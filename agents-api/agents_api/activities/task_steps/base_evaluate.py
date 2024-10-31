@@ -4,7 +4,7 @@ from typing import Any
 from beartype import beartype
 from box import Box
 from openai import BaseModel
-from simpleeval import NameNotDefined
+from simpleeval import NameNotDefined, SimpleEval
 from temporalio import activity
 from thefuzz import fuzz
 
@@ -31,10 +31,37 @@ class EvaluateError(Exception):
         super().__init__(message)
 
 
+# Recursive evaluation helper function
+def _recursive_evaluate(expr, evaluator: SimpleEval):
+    if isinstance(expr, str):
+        try:
+            return evaluator.eval(expr)
+        except Exception as e:
+            if activity.in_activity():
+                evaluate_error = EvaluateError(e, expr, evaluator.names)
+
+                variables_accessed = {
+                    name: value
+                    for name, value in evaluator.names.items()
+                    if name in expr
+                }
+
+                activity.logger.error(
+                    f"Error in base_evaluate: {evaluate_error}\nVariables accessed: {variables_accessed}"
+                )
+            raise evaluate_error from e
+    elif isinstance(expr, list):
+        return [_recursive_evaluate(e, evaluator) for e in expr]
+    elif isinstance(expr, dict):
+        return {k: _recursive_evaluate(v, evaluator) for k, v in expr.items()}
+    else:
+        raise ValueError(f"Invalid expression: {expr}")
+
+
 @auto_blob_store
 @beartype
 async def base_evaluate(
-    exprs: str | list[str] | dict[str, str] | dict[str, dict[str, str]],
+    exprs: Any,
     values: dict[str, Any] = {},
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
@@ -65,44 +92,11 @@ async def base_evaluate(
     # frozen_box doesn't work coz we need some mutability in the values
     values = Box(values, frozen_box=False, conversion_box=True)
 
-    evaluator = get_evaluator(names=values, extra_functions=extra_lambdas)
+    evaluator: SimpleEval = get_evaluator(names=values, extra_functions=extra_lambdas)
 
-    chosen_expression = ""
-
-    try:
-        result = None
-        match exprs:
-            case str():
-                chosen_expression = exprs
-                result = evaluator.eval(exprs)
-            case list():
-                result = []
-                for expr in exprs:
-                    chosen_expression = expr
-                    result.append(evaluator.eval(expr))
-            case dict() as d if all(
-                isinstance(v, dict) or isinstance(v, str) for v in d.values()
-            ):
-                result = {}
-                for k, v in d.items():
-                    if isinstance(v, str):
-                        chosen_expression = v
-                        result[k] = evaluator.eval(v)
-                    else:
-                        result[k] = {}
-                        for k1, v1 in v.items():
-                            chosen_expression = v1
-                            result[k][k1] = evaluator.eval(v1)
-            case _:
-                raise ValueError(f"Invalid expression: {exprs}")
-
-        return result
-
-    except BaseException as e:
-        if activity.in_activity():
-            activity.logger.error(f"Error in base_evaluate: {e}")
-        newException = EvaluateError(e, chosen_expression, values)
-        raise newException from e
+    # Recursively evaluate the expression
+    result = _recursive_evaluate(exprs, evaluator)
+    return result
 
 
 # Note: This is here just for clarity. We could have just imported base_evaluate directly

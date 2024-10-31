@@ -67,7 +67,7 @@ alias RemoteBrowserAction = /** Press a key */
 /** The setup parameters for the remote browser */
 model RemoteBrowserSetup {
     /** The connection URL for the remote browser */
-    connect_url: url;
+    connect_url: string | null;
 
     /** The width of the browser */
     width?: uint16;
@@ -78,6 +78,9 @@ model RemoteBrowserSetup {
 
 /** The arguments for the remote browser */
 model RemoteBrowserArguments {
+    /** The connection URL for the remote browser */
+    connect_url?: string;
+    
     /** The action to perform */
     action: RemoteBrowserAction;
 

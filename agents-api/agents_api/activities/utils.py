@@ -258,6 +258,7 @@ def get_handler(system: SystemDef) -> Callable:
     from ..models.user.update_user import update_user as update_user_query
     from ..routers.docs.create_doc import create_agent_doc, create_user_doc
     from ..routers.docs.search_docs import search_agent_docs, search_user_docs
+    from ..routers.sessions.chat import chat
 
     match (system.resource, system.subresource, system.operation):
         # AGENTS
@@ -311,6 +312,8 @@ def get_handler(system: SystemDef) -> Callable:
             return update_session_query
         case ("session", None, "delete"):
             return delete_session_query
+        case ("session", None, "chat"):
+            return chat
 
         # TASKS
         case ("task", None, "list"):
