@@ -404,7 +404,7 @@ class TaskExecutionWorkflow:
                 "finish_reason"
             ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
                 0
-            ]["type"] == "function":
+            ]["type"] not in ["integration", "api_call", "system"]:
                 workflow.logger.debug("Prompt step: Received FUNCTION tool call")
 
                 # Enter a wait-for-input step to ask the developer to run the tool calls
