@@ -103,7 +103,7 @@ model PromptStepDef {
     prompt: JinjaTemplate | InputChatMLMessage<JinjaTemplate>[];
 
     /** The tools to use for the prompt */
-    tools: "all" | (ToolRef | CreateToolRequest)[] = #[];
+    tools: "all" | (ToolRef | CreateToolRequest)[] = "all";
 
     /** The tool choice for the prompt */
     tool_choice?: ToolChoiceOption;

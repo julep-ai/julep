@@ -15,7 +15,6 @@ from ..autogen.Docs import (
     VectorDocSearchRequest,
 )
 from ..autogen.Tools import SystemDef
-from ..common.protocol.developers import Developer
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
 from ..env import testing

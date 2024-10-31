@@ -202,6 +202,9 @@ class TaskExecutionWorkflow:
             retry_policy=DEFAULT_RETRY_POLICY,
         )
 
+        # Init state
+        state = None
+
         match context.current_step, outcome:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
@@ -371,22 +374,9 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(type="resume", output=result)
 
-            case PromptStep(unwrap=True), StepOutcome(output=response):
-                finish_reason = response["choices"][0]["finish_reason"]
-                if finish_reason == "tool_calls":
-                    workflow.logger.error(
-                        "Prompt step: Tool calls not supported in unwrap mode"
-                    )
-
-                    state = PartialTransition(
-                        type="error", output="Tool calls not supported in unwrap mode"
-                    )
-                    await transition(context, state)
-
-                    raise ApplicationError("Tool calls not supported in unwrap mode")
-
-                workflow.logger.debug(f"Prompt step: Received response: {response}")
-                state = PartialTransition(output=response)
+            case PromptStep(unwrap=True), StepOutcome(output=message):
+                workflow.logger.debug(f"Prompt step: Received response: {message}")
+                state = PartialTransition(output=message)
 
             case PromptStep(auto_run_tools=False, unwrap=False), StepOutcome(
                 output=response
@@ -492,12 +482,6 @@ class TaskExecutionWorkflow:
                     f"Prompt step: Received unknown tool call: {tool_calls_input[0]['type']}"
                 )
                 state = PartialTransition(output=response)
-
-            case SetStep(), StepOutcome(output=evaluated_output):
-                workflow.logger.info("Set step: Updating user state")
-
-            case SetStep(), StepOutcome(output=evaluated_output):
-                workflow.logger.info("Set step: Updating user state")
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
