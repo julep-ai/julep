@@ -400,11 +400,11 @@ class TaskExecutionWorkflow:
 
             case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
                 output=response
-            ) if (message := response["choices"][0]["message"])[
+            ) if (choice := response["choices"][0])[
                 "finish_reason"
-            ] == "tool_calls" and (tool_calls_input := message["tool_calls"])[0][
-                "type"
-            ] == "function":
+            ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
+                0
+            ]["type"] == "function":
                 workflow.logger.debug("Prompt step: Received FUNCTION tool call")
 
                 # Enter a wait-for-input step to ask the developer to run the tool calls
@@ -430,11 +430,11 @@ class TaskExecutionWorkflow:
 
             case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
                 output=response
-            ) if (message := response["choices"][0]["message"])[
+            ) if (choice := response["choices"][0])[
                 "finish_reason"
-            ] == "tool_calls" and (tool_calls_input := message["tool_calls"])[0][
-                "type"
-            ] == "integration":
+            ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
+                0
+            ]["type"] == "integration":
                 workflow.logger.debug("Prompt step: Received INTEGRATION tool call")
 
                 # FIXME: Implement integration tool calls
@@ -445,11 +445,11 @@ class TaskExecutionWorkflow:
 
             case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
                 output=response
-            ) if (message := response["choices"][0]["message"])[
+            ) if (choice := response["choices"][0])[
                 "finish_reason"
-            ] == "tool_calls" and (tool_calls_input := message["tool_calls"])[0][
-                "type"
-            ] == "api_call":
+            ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
+                0
+            ]["type"] == "api_call":
                 workflow.logger.debug("Prompt step: Received API_CALL tool call")
 
                 # FIXME: Implement API_CALL tool calls
@@ -460,11 +460,11 @@ class TaskExecutionWorkflow:
 
             case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
                 output=response
-            ) if (message := response["choices"][0]["message"])[
+            ) if (choice := response["choices"][0])[
                 "finish_reason"
-            ] == "tool_calls" and (tool_calls_input := message["tool_calls"])[0][
-                "type"
-            ] == "system":
+            ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
+                0
+            ]["type"] == "system":
                 workflow.logger.debug("Prompt step: Received SYSTEM tool call")
 
                 # FIXME: Implement SYSTEM tool calls
@@ -474,9 +474,9 @@ class TaskExecutionWorkflow:
                 # TODO: Feed the tool call results back to the model (see above)
 
             case PromptStep(unwrap=False), StepOutcome(output=response) if (
-                message := response["choices"][0]["message"]
+                choice := response["choices"][0]
             )["finish_reason"] == "tool_calls" and (
-                tool_calls_input := message["tool_calls"]
+                tool_calls_input := choice["message"]["tool_calls"]
             )[0]["type"] not in ["function", "integration", "api_call", "system"]:
                 workflow.logger.debug(
                     f"Prompt step: Received unknown tool call: {tool_calls_input[0]['type']}"
