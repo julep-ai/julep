@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Callable
+from typing import Any
 from uuid import UUID
 
 from beartype import beartype

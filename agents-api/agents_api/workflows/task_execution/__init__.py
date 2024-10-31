@@ -34,7 +34,6 @@ with workflow.unsafe.imports_passed_through():
         SleepFor,
         SleepStep,
         SwitchStep,
-        TaskToolDef,
         ToolCallStep,
         TransitionTarget,
         WaitForInputStep,
