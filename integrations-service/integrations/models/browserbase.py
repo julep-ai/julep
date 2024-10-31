@@ -10,8 +10,12 @@ class SessionInfo(BaseOutput):
     createdAt: str | None = Field(
         None, description="Timestamp indicating when the session was created"
     )
-    projectId: str | None = Field(None, description="The Project ID linked to the Session")
-    startedAt: str | None = Field(None, description="Timestamp when the session started")
+    projectId: str | None = Field(
+        None, description="The Project ID linked to the Session"
+    )
+    startedAt: str | None = Field(
+        None, description="Timestamp when the session started"
+    )
     endedAt: str | None = Field(None, description="Timestamp when the session ended")
     expiresAt: str | None = Field(
         None, description="Timestamp when the session is set to expire"
@@ -40,8 +44,12 @@ class BrowserbaseCreateSessionOutput(BaseOutput):
     createdAt: str | None = Field(
         None, description="Timestamp indicating when the session was created"
     )
-    projectId: str | None = Field(None, description="The Project ID linked to the Session")
-    startedAt: str | None = Field(None, description="Timestamp when the session started")
+    projectId: str | None = Field(
+        None, description="The Project ID linked to the Session"
+    )
+    startedAt: str | None = Field(
+        None, description="Timestamp when the session started"
+    )
     endedAt: str | None = Field(None, description="Timestamp when the session ended")
     expiresAt: str | None = Field(
         None, description="Timestamp when the session is set to expire"
@@ -66,8 +74,12 @@ class BrowserbaseGetSessionOutput(BaseOutput):
     createdAt: str | None = Field(
         None, description="Timestamp indicating when the session was created"
     )
-    projectId: str | None = Field(None, description="The Project ID linked to the Session")
-    startedAt: str | None = Field(None, description="Timestamp when the session started")
+    projectId: str | None = Field(
+        None, description="The Project ID linked to the Session"
+    )
+    startedAt: str | None = Field(
+        None, description="Timestamp when the session started"
+    )
     endedAt: str | None = Field(None, description="Timestamp when the session ended")
     expiresAt: str | None = Field(
         None, description="Timestamp when the session is set to expire"
