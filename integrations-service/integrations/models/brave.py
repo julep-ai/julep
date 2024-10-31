@@ -1,5 +1,6 @@
 from typing import List
-from pydantic import Field, BaseModel
+
+from pydantic import BaseModel, Field
 
 from .base_models import BaseOutput
 
