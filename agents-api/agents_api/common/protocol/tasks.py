@@ -1,6 +1,7 @@
 from typing import Annotated, Any
 from uuid import UUID
 
+from beartype import beartype
 from temporalio import activity, workflow
 
 with workflow.unsafe.imports_passed_through():
@@ -234,10 +235,14 @@ class StepOutcome(BaseModel):
     transition_to: tuple[TransitionType, TransitionTarget] | None = None
 
 
+@beartype
 def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest, **model_opts
 ) -> TaskSpecDef | PartialTaskSpecDef:
     task_data = task.model_dump(**model_opts)
+
+    if "task_id" in task_data:
+        task_data.pop("task_id")
 
     if "tools" in task_data:
         del task_data["tools"]
