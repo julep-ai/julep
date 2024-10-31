@@ -1,10 +1,9 @@
 from typing import Literal, Optional
 
+from browserbase import Session
 from pydantic import AnyUrl, Field
 
 from .base_models import BaseOutput
-from browserbase import Session
-
 
 
 class BrowserbaseListSessionsOutput(BaseOutput):
