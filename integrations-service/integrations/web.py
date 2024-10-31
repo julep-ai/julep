@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from typing import Any, Callable
 
 import uvicorn
@@ -69,15 +70,19 @@ def main(
     timeout_keep_alive=30,
     workers=None,
     log_level="info",
+    reload=bool(os.environ.get("RELOAD")),
 ) -> None:
+    print(f"Reload: {reload}")
+
     uvicorn.run(
-        app,
+        "integrations.web:app",
         host=host,
         port=port,
         log_level=log_level,
         timeout_keep_alive=timeout_keep_alive,
         backlog=backlog,
         workers=workers,
+        reload=reload,
     )
 
 

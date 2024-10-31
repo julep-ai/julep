@@ -102,7 +102,7 @@ model RemoteBrowserIntegrationDef extends BaseIntegrationDef {
     provider: "remote_browser" = "remote_browser";
     setup: RemoteBrowserSetup;
     method: "perform_action" = "perform_action";
-    arguments: RemoteBrowserArguments;
+    arguments?: RemoteBrowserArguments;
 }
 
 model RemoteBrowserProviderCard extends BaseProviderCard {

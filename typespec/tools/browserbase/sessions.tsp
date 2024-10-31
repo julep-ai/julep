@@ -80,17 +80,17 @@ model BrowserbaseListSessionsArguments {
 
 alias BrowserbaseListSessionsOutput = {
     id: string;
-    createdAt: string;
-    updatedAt: string;
-    projectId: string;
-    startedAt: string;
-    endedAt: string;
-    expiresAt: string;
-    status: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
-    proxyBytes: uint64;
-    avgCpuUsage: uint64;
-    memoryUsage: uint64;
-    keepAlive: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+    projectId?: string;
+    startedAt?: string;
+    endedAt?: string;
+    expiresAt?: string;
+    status?: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
+    proxyBytes?: uint64;
+    avgCpuUsage?: uint64;
+    memoryUsage?: uint64;
+    keepAlive?: boolean;
     contextId?: string;
 }[];
 
@@ -100,41 +100,41 @@ model BrowserbaseCreateSessionIntegrationDef
     method: "create_session" = "create_session";
 
     /** The arguments for the method */
-    arguments: BrowserbaseCreateSessionArguments;
+    arguments?: BrowserbaseCreateSessionArguments;
 }
 
 model BrowserbaseCreateSessionArguments {
     /** The Project ID. Can be found in Settings. */
-    projectId: string;
+    projectId?: string;
 
     /** The installed Extension ID. See Install Extension from GitHub. */
     extensionId?: string;
 
     /** Browser settings */
-    browserSettings?: Record<unknown>;
+    browserSettings?: Record<unknown> = #{};
 
     /** Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout. */
-    timeout?: uint16;
+    timeout?: uint16 = 3600;
 
     /** Set to true to keep the session alive even after disconnections. This is available on the Startup plan only. */
-    keepAlive?: boolean;
+    keepAlive?: boolean = false;
 
     /** Proxy configuration. Can be true for default proxy, or an array of proxy configurations. */
-    proxies?: boolean | Record<unknown>[];
+    proxies?: boolean | Record<unknown>[] = false;
 }
 
 model BrowserbaseCreateSessionOutput {
     id: string;
-    createdAt: string;
-    projectId: string;
-    startedAt: string;
-    endedAt: string;
-    expiresAt: string;
-    status: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
-    proxyBytes: uint64;
-    avgCpuUsage: uint64;
-    memoryUsage: uint64;
-    keepAlive: boolean;
+    createdAt?: string;
+    projectId?: string;
+    startedAt?: string;
+    endedAt?: string;
+    expiresAt?: string;
+    status?: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
+    proxyBytes?: uint64;
+    avgCpuUsage?: uint64;
+    memoryUsage?: uint64;
+    keepAlive?: boolean;
     contextId?: string;
 }
 
@@ -142,7 +142,7 @@ model BrowserbaseCreateSessionOutput {
 model BrowserbaseGetSessionIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
     method: "get_session" = "get_session";
-    arguments: BrowserbaseGetSessionArguments;
+    arguments?: BrowserbaseGetSessionArguments;
 }
 
 model BrowserbaseGetSessionArguments {
@@ -151,16 +151,16 @@ model BrowserbaseGetSessionArguments {
 
 model BrowserbaseGetSessionOutput {
     id: string;
-    createdAt: string;
-    projectId: string;
-    startedAt: string;
-    endedAt: string;
-    expiresAt: string;
-    status: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
-    proxyBytes: uint64;
-    avgCpuUsage: uint64;
-    memoryUsage: uint64;
-    keepAlive: boolean;
+    createdAt?: string;
+    projectId?: string;
+    startedAt?: string;
+    endedAt?: string;
+    expiresAt?: string;
+    status?: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
+    proxyBytes?: uint64;
+    avgCpuUsage?: uint64;
+    memoryUsage?: uint64;
+    keepAlive?: boolean;
     contextId?: string;
 }
 
@@ -168,12 +168,12 @@ model BrowserbaseGetSessionOutput {
 model BrowserbaseCompleteSessionIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
     method: "complete_session" = "complete_session";
-    arguments: BrowserbaseCompleteSessionArguments;
+    arguments?: BrowserbaseCompleteSessionArguments;
 }
 
 model BrowserbaseCompleteSessionArguments {
     id: string;
-    status: "REQUEST_RELEASE" = "REQUEST_RELEASE";
+    status?: "REQUEST_RELEASE" = "REQUEST_RELEASE";
 }
 
 model BrowserbaseCompleteSessionOutput {
@@ -184,7 +184,7 @@ model BrowserbaseCompleteSessionOutput {
 model BrowserbaseGetSessionLiveUrlsIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
     method: "get_live_urls" = "get_live_urls";
-    arguments: BrowserbaseGetSessionLiveUrlsArguments;
+    arguments?: BrowserbaseGetSessionLiveUrlsArguments;
 }
 
 model BrowserbaseGetSessionLiveUrlsArguments {
@@ -209,7 +209,7 @@ model BrowserbaseGetSessionLiveUrlsOutput {
 model BrowserbaseGetSessionConnectUrlIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
     method: "get_connect_url" = "get_connect_url";
-    arguments: BrowserbaseGetSessionConnectUrlArguments;
+    arguments?: BrowserbaseGetSessionConnectUrlArguments;
 }
 
 model BrowserbaseGetSessionConnectUrlArguments {

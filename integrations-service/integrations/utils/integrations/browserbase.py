@@ -3,7 +3,13 @@ import tempfile
 
 import httpx
 from beartype import beartype
-from browserbase import Browserbase, BrowserSettings, CreateSessionOptions
+from browserbase import (
+    Browserbase,
+    BrowserSettings,
+    CreateSessionOptions,
+    DebugConnectionURLs,
+    Session,
+)
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import (
@@ -24,11 +30,16 @@ from ...models import (
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
 )
-from ...models.browserbase import BrowserbaseExtensionOutput, SessionInfo
+from ...models.browserbase import BrowserbaseExtensionOutput
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
-    return Browserbase(api_key=setup.api_key)
+    return Browserbase(
+        api_key=setup.api_key,
+        project_id=setup.project_id,
+        api_url=setup.api_url,
+        connect_url=setup.connect_url,
+    )
 
 
 @beartype
@@ -42,13 +53,11 @@ async def list_sessions(
 ) -> BrowserbaseListSessionsOutput:
     client = get_browserbase_client(setup)
 
+    # FIXME: Implement status filter
     # Run the list_sessions method
-    sessions = client.list_sessions()
+    sessions: list[Session] = client.list_sessions()
 
-    # Convert the sessions to the output model
-    sessions_output = [SessionInfo(**session.model_dump()) for session in sessions]
-
-    return BrowserbaseListSessionsOutput(sessions=sessions_output)
+    return BrowserbaseListSessionsOutput(sessions=sessions)
 
 
 @beartype
@@ -63,7 +72,7 @@ async def create_session(
     client = get_browserbase_client(setup)
 
     options = CreateSessionOptions(
-        projectId=arguments.project_id,
+        projectId=arguments.project_id or setup.project_id,
         extensionId=arguments.extension_id,
         browserSettings=BrowserSettings(**arguments.browser_settings),
     )
@@ -102,7 +111,7 @@ async def complete_session(
 
     try:
         client.complete_session(arguments.id)
-    except Exception as e:
+    except Exception:
         return BrowserbaseCompleteSessionOutput(success=False)
 
     return BrowserbaseCompleteSessionOutput(success=True)
@@ -114,14 +123,14 @@ async def complete_session(
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def get_session_live_urls(
+async def get_live_urls(
     setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionLiveUrlsArguments
 ) -> BrowserbaseGetSessionLiveUrlsOutput:
+    """Get the live URLs for a session."""
+
     client = get_browserbase_client(setup)
-
-    urls = client.get_debug_connection_urls(arguments.id)
-
-    return BrowserbaseGetSessionLiveUrlsOutput(**urls.model_dump())
+    urls: DebugConnectionURLs = client.get_debug_connection_urls(arguments.id)
+    return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
 
 
 @beartype
@@ -150,9 +159,8 @@ async def install_extension_from_github(
     setup: BrowserbaseSetup, arguments: BrowserbaseExtensionArguments
 ) -> BrowserbaseExtensionOutput:
     """Download and install an extension from GitHub to the user's Browserbase account."""
-    github_url = (
-        f"https://github.com/{arguments.repo}/archive/refs/heads/{arguments.ref}.zip"
-    )
+    github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{
+            arguments.ref}.zip"
 
     async with httpx.AsyncClient() as client:
         # Download the extension zip
@@ -181,7 +189,7 @@ async def install_extension_from_github(
 
             try:
                 upload_response.raise_for_status()
-            except httpx.HTTPStatusError as e:
+            except httpx.HTTPStatusError:
                 print(upload_response.text)
                 raise
 
