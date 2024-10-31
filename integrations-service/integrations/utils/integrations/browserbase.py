@@ -24,7 +24,8 @@ from ...models import (
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
 )
-from ...models.browserbase import BrowserbaseExtensionOutput, SessionInfo
+from ...models.browserbase import BrowserbaseExtensionOutput
+from browserbase import Session
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
@@ -49,12 +50,9 @@ async def list_sessions(
 
     # FIXME: Implement status filter
     # Run the list_sessions method
-    sessions = client.list_sessions()
+    sessions: list[Session] = client.list_sessions()
 
-    # Convert the sessions to the output model
-    sessions_output = [SessionInfo(**session.model_dump()) for session in sessions]
-
-    return BrowserbaseListSessionsOutput(sessions=sessions_output)
+    return BrowserbaseListSessionsOutput(sessions=sessions)
 
 
 @beartype

@@ -3,40 +3,12 @@ from typing import Literal, Optional
 from pydantic import AnyUrl, Field
 
 from .base_models import BaseOutput
+from browserbase import Session
 
-
-class SessionInfo(BaseOutput):
-    id: str = Field(..., description="Unique identifier for the session")
-    createdAt: str | None = Field(
-        None, description="Timestamp indicating when the session was created"
-    )
-    projectId: str | None = Field(
-        None, description="The Project ID linked to the Session"
-    )
-    startedAt: str | None = Field(
-        None, description="Timestamp when the session started"
-    )
-    endedAt: str | None = Field(None, description="Timestamp when the session ended")
-    expiresAt: str | None = Field(
-        None, description="Timestamp when the session is set to expire"
-    )
-    status: None | Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
-        None, description="Current status of the session"
-    )
-    proxyBytes: int | None = Field(None, description="Bytes used via the Proxy")
-    avgCpuUsage: int | None = Field(None, description="CPU used by the Session")
-    memoryUsage: int | None = Field(None, description="Memory used by the Session")
-    keepAlive: bool | None = Field(
-        None,
-        description="Indicates if the Session was created to be kept alive upon disconnections",
-    )
-    contextId: str | None = Field(
-        None, description="Optional. The Context linked to the Session."
-    )
 
 
 class BrowserbaseListSessionsOutput(BaseOutput):
-    sessions: list[SessionInfo] = Field(..., description="The list of sessions")
+    sessions: list[Session] = Field(..., description="The list of sessions")
 
 
 class BrowserbaseCreateSessionOutput(BaseOutput):
