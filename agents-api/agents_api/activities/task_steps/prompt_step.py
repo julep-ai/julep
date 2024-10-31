@@ -66,13 +66,13 @@ def format_tool(tool: Tool) -> dict:
 
         formatted["function"]["parameters"] = json_schema
 
-    # FIXME: Implement integration tools
-    elif tool.type == "integration":
-        raise NotImplementedError("Integration tools are not supported")
+    # # FIXME: Implement integration tools
+    # elif tool.type == "integration":
+    #     raise NotImplementedError("Integration tools are not supported")
 
-    # FIXME: Implement API call tools
-    elif tool.type == "api_call":
-        raise NotImplementedError("API call tools are not supported")
+    # # FIXME: Implement API call tools
+    # elif tool.type == "api_call":
+    #     raise NotImplementedError("API call tools are not supported")
 
     return formatted
 

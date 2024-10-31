@@ -11,6 +11,7 @@ from .base_models import (
     ProviderInfo as ProviderInfo,
 )
 from .brave import BraveSearchOutput as BraveSearchOutput
+from .brave import SearchResult as SearchResult
 from .browserbase import (
     BrowserbaseCompleteSessionOutput as BrowserbaseCompleteSessionOutput,
 )
