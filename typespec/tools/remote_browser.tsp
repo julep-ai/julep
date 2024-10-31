@@ -78,6 +78,9 @@ model RemoteBrowserSetup {
 
 /** The arguments for the remote browser */
 model RemoteBrowserArguments {
+    /** The connection URL for the remote browser */
+    connect_url: url;
+    
     /** The action to perform */
     action: RemoteBrowserAction;
 
