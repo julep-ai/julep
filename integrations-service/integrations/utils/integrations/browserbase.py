@@ -3,13 +3,7 @@ import tempfile
 
 import httpx
 from beartype import beartype
-from browserbase import (
-    Browserbase,
-    BrowserSettings,
-    CreateSessionOptions,
-    DebugConnectionURLs,
-    Session,
-)
+from browserbase import Browserbase, BrowserSettings, CreateSessionOptions, Session
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import (
@@ -31,6 +25,7 @@ from ...models import (
     BrowserbaseListSessionsOutput,
 )
 from ...models.browserbase import BrowserbaseExtensionOutput
+from browserbase import DebugConnectionURLs, Session
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
@@ -123,7 +118,7 @@ async def complete_session(
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def get_session_live_urls(
+async def get_live_urls(
     setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionLiveUrlsArguments
 ) -> BrowserbaseGetSessionLiveUrlsOutput:
     """Get the live URLs for a session."""
@@ -139,7 +134,7 @@ async def get_session_live_urls(
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def get_sesion_connect_url(
+async def get_connect_url(
     setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionConnectUrlArguments
 ) -> BrowserbaseGetSessionConnectUrlOutput:
     client = get_browserbase_client(setup)
