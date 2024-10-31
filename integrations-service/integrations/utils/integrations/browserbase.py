@@ -3,7 +3,13 @@ import tempfile
 
 import httpx
 from beartype import beartype
-from browserbase import Browserbase, BrowserSettings, CreateSessionOptions, Session
+from browserbase import (
+    Browserbase,
+    BrowserSettings,
+    CreateSessionOptions,
+    DebugConnectionURLs,
+    Session,
+)
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import (
@@ -25,7 +31,6 @@ from ...models import (
     BrowserbaseListSessionsOutput,
 )
 from ...models.browserbase import BrowserbaseExtensionOutput
-from browserbase import DebugConnectionURLs, Session
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
