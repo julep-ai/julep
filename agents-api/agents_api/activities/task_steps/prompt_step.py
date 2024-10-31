@@ -1,4 +1,11 @@
+from datetime import datetime
+import os
+
+from anthropic import Anthropic
+from anthropic.types.beta.beta_message import BetaMessage
 from beartype import beartype
+from litellm import ChatCompletionMessageToolCall, Function, Message
+from litellm.types.utils import Choices, ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
@@ -9,8 +16,10 @@ from ...clients import (
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
-from ...env import debug
+from ...env import anthropic_api_key, debug
 from ...models.tools.list_tools import list_tools
+
+COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
 def make_function_call(tool: Tool) -> dict | None:
@@ -151,7 +160,28 @@ def make_function_call(tool: Tool) -> dict | None:
             }
         )
 
-    return result if result.get("function") else None
+    elif tool.computer_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
+            "display_width_px": tool.computer_20241022.display_width_px,
+            "display_height_px": tool.computer_20241022.display_height_px,
+            "display_number": tool.computer_20241022.display_number,
+        }
+    elif tool.bash_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
+        }
+    elif tool.text_editor_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
+        }
+    else:
+        raise ValueError(f"Unsupported tool: {tool}")
+
+    return result
 
 
 @activity.defn
@@ -208,37 +238,123 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     if isinstance(prompt, str):
         prompt = [{"role": "user", "content": prompt}]
 
-    completion_data: dict = {
-        "model": agent_model,
-        "tools": formatted_agent_tools or None,
-        "messages": prompt,
-        **agent_default_settings,
-        **passed_settings,
-    }
+    # Check if the model is Anthropic and bash/editor/computer use tool is included
+    if "claude" in agent_model.lower() and any(
+        tool.type in ["bash_20241022", "text_editor_20241022", "computer_20241022"]
+        for tool in agent_tools
+    ):
+        # Retrieve the API key from the environment variable
+        betas = [COMPUTER_USE_BETA_FLAG]
+        # Use Anthropic API directly
+        client = Anthropic(api_key=anthropic_api_key)
 
-    extra_body = {  # OpenAI python accepts extra args in extra_body
-        "cache": {"no-cache": debug},  # will not return a cached response
-    }
+        # Claude Response
+        claude_response: BetaMessage = await client.beta.messages.create(
+            model=agent_model,
+            messages=prompt,
+            tools=formatted_agent_tools,
+            max_tokens=1024,
+            betas=betas,
+        )
 
-    response = await litellm.acompletion(
-        **completion_data,
-        extra_body=extra_body,
-    )
+        # FIXME: Handle multiple messages
+        if len(claude_response.content) != 1:
+            raise ApplicationError("Claude should only return one message")
 
-    choice = response.choices[0]
+        content_block = claude_response.content[0]
+        stop_reason = claude_response.stop_reason
+
+        if stop_reason == "tool_use":
+            choice = Choices(
+                message=Message(
+                    role="assistant",
+                    content=None,
+                    tool_calls=[
+                        ChatCompletionMessageToolCall(
+                            type="function",
+                            function=Function(
+                                name=content_block.name,
+                                arguments=content_block.input,
+                            ),
+                        )
+                    ],
+                ),
+                finish_reason="tool_calls",
+            )
+        else:
+            choice = Choices(
+                message=Message(
+                    role="assistant",
+                    content=content_block.text,
+                ),
+                finish_reason="stop",
+            )
+
+        response: ModelResponse = ModelResponse(
+            id=claude_response.id,
+            choices=[choice],
+            created=datetime.now().timestamp(),
+            model=claude_response.model,
+            object="text_completion",
+        )
+
+    else:
+        # Use litellm for other models
+        completion_data: dict = {
+            "model": agent_model,
+            "tools": formatted_agent_tools or None,
+            "messages": prompt,
+            **agent_default_settings,
+            **passed_settings,
+        }
+        extra_body = {
+            "cache": {"no-cache": debug},
+        }
+
+        response: ModelResponse = await litellm.acompletion(
+            **completion_data,
+            extra_body=extra_body,
+        )
+
     if context.current_step.unwrap:
+        if len(response.choices) != 1:
+            raise ApplicationError("Only one choice is supported")
+
+        choice = response.choices[0]
         if choice.finish_reason == "tool_calls":
             raise ApplicationError("Tool calls cannot be unwrapped")
 
-        response = choice.message.content
-
-    if choice.finish_reason == "tool_calls":
-        tc = choice.message.tool_calls[0]
-        choice.message.tool_calls = tools_mapping.get(
-            tc.function["name"] if isinstance(tc.function, dict) else tc.function.name
+        return StepOutcome(
+            output=choice.message.content,
+            next=None,
         )
 
+    # Re-convert tool-calls to integration/system calls if needed
+    response_as_dict = response.model_dump()
+
+    for choice in response_as_dict["choices"]:
+        if choice["finish_reason"] == "tool_calls":
+            calls = choice["message"]["tool_calls"]
+
+            for call in calls:
+                call_name = call["function"]["name"]
+                call_args = call["function"]["arguments"]
+
+                original_tool = tools_mapping.get(call_name)
+                if not original_tool:
+                    raise ApplicationError(f"Tool {call_name} not found")
+
+                if original_tool.type == "function":
+                    continue
+
+                call.pop("function")
+                call["type"] = original_tool.type
+                call[original_tool.type] = {
+                    "name": call_name,
+                    "arguments": call_args,
+                }
+
     return StepOutcome(
-        output=response.model_dump() if hasattr(response, "model_dump") else response,
+        output=response_as_dict,
         next=None,
     )
