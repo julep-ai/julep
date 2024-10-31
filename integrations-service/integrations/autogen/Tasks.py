@@ -686,7 +686,7 @@ class PromptStep(BaseModel):
     """
     The prompt to run
     """
-    tools: Literal["all"] | list[ToolRef | CreateToolRequest] = []
+    tools: Literal["all"] | list[ToolRef | CreateToolRequest] = "all"
     """
     The tools to use for the prompt
     """
@@ -728,7 +728,7 @@ class PromptStepUpdateItem(BaseModel):
     """
     The prompt to run
     """
-    tools: Literal["all"] | list[ToolRefUpdateItem | CreateToolRequest] = []
+    tools: Literal["all"] | list[ToolRefUpdateItem | CreateToolRequest] = "all"
     """
     The tools to use for the prompt
     """

@@ -4845,7 +4845,7 @@ components:
                   - $ref: '#/components/schemas/Tasks.ToolRef'
                   - $ref: '#/components/schemas/Tools.CreateToolRequest'
           description: The tools to use for the prompt
-          default: []
+          default: all
         tool_choice:
           anyOf:
             - type: string
@@ -4976,7 +4976,7 @@ components:
                   - $ref: '#/components/schemas/Tasks.ToolRefUpdateItem'
                   - $ref: '#/components/schemas/Tools.CreateToolRequest'
           description: The tools to use for the prompt
-          default: []
+          default: all
         tool_choice:
           anyOf:
             - type: string
