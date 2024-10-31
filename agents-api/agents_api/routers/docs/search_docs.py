@@ -11,6 +11,7 @@ from ...autogen.openapi_model import (
     VectorDocSearchRequest,
 )
 from ...dependencies.developer_id import get_developer_id
+from ...models.docs.mmr import maximal_marginal_relevance
 from ...models.docs.search_docs_by_embedding import search_docs_by_embedding
 from ...models.docs.search_docs_by_text import search_docs_by_text
 from ...models.docs.search_docs_hybrid import search_docs_hybrid
@@ -44,7 +45,7 @@ def get_search_fn_and_params(
             search_fn = search_docs_by_embedding
             params = dict(
                 query_embedding=query_embedding,
-                k=k,
+                k=k * 3 if search_params.mmr_strength > 0 else k,
                 confidence=confidence,
                 metadata_filter=metadata_filter,
             )
@@ -61,7 +62,7 @@ def get_search_fn_and_params(
             params = dict(
                 query=query,
                 query_embedding=query_embedding,
-                k=k,
+                k=k * 3 if search_params.mmr_strength > 0 else k,
                 embed_search_options=dict(confidence=confidence),
                 alpha=alpha,
                 metadata_filter=metadata_filter,
@@ -78,6 +79,7 @@ async def search_user_docs(
     ),
     user_id: UUID,
 ) -> DocSearchResponse:
+    # MMR here
     search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
@@ -86,6 +88,18 @@ async def search_user_docs(
         owners=[("user", user_id)],
         **params,
     )
+
+    k = 3
+
+    if (
+        not isinstance(search_params, TextOnlyDocSearchRequest)
+        and search_params.mmr_strength > 0
+        and len(docs) > k
+    ):
+        indices = maximal_marginal_relevance(
+            params["query_embedding"], [doc.embedding for doc in docs], k=k
+        )
+        docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
 
     end = time.time()
 
@@ -113,6 +127,18 @@ async def search_agent_docs(
         owners=[("agent", agent_id)],
         **params,
     )
+
+    k = 3
+
+    if (
+        not isinstance(search_params, TextOnlyDocSearchRequest)
+        and search_params.mmr_strength > 0
+        and len(docs) > k
+    ):
+        indices = maximal_marginal_relevance(
+            params["query_embedding"], [doc.embedding for doc in docs], k=k
+        )
+        docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
 
     end = time.time()
 

@@ -107,7 +107,7 @@ def search_docs_hybrid(
         developer_id=developer_id,
         owners=owners,
         query=query,
-        k=2 * k,
+        k=k,
         metadata_filter=metadata_filter,
         **text_search_options,
     )
@@ -116,7 +116,7 @@ def search_docs_hybrid(
         developer_id=developer_id,
         owners=owners,
         query_embedding=query_embedding,
-        k=2 * k,
+        k=k,
         metadata_filter=metadata_filter,
         **embed_search_options,
     )

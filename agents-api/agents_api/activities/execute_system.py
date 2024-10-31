@@ -225,8 +225,9 @@ async def execute_system(
                 return create_session_query(**arguments)
             elif system.operation == "update":
                 return update_session_query(**arguments)
-            elif system.operation == "delete":
-                return update_session_query(**arguments)
+            # FIXME: @hamada needs to be fixed
+            # elif system.operation == "delete":
+            #     return update_session_query(**arguments)
             elif system.operation == "delete":
                 return delete_session_query(**arguments)
         # TASKS

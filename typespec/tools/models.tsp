@@ -180,6 +180,9 @@ model ApiCallDef {
     /** The URL to call */
     url: url;
 
+    /** The schema of the response */
+    schema?: Record<unknown>;
+
     /** The headers to send with the request */
     headers?: Record<string>;
 
@@ -209,6 +212,9 @@ model ApiCallDef {
 model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
+
+    /** Type of the tool */
+    type: ToolType;
 
     /** Description of the tool */
     description?: string;
@@ -247,7 +253,7 @@ model NamedToolChoice {
 }
 
 model ToolResponse {
-    @key id: uuid;
+    @key id: string;
 
     /** The output of the tool */
     output: ToolOutput;

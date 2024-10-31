@@ -50,7 +50,6 @@ def search_docs_by_embedding(
     k: int = 3,
     confidence: float = 0.5,
     ef: int = 50,
-    mmr_strength: float = 0.0,
     embedding_size: int = 1024,
     ann_threshold: int = 1_000_000,
     metadata_filter: dict[str, Any] = {},
@@ -71,9 +70,6 @@ def search_docs_by_embedding(
 
     assert len(query_embedding) == embedding_size
     assert sum(query_embedding)
-    assert 0 <= mmr_strength < 1, "MMR strength must be in [0, 1) interval"
-
-    mmr_lambda: float = 1 - mmr_strength
 
     metadata_filter_str = ", ".join(
         [
@@ -138,6 +134,7 @@ def search_docs_by_embedding(
                 title,
                 content,
                 distance,
+                embedding,
             ] :=
                 # Get input values
                 input[owner_type, owner_id, query],
@@ -157,10 +154,11 @@ def search_docs_by_embedding(
                     content
                     |
                     query: query,
-                    k: {k*(3 if mmr_strength else 1)},   # Get more candidates for diversity
+                    k: {k},
                     ef: {ef},
                     radius: {radius},
                     bind_distance: distance,
+                    bind_vector: embedding,
                 }}
 
             :create _search_result {{
@@ -169,6 +167,7 @@ def search_docs_by_embedding(
                 title,
                 content,
                 distance,
+                embedding,
             }}
         }}
 
@@ -190,6 +189,7 @@ def search_docs_by_embedding(
                 title,
                 content,
                 distance,
+                embedding,
             ] :=
                 # Get input values
                 input[owner_type, owner_id, query],
@@ -213,7 +213,7 @@ def search_docs_by_embedding(
                 distance = cos_dist(query, embedding),
                 distance <= {radius}
 
-            :limit {k*(3 if mmr_strength else 1)}   # Get more candidates for diversity
+            :limit {k}   # Get more candidates for diversity
 
             :create _search_result {{
                 doc_id,
@@ -221,6 +221,7 @@ def search_docs_by_embedding(
                 title,
                 content,
                 distance,
+                embedding,
             }}
         }}
         %end
@@ -235,18 +236,15 @@ def search_docs_by_embedding(
             doc_id,
             snippet_data,
             distance,
-            mmr_score,
             title,
+            embedding,
         ] := 
             owners[owner_type, owner_id_str],
             owner_id = to_uuid(owner_id_str),
-            *_search_result{{ doc_id, index, title, content, distance }},
-            mmr_score = distance,
+            *_search_result{{ doc_id, index, title, content, distance, embedding, }},
             snippet_data = [index, content]
 
-        # Sort the results by distance to find the closest matches
-        :sort -mmr_score
-        :limit {k*(3 if mmr_strength else 1)}   # Get more candidates for diversity
+        :limit {k}   # Get more candidates for diversity
 
         :create _interim {{
             owner_type,
@@ -254,84 +252,8 @@ def search_docs_by_embedding(
             doc_id,
             snippet_data,
             distance,
-            mmr_score,
             title,
-        }}
-    """
-
-    mmr_interim_query = f"""
-        owners[owner_type, owner_id] <- $owners
-
-        # Calculate the min distance between every doc and every snippet being compared
-        intersnippet_distance[
-            doc_id,
-            index1,
-            min(dist)
-        ] :=
-            *_search_result{{ doc_id: doc_id2, index: index2 }},
-            *snippets {{
-                doc_id,
-                index: index1,
-                embedding: embedding1
-            }},
-            *snippets {{
-                doc_id: doc_id2,
-                index: index2,
-                embedding: embedding2
-            }},
-            is_null(embedding1) == false,
-            is_null(embedding2) == false,
-
-            # When doc_id == doc_id2, dont compare the same snippet
-            doc_id != doc_id2 || index1 != index2,
-            dist = cos_dist(embedding1, embedding2)
-
-
-        apply_mmr[
-            doc_id,
-            title,
-            snippet_data,
-            distance,
-            mmr_score,
-        ] :=
-            *_search_result{{ doc_id, index, title, content, distance: original_distance }},
-            intersnippet_distance[doc_id, index, intersnippet_distance],
-            mmr_score = ({mmr_lambda} * original_distance) - ((1.0 - {mmr_lambda}) * intersnippet_distance),
-            distance = max(0.0, min(1.0 - mmr_score, 1.0)),
-            snippet_data = [index, content]
-
-        ?[
-            owner_type,
-            owner_id,
-            doc_id,
-            snippet_data,
-            distance,
-            mmr_score,
-            title,
-        ] := 
-            owners[owner_type, owner_id_str],
-            owner_id = to_uuid(owner_id_str),
-            
-            apply_mmr[
-                doc_id,
-                title,
-                snippet_data,
-                distance,
-                mmr_score,
-            ]
-
-        # Sort the results by distance to find the closest matches
-        :sort -mmr_score
-        :limit {k}
-
-        :create _interim {{
-            owner_type,
-            owner_id,
-            doc_id,
-            snippet_data,
-            distance,
-            mmr_score,
-            title,
+            embedding,
         }}
     """
 
@@ -343,6 +265,7 @@ def search_docs_by_embedding(
             unique(snippet_data),
             distance,
             title,
+            embedding,
         ] := 
             *_interim {
                 owner_type,
@@ -351,6 +274,7 @@ def search_docs_by_embedding(
                 snippet_data,
                 distance,
                 title,
+                embedding,
             }
 
         m[
@@ -368,10 +292,12 @@ def search_docs_by_embedding(
                 snippet_data,
                 distance,
                 title,
+                embedding,
             ],
             snippet = {
                 "index": snippet_datum->0,
-                "content": snippet_datum->1
+                "content": snippet_datum->1,
+                "embedding": embedding,
             },
             snippet_datum in snippet_data
 
@@ -408,7 +334,7 @@ def search_docs_by_embedding(
         {{ {verify_query} }}
         {{ {determine_knn_ann_query} }}
         {search_query}
-        {{ {normal_interim_query if mmr_strength == 0.0 else mmr_interim_query} }}
+        {{ {normal_interim_query} }}
         {{ {collect_query} }}
     """
 
