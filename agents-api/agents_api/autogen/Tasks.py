@@ -686,7 +686,7 @@ class PromptStep(BaseModel):
     """
     The prompt to run
     """
-    tools: Literal["all"] | list[ToolRef | CreateToolRequest] = []
+    tools: Literal["all"] | list[ToolRef | CreateToolRequest] = "all"
     """
     The tools to use for the prompt
     """
@@ -702,15 +702,17 @@ class PromptStep(BaseModel):
     """
     Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
     """
-    forward_tool_results: StrictBool | None = None
+    auto_run_tools: StrictBool = True
     """
-    Whether to forward the tool results to the model when available.
-    "true" => always forward
-    "false" => never forward
-    null => forward if applicable (default)
+    Whether to auto-run the tool and send the tool results to the model when available.
+    (default: true for prompt steps, false for sessions)
 
     If a tool call is made, the tool's output will be used as the model's input.
     If a tool call is not made, the model's output will be used as the next step's input.
+    """
+    disable_cache: StrictBool = False
+    """
+    Whether to disable caching for the prompt step
     """
 
 
@@ -730,7 +732,7 @@ class PromptStepUpdateItem(BaseModel):
     """
     The prompt to run
     """
-    tools: Literal["all"] | list[ToolRefUpdateItem | CreateToolRequest] = []
+    tools: Literal["all"] | list[ToolRefUpdateItem | CreateToolRequest] = "all"
     """
     The tools to use for the prompt
     """
@@ -746,15 +748,17 @@ class PromptStepUpdateItem(BaseModel):
     """
     Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
     """
-    forward_tool_results: StrictBool | None = None
+    auto_run_tools: StrictBool = True
     """
-    Whether to forward the tool results to the model when available.
-    "true" => always forward
-    "false" => never forward
-    null => forward if applicable (default)
+    Whether to auto-run the tool and send the tool results to the model when available.
+    (default: true for prompt steps, false for sessions)
 
     If a tool call is made, the tool's output will be used as the model's input.
     If a tool call is not made, the model's output will be used as the next step's input.
+    """
+    disable_cache: StrictBool = False
+    """
+    Whether to disable caching for the prompt step
     """
 
 

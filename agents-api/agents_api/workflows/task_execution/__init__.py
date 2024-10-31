@@ -202,6 +202,9 @@ class TaskExecutionWorkflow:
             retry_policy=DEFAULT_RETRY_POLICY,
         )
 
+        # Init state
+        state = None
+
         match context.current_step, outcome:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
@@ -371,11 +374,11 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(type="resume", output=result)
 
-            case PromptStep(unwrap=True), StepOutcome(output=response):
-                workflow.logger.debug(f"Prompt step: Received response: {response}")
-                state = PartialTransition(output=response)
+            case PromptStep(unwrap=True), StepOutcome(output=message):
+                workflow.logger.debug(f"Prompt step: Received response: {message}")
+                state = PartialTransition(output=message)
 
-            case PromptStep(forward_tool_results=False, unwrap=False), StepOutcome(
+            case PromptStep(auto_run_tools=False, unwrap=False), StepOutcome(
                 output=response
             ):
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
@@ -387,12 +390,22 @@ class TaskExecutionWorkflow:
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
                 state = PartialTransition(output=response)
 
-            case PromptStep(unwrap=False), StepOutcome(output=response) if response[
-                "choices"
-            ][0]["finish_reason"] == "tool_calls":
-                workflow.logger.debug("Prompt step: Received tool call")
-                message = response["choices"][0]["message"]
-                tool_calls_input = message["tool_calls"]
+            ## TODO: Handle multiple tool calls and multiple choices
+            # case PromptStep(unwrap=False), StepOutcome(output=response) if response[
+            #     "choices"
+            # ][0]["finish_reason"] == "tool_calls":
+            #     workflow.logger.debug("Prompt step: Received tool call")
+            #     message = response["choices"][0]["message"]
+            #     tool_calls_input = message["tool_calls"]
+
+            case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
+                output=response
+            ) if (choice := response["choices"][0])[
+                "finish_reason"
+            ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
+                0
+            ]["type"] not in ["integration", "api_call", "system"]:
+                workflow.logger.debug("Prompt step: Received FUNCTION tool call")
 
                 # Enter a wait-for-input step to ask the developer to run the tool calls
                 tool_calls_results = await workflow.execute_activity(
@@ -414,6 +427,61 @@ class TaskExecutionWorkflow:
                     retry_policy=DEFAULT_RETRY_POLICY,
                 )
                 state = PartialTransition(output=new_response.output, type="resume")
+
+            case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
+                output=response
+            ) if (choice := response["choices"][0])[
+                "finish_reason"
+            ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
+                0
+            ]["type"] == "integration":
+                workflow.logger.debug("Prompt step: Received INTEGRATION tool call")
+
+                # FIXME: Implement integration tool calls
+                # See: MANUAL TOOL CALL INTEGRATION (below)
+                raise NotImplementedError("Integration tool calls not yet supported")
+
+                # TODO: Feed the tool call results back to the model (see above)
+
+            case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
+                output=response
+            ) if (choice := response["choices"][0])[
+                "finish_reason"
+            ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
+                0
+            ]["type"] == "api_call":
+                workflow.logger.debug("Prompt step: Received API_CALL tool call")
+
+                # FIXME: Implement API_CALL tool calls
+                # See: MANUAL TOOL CALL API_CALL (below)
+                raise NotImplementedError("API_CALL tool calls not yet supported")
+
+                # TODO: Feed the tool call results back to the model (see above)
+
+            case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
+                output=response
+            ) if (choice := response["choices"][0])[
+                "finish_reason"
+            ] == "tool_calls" and (tool_calls_input := choice["message"]["tool_calls"])[
+                0
+            ]["type"] == "system":
+                workflow.logger.debug("Prompt step: Received SYSTEM tool call")
+
+                # FIXME: Implement SYSTEM tool calls
+                # See: MANUAL TOOL CALL SYSTEM (below)
+                raise NotImplementedError("SYSTEM tool calls not yet supported")
+
+                # TODO: Feed the tool call results back to the model (see above)
+
+            case PromptStep(unwrap=False), StepOutcome(output=response) if (
+                choice := response["choices"][0]
+            )["finish_reason"] == "tool_calls" and (
+                tool_calls_input := choice["message"]["tool_calls"]
+            )[0]["type"] not in ["function", "integration", "api_call", "system"]:
+                workflow.logger.debug(
+                    f"Prompt step: Received unknown tool call: {tool_calls_input[0]['type']}"
+                )
+                state = PartialTransition(output=response)
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
@@ -452,6 +520,8 @@ class TaskExecutionWorkflow:
             case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
                 "type"
             ] == "integration":
+                # MANUAL TOOL CALL INTEGRATION
+                workflow.logger.debug("ToolCallStep: Received INTEGRATION tool call")
                 call = tool_call["integration"]
                 tool_name = call["name"]
                 arguments = call["arguments"]
@@ -490,6 +560,8 @@ class TaskExecutionWorkflow:
             case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
                 "type"
             ] == "api_call":
+                # MANUAL TOOL CALL API_CALL
+                workflow.logger.debug("ToolCallStep: Received API_CALL tool call")
                 call = tool_call["api_call"]
                 tool_name = call["name"]
                 arguments = call["arguments"]
@@ -528,6 +600,8 @@ class TaskExecutionWorkflow:
             case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
                 "type"
             ] == "system":
+                # MANUAL TOOL CALL SYSTEM
+                workflow.logger.debug("ToolCallStep: Received SYSTEM tool call")
                 call = tool_call.get("system")
 
                 system_call = SystemDef(**call)
@@ -545,12 +619,16 @@ class TaskExecutionWorkflow:
                 workflow.logger.error(
                     f"Unhandled step type: {type(context.current_step).__name__}"
                 )
+                state = PartialTransition(type="error", output="Not implemented")
+                await transition(context, state)
+
                 raise ApplicationError("Not implemented")
 
         # 4. Transition to the next step
         workflow.logger.info(f"Transitioning after step {context.cursor.step}")
 
         # The returned value is the transition finally created
+        state = state or PartialTransition(type="error", output="Not implemented")
         final_state = await transition(context, state)
 
         # ---

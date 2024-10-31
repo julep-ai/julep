@@ -3216,7 +3216,7 @@ components:
         - render_templates
         - token_budget
         - context_overflow
-        - forward_tool_results
+        - auto_run_tools
       properties:
         id:
           $ref: '#/components/schemas/Common.uuid'
@@ -3326,18 +3326,15 @@ components:
           nullable: true
           description: Action to start on context window overflow
           default: null
-        forward_tool_results:
+        auto_run_tools:
           type: boolean
-          nullable: true
           description: |-
-            Whether to forward the tool results to the model when available.
-            "true" => always forward
-            "false" => never forward
-            null => forward if applicable (default)
+            Whether to auto-run the tool and send the tool results to the model when available.
+            (default: false for sessions, true for tasks)
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
-          default: null
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -3350,7 +3347,7 @@ components:
         - render_templates
         - token_budget
         - context_overflow
-        - forward_tool_results
+        - auto_run_tools
       properties:
         user:
           allOf:
@@ -3458,18 +3455,15 @@ components:
           nullable: true
           description: Action to start on context window overflow
           default: null
-        forward_tool_results:
+        auto_run_tools:
           type: boolean
-          nullable: true
           description: |-
-            Whether to forward the tool results to the model when available.
-            "true" => always forward
-            "false" => never forward
-            null => forward if applicable (default)
+            Whether to auto-run the tool and send the tool results to the model when available.
+            (default: false for sessions, true for tasks)
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
-          default: null
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -3612,18 +3606,15 @@ components:
           nullable: true
           description: Action to start on context window overflow
           default: null
-        forward_tool_results:
+        auto_run_tools:
           type: boolean
-          nullable: true
           description: |-
-            Whether to forward the tool results to the model when available.
-            "true" => always forward
-            "false" => never forward
-            null => forward if applicable (default)
+            Whether to auto-run the tool and send the tool results to the model when available.
+            (default: false for sessions, true for tasks)
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
-          default: null
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -3636,7 +3627,7 @@ components:
         - render_templates
         - token_budget
         - context_overflow
-        - forward_tool_results
+        - auto_run_tools
         - id
         - created_at
         - updated_at
@@ -3737,18 +3728,15 @@ components:
           nullable: true
           description: Action to start on context window overflow
           default: null
-        forward_tool_results:
+        auto_run_tools:
           type: boolean
-          nullable: true
           description: |-
-            Whether to forward the tool results to the model when available.
-            "true" => always forward
-            "false" => never forward
-            null => forward if applicable (default)
+            Whether to auto-run the tool and send the tool results to the model when available.
+            (default: false for sessions, true for tasks)
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
-          default: null
+          default: false
         id:
           allOf:
             - $ref: '#/components/schemas/Common.uuid'
@@ -3821,7 +3809,7 @@ components:
         - render_templates
         - token_budget
         - context_overflow
-        - forward_tool_results
+        - auto_run_tools
       properties:
         situation:
           type: string
@@ -3913,18 +3901,15 @@ components:
           nullable: true
           description: Action to start on context window overflow
           default: null
-        forward_tool_results:
+        auto_run_tools:
           type: boolean
-          nullable: true
           description: |-
-            Whether to forward the tool results to the model when available.
-            "true" => always forward
-            "false" => never forward
-            null => forward if applicable (default)
+            Whether to auto-run the tool and send the tool results to the model when available.
+            (default: false for sessions, true for tasks)
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
-          default: null
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -4771,7 +4756,8 @@ components:
         - kind_
         - prompt
         - tools
-        - forward_tool_results
+        - auto_run_tools
+        - disable_cache
       properties:
         kind_:
           type: string
@@ -4860,7 +4846,7 @@ components:
                   - $ref: '#/components/schemas/Tasks.ToolRef'
                   - $ref: '#/components/schemas/Tools.CreateToolRequest'
           description: The tools to use for the prompt
-          default: []
+          default: all
         tool_choice:
           anyOf:
             - type: string
@@ -4877,18 +4863,19 @@ components:
           type: boolean
           description: Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
           default: false
-        forward_tool_results:
+        auto_run_tools:
           type: boolean
-          nullable: true
           description: |-
-            Whether to forward the tool results to the model when available.
-            "true" => always forward
-            "false" => never forward
-            null => forward if applicable (default)
+            Whether to auto-run the tool and send the tool results to the model when available.
+            (default: true for prompt steps, false for sessions)
 
             If a tool call is made, the tool's output will be used as the model's input.
             If a tool call is not made, the model's output will be used as the next step's input.
-          default: null
+          default: true
+        disable_cache:
+          type: boolean
+          description: Whether to disable caching for the prompt step
+          default: false
       allOf:
         - type: object
           required:
@@ -4911,7 +4898,8 @@ components:
       required:
         - prompt
         - tools
-        - forward_tool_results
+        - auto_run_tools
+        - disable_cache
       properties:
         prompt:
           anyOf:
@@ -4994,7 +4982,7 @@ components:
                   - $ref: '#/components/schemas/Tasks.ToolRefUpdateItem'
                   - $ref: '#/components/schemas/Tools.CreateToolRequest'
           description: The tools to use for the prompt
-          default: []
+          default: all
         tool_choice:
           anyOf:
             - type: string
@@ -5011,18 +4999,19 @@ components:
           type: boolean
           description: Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
           default: false
-        forward_tool_results:
+        auto_run_tools:
           type: boolean
-          nullable: true
           description: |-
-            Whether to forward the tool results to the model when available.
-            "true" => always forward
-            "false" => never forward
-            null => forward if applicable (default)
+            Whether to auto-run the tool and send the tool results to the model when available.
+            (default: true for prompt steps, false for sessions)
 
             If a tool call is made, the tool's output will be used as the model's input.
             If a tool call is not made, the model's output will be used as the next step's input.
-          default: null
+          default: true
+        disable_cache:
+          type: boolean
+          description: Whether to disable caching for the prompt step
+          default: false
       allOf:
         - type: object
           properties:

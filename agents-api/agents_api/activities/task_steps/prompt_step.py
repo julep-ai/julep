@@ -19,6 +19,7 @@ from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import anthropic_api_key, debug
 from ..utils import get_handler
+from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
@@ -77,42 +78,66 @@ def format_tool(tool: Tool) -> dict:
     return formatted
 
 
+EVAL_PROMPT_PREFIX = "$_ "
+
+
 @activity.defn
 @auto_blob_store
 @beartype
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
-    context_data: dict = context.model_dump()
+    context_data: dict = context.model_dump(include_remote=True)
 
-    # Render template messages
-    prompt = await render_template(
-        prompt,
-        context_data,
-        skip_vars=["developer_id"],
+    # If the prompt is a string and starts with $_ then we need to evaluate it
+    should_evaluate_prompt = isinstance(prompt, str) and prompt.startswith(
+        EVAL_PROMPT_PREFIX
     )
+
+    if should_evaluate_prompt:
+        prompt = await base_evaluate(
+            prompt[len(EVAL_PROMPT_PREFIX) :].strip(), context_data
+        )
+
+        if not isinstance(prompt, (str, list)):
+            raise ApplicationError(
+                "Invalid prompt expression, expected a string or list"
+            )
+
+    # Wrap the prompt in a list if it is not already
+    prompt = (
+        prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
+    )
+
+    # Render template messages if we didn't evaluate the prompt
+    if not should_evaluate_prompt:
+        # Render template messages
+        prompt = await render_template(
+            prompt,
+            context_data,
+            skip_vars=["developer_id"],
+        )
+
     # Get settings and run llm
     agent_default_settings: dict = (
         context.execution_input.agent.default_settings.model_dump()
         if context.execution_input.agent.default_settings
         else {}
     )
+
     agent_model: str = (
         context.execution_input.agent.model
         if context.execution_input.agent.model
         else "gpt-4o"
     )
 
+    # Get passed settings
     if context.current_step.settings:
         passed_settings: dict = context.current_step.settings.model_dump(
             exclude_unset=True
         )
     else:
         passed_settings: dict = {}
-
-    # Wrap the prompt in a list if it is not already
-    if isinstance(prompt, str):
-        prompt = [{"role": "user", "content": prompt}]
 
     # Format tools for litellm
     formatted_tools = [format_tool(tool) for tool in context.tools]
@@ -132,11 +157,15 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         betas = [COMPUTER_USE_BETA_FLAG]
         # Use Anthropic API directly
         client = AsyncAnthropic(api_key=anthropic_api_key)
-        new_prompt = [{"role": "user", "content": prompt[0]["content"]}]
+
+        # Reformat the prompt for Anthropic
+        # Anthropic expects a list of messages with role and content (and no name etc)
+        prompt = [{"role": "user", "content": message["content"]} for message in prompt]
+
         # Claude Response
         claude_response: BetaMessage = await client.beta.messages.create(
             model="claude-3-5-sonnet-20241022",
-            messages=new_prompt,
+            messages=prompt,
             tools=formatted_tools,
             max_tokens=1024,
             betas=betas,
@@ -210,7 +239,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         }
 
         extra_body = {
-            "cache": {"no-cache": debug},
+            "cache": {"no-cache": debug or context.current_step.disable_cache},
         }
 
         response: ModelResponse = await litellm.acompletion(
