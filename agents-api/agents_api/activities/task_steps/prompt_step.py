@@ -119,7 +119,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
 
     # Map tools to their original objects
     tools_mapping: dict[str, Tool] = {
-        fmt_tool["function"]["name"]: orig_tool
+        fmt_tool.get("name") or fmt_tool.get("function", {}).get("name") : orig_tool
         for fmt_tool, orig_tool in zip(formatted_tools, context.tools)
     }
 
