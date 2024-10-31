@@ -687,6 +687,18 @@ class CreateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
+    type: Literal[
+        "function",
+        "integration",
+        "system",
+        "api_call",
+        "computer_20241022",
+        "text_editor_20241022",
+        "bash_20241022",
+    ]
+    """
+    Type of the tool
+    """
     description: str | None = None
     """
     Description of the tool
@@ -952,6 +964,21 @@ class PatchToolRequest(BaseModel):
     name: Annotated[str | None, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")] = None
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
+    """
+    type: (
+        Literal[
+            "function",
+            "integration",
+            "system",
+            "api_call",
+            "computer_20241022",
+            "text_editor_20241022",
+            "bash_20241022",
+        ]
+        | None
+    ) = None
+    """
+    Type of the tool
     """
     description: str | None = None
     """
@@ -1380,6 +1407,18 @@ class Tool(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
+    type: Literal[
+        "function",
+        "integration",
+        "system",
+        "api_call",
+        "computer_20241022",
+        "text_editor_20241022",
+        "bash_20241022",
+    ]
+    """
+    Type of the tool
+    """
     description: str | None = None
     """
     Description of the tool
@@ -1456,6 +1495,18 @@ class UpdateToolRequest(BaseModel):
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
+    """
+    type: Literal[
+        "function",
+        "integration",
+        "system",
+        "api_call",
+        "computer_20241022",
+        "text_editor_20241022",
+        "bash_20241022",
+    ]
+    """
+    Type of the tool
     """
     description: str | None = None
     """

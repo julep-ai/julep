@@ -235,13 +235,12 @@ def task_to_spec(
     for tool in task.tools:
         tool_spec = getattr(tool, tool.type)
 
-        tools.append(
-            TaskToolDef(
-                type=tool.type,
-                spec=tool_spec.model_dump(),
-                **tool.model_dump(exclude={"type"}),
-            )
+        tool_obj = dict(
+            type=tool.type,
+            spec=tool_spec.model_dump(),
+            **tool.model_dump(exclude={"type"}),
         )
+        tools.append(TaskToolDef(**tool_obj))
 
     workflows = [Workflow(name="main", steps=task_data.pop("main"))]
 
