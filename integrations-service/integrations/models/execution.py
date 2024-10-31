@@ -29,7 +29,7 @@ from ..autogen.Tools import (
 from .brave import BraveSearchOutput
 from .browserbase import (
     BrowserbaseCompleteSessionOutput,
-    BrowserbaseContextOutput,
+    # BrowserbaseContextOutput,
     BrowserbaseCreateSessionOutput,
     BrowserbaseExtensionOutput,
     BrowserbaseGetSessionConnectUrlOutput,
@@ -78,7 +78,7 @@ ExecutionResponse = Union[
     BraveSearchOutput,
     BrowserbaseCreateSessionOutput,
     BrowserbaseCompleteSessionOutput,
-    BrowserbaseContextOutput,
+    # BrowserbaseContextOutput,
     BrowserbaseExtensionOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseGetSessionConnectUrlOutput,
@@ -93,7 +93,7 @@ class ExecutionRequest(BaseModel):
     """
     The setup parameters the integration accepts (such as API keys)
     """
-    arguments: ExecutionArguments
+    arguments: Optional[ExecutionArguments]
     """
     The arguments to pass to the integration
     """
