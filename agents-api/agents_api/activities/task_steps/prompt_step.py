@@ -1,7 +1,8 @@
 import os
 
-from anthropic import AsyncAnthropic, Anthropic  # Import AsyncAnthropic client
+from anthropic import Anthropic, AsyncAnthropic  # Import AsyncAnthropic client
 from beartype import beartype
+from litellm.utils import CustomStreamWrapper, ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
@@ -9,7 +10,6 @@ from ...autogen.Tools import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
-from litellm.utils import CustomStreamWrapper, ModelResponse
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
@@ -34,9 +34,9 @@ def format_agent_tool(tool: Tool) -> dict:
         return {
             "type": tool.type,
             "name": tool.name,
-            "display_width_px": tool.spec['display_width_px'],
-            "display_height_px": tool.spec['display_height_px'],
-            "display_number": tool.spec['display_number'],
+            "display_width_px": tool.spec["display_width_px"],
+            "display_height_px": tool.spec["display_height_px"],
+            "display_number": tool.spec["display_number"],
         }
     elif tool.type == "bash_20241022":
         return {
@@ -51,6 +51,7 @@ def format_agent_tool(tool: Tool) -> dict:
     # TODO: Add integration | system | api_call tool types
     else:
         return {}
+
 
 @activity.defn
 @auto_blob_store
@@ -101,20 +102,20 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     # Format agent_tools for litellm
     # Initialize the formatted_agent_tools with context tools
     task_tools = context.tools
-    formatted_agent_tools = [
-        format_agent_tool(tool) for tool in task_tools
-    ]
+    formatted_agent_tools = [format_agent_tool(tool) for tool in task_tools]
     # Add agent_tools if they are not already in formatted_agent_tools
     for agent_tool in agent_tools:
-        if format_agent_tool(agent_tool) and format_agent_tool(agent_tool) not in formatted_agent_tools:
+        if (
+            format_agent_tool(agent_tool)
+            and format_agent_tool(agent_tool) not in formatted_agent_tools
+        ):
             formatted_agent_tools.append(format_agent_tool(agent_tool))
 
     # Check if the model is Anthropic
-    if (agent_model.lower().startswith("claude-3.5")
-        and any(
-            tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
-            for tool in formatted_agent_tools)
-        ):
+    if agent_model.lower().startswith("claude-3.5") and any(
+        tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
+        for tool in formatted_agent_tools
+    ):
         # Retrieve the API key from the environment variable
         betas = [COMPUTER_USE_BETA_FLAG]
         # Use Anthropic API directly
