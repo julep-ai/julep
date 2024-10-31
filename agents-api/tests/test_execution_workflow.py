@@ -1133,6 +1133,62 @@ for p in [1, 3, 5]:
             ]
 
 
+@test("workflow: prompt step (python expression)")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    mock_model_response = ModelResponse(
+        id="fake_id",
+        choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
+        created=0,
+        object="text_completion",
+    )
+
+    with patch("agents_api.clients.litellm.acompletion") as acompletion:
+        acompletion.return_value = mock_model_response
+        data = CreateExecutionRequest(input={"test": "input"})
+
+        task = create_task(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            data=CreateTaskRequest(
+                **{
+                    "name": "test task",
+                    "description": "test task about",
+                    "input_schema": {"type": "object", "additionalProperties": True},
+                    "main": [
+                        {
+                            "prompt": "$_ [{'role': 'user', 'content': _.test}]",
+                            "settings": {},
+                        },
+                    ],
+                }
+            ),
+            client=client,
+        )
+
+        async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+            execution, handle = await start_execution(
+                developer_id=developer_id,
+                task_id=task.id,
+                data=data,
+                client=client,
+            )
+
+            assert handle is not None
+            assert execution.task_id == task.id
+            assert execution.input == data.input
+
+            mock_run_task_execution_workflow.assert_called_once()
+
+            result = await handle.result()
+            result = result["choices"][0]["message"]
+            assert result["content"] == "Hello, world!"
+            assert result["role"] == "assistant"
+
+
 @test("workflow: prompt step")
 async def _(
     client=cozo_client,

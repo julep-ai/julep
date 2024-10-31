@@ -62,14 +62,12 @@ model Session {
     /** Action to start on context window overflow */
     context_overflow: ContextOverflowType | null = null;
 
-    /** Whether to forward the tool results to the model when available.
-     * "true" => always forward
-     * "false" => never forward
-     * null => forward if applicable (default)
+    /** Whether to auto-run the tool and send the tool results to the model when available.
+     * (default: false for sessions, true for tasks)
      * 
      * If a tool call is made, the tool's output will be sent back to the model as the model's input.
      * If a tool call is not made, the model's output will be returned as is. */
-    forward_tool_results: boolean | null = null;
+    auto_run_tools: boolean = false;
 
     ...HasId;
     ...HasMetadata;

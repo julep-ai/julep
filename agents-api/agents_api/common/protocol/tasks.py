@@ -1,8 +1,9 @@
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from beartype import beartype
 from temporalio import activity, workflow
+from temporalio.exceptions import ApplicationError
 
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
@@ -23,6 +24,7 @@ with workflow.unsafe.imports_passed_through():
         TaskSpecDef,
         TaskToolDef,
         Tool,
+        ToolRef,
         TransitionTarget,
         TransitionType,
         UpdateTaskRequest,
@@ -153,6 +155,20 @@ class StepContext(BaseRemoteModel):
         execution_input = self.execution_input
         task = execution_input.task
         agent_tools = execution_input.agent_tools
+
+        step_tools: Literal["all"] | list[ToolRef | CreateToolRequest] = getattr(
+            self.current_step, "tools", "all"
+        )
+
+        if step_tools != "all":
+            if not all(
+                tool and isinstance(tool, CreateToolRequest) for tool in step_tools
+            ):
+                raise ApplicationError(
+                    "Invalid tools for step (ToolRef not supported yet)"
+                )
+
+            return step_tools
 
         # Need to convert task.tools (list[TaskToolDef]) to list[Tool]
         task_tools = []
