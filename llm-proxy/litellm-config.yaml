@@ -12,7 +12,7 @@ model_list:
     tags: ["paid"]
     vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
 
-- model_name: claude-3.5-sonnet
+- model_name: claude-3.5-sonnet-20240620
   litellm_params:
     model: vertex_ai/claude-3-5-sonnet@20240620
     tags: ["paid"]
@@ -51,6 +51,12 @@ model_list:
     api_key: os.environ/ANTHROPIC_API_KEY
 
 - model_name: "claude-3.5-sonnet"
+  litellm_params:
+    model: "claude-3-5-sonnet-20241022"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
+- model_name: "claude-3.5-sonnet-20241022"
   litellm_params:
     model: "claude-3-5-sonnet-20241022"
     tags: ["paid"]
