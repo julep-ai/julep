@@ -1041,7 +1041,7 @@ class RemoteBrowserArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    connect_url: AnyUrl
+    connect_url: str | None = None
     """
     The connection URL for the remote browser
     """
@@ -1081,7 +1081,7 @@ class RemoteBrowserArgumentsUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    connect_url: AnyUrl | None = None
+    connect_url: str | None = None
     """
     The connection URL for the remote browser
     """
@@ -1152,7 +1152,7 @@ class RemoteBrowserSetup(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    connect_url: AnyUrl
+    connect_url: Annotated[str | None, Field(...)] = None
     """
     The connection URL for the remote browser
     """
@@ -1174,7 +1174,7 @@ class RemoteBrowserSetupUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    connect_url: AnyUrl | None = None
+    connect_url: str | None = None
     """
     The connection URL for the remote browser
     """
