@@ -10,6 +10,7 @@ with workflow.unsafe.imports_passed_through():
     from ...autogen.openapi_model import (
         Agent,
         CreateTaskRequest,
+        CreateToolRequest,
         CreateTransitionRequest,
         Execution,
         ExecutionStatus,
@@ -132,7 +133,7 @@ class ExecutionInput(BaseModel):
     execution: Execution
     task: TaskSpecDef
     agent: Agent
-    agent_tools: list[Tool]
+    agent_tools: list[Tool | CreateToolRequest]
     arguments: dict[str, Any]
 
     # Not used at the moment
@@ -147,20 +148,30 @@ class StepContext(BaseRemoteModel):
 
     @computed_field
     @property
-    def tools(self) -> list[Tool]:
+    def tools(self) -> list[Tool | CreateToolRequest]:
         execution_input = self.execution_input
         task = execution_input.task
         agent_tools = execution_input.agent_tools
 
+        # Need to convert task.tools (list[TaskToolDef]) to list[Tool]
+        task_tools = []
+        for tool in task.tools:
+            tool_def = tool.model_dump()
+            task_tools.append(
+                CreateToolRequest(
+                    **{tool_def["type"]: tool_def.pop("spec"), **tool_def}
+                )
+            )
+
         if not task.inherit_tools:
-            return task.tools
+            return task_tools
 
         # Remove duplicates from agent_tools
         filtered_tools = [
             t for t in agent_tools if t.name not in map(lambda x: x.name, task.tools)
         ]
 
-        return filtered_tools + task.tools
+        return filtered_tools + task_tools
 
     @computed_field
     @property
