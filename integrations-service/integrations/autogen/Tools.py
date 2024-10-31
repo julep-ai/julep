@@ -35,6 +35,10 @@ class ApiCallDef(BaseModel):
     """
     The URL to call
     """
+    schema_: Annotated[dict[str, Any] | None, Field(alias="schema")] = None
+    """
+    The schema of the response
+    """
     headers: dict[str, str] | None = None
     """
     The headers to send with the request
@@ -97,6 +101,10 @@ class ApiCallDefUpdate(BaseModel):
     url: AnyUrl | None = None
     """
     The URL to call
+    """
+    schema_: Annotated[dict[str, Any] | None, Field(alias="schema")] = None
+    """
+    The schema of the response
     """
     headers: dict[str, str] | None = None
     """
@@ -687,6 +695,18 @@ class CreateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
+    type: Literal[
+        "function",
+        "integration",
+        "system",
+        "api_call",
+        "computer_20241022",
+        "text_editor_20241022",
+        "bash_20241022",
+    ]
+    """
+    Type of the tool
+    """
     description: str | None = None
     """
     Description of the tool
@@ -952,6 +972,21 @@ class PatchToolRequest(BaseModel):
     name: Annotated[str | None, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")] = None
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
+    """
+    type: (
+        Literal[
+            "function",
+            "integration",
+            "system",
+            "api_call",
+            "computer_20241022",
+            "text_editor_20241022",
+            "bash_20241022",
+        ]
+        | None
+    ) = None
+    """
+    Type of the tool
     """
     description: str | None = None
     """
@@ -1380,6 +1415,18 @@ class Tool(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
+    type: Literal[
+        "function",
+        "integration",
+        "system",
+        "api_call",
+        "computer_20241022",
+        "text_editor_20241022",
+        "bash_20241022",
+    ]
+    """
+    Type of the tool
+    """
     description: str | None = None
     """
     Description of the tool
@@ -1438,7 +1485,7 @@ class ToolResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    id: UUID
+    id: str
     output: dict[str, Any]
     """
     The output of the tool
@@ -1456,6 +1503,18 @@ class UpdateToolRequest(BaseModel):
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
+    """
+    type: Literal[
+        "function",
+        "integration",
+        "system",
+        "api_call",
+        "computer_20241022",
+        "text_editor_20241022",
+        "bash_20241022",
+    ]
+    """
+    Type of the tool
     """
     description: str | None = None
     """

@@ -2458,6 +2458,13 @@ components:
               - type: boolean
             nullable: true
           default: {}
+        mmr_strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          exclusiveMaximum: true
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          default: 0
     Docs.CreateDocRequest:
       type: object
       required:
@@ -2676,6 +2683,10 @@ components:
           format: uint16
         content:
           type: string
+        embedding:
+          type: array
+          items:
+            type: number
     Docs.TextOnlyDocSearchRequest:
       type: object
       required:
@@ -4059,6 +4070,9 @@ components:
                           - map_reduce
                         description: The kind of step
                         readOnly: true
+                      label:
+                        type: string
+                        description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
           minItems: 1
@@ -4077,8 +4091,8 @@ components:
           default: []
         inherit_tools:
           type: boolean
-          description: Whether to inherit tools from the parent agent or not. Defaults to true.
-          default: true
+          description: Whether to inherit tools from the parent agent or not. Defaults to false.
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -4154,6 +4168,9 @@ components:
                         - map_reduce
                       description: The kind of step
                       readOnly: true
+                    label:
+                      type: string
+                      description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
       description: Payload for creating a task
@@ -4183,6 +4200,9 @@ components:
                 - error
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -4214,6 +4234,9 @@ components:
                 - evaluate
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -4290,6 +4313,9 @@ components:
                 - foreach
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -4305,6 +4331,9 @@ components:
       allOf:
         - type: object
           properties:
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
             kind_:
               type: string
               description: Discriminator property for BaseWorkflowStep.
@@ -4337,6 +4366,9 @@ components:
                 - get
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -4399,6 +4431,9 @@ components:
                 - if_else
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -4446,6 +4481,9 @@ components:
       allOf:
         - type: object
           properties:
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
             kind_:
               type: string
               description: Discriminator property for BaseWorkflowStep.
@@ -4479,6 +4517,9 @@ components:
                 - log
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -4518,6 +4559,9 @@ components:
                 - parallel
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -4542,6 +4586,9 @@ components:
       allOf:
         - type: object
           properties:
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
             kind_:
               type: string
               description: Discriminator property for BaseWorkflowStep.
@@ -4611,6 +4658,9 @@ components:
                 allOf:
                   - type: object
                     properties:
+                      label:
+                        type: string
+                        description: The label of this step for referencing it from other steps
                       kind_:
                         type: string
                         description: Discriminator property for BaseWorkflowStep.
@@ -4632,8 +4682,8 @@ components:
           default: []
         inherit_tools:
           type: boolean
-          description: Whether to inherit tools from the parent agent or not. Defaults to true.
-          default: true
+          description: Whether to inherit tools from the parent agent or not. Defaults to false.
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -4694,6 +4744,9 @@ components:
               allOf:
                 - type: object
                   properties:
+                    label:
+                      type: string
+                      description: The label of this step for referencing it from other steps
                     kind_:
                       type: string
                       description: Discriminator property for BaseWorkflowStep.
@@ -4835,6 +4888,9 @@ components:
                 - prompt
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -4958,6 +5014,9 @@ components:
       allOf:
         - type: object
           properties:
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
             kind_:
               type: string
               description: Discriminator property for BaseWorkflowStep.
@@ -4992,6 +5051,9 @@ components:
                 - return
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -5023,6 +5085,9 @@ components:
                 - set
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -5089,6 +5154,9 @@ components:
                 - sleep
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -5121,6 +5189,9 @@ components:
                 - switch
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -5138,6 +5209,9 @@ components:
       allOf:
         - type: object
           properties:
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
             kind_:
               type: string
               description: Discriminator property for BaseWorkflowStep.
@@ -5234,6 +5308,9 @@ components:
                           - map_reduce
                         description: The kind of step
                         readOnly: true
+                      label:
+                        type: string
+                        description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
           minItems: 1
@@ -5252,8 +5329,8 @@ components:
           default: []
         inherit_tools:
           type: boolean
-          description: Whether to inherit tools from the parent agent or not. Defaults to true.
-          default: true
+          description: Whether to inherit tools from the parent agent or not. Defaults to false.
+          default: false
         id:
           allOf:
             - $ref: '#/components/schemas/Common.uuid'
@@ -5343,6 +5420,9 @@ components:
                         - map_reduce
                       description: The kind of step
                       readOnly: true
+                    label:
+                      type: string
+                      description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
       description: Object describing a Task
@@ -5398,6 +5478,9 @@ components:
                 - tool_call
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -5415,7 +5498,7 @@ components:
       type: object
       properties:
         id:
-          $ref: '#/components/schemas/Common.uuid'
+          type: string
       description: Reference to a tool by id
     Tasks.ToolRefByName:
       type: object
@@ -5510,6 +5593,9 @@ components:
                           - map_reduce
                         description: The kind of step
                         readOnly: true
+                      label:
+                        type: string
+                        description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
           minItems: 1
@@ -5528,8 +5614,8 @@ components:
           default: []
         inherit_tools:
           type: boolean
-          description: Whether to inherit tools from the parent agent or not. Defaults to true.
-          default: true
+          description: Whether to inherit tools from the parent agent or not. Defaults to false.
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -5605,6 +5691,9 @@ components:
                         - map_reduce
                       description: The kind of step
                       readOnly: true
+                    label:
+                      type: string
+                      description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
       description: Payload for updating a task
@@ -5645,6 +5734,9 @@ components:
                 - wait_for_input
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -5687,6 +5779,9 @@ components:
                 - yield
               description: The kind of step
               readOnly: true
+            label:
+              type: string
+              description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
             mapping: {}
@@ -5713,6 +5808,10 @@ components:
           type: string
           format: uri
           description: The URL to call
+        schema:
+          type: object
+          additionalProperties: {}
+          description: The schema of the response
         headers:
           type: object
           additionalProperties:
@@ -5768,6 +5867,10 @@ components:
           type: string
           format: uri
           description: The URL to call
+        schema:
+          type: object
+          additionalProperties: {}
+          description: The schema of the response
         headers:
           type: object
           additionalProperties:
@@ -6645,11 +6748,16 @@ components:
       type: object
       required:
         - name
+        - type
       properties:
         name:
           allOf:
             - $ref: '#/components/schemas/Common.validPythonIdentifier'
           description: Name of the tool (must be unique for this agent and a valid python identifier string )
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ToolType'
+          description: Type of the tool
         description:
           type: string
           description: Description of the tool
@@ -6874,6 +6982,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.validPythonIdentifier'
           description: Name of the tool (must be unique for this agent and a valid python identifier string )
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ToolType'
+          description: Type of the tool
         description:
           type: string
           description: Description of the tool
@@ -7280,6 +7392,7 @@ components:
       type: object
       required:
         - name
+        - type
         - created_at
         - updated_at
         - id
@@ -7288,6 +7401,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.validPythonIdentifier'
           description: Name of the tool (must be unique for this agent and a valid python identifier string )
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ToolType'
+          description: Type of the tool
         description:
           type: string
           description: Description of the tool
@@ -7350,7 +7467,7 @@ components:
         - output
       properties:
         id:
-          $ref: '#/components/schemas/Common.uuid'
+          type: string
         output:
           type: object
           additionalProperties: {}
@@ -7369,11 +7486,16 @@ components:
       type: object
       required:
         - name
+        - type
       properties:
         name:
           allOf:
             - $ref: '#/components/schemas/Common.validPythonIdentifier'
           description: Name of the tool (must be unique for this agent and a valid python identifier string )
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ToolType'
+          description: Type of the tool
         description:
           type: string
           description: Description of the tool

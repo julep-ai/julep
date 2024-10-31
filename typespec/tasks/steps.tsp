@@ -35,10 +35,13 @@ alias ExpressionObject<T> = Record<TypedExpression<T>>;
 alias NestedExpressionObject<T> = Record<TypedExpression<T> | ExpressionObject<T>>;
 
 @discriminator("kind_")
-model BaseWorkflowStep<T extends WorkflowStepKind> {
+model BaseWorkflowStep<T extends valueof WorkflowStepKind> {
     /** The kind of step */
     @visibility("read")
-    kind_: T;
+    kind_: (typeof T);
+
+    /** The label of this step for referencing it from other steps */
+    label?: string;
 }
 
 alias SequentialWorkflowStep =

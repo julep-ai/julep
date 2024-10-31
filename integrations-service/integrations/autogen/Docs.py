@@ -19,6 +19,10 @@ class BaseDocSearchRequest(BaseModel):
     The language to be used for text-only search. Support for other languages coming soon.
     """
     metadata_filter: dict[str, float | str | StrictBool | None] = {}
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
 
 
 class CreateDocRequest(BaseModel):
@@ -176,6 +180,7 @@ class Snippet(BaseModel):
     )
     index: int
     content: str
+    embedding: list[float] | None = None
 
 
 class TextOnlyDocSearchRequest(BaseDocSearchRequest):
