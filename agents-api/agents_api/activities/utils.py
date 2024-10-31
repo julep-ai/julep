@@ -50,6 +50,8 @@ ALLOWED_FUNCTIONS = {
     "search_regex": lambda pattern, string: re2.search(pattern, string),
     "load_json": json.loads,
     "load_yaml": yaml.load,
+    "dump_json": json.dumps,
+    "dump_yaml": yaml.dump,
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
 }
 
@@ -203,6 +205,9 @@ stdlib = {
 
 constants = {
     "NEWLINE": "\n",
+    "true": True,
+    "false": False,
+    "null": None,
 }
 
 

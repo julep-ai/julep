@@ -35,6 +35,10 @@ class ApiCallDef(BaseModel):
     """
     The URL to call
     """
+    schema_: Annotated[dict[str, Any] | None, Field(alias="schema")] = None
+    """
+    The schema of the response
+    """
     headers: dict[str, str] | None = None
     """
     The headers to send with the request
@@ -97,6 +101,10 @@ class ApiCallDefUpdate(BaseModel):
     url: AnyUrl | None = None
     """
     The URL to call
+    """
+    schema_: Annotated[dict[str, Any] | None, Field(alias="schema")] = None
+    """
+    The schema of the response
     """
     headers: dict[str, str] | None = None
     """
@@ -1477,7 +1485,7 @@ class ToolResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    id: UUID
+    id: str
     output: dict[str, Any]
     """
     The output of the tool
