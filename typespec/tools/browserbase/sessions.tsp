@@ -80,17 +80,17 @@ model BrowserbaseListSessionsArguments {
 
 alias BrowserbaseListSessionsOutput = {
     id: string;
-    createdAt: string;
-    updatedAt: string;
-    projectId: string;
-    startedAt: string;
-    endedAt: string;
-    expiresAt: string;
-    status: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
-    proxyBytes: uint64;
-    avgCpuUsage: uint64;
-    memoryUsage: uint64;
-    keepAlive: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+    projectId?: string;
+    startedAt?: string;
+    endedAt?: string;
+    expiresAt?: string;
+    status?: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
+    proxyBytes?: uint64;
+    avgCpuUsage?: uint64;
+    memoryUsage?: uint64;
+    keepAlive?: boolean;
     contextId?: string;
 }[];
 
@@ -125,16 +125,16 @@ model BrowserbaseCreateSessionArguments {
 
 model BrowserbaseCreateSessionOutput {
     id: string;
-    createdAt: string;
-    projectId: string;
-    startedAt: string;
-    endedAt: string;
-    expiresAt: string;
-    status: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
-    proxyBytes: uint64;
-    avgCpuUsage: uint64;
-    memoryUsage: uint64;
-    keepAlive: boolean;
+    createdAt?: string;
+    projectId?: string;
+    startedAt?: string;
+    endedAt?: string;
+    expiresAt?: string;
+    status?: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
+    proxyBytes?: uint64;
+    avgCpuUsage?: uint64;
+    memoryUsage?: uint64;
+    keepAlive?: boolean;
     contextId?: string;
 }
 
@@ -151,16 +151,16 @@ model BrowserbaseGetSessionArguments {
 
 model BrowserbaseGetSessionOutput {
     id: string;
-    createdAt: string;
-    projectId: string;
-    startedAt: string;
-    endedAt: string;
-    expiresAt: string;
-    status: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
-    proxyBytes: uint64;
-    avgCpuUsage: uint64;
-    memoryUsage: uint64;
-    keepAlive: boolean;
+    createdAt?: string;
+    projectId?: string;
+    startedAt?: string;
+    endedAt?: string;
+    expiresAt?: string;
+    status?: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
+    proxyBytes?: uint64;
+    avgCpuUsage?: uint64;
+    memoryUsage?: uint64;
+    keepAlive?: boolean;
     contextId?: string;
 }
 
@@ -173,7 +173,7 @@ model BrowserbaseCompleteSessionIntegrationDef
 
 model BrowserbaseCompleteSessionArguments {
     id: string;
-    status: "REQUEST_RELEASE" = "REQUEST_RELEASE";
+    status?: "REQUEST_RELEASE" = "REQUEST_RELEASE";
 }
 
 model BrowserbaseCompleteSessionOutput {

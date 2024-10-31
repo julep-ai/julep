@@ -6167,7 +6167,6 @@ components:
       type: object
       required:
         - id
-        - status
       properties:
         id:
           type: string

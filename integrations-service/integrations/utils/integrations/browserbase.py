@@ -47,6 +47,7 @@ async def list_sessions(
 ) -> BrowserbaseListSessionsOutput:
     client = get_browserbase_client(setup)
 
+    # FIXME: Implement status filter
     # Run the list_sessions method
     sessions = client.list_sessions()
 
@@ -107,7 +108,7 @@ async def complete_session(
 
     try:
         client.complete_session(arguments.id)
-    except Exception as e:
+    except Exception:
         return BrowserbaseCompleteSessionOutput(success=False)
 
     return BrowserbaseCompleteSessionOutput(success=True)
@@ -186,7 +187,7 @@ async def install_extension_from_github(
 
             try:
                 upload_response.raise_for_status()
-            except httpx.HTTPStatusError as e:
+            except httpx.HTTPStatusError:
                 print(upload_response.text)
                 raise
 

@@ -21,9 +21,9 @@ model BrowserbaseContextArguments {
 
 model BrowserbaseContextOutput {
     id: string;
-    uploadUrl: url;
-    publicKey: string;
-    cipherAlgorithm: string;
-    initializationVectorSize: uint16;
+    uploadUrl?: url;
+    publicKey?: string;
+    cipherAlgorithm?: string;
+    initializationVectorSize?: uint16;
 }
 

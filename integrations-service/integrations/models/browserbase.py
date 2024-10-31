@@ -7,26 +7,26 @@ from .base_models import BaseOutput
 
 class SessionInfo(BaseOutput):
     id: str = Field(..., description="Unique identifier for the session")
-    createdAt: str = Field(
-        ..., description="Timestamp indicating when the session was created"
+    createdAt: str | None = Field(
+        None, description="Timestamp indicating when the session was created"
     )
-    projectId: str = Field(..., description="The Project ID linked to the Session")
-    startedAt: str = Field(..., description="Timestamp when the session started")
-    endedAt: str = Field(..., description="Timestamp when the session ended")
-    expiresAt: str = Field(
-        ..., description="Timestamp when the session is set to expire"
+    projectId: str | None = Field(None, description="The Project ID linked to the Session")
+    startedAt: str | None = Field(None, description="Timestamp when the session started")
+    endedAt: str | None = Field(None, description="Timestamp when the session ended")
+    expiresAt: str | None = Field(
+        None, description="Timestamp when the session is set to expire"
     )
-    status: Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
-        ..., description="Current status of the session"
+    status: None | Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
+        None, description="Current status of the session"
     )
-    proxyBytes: int = Field(..., description="Bytes used via the Proxy")
-    avgCpuUsage: int = Field(..., description="CPU used by the Session")
-    memoryUsage: int = Field(..., description="Memory used by the Session")
-    keepAlive: bool = Field(
-        ...,
+    proxyBytes: int | None = Field(None, description="Bytes used via the Proxy")
+    avgCpuUsage: int | None = Field(None, description="CPU used by the Session")
+    memoryUsage: int | None = Field(None, description="Memory used by the Session")
+    keepAlive: bool | None = Field(
+        None,
         description="Indicates if the Session was created to be kept alive upon disconnections",
     )
-    contextId: Optional[str] = Field(
+    contextId: str | None = Field(
         None, description="Optional. The Context linked to the Session."
     )
 
@@ -37,52 +37,52 @@ class BrowserbaseListSessionsOutput(BaseOutput):
 
 class BrowserbaseCreateSessionOutput(BaseOutput):
     id: str = Field(..., description="Unique identifier for the session")
-    createdAt: str = Field(
-        ..., description="Timestamp indicating when the session was created"
+    createdAt: str | None = Field(
+        None, description="Timestamp indicating when the session was created"
     )
-    projectId: str = Field(..., description="The Project ID linked to the Session")
-    startedAt: str = Field(..., description="Timestamp when the session started")
-    endedAt: str = Field(..., description="Timestamp when the session ended")
-    expiresAt: str = Field(
-        ..., description="Timestamp when the session is set to expire"
+    projectId: str | None = Field(None, description="The Project ID linked to the Session")
+    startedAt: str | None = Field(None, description="Timestamp when the session started")
+    endedAt: str | None = Field(None, description="Timestamp when the session ended")
+    expiresAt: str | None = Field(
+        None, description="Timestamp when the session is set to expire"
     )
-    status: Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
-        ..., description="Current status of the session"
+    status: None | Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
+        None, description="Current status of the session"
     )
-    proxyBytes: int = Field(..., description="Bytes used via the Proxy")
-    avgCpuUsage: int = Field(..., description="CPU used by the Session")
-    memoryUsage: int = Field(..., description="Memory used by the Session")
-    keepAlive: bool = Field(
-        ...,
+    proxyBytes: int | None = Field(None, description="Bytes used via the Proxy")
+    avgCpuUsage: int | None = Field(None, description="CPU used by the Session")
+    memoryUsage: int | None = Field(None, description="Memory used by the Session")
+    keepAlive: bool | None = Field(
+        None,
         description="Indicates if the Session was created to be kept alive upon disconnections",
     )
-    contextId: Optional[str] = Field(
+    contextId: str | None = Field(
         None, description="Optional. The Context linked to the Session."
     )
 
 
 class BrowserbaseGetSessionOutput(BaseOutput):
     id: str = Field(..., description="Unique identifier for the session")
-    createdAt: str = Field(
-        ..., description="Timestamp indicating when the session was created"
+    createdAt: str | None = Field(
+        None, description="Timestamp indicating when the session was created"
     )
-    projectId: str = Field(..., description="The Project ID linked to the Session")
-    startedAt: str = Field(..., description="Timestamp when the session started")
-    endedAt: str = Field(..., description="Timestamp when the session ended")
-    expiresAt: str = Field(
-        ..., description="Timestamp when the session is set to expire"
+    projectId: str | None = Field(None, description="The Project ID linked to the Session")
+    startedAt: str | None = Field(None, description="Timestamp when the session started")
+    endedAt: str | None = Field(None, description="Timestamp when the session ended")
+    expiresAt: str | None = Field(
+        None, description="Timestamp when the session is set to expire"
     )
-    status: Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
-        ..., description="Current status of the session"
+    status: None | Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
+        None, description="Current status of the session"
     )
-    proxyBytes: int = Field(..., description="Bytes used via the Proxy")
-    avgCpuUsage: int = Field(..., description="CPU used by the Session")
-    memoryUsage: int = Field(..., description="Memory used by the Session")
-    keepAlive: bool = Field(
-        ...,
+    proxyBytes: int | None = Field(None, description="Bytes used via the Proxy")
+    avgCpuUsage: int | None = Field(None, description="CPU used by the Session")
+    memoryUsage: int | None = Field(None, description="Memory used by the Session")
+    keepAlive: bool | None = Field(
+        None,
         description="Indicates if the Session was created to be kept alive upon disconnections",
     )
-    contextId: Optional[str] = Field(
+    contextId: str | None = Field(
         None, description="Optional. The Context linked to the Session."
     )
 
@@ -131,11 +131,11 @@ class BrowserbaseGetSessionLiveUrlsOutput(BaseOutput):
 
 class BrowserbaseContextOutput(BaseOutput):
     id: str = Field(..., description="Unique identifier for the context")
-    uploadUrl: str = Field(..., description="The upload URL for the context")
-    publicKey: str = Field(..., description="The public key for the context")
-    cipherAlgorithm: str = Field(
-        ..., description="The cipher algorithm for the context"
+    uploadUrl: str | None = Field(None, description="The upload URL for the context")
+    publicKey: str | None = Field(None, description="The public key for the context")
+    cipherAlgorithm: str | None = Field(
+        None, description="The cipher algorithm for the context"
     )
-    initializationVectorSize: int = Field(
-        ..., description="The size of the initialization vector"
+    initializationVectorSize: int | None = Field(
+        None, description="The size of the initialization vector"
     )

@@ -19,6 +19,7 @@ from ..autogen.Tools import (
     EmailArguments,
     EmailSetup,
     RemoteBrowserArguments,
+    RemoteBrowserSetup,
     SpiderFetchArguments,
     SpiderSetup,
     WeatherGetArguments,
@@ -47,6 +48,9 @@ ExecutionSetup = Union[
     SpiderSetup,
     WeatherSetup,
     BraveSearchSetup,
+    BrowserbaseSetup,
+    RemoteBrowserSetup,
+    # WikipediaSetup (not used)
 ]
 
 ExecutionArguments = Union[
@@ -73,7 +77,14 @@ ExecutionResponse = Union[
     WikipediaSearchOutput,
     BraveSearchOutput,
     BrowserbaseCreateSessionOutput,
+    BrowserbaseCompleteSessionOutput,
+    BrowserbaseContextOutput,
+    BrowserbaseExtensionOutput,
+    BrowserbaseGetSessionOutput,
+    BrowserbaseGetSessionConnectUrlOutput,
+    BrowserbaseGetSessionLiveUrlsOutput,
     RemoteBrowserOutput,
+    BrowserbaseListSessionsOutput,
 ]
 
 

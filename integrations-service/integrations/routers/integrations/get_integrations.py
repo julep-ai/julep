@@ -1,6 +1,5 @@
 from typing import List
 
-from ...models.base_models import BaseProvider
 from ...providers import available_providers
 from .router import router
 
