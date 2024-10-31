@@ -4221,7 +4221,19 @@ components:
         evaluate:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/Common.PyExpression'
+            anyOf:
+              - $ref: '#/components/schemas/Common.PyExpression'
+              - type: array
+                items:
+                  $ref: '#/components/schemas/Common.PyExpression'
+              - type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/Common.PyExpression'
+              - type: array
+                items:
+                  type: object
+                  additionalProperties:
+                    $ref: '#/components/schemas/Common.PyExpression'
           description: The expression to evaluate
       allOf:
         - type: object
@@ -5038,7 +5050,19 @@ components:
         return:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/Common.PyExpression'
+            anyOf:
+              - $ref: '#/components/schemas/Common.PyExpression'
+              - type: array
+                items:
+                  $ref: '#/components/schemas/Common.PyExpression'
+              - type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/Common.PyExpression'
+              - type: array
+                items:
+                  type: object
+                  additionalProperties:
+                    $ref: '#/components/schemas/Common.PyExpression'
           description: The value to return
       allOf:
         - type: object
@@ -5461,7 +5485,74 @@ components:
                   - $ref: '#/components/schemas/Common.PyExpression'
                   - type: object
                     additionalProperties:
-                      $ref: '#/components/schemas/Common.PyExpression'
+                      anyOf:
+                        - $ref: '#/components/schemas/Common.PyExpression'
+                        - type: array
+                          items:
+                            $ref: '#/components/schemas/Common.PyExpression'
+                        - type: object
+                          additionalProperties:
+                            $ref: '#/components/schemas/Common.PyExpression'
+                        - type: array
+                          items:
+                            type: object
+                            additionalProperties:
+                              $ref: '#/components/schemas/Common.PyExpression'
+                  - type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        anyOf:
+                          - $ref: '#/components/schemas/Common.PyExpression'
+                          - type: array
+                            items:
+                              $ref: '#/components/schemas/Common.PyExpression'
+                          - type: object
+                            additionalProperties:
+                              $ref: '#/components/schemas/Common.PyExpression'
+                          - type: array
+                            items:
+                              type: object
+                              additionalProperties:
+                                $ref: '#/components/schemas/Common.PyExpression'
+            - type: array
+              items:
+                type: object
+                additionalProperties:
+                  anyOf:
+                    - $ref: '#/components/schemas/Common.PyExpression'
+                    - type: object
+                      additionalProperties:
+                        anyOf:
+                          - $ref: '#/components/schemas/Common.PyExpression'
+                          - type: array
+                            items:
+                              $ref: '#/components/schemas/Common.PyExpression'
+                          - type: object
+                            additionalProperties:
+                              $ref: '#/components/schemas/Common.PyExpression'
+                          - type: array
+                            items:
+                              type: object
+                              additionalProperties:
+                                $ref: '#/components/schemas/Common.PyExpression'
+                    - type: array
+                      items:
+                        type: object
+                        additionalProperties:
+                          anyOf:
+                            - $ref: '#/components/schemas/Common.PyExpression'
+                            - type: array
+                              items:
+                                $ref: '#/components/schemas/Common.PyExpression'
+                            - type: object
+                              additionalProperties:
+                                $ref: '#/components/schemas/Common.PyExpression'
+                            - type: array
+                              items:
+                                type: object
+                                additionalProperties:
+                                  $ref: '#/components/schemas/Common.PyExpression'
             - type: string
               enum:
                 - _
@@ -5705,7 +5796,19 @@ components:
         info:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/Common.PyExpression'
+            anyOf:
+              - $ref: '#/components/schemas/Common.PyExpression'
+              - type: array
+                items:
+                  $ref: '#/components/schemas/Common.PyExpression'
+              - type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/Common.PyExpression'
+              - type: array
+                items:
+                  type: object
+                  additionalProperties:
+                    $ref: '#/components/schemas/Common.PyExpression'
           description: Any additional info or data
     Tasks.WaitForInputStep:
       type: object
@@ -5762,7 +5865,19 @@ components:
           anyOf:
             - type: object
               additionalProperties:
-                $ref: '#/components/schemas/Common.PyExpression'
+                anyOf:
+                  - $ref: '#/components/schemas/Common.PyExpression'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Common.PyExpression'
+                  - type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/Common.PyExpression'
+                  - type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        $ref: '#/components/schemas/Common.PyExpression'
             - type: string
               enum:
                 - _
@@ -7046,6 +7161,9 @@ components:
       required:
         - action
       properties:
+        connect_url:
+          type: string
+          description: The connection URL for the remote browser
         action:
           type: string
           enum:
@@ -7074,6 +7192,9 @@ components:
     Tools.RemoteBrowserArgumentsUpdate:
       type: object
       properties:
+        connect_url:
+          type: string
+          description: The connection URL for the remote browser
         action:
           type: string
           enum:
@@ -7150,6 +7271,7 @@ components:
       properties:
         connect_url:
           type: string
+          nullable: true
           description: The connection URL for the remote browser
         width:
           type: integer
@@ -7165,6 +7287,7 @@ components:
       properties:
         connect_url:
           type: string
+          nullable: true
           description: The connection URL for the remote browser
         width:
           type: integer
