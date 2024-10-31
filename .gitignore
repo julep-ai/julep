@@ -1,4 +1,5 @@
 .DS_Store
+*gaga*
 *.swp
 ngrok*
 .env*
