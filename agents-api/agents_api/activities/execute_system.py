@@ -7,6 +7,7 @@ from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
+from ..autogen.Chat import ChatInput
 from ..autogen.Docs import (
     CreateDocRequest,
     HybridDocSearchRequest,
@@ -14,9 +15,11 @@ from ..autogen.Docs import (
     VectorDocSearchRequest,
 )
 from ..autogen.Tools import SystemDef
+from ..common.protocol.developers import Developer
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
 from ..env import testing
+from ..models.developer import get_developer
 from .utils import get_handler
 
 
@@ -72,6 +75,20 @@ async def execute_system(
             arguments["x_developer_id"] = arguments.pop("developer_id")
             search_params = _create_search_request(arguments)
             return await handler(search_params=search_params, **arguments)
+
+        # Handle chat operations
+        if system.operation == "chat" and system.resource == "session":
+            developer = get_developer(developer_id=arguments.pop("developer_id"))
+            session_id = arguments.pop("session_id")
+            x_custom_api_key = arguments.pop("x_custom_api_key", None)
+            chat_input = ChatInput(**arguments)
+            return await handler(
+                developer=developer,
+                session_id=session_id,
+                background_tasks=BackgroundTasks(),
+                x_custom_api_key=x_custom_api_key,
+                chat_input=chat_input,
+            )
 
         # Handle regular operations
         if asyncio.iscoroutinefunction(handler):
