@@ -34,7 +34,6 @@ with workflow.unsafe.imports_passed_through():
         SleepFor,
         SleepStep,
         SwitchStep,
-        TaskToolDef,
         ToolCallStep,
         TransitionTarget,
         WaitForInputStep,
@@ -456,23 +455,19 @@ class TaskExecutionWorkflow:
                 call = tool_call["integration"]
                 tool_name = call["name"]
                 arguments = call["arguments"]
-                integration_spec = next(
+                integration_tool = next(
                     (t for t in context.tools if t.name == tool_name), None
                 )
 
-                if integration_spec is None:
+                if integration_tool is None:
                     raise ApplicationError(f"Integration {tool_name} not found")
 
-                # FIXME: Refactor this
-                # Tools that are not defined in the task spec have a different format
-                if isinstance(integration_spec, TaskToolDef):
-                    provider = integration_spec.spec["provider"]
-                    setup = integration_spec.spec["setup"]
-                    method = integration_spec.spec["method"]
-                else:
-                    provider = integration_spec.integration.provider
-                    setup = integration_spec.integration.setup.model_dump()
-                    method = integration_spec.integration.method
+                provider = integration_tool.integration.provider
+                setup = (
+                    integration_tool.integration.setup
+                    and integration_tool.integration.setup.model_dump()
+                )
+                method = integration_tool.integration.method
 
                 integration = BaseIntegrationDef(
                     provider=provider,
@@ -498,18 +493,18 @@ class TaskExecutionWorkflow:
                 call = tool_call["api_call"]
                 tool_name = call["name"]
                 arguments = call["arguments"]
-                apicall_spec = next(
+                apicall_tool = next(
                     (t for t in context.tools if t.name == tool_name), None
                 )
 
-                if apicall_spec is None:
+                if apicall_tool is None:
                     raise ApplicationError(f"Integration {tool_name} not found")
 
                 api_call = ApiCallDef(
-                    method=apicall_spec.spec["method"],
-                    url=apicall_spec.spec["url"],
-                    headers=apicall_spec.spec["headers"],
-                    follow_redirects=apicall_spec.spec["follow_redirects"],
+                    method=apicall_tool.api_call.method,
+                    url=apicall_tool.api_call.url,
+                    headers=apicall_tool.api_call.headers,
+                    follow_redirects=apicall_tool.api_call.follow_redirects,
                 )
 
                 if "json_" in arguments:

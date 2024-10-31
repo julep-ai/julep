@@ -16,6 +16,7 @@ import zoneinfo
 from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
 
+from ..autogen.openapi_model import SystemDef
 from ..common.utils import yaml
 
 T = TypeVar("T")
@@ -228,3 +229,102 @@ def simple_eval_dict(exprs: dict[str, str], values: dict[str, Any]) -> dict[str,
     evaluator = get_evaluator(names=values)
 
     return {k: evaluator.eval(v) for k, v in exprs.items()}
+
+
+def get_handler(system: SystemDef) -> Callable:
+    """Get the appropriate handler function based on the SystemDef."""
+
+    from ..models.agent.create_agent import create_agent as create_agent_query
+    from ..models.agent.delete_agent import delete_agent as delete_agent_query
+    from ..models.agent.get_agent import get_agent as get_agent_query
+    from ..models.agent.list_agents import list_agents as list_agents_query
+    from ..models.agent.update_agent import update_agent as update_agent_query
+    from ..models.docs.delete_doc import delete_doc as delete_doc_query
+    from ..models.docs.list_docs import list_docs as list_docs_query
+    from ..models.session.create_session import create_session as create_session_query
+    from ..models.session.delete_session import delete_session as delete_session_query
+    from ..models.session.get_session import get_session as get_session_query
+    from ..models.session.list_sessions import list_sessions as list_sessions_query
+    from ..models.session.update_session import update_session as update_session_query
+    from ..models.task.create_task import create_task as create_task_query
+    from ..models.task.delete_task import delete_task as delete_task_query
+    from ..models.task.get_task import get_task as get_task_query
+    from ..models.task.list_tasks import list_tasks as list_tasks_query
+    from ..models.task.update_task import update_task as update_task_query
+    from ..models.user.create_user import create_user as create_user_query
+    from ..models.user.delete_user import delete_user as delete_user_query
+    from ..models.user.get_user import get_user as get_user_query
+    from ..models.user.list_users import list_users as list_users_query
+    from ..models.user.update_user import update_user as update_user_query
+    from ..routers.docs.create_doc import create_agent_doc, create_user_doc
+    from ..routers.docs.search_docs import search_agent_docs, search_user_docs
+
+    match (system.resource, system.subresource, system.operation):
+        # AGENTS
+        case ("agent", "doc", "list"):
+            return list_docs_query
+        case ("agent", "doc", "create"):
+            return create_agent_doc
+        case ("agent", "doc", "delete"):
+            return delete_doc_query
+        case ("agent", "doc", "search"):
+            return search_agent_docs
+        case ("agent", None, "list"):
+            return list_agents_query
+        case ("agent", None, "get"):
+            return get_agent_query
+        case ("agent", None, "create"):
+            return create_agent_query
+        case ("agent", None, "update"):
+            return update_agent_query
+        case ("agent", None, "delete"):
+            return delete_agent_query
+
+        # USERS
+        case ("user", "doc", "list"):
+            return list_docs_query
+        case ("user", "doc", "create"):
+            return create_user_doc
+        case ("user", "doc", "delete"):
+            return delete_doc_query
+        case ("user", "doc", "search"):
+            return search_user_docs
+        case ("user", None, "list"):
+            return list_users_query
+        case ("user", None, "get"):
+            return get_user_query
+        case ("user", None, "create"):
+            return create_user_query
+        case ("user", None, "update"):
+            return update_user_query
+        case ("user", None, "delete"):
+            return delete_user_query
+
+        # SESSIONS
+        case ("session", None, "list"):
+            return list_sessions_query
+        case ("session", None, "get"):
+            return get_session_query
+        case ("session", None, "create"):
+            return create_session_query
+        case ("session", None, "update"):
+            return update_session_query
+        case ("session", None, "delete"):
+            return delete_session_query
+
+        # TASKS
+        case ("task", None, "list"):
+            return list_tasks_query
+        case ("task", None, "get"):
+            return get_task_query
+        case ("task", None, "create"):
+            return create_task_query
+        case ("task", None, "update"):
+            return update_task_query
+        case ("task", None, "delete"):
+            return delete_task_query
+
+        case _:
+            raise NotImplementedError(
+                f"System call not implemented for {system.resource}.{system.operation}"
+            )
