@@ -23,7 +23,6 @@ from ...models.tools.list_tools import list_tools
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
-# FIXME: This shouldn't be here.
 def format_agent_tool(tool: Tool) -> dict:
     if tool.type == "function":
         return {
@@ -31,16 +30,16 @@ def format_agent_tool(tool: Tool) -> dict:
             "function": {
                 "name": tool.name,
                 "description": tool.description,
-                "parameters": tool.parameters,
+                "parameters": tool.function.parameters,
             },
         }
     elif tool.type == "computer_20241022":
         return {
             "type": tool.type,
             "name": tool.name,
-            "display_width_px": tool.spec["display_width_px"],
-            "display_height_px": tool.spec["display_height_px"],
-            "display_number": tool.spec["display_number"],
+            "display_width_px": tool.computer_20241022.display_width_px,
+            "display_height_px": tool.computer_20241022.display_height_px,
+            "display_number": tool.computer_20241022.display_number,
         }
     elif tool.type == "bash_20241022":
         return {

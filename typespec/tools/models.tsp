@@ -180,6 +180,9 @@ model ApiCallDef {
     /** The URL to call */
     url: url;
 
+    /** The schema of the response */
+    schema?: Record<unknown>;
+
     /** The headers to send with the request */
     headers?: Record<string>;
 
@@ -250,7 +253,7 @@ model NamedToolChoice {
 }
 
 model ToolResponse {
-    @key id: uuid;
+    @key id: string;
 
     /** The output of the tool */
     output: ToolOutput;
