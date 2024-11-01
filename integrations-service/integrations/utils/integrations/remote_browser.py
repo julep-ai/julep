@@ -13,6 +13,7 @@ from playwright.async_api import (
     Keyboard,
     Mouse,
     Page,
+    PlaywrightContextManager,
     async_playwright,
 )
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -31,8 +32,6 @@ class PlaywrightActions:
     context: BrowserContext
     mouse: Mouse
     keyboard: Keyboard
-    current_x: int
-    current_y: int
     width: int | None
     height: int | None
 
@@ -40,26 +39,70 @@ class PlaywrightActions:
         self, browser: Browser, width: int | None = None, height: int | None = None
     ) -> None:
         self.browser = browser
-        self.page = None
-        self.context = None
-        self.page = None
-        self.current_x: int = 0
-        self.current_y: int = 0
-        self.mouse = None
-        self.keyboard = None
-        self.width, self.height = width, height
-
-    async def initialize(self) -> None:
         self.context = self.browser.contexts[0]
         self.page = self.context.pages[0]
         self.mouse = self.page.mouse
         self.keyboard = self.page.keyboard
+        self.width, self.height = width, height
+
+    async def _is_initialized(self) -> bool:
+        """Check if the page is initialized"""
+        result = bool(
+            await self._execute_javascript("""
+                window.$$julep$$_initialized
+            """)
+        )
+
+        return result
+
+    async def initialize(self, debug: bool = False) -> None:
+        if debug:
+            self.page.on("console", lambda msg: print(msg.text))
 
         if self.width and self.height:
-            await self._set_screen_size(self.width, self.height)
+            current_width, current_height = await self._get_screen_size()
+            if current_width != self.width or current_height != self.height:
+                await self._set_screen_size(self.width, self.height)
 
-        # Move mouse to center of screen
-        await self.mouse_move(coordinate=(self.width // 2, self.height // 2))
+        # Install mouse move event listener
+        init_script = """
+
+        // Update mouse coordinates on mouse move
+        // but only on the top document
+        if (window === window.parent) 
+            window.addEventListener(
+                'DOMContentLoaded',
+                () => {
+                    const updateMouseCoordinates = (event) => {
+                        window.mouseX = event.clientX;
+                        window.mouseY = event.clientY;
+                    };
+
+                    if (!window.$$julep$$_mouseListenerInitialized) {
+                        window.addEventListener('mousemove', updateMouseCoordinates);
+                        window.addEventListener('mouseup', updateMouseCoordinates);
+                        window.addEventListener('mousedown', updateMouseCoordinates);
+                        window.addEventListener('click', updateMouseCoordinates);
+                        window.addEventListener('dblclick', updateMouseCoordinates);
+
+                        window.$$julep$$_mouseListenerInitialized = true;
+                    }
+                }
+            );
+        """
+        await self.page.add_init_script(init_script)
+        await self.page.evaluate(init_script)
+
+        await self._reset_mouse()
+
+    async def _reset_mouse(self) -> None:
+        # Wait for the page to be fully loaded
+        await self._wait_for_load()
+        if not await self._is_initialized():
+            await self.page.mouse.move(self.width // 2, self.height // 2)
+            await self.page.evaluate("""
+            window.$$julep$$_initialized = true;
+            """)
 
     @staticmethod
     def _with_error_and_screenshot(f):
@@ -85,18 +128,22 @@ class PlaywrightActions:
     async def _get_screen_size(self) -> tuple[int, int]:
         """Get the current browser viewport size"""
 
-        viewport = self.page.viewport_size
+        viewport: dict[str, int] | None = self.page.viewport_size
+        if viewport is None:
+            return (0, 0)
+
         return (viewport["width"], viewport["height"])
 
     async def _set_screen_size(self, width: int, height: int) -> None:
         """Set the current browser viewport size"""
 
         await self.page.set_viewport_size(dict(width=width, height=height))
-        self.width, self.height = width, height
 
-    async def _wait_for_load(self, timeout: int = 0) -> None:
+    async def _wait_for_load(
+        self, event: str = "domcontentloaded", timeout: int = 0
+    ) -> None:
         """Wait for document to be fully loaded"""
-        await self.page.wait_for_load_state("domcontentloaded", timeout=timeout)
+        await self.page.wait_for_load_state(event, timeout=timeout)
 
     async def _execute_javascript(self, script: str, *args) -> Any:
         """Execute JavaScript code and return the result"""
@@ -115,7 +162,11 @@ class PlaywrightActions:
 
     async def _get_mouse_coordinates(self) -> tuple[int, int]:
         """Get current mouse coordinates"""
-        return (self.current_x, self.current_y)
+        result = await self._execute_javascript("""
+        [window.mouseX, window.mouseY]
+        """)
+
+        return result[0], result[1]
 
     async def _get_element_coordinates(self, selector: str) -> tuple[int, int]:
         """Get the coordinates of an element"""
@@ -131,7 +182,9 @@ class PlaywrightActions:
         screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGBA")
 
         # Load the cursor image
-        cursor = Image.open(CURSOR_PATH.absolute()).convert("RGBA")
+        cursor = Image.open(
+            "./integrations/utils/integrations/assets/cursor-small.png"
+        ).convert("RGBA")
 
         # Create a copy of the screenshot to overlay the cursor
         combined = screenshot.copy()
@@ -149,6 +202,7 @@ class PlaywrightActions:
     async def navigate(self, url: str) -> RemoteBrowserOutput:
         """Navigate to a specific URL"""
         await self.page.goto(url)
+        await self._reset_mouse()
 
         return RemoteBrowserOutput(
             output=url,
@@ -158,6 +212,7 @@ class PlaywrightActions:
     async def refresh(self) -> RemoteBrowserOutput:
         """Refresh the current page"""
         await self.page.reload()
+        await self._reset_mouse()
 
         return RemoteBrowserOutput(
             output="Refreshed page",
@@ -205,7 +260,6 @@ class PlaywrightActions:
     async def mouse_move(self, coordinate: tuple[int, int]) -> RemoteBrowserOutput:
         """Move mouse to specified coordinates"""
         await self.mouse.move(*coordinate)
-        self.current_x, self.current_y = coordinate
 
         return RemoteBrowserOutput(
             output=f"Moved mouse to {coordinate}",
@@ -214,7 +268,8 @@ class PlaywrightActions:
     @_with_error_and_screenshot
     async def left_click(self) -> RemoteBrowserOutput:
         """Perform left mouse click"""
-        await self.mouse.click(self.current_x, self.current_y)
+        x, y = await self._get_mouse_coordinates()
+        await self.mouse.click(x, y)
 
         return RemoteBrowserOutput(
             output="Left clicked",
@@ -227,8 +282,6 @@ class PlaywrightActions:
         await self.mouse.move(*coordinate)
         await self.mouse.up()
 
-        self.current_x, self.current_y = coordinate
-
         return RemoteBrowserOutput(
             output=f"Left clicked and dragged to {coordinate}",
         )
@@ -236,7 +289,8 @@ class PlaywrightActions:
     @_with_error_and_screenshot
     async def right_click(self) -> RemoteBrowserOutput:
         """Perform right mouse click"""
-        await self.mouse.click(self.current_x, self.current_y, button="right")
+        x, y = await self._get_mouse_coordinates()
+        await self.mouse.click(x, y, button="right")
 
         return RemoteBrowserOutput(
             output="Right clicked",
@@ -245,7 +299,8 @@ class PlaywrightActions:
     @_with_error_and_screenshot
     async def middle_click(self) -> RemoteBrowserOutput:
         """Perform middle mouse click"""
-        await self.mouse.click(self.current_x, self.current_y, button="middle")
+        x, y = await self._get_mouse_coordinates()
+        await self.mouse.click(x, y, button="middle")
 
         return RemoteBrowserOutput(
             output="Middle clicked",
@@ -254,13 +309,14 @@ class PlaywrightActions:
     @_with_error_and_screenshot
     async def double_click(self) -> RemoteBrowserOutput:
         """Perform double click"""
-        await self.mouse.dblclick(self.current_x, self.current_y)
+        x, y = await self._get_mouse_coordinates()
+        await self.mouse.dblclick(x, y)
 
         return RemoteBrowserOutput(
             output="Double clicked",
         )
 
-    async def take_screenshot(self) -> RemoteBrowserOutput:
+    async def take_screenshot(self, filename: str | None = None) -> RemoteBrowserOutput:
         """Take a screenshot of the current browser window"""
         try:
             screenshot = await self.page.screenshot()
@@ -269,6 +325,10 @@ class PlaywrightActions:
 
         x, y = await self._get_mouse_coordinates()
         screenshot = self._overlay_cursor(screenshot, x, y)
+
+        if filename:
+            with open(filename, "wb") as f:
+                f.write(screenshot)
 
         encoded = base64.b64encode(screenshot).decode("utf-8")
 
@@ -321,7 +381,7 @@ class PlaywrightActions:
 async def perform_action(
     setup: RemoteBrowserSetup, arguments: RemoteBrowserArguments
 ) -> RemoteBrowserOutput:
-    p = await async_playwright().start()
+    p: PlaywrightContextManager = await async_playwright().start()
     connect_url = setup.connect_url if setup.connect_url else arguments.connect_url
     browser = await p.chromium.connect_over_cdp(connect_url)
 
