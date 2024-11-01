@@ -1,6 +1,6 @@
 import base64
 import json
-from functools import partial
+from functools import partial, wraps
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -56,28 +56,53 @@ class PlaywrightActions:
         self.keyboard = self.page.keyboard
 
         if self.width and self.height:
-            await self.set_screen_size(self.width, self.height)
+            await self._set_screen_size(self.width, self.height)
 
         # Move mouse to center of screen
         await self.mouse_move(coordinate=(self.width // 2, self.height // 2))
 
-    async def navigate(self, url: str) -> None:
-        """Navigate to a specific URL"""
-        await self.page.goto(url)
+    @staticmethod
+    def _with_error_and_screenshot(f):
+        @wraps(f)
+        async def wrapper(self: "PlaywrightActions", *args, **kwargs):
+            try:
+                result: RemoteBrowserOutput = await f(self, *args, **kwargs)
+                await self._wait_for_load()
 
-    async def refresh(self) -> None:
-        """Refresh the current page"""
-        await self.page.reload()
+                screenshot: RemoteBrowserOutput = await self.take_screenshot()
 
-    async def wait_for_load(self, timeout: int = 30000) -> None:
+                return RemoteBrowserOutput(
+                    output=result.output,
+                    base64_image=screenshot.base64_image,
+                    system=result.system or f.__name__,
+                )
+
+            except Exception as e:
+                return RemoteBrowserOutput(error=str(e))
+
+        return wrapper
+
+    async def _get_screen_size(self) -> tuple[int, int]:
+        """Get the current browser viewport size"""
+
+        viewport = self.page.viewport_size
+        return (viewport["width"], viewport["height"])
+
+    async def _set_screen_size(self, width: int, height: int) -> None:
+        """Set the current browser viewport size"""
+
+        await self.page.set_viewport_size(dict(width=width, height=height))
+        self.width, self.height = width, height
+
+    async def _wait_for_load(self, timeout: int = 0) -> None:
         """Wait for document to be fully loaded"""
         await self.page.wait_for_load_state("domcontentloaded", timeout=timeout)
 
-    async def execute_javascript(self, script: str, *args) -> Any:
+    async def _execute_javascript(self, script: str, *args) -> Any:
         """Execute JavaScript code and return the result"""
         return await self.page.evaluate(script, *args)
 
-    async def set_window_vars(self, variables: dict[str, Any]) -> None:
+    async def _set_window_vars(self, variables: dict[str, Any]) -> None:
         """Set variables in the window scope"""
         json_str = json.dumps(variables)
         script = """
@@ -86,21 +111,13 @@ class PlaywrightActions:
             window[key] = value;
         }
         """
-        await self.execute_javascript(script, json_str)
+        await self._execute_javascript(script, json_str)
 
-    async def get_screen_size(self) -> tuple[int, int]:
-        """Get the current browser viewport size"""
+    async def _get_mouse_coordinates(self) -> tuple[int, int]:
+        """Get current mouse coordinates"""
+        return (self.current_x, self.current_y)
 
-        viewport = self.page.viewport_size
-        return (viewport["width"], viewport["height"])
-
-    async def set_screen_size(self, width: int, height: int) -> None:
-        """Set the current browser viewport size"""
-
-        await self.page.set_viewport_size(dict(width=width, height=height))
-        self.width, self.height = width, height
-
-    async def get_element_coordinates(self, selector: str) -> tuple[int, int]:
+    async def _get_element_coordinates(self, selector: str) -> tuple[int, int]:
         """Get the coordinates of an element"""
         element = await self.page.query_selector(selector)
         if element:
@@ -108,11 +125,54 @@ class PlaywrightActions:
             return (box["x"], box["y"])
         raise Exception(f"Element not found: {selector}")
 
-    async def get_mouse_coordinates(self) -> tuple[int, int]:
-        """Get current mouse coordinates"""
-        return (self.current_x, self.current_y)
+    def _overlay_cursor(self, screenshot_bytes: bytes, x: int, y: int) -> bytes:
+        """Overlay the cursor image on the screenshot at the specified coordinates."""
+        # Load the screenshot from bytes
+        screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGBA")
 
-    async def press_key(self, key_combination: str) -> None:
+        # Load the cursor image
+        cursor = Image.open(CURSOR_PATH.absolute()).convert("RGBA")
+
+        # Create a copy of the screenshot to overlay the cursor
+        combined = screenshot.copy()
+        combined.paste(cursor, (x, y), cursor)
+
+        # Save the combined image to bytes
+        output = BytesIO()
+        combined.save(output, format="PNG")
+        return output.getvalue()
+
+    # ---
+    # Actions
+
+    @_with_error_and_screenshot
+    async def navigate(self, url: str) -> RemoteBrowserOutput:
+        """Navigate to a specific URL"""
+        await self.page.goto(url)
+
+        return RemoteBrowserOutput(
+            output=url,
+        )
+
+    @_with_error_and_screenshot
+    async def refresh(self) -> RemoteBrowserOutput:
+        """Refresh the current page"""
+        await self.page.reload()
+
+        return RemoteBrowserOutput(
+            output="Refreshed page",
+        )
+
+    @_with_error_and_screenshot
+    async def cursor_position(self) -> RemoteBrowserOutput:
+        """Get current mouse coordinates"""
+        x, y = await self._get_mouse_coordinates()
+        return RemoteBrowserOutput(
+            output=f"X={x}, Y={y}",
+        )
+
+    @_with_error_and_screenshot
+    async def press_key(self, key_combination: str) -> RemoteBrowserOutput:
         """Press a key or key combination"""
         # Split combination into individual keys
         keys = key_combination.split("+")
@@ -128,20 +188,40 @@ class PlaywrightActions:
         for key in reversed(keys[:-1]):
             await self.page.keyboard.up(key)
 
-    async def type_text(self, text: str) -> None:
+        return RemoteBrowserOutput(
+            output=f"Pressed {key_combination}",
+        )
+
+    @_with_error_and_screenshot
+    async def type_text(self, text: str) -> RemoteBrowserOutput:
         """Type a string of text"""
         await self.page.keyboard.type(text)
 
-    async def mouse_move(self, coordinate: tuple[int, int]) -> None:
+        return RemoteBrowserOutput(
+            output=f"Typed {text}",
+        )
+
+    @_with_error_and_screenshot
+    async def mouse_move(self, coordinate: tuple[int, int]) -> RemoteBrowserOutput:
         """Move mouse to specified coordinates"""
         await self.mouse.move(*coordinate)
         self.current_x, self.current_y = coordinate
 
-    async def left_click(self) -> None:
+        return RemoteBrowserOutput(
+            output=f"Moved mouse to {coordinate}",
+        )
+
+    @_with_error_and_screenshot
+    async def left_click(self) -> RemoteBrowserOutput:
         """Perform left mouse click"""
         await self.mouse.click(self.current_x, self.current_y)
 
-    async def left_click_drag(self, coordinate: tuple[int, int]) -> None:
+        return RemoteBrowserOutput(
+            output="Left clicked",
+        )
+
+    @_with_error_and_screenshot
+    async def left_click_drag(self, coordinate: tuple[int, int]) -> RemoteBrowserOutput:
         """Click and drag to specified coordinates"""
         await self.mouse.down()
         await self.mouse.move(*coordinate)
@@ -149,32 +229,49 @@ class PlaywrightActions:
 
         self.current_x, self.current_y = coordinate
 
-    async def right_click(self) -> None:
+    @_with_error_and_screenshot
+    async def right_click(self) -> RemoteBrowserOutput:
         """Perform right mouse click"""
         await self.mouse.click(self.current_x, self.current_y, button="right")
 
-    async def middle_click(self) -> None:
+        return RemoteBrowserOutput(
+            output="Right clicked",
+        )
+
+    @_with_error_and_screenshot
+    async def middle_click(self) -> RemoteBrowserOutput:
         """Perform middle mouse click"""
         await self.mouse.click(self.current_x, self.current_y, button="middle")
 
-    async def double_click(self) -> None:
+        return RemoteBrowserOutput(
+            output="Middle clicked",
+        )
+
+    @_with_error_and_screenshot
+    async def double_click(self) -> RemoteBrowserOutput:
         """Perform double click"""
         await self.mouse.dblclick(self.current_x, self.current_y)
 
-    async def take_screenshot(self, filename: str | None = None) -> str | None:
+        return RemoteBrowserOutput(
+            output="Double clicked",
+        )
+
+    async def take_screenshot(self) -> RemoteBrowserOutput:
         """Take a screenshot of the current browser window"""
-        screenshot = await self.page.screenshot()
+        try:
+            screenshot = await self.page.screenshot()
+        except Exception as e:
+            return RemoteBrowserOutput(error=str(e), system="take_screenshot")
 
-        x, y = await self.get_mouse_coordinates()
-        screenshot = self.overlay_cursor(screenshot, x, y)
-
-        if filename:
-            with open(filename, "wb") as f:
-                f.write(screenshot)
-            return None
+        x, y = await self._get_mouse_coordinates()
+        screenshot = self._overlay_cursor(screenshot, x, y)
 
         encoded = base64.b64encode(screenshot).decode("utf-8")
-        return f"data:image/png;base64,{encoded}"
+
+        return RemoteBrowserOutput(
+            base64_image=f"data:image/png;base64,{encoded}",
+            system="take_screenshot",
+        )
 
     async def perform_action(
         self,
@@ -195,12 +292,11 @@ class PlaywrightActions:
                 "middle_click": self.middle_click,
                 "double_click": self.double_click,
                 "screenshot": self.take_screenshot,
-                "cursor_position": self.get_mouse_coordinates,
+                "cursor_position": self.cursor_position,
                 #
                 # Additional
                 "navigate": partial(self.navigate, text),
                 "refresh": self.refresh,
-                "wait_for_load": self.wait_for_load,
             }
 
             if action not in actions:
@@ -210,23 +306,6 @@ class PlaywrightActions:
 
         except Exception as e:
             raise Exception(f"Error performing action {action}: {str(e)}")
-
-    def overlay_cursor(self, screenshot_bytes: bytes, x: int, y: int) -> bytes:
-        """Overlay the cursor image on the screenshot at the specified coordinates."""
-        # Load the screenshot from bytes
-        screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGBA")
-
-        # Load the cursor image
-        cursor = Image.open(CURSOR_PATH.absolute()).convert("RGBA")
-
-        # Create a copy of the screenshot to overlay the cursor
-        combined = screenshot.copy()
-        combined.paste(cursor, (x, y), cursor)
-
-        # Save the combined image to bytes
-        output = BytesIO()
-        combined.save(output, format="PNG")
-        return output.getvalue()
 
 
 @beartype

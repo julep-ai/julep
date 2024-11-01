@@ -4,41 +4,9 @@ using Common;
 
 namespace Tools;
 
-/*
-async def perform_action(
-    self,
-    action: str,
-    coordinate: tuple[int, int] | None = None,
-    text: str | None = None,
-) -> tuple[int, int] | str | None:
-    """Perform a specified automation action"""
-
-    actions = {
-        # Anthropic
-        "key": lambda: text and self.press_key(text),
-        "type": lambda: text and self.type_text(text),
-        "mouse_move": lambda: coordinate and self.mouse_move(*coordinate),
-        "left_click": self.left_click,
-        "left_click_drag": lambda: coordinate
-        and self.left_click_drag(*coordinate),
-        "right_click": self.right_click,
-        "middle_click": self.middle_click,
-        "double_click": self.double_click,
-        "screenshot": self.take_screenshot,
-        "cursor_position": self.get_mouse_coordinates,
-        # Additional
-        "navigate": lambda: text and self.navigate(text),
-        "refresh": self.refresh,
-        "wait_for_load": self.wait_for_load,
-    }
-
-    ...
-
-*/
-
-alias RemoteBrowserAction = /** Press a key */
-
-    | "key"
+alias RemoteBrowserAction = 
+    | /** Press a key */
+      "key"
     | /** Type text */
       "type"
     | /** Move the mouse to a coordinate */
@@ -60,14 +28,12 @@ alias RemoteBrowserAction = /** Press a key */
     | /** Navigate to a URL */
       "navigate"
     | /** Refresh the page */
-      "refresh"
-    | /** Wait for the page to load */
-      "wait_for_load";
+      "refresh";
 
 /** The setup parameters for the remote browser */
 model RemoteBrowserSetup {
     /** The connection URL for the remote browser */
-    connect_url: string | null;
+    connect_url?: string;
 
     /** The width of the browser */
     width?: uint16;
@@ -93,8 +59,17 @@ model RemoteBrowserArguments {
 
 /** The output of the remote browser */
 model RemoteBrowserOutput {
-    /** The result of the action */
-    result: unknown;
+    /** The output of the action */
+    output: string | null = null;
+
+    /** The error of the action */
+    error: string | null = null;
+
+    /** The base64 encoded image of the action */
+    base64_image: string | null = null;
+
+    /** The system output of the action */
+    system: string | null = null;
 }
 
 /** The integration definition for the remote browser */

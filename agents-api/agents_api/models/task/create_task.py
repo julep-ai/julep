@@ -13,8 +13,9 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import (
     CreateTaskRequest,
+    ResourceCreatedResponse,
 )
-from ...common.protocol.tasks import spec_to_task, task_to_spec
+from ...common.protocol.tasks import task_to_spec
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...metrics.counters import increase_counter
 from ..utils import (
@@ -37,7 +38,16 @@ T = TypeVar("T")
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(spec_to_task, one=True, _kind="inserted")
+@wrap_in_class(
+    ResourceCreatedResponse,
+    one=True,
+    transform=lambda d: {
+        "id": d["task_id"],
+        "jobs": [],
+        "created_at": d["created_at"],
+        **d,
+    },
+)
 @cozo_query
 @increase_counter("create_task")
 @beartype
