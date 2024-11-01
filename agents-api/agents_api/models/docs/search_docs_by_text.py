@@ -136,7 +136,7 @@ def search_docs_by_text(
 
         m[
             doc_id,
-            collect(snippet),
+            snippet,
             distance,
             title,
             owner_type,
@@ -164,7 +164,7 @@ def search_docs_by_text(
             id,
             owner_type,
             owner_id,
-            snippets,
+            snippet,
             distance,
             title,
         ] := 
@@ -172,7 +172,7 @@ def search_docs_by_text(
             input[owner_type, owner_id],
             m[
                 id,
-                snippets,
+                snippet,
                 distance,
                 title,
                 owner_type,

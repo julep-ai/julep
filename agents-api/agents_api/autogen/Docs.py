@@ -96,7 +96,7 @@ class DocReference(BaseModel):
     ID of the document
     """
     title: str | None = None
-    snippets: Annotated[list[Snippet], Field(min_length=1)]
+    snippet: Snippet
     distance: float | None = None
 
 
