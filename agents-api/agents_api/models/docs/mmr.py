@@ -29,6 +29,9 @@ def _cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
     if len(x) == 0 or len(y) == 0:
         return np.array([])
 
+    x = [xx for xx in x if xx is not None]
+    y = [yy for yy in y if yy is not None]
+
     x = np.array(x)
     y = np.array(y)
     if x.shape[1] != y.shape[1]:

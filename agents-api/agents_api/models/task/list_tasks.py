@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
+from ...common.protocol.tasks import spec_to_task
 from ..utils import (
     cozo_query,
     partialclass,
@@ -14,7 +15,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-from .create_task import spec_to_task
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")

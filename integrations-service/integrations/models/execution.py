@@ -29,7 +29,7 @@ from ..autogen.Tools import (
 from .brave import BraveSearchOutput
 from .browserbase import (
     BrowserbaseCompleteSessionOutput,
-    # BrowserbaseContextOutput,
+    BrowserbaseContextOutput,
     BrowserbaseCreateSessionOutput,
     BrowserbaseExtensionOutput,
     BrowserbaseGetSessionConnectUrlOutput,
@@ -50,7 +50,6 @@ ExecutionSetup = Union[
     BraveSearchSetup,
     BrowserbaseSetup,
     RemoteBrowserSetup,
-    # WikipediaSetup (not used)
 ]
 
 ExecutionArguments = Union[
@@ -59,12 +58,12 @@ ExecutionArguments = Union[
     EmailArguments,
     WikipediaSearchArguments,
     BraveSearchArguments,
-    BrowserbaseCompleteSessionArguments,
-    BrowserbaseContextArguments,
     BrowserbaseCreateSessionArguments,
     BrowserbaseGetSessionArguments,
-    BrowserbaseGetSessionLiveUrlsArguments,
     BrowserbaseGetSessionConnectUrlArguments,
+    BrowserbaseGetSessionLiveUrlsArguments,
+    BrowserbaseCompleteSessionArguments,
+    BrowserbaseContextArguments,
     BrowserbaseExtensionArguments,
     BrowserbaseListSessionsArguments,
     RemoteBrowserArguments,
@@ -77,14 +76,14 @@ ExecutionResponse = Union[
     WikipediaSearchOutput,
     BraveSearchOutput,
     BrowserbaseCreateSessionOutput,
-    BrowserbaseCompleteSessionOutput,
-    # BrowserbaseContextOutput,
-    BrowserbaseExtensionOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseGetSessionConnectUrlOutput,
     BrowserbaseGetSessionLiveUrlsOutput,
-    RemoteBrowserOutput,
+    BrowserbaseCompleteSessionOutput,
+    BrowserbaseContextOutput,
+    BrowserbaseExtensionOutput,
     BrowserbaseListSessionsOutput,
+    RemoteBrowserOutput,
 ]
 
 

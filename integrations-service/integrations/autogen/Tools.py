@@ -12,7 +12,6 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    RootModel,
     StrictBool,
 )
 
@@ -1048,7 +1047,6 @@ class RemoteBrowserArguments(BaseModel):
         "cursor_position",
         "navigate",
         "refresh",
-        "wait_for_load",
     ]
     """
     The action to perform
@@ -1089,7 +1087,6 @@ class RemoteBrowserArgumentsUpdate(BaseModel):
             "cursor_position",
             "navigate",
             "refresh",
-            "wait_for_load",
         ]
         | None
     ) = None
@@ -1129,34 +1126,12 @@ class RemoteBrowserIntegrationDefUpdate(BaseIntegrationDefUpdate):
         populate_by_name=True,
     )
     provider: Literal["remote_browser"] = "remote_browser"
-    setup: RemoteBrowserSetupUpdate | None = None
+    setup: RemoteBrowserSetup | None = None
     method: Literal["perform_action"] = "perform_action"
     arguments: RemoteBrowserArgumentsUpdate | None = None
 
 
 class RemoteBrowserSetup(BaseModel):
-    """
-    The setup parameters for the remote browser
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    connect_url: Annotated[str | None, Field(...)] = None
-    """
-    The connection URL for the remote browser
-    """
-    width: int | None = None
-    """
-    The width of the browser
-    """
-    height: int | None = None
-    """
-    The height of the browser
-    """
-
-
-class RemoteBrowserSetupUpdate(BaseModel):
     """
     The setup parameters for the remote browser
     """

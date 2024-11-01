@@ -1,4 +1,4 @@
-import asyncio
+import time
 
 from ward import skip, test
 
@@ -137,7 +137,7 @@ def _(make_request=make_request, agent=test_agent):
 # TODO: Fix this test. It fails sometimes and sometimes not.
 @test("route: search agent docs")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-    await asyncio.sleep(0.5)
+    time.sleep(0.5)
     search_params = dict(
         text=doc.content[0],
         limit=1,
@@ -161,7 +161,7 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
 @skip("Fails randomly on CI")
 @test("route: search user docs")
 async def _(make_request=make_request, user=test_user, doc=test_user_doc):
-    await asyncio.sleep(0.5)
+    time.sleep(0.5)
     search_params = dict(
         text=doc.content[0],
         limit=1,
@@ -184,7 +184,7 @@ async def _(make_request=make_request, user=test_user, doc=test_user_doc):
 
 @test("route: search agent docs hybrid with mmr")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-    await asyncio.sleep(0.5)
+    time.sleep(0.5)
 
     EMBEDDING_SIZE = 1024
     search_params = dict(

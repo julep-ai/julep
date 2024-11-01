@@ -7139,7 +7139,6 @@ components:
             - cursor_position
             - navigate
             - refresh
-            - wait_for_load
           description: The action to perform
         text:
           type: string
@@ -7170,7 +7169,6 @@ components:
             - cursor_position
             - navigate
             - refresh
-            - wait_for_load
           description: The action to perform
         text:
           type: string
@@ -7213,7 +7211,7 @@ components:
             - remote_browser
           default: remote_browser
         setup:
-          $ref: '#/components/schemas/Tools.RemoteBrowserSetupUpdate'
+          $ref: '#/components/schemas/Tools.RemoteBrowserSetup'
         method:
           type: string
           enum:
@@ -7226,28 +7224,9 @@ components:
       description: The integration definition for the remote browser
     Tools.RemoteBrowserSetup:
       type: object
-      required:
-        - connect_url
       properties:
         connect_url:
           type: string
-          nullable: true
-          description: The connection URL for the remote browser
-        width:
-          type: integer
-          format: uint16
-          description: The width of the browser
-        height:
-          type: integer
-          format: uint16
-          description: The height of the browser
-      description: The setup parameters for the remote browser
-    Tools.RemoteBrowserSetupUpdate:
-      type: object
-      properties:
-        connect_url:
-          type: string
-          nullable: true
           description: The connection URL for the remote browser
         width:
           type: integer
