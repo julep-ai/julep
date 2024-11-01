@@ -2,9 +2,11 @@ import time
 from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
+import numpy as np
 from fastapi import Depends
 
 from ...autogen.openapi_model import (
+    DocReference,
     DocSearchResponse,
     HybridDocSearchRequest,
     TextOnlyDocSearchRequest,
@@ -83,21 +85,21 @@ async def search_user_docs(
     search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
-    docs = search_fn(
+    docs: list[DocReference] = search_fn(
         developer_id=x_developer_id,
         owners=[("user", user_id)],
         **params,
     )
 
-    k = 3
-
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
         and search_params.mmr_strength > 0
-        and len(docs) > k
+        and len(docs) > search_params.limit
     ):
         indices = maximal_marginal_relevance(
-            params["query_embedding"], [doc.embedding for doc in docs], k=k
+            np.asarray(params["query_embedding"]),
+            [doc.snippet.embedding for doc in docs],
+            k=search_params.limit,
         )
         docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
 
@@ -122,21 +124,21 @@ async def search_agent_docs(
     search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
-    docs = search_fn(
+    docs: list[DocReference] = search_fn(
         developer_id=x_developer_id,
         owners=[("agent", agent_id)],
         **params,
     )
 
-    k = 3
-
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
         and search_params.mmr_strength > 0
-        and len(docs) > k
+        and len(docs) > search_params.limit
     ):
         indices = maximal_marginal_relevance(
-            params["query_embedding"], [doc.embedding for doc in docs], k=k
+            np.asarray(params["query_embedding"]),
+            [doc.snippet.embedding for doc in docs],
+            k=search_params.limit,
         )
         docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
 

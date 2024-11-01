@@ -281,7 +281,7 @@ def search_docs_by_embedding(
             doc_id,
             owner_type,
             owner_id,
-            collect(snippet),
+            snippet,
             distance,
             title,
         ] := 
@@ -305,14 +305,14 @@ def search_docs_by_embedding(
             id,
             owner_type,
             owner_id,
-            snippets,
+            snippet,
             distance,
             title,
         ] := m[
             id,
             owner_type,
             owner_id,
-            snippets,
+            snippet,
             distance,
             title,
         ]

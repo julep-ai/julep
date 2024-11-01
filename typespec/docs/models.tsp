@@ -57,9 +57,8 @@ model DocReference {
     id: Doc.id;
 
     title?: string;
-    
-    @minItems(1)
-    snippets: Snippet[];
+
+    snippet: Snippet;
     distance: float | null = null;
 }
 
