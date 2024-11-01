@@ -2561,7 +2561,7 @@ components:
       required:
         - owner
         - id
-        - snippets
+        - snippet
         - distance
       properties:
         owner:
@@ -2575,11 +2575,8 @@ components:
           description: ID of the document
         title:
           type: string
-        snippets:
-          type: array
-          items:
-            $ref: '#/components/schemas/Docs.Snippet'
-          minItems: 1
+        snippet:
+          $ref: '#/components/schemas/Docs.Snippet'
         distance:
           type: number
           nullable: true
