@@ -6271,7 +6271,6 @@ components:
       type: object
       required:
         - id
-        - status
       properties:
         id:
           type: string
@@ -6294,7 +6293,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6367,8 +6365,6 @@ components:
       description: browserbase context provider
     Tools.BrowserbaseCreateSessionArguments:
       type: object
-      required:
-        - projectId
       properties:
         projectId:
           type: string
@@ -6380,13 +6376,16 @@ components:
           type: object
           additionalProperties: {}
           description: Browser settings
+          default: {}
         timeout:
           type: integer
           format: uint16
           description: Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
+          default: 3600
         keepAlive:
           type: boolean
           description: Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
+          default: false
         proxies:
           anyOf:
             - type: boolean
@@ -6395,39 +6394,11 @@ components:
                 type: object
                 additionalProperties: {}
           description: Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
-    Tools.BrowserbaseCreateSessionArgumentsUpdate:
-      type: object
-      properties:
-        projectId:
-          type: string
-          description: The Project ID. Can be found in Settings.
-        extensionId:
-          type: string
-          description: The installed Extension ID. See Install Extension from GitHub.
-        browserSettings:
-          type: object
-          additionalProperties: {}
-          description: Browser settings
-        timeout:
-          type: integer
-          format: uint16
-          description: Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
-        keepAlive:
-          type: boolean
-          description: Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
-        proxies:
-          anyOf:
-            - type: boolean
-            - type: array
-              items:
-                type: object
-                additionalProperties: {}
-          description: Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
+          default: false
     Tools.BrowserbaseCreateSessionIntegrationDef:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6451,7 +6422,7 @@ components:
           default: create_session
         arguments:
           allOf:
-            - $ref: '#/components/schemas/Tools.BrowserbaseCreateSessionArgumentsUpdate'
+            - $ref: '#/components/schemas/Tools.BrowserbaseCreateSessionArguments'
           description: The arguments for the method
       allOf:
         - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
@@ -6534,7 +6505,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6563,7 +6533,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6604,7 +6573,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6678,10 +6646,20 @@ components:
       type: object
       required:
         - api_key
+        - project_id
       properties:
         api_key:
           type: string
           description: API key for the browserbase integration
+        project_id:
+          type: string
+          description: The project ID. Can be found in Settings.
+        api_url:
+          type: string
+          description: The API URL. Defaults to https://www.browserbase.com
+        connect_url:
+          type: string
+          description: The connect URL. Defaults to wss://connect.browserbase.com
       description: The setup parameters for the browserbase integration
     Tools.BrowserbaseSetupUpdate:
       type: object
@@ -6689,6 +6667,15 @@ components:
         api_key:
           type: string
           description: API key for the browserbase integration
+        project_id:
+          type: string
+          description: The project ID. Can be found in Settings.
+        api_url:
+          type: string
+          description: The API URL. Defaults to https://www.browserbase.com
+        connect_url:
+          type: string
+          description: The connect URL. Defaults to wss://connect.browserbase.com
       description: The setup parameters for the browserbase integration
     Tools.ChosenBash20241022:
       type: object
@@ -7202,7 +7189,6 @@ components:
         - provider
         - setup
         - method
-        - arguments
       properties:
         provider:
           type: string

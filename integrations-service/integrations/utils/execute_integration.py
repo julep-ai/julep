@@ -4,7 +4,6 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from .. import providers as available_providers
-from ..autogen.Tools import BaseIntegrationDef
 from ..models.base_models import BaseProvider, IdentifierName
 from ..models.execution import ExecutionArguments, ExecutionResponse, ExecutionSetup
 

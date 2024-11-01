@@ -406,38 +406,6 @@ class BrowserbaseCreateSessionArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    project_id: Annotated[str, Field(alias="projectId")]
-    """
-    The Project ID. Can be found in Settings.
-    """
-    extension_id: Annotated[str | None, Field(alias="extensionId")] = None
-    """
-    The installed Extension ID. See Install Extension from GitHub.
-    """
-    browser_settings: Annotated[
-        dict[str, Any] | None, Field(alias="browserSettings")
-    ] = None
-    """
-    Browser settings
-    """
-    timeout: int | None = None
-    """
-    Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
-    """
-    keep_alive: Annotated[StrictBool | None, Field(alias="keepAlive")] = None
-    """
-    Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
-    """
-    proxies: StrictBool | list[dict[str, Any]] | None = None
-    """
-    Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
-    """
-
-
-class BrowserbaseCreateSessionArgumentsUpdate(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
     project_id: Annotated[str | None, Field(alias="projectId")] = None
     """
     The Project ID. Can be found in Settings.
@@ -446,21 +414,19 @@ class BrowserbaseCreateSessionArgumentsUpdate(BaseModel):
     """
     The installed Extension ID. See Install Extension from GitHub.
     """
-    browser_settings: Annotated[
-        dict[str, Any] | None, Field(alias="browserSettings")
-    ] = None
+    browser_settings: Annotated[dict[str, Any], Field(alias="browserSettings")] = {}
     """
     Browser settings
     """
-    timeout: int | None = None
+    timeout: int = 3600
     """
     Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
     """
-    keep_alive: Annotated[StrictBool | None, Field(alias="keepAlive")] = None
+    keep_alive: Annotated[StrictBool, Field(alias="keepAlive")] = False
     """
     Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
     """
-    proxies: StrictBool | list[dict[str, Any]] | None = None
+    proxies: StrictBool | list[dict[str, Any]] = False
     """
     Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
     """
@@ -550,6 +516,18 @@ class BrowserbaseSetup(BaseModel):
     """
     API key for the browserbase integration
     """
+    project_id: str
+    """
+    The project ID. Can be found in Settings.
+    """
+    api_url: str | None = None
+    """
+    The API URL. Defaults to https://www.browserbase.com
+    """
+    connect_url: str | None = None
+    """
+    The connect URL. Defaults to wss://connect.browserbase.com
+    """
 
 
 class BrowserbaseSetupUpdate(BaseModel):
@@ -563,6 +541,18 @@ class BrowserbaseSetupUpdate(BaseModel):
     api_key: str | None = None
     """
     API key for the browserbase integration
+    """
+    project_id: str | None = None
+    """
+    The project ID. Can be found in Settings.
+    """
+    api_url: str | None = None
+    """
+    The API URL. Defaults to https://www.browserbase.com
+    """
+    connect_url: str | None = None
+    """
+    The connect URL. Defaults to wss://connect.browserbase.com
     """
 
 
@@ -1127,7 +1117,7 @@ class RemoteBrowserIntegrationDef(BaseIntegrationDef):
     provider: Literal["remote_browser"] = "remote_browser"
     setup: RemoteBrowserSetup
     method: Literal["perform_action"] = "perform_action"
-    arguments: RemoteBrowserArguments
+    arguments: RemoteBrowserArguments | None = None
 
 
 class RemoteBrowserIntegrationDefUpdate(BaseIntegrationDefUpdate):
@@ -1832,7 +1822,7 @@ class BrowserbaseCompleteSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
         populate_by_name=True,
     )
     method: Literal["complete_session"] = "complete_session"
-    arguments: BrowserbaseCompleteSessionArguments
+    arguments: BrowserbaseCompleteSessionArguments | None = None
 
 
 class BrowserbaseCompleteSessionIntegrationDefUpdate(
@@ -1894,7 +1884,7 @@ class BrowserbaseCreateSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
         populate_by_name=True,
     )
     method: Literal["create_session"] = "create_session"
-    arguments: BrowserbaseCreateSessionArguments
+    arguments: BrowserbaseCreateSessionArguments | None = None
     """
     The arguments for the method
     """
@@ -1909,7 +1899,7 @@ class BrowserbaseCreateSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDef
         populate_by_name=True,
     )
     method: Literal["create_session"] = "create_session"
-    arguments: BrowserbaseCreateSessionArgumentsUpdate | None = None
+    arguments: BrowserbaseCreateSessionArguments | None = None
     """
     The arguments for the method
     """
@@ -1960,7 +1950,7 @@ class BrowserbaseGetSessionConnectUrlIntegrationDef(BaseBrowserbaseIntegrationDe
         populate_by_name=True,
     )
     method: Literal["get_connect_url"] = "get_connect_url"
-    arguments: BrowserbaseGetSessionConnectUrlArguments
+    arguments: BrowserbaseGetSessionConnectUrlArguments | None = None
 
 
 class BrowserbaseGetSessionConnectUrlIntegrationDefUpdate(
@@ -1986,7 +1976,7 @@ class BrowserbaseGetSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
         populate_by_name=True,
     )
     method: Literal["get_session"] = "get_session"
-    arguments: BrowserbaseGetSessionArguments
+    arguments: BrowserbaseGetSessionArguments | None = None
 
 
 class BrowserbaseGetSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
@@ -2010,7 +2000,7 @@ class BrowserbaseGetSessionLiveUrlsIntegrationDef(BaseBrowserbaseIntegrationDef)
         populate_by_name=True,
     )
     method: Literal["get_live_urls"] = "get_live_urls"
-    arguments: BrowserbaseGetSessionLiveUrlsArguments
+    arguments: BrowserbaseGetSessionLiveUrlsArguments | None = None
 
 
 class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(
