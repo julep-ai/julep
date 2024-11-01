@@ -342,7 +342,7 @@ class PlaywrightActions:
         action: str,
         coordinate: tuple[int, int] | None = None,
         text: str | None = None,
-    ) -> tuple[int, int] | str | None:
+    ) -> RemoteBrowserOutput:
         """Perform a specified automation action"""
         try:
             actions = {
@@ -389,10 +389,8 @@ async def perform_action(
 
     await automation.initialize()
 
-    result = await automation.perform_action(
+    return await automation.perform_action(
         action=arguments.action,
         coordinate=arguments.coordinate,
         text=arguments.text,
     )
-
-    return RemoteBrowserOutput(result=result)
