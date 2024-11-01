@@ -89,15 +89,15 @@ async def search_user_docs(
         **params,
     )
 
-    k = 3
-
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
         and search_params.mmr_strength > 0
-        and len(docs) > k
+        and len(docs) > search_params.limit
     ):
         indices = maximal_marginal_relevance(
-            params["query_embedding"], [doc.embedding for doc in docs], k=k
+            params["query_embedding"],
+            [doc.embedding for doc in docs],
+            k=search_params.limit,
         )
         docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
 
@@ -128,15 +128,15 @@ async def search_agent_docs(
         **params,
     )
 
-    k = 3
-
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
         and search_params.mmr_strength > 0
-        and len(docs) > k
+        and len(docs) > search_params.limit
     ):
         indices = maximal_marginal_relevance(
-            params["query_embedding"], [doc.embedding for doc in docs], k=k
+            params["query_embedding"],
+            [doc.embedding for doc in docs],
+            k=search_params.limit,
         )
         docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
 
