@@ -229,6 +229,10 @@ class PlaywrightActions:
 
         self.current_x, self.current_y = coordinate
 
+        return RemoteBrowserOutput(
+            output=f"Left clicked and dragged to {coordinate}",
+        )
+
     @_with_error_and_screenshot
     async def right_click(self) -> RemoteBrowserOutput:
         """Perform right mouse click"""
