@@ -58,12 +58,14 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
     """
 
     async def _handler(request: Request, exc: Exception):
-        errors = exc.errors() if hasattr(exc, "errors") else [exc]
+
         location = None
         offending_input = None
 
         # Return the deepest matching possibility
         if isinstance(exc, (ValidationError, RequestValidationError)):
+            errors = exc.errors()
+            
             # Get the deepest matching errors
             max_depth = max(len(error["loc"]) for error in errors)
             errors = [error for error in errors if len(error["loc"]) == max_depth]
@@ -95,9 +97,12 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
                         break
 
                 offending_input = offending_input[loc]
+                
+                # Keep only the message from the error
+                errors = [error.get("msg", error) for error in errors]
 
-            # Keep only the message from the error
-            errors = [error["msg"] for error in errors]
+            else:
+                errors = exc.errors() if hasattr(exc, "errors") else [exc]
 
         return JSONResponse(
             content={
