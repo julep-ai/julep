@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
 from prometheus_fastapi_instrumentator import Instrumentator
 from pycozo.client import QueryException
+from pydantic import ValidationError
 from scalar_fastapi import get_scalar_api_reference
 from temporalio.service import RPCError
 
@@ -45,22 +46,71 @@ else:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def make_exception_handler(status: int) -> Callable[[Any, Any], Any]:
+def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
     """
     Creates a custom exception handler for the application.
 
     Parameters:
-    - status (int): The HTTP status code to return for this exception.
+    - status_code (int): The HTTP status code to return for this exception.
 
     Returns:
     A callable exception handler that logs the exception and returns a JSON response with the specified status code.
     """
 
-    async def _handler(request: Request, exc):
-        exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
-        logger.exception(exc)
-        content = {"status_code": status, "message": exc_str, "data": None}
-        return JSONResponse(content=content, status_code=status)
+    async def _handler(request: Request, exc: Exception):
+        location = None
+        offending_input = None
+
+        # Return the deepest matching possibility
+        if isinstance(exc, (ValidationError, RequestValidationError)):
+            errors = exc.errors()
+
+            # Get the deepest matching errors
+            max_depth = max(len(error["loc"]) for error in errors)
+            errors = [error for error in errors if len(error["loc"]) == max_depth]
+
+            # Get the common location
+            location = errors[0]["loc"]
+            for error in errors[1:]:
+                for a, b in zip(location, error["loc"]):
+                    if a == b:
+                        continue
+                    location = location[:-1]
+                    break
+
+            location = location[1:]  # Skip the first element ("body")
+
+            # Get the part of the input that caused the error
+            offending_input = exc.body
+            for loc in location:
+                match offending_input:
+                    case dict():
+                        if loc not in offending_input:
+                            break
+                    case list():
+                        if not (
+                            isinstance(loc, int) and 0 <= loc < len(offending_input)
+                        ):
+                            break
+                    case _:
+                        break
+
+                offending_input = offending_input[loc]
+
+                # Keep only the message from the error
+                errors = [error.get("msg", error) for error in errors]
+
+            else:
+                errors = exc.errors() if hasattr(exc, "errors") else [exc]
+
+        return JSONResponse(
+            content={
+                "errors": errors,
+                "offending_input": offending_input,
+                "location": location,
+            },
+            status_code=status_code,
+        )
 
     return _handler
 
