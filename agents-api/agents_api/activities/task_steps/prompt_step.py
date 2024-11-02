@@ -164,8 +164,10 @@ async def prompt_step(context: StepContext) -> StepOutcome:
 
         # Filter tools for specific types
         filtered_tools = [
-            tool for tool in formatted_tools
-            if tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
+            tool
+            for tool in formatted_tools
+            if tool["type"]
+            in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
         ]
 
         # Claude Response
