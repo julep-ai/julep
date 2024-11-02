@@ -162,11 +162,19 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         # Anthropic expects a list of messages with role and content (and no name etc)
         prompt = [{"role": "user", "content": message["content"]} for message in prompt]
 
+        # Filter tools for specific types
+        filtered_tools = [
+            tool
+            for tool in formatted_tools
+            if tool["type"]
+            in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
+        ]
+
         # Claude Response
         claude_response: BetaMessage = await client.beta.messages.create(
             model="claude-3-5-sonnet-20241022",
             messages=prompt,
-            tools=formatted_tools,
+            tools=filtered_tools,
             max_tokens=1024,
             betas=betas,
         )
