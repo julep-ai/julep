@@ -66,9 +66,7 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
         if isinstance(exc, (ValidationError, RequestValidationError)):
             # Get the deepest matching errors
             max_depth = max(len(error["loc"]) for error in errors)
-            errors = [
-                error for error in errors if len(error["loc"]) == max_depth
-            ]
+            errors = [error for error in errors if len(error["loc"]) == max_depth]
 
             # Get the common location
             location = errors[0]["loc"]
@@ -89,7 +87,9 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
                         if loc not in offending_input:
                             break
                     case list():
-                        if not (isinstance(loc, int) and 0 <= loc < len(offending_input)):
+                        if not (
+                            isinstance(loc, int) and 0 <= loc < len(offending_input)
+                        ):
                             break
                     case _:
                         break
