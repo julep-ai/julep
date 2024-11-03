@@ -8,7 +8,7 @@ packages = [{include = "agents_api"}]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-fastapi = "^0.112.1"
+fastapi = "^0.115.4"
 pycozo = {extras = ["embedded"], version = "^0.7.6"}
 uvicorn = "^0.30.6"
 fire = "^0.5.0"

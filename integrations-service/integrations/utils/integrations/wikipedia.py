@@ -12,7 +12,7 @@ from ...models import WikipediaSearchOutput
     reraise=True,
     stop=stop_after_attempt(4),
 )
-def search(arguments: WikipediaSearchArguments) -> WikipediaSearchOutput:
+async def search(arguments: WikipediaSearchArguments) -> WikipediaSearchOutput:
     """
     Searches Wikipedia for a given query and returns formatted results.
     """
