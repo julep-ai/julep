@@ -70,7 +70,6 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 - [Installation](#installation)
 - [Démarrage rapide de Python 🐍](#d%C3%A9marrage-rapide-de-python-)
 - [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
 - [Components](#components)
   - [Mental Model](#mental-model)
 - [Concepts](#concepts)

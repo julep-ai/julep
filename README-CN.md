@@ -67,7 +67,6 @@
 - [主要特点](#%E4%B8%BB%E8%A6%81%E7%89%B9%E7%82%B9)
 - [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
 - [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
 - [Components](#components)
   - [Mental Model](#mental-model)
 - [Concepts](#concepts)

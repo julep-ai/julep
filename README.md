@@ -70,7 +70,6 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 - [Installation](#installation)
 - [Python Quick Start 🐍](#python-quick-start-)
 - [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
 - [Components](#components)
   - [Mental Model](#mental-model)
 - [Concepts](#concepts)
