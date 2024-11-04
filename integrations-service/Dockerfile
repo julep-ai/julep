@@ -19,4 +19,4 @@ RUN poetry config virtualenvs.create false \
 COPY . ./
 
 # Run the application
-ENTRYPOINT ["python", "-m", "integrations.web", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["gunicorn", "integrations.web:app", "-c", "gunicorn_conf.py"]

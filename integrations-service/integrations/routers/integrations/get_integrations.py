@@ -1,6 +1,6 @@
 from typing import List
 
-from ...providers import providers
+from ...providers import available_providers
 from .router import router
 
 
@@ -26,6 +26,6 @@ async def get_integrations() -> List[dict]:
                 "friendly_name": p.info.friendly_name,
             },
         }
-        for p in providers.values()
+        for p in available_providers.values()
     ]
     return integrations

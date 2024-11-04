@@ -76,6 +76,14 @@ class InputChatMLMessage(Message):
     pass
 
 
+IntegrationDef = (
+    BraveIntegrationDef
+    | EmailIntegrationDef
+    | SpiderIntegrationDef
+    | WikipediaIntegrationDef
+    | WeatherIntegrationDef
+)
+
 # Patches
 # -------
 
@@ -312,13 +320,13 @@ CreateTaskRequest.validate_subworkflows = validate_subworkflows
 ChatMLContent = (
     list[ChatMLTextContentPart | ChatMLImageContentPart]
     | Tool
-    | ChosenToolCall
+    | BaseChosenToolCall
     | str
     | ToolResponse
     | list[
         list[ChatMLTextContentPart | ChatMLImageContentPart]
         | Tool
-        | ChosenToolCall
+        | BaseChosenToolCall
         | str
         | ToolResponse
     ]

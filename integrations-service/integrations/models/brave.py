@@ -1,19 +1,15 @@
-from pydantic import Field
+from typing import List
 
-from .base_models import (
-    BaseArguments,
-    BaseOutput,
-    BaseSetup,
-)
+from pydantic import BaseModel, Field
+
+from .base_models import BaseOutput
 
 
-class BraveSearchSetup(BaseSetup):
-    api_key: str = Field(..., description="The api key for Brave Search")
-
-
-class BraveSearchArguments(BaseArguments):
-    query: str = Field(..., description="The search query for searching with Brave")
+class SearchResult(BaseModel):
+    title: str
+    link: str
+    snippet: str
 
 
 class BraveSearchOutput(BaseOutput):
-    result: str = Field(..., description="The result of the Brave Search")
+    result: List[SearchResult] = Field(..., description="A list of search results")

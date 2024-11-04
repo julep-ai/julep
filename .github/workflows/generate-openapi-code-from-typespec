@@ -1,0 +1,56 @@
+name: Generate OpenAPI code
+run-name: ${{ github.actor }} is generating openapi code
+
+on:
+  pull_request:
+    paths:
+      - 'typespec/**'
+  push: 
+    paths:
+      - 'typespec/**'
+
+jobs:
+  Typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+          cache: npm
+          cache-dependency-path: 'typespec/package-lock.json'
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Configure Poetry to use .venv
+        run: |
+          cd agents-api
+          poetry config virtualenvs.in-project true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: agents-api/.venv
+          key: ${{ runner.os }}-agents-api-poetry-${{ hashFiles('agents-api/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-agents-api-poetry-
+
+      - name: Install dependencies
+        run: |
+          cd agents-api
+          poetry install
+
+      - name: Generate openapi code
+        run: |
+          bash scripts/generate_openapi_code.sh
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}

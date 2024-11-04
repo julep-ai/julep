@@ -1,23 +1,41 @@
+from .autogen.Tools import (
+    BraveSearchArguments,
+    BraveSearchSetup,
+    BrowserbaseCompleteSessionArguments,
+    BrowserbaseCreateSessionArguments,
+    BrowserbaseExtensionArguments,
+    BrowserbaseGetSessionArguments,
+    BrowserbaseGetSessionConnectUrlArguments,
+    BrowserbaseGetSessionLiveUrlsArguments,
+    # WikipediaSearchSetup,
+    BrowserbaseListSessionsArguments,
+    BrowserbaseSetup,
+    EmailArguments,
+    EmailSetup,
+    RemoteBrowserArguments,
+    RemoteBrowserSetup,
+    SpiderFetchArguments,
+    SpiderSetup,
+    WeatherGetArguments,
+    WeatherSetup,
+    WikipediaSearchArguments,
+)
 from .models import (
     BaseProvider,
     BaseProviderMethod,
-    BraveSearchArguments,
     BraveSearchOutput,
-    BraveSearchSetup,
-    BrowserBaseLoadArguments,
-    BrowserBaseLoadOutput,
-    BrowserBaseSetup,
-    EmailArguments,
+    BrowserbaseCompleteSessionOutput,
+    BrowserbaseCreateSessionOutput,
+    BrowserbaseExtensionOutput,
+    BrowserbaseGetSessionConnectUrlOutput,
+    BrowserbaseGetSessionLiveUrlsOutput,
+    BrowserbaseGetSessionOutput,
+    BrowserbaseListSessionsOutput,
     EmailOutput,
-    EmailSetup,
     ProviderInfo,
-    SpiderFetchArguments,
+    RemoteBrowserOutput,
     SpiderFetchOutput,
-    SpiderSetup,
-    WeatherGetArguments,
     WeatherGetOutput,
-    WeatherSetup,
-    WikipediaSearchArguments,
     WikipediaSearchOutput,
 )
 
@@ -97,25 +115,6 @@ brave = BaseProvider(
     ),
 )
 
-browserbase = BaseProvider(
-    provider="browserbase",
-    setup=BrowserBaseSetup,
-    methods=[
-        BaseProviderMethod(
-            method="load",
-            description="Load documents from the provided urls",
-            arguments=BrowserBaseLoadArguments,
-            output=BrowserBaseLoadOutput,
-        ),
-    ],
-    info=ProviderInfo(
-        url="https://browserbase.com/",
-        docs="https://browserbase.com/docs/",
-        icon="https://browserbase.com/favicon.ico",
-        friendly_name="BrowserBase",
-    ),
-)
-
 email = BaseProvider(
     provider="email",
     setup=EmailSetup,
@@ -132,11 +131,86 @@ email = BaseProvider(
     ),
 )
 
-providers = {
+browserbase = BaseProvider(
+    provider="browserbase",
+    setup=BrowserbaseSetup,
+    methods=[
+        BaseProviderMethod(
+            method="list_sessions",
+            description="List sessions in Browserbase",
+            arguments=BrowserbaseListSessionsArguments,
+            output=BrowserbaseListSessionsOutput,
+        ),
+        BaseProviderMethod(
+            method="create_session",
+            description="Create a session in Browserbase",
+            arguments=BrowserbaseCreateSessionArguments,
+            output=BrowserbaseCreateSessionOutput,
+        ),
+        BaseProviderMethod(
+            method="get_session",
+            description="Get a session in Browserbase",
+            arguments=BrowserbaseGetSessionArguments,
+            output=BrowserbaseGetSessionOutput,
+        ),
+        BaseProviderMethod(
+            method="complete_session",
+            description="Complete a session in Browserbase",
+            arguments=BrowserbaseCompleteSessionArguments,
+            output=BrowserbaseCompleteSessionOutput,
+        ),
+        BaseProviderMethod(
+            method="get_live_urls",
+            description="Get sessions' live urls in Browserbase",
+            arguments=BrowserbaseGetSessionLiveUrlsArguments,
+            output=BrowserbaseGetSessionLiveUrlsOutput,
+        ),
+        BaseProviderMethod(
+            method="install_extension_from_github",
+            description="Install an extension from GitHub to the browserbase context",
+            arguments=BrowserbaseExtensionArguments,
+            output=BrowserbaseExtensionOutput,
+        ),
+        BaseProviderMethod(
+            method="get_connect_url",
+            description="Get the connection URL for a session",
+            arguments=BrowserbaseGetSessionConnectUrlArguments,
+            output=BrowserbaseGetSessionConnectUrlOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        friendly_name="BrowserBase",
+        url="https://browserbase.com/",
+        docs="https://browserbase.com/docs/",
+        icon="https://browserbase.com/favicon.ico",
+    ),
+)
+
+remote_browser = BaseProvider(
+    provider="remote_browser",
+    setup=RemoteBrowserSetup,
+    methods=[
+        BaseProviderMethod(
+            method="perform_action",
+            description="Perform an action in the browser",
+            arguments=RemoteBrowserArguments,
+            output=RemoteBrowserOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        friendly_name="Remote Browser",
+        url="https://playwright.dev/",
+        docs="https://playwright.dev/docs/",
+        icon="https://playwright.dev/favicon.ico",
+    ),
+)
+
+available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
     "spider": spider,
     "brave": brave,
-    "browserbase": browserbase,
     "email": email,
+    "browserbase": browserbase,
+    "remote_browser": remote_browser,
 }

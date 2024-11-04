@@ -1,15 +1,7 @@
 from langchain_core.documents import Document
 from pydantic import Field
 
-from .base_models import (
-    BaseArguments,
-    BaseOutput,
-)
-
-
-class WikipediaSearchArguments(BaseArguments):
-    query: str = Field(..., description="The search query string")
-    load_max_docs: int = Field(2, description="Maximum number of documents to load")
+from .base_models import BaseOutput
 
 
 class WikipediaSearchOutput(BaseOutput):

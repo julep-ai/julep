@@ -62,7 +62,7 @@ async def chat(
     env["docs"] = [
         dict(
             title=ref.title,
-            content=[snippet.content for snippet in ref.snippets],
+            content=[ref.snippet.content],
         )
         for ref in doc_references
     ]

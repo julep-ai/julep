@@ -3,7 +3,7 @@ from typing import Any
 from beartype import beartype
 from temporalio import activity
 
-from ..autogen.openapi_model import IntegrationDef
+from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
@@ -16,7 +16,7 @@ from ..models.tools import get_tool_args_from_metadata
 async def execute_integration(
     context: StepContext,
     tool_name: str,
-    integration: IntegrationDef,
+    integration: BaseIntegrationDef,
     arguments: dict[str, Any],
     setup: dict[str, Any] = {},
 ) -> Any:

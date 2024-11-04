@@ -1,10 +1,12 @@
 import inspect
 import re
+import time
 from functools import partialmethod, wraps
 from typing import Any, Callable, ParamSpec, Type, TypeVar
 from uuid import UUID
 
 import pandas as pd
+from fastapi import HTTPException
 from pydantic import BaseModel
 
 from ..common.utils.cozo import uuid_int_list_to_uuid4
@@ -187,6 +189,7 @@ def cozo_query(
     func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
     debug: bool | None = None,
     only_on_error: bool = False,
+    timeit: bool = False,
 ):
     def cozo_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
         """
@@ -199,6 +202,21 @@ def cozo_query(
 
         from pprint import pprint
 
+        from tenacity import (
+            retry,
+            retry_if_exception,
+            stop_after_attempt,
+            wait_exponential,
+        )
+
+        def is_resource_busy(e: Exception) -> bool:
+            return isinstance(e, HTTPException) and e.status_code == 429
+
+        @retry(
+            stop=stop_after_attempt(2),
+            wait=wait_exponential(multiplier=1, min=4, max=10),
+            retry=retry_if_exception(is_resource_busy),
+        )
         @wraps(func)
         def wrapper(*args: P.args, client=None, **kwargs: P.kwargs) -> pd.DataFrame:
             queries, variables = func(*args, **kwargs)
@@ -222,14 +240,25 @@ def cozo_query(
 
             try:
                 client = client or cozo.get_cozo_client()
+
+                start = timeit and time.perf_counter()
                 result = client.run(query, variables)
+                end = timeit and time.perf_counter()
+
+                timeit and print(f"Cozo query time: {end - start:.2f} seconds")
 
             except Exception as e:
                 if only_on_error and debug:
                     print(query)
                     pprint(variables)
 
-                debug and print(repr(getattr(e, "__cause__", None) or e))
+                debug and print(repr(e))
+
+                if "busy" in str(getattr(e, "resp", e)).lower():
+                    raise HTTPException(
+                        status_code=429, detail="Resource busy. Please try again later."
+                    ) from e
+
                 raise
 
             # Need to fix the UUIDs in the result

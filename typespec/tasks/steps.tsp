@@ -29,16 +29,21 @@ alias TypedExpression<T> = PyExpression;
 alias ReduceExpression<Value = unknown, Accumulator = Array<Value>> = TypedExpression<Accumulator>;
 
 /** A string->string object where the values are python expressions that get evaluated to give a final object. */
-alias ExpressionObject<T> = Record<TypedExpression<T>>;
+alias ExpressionObject<T> = Record<TypedExpression<T> | TypedExpression<T>[] | Record<TypedExpression<T>> | Record<TypedExpression<T>>[]>;
+
+alias NestedExpression<T> = Record<TypedExpression<T> | ExpressionObject<T> | ExpressionObject<T>[]>;
 
 /** Nested expression object. */
-alias NestedExpressionObject<T> = Record<TypedExpression<T> | ExpressionObject<T>>;
+alias NestedExpressionObject<T> = NestedExpression<T> | NestedExpression<T>[];
 
 @discriminator("kind_")
-model BaseWorkflowStep<T extends WorkflowStepKind> {
+model BaseWorkflowStep<T extends valueof WorkflowStepKind> {
     /** The kind of step */
     @visibility("read")
-    kind_: T;
+    kind_: (typeof T);
+
+    /** The label of this step for referencing it from other steps */
+    label?: string;
 }
 
 alias SequentialWorkflowStep =
@@ -98,7 +103,7 @@ model PromptStepDef {
     prompt: JinjaTemplate | InputChatMLMessage<JinjaTemplate>[];
 
     /** The tools to use for the prompt */
-    tools: "all" | (ToolRef | CreateToolRequest)[] = #[];
+    tools: "all" | (ToolRef | CreateToolRequest)[] = "all";
 
     /** The tool choice for the prompt */
     tool_choice?: ToolChoiceOption;
@@ -109,14 +114,15 @@ model PromptStepDef {
     /** Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content` */
     unwrap?: boolean = false;
 
-    /** Whether to forward the tool results to the model when available.
-     * "true" => always forward
-     * "false" => never forward
-     * null => forward if applicable (default)
-     * 
+    /** Whether to auto-run the tool and send the tool results to the model when available.
+     * (default: true for prompt steps, false for sessions)
+     *
      * If a tool call is made, the tool's output will be used as the model's input.
      * If a tool call is not made, the model's output will be used as the next step's input. */
-    forward_tool_results: boolean | null = null;
+    auto_run_tools: boolean = true;
+
+    /** Whether to disable caching for the prompt step */
+    disable_cache: boolean = false;
 }
 
 model EvaluateStep extends BaseWorkflowStep<"evaluate"> {
