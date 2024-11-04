@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Callable
 
 from anthropic import AsyncAnthropic  # Import AsyncAnthropic client
 from anthropic.types.beta.beta_message import BetaMessage
@@ -18,7 +19,7 @@ from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import anthropic_api_key, debug
-from ..utils import get_handler
+from ..utils import get_handler_with_filtered_params
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -57,8 +58,11 @@ def format_tool(tool: Tool) -> dict:
     }
 
     if tool.type == "system":
-        handler = get_handler(tool.system)
+        handler: Callable = get_handler_with_filtered_params(tool.system)
+
+        
         lc_tool: BaseTool = tool_decorator(handler)
+
         json_schema: dict = lc_tool.get_input_jsonschema()
 
         formatted["function"]["description"] = formatted["function"][
