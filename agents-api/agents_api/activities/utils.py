@@ -243,8 +243,8 @@ def get_handler_with_filtered_params(system: SystemDef) -> Callable:
         from its signature for JSON schema serialization.
     """
 
-    from inspect import signature
     from functools import wraps
+    from inspect import signature
 
     # Get the base handler based on system definition
     base_handler = get_handler(system)
@@ -263,9 +263,7 @@ def get_handler_with_filtered_params(system: SystemDef) -> Callable:
     # Remove problematic parameters
     filtered_handler.__signature__ = sig.replace(
         parameters=[
-            p
-            for p in sig.parameters.values()
-            if p.name not in parameters_to_exclude
+            p for p in sig.parameters.values() if p.name not in parameters_to_exclude
         ]
     )
 

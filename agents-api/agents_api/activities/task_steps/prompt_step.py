@@ -60,7 +60,6 @@ def format_tool(tool: Tool) -> dict:
     if tool.type == "system":
         handler: Callable = get_handler_with_filtered_params(tool.system)
 
-        
         lc_tool: BaseTool = tool_decorator(handler)
 
         json_schema: dict = lc_tool.get_input_jsonschema()
@@ -150,7 +149,6 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         exclude=excluded_keys, exclude_unset=True
     )
     passed_settings.update(passed_settings.pop("settings", {}))
-
 
     # Format tools for litellm
     formatted_tools = [format_tool(tool) for tool in context.tools]
