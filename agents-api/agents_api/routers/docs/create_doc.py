@@ -61,6 +61,19 @@ async def create_user_doc(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
+    """
+    Creates a new document for a user.
+
+    Parameters:
+        user_id (UUID): The unique identifier of the user associated with the document.
+        data (CreateDocRequest): The data to create the document with.
+        x_developer_id (UUID): The unique identifier of the developer associated with the document.
+        background_tasks (BackgroundTasks): The background tasks to run.
+
+    Returns:
+        ResourceCreatedResponse: The created document.
+    """
+
     doc: Doc = create_doc_query(
         developer_id=x_developer_id,
         owner_type="user",

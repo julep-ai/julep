@@ -58,6 +58,18 @@ def get_user(
     developer_id: UUID,
     user_id: UUID,
 ) -> tuple[list[str], dict]:
+    """
+    Retrieves a user by their unique identifier.
+
+
+    Parameters:
+        developer_id (UUID): The unique identifier of the developer associated with the user.
+        user_id (UUID): The unique identifier of the user to retrieve.
+
+    Returns:
+        User: The retrieved user.
+    """
+
     # Convert UUIDs to strings for query compatibility.
     user_id = str(user_id)
     developer_id = str(developer_id)

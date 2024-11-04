@@ -48,8 +48,9 @@ async def execute_system(
     try:
         handler = get_handler(system)
 
-        # Transform arguments for doc-related operations
-        if system.subresource == "doc":
+        # Transform arguments for doc-related operations (except create and search
+        # as we're calling the endpoint function rather than the model method)
+        if system.subresource == "doc" and system.operation not in ["create", "search"]:
             owner_id_field = f"{system.resource}_id"
             if owner_id_field in arguments:
                 doc_args = {

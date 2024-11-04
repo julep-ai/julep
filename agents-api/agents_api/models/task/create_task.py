@@ -58,6 +58,19 @@ def create_task(
     task_id: UUID | None = None,
     data: CreateTaskRequest,
 ) -> tuple[list[str], dict]:
+    """
+    Creates a new task.
+
+    Parameters:
+        developer_id (UUID): The unique identifier of the developer associated with the task.
+        agent_id (UUID): The unique identifier of the agent associated with the task.
+        task_id (UUID | None): The unique identifier of the task. If not provided, a new UUID will be generated.
+        data (CreateTaskRequest): The data to create the task with.
+
+    Returns:
+        ResourceCreatedResponse: The created task.
+    """
+
     data.metadata = data.metadata or {}
     data.input_schema = data.input_schema or {}
 

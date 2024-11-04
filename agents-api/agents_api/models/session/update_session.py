@@ -60,6 +60,18 @@ def update_session(
     developer_id: UUID,
     data: UpdateSessionRequest,
 ) -> tuple[list[str], dict]:
+    """
+    Updates a session with the provided data.
+
+    Parameters:
+        session_id (UUID): The unique identifier of the session to update.
+        developer_id (UUID): The unique identifier of the developer associated with the session.
+        data (UpdateSessionRequest): The data to update the session with.
+
+    Returns:
+        ResourceUpdatedResponse: The updated session.
+    """
+
     update_data = data.model_dump(exclude_unset=True)
 
     session_update_cols, session_update_vals = cozo_process_mutate_data(

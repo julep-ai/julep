@@ -81,6 +81,18 @@ async def search_user_docs(
     ),
     user_id: UUID,
 ) -> DocSearchResponse:
+    """
+    Searches for documents associated with a specific user.
+
+    Parameters:
+        x_developer_id (UUID): The unique identifier of the developer associated with the user.
+        search_params (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest): The parameters for the search.
+        user_id (UUID): The unique identifier of the user associated with the documents.
+
+    Returns:
+        DocSearchResponse: The search results.
+    """
+
     # MMR here
     search_fn, params = get_search_fn_and_params(search_params)
 
@@ -121,6 +133,18 @@ async def search_agent_docs(
     ),
     agent_id: UUID,
 ) -> DocSearchResponse:
+    """
+    Searches for documents associated with a specific agent.
+
+    Parameters:
+        x_developer_id (UUID): The unique identifier of the developer associated with the agent.
+        search_params (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest): The parameters for the search.
+        agent_id (UUID): The unique identifier of the agent associated with the documents.
+
+    Returns:
+        DocSearchResponse: The search results.
+    """
+
     search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()

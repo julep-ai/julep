@@ -58,6 +58,8 @@ def list_users(
         developer_id (UUID): The unique identifier of the developer.
         limit (int): The maximum number of users to return. Defaults to 100.
         offset (int): The number of users to skip before starting to collect the result set. Defaults to 0.
+        sort_by (Literal["created_at", "updated_at"]): The field to sort the users by. Defaults to "created_at".
+        direction (Literal["asc", "desc"]): The direction to sort the users in. Defaults to "desc".
         metadata_filter (dict[str, Any]): A dictionary representing filters to apply on user metadata.
 
     Returns:
