@@ -98,7 +98,10 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
                 offending_input = offending_input[loc]
 
                 # Keep only the message from the error
-                errors = [error.get("msg", error) for error in errors]
+                errors = [
+                    error.get("msg", error) if hasattr(error, "msg") else error
+                    for error in errors
+                ]
 
             else:
                 errors = exc.errors() if hasattr(exc, "errors") else [exc]
