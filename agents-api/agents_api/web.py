@@ -4,7 +4,7 @@ This module initializes the FastAPI application, registers routes, sets up middl
 
 import asyncio
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Union, cast
 
 import sentry_sdk
 import uvicorn
@@ -63,6 +63,7 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
 
         # Return the deepest matching possibility
         if isinstance(exc, (ValidationError, RequestValidationError)):
+            exc = cast(Union[ValidationError, RequestValidationError], exc)
             errors = exc.errors()
 
             # Get the deepest matching errors
@@ -98,7 +99,12 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
                 offending_input = offending_input[loc]
 
                 # Keep only the message from the error
-                errors = [error.get("msg", error) for error in errors]
+                errors = [
+                    error.get("msg", error)
+                    if isinstance(error, dict)
+                    else getattr(error, "msg", error)
+                    for error in errors
+                ]
 
             else:
                 errors = exc.errors() if hasattr(exc, "errors") else [exc]

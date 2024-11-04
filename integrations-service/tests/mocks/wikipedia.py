@@ -18,6 +18,7 @@ class MockWikipediaClient:
     def load(self, *args, **kwargs) -> List[Document]:
         return self.result
 
+
 class MockWikipediaException(Exception):
     """Mock exception for Wikipedia API errors"""
 
