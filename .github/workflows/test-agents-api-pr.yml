@@ -44,7 +44,7 @@ jobs:
       - name: Run tests
         run: |
           cd agents-api
-          poetry run poe test --fail-limit 1
+          poetry run poe test --fail-limit 3
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
