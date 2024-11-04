@@ -100,7 +100,7 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
 
                 # Keep only the message from the error
                 errors = [
-                    error.get("msg", error) if hasattr(error, "msg") else error
+                    error.get("msg", error) if isinstance(error, dict) else getattr(error, "msg", error)
                     for error in errors
                 ]
 
