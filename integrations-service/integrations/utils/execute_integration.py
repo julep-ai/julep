@@ -58,4 +58,4 @@ async def execute_integration(
     if setup_obj:
         return await execution_function(setup=setup_obj, arguments=parsed_arguments)
     else:
-        return execution_function(arguments=parsed_arguments)
+        return await execution_function(arguments=parsed_arguments)

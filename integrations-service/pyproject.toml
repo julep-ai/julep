@@ -79,11 +79,14 @@ datamodel-codegen \
 [tool.poetry.group.dev.dependencies]
 poethepoet = "^0.25.1"
 datamodel-code-generator = "^0.26.2"
-pytest = "^6.2.5"
+pytest = "^8.3.3"
 pytype = "^2024.9.13"
 ruff = "^0.6.8"
-pytest-cov = "^5.0.0"
-anyio = "^4.6.2.post1"
+pytest-cov = "^6.0.0"
+pytest-asyncio = "^0.24.0"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

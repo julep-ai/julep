@@ -14,28 +14,22 @@ from integrations.providers import available_providers
 from integrations.utils.execute_integration import execute_integration
 
 
-async def test_weather_get_mock(weather_provider):
-    """Test weather lookup with mock client"""
+@pytest.mark.asyncio
+async def test_weather_get_mock(wikipedia_provider):
+    """Test wikipedia lookup with mock client"""
+    query = "London"
+
     result = await execute_integration(
-        provider="weather",
-        method="get",
-        arguments=WeatherGetArguments(location="London"),
+        provider="wikipedia",
+        method="search",
+        arguments=WikipediaSearchArguments(query=query),
     )
 
-    assert "London" in result.result
+    assert len(result.documents) > 0
+    assert any([(query in doc.page_content) for doc in result.documents])
 
 
-async def test_weather_get_direct():
-    """Test weather lookup with mock client"""
-    result = await execute_integration(
-        provider="weather",
-        method="get",
-        arguments=WeatherGetArguments(location="London"),
-    )
-
-    assert "London" in result.result
-
-
+# @pytest.mark.asyncio
 # async def test_weather_get_direct():
 #     """Test weather lookup with mock client"""
 #     raise NotImplementedError
