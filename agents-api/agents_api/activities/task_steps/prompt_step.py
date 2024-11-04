@@ -131,13 +131,22 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         else "gpt-4o"
     )
 
+    excluded_keys = [
+        "prompt",
+        "kind_",
+        "label",
+        "unwrap",
+        "auto_run_tools",
+        "disable_cache",
+        "tools",
+    ]
+
     # Get passed settings
-    if context.current_step.settings:
-        passed_settings: dict = context.current_step.settings.model_dump(
-            exclude_unset=True
-        )
-    else:
-        passed_settings: dict = {}
+    passed_settings: dict = context.current_step.model_dump(
+        exclude=excluded_keys, exclude_unset=True
+    )
+    passed_settings.update(passed_settings.pop("settings", {}))
+
 
     # Format tools for litellm
     formatted_tools = [format_tool(tool) for tool in context.tools]
