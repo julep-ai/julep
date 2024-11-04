@@ -56,6 +56,24 @@ def list_docs(
     metadata_filter: dict[str, Any] = {},
     include_without_embeddings: bool = False,
 ) -> tuple[list[str], dict]:
+    """
+    Constructs and returns a datalog query for listing documents and their associated information snippets.
+
+    Parameters:
+        developer_id (UUID): The unique identifier of the developer associated with the documents.
+        owner_id (UUID): The unique identifier of the owner (user or agent) associated with the documents.
+        owner_type (Literal["user", "agent"]): The type of owner associated with the documents.
+        limit (int): The maximum number of documents to return.
+        offset (int): The number of documents to skip before returning the results.
+        sort_by (Literal["created_at"]): The field to sort the documents by.
+        direction (Literal["asc", "desc"]): The direction to sort the documents in.
+        metadata_filter (dict): A dictionary of metadata filters to apply to the documents.
+        include_without_embeddings (bool): Whether to include documents without embeddings in the results.
+
+    Returns:
+        Doc[]
+    """
+
     # Transforms the metadata_filter dictionary into a string representation for the datalog query.
     metadata_filter_str = ", ".join(
         [
