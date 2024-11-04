@@ -248,6 +248,8 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         )
 
     else:
+        # FIXME: hardcoded tool to a None value as the tool calls are not implemented yet
+        formatted_tools = None
         # Use litellm for other models
         completion_data: dict = {
             "model": agent_model,
