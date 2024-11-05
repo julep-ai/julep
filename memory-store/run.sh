@@ -11,6 +11,9 @@ echo "Auth token: $COZO_AUTH_TOKEN"
 export COZO_ROCKSDB_DIR=${COZO_ROCKSDB_DIR:-cozo.db}
 echo $COZO_AUTH_TOKEN > $COZO_MNT_DIR/${COZO_ROCKSDB_DIR}.rocksdb.cozo_auth
 
+# Copy options file to the RocksDB directory
+cp /app/options $COZO_MNT_DIR/${COZO_ROCKSDB_DIR}/options
+
 # Start server
 ${APP_HOME:=.}/bin/cozo server \
     --engine rocksdb \
