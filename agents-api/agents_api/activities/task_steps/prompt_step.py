@@ -150,6 +150,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     )
     passed_settings.update(passed_settings.pop("settings", {}))
 
+    if not passed_settings.get("tools"):
+        passed_settings.pop("tool_choice", None)
+
     # Format tools for litellm
     formatted_tools = [format_tool(tool) for tool in context.tools]
 
