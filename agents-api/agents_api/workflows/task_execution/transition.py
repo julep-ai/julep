@@ -12,6 +12,9 @@ from ...autogen.openapi_model import (
 from ...common.protocol.tasks import PartialTransition, StepContext
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
 
+with workflow.unsafe.imports_passed_through():
+    from ...env import debug, testing
+
 
 async def transition(
     context: StepContext, state: PartialTransition | None = None, **kwargs
@@ -46,7 +49,9 @@ async def transition(
         return await workflow.execute_activity(
             task_steps.transition_step,
             args=[context, transition_request],
-            schedule_to_close_timeout=timedelta(seconds=30),
+            schedule_to_close_timeout=timedelta(
+                seconds=30 if debug or testing else 600
+            ),
             retry_policy=DEFAULT_RETRY_POLICY,
         )
 
