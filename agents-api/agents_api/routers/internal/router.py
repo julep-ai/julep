@@ -11,7 +11,14 @@ converter = PydanticEncodingPayloadConverter()
 
 # Decode route
 @router.post("/temporal/decode", tags=["temporal"])
-async def decode_payloads(req: Request) -> dict:
+    """Decodes a list of payloads from the request body.
+
+    Args:
+        req (Request): The request containing the payloads to decode.
+
+    Returns:
+        dict: A dictionary containing the decoded payloads, including any errors encountered.
+    """
     body = json_format.Parse(await req.body(), Payloads())
     payloads = body.payloads
     decoded_payloads = []
