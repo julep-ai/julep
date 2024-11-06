@@ -17,6 +17,7 @@ Each sub-module defines its own set of API endpoints and is responsible for hand
 
 from .agents import router as agents_router
 from .docs import router as docs_router
+from .internal import router as internal_router
 from .jobs import router as jobs_router
 from .sessions import router as sessions_router
 from .tasks import router as tasks_router
