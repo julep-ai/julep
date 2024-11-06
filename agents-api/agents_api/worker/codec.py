@@ -114,10 +114,21 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
             f"{sys.version_info.major}.{sys.version_info.minor}".encode()
         )
 
-        assert payload.metadata["encoding"] == self.b_encoding
-        assert payload.metadata["python_version"] == current_python_version
+        # Check if this is a payload we can handle
+        if (
+            "encoding" not in payload.metadata
+            or payload.metadata["encoding"] != self.b_encoding
+            or "python_version" not in payload.metadata
+            or payload.metadata["python_version"] != current_python_version
+        ):
+            # Return the payload data as-is if we can't handle it
+            return payload.data
 
-        return from_payload_data(payload.data, type_hint)
+        try:
+            return from_payload_data(payload.data, type_hint)
+        except Exception as e:
+            logging.warning(f"Failed to decode payload with our encoder: {e}")
+            return None
 
 
 class PydanticPayloadConverter(CompositePayloadConverter):
