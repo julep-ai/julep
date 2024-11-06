@@ -128,6 +128,7 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
             return from_payload_data(payload.data, type_hint)
         except Exception as e:
             logging.warning(f"Failed to decode payload with our encoder: {e}")
+            return None
 
 
 class PydanticPayloadConverter(CompositePayloadConverter):
