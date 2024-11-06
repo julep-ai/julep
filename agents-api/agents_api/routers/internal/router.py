@@ -49,5 +49,5 @@ async def decode_payloads(req: Request):
                 metadata[k] = str(v)
 
         decoded_payloads.append({"data": data, "metadata": metadata})
-  
+
     return {"payloads": decoded_payloads}
