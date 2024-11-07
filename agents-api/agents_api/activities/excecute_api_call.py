@@ -34,7 +34,7 @@ async def execute_api_call(
             response = await client.request(
                 method=api_call.method,
                 url=arg_url or str(api_call.url),
-                headers=arg_headers or api_call.headers,
+                headers={**(arg_headers or {}), **(api_call.headers or {})},
                 follow_redirects=api_call.follow_redirects,
                 **request_args,
             )

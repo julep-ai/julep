@@ -18,6 +18,16 @@ log:
 
 http:
   routers:
+    agents-api-internal:
+      entryPoints:
+        - web
+      rule: Path(`/api/temporal/{path:.*}`)
+      middlewares:
+        - corsHeaders
+        - agents-api-strip-prefix-api
+      service: service-agents-api
+      priority: 2  # Higher priority than the general agents-api route
+
     agents-api:
       entryPoints:
         - web
