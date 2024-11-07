@@ -2,8 +2,8 @@
 
 set -eo pipefail
 
-# Create mount directory for service.
-mkdir -p ${COZO_MNT_DIR:=/data}
+# Create mount directory for service and RocksDB directory
+mkdir -p ${COZO_MNT_DIR:=/data}/${COZO_ROCKSDB_DIR:-cozo.db}
 
 # Create auth token if not exists.
 export COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN:=`tr -dc A-Za-z0-9 </dev/urandom | head -c 72`}
