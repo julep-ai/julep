@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Callable
+from typing import Callable, Any
 
 from anthropic import AsyncAnthropic  # Import AsyncAnthropic client
 from anthropic.types.beta.beta_message import BetaMessage
@@ -11,7 +11,24 @@ from litellm.types.utils import Choices, ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from ...autogen.Tools import Tool
+from ...autogen.Tools import (
+    BraveIntegrationDef,
+    BrowserbaseCompleteSessionIntegrationDef,
+    BrowserbaseContextIntegrationDef,
+    BrowserbaseCreateSessionIntegrationDef,
+    BrowserbaseExtensionIntegrationDef,
+    BrowserbaseGetSessionConnectUrlIntegrationDef,
+    BrowserbaseGetSessionIntegrationDef,
+    BrowserbaseGetSessionLiveUrlsIntegrationDef,
+    BrowserbaseListSessionsIntegrationDef,
+    DummyIntegrationDef,
+    EmailIntegrationDef,
+    RemoteBrowserIntegrationDef,
+    SpiderIntegrationDef,
+    Tool,
+    WeatherIntegrationDef,
+    WikipediaIntegrationDef,
+)
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
@@ -23,6 +40,43 @@ from ..utils import get_handler_with_filtered_params
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
+
+
+def _get_integration_arguments(tool: Tool):
+    providers_map = {
+        "brave": BraveIntegrationDef,
+        "dummy": DummyIntegrationDef,
+        "email": EmailIntegrationDef,
+        "spider": SpiderIntegrationDef,
+        "wikipedia": WikipediaIntegrationDef,
+        "weather": WeatherIntegrationDef,
+        "browserbase": {
+            "create_context": BrowserbaseContextIntegrationDef,
+            "install_extension_from_github": BrowserbaseExtensionIntegrationDef,
+            "list_sessions": BrowserbaseListSessionsIntegrationDef,
+            "create_session": BrowserbaseCreateSessionIntegrationDef,
+            "get_session": BrowserbaseGetSessionIntegrationDef,
+            "complete_session": BrowserbaseCompleteSessionIntegrationDef,
+            "get_live_urls": BrowserbaseGetSessionLiveUrlsIntegrationDef,
+            "get_connect_url": BrowserbaseGetSessionConnectUrlIntegrationDef,
+        },
+        "remote_browser": RemoteBrowserIntegrationDef,
+    }
+
+    integration = providers_map.get(tool.integration.provider)
+    if isinstance(integration, dict):
+        integration = integration.get(tool.integration.method)
+
+    return integration.model_fields["arguments"].annotation if integration else None
+
+
+def _annotation_input_schema(annotation: Any) -> dict:
+    # TODO: implement
+    def _tool(x: annotation):
+        pass
+
+    lc_tool: BaseTool = tool_decorator(_tool)
+    return lc_tool.get_input_jsonschema()
 
 
 def format_tool(tool: Tool) -> dict:
@@ -70,13 +124,12 @@ def format_tool(tool: Tool) -> dict:
 
         formatted["function"]["parameters"] = json_schema
 
-    # # FIXME: Implement integration tools
-    # elif tool.type == "integration":
-    #     raise NotImplementedError("Integration tools are not supported")
+    elif tool.type == "integration" and tool.integration:
+        if annotation := _get_integration_arguments(tool):
+            formatted["function"]["parameters"] = _annotation_input_schema(annotation)
 
-    # # FIXME: Implement API call tools
-    # elif tool.type == "api_call":
-    #     raise NotImplementedError("API call tools are not supported")
+    elif tool.type == "api_call" and tool.api_call:
+        formatted["function"]["parameters"] = tool.api_call.schema_
 
     return formatted
 
