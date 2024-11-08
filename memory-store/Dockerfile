@@ -56,6 +56,9 @@ RUN \
     mkdir -p $COZO_MNT_DIR $COZO_BACKUP_DIR && \
     chmod +x $APP_HOME/bin/cozo && \
     chmod +x $APP_HOME/run.sh
+    
+# Copy the options file into the image
+COPY ./options ./options
 
 # Use tini to manage zombie processes and signal forwarding
 # https://github.com/krallin/tini
