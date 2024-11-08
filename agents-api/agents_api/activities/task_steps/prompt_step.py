@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Callable, Any
+from typing import Any, Callable
 
 from anthropic import AsyncAnthropic  # Import AsyncAnthropic client
 from anthropic.types.beta.beta_message import BetaMessage
