@@ -18,6 +18,8 @@ from ..autogen.Tools import (
     BrowserbaseSetup,
     EmailArguments,
     EmailSetup,
+    LlamaParseFetchArguments,
+    LlamaParseSetup,
     RemoteBrowserArguments,
     RemoteBrowserSetup,
     SpiderFetchArguments,
@@ -38,6 +40,7 @@ from .browserbase import (
     BrowserbaseListSessionsOutput,
 )
 from .email import EmailOutput
+from .llama_parse import LlamaParseFetchOutput
 from .remote_browser import RemoteBrowserOutput
 from .spider import SpiderFetchOutput
 from .weather import WeatherGetOutput
@@ -50,6 +53,7 @@ ExecutionSetup = Union[
     BraveSearchSetup,
     BrowserbaseSetup,
     RemoteBrowserSetup,
+    LlamaParseSetup,
 ]
 
 ExecutionArguments = Union[
@@ -67,6 +71,7 @@ ExecutionArguments = Union[
     BrowserbaseExtensionArguments,
     BrowserbaseListSessionsArguments,
     RemoteBrowserArguments,
+    LlamaParseFetchArguments,
 ]
 
 ExecutionResponse = Union[
@@ -84,6 +89,7 @@ ExecutionResponse = Union[
     BrowserbaseExtensionOutput,
     BrowserbaseListSessionsOutput,
     RemoteBrowserOutput,
+    LlamaParseFetchOutput,
 ]
 
 

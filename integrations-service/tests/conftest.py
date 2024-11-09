@@ -7,6 +7,7 @@ from .mocks.email import MockEmailClient
 from .mocks.spider import MockSpiderClient
 from .mocks.weather import MockWeatherClient
 from .mocks.wikipedia import MockWikipediaClient
+from .mocks.llama_parse import MockLlamaParseClient
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +21,7 @@ def mock_external_services():
         "langchain_community.utilities.OpenWeatherMapAPIWrapper", MockWeatherClient
     ), patch(
         "langchain_community.document_loaders.WikipediaLoader", MockWikipediaClient
-    ):
+    ), patch("llama_parse.LlamaParse", MockLlamaParseClient):
         yield
 
 
@@ -58,3 +59,9 @@ def brave_provider():
 def email_provider():
     """Fixture that provides access to the Email provider"""
     return available_providers["email"]
+
+
+@pytest.fixture
+def llama_parse_provider():
+    """Fixture that provides access to the LlamaParse provider"""
+    return available_providers["llama_parse"]
