@@ -149,8 +149,7 @@ def test_session(
     session = create_session(
         developer_id=developer_id,
         data=CreateSessionRequest(
-            agent=test_agent.id,
-            user=test_user.id,
+            agent=test_agent.id, user=test_user.id, metadata={"test": "test"}
         ),
         client=cozo_client,
     )
