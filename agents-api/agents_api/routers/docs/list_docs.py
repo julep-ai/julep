@@ -2,12 +2,12 @@ import json
 from typing import Annotated, Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict
 from fastapi import Depends, Query
+from pydantic import BaseModel, BeforeValidator, ConfigDict
 
 from ...autogen.openapi_model import Doc, ListResponse
 from ...dependencies.developer_id import get_developer_id
-from ...dependencies.query_filter import create_filter_extractor, MetadataFilter
+from ...dependencies.query_filter import MetadataFilter, create_filter_extractor
 from ...models.docs.list_docs import list_docs as list_docs_query
 from .router import router
 
