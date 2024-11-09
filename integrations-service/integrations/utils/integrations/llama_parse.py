@@ -34,8 +34,8 @@ async def parse(
     # Decode base64 file content
     file_content = base64.b64decode(arguments.file)
     extra_info = {
-        "file_name": str(uuid.uuid4())
-    }  # Generate a random UUID for the filename
+        "file_name": arguments.filename if arguments.filename else str(uuid.uuid4())
+    }
 
     # Parse the document
     documents = await parser.aload_data(file_content, extra_info=extra_info)

@@ -26,6 +26,9 @@ model LlamaParseFetchArguments {
     /** Language of the text. Default is English.*/
     language?: string = "en";
 
+    /** File Name. If not provided, a random name will be generated. */
+    filename?: string;
+
     /** The base64 string of the file*/
     file: string;
 }

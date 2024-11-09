@@ -7086,6 +7086,9 @@ components:
           type: string
           description: Language of the text. Default is English.
           default: en
+        filename:
+          type: string
+          description: File Name. If not provided, a random name will be generated.
         file:
           type: string
           description: The base64 string of the file
@@ -7115,6 +7118,9 @@ components:
           type: string
           description: Language of the text. Default is English.
           default: en
+        filename:
+          type: string
+          description: File Name. If not provided, a random name will be generated.
         file:
           type: string
           description: The base64 string of the file

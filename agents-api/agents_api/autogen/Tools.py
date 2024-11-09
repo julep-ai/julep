@@ -983,6 +983,10 @@ class LlamaParseFetchArguments(BaseModel):
     """
     Language of the text. Default is English.
     """
+    filename: str | None = None
+    """
+    File Name. If not provided, a random name will be generated.
+    """
     file: str
     """
     The base64 string of the file
@@ -1012,6 +1016,10 @@ class LlamaParseFetchArgumentsUpdate(BaseModel):
     language: str = "en"
     """
     Language of the text. Default is English.
+    """
+    filename: str | None = None
+    """
+    File Name. If not provided, a random name will be generated.
     """
     file: str | None = None
     """
