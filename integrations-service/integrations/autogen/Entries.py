@@ -22,17 +22,9 @@ class BaseEntry(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    role: Literal[
-        "user",
-        "assistant",
-        "system",
-        "function",
-        "function_response",
-        "function_call",
-        "auto",
-    ]
+    role: Literal["user", "assistant", "system", "tool"]
     """
-    ChatML role (system|assistant|user|function_call|function|function_response|auto)
+    ChatML role (system|assistant|user|tool)
     """
     name: str | None = None
     content: (
@@ -66,33 +58,13 @@ class BaseEntry(BaseModel):
     """
 
 
-class ChatMLRole(
-    RootModel[
-        Literal[
-            "user",
-            "assistant",
-            "system",
-            "function",
-            "function_response",
-            "function_call",
-            "auto",
-        ]
-    ]
-):
+class ChatMLRole(RootModel[Literal["user", "assistant", "system", "tool"]]):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: Literal[
-        "user",
-        "assistant",
-        "system",
-        "function",
-        "function_response",
-        "function_call",
-        "auto",
-    ]
+    root: Literal["user", "assistant", "system", "tool"]
     """
-    ChatML role (system|assistant|user|function_call|function|function_response|auto)
+    ChatML role (system|assistant|user|tool)
     """
 
 

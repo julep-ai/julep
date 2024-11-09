@@ -106,6 +106,27 @@ async def chat(
 
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
+    tools = [tool.model_dump(mode="json") for tool in tools]
+
+    # Convert anthropic tools to `function`
+    for tool in tools:
+        if tool.get("type") == "computer_20241022":
+            tool["function"] = {
+                "name": tool["name"],
+                "parameters": tool.pop("computer_20241022"),
+            }
+
+        elif tool.get("type") == "bash_20241022":
+            tool["function"] = {
+                "name": tool["name"],
+                "parameters": tool.pop("bash_20241022"),
+            }
+
+        elif tool.get("type") == "text_editor_20241022":
+            tool["function"] = {
+                "name": tool["name"],
+                "parameters": tool.pop("text_editor_20241022"),
+            }
 
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7

@@ -243,6 +243,9 @@ model Tool {
 model FunctionCallOption {
     /** The name of the function */
     name: string;
+
+    /** The parameters to pass to the function */
+    arguments?: string | FunctionCallOption; // May be a JSON string or another FunctionCallOption
 }
 
 model NamedToolChoice {
@@ -290,7 +293,7 @@ model BaseChosenToolCall {
     bash_20241022?: ChosenBash20241022;
 
     @visibility("read")
-    id?: uuid;
+    id?: string;
 }
 
 model ChosenFunctionCall extends BaseChosenToolCall {

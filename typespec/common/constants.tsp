@@ -37,11 +37,9 @@ Instructions:{{"\n"}}
 {%- if tools -%}
 Tools:{{"\n"}}
   {%- for tool in tools -%}
-    {%- if tool.type == "function" -%}
+    {%- if tool.function -%}
       - {{tool.function.name}}
       {%- if tool.function.description -%}: {{tool.function.description}}{%- endif -%}{{"\n"}}
-    {%- else -%}
-      - {{ 0/0 }} {# Error: Other tool types aren't supported yet. #}
     {%- endif -%}
   {%- endfor -%}
 {{"\n\n"}}

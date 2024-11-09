@@ -642,18 +642,11 @@ class PromptItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    role: Literal[
-        "user",
-        "assistant",
-        "system",
-        "function",
-        "function_response",
-        "function_call",
-        "auto",
-    ]
+    role: Literal["user", "assistant", "system", "tool"]
     """
     The role of the message
     """
+    tool_call_id: str | None = None
     content: list[str] | list[Content | ContentModel] | str
     """
     The content parts of the message
