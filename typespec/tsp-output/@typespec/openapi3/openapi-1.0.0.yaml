@@ -1340,12 +1340,8 @@ components:
       description: Object to filter results by metadata
       schema:
         type: object
-        additionalProperties:
-          anyOf:
-            - type: number
-            - type: string
-            - type: boolean
-          nullable: true
+        additionalProperties: {}
+        default: {}
       explode: false
     Common.PaginationOptions.offset:
       name: offset
@@ -2451,12 +2447,7 @@ components:
           default: en-US
         metadata_filter:
           type: object
-          additionalProperties:
-            anyOf:
-              - type: number
-              - type: string
-              - type: boolean
-            nullable: true
+          additionalProperties: {}
           default: {}
         mmr_strength:
           type: number
