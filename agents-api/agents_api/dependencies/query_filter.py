@@ -22,7 +22,7 @@ class MetadataFilter(BaseModel):
 
 def create_filter_extractor(
     prefix: str = "metadata_filter",
-) -> Callable[[Request], MetadataFilter]:
+) -> Callable[[Request, MetadataFilter], MetadataFilter]:
     """
     Creates a dependency function to extract filter parameters with a given prefix.
 
