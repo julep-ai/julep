@@ -164,6 +164,9 @@ def search_docs_by_embedding(
                     bind_vector: embedding,
                 }}
 
+            :sort distance
+            :limit {k}
+
             :create _search_result {{
                 doc_id,
                 index,
@@ -219,7 +222,8 @@ def search_docs_by_embedding(
                 distance = cos_dist(query, embedding),
                 distance <= {radius}
 
-            :limit {k}   # Get more candidates for diversity
+            :sort distance
+            :limit {k}
 
             :create _search_result {{
                 doc_id,
@@ -252,7 +256,8 @@ def search_docs_by_embedding(
             *_search_result{{ doc_id, index, title, content, distance, embedding, metadata }},
             snippet_data = [index, content]
 
-        :limit {k}   # Get more candidates for diversity
+        :sort distance
+        :limit {k}
 
         :create _interim {{
             owner_type,
@@ -331,6 +336,8 @@ def search_docs_by_embedding(
             title,
             metadata,
         ]
+
+        :sort distance
     """
 
     verify_query = "}\n\n{".join(
