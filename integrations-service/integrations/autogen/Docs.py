@@ -87,6 +87,7 @@ class DocReference(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    metadata: dict[str, Any] | None = None
     owner: DocOwner
     """
     The owner of this document.

@@ -2564,6 +2564,9 @@ components:
         - snippet
         - distance
       properties:
+        metadata:
+          type: object
+          additionalProperties: {}
         owner:
           allOf:
             - $ref: '#/components/schemas/Docs.DocOwner'
