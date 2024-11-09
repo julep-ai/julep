@@ -68,7 +68,7 @@ async def gather_messages(
     if not recall:
         return past_messages, []
 
-    # FIXME: This should only search text messages and not embed if text is empty 
+    # FIXME: This should only search text messages and not embed if text is empty
     # Search matching docs
     [query_embedding, *_] = await litellm.aembedding(
         inputs="\n\n".join(
