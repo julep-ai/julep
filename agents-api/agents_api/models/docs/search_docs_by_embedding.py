@@ -136,6 +136,7 @@ def search_docs_by_embedding(
                 content,
                 distance,
                 embedding,
+                metadata,
             ] :=
                 # Get input values
                 input[owner_type, owner_id, query],
@@ -146,6 +147,7 @@ def search_docs_by_embedding(
                     owner_id,
                     doc_id,
                     title,
+                    metadata,
                 }},
 
                 # Search for snippets in the embedding space
@@ -169,6 +171,7 @@ def search_docs_by_embedding(
                 content,
                 distance,
                 embedding,
+                metadata,
             }}
         }}
 
@@ -191,6 +194,7 @@ def search_docs_by_embedding(
                 content,
                 distance,
                 embedding,
+                metadata,
             ] :=
                 # Get input values
                 input[owner_type, owner_id, query],
@@ -201,6 +205,7 @@ def search_docs_by_embedding(
                     owner_id,
                     doc_id,
                     title,
+                    metadata,
                 }},
 
                 # Search for snippets in the embedding space
@@ -223,6 +228,7 @@ def search_docs_by_embedding(
                 content,
                 distance,
                 embedding,
+                metadata,
             }}
         }}
         %end
@@ -239,10 +245,11 @@ def search_docs_by_embedding(
             distance,
             title,
             embedding,
+            metadata,
         ] := 
             owners[owner_type, owner_id_str],
             owner_id = to_uuid(owner_id_str),
-            *_search_result{{ doc_id, index, title, content, distance, embedding, }},
+            *_search_result{{ doc_id, index, title, content, distance, embedding, metadata }},
             snippet_data = [index, content]
 
         :limit {k}   # Get more candidates for diversity
@@ -255,6 +262,7 @@ def search_docs_by_embedding(
             distance,
             title,
             embedding,
+            metadata,
         }}
     """
 
@@ -267,6 +275,7 @@ def search_docs_by_embedding(
             distance,
             title,
             embedding,
+            metadata,
         ] := 
             *_interim {
                 owner_type,
@@ -276,6 +285,7 @@ def search_docs_by_embedding(
                 distance,
                 title,
                 embedding,
+                metadata,
             }
 
         m[
@@ -285,6 +295,7 @@ def search_docs_by_embedding(
             snippet,
             distance,
             title,
+            metadata,
         ] := 
             n[
                 doc_id,
@@ -294,6 +305,7 @@ def search_docs_by_embedding(
                 distance,
                 title,
                 embedding,
+                metadata,
             ],
             snippet = {
                 "index": snippet_datum->0,
@@ -309,6 +321,7 @@ def search_docs_by_embedding(
             snippet,
             distance,
             title,
+            metadata,
         ] := m[
             id,
             owner_type,
@@ -316,6 +329,7 @@ def search_docs_by_embedding(
             snippet,
             distance,
             title,
+            metadata,
         ]
     """
 

@@ -142,6 +142,7 @@ def search_docs_by_text(
             title,
             owner_type,
             owner_id,
+            metadata,
         ] :=
             candidate[doc_id],
             *docs {{
@@ -149,6 +150,7 @@ def search_docs_by_text(
                 owner_id,
                 doc_id,
                 title,
+                metadata,
             }},
             search_result [
                 doc_id,
@@ -168,6 +170,7 @@ def search_docs_by_text(
             snippet,
             distance,
             title,
+            metadata,
         ] := 
             candidate[id],
             input[owner_type, owner_id],
@@ -178,6 +181,7 @@ def search_docs_by_text(
                 title,
                 owner_type,
                 owner_id,
+                metadata,
             ]
 
         # Sort the results by distance to find the closest matches
