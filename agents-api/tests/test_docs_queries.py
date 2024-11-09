@@ -1,6 +1,7 @@
 # Tests for entry queries
 
 import asyncio
+
 from ward import test
 
 from agents_api.autogen.openapi_model import CreateDocRequest
