@@ -245,7 +245,7 @@ model FunctionCallOption {
     name: string;
 
     /** The parameters to pass to the function */
-    arguments?: string | FunctionCallOption; // May be a JSON string or another FunctionCallOption
+    arguments?: string; // May be a JSON string
 }
 
 model NamedToolChoice {

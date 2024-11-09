@@ -7037,9 +7037,7 @@ components:
           type: string
           description: The name of the function
         arguments:
-          anyOf:
-            - type: string
-            - $ref: '#/components/schemas/Tools.FunctionCallOption'
+          type: string
           description: The parameters to pass to the function
     Tools.FunctionDef:
       type: object

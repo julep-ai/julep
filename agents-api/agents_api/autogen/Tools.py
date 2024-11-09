@@ -920,7 +920,7 @@ class FunctionCallOption(BaseModel):
     """
     The name of the function
     """
-    arguments: str | FunctionCallOption | None = None
+    arguments: str | None = None
     """
     The parameters to pass to the function
     """
@@ -2031,6 +2031,3 @@ class BrowserbaseListSessionsIntegrationDefUpdate(BaseBrowserbaseIntegrationDefU
     """
     The arguments for the method
     """
-
-
-FunctionCallOption.model_rebuild()
