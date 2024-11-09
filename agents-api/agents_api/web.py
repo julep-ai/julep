@@ -159,7 +159,7 @@ app: FastAPI = FastAPI(
 )
 
 # Enable metrics
-Instrumentator().instrument(app).expose(app)
+Instrumentator().instrument(app).expose(app, include_in_schema=False)
 
 # Create a new router for the docs
 scalar_router = APIRouter()

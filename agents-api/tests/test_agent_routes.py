@@ -210,3 +210,21 @@ def _(make_request=make_request):
 
     assert isinstance(agents, list)
     assert len(agents) > 0
+
+
+@test("route: list agents with metadata filter")
+def _(make_request=make_request):
+    response = make_request(
+        method="GET",
+        url="/agents",
+        params={
+            "metadata_filter": {"test": "test"},
+        },
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    agents = response["items"]
+
+    assert isinstance(agents, list)
+    assert len(agents) > 0
