@@ -28,6 +28,7 @@ T = TypeVar("T")
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),
+        AssertionError: partialclass(HTTPException, status_code=400),
     }
 )
 @wrap_in_class(
@@ -60,13 +61,19 @@ def create_tools(
         list[Tool]
     """
 
+    assert all(
+        getattr(tool, tool.type) is not None
+        for tool in data
+        if hasattr(tool, tool.type)
+    ), "Tool spec must be passed"
+
     tools_data = [
         [
             str(agent_id),
             str(uuid4()),
             tool.type,
             tool.name,
-            getattr(tool, tool.type).dict(),
+            getattr(tool, tool.type) and getattr(tool, tool.type).model_dump(),
             tool.description if hasattr(tool, "description") else None,
         ]
         for tool in data
