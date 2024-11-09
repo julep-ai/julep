@@ -1,7 +1,6 @@
 from typing import TypeVar
 from uuid import UUID
 
-from ..docs import search_docs_by_embedding
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
@@ -12,6 +11,7 @@ from ...autogen.openapi_model import DocReference, History
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
+from ..docs import search_docs_by_embedding
 from ..docs.search_docs_hybrid import search_docs_hybrid
 from ..entry.get_history import get_history
 from ..utils import (
@@ -77,7 +77,7 @@ async def gather_messages(
     owners = [("user", user_id) for user_id in user_ids] + [("agent", active_agent_id)]
 
     # TODO: Hybrid search is timing out when there are a lot of docs, so now
-    # sticking to embedding search only. Need to add a search_type option that 
+    # sticking to embedding search only. Need to add a search_type option that
     # controls which search to use. See: https://github.com/cozodb/cozo/issues/106
     doc_references: list[DocReference] = search_docs_by_embedding(
         developer_id=developer.id,
