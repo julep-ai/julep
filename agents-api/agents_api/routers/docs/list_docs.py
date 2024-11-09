@@ -12,14 +12,6 @@ from ...models.docs.list_docs import list_docs as list_docs_query
 from .router import router
 
 
-class ListDocsQuery(BaseModel):
-    limit: int = 100
-    offset: int = 0
-    sort_by: Literal["created_at", "updated_at"] = "created_at"
-    direction: Literal["asc", "desc"] = "desc"
-    metadata_filter: MetadataFilter = None
-
-
 @router.get("/users/{user_id}/docs", tags=["docs"])
 async def list_user_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
