@@ -53,10 +53,10 @@ def create_entries(
     developer_id = str(developer_id)
     session_id = str(session_id)
 
-    data_dicts = [item.model_dump(exclude_unset=True) for item in data]
+    data_dicts = [item.model_dump(mode="json") for item in data]
 
     for item in data_dicts:
-        item["content"] = content_to_json(item["content"])
+        item["content"] = content_to_json(item["content"] or [])
         item["session_id"] = session_id
         item["entry_id"] = item.pop("id", None) or str(uuid4())
         item["created_at"] = (item.get("created_at") or utcnow()).timestamp()

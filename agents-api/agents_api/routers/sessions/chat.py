@@ -61,7 +61,7 @@ async def chat(
 
     # Merge the settings and prepare environment
     chat_context.merge_settings(chat_input)
-    settings: dict = chat_context.settings.model_dump()
+    settings: dict = chat_context.settings.model_dump(mode="json", exclude_none=True)
 
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(
@@ -94,7 +94,7 @@ async def chat(
         past_messages = system_messages + past_messages
 
     # Render the incoming messages
-    new_raw_messages = [msg.model_dump() for msg in chat_input.messages]
+    new_raw_messages = [msg.model_dump(mode="json") for msg in chat_input.messages]
 
     if chat_context.session.render_templates:
         new_messages = await render_template(new_raw_messages, variables=env)
@@ -106,6 +106,27 @@ async def chat(
 
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
+    tools = [tool.model_dump(mode="json") for tool in tools]
+
+    # Convert anthropic tools to `function`
+    for tool in tools:
+        if tool.get("type") == "computer_20241022":
+            tool["function"] = {
+                "name": tool["name"],
+                "parameters": tool.pop("computer_20241022"),
+            }
+
+        elif tool.get("type") == "bash_20241022":
+            tool["function"] = {
+                "name": tool["name"],
+                "parameters": tool.pop("bash_20241022"),
+            }
+
+        elif tool.get("type") == "text_editor_20241022":
+            tool["function"] = {
+                "name": tool["name"],
+                "parameters": tool.pop("text_editor_20241022"),
+            }
 
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
@@ -115,11 +136,12 @@ async def chat(
 
     # FIXME: Hotfix for datetime not serializable. Needs investigation
     messages = [
-        msg.model_dump() if hasattr(msg, "model_dump") else msg for msg in messages
-    ]
-
-    messages = [
-        dict(role=m["role"], content=m["content"], user=m.get("user")) for m in messages
+        {
+            k: v
+            for k, v in m.items()
+            if k in ["role", "content", "tool_calls", "tool_call_id", "user"]
+        }
+        for m in messages
     ]
 
     # Get the response from the model

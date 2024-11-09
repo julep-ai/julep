@@ -12,7 +12,6 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    RootModel,
     StrictBool,
 )
 
@@ -170,7 +169,7 @@ class BaseChosenToolCall(BaseModel):
     """
     text_editor_20241022: ChosenTextEditor20241022 | None = None
     bash_20241022: ChosenBash20241022 | None = None
-    id: Annotated[UUID | None, Field(json_schema_extra={"readOnly": True})] = None
+    id: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
 
 
 class BaseIntegrationDef(BaseModel):
@@ -919,6 +918,10 @@ class FunctionCallOption(BaseModel):
     name: str
     """
     The name of the function
+    """
+    arguments: str | None = None
+    """
+    The parameters to pass to the function
     """
 
 

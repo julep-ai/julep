@@ -1,11 +1,13 @@
-from typing import Annotated, Literal
+import json
+from typing import Annotated, Literal, Optional
 from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, Query
+from pydantic import BaseModel, BeforeValidator, ConfigDict
 
 from ...autogen.openapi_model import Doc, ListResponse
 from ...dependencies.developer_id import get_developer_id
-from ...dependencies.query_filter import create_filter_extractor
+from ...dependencies.query_filter import MetadataFilter, create_filter_extractor
 from ...models.docs.list_docs import list_docs as list_docs_query
 from .router import router
 
@@ -13,10 +15,11 @@ from .router import router
 @router.get("/users/{user_id}/docs", tags=["docs"])
 async def list_user_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
-    metadata_filter: Annotated[
-        dict, Depends(create_filter_extractor("metadata_filter"))
-    ],
     user_id: UUID,
+    metadata_filter: Annotated[
+        MetadataFilter,
+        Depends(create_filter_extractor("metadata_filter")),
+    ],
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
@@ -30,7 +33,7 @@ async def list_user_docs(
         offset=offset,
         sort_by=sort_by,
         direction=direction,
-        metadata_filter=metadata_filter or {},
+        metadata_filter=metadata_filter.model_dump(mode="json"),
     )
 
     return ListResponse[Doc](items=docs)
@@ -39,10 +42,10 @@ async def list_user_docs(
 @router.get("/agents/{agent_id}/docs", tags=["docs"])
 async def list_agent_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
-    metadata_filter: Annotated[
-        dict, Depends(create_filter_extractor("metadata_filter"))
-    ],
     agent_id: UUID,
+    metadata_filter: Annotated[
+        MetadataFilter, Depends(create_filter_extractor("metadata_filter"))
+    ],
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
@@ -56,7 +59,7 @@ async def list_agent_docs(
         offset=offset,
         sort_by=sort_by,
         direction=direction,
-        metadata_filter=metadata_filter or {},
+        metadata_filter=metadata_filter.model_dump(mode="json"),
     )
 
     return ListResponse[Doc](items=docs)

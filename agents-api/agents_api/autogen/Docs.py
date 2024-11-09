@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 
 class BaseDocSearchRequest(BaseModel):
@@ -18,7 +18,7 @@ class BaseDocSearchRequest(BaseModel):
     """
     The language to be used for text-only search. Support for other languages coming soon.
     """
-    metadata_filter: dict[str, float | str | StrictBool | None] = {}
+    metadata_filter: dict[str, Any] = {}
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
