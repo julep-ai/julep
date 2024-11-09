@@ -73,7 +73,7 @@ async def gather_messages(
     search_query_chars = 1000
     search_messages = [
         msg
-        for msg in new_raw_messages[:-(search_threshold)]
+        for msg in (past_messages + new_raw_messages)[-(search_threshold):]
         if isinstance(msg["content"], str) and msg["role"] in ["user", "assistant"]
     ]
 
@@ -90,9 +90,11 @@ async def gather_messages(
     ).strip()
 
     [query_embedding, *_] = await litellm.aembedding(
-        # Truncate on the left to keep the last 1000 characters
+        # Truncate on the left to keep the last `search_query_chars` characters
         inputs=embed_text[-(search_query_chars):],
     )
+
+    # Truncate on the right to take only the first `search_query_chars` characters
     query_text = search_messages[-1]["content"].strip()[:search_query_chars]
 
     # List all the applicable owners to search docs from
