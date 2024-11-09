@@ -103,22 +103,31 @@ def search_docs_hybrid(
     metadata_filter: dict[str, Any] = {},
 ) -> list[DocReference]:
     # TODO: We should probably parallelize these queries
-    text_results = search_docs_by_text(
-        developer_id=developer_id,
-        owners=owners,
-        query=query,
-        k=k,
-        metadata_filter=metadata_filter,
-        **text_search_options,
+
+    text_results = (
+        search_docs_by_text(
+            developer_id=developer_id,
+            owners=owners,
+            query=query,
+            k=k,
+            metadata_filter=metadata_filter,
+            **text_search_options,
+        )
+        if bool(query.strip())
+        else []
     )
 
-    embedding_results = search_docs_by_embedding(
-        developer_id=developer_id,
-        owners=owners,
-        query_embedding=query_embedding,
-        k=k,
-        metadata_filter=metadata_filter,
-        **embed_search_options,
+    embedding_results = (
+        search_docs_by_embedding(
+            developer_id=developer_id,
+            owners=owners,
+            query_embedding=query_embedding,
+            k=k,
+            metadata_filter=metadata_filter,
+            **embed_search_options,
+        )
+        if bool(sum(query_embedding))
+        else []
     )
 
     return dbsf_fuse(text_results, embedding_results, alpha)[:k]

@@ -68,22 +68,26 @@ async def gather_messages(
     if not recall:
         return past_messages, []
 
+    search_messages = [
+        msg
+        for msg in new_raw_messages
+        if isinstance(msg["content"], str) and msg["role"] in ["user", "assistant"]
+    ]
+
+    if len(search_messages) == 0:
+        return past_messages, []
+
     # FIXME: This should only search text messages and not embed if text is empty
     # Search matching docs
     [query_embedding, *_] = await litellm.aembedding(
         inputs="\n\n".join(
             [
                 f"{msg.get('name') or msg['role']}: {msg['content']}"
-                for msg in new_raw_messages
-                if isinstance(msg["content"], str)
+                for msg in search_messages
             ]
         ),
     )
-    query_text = (
-        new_raw_messages[-1]["content"]
-        if isinstance(new_raw_messages[-1]["content"], str)
-        else ""
-    )
+    query_text = search_messages[-1]["content"]
 
     # List all the applicable owners to search docs from
     active_agent_id = chat_context.get_active_agent().id
