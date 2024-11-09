@@ -39,6 +39,7 @@ T = TypeVar("T")
             "id": d["owner_id"],
             "role": d["owner_type"],
         },
+        "metadata": d.get("metadata", {}),
         **d,
     },
 )
