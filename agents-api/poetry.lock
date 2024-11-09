@@ -1942,13 +1942,13 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "julep"
-version = "1.34.0"
+version = "1.35.0"
 description = "The official Python library for the julep API"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "julep-1.34.0-py3-none-any.whl", hash = "sha256:134461588c48a09e5f5966a04511aee178c453bb6f26db824da4ad3fd39d282e"},
-    {file = "julep-1.34.0.tar.gz", hash = "sha256:b51049fb349cb3a0af21c90b68a51d38fb3ebf4f32a24e3e3dafc2302904450c"},
+    {file = "julep-1.35.0-py3-none-any.whl", hash = "sha256:629a90048b6f11cb725cdf71f587818ecfbc6296aa87bab322b59d45661127d9"},
+    {file = "julep-1.35.0.tar.gz", hash = "sha256:7490e630addf1563a123053a7c59e083de815bbdd001386050c0535fc642a633"},
 ]
 
 [package.dependencies]

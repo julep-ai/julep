@@ -35,8 +35,8 @@ async def gather_messages(
     session_id: UUID,
     chat_context: ChatContext,
     chat_input: ChatInput,
-):
-    new_raw_messages = [msg.model_dump() for msg in chat_input.messages]
+) -> tuple[list[dict], list[DocReference]]:
+    new_raw_messages = [msg.model_dump(mode="json") for msg in chat_input.messages]
     recall = chat_input.recall
 
     assert len(new_raw_messages) > 0
@@ -51,7 +51,7 @@ async def gather_messages(
     # Keep leaf nodes only
     relations = history.relations
     past_messages = [
-        entry.model_dump()
+        entry.model_dump(mode="json")
         for entry in history.entries
         if entry.id not in {r.head for r in relations}
     ]
@@ -63,7 +63,7 @@ async def gather_messages(
             and len(message["content"]) == 1
             and message["content"][0].get("type") == "text"
         ):
-            message["content"] = message["content"][0]["text"]
+            message["content"] = message["content"][0]["text"].strip()
 
     if not recall:
         return past_messages, []

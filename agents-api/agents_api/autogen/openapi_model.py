@@ -377,7 +377,7 @@ class CreateEntryRequest(BaseEntry):
         model: str,
         *,
         role: ChatMLRole,
-        content: ChatMLContent,
+        content: ChatMLContent | None = None,
         name: str | None = None,
         source: ChatMLSource,
         **kwargs: dict,
@@ -389,7 +389,7 @@ class CreateEntryRequest(BaseEntry):
 
         return cls(
             role=role,
-            content=content,
+            content=content or [],
             name=name,
             source=source,
             tokenizer=tokenizer["type"],
