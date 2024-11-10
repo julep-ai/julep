@@ -25,7 +25,7 @@ async def yield_step(context: StepContext) -> StepOutcome:
         ], f"Workflow {workflow} not found in task"
 
         # Evaluate the expressions in the arguments
-        arguments = await base_evaluate(exprs, context.model_dump())
+        arguments = await base_evaluate(exprs, context.prepare_for_step())
 
         # Transition to the first step of that workflow
         transition_target = TransitionTarget(

@@ -90,7 +90,7 @@ EVAL_PROMPT_PREFIX = "$_ "
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
-    context_data: dict = context.model_dump(include_remote=True)
+    context_data: dict = context.prepare_for_step(include_remote=True)
 
     # If the prompt is a string and starts with $_ then we need to evaluate it
     should_evaluate_prompt = isinstance(prompt, str) and prompt.startswith(

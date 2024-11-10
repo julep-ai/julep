@@ -61,7 +61,7 @@ async def tool_call_step(context: StepContext) -> StepOutcome:
         raise ApplicationError(f"Tool {tool_name} not found in the toolset")
 
     arguments = await base_evaluate(
-        context.current_step.arguments, context.model_dump()
+        context.current_step.arguments, context.prepare_for_step()
     )
 
     call_id = generate_call_id()
