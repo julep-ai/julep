@@ -80,7 +80,7 @@ def create_task(
     # Prepares the update data by filtering out None values and adding user_id and developer_id.
     columns, values = cozo_process_mutate_data(
         {
-            **task_spec.model_dump(exclude_none=True, exclude_unset=True, mode="json"),
+            **task_spec.model_dump(exclude_none=True, mode="json"),
             "task_id": str(task_id),
             "agent_id": str(agent_id),
         }
