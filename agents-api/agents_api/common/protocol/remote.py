@@ -98,6 +98,7 @@ class BaseRemoteModel(BaseModel):
             self.unload_attribute(name)
         return self
 
+
 class RemoteList(list):
     _remote_cache: dict[int, Any]
 

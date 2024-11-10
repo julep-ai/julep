@@ -1,10 +1,11 @@
 import ast
 from typing import Any
 
+import simpleeval
 from beartype import beartype
 from box import Box
 from openai import BaseModel
-import simpleeval
+
 # Increase the max string length to 300000
 simpleeval.MAX_STRING_LENGTH = 300000
 

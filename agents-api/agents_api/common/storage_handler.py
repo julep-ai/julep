@@ -3,8 +3,8 @@ import sys
 from datetime import timedelta
 from functools import wraps
 from typing import Any, Callable
-from pydantic import BaseModel
 
+from pydantic import BaseModel
 from temporalio import workflow
 
 from ..activities.sync_items_remote import load_inputs_remote
@@ -79,18 +79,29 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                         )
                     elif isinstance(arg, BaseRemoteModel):
                         new_args.append(arg.unload_all())
-                    
+
                     elif isinstance(arg, BaseModel):
-                        for field in arg.model_fields.keys(): 
+                        for field in arg.model_fields.keys():
                             if isinstance(getattr(arg, field), RemoteObject):
-                                setattr(arg, field, load_from_blob_store_if_remote(getattr(arg, field)))
+                                setattr(
+                                    arg,
+                                    field,
+                                    load_from_blob_store_if_remote(getattr(arg, field)),
+                                )
                             elif isinstance(getattr(arg, field), RemoteList):
-                                setattr(arg, field, [load_from_blob_store_if_remote(item) for item in getattr(arg, field)])
+                                setattr(
+                                    arg,
+                                    field,
+                                    [
+                                        load_from_blob_store_if_remote(item)
+                                        for item in getattr(arg, field)
+                                    ],
+                                )
                             elif isinstance(getattr(arg, field), BaseRemoteModel):
                                 setattr(arg, field, getattr(arg, field).unload_all())
 
                         new_args.append(arg)
-                    
+
                     else:
                         new_args.append(arg)
 
@@ -114,9 +125,20 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                     elif isinstance(v, BaseModel):
                         for field in v.model_fields.keys():
                             if isinstance(getattr(v, field), RemoteObject):
-                                setattr(v, field, load_from_blob_store_if_remote(getattr(v, field)))
+                                setattr(
+                                    v,
+                                    field,
+                                    load_from_blob_store_if_remote(getattr(v, field)),
+                                )
                             elif isinstance(getattr(v, field), RemoteList):
-                                setattr(v, field, [load_from_blob_store_if_remote(item) for item in getattr(v, field)])
+                                setattr(
+                                    v,
+                                    field,
+                                    [
+                                        load_from_blob_store_if_remote(item)
+                                        for item in getattr(v, field)
+                                    ],
+                                )
                             elif isinstance(getattr(v, field), BaseRemoteModel):
                                 setattr(v, field, getattr(v, field).unload_all())
                         new_kwargs[k] = v
