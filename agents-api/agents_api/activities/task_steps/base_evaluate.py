@@ -4,6 +4,10 @@ from typing import Any
 from beartype import beartype
 from box import Box
 from openai import BaseModel
+import simpleeval
+# Increase the max string length to 300000
+simpleeval.MAX_STRING_LENGTH = 300000
+
 from simpleeval import NameNotDefined, SimpleEval
 from temporalio import activity
 from thefuzz import fuzz

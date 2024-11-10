@@ -27,21 +27,34 @@ agent = client.agents.create_or_update(
 )
 
 # Defining a Task
-task_def = yaml.safe_load("""
-name: Agent Crawler
+task_def = yaml.safe_load(f"""
+name: Crawling Task
 
+# Define the tools that the agent will use in this workflow
 tools:
 - name: spider_crawler
   type: integration
   integration:
     provider: spider
     setup:
-      spider_api_key: "{{SPIDER_API_KEY}}"
+      spider_api_key: "{spider_api_key}"
 
+# Define the steps of the workflow
 main:
+# Define a tool call step that calls the spider_crawler tool with the url input
 - tool: spider_crawler
   arguments:
-    url: '"https://spider.cloud"'
+    url: "_['url']" # You can also use 'inputs[0]['url']'
+  
+    
+- prompt: |
+    You are {{{{agent.about}}}}
+    I have given you this url: {{{{inputs[0]['url']}}}}
+    And you have crawled that website. Here are the results you found:
+    {{{{_['documents']}}}}
+    I want you to create a short summary (no longer than 100 words) of the results you found while crawling that website.
+
+  unwrap: True
 """)
 
 # Creating/Updating a task
