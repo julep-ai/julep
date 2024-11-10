@@ -93,9 +93,10 @@ class BaseRemoteModel(BaseModel):
             remote_obj = self.__save_item(data)
             super().__setattr__(name, remote_obj)
 
-    def unload_all(self) -> None:
+    def unload_all(self) -> "BaseRemoteModel":
         for name in list(self._remote_cache.keys()):
             self.unload_attribute(name)
+        return self
 
 
 class RemoteList(list):

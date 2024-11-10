@@ -8,6 +8,7 @@ import "./weather.tsp";
 import "./wikipedia.tsp";
 import "./browserbase";
 import "./remote_browser.tsp";
+import "./llama_parse.tsp";
 
 namespace Tools;
 

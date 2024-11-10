@@ -23,6 +23,7 @@ alias integrationProvider = (
     | "browserbase"
     | "email"
     | "remote_browser"
+    | "llama_parse"
 );
 
 enum ToolType {
@@ -114,6 +115,7 @@ alias IntegrationDef = (
     | WeatherIntegrationDef
     | BrowserbaseIntegrationDef
     | RemoteBrowserIntegrationDef
+    | LlamaParseIntegrationDef
 );
 
 //
@@ -191,6 +193,9 @@ model ApiCallDef {
 
     /** The data to send as form data */
     data?: Record<unknown>;
+
+    /** The data to send as files data */
+    files?: Record<unknown>;
 
     /** JSON body to send with the request */
     json?: Record<unknown>;

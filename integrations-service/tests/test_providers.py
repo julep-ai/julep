@@ -34,3 +34,11 @@ def test_weather_provider(weather_provider):
     assert weather_provider.setup is not None
     assert len(weather_provider.methods) == 1
     assert weather_provider.methods[0].method == "get"
+
+
+def test_llama_parse_provider(llama_parse_provider):
+    """Test LlamaParse provider specific configuration"""
+    assert llama_parse_provider.provider == "llama_parse"
+    assert llama_parse_provider.setup is not None
+    assert len(llama_parse_provider.methods) == 1
+    assert llama_parse_provider.methods[0].method == "parse"
