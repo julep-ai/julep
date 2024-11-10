@@ -5911,6 +5911,10 @@ components:
           type: object
           additionalProperties: {}
           description: The data to send as form data
+        files:
+          type: object
+          additionalProperties: {}
+          description: The data to send as files data
         json:
           type: object
           additionalProperties: {}
@@ -5970,6 +5974,10 @@ components:
           type: object
           additionalProperties: {}
           description: The data to send as form data
+        files:
+          type: object
+          additionalProperties: {}
+          description: The data to send as files data
         json:
           type: object
           additionalProperties: {}
@@ -6093,6 +6101,7 @@ components:
             - browserbase
             - email
             - remote_browser
+            - llama_parse
           description: The provider of the integration
         method:
           type: string
@@ -6111,6 +6120,7 @@ components:
           weather: '#/components/schemas/Tools.WeatherIntegrationDef'
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
+          llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -6126,6 +6136,7 @@ components:
             - browserbase
             - email
             - remote_browser
+            - llama_parse
           description: The provider of the integration
         method:
           type: string
@@ -6144,6 +6155,7 @@ components:
           weather: '#/components/schemas/Tools.WeatherIntegrationDefUpdate'
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
+          llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -6855,6 +6867,7 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
+            - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -7046,6 +7059,136 @@ components:
           additionalProperties: {}
           description: The parameters the function accepts
       description: Function definition
+    Tools.LlamaParseFetchArguments:
+      type: object
+      required:
+        - file
+      properties:
+        result_format:
+          type: string
+          enum:
+            - text
+            - markdown
+          description: The format of the result. Can be "text" or "markdown". Default is "text".
+          default: text
+        num_workers:
+          type: integer
+          format: uint8
+          minimum: 1
+          maximum: 10
+          description: Number of workers for parallel processing. Default is 2, but can be set between 1 and 10.
+          default: 2
+        verbose:
+          type: boolean
+          description: Verbose mode for detailed logging. Default is true.
+          default: true
+        language:
+          type: string
+          description: Language of the text. Default is English.
+          default: en
+        filename:
+          type: string
+          description: File Name. If not provided, a random name will be generated.
+        file:
+          type: string
+          description: The base64 string of the file
+      description: Arguments for LlamaParse integration
+    Tools.LlamaParseFetchArgumentsUpdate:
+      type: object
+      properties:
+        result_format:
+          type: string
+          enum:
+            - text
+            - markdown
+          description: The format of the result. Can be "text" or "markdown". Default is "text".
+          default: text
+        num_workers:
+          type: integer
+          format: uint8
+          minimum: 1
+          maximum: 10
+          description: Number of workers for parallel processing. Default is 2, but can be set between 1 and 10.
+          default: 2
+        verbose:
+          type: boolean
+          description: Verbose mode for detailed logging. Default is true.
+          default: true
+        language:
+          type: string
+          description: Language of the text. Default is English.
+          default: en
+        filename:
+          type: string
+          description: File Name. If not provided, a random name will be generated.
+        file:
+          type: string
+          description: The base64 string of the file
+      description: Arguments for LlamaParse integration
+    Tools.LlamaParseIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - llama_parse
+          description: The provider must be "LlamaParseSetup"
+          default: llama_parse
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.LlamaParseSetup'
+          description: The setup parameters for LlamaParse
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.LlamaParseFetchArguments'
+          description: The arguments for LlamaParse
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: LlamaParse integration definition
+    Tools.LlamaParseIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - llama_parse
+          description: The provider must be "LlamaParseSetup"
+          default: llama_parse
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.LlamaParseSetupUpdate'
+          description: The setup parameters for LlamaParse
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.LlamaParseFetchArgumentsUpdate'
+          description: The arguments for LlamaParse
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: LlamaParse integration definition
+    Tools.LlamaParseSetup:
+      type: object
+      required:
+        - llamaparse_api_key
+      properties:
+        llamaparse_api_key:
+          type: string
+          description: The API key for LlamaParse
+      description: Setup parameters for LlamaParse integration
+    Tools.LlamaParseSetupUpdate:
+      type: object
+      properties:
+        llamaparse_api_key:
+          type: string
+          description: The API key for LlamaParse
+      description: Setup parameters for LlamaParse integration
     Tools.NamedToolChoice:
       type: object
       properties:
@@ -7086,6 +7229,7 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -7489,6 +7633,7 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
+            - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -7580,6 +7725,7 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
+            - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
           description: The integration to call
         system:
           allOf:

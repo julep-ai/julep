@@ -11,7 +11,7 @@ from ..env import testing
 from ..models.tools import get_tool_args_from_metadata
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def execute_integration(
     context: StepContext,
