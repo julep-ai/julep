@@ -38,8 +38,9 @@ client.agents.tools.create(
     integration={
         "provider": "brave",
         "method": "search",
-        "setup": {"api_key": "your_brave_api_key"},
+        "setup": {"api_key": ""},
     },
+    type="integration"
 )
 
 # Defining a Task with various step types
@@ -59,7 +60,7 @@ tools:
   integration:
     provider: brave
     setup:
-      api_key: "your_api_key"
+      api_key: ""
 
 main:
 # Step 1: Prompt - Initial research question
