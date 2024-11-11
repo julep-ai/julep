@@ -23,7 +23,7 @@ async def evaluate_step(
             else context.current_step.evaluate
         )
 
-        values = context.model_dump(include_remote=True) | additional_values
+        values = context.prepare_for_step(include_remote=True) | additional_values
 
         output = simple_eval_dict(expr, values)
         result = StepOutcome(output=output)

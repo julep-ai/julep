@@ -58,6 +58,19 @@ def create_task(
     task_id: UUID | None = None,
     data: CreateTaskRequest,
 ) -> tuple[list[str], dict]:
+    """
+    Creates a new task.
+
+    Parameters:
+        developer_id (UUID): The unique identifier of the developer associated with the task.
+        agent_id (UUID): The unique identifier of the agent associated with the task.
+        task_id (UUID | None): The unique identifier of the task. If not provided, a new UUID will be generated.
+        data (CreateTaskRequest): The data to create the task with.
+
+    Returns:
+        ResourceCreatedResponse: The created task.
+    """
+
     data.metadata = data.metadata or {}
     data.input_schema = data.input_schema or {}
 
@@ -67,7 +80,7 @@ def create_task(
     # Prepares the update data by filtering out None values and adding user_id and developer_id.
     columns, values = cozo_process_mutate_data(
         {
-            **task_spec.model_dump(exclude_none=True, exclude_unset=True, mode="json"),
+            **task_spec.model_dump(exclude_none=True, mode="json"),
             "task_id": str(task_id),
             "agent_id": str(agent_id),
         }

@@ -47,6 +47,18 @@ def delete_task(
     agent_id: UUID,
     task_id: UUID,
 ) -> tuple[list[str], dict]:
+    """
+    Deletes a task.
+
+    Parameters:
+        developer_id (UUID): The unique identifier of the developer associated with the task.
+        agent_id (UUID): The unique identifier of the agent associated with the task.
+        task_id (UUID): The unique identifier of the task to delete.
+
+    Returns:
+        ResourceDeletedResponse: The deleted task.
+    """
+
     delete_query = """
     input[agent_id, task_id] <- [[
         to_uuid($agent_id),

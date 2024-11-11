@@ -12,6 +12,8 @@ from .autogen.Tools import (
     BrowserbaseSetup,
     EmailArguments,
     EmailSetup,
+    LlamaParseFetchArguments,
+    LlamaParseSetup,
     RemoteBrowserArguments,
     RemoteBrowserSetup,
     SpiderFetchArguments,
@@ -32,6 +34,7 @@ from .models import (
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
     EmailOutput,
+    LlamaParseFetchOutput,
     ProviderInfo,
     RemoteBrowserOutput,
     SpiderFetchOutput,
@@ -112,6 +115,25 @@ brave = BaseProvider(
         docs="https://brave.com/docs/",
         icon="https://brave.com/favicon.ico",
         friendly_name="Brave Search",
+    ),
+)
+
+llama_parse = BaseProvider(
+    provider="llama_parse",
+    setup=LlamaParseSetup,
+    methods=[
+        BaseProviderMethod(
+            method="parse",
+            description="Parse and extract the files",
+            arguments=LlamaParseFetchArguments,
+            output=LlamaParseFetchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        friendly_name="LlamaParse",
+        url="https://www.llamaindex.ai/",
+        docs="https://docs.cloud.llamaindex.ai/llamaparse/getting_started",
+        icon="https://www.llamaindex.ai/favicon.ico",
     ),
 )
 
@@ -213,4 +235,5 @@ available_providers: dict[str, BaseProvider] = {
     "email": email,
     "browserbase": browserbase,
     "remote_browser": remote_browser,
+    "llama_parse": llama_parse,
 }

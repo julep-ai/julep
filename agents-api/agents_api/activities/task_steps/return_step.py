@@ -18,7 +18,7 @@ async def return_step(context: StepContext) -> StepOutcome:
         assert isinstance(context.current_step, ReturnStep)
 
         exprs: dict[str, str] = context.current_step.return_
-        output = await base_evaluate(exprs, context.model_dump())
+        output = await base_evaluate(exprs, context.prepare_for_step())
 
         result = StepOutcome(output=output)
         return result

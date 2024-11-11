@@ -23,6 +23,7 @@ alias integrationProvider = (
     | "browserbase"
     | "email"
     | "remote_browser"
+    | "llama_parse"
 );
 
 enum ToolType {
@@ -114,6 +115,7 @@ alias IntegrationDef = (
     | WeatherIntegrationDef
     | BrowserbaseIntegrationDef
     | RemoteBrowserIntegrationDef
+    | LlamaParseIntegrationDef
 );
 
 //
@@ -192,6 +194,9 @@ model ApiCallDef {
     /** The data to send as form data */
     data?: Record<unknown>;
 
+    /** The data to send as files data */
+    files?: Record<unknown>;
+
     /** JSON body to send with the request */
     json?: Record<unknown>;
 
@@ -243,6 +248,9 @@ model Tool {
 model FunctionCallOption {
     /** The name of the function */
     name: string;
+
+    /** The parameters to pass to the function */
+    arguments?: string; // May be a JSON string
 }
 
 model NamedToolChoice {
@@ -290,7 +298,7 @@ model BaseChosenToolCall {
     bash_20241022?: ChosenBash20241022;
 
     @visibility("read")
-    id?: uuid;
+    id?: string;
 }
 
 model ChosenFunctionCall extends BaseChosenToolCall {

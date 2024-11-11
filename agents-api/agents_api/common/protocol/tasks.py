@@ -228,21 +228,26 @@ class StepContext(BaseRemoteModel):
         return self.cursor.workflow == "main"
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
+        dump = super().model_dump(*args, **kwargs)
+        execution_input: dict = dump.pop("execution_input")
+
+        return dump | execution_input
+
+    def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
         if activity.in_activity():
             current_input = load_from_blob_store_if_remote(current_input)
 
-        dump = super().model_dump(*args, **kwargs)
-
         # Merge execution inputs into the dump dict
-        execution_input: dict = dump.pop("execution_input")
-        dump = {
-            **dump,
-            **execution_input,
-            "_": current_input,
-        }
+        dump = self.model_dump(*args, **kwargs)
+        prepared = dump | {"_": current_input}
 
-        return dump
+        for i, input in enumerate(self.inputs):
+            prepared = prepared | {f"_{i}": input}
+            if i >= 100:
+                break
+
+        return prepared
 
 
 class StepOutcome(BaseModel):

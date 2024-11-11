@@ -20,42 +20,38 @@ You are talking to a user
   {%- endif -%}
 {%- endif -%}
 
-{{"\n\n"}}
+{{NEWLINE+NEWLINE}}
 
 {%- if agent.instructions -%}
-Instructions:{{"\n"}}
+Instructions:{{NEWLINE}}
   {%- if agent.instructions is string -%}
-    {{agent.instructions}}{{"\n"}}
+    {{agent.instructions}}{{NEWLINE}}
   {%- else -%}
     {%- for instruction in agent.instructions -%}
-      - {{instruction}}{{"\n"}}
+      - {{instruction}}{{NEWLINE}}
     {%- endfor -%}
   {%- endif -%}
-  {{"\n"}}
+  {{NEWLINE}}
 {%- endif -%}
 
 {%- if tools -%}
-Tools:{{"\n"}}
+Tools:{{NEWLINE}}
   {%- for tool in tools -%}
-    {%- if tool.type == "function" -%}
-      - {{tool.function.name}}
-      {%- if tool.function.description -%}: {{tool.function.description}}{%- endif -%}{{"\n"}}
-    {%- else -%}
-      - {{ 0/0 }} {# Error: Other tool types aren't supported yet. #}
-    {%- endif -%}
+    - {{tool.name + NEWLINE}}
+    {%- if tool.description -%}: {{tool.description + NEWLINE}}{%- endif -%}
   {%- endfor -%}
-{{"\n\n"}}
+{{NEWLINE+NEWLINE}}
 {%- endif -%}
 
 {%- if docs -%}
-Relevant documents:{{"\n"}}
+Relevant documents:{{NEWLINE}}
   {%- for doc in docs -%}
-    {{doc.title}}{{"\n"}}
+    {{doc.title}}{{NEWLINE}}
     {%- if doc.content is string -%}
-      {{doc.content}}{{"\n"}}
+      {{doc.content}}{{NEWLINE}}
     {%- else -%}
       {%- for snippet in doc.content -%}
-        {{snippet}}{{"\n"}}
+        {{snippet}}{{NEWLINE}}
       {%- endfor -%}
     {%- endif -%}
     {{"---"}}

@@ -35,6 +35,17 @@ def get_task(
     developer_id: UUID,
     task_id: UUID,
 ) -> tuple[list[str], dict]:
+    """
+    Retrieves a task by its unique identifier.
+
+    Parameters:
+        developer_id (UUID): The unique identifier of the developer associated with the task.
+        task_id (UUID): The unique identifier of the task to retrieve.
+
+    Returns:
+        Task | CreateTaskRequest: The retrieved task.
+    """
+
     get_query = """
     input[task_id] <- [[to_uuid($task_id)]]
 

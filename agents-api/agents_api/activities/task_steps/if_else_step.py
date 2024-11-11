@@ -20,7 +20,7 @@ async def if_else_step(context: StepContext) -> StepOutcome:
         assert isinstance(context.current_step, IfElseWorkflowStep)
 
         expr: str = context.current_step.if_
-        output = await base_evaluate(expr, context.model_dump())
+        output = await base_evaluate(expr, context.prepare_for_step())
         output: bool = bool(output)
 
         result = StepOutcome(output=output)

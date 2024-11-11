@@ -12,6 +12,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    RootModel,
     StrictBool,
 )
 
@@ -49,6 +50,10 @@ class ApiCallDef(BaseModel):
     data: dict[str, Any] | None = None
     """
     The data to send as form data
+    """
+    files: dict[str, Any] | None = None
+    """
+    The data to send as files data
     """
     json_: Annotated[dict[str, Any] | None, Field(alias="json")] = None
     """
@@ -117,6 +122,10 @@ class ApiCallDefUpdate(BaseModel):
     """
     The data to send as form data
     """
+    files: dict[str, Any] | None = None
+    """
+    The data to send as files data
+    """
     json_: Annotated[dict[str, Any] | None, Field(alias="json")] = None
     """
     JSON body to send with the request
@@ -169,7 +178,7 @@ class BaseChosenToolCall(BaseModel):
     """
     text_editor_20241022: ChosenTextEditor20241022 | None = None
     bash_20241022: ChosenBash20241022 | None = None
-    id: Annotated[UUID | None, Field(json_schema_extra={"readOnly": True})] = None
+    id: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
 
 
 class BaseIntegrationDef(BaseModel):
@@ -189,6 +198,7 @@ class BaseIntegrationDef(BaseModel):
         "browserbase",
         "email",
         "remote_browser",
+        "llama_parse",
     ]
     """
     The provider of the integration
@@ -225,6 +235,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "browserbase",
             "email",
             "remote_browser",
+            "llama_parse",
         ]
         | None
     ) = None
@@ -720,6 +731,7 @@ class CreateToolRequest(BaseModel):
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
+        | LlamaParseIntegrationDef
         | None
     ) = None
     """
@@ -919,6 +931,10 @@ class FunctionCallOption(BaseModel):
     """
     The name of the function
     """
+    arguments: str | None = None
+    """
+    The parameters to pass to the function
+    """
 
 
 class FunctionDef(BaseModel):
@@ -940,6 +956,154 @@ class FunctionDef(BaseModel):
     parameters: dict[str, Any] | None = None
     """
     The parameters the function accepts
+    """
+
+
+class LlamaParseFetchArguments(BaseModel):
+    """
+    Arguments for LlamaParse integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    result_format: Literal["text", "markdown"] = "text"
+    """
+    The format of the result. Can be "text" or "markdown". Default is "text".
+    """
+    num_workers: Annotated[int, Field(ge=1, le=10)] = 2
+    """
+    Number of workers for parallel processing. Default is 2, but can be set between 1 and 10.
+    """
+    verbose: StrictBool = True
+    """
+    Verbose mode for detailed logging. Default is true.
+    """
+    language: str = "en"
+    """
+    Language of the text. Default is English.
+    """
+    filename: str | None = None
+    """
+    File Name. If not provided, a random name will be generated.
+    """
+    file: str
+    """
+    The base64 string of the file
+    """
+
+
+class LlamaParseFetchArgumentsUpdate(BaseModel):
+    """
+    Arguments for LlamaParse integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    result_format: Literal["text", "markdown"] = "text"
+    """
+    The format of the result. Can be "text" or "markdown". Default is "text".
+    """
+    num_workers: Annotated[int, Field(ge=1, le=10)] = 2
+    """
+    Number of workers for parallel processing. Default is 2, but can be set between 1 and 10.
+    """
+    verbose: StrictBool = True
+    """
+    Verbose mode for detailed logging. Default is true.
+    """
+    language: str = "en"
+    """
+    Language of the text. Default is English.
+    """
+    filename: str | None = None
+    """
+    File Name. If not provided, a random name will be generated.
+    """
+    file: str | None = None
+    """
+    The base64 string of the file
+    """
+
+
+class LlamaParseIntegrationDef(BaseIntegrationDef):
+    """
+    LlamaParse integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["llama_parse"] = "llama_parse"
+    """
+    The provider must be "LlamaParseSetup"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: LlamaParseSetup | None = None
+    """
+    The setup parameters for LlamaParse
+    """
+    arguments: LlamaParseFetchArguments | None = None
+    """
+    The arguments for LlamaParse
+    """
+
+
+class LlamaParseIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    LlamaParse integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["llama_parse"] = "llama_parse"
+    """
+    The provider must be "LlamaParseSetup"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: LlamaParseSetupUpdate | None = None
+    """
+    The setup parameters for LlamaParse
+    """
+    arguments: LlamaParseFetchArgumentsUpdate | None = None
+    """
+    The arguments for LlamaParse
+    """
+
+
+class LlamaParseSetup(BaseModel):
+    """
+    Setup parameters for LlamaParse integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    llamaparse_api_key: str
+    """
+    The API key for LlamaParse
+    """
+
+
+class LlamaParseSetupUpdate(BaseModel):
+    """
+    Setup parameters for LlamaParse integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    llamaparse_api_key: str | None = None
+    """
+    The API key for LlamaParse
     """
 
 
@@ -1001,6 +1165,7 @@ class PatchToolRequest(BaseModel):
         | BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate
         | BrowserbaseGetSessionConnectUrlIntegrationDefUpdate
         | RemoteBrowserIntegrationDefUpdate
+        | LlamaParseIntegrationDefUpdate
         | None
     ) = None
     """
@@ -1424,6 +1589,7 @@ class Tool(BaseModel):
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
+        | LlamaParseIntegrationDef
         | None
     ) = None
     """
@@ -1513,6 +1679,7 @@ class UpdateToolRequest(BaseModel):
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
+        | LlamaParseIntegrationDef
         | None
     ) = None
     """

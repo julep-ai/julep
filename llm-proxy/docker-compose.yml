@@ -1,7 +1,7 @@
 name: julep-llm-proxy
 
 x--litellm-base: &litellm-base
-  image: ghcr.io/berriai/litellm-database:main-v1.51.2
+  image: ghcr.io/berriai/litellm-database:main-v1.52.0-stable
   restart: unless-stopped
   hostname: litellm
   ports:

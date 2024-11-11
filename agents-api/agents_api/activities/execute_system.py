@@ -48,8 +48,9 @@ async def execute_system(
     try:
         handler = get_handler(system)
 
-        # Transform arguments for doc-related operations
-        if system.subresource == "doc":
+        # Transform arguments for doc-related operations (except create and search
+        # as we're calling the endpoint function rather than the model method)
+        if system.subresource == "doc" and system.operation not in ["create", "search"]:
             owner_id_field = f"{system.resource}_id"
             if owner_id_field in arguments:
                 doc_args = {
@@ -105,6 +106,7 @@ def _create_search_request(arguments: dict) -> Any:
     if "text" in arguments and "vector" in arguments:
         return HybridDocSearchRequest(
             text=arguments.pop("text"),
+            mmr_strength=arguments.pop("mmr_strength", 0),
             vector=arguments.pop("vector"),
             alpha=arguments.pop("alpha", 0.75),
             confidence=arguments.pop("confidence", 0.5),
@@ -113,11 +115,13 @@ def _create_search_request(arguments: dict) -> Any:
     elif "text" in arguments:
         return TextOnlyDocSearchRequest(
             text=arguments.pop("text"),
+            mmr_strength=arguments.pop("mmr_strength", 0),
             limit=arguments.get("limit", 10),
         )
     elif "vector" in arguments:
         return VectorDocSearchRequest(
             vector=arguments.pop("vector"),
+            mmr_strength=arguments.pop("mmr_strength", 0),
             confidence=arguments.pop("confidence", 0.7),
             limit=arguments.get("limit", 10),
         )

@@ -1,6 +1,7 @@
 from datetime import timedelta
 from uuid import UUID
 
+from beartype import beartype
 from temporalio.client import Client, TLSConfig
 from temporalio.common import (
     SearchAttributeKey,
@@ -42,15 +43,19 @@ async def get_client(
     )
 
 
+@beartype
 async def run_task_execution_workflow(
     *,
     execution_input: ExecutionInput,
     job_id: UUID,
-    start: TransitionTarget = TransitionTarget(workflow="main", step=0),
-    previous_inputs: list[dict] = [],
+    start: TransitionTarget | None = None,
+    previous_inputs: list[dict] | None = None,
     client: Client | None = None,
 ):
     from ..workflows.task_execution import TaskExecutionWorkflow
+
+    start: TransitionTarget = start or TransitionTarget(workflow="main", step=0)
+    previous_inputs: list[dict] = previous_inputs or []
 
     client = client or (await get_client())
     execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")

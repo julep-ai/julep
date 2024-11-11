@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Callable
 
 from anthropic import AsyncAnthropic  # Import AsyncAnthropic client
 from anthropic.types.beta.beta_message import BetaMessage
@@ -18,7 +19,7 @@ from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import anthropic_api_key, debug
-from ..utils import get_handler
+from ..utils import get_handler_with_filtered_params
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -57,8 +58,10 @@ def format_tool(tool: Tool) -> dict:
     }
 
     if tool.type == "system":
-        handler = get_handler(tool.system)
+        handler: Callable = get_handler_with_filtered_params(tool.system)
+
         lc_tool: BaseTool = tool_decorator(handler)
+
         json_schema: dict = lc_tool.get_input_jsonschema()
 
         formatted["function"]["description"] = formatted["function"][
@@ -87,7 +90,7 @@ EVAL_PROMPT_PREFIX = "$_ "
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
-    context_data: dict = context.model_dump(include_remote=True)
+    context_data: dict = context.prepare_for_step(include_remote=True)
 
     # If the prompt is a string and starts with $_ then we need to evaluate it
     should_evaluate_prompt = isinstance(prompt, str) and prompt.startswith(
@@ -131,13 +134,24 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         else "gpt-4o"
     )
 
+    excluded_keys = [
+        "prompt",
+        "kind_",
+        "label",
+        "unwrap",
+        "auto_run_tools",
+        "disable_cache",
+        "tools",
+    ]
+
     # Get passed settings
-    if context.current_step.settings:
-        passed_settings: dict = context.current_step.settings.model_dump(
-            exclude_unset=True
-        )
-    else:
-        passed_settings: dict = {}
+    passed_settings: dict = context.current_step.model_dump(
+        exclude=excluded_keys, exclude_unset=True
+    )
+    passed_settings.update(passed_settings.pop("settings", {}))
+
+    if not passed_settings.get("tools"):
+        passed_settings.pop("tool_choice", None)
 
     # Format tools for litellm
     formatted_tools = [format_tool(tool) for tool in context.tools]
@@ -237,6 +251,8 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         )
 
     else:
+        # FIXME: hardcoded tool to a None value as the tool calls are not implemented yet
+        formatted_tools = None
         # Use litellm for other models
         completion_data: dict = {
             "model": agent_model,

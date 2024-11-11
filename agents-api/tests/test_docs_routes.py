@@ -134,6 +134,40 @@ def _(make_request=make_request, agent=test_agent):
     assert isinstance(docs, list)
 
 
+@test("route: list user docs with metadata filter")
+def _(make_request=make_request, user=test_user):
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+        params={
+            "metadata_filter": {"test": "test"},
+        },
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["items"]
+
+    assert isinstance(docs, list)
+
+
+@test("route: list agent docs with metadata filter")
+def _(make_request=make_request, agent=test_agent):
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+        params={
+            "metadata_filter": {"test": "test"},
+        },
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["items"]
+
+    assert isinstance(docs, list)
+
+
 # TODO: Fix this test. It fails sometimes and sometimes not.
 @test("route: search agent docs")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):

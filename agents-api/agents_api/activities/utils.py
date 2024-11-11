@@ -231,8 +231,55 @@ def simple_eval_dict(exprs: dict[str, str], values: dict[str, Any]) -> dict[str,
     return {k: evaluator.eval(v) for k, v in exprs.items()}
 
 
+def get_handler_with_filtered_params(system: SystemDef) -> Callable:
+    """
+    Get the appropriate handler function based on the SystemDef.
+
+    Parameters:
+        system (SystemDef): The system definition to get the handler for.
+
+    Returns:
+        A wrapped handler function with problematic parameters filtered out
+        from its signature for JSON schema serialization.
+    """
+
+    from functools import wraps
+    from inspect import signature
+
+    # Get the base handler based on system definition
+    base_handler = get_handler(system)
+
+    # Skip parameters that can't be serialized to JSON schema
+    parameters_to_exclude = ["background_tasks"]
+
+    # Get the original signature
+    sig = signature(base_handler)
+
+    # Create a new function with filtered parameters
+    @wraps(base_handler)
+    def filtered_handler(*args, **kwargs):
+        return base_handler(*args, **kwargs)
+
+    # Remove problematic parameters
+    filtered_handler.__signature__ = sig.replace(
+        parameters=[
+            p for p in sig.parameters.values() if p.name not in parameters_to_exclude
+        ]
+    )
+
+    return filtered_handler
+
+
 def get_handler(system: SystemDef) -> Callable:
-    """Get the appropriate handler function based on the SystemDef."""
+    """
+    Internal function to get the base handler without parameter filtering.
+
+    Parameters:
+        system (SystemDef): The system definition to get the handler for.
+
+    Returns:
+        The base handler function.
+    """
 
     from ..models.agent.create_agent import create_agent as create_agent_query
     from ..models.agent.delete_agent import delete_agent as delete_agent_query
