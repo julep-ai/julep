@@ -1,5 +1,12 @@
 # Adaptive Context ᴺᴱᵂ
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 ### What is Adaptive Context?
 
 Adaptive Context is a feature in Julep that intelligently manages the context size for long-running sessions. It allows users to continue adding messages to a session indefinitely without worrying about hitting context window limits or incurring excessive costs.
