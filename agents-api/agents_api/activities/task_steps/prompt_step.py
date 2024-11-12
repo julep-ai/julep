@@ -8,11 +8,12 @@ from langchain_core.tools import BaseTool
 from langchain_core.tools.convert import tool as tool_decorator
 from litellm import ChatCompletionMessageToolCall, Function, Message
 from litellm.types.utils import Choices, ModelResponse
+from pydantic import BaseModel
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
-from pydantic import BaseModel
 
 from ...autogen.Tools import (
+    BaseIntegrationDef,
     BraveIntegrationDef,
     BrowserbaseCompleteSessionIntegrationDef,
     BrowserbaseContextIntegrationDef,
@@ -29,7 +30,6 @@ from ...autogen.Tools import (
     Tool,
     WeatherIntegrationDef,
     WikipediaIntegrationDef,
-    BaseIntegrationDef,
 )
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
@@ -65,7 +65,9 @@ def _get_integration_arguments(tool: Tool):
         "remote_browser": RemoteBrowserIntegrationDef,
     }
 
-    integration: BaseIntegrationDef | dict[str, BaseIntegrationDef] = providers_map.get(tool.integration.provider)
+    integration: BaseIntegrationDef | dict[str, BaseIntegrationDef] = providers_map.get(
+        tool.integration.provider
+    )
     if isinstance(integration, dict):
         integration: BaseIntegrationDef = integration.get(tool.integration.method)
 
