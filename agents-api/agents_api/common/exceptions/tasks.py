@@ -180,15 +180,3 @@ def is_retryable_error(error: BaseException) -> bool:
     # If we don't know this error, we play it safe and don't retry
     # (stranger danger!)
     return False
-
-    # Check for specific HTTP errors that should be retried
-    if isinstance(error, fastapi.exceptions.HTTPException):
-        if error.status_code in RETRYABLE_HTTP_STATUS_CODES:
-            return True
-
-    if isinstance(error, httpx.HTTPStatusError):
-        if error.response.status_code in RETRYABLE_HTTP_STATUS_CODES:
-            return True
-
-    # If we don't know about the error, we should not retry
-    return False
