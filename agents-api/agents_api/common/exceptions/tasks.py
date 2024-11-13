@@ -24,6 +24,7 @@ import litellm
 import pydantic
 import requests
 import temporalio.exceptions
+from tenacity import RetryError
 
 # 🚫 The "No Second Chances" Club - errors that we won't retry
 # Because sometimes, no means no!
@@ -130,6 +131,9 @@ RETRYABLE_ERROR_TYPES = (
     #
     # Database/storage related (when the database needs a nap)
     asyncio.TimeoutError,
+    #
+    # Tenacity exceptions (retry when retrying goes wrong lol)
+    RetryError,
 )
 
 # HTTP status codes that say "maybe try again later?"
