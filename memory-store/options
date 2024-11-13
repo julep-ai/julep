@@ -12,13 +12,13 @@
   compaction_readahead_size=2097152
   strict_bytes_per_sync=false
   bytes_per_sync=1048576
-  max_background_jobs=6
+  max_background_jobs=16
   avoid_flush_during_shutdown=false
   max_background_flushes=-1
   delayed_write_rate=16777216
   max_open_files=-1
-  max_subcompactions=1
-  writable_file_max_buffer_size=1048576
+  max_subcompactions=2
+  writable_file_max_buffer_size=5048576
   wal_bytes_per_sync=0
   max_background_compactions=-1
   max_total_wal_size=0
@@ -47,7 +47,7 @@
   track_and_verify_wals_in_manifest=false
   compaction_verify_record_count=true
   paranoid_checks=true
-  create_if_missing=false
+  create_if_missing=true
   max_write_batch_group_size_bytes=1048576
   avoid_flush_during_recovery=false
   file_checksum_gen_factory=nullptr
@@ -57,7 +57,7 @@
   error_if_exists=false
   use_direct_io_for_flush_and_compaction=false
   create_missing_column_families=true
-  WAL_size_limit_MB=0
+  WAL_size_limit_MB=512
   use_direct_reads=false
   persist_stats_to_disk=false
   allow_2pc=true
@@ -69,7 +69,7 @@
   allow_mmap_reads=false
   allow_mmap_writes=false
   use_adaptive_mutex=false
-  use_fsync=false
+  use_fsync=true
   table_cache_numshardbits=6
   dump_malloc_stats=false
   db_write_buffer_size=0
@@ -100,10 +100,10 @@
   memtable_protection_bytes_per_key=0
   target_file_size_multiplier=1
   report_bg_io_stats=false
-  write_buffer_size=134217728
+  write_buffer_size=267108864
   memtable_huge_page_size=0
   max_successive_merges=0
-  max_write_buffer_number=5
+  max_write_buffer_number=25
   prefix_extractor=rocksdb.CappedPrefix.9
   bottommost_compression_opts={checksum=false;max_dict_buffer_bytes=0;enabled=false;max_dict_bytes=0;max_compressed_bytes_per_kb=896;parallel_threads=1;zstd_max_train_bytes=0;level=32767;use_zstd_dict_trainer=true;strategy=0;window_bits=-14;}
   paranoid_file_checks=false
@@ -121,8 +121,8 @@
   hard_pending_compaction_bytes_limit=274877906944
   soft_pending_compaction_bytes_limit=68719476736
   target_file_size_base=67108864
-  level0_file_num_compaction_trigger=4
-  max_compaction_bytes=1677721600
+  level0_file_num_compaction_trigger=16
+  max_compaction_bytes=2677721600
   disable_auto_compactions=false
   check_flush_compaction_key_order=true
   min_blob_size=0
@@ -134,7 +134,7 @@
   max_bytes_for_level_multiplier_additional=1:1:1:1:1:1:1
   max_sequential_skip_in_iterations=8
   prepopulate_blob_cache=kDisable
-  compression=kLZ4Compression
+  compression=kNoCompression
   compaction_options_universal={incremental=false;compression_size_percent=-1;allow_trivial_move=false;max_size_amplification_percent=200;max_merge_width=4294967295;stop_style=kCompactionStopStyleTotalSize;min_merge_width=2;size_ratio=1;}
   blob_garbage_collection_age_cutoff=0.250000
   ttl=2592000
@@ -153,7 +153,7 @@
   memtable_insert_with_hint_prefix_extractor=nullptr
   memtable_factory=SkipListFactory
   compaction_pri=kMinOverlappingRatio
-  max_write_buffer_size_to_maintain=134217728
+  max_write_buffer_size_to_maintain=534217728
   level_compaction_dynamic_file_size=true
   max_write_buffer_number_to_maintain=0
   optimize_filters_for_hits=false
@@ -162,7 +162,7 @@
   inplace_update_support=false
   merge_operator=nullptr
   table_factory=BlockBasedTable
-  min_write_buffer_number_to_merge=1
+  min_write_buffer_number_to_merge=4
   compaction_filter=nullptr
   compaction_style=kCompactionStyleLevel
   bloom_locality=0
