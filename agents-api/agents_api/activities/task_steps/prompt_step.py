@@ -12,25 +12,7 @@ from pydantic import BaseModel
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from ...autogen.Tools import (
-    BaseIntegrationDef,
-    BraveIntegrationDef,
-    BrowserbaseCompleteSessionIntegrationDef,
-    BrowserbaseContextIntegrationDef,
-    BrowserbaseCreateSessionIntegrationDef,
-    BrowserbaseExtensionIntegrationDef,
-    BrowserbaseGetSessionConnectUrlIntegrationDef,
-    BrowserbaseGetSessionIntegrationDef,
-    BrowserbaseGetSessionLiveUrlsIntegrationDef,
-    BrowserbaseListSessionsIntegrationDef,
-    DummyIntegrationDef,
-    EmailIntegrationDef,
-    RemoteBrowserIntegrationDef,
-    SpiderIntegrationDef,
-    Tool,
-    WeatherIntegrationDef,
-    WikipediaIntegrationDef,
-)
+from ...autogen.Tools import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
@@ -38,62 +20,10 @@ from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import anthropic_api_key, debug
-from ..utils import get_handler_with_filtered_params
+from ..utils import get_handler_with_filtered_params, get_integration_arguments
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
-
-
-def _get_integration_arguments(tool: Tool):
-    providers_map = {
-        "brave": BraveIntegrationDef,
-        "dummy": DummyIntegrationDef,
-        "email": EmailIntegrationDef,
-        "spider": SpiderIntegrationDef,
-        "wikipedia": WikipediaIntegrationDef,
-        "weather": WeatherIntegrationDef,
-        "browserbase": {
-            "create_context": BrowserbaseContextIntegrationDef,
-            "install_extension_from_github": BrowserbaseExtensionIntegrationDef,
-            "list_sessions": BrowserbaseListSessionsIntegrationDef,
-            "create_session": BrowserbaseCreateSessionIntegrationDef,
-            "get_session": BrowserbaseGetSessionIntegrationDef,
-            "complete_session": BrowserbaseCompleteSessionIntegrationDef,
-            "get_live_urls": BrowserbaseGetSessionLiveUrlsIntegrationDef,
-            "get_connect_url": BrowserbaseGetSessionConnectUrlIntegrationDef,
-        },
-        "remote_browser": RemoteBrowserIntegrationDef,
-    }
-
-    integration: BaseIntegrationDef | dict[str, BaseIntegrationDef] = providers_map.get(
-        tool.integration.provider
-    )
-    if isinstance(integration, dict):
-        integration: BaseIntegrationDef = integration.get(tool.integration.method)
-
-    properties = {
-        "type": "object",
-        "properties": {},
-        "required": [],
-    }
-
-    arguments: BaseModel | Any | None = integration.arguments
-    if not arguments:
-        return properties
-
-    if isinstance(arguments, BaseModel):
-        for fld_name, fld_annotation in arguments.model_fields.items():
-            properties["properties"][fld_name] = {
-                "type": fld_annotation.annotation,
-                "description": fld_name,
-            }
-            if fld_annotation.is_required:
-                properties["required"].append(fld_name)
-
-    elif isinstance(arguments, dict):
-        properties["properties"] = arguments
-
-    return properties
 
 
 def format_tool(tool: Tool) -> dict:
@@ -142,7 +72,7 @@ def format_tool(tool: Tool) -> dict:
         formatted["function"]["parameters"] = json_schema
 
     elif tool.type == "integration" and tool.integration:
-        formatted["function"]["parameters"] = _get_integration_arguments(tool)
+        formatted["function"]["parameters"] = get_integration_arguments(tool)
 
     elif tool.type == "api_call" and tool.api_call:
         formatted["function"]["parameters"] = tool.api_call.schema_

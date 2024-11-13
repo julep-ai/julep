@@ -9,14 +9,32 @@ import statistics
 import string
 import time
 import urllib.parse
-from typing import Any, Callable, ParamSpec, TypeVar
+from typing import Any, Callable, Literal, ParamSpec, TypeVar, get_origin
 
 import re2
 import zoneinfo
 from beartype import beartype
+from pydantic import BaseModel
 from simpleeval import EvalWithCompoundTypes, SimpleEval
 
 from ..autogen.openapi_model import SystemDef
+from ..autogen.Tools import (
+    BraveSearchArguments,
+    BrowserbaseCompleteSessionArguments,
+    BrowserbaseContextArguments,
+    BrowserbaseCreateSessionArguments,
+    BrowserbaseExtensionArguments,
+    BrowserbaseGetSessionArguments,
+    BrowserbaseGetSessionConnectUrlArguments,
+    BrowserbaseGetSessionLiveUrlsArguments,
+    BrowserbaseListSessionsArguments,
+    EmailArguments,
+    RemoteBrowserArguments,
+    SpiderFetchArguments,
+    Tool,
+    WeatherGetArguments,
+    WikipediaSearchArguments,
+)
 from ..common.utils import yaml
 
 T = TypeVar("T")
@@ -378,3 +396,81 @@ def get_handler(system: SystemDef) -> Callable:
             raise NotImplementedError(
                 f"System call not implemented for {system.resource}.{system.operation}"
             )
+
+
+def _annotation_to_type(annotation: type) -> dict[str, str]:
+    type_, enum = None, None
+    if get_origin(annotation) is Literal:
+        type_ = "string"
+        enum = ",".join(annotation.__args__)
+    elif annotation is str:
+        type_ = "string"
+    elif annotation in (int, float):
+        type_ = "number"
+    elif annotation is list:
+        type_ = "array"
+    elif annotation is bool:
+        type_ = "boolean"
+    elif annotation == type(None):
+        type_ = "null"
+    else:
+        type_ = "object"
+
+    result = {
+        "type": type_,
+    }
+    if enum is not None:
+        result.update({"enum": enum})
+
+    return result
+
+
+def get_integration_arguments(tool: Tool):
+    providers_map = {
+        "brave": BraveSearchArguments,
+        # "dummy": DummyIntegrationDef,
+        "email": EmailArguments,
+        "spider": SpiderFetchArguments,
+        "wikipedia": WikipediaSearchArguments,
+        "weather": WeatherGetArguments,
+        "browserbase": {
+            "create_context": BrowserbaseContextArguments,
+            "install_extension_from_github": BrowserbaseExtensionArguments,
+            "list_sessions": BrowserbaseListSessionsArguments,
+            "create_session": BrowserbaseCreateSessionArguments,
+            "get_session": BrowserbaseGetSessionArguments,
+            "complete_session": BrowserbaseCompleteSessionArguments,
+            "get_live_urls": BrowserbaseGetSessionLiveUrlsArguments,
+            "get_connect_url": BrowserbaseGetSessionConnectUrlArguments,
+        },
+        "remote_browser": RemoteBrowserArguments,
+    }
+    properties = {
+        "type": "object",
+        "properties": {},
+        "required": [],
+    }
+
+    integration_args: type[BaseModel] | dict[str, type[BaseModel]] | None = (
+        providers_map.get(tool.integration.provider)
+    )
+
+    if integration_args is None:
+        return properties
+
+    if isinstance(integration_args, dict):
+        integration_args: type[BaseModel] | None = integration_args.get(
+            tool.integration.method
+        )
+
+    if integration_args is None:
+        return properties
+
+    for fld_name, fld_annotation in integration_args.model_fields.items():
+        tp = _annotation_to_type(fld_annotation.annotation)
+        tp["description"] = fld_name
+        properties["properties"][fld_name] = tp
+        if fld_annotation.is_required:
+            properties["required"].append(fld_name)
+
+    return properties
