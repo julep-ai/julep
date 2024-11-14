@@ -10,6 +10,7 @@ from browserbase import (
     DebugConnectionURLs,
     Session,
 )
+from ...models.execution import ExecutionError
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import (
@@ -33,13 +34,16 @@ from ...models import (
 from ...models.browserbase import BrowserbaseExtensionOutput
 
 
-def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
-    return Browserbase(
-        api_key=setup.api_key,
-        project_id=setup.project_id,
-        api_url=setup.api_url,
-        connect_url=setup.connect_url,
-    )
+def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase | ExecutionError:
+    try:
+        return Browserbase(
+            api_key=setup.api_key,
+            project_id=setup.project_id,
+            api_url=setup.api_url,
+            connect_url=setup.connect_url,
+        )
+    except Exception as e:
+        return ExecutionError(error=str(e))
 
 
 @beartype
@@ -50,14 +54,17 @@ def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
 )
 async def list_sessions(
     setup: BrowserbaseSetup, arguments: BrowserbaseListSessionsArguments
-) -> BrowserbaseListSessionsOutput:
-    client = get_browserbase_client(setup)
+) -> BrowserbaseListSessionsOutput | ExecutionError:
+    try:
+        client = get_browserbase_client(setup)
 
-    # FIXME: Implement status filter
-    # Run the list_sessions method
-    sessions: list[Session] = client.list_sessions()
+        # FIXME: Implement status filter
+        # Run the list_sessions method
+        sessions: list[Session] = client.list_sessions()
 
-    return BrowserbaseListSessionsOutput(sessions=sessions)
+        return BrowserbaseListSessionsOutput(sessions=sessions)
+    except Exception as e:
+        return ExecutionError(error=str(e))
 
 
 @beartype
@@ -68,18 +75,21 @@ async def list_sessions(
 )
 async def create_session(
     setup: BrowserbaseSetup, arguments: BrowserbaseCreateSessionArguments
-) -> BrowserbaseCreateSessionOutput:
-    client = get_browserbase_client(setup)
+) -> BrowserbaseCreateSessionOutput | ExecutionError:
+    try:
+        client = get_browserbase_client(setup)
 
-    options = CreateSessionOptions(
-        projectId=arguments.project_id or setup.project_id,
-        extensionId=arguments.extension_id,
-        browserSettings=BrowserSettings(**arguments.browser_settings),
-    )
+        options = CreateSessionOptions(
+            projectId=arguments.project_id or setup.project_id,
+            extensionId=arguments.extension_id,
+            browserSettings=BrowserSettings(**arguments.browser_settings),
+        )
 
-    session = client.create_session(options)
+        session = client.create_session(options)
 
-    return BrowserbaseCreateSessionOutput(**session.model_dump())
+        return BrowserbaseCreateSessionOutput(**session.model_dump())
+    except Exception as e:
+        return ExecutionError(error=str(e))
 
 
 @beartype
@@ -90,12 +100,15 @@ async def create_session(
 )
 async def get_session(
     setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionArguments
-) -> BrowserbaseGetSessionOutput:
-    client = get_browserbase_client(setup)
+) -> BrowserbaseGetSessionOutput | ExecutionError:
+    try:
+        client = get_browserbase_client(setup)
 
-    session = client.get_session(arguments.id)
+        session = client.get_session(arguments.id)
 
-    return BrowserbaseGetSessionOutput(**session.model_dump())
+        return BrowserbaseGetSessionOutput(**session.model_dump())
+    except Exception as e:
+        return ExecutionError(error=str(e))
 
 
 @beartype
@@ -106,15 +119,18 @@ async def get_session(
 )
 async def complete_session(
     setup: BrowserbaseSetup, arguments: BrowserbaseCompleteSessionArguments
-) -> BrowserbaseCompleteSessionOutput:
-    client = get_browserbase_client(setup)
-
+) -> BrowserbaseCompleteSessionOutput | ExecutionError:
     try:
-        client.complete_session(arguments.id)
-    except Exception:
-        return BrowserbaseCompleteSessionOutput(success=False)
+        client = get_browserbase_client(setup)
 
-    return BrowserbaseCompleteSessionOutput(success=True)
+        try:
+            client.complete_session(arguments.id)
+        except Exception:
+            return BrowserbaseCompleteSessionOutput(success=False)
+
+        return BrowserbaseCompleteSessionOutput(success=True)
+    except Exception as e:
+        return ExecutionError(error=str(e))
 
 
 @beartype
@@ -125,12 +141,14 @@ async def complete_session(
 )
 async def get_live_urls(
     setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionLiveUrlsArguments
-) -> BrowserbaseGetSessionLiveUrlsOutput:
+) -> BrowserbaseGetSessionLiveUrlsOutput | ExecutionError:
     """Get the live URLs for a session."""
-
-    client = get_browserbase_client(setup)
-    urls: DebugConnectionURLs = client.get_debug_connection_urls(arguments.id)
-    return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
+    try:
+        client = get_browserbase_client(setup)
+        urls: DebugConnectionURLs = client.get_debug_connection_urls(arguments.id)
+        return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
+    except Exception as e:
+        return ExecutionError(error=str(e))
 
 
 @beartype
@@ -141,12 +159,15 @@ async def get_live_urls(
 )
 async def get_connect_url(
     setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionConnectUrlArguments
-) -> BrowserbaseGetSessionConnectUrlOutput:
-    client = get_browserbase_client(setup)
+) -> BrowserbaseGetSessionConnectUrlOutput | ExecutionError:
+    try:
+        client = get_browserbase_client(setup)
 
-    url = client.get_connect_url(arguments.id)
+        url = client.get_connect_url(arguments.id)
 
-    return BrowserbaseGetSessionConnectUrlOutput(url=url)
+        return BrowserbaseGetSessionConnectUrlOutput(url=url)
+    except Exception as e:
+        return ExecutionError(error=str(e))
 
 
 @beartype
@@ -157,46 +178,49 @@ async def get_connect_url(
 )
 async def install_extension_from_github(
     setup: BrowserbaseSetup, arguments: BrowserbaseExtensionArguments
-) -> BrowserbaseExtensionOutput:
+) -> BrowserbaseExtensionOutput | ExecutionError:
     """Download and install an extension from GitHub to the user's Browserbase account."""
-    github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{
-            arguments.ref}.zip"
+    try:
+        github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{
+                arguments.ref}.zip"
 
-    async with httpx.AsyncClient() as client:
-        # Download the extension zip
-        response = await client.get(github_url, follow_redirects=True)
-        response.raise_for_status()
+        async with httpx.AsyncClient() as client:
+            # Download the extension zip
+            response = await client.get(github_url, follow_redirects=True)
+            response.raise_for_status()
 
-        with tempfile.NamedTemporaryFile(
-            delete=True, delete_on_close=False, suffix=".zip"
-        ) as tmp_file:
-            tmp_file.write(response.content)
-            tmp_file_path = tmp_file.name
+            with tempfile.NamedTemporaryFile(
+                delete=True, delete_on_close=False, suffix=".zip"
+            ) as tmp_file:
+                tmp_file.write(response.content)
+                tmp_file_path = tmp_file.name
 
-            # Upload the extension to Browserbase
-            upload_url = "https://www.browserbase.com/v1/extensions"
-            headers = {
-                # NOTE: httpx won't add a boundary if Content-Type header is set when you pass files=
-                # "Content-Type": "multipart/form-data",
-                "X-BB-API-Key": setup.api_key,
-            }
+                # Upload the extension to Browserbase
+                upload_url = "https://www.browserbase.com/v1/extensions"
+                headers = {
+                    # NOTE: httpx won't add a boundary if Content-Type header is set when you pass files=
+                    # "Content-Type": "multipart/form-data",
+                    "X-BB-API-Key": setup.api_key,
+                }
 
-            with open(tmp_file_path, "rb") as f:
-                files = {"file": f}
-                upload_response = await client.post(
-                    upload_url, headers=headers, files=files
-                )
+                with open(tmp_file_path, "rb") as f:
+                    files = {"file": f}
+                    upload_response = await client.post(
+                        upload_url, headers=headers, files=files
+                    )
 
+                try:
+                    upload_response.raise_for_status()
+                except httpx.HTTPStatusError:
+                    print(upload_response.text)
+                    raise
+
+            # Delete the temporary file
             try:
-                upload_response.raise_for_status()
-            except httpx.HTTPStatusError:
-                print(upload_response.text)
-                raise
+                os.remove(tmp_file_path)
+            except FileNotFoundError:
+                pass
 
-        # Delete the temporary file
-        try:
-            os.remove(tmp_file_path)
-        except FileNotFoundError:
-            pass
-
-        return BrowserbaseExtensionOutput(id=upload_response.json()["id"])
+            return BrowserbaseExtensionOutput(id=upload_response.json()["id"])
+    except Exception as e:
+        return ExecutionError(error=str(e))

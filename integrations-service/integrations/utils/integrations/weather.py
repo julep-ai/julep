@@ -4,6 +4,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import WeatherGetArguments, WeatherSetup
 from ...models import WeatherGetOutput
+from ...models.execution import ExecutionError
 
 
 @beartype
@@ -12,20 +13,23 @@ from ...models import WeatherGetOutput
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGetOutput:
+async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGetOutput | ExecutionError:
     """
     Fetches weather data for a specified location using OpenWeatherMap API.
     """
 
-    assert isinstance(setup, WeatherSetup), "Invalid setup"
-    assert isinstance(arguments, WeatherGetArguments), "Invalid arguments"
+    try:
+        assert isinstance(setup, WeatherSetup), "Invalid setup"
+        assert isinstance(arguments, WeatherGetArguments), "Invalid arguments"
 
-    location = arguments.location
+        location = arguments.location
 
-    openweathermap_api_key = setup.openweathermap_api_key
-    if not location:
-        raise ValueError("Location parameter is required for weather data")
+        openweathermap_api_key = setup.openweathermap_api_key
+        if not location:
+            raise ValueError("Location parameter is required for weather data")
 
-    weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=openweathermap_api_key)
-    result = weather.run(location)
-    return WeatherGetOutput(result=result)
+        weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=openweathermap_api_key)
+        result = weather.run(location)
+        return WeatherGetOutput(result=result)
+    except Exception as e:
+        return ExecutionError(error=str(e))

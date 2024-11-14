@@ -2,6 +2,7 @@ import base64
 import uuid
 
 from beartype import beartype
+from ...models.execution import ExecutionError
 from llama_parse import LlamaParse
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -17,27 +18,30 @@ from ...models import LlamaParseFetchOutput
 )
 async def parse(
     setup: LlamaParseSetup, arguments: LlamaParseFetchArguments
-) -> LlamaParseFetchOutput:
+) -> LlamaParseFetchOutput | ExecutionError:
     """
     Parse and extract content from files using LlamaParse.
     """
-    assert isinstance(setup, LlamaParseSetup), "Invalid setup"
-    assert isinstance(arguments, LlamaParseFetchArguments), "Invalid arguments"
+    try:
+        assert isinstance(setup, LlamaParseSetup), "Invalid setup"
+        assert isinstance(arguments, LlamaParseFetchArguments), "Invalid arguments"
 
-    parser = LlamaParse(
-        api_key=setup.llamaparse_api_key,
-        result_type=arguments.result_format,
-        num_workers=arguments.num_workers,
-        language=arguments.language,
-    )
+        parser = LlamaParse(
+            api_key=setup.llamaparse_api_key,
+            result_type=arguments.result_format,
+            num_workers=arguments.num_workers,
+            language=arguments.language,
+        )
 
-    # Decode base64 file content
-    file_content = base64.b64decode(arguments.file)
-    extra_info = {
-        "file_name": arguments.filename if arguments.filename else str(uuid.uuid4())
+        # Decode base64 file content
+        file_content = base64.b64decode(arguments.file)
+        extra_info = {
+            "file_name": arguments.filename if arguments.filename else str(uuid.uuid4())
     }
 
-    # Parse the document
-    documents = await parser.aload_data(file_content, extra_info=extra_info)
+        # Parse the document
+        documents = await parser.aload_data(file_content, extra_info=extra_info)
 
-    return LlamaParseFetchOutput(documents=documents)
+        return LlamaParseFetchOutput(documents=documents)
+    except Exception as e:
+        return ExecutionError(error=str(e))
