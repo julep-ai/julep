@@ -28,7 +28,7 @@ class BaseEntry(BaseModel):
     """
     name: str | None = None
     content: (
-        list[Content | ContentModel]
+        list[Content | ContentModel3 | ContentModel]
         | Tool
         | ChosenFunctionCall
         | ChosenComputer20241022
@@ -37,7 +37,7 @@ class BaseEntry(BaseModel):
         | str
         | ToolResponse
         | list[
-            list[Content | ContentModel]
+            list[ContentModel1 | ContentModel3 | ContentModel2]
             | Tool
             | ChosenFunctionCall
             | ChosenComputer20241022
@@ -95,7 +95,38 @@ class Content(BaseModel):
     """
 
 
+class ContentItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["image"] = "image"
+    source: Source
+
+
 class ContentModel(BaseModel):
+    """
+    Anthropic image content part
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_use_id: str
+    type: Literal["tool_result"] = "tool_result"
+    content: list[ContentItem]
+
+
+class ContentModel1(Content):
+    pass
+
+
+class ContentModel2(ContentModel):
+    """
+    Anthropic image content part
+    """
+
+
+class ContentModel3(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -168,3 +199,12 @@ class Relation(BaseModel):
     head: UUID
     relation: str
     tail: UUID
+
+
+class Source(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["base64"] = "base64"
+    media_type: str
+    data: str

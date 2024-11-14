@@ -85,6 +85,14 @@ class Content(BaseModel):
     """
 
 
+class ContentItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["image"] = "image"
+    source: Source
+
+
 class ContentModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -99,12 +107,31 @@ class ContentModel(BaseModel):
     """
 
 
-class ContentModel1(Content):
+class ContentModel1(BaseModel):
+    """
+    Anthropic image content part
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_use_id: str
+    type: Literal["tool_result"] = "tool_result"
+    content: list[ContentItem]
+
+
+class ContentModel2(Content):
     pass
 
 
-class ContentModel2(ContentModel):
+class ContentModel3(ContentModel):
     pass
+
+
+class ContentModel4(ContentModel1):
+    """
+    Anthropic image content part
+    """
 
 
 class CreateTaskRequest(BaseModel):
@@ -655,7 +682,8 @@ class PromptItem(BaseModel):
     """
     tool_call_id: str | None = None
     content: Annotated[
-        list[str] | list[Content | ContentModel] | str | None, Field(...)
+        list[str] | list[Content | ContentModel | ContentModel1] | str | None,
+        Field(...),
     ]
     """
     The content parts of the message
@@ -858,6 +886,18 @@ class SleepStep(BaseModel):
     sleep: SleepFor
     """
     The duration to sleep for (max 31 days)
+    """
+
+
+class Source(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["base64"] = "base64"
+    media_type: str
+    data: str
+    """
+    A valid jinja template.
     """
 
 

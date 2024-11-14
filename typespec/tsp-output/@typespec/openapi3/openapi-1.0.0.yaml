@@ -1836,6 +1836,49 @@ components:
                                 - image_url
                               description: The type (fixed to 'image_url')
                               default: image_url
+                        - type: object
+                          required:
+                            - tool_use_id
+                            - type
+                            - content
+                          properties:
+                            tool_use_id:
+                              type: string
+                            type:
+                              type: string
+                              enum:
+                                - tool_result
+                              default: tool_result
+                            content:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                  - type
+                                  - source
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - image
+                                    default: image
+                                  source:
+                                    type: object
+                                    required:
+                                      - type
+                                      - media_type
+                                      - data
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - base64
+                                        default: base64
+                                      media_type:
+                                        type: string
+                                      data:
+                                        type: string
+                          description: Anthropic image content part
                 nullable: true
                 description: The content parts of the message
               name:
@@ -1936,6 +1979,49 @@ components:
                               - image_url
                             description: The type (fixed to 'image_url')
                             default: image_url
+                      - type: object
+                        required:
+                          - tool_use_id
+                          - type
+                          - content
+                        properties:
+                          tool_use_id:
+                            type: string
+                          type:
+                            type: string
+                            enum:
+                              - tool_result
+                            default: tool_result
+                          content:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                                - type
+                                - source
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                    - image
+                                  default: image
+                                source:
+                                  type: object
+                                  required:
+                                    - type
+                                    - media_type
+                                    - data
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - base64
+                                      default: base64
+                                    media_type:
+                                      type: string
+                                    data:
+                                      type: string
+                        description: Anthropic image content part
               nullable: true
               description: The content parts of the message
             name:
@@ -2167,6 +2253,49 @@ components:
                                 - image_url
                               description: The type (fixed to 'image_url')
                               default: image_url
+                        - type: object
+                          required:
+                            - tool_use_id
+                            - type
+                            - content
+                          properties:
+                            tool_use_id:
+                              type: string
+                            type:
+                              type: string
+                              enum:
+                                - tool_result
+                              default: tool_result
+                            content:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                  - type
+                                  - source
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - image
+                                    default: image
+                                  source:
+                                    type: object
+                                    required:
+                                      - type
+                                      - media_type
+                                      - data
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - base64
+                                        default: base64
+                                      media_type:
+                                        type: string
+                                      data:
+                                        type: string
+                          description: Anthropic image content part
                 nullable: true
                 description: The content parts of the message
               name:
@@ -2317,6 +2446,49 @@ components:
                               - image_url
                             description: The type (fixed to 'image_url')
                             default: image_url
+                      - type: object
+                        required:
+                          - tool_use_id
+                          - type
+                          - content
+                        properties:
+                          tool_use_id:
+                            type: string
+                          type:
+                            type: string
+                            enum:
+                              - tool_result
+                            default: tool_result
+                          content:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                                - type
+                                - source
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                    - image
+                                  default: image
+                                source:
+                                  type: object
+                                  required:
+                                    - type
+                                    - media_type
+                                    - data
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - base64
+                                      default: base64
+                                    media_type:
+                                      type: string
+                                    data:
+                                      type: string
+                        description: Anthropic image content part
               nullable: true
               description: The content parts of the message
             name:
@@ -2809,6 +2981,49 @@ components:
                           - image_url
                         description: The type (fixed to 'image_url')
                         default: image_url
+                  - type: object
+                    required:
+                      - tool_use_id
+                      - type
+                      - content
+                    properties:
+                      tool_use_id:
+                        type: string
+                      type:
+                        type: string
+                        enum:
+                          - tool_result
+                        default: tool_result
+                      content:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - type
+                            - source
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - image
+                              default: image
+                            source:
+                              type: object
+                              required:
+                                - type
+                                - media_type
+                                - data
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                    - base64
+                                  default: base64
+                                media_type:
+                                  type: string
+                                data:
+                                  type: string
+                    description: Anthropic image content part
             - $ref: '#/components/schemas/Tools.Tool'
             - $ref: '#/components/schemas/Tools.ChosenFunctionCall'
             - $ref: '#/components/schemas/Tools.ChosenComputer20241022'
@@ -2861,6 +3076,49 @@ components:
                                 - image_url
                               description: The type (fixed to 'image_url')
                               default: image_url
+                        - type: object
+                          required:
+                            - tool_use_id
+                            - type
+                            - content
+                          properties:
+                            tool_use_id:
+                              type: string
+                            type:
+                              type: string
+                              enum:
+                                - tool_result
+                              default: tool_result
+                            content:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                  - type
+                                  - source
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - image
+                                    default: image
+                                  source:
+                                    type: object
+                                    required:
+                                      - type
+                                      - media_type
+                                      - data
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - base64
+                                        default: base64
+                                      media_type:
+                                        type: string
+                                      data:
+                                        type: string
+                          description: Anthropic image content part
                   - $ref: '#/components/schemas/Tools.Tool'
                   - $ref: '#/components/schemas/Tools.ChosenFunctionCall'
                   - $ref: '#/components/schemas/Tools.ChosenComputer20241022'
@@ -4784,6 +5042,49 @@ components:
                                     - image_url
                                   description: The type (fixed to 'image_url')
                                   default: image_url
+                            - type: object
+                              required:
+                                - tool_use_id
+                                - type
+                                - content
+                              properties:
+                                tool_use_id:
+                                  type: string
+                                type:
+                                  type: string
+                                  enum:
+                                    - tool_result
+                                  default: tool_result
+                                content:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - type
+                                      - source
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - image
+                                        default: image
+                                      source:
+                                        type: object
+                                        required:
+                                          - type
+                                          - media_type
+                                          - data
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - base64
+                                            default: base64
+                                          media_type:
+                                            type: string
+                                          data:
+                                            $ref: '#/components/schemas/Common.JinjaTemplate'
+                              description: Anthropic image content part
                     nullable: true
                     description: The content parts of the message
                   name:
@@ -4934,6 +5235,49 @@ components:
                                     - image_url
                                   description: The type (fixed to 'image_url')
                                   default: image_url
+                            - type: object
+                              required:
+                                - tool_use_id
+                                - type
+                                - content
+                              properties:
+                                tool_use_id:
+                                  type: string
+                                type:
+                                  type: string
+                                  enum:
+                                    - tool_result
+                                  default: tool_result
+                                content:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - type
+                                      - source
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - image
+                                        default: image
+                                      source:
+                                        type: object
+                                        required:
+                                          - type
+                                          - media_type
+                                          - data
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - base64
+                                            default: base64
+                                          media_type:
+                                            type: string
+                                          data:
+                                            $ref: '#/components/schemas/Common.JinjaTemplate'
+                              description: Anthropic image content part
                     nullable: true
                     description: The content parts of the message
                   name:

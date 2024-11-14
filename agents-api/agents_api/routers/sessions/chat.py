@@ -1,9 +1,17 @@
-from typing import Annotated, Optional
+from datetime import datetime
+from typing import Annotated, Callable, Optional
 from uuid import UUID, uuid4
 
+from anthropic import AsyncAnthropic
+from anthropic.types.beta.beta_message import BetaMessage
 from fastapi import BackgroundTasks, Depends, Header
+from langchain_core.tools import BaseTool
+from langchain_core.tools.convert import tool as tool_decorator
+from litellm import ChatCompletionMessageToolCall, Function, Message
+from litellm.types.utils import Choices, ModelResponse
 from starlette.status import HTTP_201_CREATED
 
+from ...activities.utils import get_handler_with_filtered_params
 from ...autogen.openapi_model import (
     ChatInput,
     ChatResponse,
@@ -11,17 +19,77 @@ from ...autogen.openapi_model import (
     CreateEntryRequest,
     MessageChatResponse,
 )
+from ...autogen.Tools import Tool
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
+from ...env import anthropic_api_key
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
 from .metrics import total_tokens_per_user
 from .router import router
+
+COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
+
+
+def format_tool(tool: Tool) -> dict:
+    if tool.type == "computer_20241022":
+        return {
+            "type": tool.type,
+            "name": tool.name,
+            "display_width_px": tool.computer_20241022
+            and tool.computer_20241022.display_width_px,
+            "display_height_px": tool.computer_20241022
+            and tool.computer_20241022.display_height_px,
+            "display_number": tool.computer_20241022
+            and tool.computer_20241022.display_number,
+        }
+
+    if tool.type in ["bash_20241022", "text_editor_20241022"]:
+        return tool.model_dump(include={"type", "name"})
+
+    if tool.type == "function":
+        return {
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.function and tool.function.parameters,
+            },
+        }
+
+    # For other tool types, we need to translate them to the OpenAI function tool format
+    formatted = {
+        "type": "function",
+        "function": {"name": tool.name, "description": tool.description},
+    }
+
+    if tool.type == "system":
+        handler: Callable = get_handler_with_filtered_params(tool.system)
+
+        lc_tool: BaseTool = tool_decorator(handler)
+
+        json_schema: dict = lc_tool.get_input_jsonschema()
+
+        formatted["function"]["description"] = formatted["function"][
+            "description"
+        ] or json_schema.get("description")
+
+        formatted["function"]["parameters"] = json_schema
+
+    # # FIXME: Implement integration tools
+    # elif tool.type == "integration":
+    #     raise NotImplementedError("Integration tools are not supported")
+
+    # # FIXME: Implement API call tools
+    # elif tool.type == "api_call":
+    #     raise NotImplementedError("API call tools are not supported")
+
+    return formatted
 
 
 @router.post(
@@ -106,27 +174,9 @@ async def chat(
 
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
-    tools = [tool.model_dump(mode="json") for tool in tools]
 
-    # Convert anthropic tools to `function`
-    for tool in tools:
-        if tool.get("type") == "computer_20241022":
-            tool["function"] = {
-                "name": tool["name"],
-                "parameters": tool.pop("computer_20241022"),
-            }
-
-        elif tool.get("type") == "bash_20241022":
-            tool["function"] = {
-                "name": tool["name"],
-                "parameters": tool.pop("bash_20241022"),
-            }
-
-        elif tool.get("type") == "text_editor_20241022":
-            tool["function"] = {
-                "name": tool["name"],
-                "parameters": tool.pop("text_editor_20241022"),
-            }
+    # Format tools for litellm
+    formatted_tools = [format_tool(tool) for tool in tools]
 
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
@@ -144,15 +194,103 @@ async def chat(
         for m in messages
     ]
 
-    # Get the response from the model
-    model_response = await litellm.acompletion(
-        messages=messages,
-        tools=tools or None,
-        user=str(developer.id),  # For tracking usage
-        tags=developer.tags,  # For filtering models in litellm
-        custom_api_key=x_custom_api_key,
-        **settings,
+    # Check if using Claude model and has specific tool types
+    is_claude_model = settings["model"].lower().startswith("claude-3.5")
+    has_special_tools = any(
+        tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
+        for tool in formatted_tools
     )
+
+    if is_claude_model and has_special_tools:
+        # Use Anthropic API directly
+        client = AsyncAnthropic(api_key=anthropic_api_key)
+
+        # Filter tools for specific types
+        filtered_tools = [
+            tool
+            for tool in formatted_tools
+            if tool["type"]
+            in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
+        ]
+
+        # Format messages for Claude
+        claude_messages = []
+        for msg in messages:
+            # Skip messages that are not assistant or user
+            if msg["role"] not in ["assistant", "user"]:
+                continue
+
+            claude_messages.append({"role": msg["role"], "content": msg["content"]})
+
+        # Call Claude API
+        claude_response: BetaMessage = await client.beta.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            messages=claude_messages,
+            tools=filtered_tools,
+            max_tokens=settings.get("max_tokens", 1024),
+            betas=[COMPUTER_USE_BETA_FLAG],
+        )
+
+        # Convert Claude response to litellm format
+        text_block = next(
+            (block for block in claude_response.content if block.type == "text"),
+            None,
+        )
+
+        if claude_response.stop_reason == "tool_use":
+            choice = Choices(
+                message=Message(
+                    role="assistant",
+                    content=text_block.text if text_block else None,
+                    tool_calls=[
+                        ChatCompletionMessageToolCall(
+                            type="function",
+                            function=Function(
+                                name=block.name,
+                                arguments=block.input,
+                            ),
+                        )
+                        for block in claude_response.content
+                        if block.type == "tool_use"
+                    ],
+                ),
+                finish_reason="tool_calls",
+            )
+        else:
+            assert (
+                text_block
+            ), "Claude should always return a text block for stop_reason=stop"
+            choice = Choices(
+                message=Message(
+                    role="assistant",
+                    content=text_block.text,
+                ),
+                finish_reason="stop",
+            )
+
+        model_response = ModelResponse(
+            id=claude_response.id,
+            choices=[choice],
+            created=int(datetime.now().timestamp()),
+            model=claude_response.model,
+            object="text_completion",
+            usage={
+                "total_tokens": claude_response.usage.input_tokens
+                + claude_response.usage.output_tokens
+            },
+        )
+    else:
+        # FIXME: hardcoded tool to a None value as the tool calls are not implemented yet
+        formatted_tools = None
+        # Use litellm for other models
+        model_response = await litellm.acompletion(
+            messages=messages,
+            tools=formatted_tools or None,
+            user=str(developer.id),
+            tags=developer.tags,
+            custom_api_key=x_custom_api_key,
+            **settings,
+        )
 
     # Save the input and the response to the session history
     if chat_input.save:

@@ -165,7 +165,58 @@ class Content(BaseModel):
     """
 
 
+class ContentItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["image"] = "image"
+    source: Source
+
+
 class ContentModel(BaseModel):
+    """
+    Anthropic image content part
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_use_id: str
+    type: Literal["tool_result"] = "tool_result"
+    content: list[ContentItem]
+
+
+class ContentModel1(Content):
+    pass
+
+
+class ContentModel2(ContentModel):
+    """
+    Anthropic image content part
+    """
+
+
+class ContentModel3(Content):
+    pass
+
+
+class ContentModel4(ContentModel):
+    """
+    Anthropic image content part
+    """
+
+
+class ContentModel5(Content):
+    pass
+
+
+class ContentModel6(ContentModel):
+    """
+    Anthropic image content part
+    """
+
+
+class ContentModel7(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -193,7 +244,8 @@ class Delta(BaseModel):
     """
     tool_call_id: str | None = None
     content: Annotated[
-        str | list[str] | list[Content | ContentModel] | None, Field(...)
+        str | list[str] | list[ContentModel1 | ContentModel7 | ContentModel2] | None,
+        Field(...),
     ] = None
     """
     The content parts of the message
@@ -258,7 +310,8 @@ class Message(BaseModel):
     """
     tool_call_id: str | None = None
     content: Annotated[
-        str | list[str] | list[Content | ContentModel] | None, Field(...)
+        str | list[str] | list[Content | ContentModel7 | ContentModel] | None,
+        Field(...),
     ] = None
     """
     The content parts of the message
@@ -305,7 +358,8 @@ class MessageModel(BaseModel):
     """
     tool_call_id: str | None = None
     content: Annotated[
-        str | list[str] | list[Content | ContentModel] | None, Field(...)
+        str | list[str] | list[ContentModel3 | ContentModel7 | ContentModel4] | None,
+        Field(...),
     ] = None
     """
     The content parts of the message
@@ -403,6 +457,15 @@ class SingleChatOutput(BaseChatOutput):
         populate_by_name=True,
     )
     message: MessageModel
+
+
+class Source(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["base64"] = "base64"
+    media_type: str
+    data: str
 
 
 class TokenLogProb(BaseTokenLogProb):
