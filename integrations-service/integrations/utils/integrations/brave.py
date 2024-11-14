@@ -1,12 +1,12 @@
 import json
 
 from beartype import beartype
-from ...models.execution import ExecutionError
 from langchain_community.tools import BraveSearch
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import BraveSearchArguments, BraveSearchSetup
 from ...models import BraveSearchOutput, SearchResult
+from ...models.execution import ExecutionError
 
 
 @beartype
@@ -27,7 +27,8 @@ async def search(
         assert isinstance(arguments, BraveSearchArguments), "Invalid arguments"
 
         tool = BraveSearch.from_api_key(
-            api_key=setup.api_key, search_kwargs={"count": 3})
+            api_key=setup.api_key, search_kwargs={"count": 3}
+        )
 
         result = tool.run(arguments.query)
 

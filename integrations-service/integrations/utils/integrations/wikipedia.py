@@ -13,7 +13,9 @@ from ...models.execution import ExecutionError
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def search(arguments: WikipediaSearchArguments) -> WikipediaSearchOutput | ExecutionError:
+async def search(
+    arguments: WikipediaSearchArguments,
+) -> WikipediaSearchOutput | ExecutionError:
     """
     Searches Wikipedia for a given query and returns formatted results.
     """

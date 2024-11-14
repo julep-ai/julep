@@ -13,7 +13,9 @@ from ...models.execution import ExecutionError
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGetOutput | ExecutionError:
+async def get(
+    setup: WeatherSetup, arguments: WeatherGetArguments
+) -> WeatherGetOutput | ExecutionError:
     """
     Fetches weather data for a specified location using OpenWeatherMap API.
     """
@@ -28,7 +30,9 @@ async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGet
         if not location:
             raise ValueError("Location parameter is required for weather data")
 
-        weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=openweathermap_api_key)
+        weather = OpenWeatherMapAPIWrapper(
+            openweathermap_api_key=openweathermap_api_key
+        )
         result = weather.run(location)
         return WeatherGetOutput(result=result)
     except Exception as e:

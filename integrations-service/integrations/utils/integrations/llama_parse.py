@@ -2,12 +2,12 @@ import base64
 import uuid
 
 from beartype import beartype
-from ...models.execution import ExecutionError
 from llama_parse import LlamaParse
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import LlamaParseFetchArguments, LlamaParseSetup
 from ...models import LlamaParseFetchOutput
+from ...models.execution import ExecutionError
 
 
 @beartype
@@ -37,7 +37,7 @@ async def parse(
         file_content = base64.b64decode(arguments.file)
         extra_info = {
             "file_name": arguments.filename if arguments.filename else str(uuid.uuid4())
-    }
+        }
 
         # Parse the document
         documents = await parser.aload_data(file_content, extra_info=extra_info)

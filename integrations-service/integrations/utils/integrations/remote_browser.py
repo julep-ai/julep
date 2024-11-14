@@ -21,6 +21,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from ...autogen.Tools import RemoteBrowserArguments, RemoteBrowserSetup
 from ...models import RemoteBrowserOutput
 from ...models.execution import ExecutionError
+
 CURSOR_PATH = Path(__file__).parent / "assets" / "cursor-small.png"
 
 

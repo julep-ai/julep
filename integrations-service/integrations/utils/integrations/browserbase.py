@@ -10,7 +10,6 @@ from browserbase import (
     DebugConnectionURLs,
     Session,
 )
-from ...models.execution import ExecutionError
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import (
@@ -32,6 +31,7 @@ from ...models import (
     BrowserbaseListSessionsOutput,
 )
 from ...models.browserbase import BrowserbaseExtensionOutput
+from ...models.execution import ExecutionError
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase | ExecutionError:

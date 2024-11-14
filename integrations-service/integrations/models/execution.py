@@ -53,6 +53,7 @@ class ExecutionError(BaseModel):
     The error message of the integration execution
     """
 
+
 ExecutionSetup = Union[
     EmailSetup,
     SpiderSetup,
