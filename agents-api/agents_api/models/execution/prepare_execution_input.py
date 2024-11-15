@@ -31,7 +31,7 @@ T = TypeVar("T")
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),
-        AssertionError: lambda e: HTTPException(status_code=422, detail=str(e)),
+        AssertionError: lambda e: HTTPException(status_code=400, detail=str(e)),
     }
 )
 @wrap_in_class(
