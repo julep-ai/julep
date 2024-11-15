@@ -165,12 +165,40 @@ class Content(BaseModel):
     """
 
 
-class ContentItem(BaseModel):
+class ContentItem(Content):
+    pass
+
+
+class ContentItemModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
     type: Literal["image"] = "image"
     source: Source
+
+
+class ContentItemModel1(Content):
+    pass
+
+
+class ContentItemModel2(ContentItemModel):
+    pass
+
+
+class ContentItemModel3(Content):
+    pass
+
+
+class ContentItemModel4(ContentItemModel):
+    pass
+
+
+class ContentItemModel5(Content):
+    pass
+
+
+class ContentItemModel6(ContentItemModel):
+    pass
 
 
 class ContentModel(BaseModel):
@@ -183,37 +211,58 @@ class ContentModel(BaseModel):
     )
     tool_use_id: str
     type: Literal["tool_result"] = "tool_result"
-    content: list[ContentItem]
+    content: list[ContentItem] | list[ContentItemModel]
 
 
 class ContentModel1(Content):
     pass
 
 
-class ContentModel2(ContentModel):
+class ContentModel2(BaseModel):
     """
     Anthropic image content part
     """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_use_id: str
+    type: Literal["tool_result"] = "tool_result"
+    content: list[ContentItemModel1] | list[ContentItemModel2]
 
 
 class ContentModel3(Content):
     pass
 
 
-class ContentModel4(ContentModel):
+class ContentModel4(BaseModel):
     """
     Anthropic image content part
     """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_use_id: str
+    type: Literal["tool_result"] = "tool_result"
+    content: list[ContentItemModel3] | list[ContentItemModel4]
 
 
 class ContentModel5(Content):
     pass
 
 
-class ContentModel6(ContentModel):
+class ContentModel6(BaseModel):
     """
     Anthropic image content part
     """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_use_id: str
+    type: Literal["tool_result"] = "tool_result"
+    content: list[ContentItemModel5] | list[ContentItemModel6]
 
 
 class ContentModel7(BaseModel):

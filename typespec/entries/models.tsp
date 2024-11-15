@@ -65,7 +65,7 @@ model ChatMLAnthropicInnerImageContentPart<T extends string = string> {
 model ChatMLAnthropicImageContentPart<T extends string = string> {
     tool_use_id: string;
     type: "tool_result" = "tool_result";
-    content: ChatMLAnthropicInnerImageContentPart<T>[];
+    content: ChatMLTextContentPart<T>[] | ChatMLAnthropicInnerImageContentPart<T>[];
 }
 
 alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart<T> | ChatMLAnthropicImageContentPart<T>;

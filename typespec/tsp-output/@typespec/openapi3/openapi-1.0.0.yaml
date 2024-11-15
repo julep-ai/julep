@@ -1850,34 +1850,50 @@ components:
                                 - tool_result
                               default: tool_result
                             content:
-                              type: array
-                              items:
-                                type: object
-                                required:
-                                  - type
-                                  - source
-                                properties:
-                                  type:
-                                    type: string
-                                    enum:
-                                      - image
-                                    default: image
-                                  source:
+                              anyOf:
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - text
+                                      - type
+                                    properties:
+                                      text:
+                                        type: string
+                                      type:
+                                        type: string
+                                        enum:
+                                          - text
+                                        description: The type (fixed to 'text')
+                                        default: text
+                                - type: array
+                                  items:
                                     type: object
                                     required:
                                       - type
-                                      - media_type
-                                      - data
+                                      - source
                                     properties:
                                       type:
                                         type: string
                                         enum:
-                                          - base64
-                                        default: base64
-                                      media_type:
-                                        type: string
-                                      data:
-                                        type: string
+                                          - image
+                                        default: image
+                                      source:
+                                        type: object
+                                        required:
+                                          - type
+                                          - media_type
+                                          - data
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - base64
+                                            default: base64
+                                          media_type:
+                                            type: string
+                                          data:
+                                            type: string
                           description: Anthropic image content part
                 nullable: true
                 description: The content parts of the message
@@ -1993,34 +2009,50 @@ components:
                               - tool_result
                             default: tool_result
                           content:
-                            type: array
-                            items:
-                              type: object
-                              required:
-                                - type
-                                - source
-                              properties:
-                                type:
-                                  type: string
-                                  enum:
-                                    - image
-                                  default: image
-                                source:
+                            anyOf:
+                              - type: array
+                                items:
+                                  type: object
+                                  required:
+                                    - text
+                                    - type
+                                  properties:
+                                    text:
+                                      type: string
+                                    type:
+                                      type: string
+                                      enum:
+                                        - text
+                                      description: The type (fixed to 'text')
+                                      default: text
+                              - type: array
+                                items:
                                   type: object
                                   required:
                                     - type
-                                    - media_type
-                                    - data
+                                    - source
                                   properties:
                                     type:
                                       type: string
                                       enum:
-                                        - base64
-                                      default: base64
-                                    media_type:
-                                      type: string
-                                    data:
-                                      type: string
+                                        - image
+                                      default: image
+                                    source:
+                                      type: object
+                                      required:
+                                        - type
+                                        - media_type
+                                        - data
+                                      properties:
+                                        type:
+                                          type: string
+                                          enum:
+                                            - base64
+                                          default: base64
+                                        media_type:
+                                          type: string
+                                        data:
+                                          type: string
                         description: Anthropic image content part
               nullable: true
               description: The content parts of the message
@@ -2267,34 +2299,50 @@ components:
                                 - tool_result
                               default: tool_result
                             content:
-                              type: array
-                              items:
-                                type: object
-                                required:
-                                  - type
-                                  - source
-                                properties:
-                                  type:
-                                    type: string
-                                    enum:
-                                      - image
-                                    default: image
-                                  source:
+                              anyOf:
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - text
+                                      - type
+                                    properties:
+                                      text:
+                                        type: string
+                                      type:
+                                        type: string
+                                        enum:
+                                          - text
+                                        description: The type (fixed to 'text')
+                                        default: text
+                                - type: array
+                                  items:
                                     type: object
                                     required:
                                       - type
-                                      - media_type
-                                      - data
+                                      - source
                                     properties:
                                       type:
                                         type: string
                                         enum:
-                                          - base64
-                                        default: base64
-                                      media_type:
-                                        type: string
-                                      data:
-                                        type: string
+                                          - image
+                                        default: image
+                                      source:
+                                        type: object
+                                        required:
+                                          - type
+                                          - media_type
+                                          - data
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - base64
+                                            default: base64
+                                          media_type:
+                                            type: string
+                                          data:
+                                            type: string
                           description: Anthropic image content part
                 nullable: true
                 description: The content parts of the message
@@ -2460,34 +2508,50 @@ components:
                               - tool_result
                             default: tool_result
                           content:
-                            type: array
-                            items:
-                              type: object
-                              required:
-                                - type
-                                - source
-                              properties:
-                                type:
-                                  type: string
-                                  enum:
-                                    - image
-                                  default: image
-                                source:
+                            anyOf:
+                              - type: array
+                                items:
+                                  type: object
+                                  required:
+                                    - text
+                                    - type
+                                  properties:
+                                    text:
+                                      type: string
+                                    type:
+                                      type: string
+                                      enum:
+                                        - text
+                                      description: The type (fixed to 'text')
+                                      default: text
+                              - type: array
+                                items:
                                   type: object
                                   required:
                                     - type
-                                    - media_type
-                                    - data
+                                    - source
                                   properties:
                                     type:
                                       type: string
                                       enum:
-                                        - base64
-                                      default: base64
-                                    media_type:
-                                      type: string
-                                    data:
-                                      type: string
+                                        - image
+                                      default: image
+                                    source:
+                                      type: object
+                                      required:
+                                        - type
+                                        - media_type
+                                        - data
+                                      properties:
+                                        type:
+                                          type: string
+                                          enum:
+                                            - base64
+                                          default: base64
+                                        media_type:
+                                          type: string
+                                        data:
+                                          type: string
                         description: Anthropic image content part
               nullable: true
               description: The content parts of the message
@@ -2995,34 +3059,50 @@ components:
                           - tool_result
                         default: tool_result
                       content:
-                        type: array
-                        items:
-                          type: object
-                          required:
-                            - type
-                            - source
-                          properties:
-                            type:
-                              type: string
-                              enum:
-                                - image
-                              default: image
-                            source:
+                        anyOf:
+                          - type: array
+                            items:
+                              type: object
+                              required:
+                                - text
+                                - type
+                              properties:
+                                text:
+                                  type: string
+                                type:
+                                  type: string
+                                  enum:
+                                    - text
+                                  description: The type (fixed to 'text')
+                                  default: text
+                          - type: array
+                            items:
                               type: object
                               required:
                                 - type
-                                - media_type
-                                - data
+                                - source
                               properties:
                                 type:
                                   type: string
                                   enum:
-                                    - base64
-                                  default: base64
-                                media_type:
-                                  type: string
-                                data:
-                                  type: string
+                                    - image
+                                  default: image
+                                source:
+                                  type: object
+                                  required:
+                                    - type
+                                    - media_type
+                                    - data
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - base64
+                                      default: base64
+                                    media_type:
+                                      type: string
+                                    data:
+                                      type: string
                     description: Anthropic image content part
             - $ref: '#/components/schemas/Tools.Tool'
             - $ref: '#/components/schemas/Tools.ChosenFunctionCall'
@@ -3090,34 +3170,50 @@ components:
                                 - tool_result
                               default: tool_result
                             content:
-                              type: array
-                              items:
-                                type: object
-                                required:
-                                  - type
-                                  - source
-                                properties:
-                                  type:
-                                    type: string
-                                    enum:
-                                      - image
-                                    default: image
-                                  source:
+                              anyOf:
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - text
+                                      - type
+                                    properties:
+                                      text:
+                                        type: string
+                                      type:
+                                        type: string
+                                        enum:
+                                          - text
+                                        description: The type (fixed to 'text')
+                                        default: text
+                                - type: array
+                                  items:
                                     type: object
                                     required:
                                       - type
-                                      - media_type
-                                      - data
+                                      - source
                                     properties:
                                       type:
                                         type: string
                                         enum:
-                                          - base64
-                                        default: base64
-                                      media_type:
-                                        type: string
-                                      data:
-                                        type: string
+                                          - image
+                                        default: image
+                                      source:
+                                        type: object
+                                        required:
+                                          - type
+                                          - media_type
+                                          - data
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - base64
+                                            default: base64
+                                          media_type:
+                                            type: string
+                                          data:
+                                            type: string
                           description: Anthropic image content part
                   - $ref: '#/components/schemas/Tools.Tool'
                   - $ref: '#/components/schemas/Tools.ChosenFunctionCall'
@@ -5056,34 +5152,50 @@ components:
                                     - tool_result
                                   default: tool_result
                                 content:
-                                  type: array
-                                  items:
-                                    type: object
-                                    required:
-                                      - type
-                                      - source
-                                    properties:
-                                      type:
-                                        type: string
-                                        enum:
-                                          - image
-                                        default: image
-                                      source:
+                                  anyOf:
+                                    - type: array
+                                      items:
+                                        type: object
+                                        required:
+                                          - text
+                                          - type
+                                        properties:
+                                          text:
+                                            $ref: '#/components/schemas/Common.JinjaTemplate'
+                                          type:
+                                            type: string
+                                            enum:
+                                              - text
+                                            description: The type (fixed to 'text')
+                                            default: text
+                                    - type: array
+                                      items:
                                         type: object
                                         required:
                                           - type
-                                          - media_type
-                                          - data
+                                          - source
                                         properties:
                                           type:
                                             type: string
                                             enum:
-                                              - base64
-                                            default: base64
-                                          media_type:
-                                            type: string
-                                          data:
-                                            $ref: '#/components/schemas/Common.JinjaTemplate'
+                                              - image
+                                            default: image
+                                          source:
+                                            type: object
+                                            required:
+                                              - type
+                                              - media_type
+                                              - data
+                                            properties:
+                                              type:
+                                                type: string
+                                                enum:
+                                                  - base64
+                                                default: base64
+                                              media_type:
+                                                type: string
+                                              data:
+                                                $ref: '#/components/schemas/Common.JinjaTemplate'
                               description: Anthropic image content part
                     nullable: true
                     description: The content parts of the message
@@ -5249,34 +5361,50 @@ components:
                                     - tool_result
                                   default: tool_result
                                 content:
-                                  type: array
-                                  items:
-                                    type: object
-                                    required:
-                                      - type
-                                      - source
-                                    properties:
-                                      type:
-                                        type: string
-                                        enum:
-                                          - image
-                                        default: image
-                                      source:
+                                  anyOf:
+                                    - type: array
+                                      items:
+                                        type: object
+                                        required:
+                                          - text
+                                          - type
+                                        properties:
+                                          text:
+                                            $ref: '#/components/schemas/Common.JinjaTemplate'
+                                          type:
+                                            type: string
+                                            enum:
+                                              - text
+                                            description: The type (fixed to 'text')
+                                            default: text
+                                    - type: array
+                                      items:
                                         type: object
                                         required:
                                           - type
-                                          - media_type
-                                          - data
+                                          - source
                                         properties:
                                           type:
                                             type: string
                                             enum:
-                                              - base64
-                                            default: base64
-                                          media_type:
-                                            type: string
-                                          data:
-                                            $ref: '#/components/schemas/Common.JinjaTemplate'
+                                              - image
+                                            default: image
+                                          source:
+                                            type: object
+                                            required:
+                                              - type
+                                              - media_type
+                                              - data
+                                            properties:
+                                              type:
+                                                type: string
+                                                enum:
+                                                  - base64
+                                                default: base64
+                                              media_type:
+                                                type: string
+                                              data:
+                                                $ref: '#/components/schemas/Common.JinjaTemplate'
                               description: Anthropic image content part
                     nullable: true
                     description: The content parts of the message

@@ -231,6 +231,16 @@ class PlaywrightActions:
         """Press a key or key combination"""
         # Split combination into individual keys
         keys = key_combination.split("+")
+        keys = [
+            "Enter"
+            if k == "Return"
+            else "Control"
+            if k == "ctrl"
+            else "PageDown"
+            if k == "Page_Down"
+            else k
+            for k in keys
+        ]
 
         # Press modifier keys first
         for key in keys[:-1]:

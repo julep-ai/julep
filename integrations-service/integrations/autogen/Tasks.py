@@ -9,6 +9,7 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 from .Chat import ChatSettings
+from .Common import JinjaTemplate
 from .Tools import (
     ChosenBash20241022,
     ChosenComputer20241022,
@@ -85,12 +86,24 @@ class Content(BaseModel):
     """
 
 
-class ContentItem(BaseModel):
+class ContentItem(Content):
+    pass
+
+
+class ContentItemModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
     type: Literal["image"] = "image"
     source: Source
+
+
+class ContentItemModel1(Content):
+    pass
+
+
+class ContentItemModel2(ContentItemModel):
+    pass
 
 
 class ContentModel(BaseModel):
@@ -117,7 +130,7 @@ class ContentModel1(BaseModel):
     )
     tool_use_id: str
     type: Literal["tool_result"] = "tool_result"
-    content: list[ContentItem]
+    content: list[ContentItem] | list[ContentItemModel]
 
 
 class ContentModel2(Content):
@@ -128,10 +141,17 @@ class ContentModel3(ContentModel):
     pass
 
 
-class ContentModel4(ContentModel1):
+class ContentModel4(BaseModel):
     """
     Anthropic image content part
     """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool_use_id: str
+    type: Literal["tool_result"] = "tool_result"
+    content: list[ContentItemModel1] | list[ContentItemModel2]
 
 
 class CreateTaskRequest(BaseModel):

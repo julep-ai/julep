@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Annotated, Callable, Optional
 from uuid import UUID, uuid4
@@ -34,6 +35,111 @@ from .metrics import total_tokens_per_user
 from .router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
+
+
+async def request_anthropic(
+    messages: list[dict], formatted_tools: list[dict], settings: dict
+) -> ModelResponse:
+    # Use Anthropic API directly
+    client = AsyncAnthropic(api_key=anthropic_api_key)
+
+    # Filter tools for specific types
+    filtered_tools = [
+        tool
+        for tool in formatted_tools
+        if tool["type"]
+        in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
+    ]
+
+    # Format messages for Claude
+    claude_messages = []
+    for msg in messages:
+        # Skip messages that are not assistant or user
+        if msg["role"] not in ["assistant", "user"]:
+            continue
+
+        # Transform the message content and tool calls
+        if msg["role"] == "assistant":
+            transformed_content = [{"text": msg["content"], "type": "text"}]
+            transformed_content.extend(
+                {
+                    "id": f"{tool_call['id']}",
+                    "input": json.loads(tool_call["function"]["arguments"]),
+                    "name": tool_call["function"]["name"],
+                    "type": "tool_use",
+                }
+                for tool_call in msg.get("tool_calls", [])
+            )
+            claude_message = {
+                "role": msg["role"],
+                "content": transformed_content,
+            }
+        else:
+            try:
+                transformed_content = json.loads(msg["content"])
+            except Exception:
+                transformed_content = msg["content"]
+            claude_message = {"role": msg["role"], "content": transformed_content}
+
+        claude_messages.append(claude_message)
+    # Call Claude API
+    claude_response: BetaMessage = await client.beta.messages.create(
+        model="claude-3-5-sonnet-20241022",
+        messages=claude_messages,
+        tools=filtered_tools,
+        max_tokens=settings.get("max_tokens", 1024),
+        betas=[COMPUTER_USE_BETA_FLAG],
+    )
+    # Convert Claude response to litellm format
+    text_block = next(
+        (block for block in claude_response.content if block.type == "text"),
+        None,
+    )
+
+    if claude_response.stop_reason == "tool_use":
+        choice = Choices(
+            message=Message(
+                role="assistant",
+                content=text_block.text if text_block else None,
+                tool_calls=[
+                    ChatCompletionMessageToolCall(
+                        type="function",
+                        function=Function(
+                            name=block.name,
+                            arguments=block.input,
+                        ),
+                    )
+                    for block in claude_response.content
+                    if block.type == "tool_use"
+                ],
+            ),
+            finish_reason="tool_calls",
+        )
+    else:
+        assert (
+            text_block
+        ), "Claude should always return a text block for stop_reason=stop"
+        choice = Choices(
+            message=Message(
+                role="assistant",
+                content=text_block.text,
+            ),
+            finish_reason="stop",
+        )
+
+    model_response = ModelResponse(
+        id=claude_response.id,
+        choices=[choice],
+        created=int(datetime.now().timestamp()),
+        model=claude_response.model,
+        object="text_completion",
+        usage={
+            "total_tokens": claude_response.usage.input_tokens
+            + claude_response.usage.output_tokens
+        },
+    )
+
+    return model_response
 
 
 def format_tool(tool: Tool) -> dict:
@@ -202,83 +308,7 @@ async def chat(
     )
 
     if is_claude_model and has_special_tools:
-        # Use Anthropic API directly
-        client = AsyncAnthropic(api_key=anthropic_api_key)
-
-        # Filter tools for specific types
-        filtered_tools = [
-            tool
-            for tool in formatted_tools
-            if tool["type"]
-            in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
-        ]
-
-        # Format messages for Claude
-        claude_messages = []
-        for msg in messages:
-            # Skip messages that are not assistant or user
-            if msg["role"] not in ["assistant", "user"]:
-                continue
-
-            claude_messages.append({"role": msg["role"], "content": msg["content"]})
-
-        # Call Claude API
-        claude_response: BetaMessage = await client.beta.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            messages=claude_messages,
-            tools=filtered_tools,
-            max_tokens=settings.get("max_tokens", 1024),
-            betas=[COMPUTER_USE_BETA_FLAG],
-        )
-
-        # Convert Claude response to litellm format
-        text_block = next(
-            (block for block in claude_response.content if block.type == "text"),
-            None,
-        )
-
-        if claude_response.stop_reason == "tool_use":
-            choice = Choices(
-                message=Message(
-                    role="assistant",
-                    content=text_block.text if text_block else None,
-                    tool_calls=[
-                        ChatCompletionMessageToolCall(
-                            type="function",
-                            function=Function(
-                                name=block.name,
-                                arguments=block.input,
-                            ),
-                        )
-                        for block in claude_response.content
-                        if block.type == "tool_use"
-                    ],
-                ),
-                finish_reason="tool_calls",
-            )
-        else:
-            assert (
-                text_block
-            ), "Claude should always return a text block for stop_reason=stop"
-            choice = Choices(
-                message=Message(
-                    role="assistant",
-                    content=text_block.text,
-                ),
-                finish_reason="stop",
-            )
-
-        model_response = ModelResponse(
-            id=claude_response.id,
-            choices=[choice],
-            created=int(datetime.now().timestamp()),
-            model=claude_response.model,
-            object="text_completion",
-            usage={
-                "total_tokens": claude_response.usage.input_tokens
-                + claude_response.usage.output_tokens
-            },
-        )
+        model_response = await request_anthropic(messages, formatted_tools, settings)
     else:
         # FIXME: hardcoded tool to a None value as the tool calls are not implemented yet
         formatted_tools = None
