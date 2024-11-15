@@ -60,7 +60,14 @@ async def request_anthropic(
 
         # Transform the message content and tool calls
         if msg["role"] == "assistant":
-            transformed_content = [{"text": "Let's do this action" if msg["content"] == [] else msg["content"], "type": "text"}]
+            transformed_content = [
+                {
+                    "text": "Let's do this action"
+                    if msg["content"] == []
+                    else msg["content"],
+                    "type": "text",
+                }
+            ]
             transformed_content.extend(
                 {
                     "id": f"{tool_call['id']}",
