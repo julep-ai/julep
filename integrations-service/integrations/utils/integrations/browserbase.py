@@ -127,7 +127,6 @@ async def get_live_urls(
     setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionLiveUrlsArguments
 ) -> BrowserbaseGetSessionLiveUrlsOutput:
     """Get the live URLs for a session."""
-
     client = get_browserbase_client(setup)
     urls: DebugConnectionURLs = client.get_debug_connection_urls(arguments.id)
     return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
@@ -159,6 +158,7 @@ async def install_extension_from_github(
     setup: BrowserbaseSetup, arguments: BrowserbaseExtensionArguments
 ) -> BrowserbaseExtensionOutput:
     """Download and install an extension from GitHub to the user's Browserbase account."""
+
     github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{
             arguments.ref}.zip"
 
