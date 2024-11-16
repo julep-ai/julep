@@ -42,4 +42,3 @@ async def parse(
     documents = await parser.aload_data(file_content, extra_info=extra_info)
 
     return LlamaParseFetchOutput(documents=documents)
-

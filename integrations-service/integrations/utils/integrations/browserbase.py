@@ -51,7 +51,6 @@ def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
 async def list_sessions(
     setup: BrowserbaseSetup, arguments: BrowserbaseListSessionsArguments
 ) -> BrowserbaseListSessionsOutput:
-
     client = get_browserbase_client(setup)
 
     # FIXME: Implement status filter

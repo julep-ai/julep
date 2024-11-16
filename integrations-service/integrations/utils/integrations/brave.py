@@ -24,9 +24,7 @@ async def search(
     assert isinstance(setup, BraveSearchSetup), "Invalid setup"
     assert isinstance(arguments, BraveSearchArguments), "Invalid arguments"
 
-    tool = BraveSearch.from_api_key(
-        api_key=setup.api_key, search_kwargs={"count": 3}
-    )
+    tool = BraveSearch.from_api_key(api_key=setup.api_key, search_kwargs={"count": 3})
 
     result = tool.run(arguments.query)
 

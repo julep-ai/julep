@@ -14,9 +14,7 @@ from ...models import EmailOutput
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def send(
-    setup: EmailSetup, arguments: EmailArguments
-) -> EmailOutput:
+async def send(setup: EmailSetup, arguments: EmailArguments) -> EmailOutput:
     """
     Sends an email with the provided details.
     """
@@ -32,4 +30,3 @@ async def send(
         server.send_message(message)
 
     return EmailOutput(success=True)
-

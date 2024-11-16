@@ -381,7 +381,6 @@ class PlaywrightActions:
 async def perform_action(
     setup: RemoteBrowserSetup, arguments: RemoteBrowserArguments
 ) -> RemoteBrowserOutput:
-
     p: PlaywrightContextManager = await async_playwright().start()
     connect_url = setup.connect_url if setup.connect_url else arguments.connect_url
     browser = await p.chromium.connect_over_cdp(connect_url)
