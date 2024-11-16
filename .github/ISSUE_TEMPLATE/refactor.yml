@@ -1,0 +1,17 @@
+name: "🛠️ RRefactor"
+description: "Submit a bug report to help us improve"
+title: "[Refactor]: "
+labels: ["refactor"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "📜 Description"
+      placeholder: "A clear and concise description of what should be refactored."
+
+  - type: textarea
+    id: relevant-files
+    attributes:
+      label: "👟 Relevant files"
+      placeholder: "1. `agents-api/Dockerfile` needs to change
+        2. `integrations/**/*.py` files need to be reformatted"
