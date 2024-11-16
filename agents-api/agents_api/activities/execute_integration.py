@@ -49,8 +49,9 @@ async def execute_integration(
             arguments=arguments,
         )
 
-        if hasattr(integration_service_response, "error"):
-            raise Exception(integration_service_response.error)
+
+        if "error" in integration_service_response:
+            raise Exception(integration_service_response["error"])
 
         return integration_service_response
 
