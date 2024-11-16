@@ -4,7 +4,6 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import SpiderFetchArguments, SpiderSetup
 from ...models import SpiderFetchOutput
-from ...models.execution import ExecutionError
 
 
 @beartype
@@ -15,28 +14,26 @@ from ...models.execution import ExecutionError
 )
 async def crawl(
     setup: SpiderSetup, arguments: SpiderFetchArguments
-) -> SpiderFetchOutput | ExecutionError:
+) -> SpiderFetchOutput:
     """
     Fetches data from a specified URL.
     """
-    try:
-        assert isinstance(setup, SpiderSetup), "Invalid setup"
-        assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
 
-        url = arguments.url
+    assert isinstance(setup, SpiderSetup), "Invalid setup"
+    assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
 
-        if not url:
-            raise ValueError("URL parameter is required for spider")
+    url = arguments.url
 
-        spider_loader = SpiderLoader(
-            api_key=setup.spider_api_key,
-            url=str(url),
-            mode=arguments.mode,
-            params=arguments.params,
-        )
+    if not url:
+        raise ValueError("URL parameter is required for spider")
 
-        documents = spider_loader.load()
+    spider_loader = SpiderLoader(
+        api_key=setup.spider_api_key,
+        url=str(url),
+        mode=arguments.mode,
+        params=arguments.params,
+    )
 
-        return SpiderFetchOutput(documents=documents)
-    except Exception as e:
-        return ExecutionError(error=str(e))
+    documents = spider_loader.load()
+
+    return SpiderFetchOutput(documents=documents)

@@ -4,7 +4,6 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import WikipediaSearchArguments
 from ...models import WikipediaSearchOutput
-from ...models.execution import ExecutionError
 
 
 @beartype
@@ -15,20 +14,18 @@ from ...models.execution import ExecutionError
 )
 async def search(
     arguments: WikipediaSearchArguments,
-) -> WikipediaSearchOutput | ExecutionError:
+) -> WikipediaSearchOutput:
     """
     Searches Wikipedia for a given query and returns formatted results.
     """
-    try:
-        query = arguments.query
-        if not query:
-            raise ValueError("Query parameter is required for Wikipedia search")
 
-        load_max_docs = arguments.load_max_docs
+    query = arguments.query
+    if not query:
+        raise ValueError("Query parameter is required for Wikipedia search")
 
-        loader = WikipediaLoader(query=query, load_max_docs=load_max_docs)
-        documents = loader.load()
+    load_max_docs = arguments.load_max_docs
 
-        return WikipediaSearchOutput(documents=documents)
-    except Exception as e:
-        return ExecutionError(error=str(e))
+    loader = WikipediaLoader(query=query, load_max_docs=load_max_docs)
+    documents = loader.load()
+
+    return WikipediaSearchOutput(documents=documents)

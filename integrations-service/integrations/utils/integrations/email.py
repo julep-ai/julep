@@ -6,7 +6,6 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import EmailArguments, EmailSetup
 from ...models import EmailOutput
-from ...models.execution import ExecutionError
 
 
 @beartype
@@ -17,22 +16,20 @@ from ...models.execution import ExecutionError
 )
 async def send(
     setup: EmailSetup, arguments: EmailArguments
-) -> EmailOutput | ExecutionError:
+) -> EmailOutput:
     """
     Sends an email with the provided details.
     """
 
-    try:
-        message = EmailMessage()
-        message.set_content(arguments.body)
-        message["Subject"] = arguments.subject
-        message["From"] = arguments.from_
-        message["To"] = arguments.to
+    message = EmailMessage()
+    message.set_content(arguments.body)
+    message["Subject"] = arguments.subject
+    message["From"] = arguments.from_
+    message["To"] = arguments.to
 
-        with SMTP(setup.host, setup.port) as server:
-            server.login(setup.user, setup.password)
-            server.send_message(message)
+    with SMTP(setup.host, setup.port) as server:
+        server.login(setup.user, setup.password)
+        server.send_message(message)
 
-        return EmailOutput(success=True)
-    except Exception as e:
-        return ExecutionError(error=str(e))
+    return EmailOutput(success=True)
+
