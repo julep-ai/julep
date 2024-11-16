@@ -6,13 +6,10 @@ from uuid import UUID, uuid4
 from anthropic import AsyncAnthropic
 from anthropic.types.beta.beta_message import BetaMessage
 from fastapi import BackgroundTasks, Depends, Header
-from langchain_core.tools import BaseTool
-from langchain_core.tools.convert import tool as tool_decorator
 from litellm import ChatCompletionMessageToolCall, Function, Message
 from litellm.types.utils import Choices, ModelResponse
 from starlette.status import HTTP_201_CREATED
 
-from ...activities.utils import get_handler_with_filtered_params
 from ...autogen.openapi_model import (
     ChatInput,
     ChatResponse,
@@ -33,6 +30,7 @@ from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
 from .metrics import total_tokens_per_user
 from .router import router
+from ...activities.task_steps.prompt_step import format_tool
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
@@ -147,63 +145,6 @@ async def request_anthropic(
     )
 
     return model_response
-
-
-def format_tool(tool: Tool) -> dict:
-    if tool.type == "computer_20241022":
-        return {
-            "type": tool.type,
-            "name": tool.name,
-            "display_width_px": tool.computer_20241022
-            and tool.computer_20241022.display_width_px,
-            "display_height_px": tool.computer_20241022
-            and tool.computer_20241022.display_height_px,
-            "display_number": tool.computer_20241022
-            and tool.computer_20241022.display_number,
-        }
-
-    if tool.type in ["bash_20241022", "text_editor_20241022"]:
-        return tool.model_dump(include={"type", "name"})
-
-    if tool.type == "function":
-        return {
-            "type": "function",
-            "function": {
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.function and tool.function.parameters,
-            },
-        }
-
-    # For other tool types, we need to translate them to the OpenAI function tool format
-    formatted = {
-        "type": "function",
-        "function": {"name": tool.name, "description": tool.description},
-    }
-
-    if tool.type == "system":
-        handler: Callable = get_handler_with_filtered_params(tool.system)
-
-        lc_tool: BaseTool = tool_decorator(handler)
-
-        json_schema: dict = lc_tool.get_input_jsonschema()
-
-        formatted["function"]["description"] = formatted["function"][
-            "description"
-        ] or json_schema.get("description")
-
-        formatted["function"]["parameters"] = json_schema
-
-    # # FIXME: Implement integration tools
-    # elif tool.type == "integration":
-    #     raise NotImplementedError("Integration tools are not supported")
-
-    # # FIXME: Implement API call tools
-    # elif tool.type == "api_call":
-    #     raise NotImplementedError("API call tools are not supported")
-
-    return formatted
-
 
 @router.post(
     "/sessions/{session_id}/chat",
