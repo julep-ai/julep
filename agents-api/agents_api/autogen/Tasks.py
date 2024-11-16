@@ -236,7 +236,7 @@ class EvaluateStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    evaluate: dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
+    evaluate: dict[str, Any]
     """
     The expression to evaluate
     """
@@ -837,10 +837,7 @@ class ReturnStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    return_: Annotated[
-        dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str],
-        Field(alias="return"),
-    ]
+    return_: Annotated[dict[str, Any], Field(alias="return")]
     """
     The value to return
     """
@@ -860,7 +857,7 @@ class SetStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    set: dict[str, str]
+    set: dict[str, Any]
     """
     The value to set
     """
@@ -1046,25 +1043,7 @@ class ToolCallStep(BaseModel):
     """
     The tool to run
     """
-    arguments: (
-        dict[
-            str,
-            dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-            | list[dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]]
-            | str,
-        ]
-        | list[
-            dict[
-                str,
-                dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-                | list[
-                    dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-                ]
-                | str,
-            ]
-        ]
-        | Literal["_"]
-    ) = "_"
+    arguments: dict[str, Any] | Literal["_"] = "_"
     """
     The input parameters for the tool (defaults to last step output)
     """
@@ -1168,7 +1147,7 @@ class WaitForInputInfo(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    info: dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
+    info: dict[str, Any]
     """
     Any additional info or data
     """
@@ -1213,10 +1192,7 @@ class YieldStep(BaseModel):
     The subworkflow to run.
     VALIDATION: Should resolve to a defined subworkflow.
     """
-    arguments: (
-        dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-        | Literal["_"]
-    ) = "_"
+    arguments: dict[str, Any] | Literal["_"] = "_"
     """
     The input parameters for the subworkflow (defaults to last step output)
     """

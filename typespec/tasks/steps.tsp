@@ -28,14 +28,6 @@ alias TypedExpression<T> = PyExpression;
 /** A python expression that takes an accumulator `results` and an input item `_` and reduces them. */
 alias ReduceExpression<Value = unknown, Accumulator = Array<Value>> = TypedExpression<Accumulator>;
 
-/** A string->string object where the values are python expressions that get evaluated to give a final object. */
-alias ExpressionObject<T> = Record<TypedExpression<T> | TypedExpression<T>[] | Record<TypedExpression<T>> | Record<TypedExpression<T>>[]>;
-
-alias NestedExpression<T> = Record<TypedExpression<T> | ExpressionObject<T> | ExpressionObject<T>[]>;
-
-/** Nested expression object. */
-alias NestedExpressionObject<T> = NestedExpression<T> | NestedExpression<T>[];
-
 @discriminator("kind_")
 model BaseWorkflowStep<T extends valueof WorkflowStepKind> {
     /** The kind of step */
@@ -88,7 +80,7 @@ model ToolCallStepDef {
     tool: validPythonIdentifier;
 
     /** The input parameters for the tool (defaults to last step output) */
-    arguments: NestedExpressionObject<unknown> | "_" = "_";
+    arguments: Record<unknown> | "_" = "_";
 }
 
 model PromptStep extends BaseWorkflowStep<"prompt"> {
@@ -134,7 +126,7 @@ model EvaluateStep extends BaseWorkflowStep<"evaluate"> {
 
 model EvaluateStepDef {
     /** The expression to evaluate */
-    evaluate: ExpressionObject<unknown>;
+    evaluate: Record<unknown>;
 }
 
 model WaitForInputStep extends BaseWorkflowStep<"wait_for_input"> {
@@ -146,7 +138,7 @@ model WaitForInputStep extends BaseWorkflowStep<"wait_for_input"> {
 
 model WaitForInputInfo {
     /** Any additional info or data */
-    info: ExpressionObject<unknown>;
+    info: Record<unknown>;
 }
 
 model WaitForInputStepDef {
@@ -191,7 +183,7 @@ model SetStep extends BaseWorkflowStep<"set"> {
 
 model SetStepDef {
     /** The value to set */
-    set: Record<TypedExpression<unknown>>;
+    set: Record<unknown>;
 }
 
 ///////////////////////
@@ -317,7 +309,7 @@ model YieldStepDef {
     workflow: string;
 
     /** The input parameters for the subworkflow (defaults to last step output) */
-    arguments: ExpressionObject<unknown> | "_" = "_";
+    arguments: Record<unknown> | "_" = "_";
 }
 
 model ErrorWorkflowStep extends BaseWorkflowStep<"error"> {
@@ -375,5 +367,5 @@ model ReturnStep extends BaseWorkflowStep<"return"> {
 
 model ReturnStepDef {
     /** The value to return */
-    `return`: ExpressionObject<unknown>;
+    `return`: Record<unknown>;
 }
