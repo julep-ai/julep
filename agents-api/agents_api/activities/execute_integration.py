@@ -49,7 +49,6 @@ async def execute_integration(
             arguments=arguments,
         )
 
-
         if "error" in integration_service_response:
             raise Exception(integration_service_response["error"])
 
