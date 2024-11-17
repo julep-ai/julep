@@ -56,19 +56,19 @@ model ChatMLAnthropicImageSource<T extends string = string> {
     data: T;
 }
 
-model ChatMLAnthropicInnerImageContentPart<T extends string = string> {
+model ChatMLAnthropicImageContentPart<T extends string = string> {
     type: "image" = "image";
     source: ChatMLAnthropicImageSource<T>;
 }
 
 /** Anthropic image content part */
-model ChatMLAnthropicImageContentPart<T extends string = string> {
+model ChatMLAnthropicContentPart<T extends string = string> {
     tool_use_id: string;
     type: "tool_result" = "tool_result";
-    content: ChatMLTextContentPart<T>[] | ChatMLAnthropicInnerImageContentPart<T>[];
+    content: ChatMLTextContentPart<T>[] | ChatMLAnthropicImageContentPart<T>[];
 }
 
-alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart<T> | ChatMLAnthropicImageContentPart<T>;
+alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart<T> | ChatMLAnthropicContentPart<T>;
 
 model ChatMLMessage<T extends string = string> {
     /** The role of the message */
