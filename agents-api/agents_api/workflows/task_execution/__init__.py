@@ -437,7 +437,7 @@ class TaskExecutionWorkflow:
             ]["type"] == "integration":
                 workflow.logger.debug("Prompt step: Received INTEGRATION tool call")
 
-                # FIXME: Implement integration tool calls
+                # TODO: Implement integration tool calls
                 # See: MANUAL TOOL CALL INTEGRATION (below)
                 raise NotImplementedError("Integration tool calls not yet supported")
 
@@ -452,7 +452,7 @@ class TaskExecutionWorkflow:
             ]["type"] == "api_call":
                 workflow.logger.debug("Prompt step: Received API_CALL tool call")
 
-                # FIXME: Implement API_CALL tool calls
+                # TODO: Implement API_CALL tool calls
                 # See: MANUAL TOOL CALL API_CALL (below)
                 raise NotImplementedError("API_CALL tool calls not yet supported")
 
@@ -467,7 +467,7 @@ class TaskExecutionWorkflow:
             ]["type"] == "system":
                 workflow.logger.debug("Prompt step: Received SYSTEM tool call")
 
-                # FIXME: Implement SYSTEM tool calls
+                # TODO: Implement SYSTEM tool calls
                 # See: MANUAL TOOL CALL SYSTEM (below)
                 raise NotImplementedError("SYSTEM tool calls not yet supported")
 

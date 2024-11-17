@@ -255,6 +255,7 @@ model FunctionCallOption {
 
 model NamedToolChoice {
     function?: FunctionCallOption;
+    // TODO: Add integration, system, api_call
     integration?: never;
     system?: never;
     api_call?: never;
@@ -288,6 +289,7 @@ model BaseChosenToolCall {
     type: ToolType;
 
     function?: FunctionCallOption;
+    // TODO: Add integration, system, api_call
     integration?: unknown; // ChosenIntegrationCall
     system?: unknown; // ChosenSystemCall
     api_call?: unknown; // ChosenApiCall
