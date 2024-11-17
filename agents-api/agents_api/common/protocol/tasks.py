@@ -75,7 +75,14 @@ with workflow.unsafe.imports_passed_through():
 valid_transitions: dict[TransitionType, list[TransitionType]] = {
     # Start state
     "init": ["wait", "error", "step", "cancelled", "init_branch", "finish"],
-    "init_branch": ["wait", "error", "step", "cancelled", "finish_branch"],
+    "init_branch": [
+        "wait",
+        "error",
+        "step",
+        "cancelled",
+        "init_branch",
+        "finish_branch",
+    ],
     # End states
     "finish": [],
     "error": [],
