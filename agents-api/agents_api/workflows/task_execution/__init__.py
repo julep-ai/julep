@@ -15,8 +15,8 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
-    from ...activities.task_steps.base_evaluate import base_evaluate
     from ...activities.sync_items_remote import load_inputs_remote, save_inputs_remote
+    from ...activities.task_steps.base_evaluate import base_evaluate
     from ...autogen.openapi_model import (
         ApiCallDef,
         BaseIntegrationDef,
