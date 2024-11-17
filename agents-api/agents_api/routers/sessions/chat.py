@@ -55,7 +55,8 @@ async def request_anthropic(
         # Skip messages that are not assistant or user
         if msg["role"] not in ["assistant", "user"]:
             continue
-
+        
+        # FIXME: return the tool call ids (save assistant message in entries as json dump)
         # Transform the message content and tool calls
         if msg["role"] == "assistant":
             transformed_content = [

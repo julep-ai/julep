@@ -104,26 +104,26 @@ class PlaywrightActions:
             window.$$julep$$_initialized = true;
             """)
 
-    @staticmethod
-    def _with_error_and_screenshot(f):
-        @wraps(f)
-        async def wrapper(self: "PlaywrightActions", *args, **kwargs):
-            try:
-                result: RemoteBrowserOutput = await f(self, *args, **kwargs)
-                await self._wait_for_load()
+    # @staticmethod
+    # def _with_error_and_screenshot(f):
+    #     @wraps(f)
+    #     async def wrapper(self: "PlaywrightActions", *args, **kwargs):
+    #         try:
+    #             result: RemoteBrowserOutput = await f(self, *args, **kwargs)
+    #             await self._wait_for_load()
 
-                screenshot: RemoteBrowserOutput = await self.take_screenshot()
+    #             screenshot: RemoteBrowserOutput = await self.take_screenshot()
 
-                return RemoteBrowserOutput(
-                    output=result.output,
-                    base64_image=screenshot.base64_image,
-                    system=result.system or f.__name__,
-                )
+    #             return RemoteBrowserOutput(
+    #                 output=result.output,
+    #                 base64_image=screenshot.base64_image,
+    #                 system=result.system or f.__name__,
+    #             )
 
-            except Exception as e:
-                return RemoteBrowserOutput(error=str(e))
+    #         except Exception as e:
+    #             return RemoteBrowserOutput(error=str(e))
 
-        return wrapper
+    #     return wrapper
 
     async def _get_screen_size(self) -> tuple[int, int]:
         """Get the current browser viewport size"""
@@ -198,7 +198,6 @@ class PlaywrightActions:
     # ---
     # Actions
 
-    @_with_error_and_screenshot
     async def navigate(self, url: str) -> RemoteBrowserOutput:
         """Navigate to a specific URL"""
         await self.page.goto(url)
@@ -208,7 +207,6 @@ class PlaywrightActions:
             output=url,
         )
 
-    @_with_error_and_screenshot
     async def refresh(self) -> RemoteBrowserOutput:
         """Refresh the current page"""
         await self.page.reload()
@@ -218,7 +216,6 @@ class PlaywrightActions:
             output="Refreshed page",
         )
 
-    @_with_error_and_screenshot
     async def cursor_position(self) -> RemoteBrowserOutput:
         """Get current mouse coordinates"""
         x, y = await self._get_mouse_coordinates()
@@ -226,7 +223,6 @@ class PlaywrightActions:
             output=f"X={x}, Y={y}",
         )
 
-    @_with_error_and_screenshot
     async def press_key(self, key_combination: str) -> RemoteBrowserOutput:
         """Press a key or key combination"""
         # Split combination into individual keys
@@ -257,7 +253,6 @@ class PlaywrightActions:
             output=f"Pressed {key_combination}",
         )
 
-    @_with_error_and_screenshot
     async def type_text(self, text: str) -> RemoteBrowserOutput:
         """Type a string of text"""
         await self.page.keyboard.type(text)
@@ -266,7 +261,6 @@ class PlaywrightActions:
             output=f"Typed {text}",
         )
 
-    @_with_error_and_screenshot
     async def mouse_move(self, coordinate: tuple[int, int]) -> RemoteBrowserOutput:
         """Move mouse to specified coordinates"""
         await self.mouse.move(*coordinate)
@@ -275,7 +269,6 @@ class PlaywrightActions:
             output=f"Moved mouse to {coordinate}",
         )
 
-    @_with_error_and_screenshot
     async def left_click(self) -> RemoteBrowserOutput:
         """Perform left mouse click"""
         x, y = await self._get_mouse_coordinates()
@@ -285,7 +278,6 @@ class PlaywrightActions:
             output="Left clicked",
         )
 
-    @_with_error_and_screenshot
     async def left_click_drag(self, coordinate: tuple[int, int]) -> RemoteBrowserOutput:
         """Click and drag to specified coordinates"""
         await self.mouse.down()
@@ -296,7 +288,6 @@ class PlaywrightActions:
             output=f"Left clicked and dragged to {coordinate}",
         )
 
-    @_with_error_and_screenshot
     async def right_click(self) -> RemoteBrowserOutput:
         """Perform right mouse click"""
         x, y = await self._get_mouse_coordinates()
@@ -306,7 +297,6 @@ class PlaywrightActions:
             output="Right clicked",
         )
 
-    @_with_error_and_screenshot
     async def middle_click(self) -> RemoteBrowserOutput:
         """Perform middle mouse click"""
         x, y = await self._get_mouse_coordinates()
@@ -316,7 +306,6 @@ class PlaywrightActions:
             output="Middle clicked",
         )
 
-    @_with_error_and_screenshot
     async def double_click(self) -> RemoteBrowserOutput:
         """Perform double click"""
         x, y = await self._get_mouse_coordinates()
