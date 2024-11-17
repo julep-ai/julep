@@ -146,7 +146,8 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     # Get passed settings
     passed_settings: dict = context.current_step.model_dump(
         # TODO: Should we exclude unset?
-        exclude=excluded_keys, exclude_unset=True
+        exclude=excluded_keys,
+        exclude_unset=True,
     )
     passed_settings.update(passed_settings.pop("settings", {}))
 
