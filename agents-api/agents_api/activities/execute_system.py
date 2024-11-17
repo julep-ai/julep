@@ -2,6 +2,7 @@ import asyncio
 from typing import Any
 from uuid import UUID
 
+from ..autogen.Sessions import CreateSessionRequest
 from beartype import beartype
 from box import Box, BoxList
 from fastapi.background import BackgroundTasks
@@ -88,6 +89,14 @@ async def execute_system(
                 background_tasks=BackgroundTasks(),
                 x_custom_api_key=x_custom_api_key,
                 chat_input=chat_input,
+            )
+
+        if system.operation == "create" and system.resource == "session":
+            developer_id = arguments.pop("developer_id")
+            session_id = arguments.pop("session_id", None)
+            data = CreateSessionRequest(**arguments)
+            return handler(
+                developer_id=developer_id, session_id=session_id, data=data
             )
 
         # Handle regular operations

@@ -79,7 +79,7 @@ async def request_anthropic(
                 "role": msg["role"],
                 "content": transformed_content,
             }
-        else:
+        elif msg["role"] == "user":
             try:
                 transformed_content = json.loads(msg["content"])
             except Exception:
