@@ -37,10 +37,14 @@ class EvaluateError(Exception):
 
 
 # Recursive evaluation helper function
-def _recursive_evaluate(expr, evaluator: SimpleEval):
+def _recursive_evaluate(expr, evaluator: SimpleEval, eval_prompt_prefix: str = "$_"):
     if isinstance(expr, str):
         try:
-            return evaluator.eval(expr)
+            result = expr
+            if expr.startswith(eval_prompt_prefix):
+                result = evaluator.eval(expr)
+
+            return result
         except Exception as e:
             if activity.in_activity():
                 evaluate_error = EvaluateError(e, expr, evaluator.names)
@@ -69,6 +73,7 @@ async def base_evaluate(
     exprs: Any,
     values: dict[str, Any] = {},
     extra_lambda_strs: dict[str, str] | None = None,
+    eval_prompt_prefix: str = "$_",
 ) -> Any | list[Any] | dict[str, Any]:
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"
@@ -100,7 +105,9 @@ async def base_evaluate(
     evaluator: SimpleEval = get_evaluator(names=values, extra_functions=extra_lambdas)
 
     # Recursively evaluate the expression
-    result = _recursive_evaluate(exprs, evaluator)
+    result = _recursive_evaluate(
+        exprs, evaluator, eval_prompt_prefix=eval_prompt_prefix
+    )
     return result
 
 

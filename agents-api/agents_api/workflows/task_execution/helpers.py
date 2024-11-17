@@ -9,6 +9,7 @@ from ...common.retry_policies import DEFAULT_RETRY_POLICY
 
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
+    from ...activities.task_steps.base_evaluate import base_evaluate
     from ...autogen.openapi_model import (
         EvaluateStep,
         TransitionTarget,
@@ -122,44 +123,6 @@ async def execute_if_else_branch(
         previous_inputs,
         user_state=user_state,
     )
-
-
-@auto_blob_store_workflow
-async def execute_foreach_step(
-    *,
-    context: StepContext,
-    execution_input: ExecutionInput,
-    do_step: WorkflowStep,
-    items: list[Any],
-    previous_inputs: RemoteList | list[Any],
-    user_state: dict[str, Any] = {},
-) -> Any:
-    workflow.logger.info(f"Foreach step: Iterating over {len(items)} items")
-    results = []
-
-    for i, item in enumerate(items):
-        foreach_wf_name = (
-            f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
-        )
-        foreach_task = execution_input.task.model_copy()
-        foreach_task.workflows = [
-            Workflow(name=foreach_wf_name, steps=[do_step]),
-            *foreach_task.workflows,
-        ]
-
-        foreach_execution_input = execution_input.model_copy()
-        foreach_execution_input.task = foreach_task
-        foreach_next_target = TransitionTarget(workflow=foreach_wf_name, step=0)
-
-        result = await continue_as_child(
-            foreach_execution_input,
-            foreach_next_target,
-            previous_inputs + [item],
-            user_state=user_state,
-        )
-        results.append(result)
-
-    return results
 
 
 @auto_blob_store_workflow

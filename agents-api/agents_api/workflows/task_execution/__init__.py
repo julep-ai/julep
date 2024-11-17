@@ -15,6 +15,7 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
+    from ...activities.task_steps.base_evaluate import base_evaluate
     from ...activities.sync_items_remote import load_inputs_remote, save_inputs_remote
     from ...autogen.openapi_model import (
         ApiCallDef,
@@ -52,7 +53,6 @@ with workflow.unsafe.imports_passed_through():
     from ...env import debug, temporal_schedule_to_close_timeout, testing
     from .helpers import (
         continue_as_child,
-        execute_foreach_step,
         execute_if_else_branch,
         execute_map_reduce_step,
         execute_map_reduce_step_parallel,
@@ -96,7 +96,6 @@ STEP_TO_ACTIVITY = {
     ReturnStep: task_steps.return_step,
     YieldStep: task_steps.yield_step,
     IfElseWorkflowStep: task_steps.if_else_step,
-    ForeachStep: task_steps.for_each_step,
     MapReduceStep: task_steps.map_reduce_step,
     SetStep: task_steps.set_value_step,
     # GetStep: task_steps.get_value_step,
@@ -271,13 +270,10 @@ class TaskExecutionWorkflow:
                 state = PartialTransition(output=result)
 
             case ForeachStep(foreach=ForeachDo(do=do_step)), StepOutcome(output=items):
-                result = await execute_foreach_step(
-                    context=context,
-                    execution_input=execution_input,
-                    do_step=do_step,
-                    items=items,
-                    previous_inputs=previous_inputs,
-                )
+                result = [
+                    base_evaluate(do_step.foreach.in_, {f"item": item})
+                    for item in items
+                ]
                 state = PartialTransition(output=result)
 
             case MapReduceStep(
