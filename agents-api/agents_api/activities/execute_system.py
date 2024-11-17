@@ -2,7 +2,6 @@ import asyncio
 from typing import Any
 from uuid import UUID
 
-from ..autogen.Sessions import CreateSessionRequest
 from beartype import beartype
 from box import Box, BoxList
 from fastapi.background import BackgroundTasks
@@ -15,6 +14,7 @@ from ..autogen.Docs import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
+from ..autogen.Sessions import CreateSessionRequest
 from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
@@ -95,9 +95,7 @@ async def execute_system(
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id", None)
             data = CreateSessionRequest(**arguments)
-            return handler(
-                developer_id=developer_id, session_id=session_id, data=data
-            )
+            return handler(developer_id=developer_id, session_id=session_id, data=data)
 
         # Handle regular operations
         if asyncio.iscoroutinefunction(handler):
