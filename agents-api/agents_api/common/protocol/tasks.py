@@ -144,7 +144,7 @@ class ExecutionInput(BaseModel):
     task: TaskSpecDef
     agent: Agent
     agent_tools: list[Tool | CreateToolRequest]
-    arguments: dict[str, Any]
+    arguments: dict[str, Any] | RemoteObject
 
     # Not used at the moment
     user: User | None = None
