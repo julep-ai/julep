@@ -24,6 +24,7 @@ import litellm
 import pydantic
 import requests
 import temporalio.exceptions
+from tenacity import RetryError
 
 # 🚫 The "No Second Chances" Club - errors that we won't retry
 # Because sometimes, no means no!
@@ -130,6 +131,9 @@ RETRYABLE_ERROR_TYPES = (
     #
     # Database/storage related (when the database needs a nap)
     asyncio.TimeoutError,
+    #
+    # Tenacity exceptions (retry when retrying goes wrong lol)
+    RetryError,
 )
 
 # HTTP status codes that say "maybe try again later?"
@@ -175,16 +179,4 @@ def is_retryable_error(error: BaseException) -> bool:
 
     # If we don't know this error, we play it safe and don't retry
     # (stranger danger!)
-    return False
-
-    # Check for specific HTTP errors that should be retried
-    if isinstance(error, fastapi.exceptions.HTTPException):
-        if error.status_code in RETRYABLE_HTTP_STATUS_CODES:
-            return True
-
-    if isinstance(error, httpx.HTTPStatusError):
-        if error.response.status_code in RETRYABLE_HTTP_STATUS_CODES:
-            return True
-
-    # If we don't know about the error, we should not retry
     return False

@@ -42,12 +42,17 @@ async def execute_integration(
         if integration.provider == "dummy":
             return arguments
 
-        return await integrations.run_integration_service(
+        integration_service_response = await integrations.run_integration_service(
             provider=integration.provider,
             setup=setup,
             method=integration.method,
             arguments=arguments,
         )
+
+        if "error" in integration_service_response:
+            raise Exception(integration_service_response["error"])
+
+        return integration_service_response
 
     except BaseException as e:
         if activity.in_activity():

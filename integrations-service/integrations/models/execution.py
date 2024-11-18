@@ -46,6 +46,14 @@ from .spider import SpiderFetchOutput
 from .weather import WeatherGetOutput
 from .wikipedia import WikipediaSearchOutput
 
+
+class ExecutionError(BaseModel):
+    error: str
+    """
+    The error message of the integration execution
+    """
+
+
 ExecutionSetup = Union[
     EmailSetup,
     SpiderSetup,
@@ -90,6 +98,7 @@ ExecutionResponse = Union[
     BrowserbaseListSessionsOutput,
     RemoteBrowserOutput,
     LlamaParseFetchOutput,
+    ExecutionError,
 ]
 
 

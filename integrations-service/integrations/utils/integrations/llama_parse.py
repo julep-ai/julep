@@ -21,6 +21,7 @@ async def parse(
     """
     Parse and extract content from files using LlamaParse.
     """
+
     assert isinstance(setup, LlamaParseSetup), "Invalid setup"
     assert isinstance(arguments, LlamaParseFetchArguments), "Invalid arguments"
 
