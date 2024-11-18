@@ -6,7 +6,7 @@ from beartype import beartype
 from box import Box
 from openai import BaseModel
 
-# Increase the max string length to 300000
+# Increase the max string length to 2048000
 simpleeval.MAX_STRING_LENGTH = 2048000
 
 from simpleeval import NameNotDefined, SimpleEval

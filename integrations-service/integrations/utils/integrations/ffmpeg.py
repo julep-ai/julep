@@ -75,9 +75,6 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
         # Validate input format
         is_valid, input_mime = await validate_format(input_data)
 
-        print(f"Input MIME type: {input_mime}")
-        print(f"Is valid: {is_valid}")
-
         if not is_valid:
             return FfmpegSearchOutput(
                 fileoutput="Error: Unsupported input file format",
