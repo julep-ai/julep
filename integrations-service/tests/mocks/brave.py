@@ -1,6 +1,5 @@
 """Mock implementation of Brave Search API client"""
 
-from typing import Optional
 
 
 class MockBraveSearchClient:

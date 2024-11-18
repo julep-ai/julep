@@ -37,7 +37,7 @@ class CreateFileRequest(BaseModel):
     """
     content: str
     """
-    Content of the file
+    Base64 encoded content of the file
     """
 
 
@@ -70,7 +70,7 @@ class File(BaseModel):
     """
     content: str
     """
-    Content of the file
+    Base64 encoded content of the file
     """
     size: Annotated[int, Field(ge=1, json_schema_extra={"readOnly": True})]
     """

@@ -1,4 +1,3 @@
-import pytest
 from integrations.models import BaseProvider, BaseProviderMethod, ProviderInfo
 
 

@@ -21,8 +21,8 @@ model File {
     /** MIME type of the file */
     mime_type: mimeType | null = null;
 
-    /** Content of the file */
-    content: bytes;
+    /** Base64 encoded content of the file */
+    content: string;
 
     /** Size of the file in bytes */
     @visibility("read")

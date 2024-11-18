@@ -21,6 +21,7 @@ from .Common import *
 from .Docs import *
 from .Entries import *
 from .Executions import *
+from .Files import *
 from .Jobs import *
 from .Sessions import *
 from .Tasks import *

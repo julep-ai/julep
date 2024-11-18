@@ -11,6 +11,7 @@ from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
     CreateDocRequest,
     CreateExecutionRequest,
+    CreateFileRequest,
     CreateSessionRequest,
     CreateTaskRequest,
     CreateToolRequest,
@@ -28,6 +29,8 @@ from agents_api.models.execution.create_execution_transition import (
     create_execution_transition,
 )
 from agents_api.models.execution.create_temporal_lookup import create_temporal_lookup
+from agents_api.models.files.create_file import create_file
+from agents_api.models.files.delete_file import delete_file
 from agents_api.models.session.create_session import create_session
 from agents_api.models.session.delete_session import delete_session
 from agents_api.models.task.create_task import create_task
@@ -78,6 +81,28 @@ def test_developer_id(cozo_client=cozo_client):
     ?[developer_id, email] <- [["{str(developer_id)}", "developers@julep.ai"]]
     :delete developers {{ developer_id, email }}
     """
+    )
+
+
+@fixture(scope="global")
+def test_file(client=cozo_client, developer_id=test_developer_id):
+    file = create_file(
+        developer_id=developer_id,
+        data=CreateFileRequest(
+            name="Hello",
+            description="World",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+        ),
+        client=client,
+    )
+
+    yield file
+
+    delete_file(
+        developer_id=developer_id,
+        file_id=file.id,
+        client=client,
     )
 
 

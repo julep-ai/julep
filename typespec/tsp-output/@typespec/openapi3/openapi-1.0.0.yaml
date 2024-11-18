@@ -3251,8 +3251,7 @@ components:
           default: null
         content:
           type: string
-          format: byte
-          description: Content of the file
+          description: Base64 encoded content of the file
       description: Payload for creating a file
     Files.File:
       type: object
@@ -3291,8 +3290,7 @@ components:
           default: null
         content:
           type: string
-          format: byte
-          description: Content of the file
+          description: Base64 encoded content of the file
         size:
           type: integer
           format: uint64
