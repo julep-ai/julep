@@ -12,6 +12,7 @@ from .autogen.Tools import (
     BrowserbaseSetup,
     EmailArguments,
     EmailSetup,
+    FfmpegSearchArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
     RemoteBrowserArguments,
@@ -34,6 +35,7 @@ from .models import (
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
     EmailOutput,
+    FfmpegSearchOutput,
     LlamaParseFetchOutput,
     ProviderInfo,
     RemoteBrowserOutput,
@@ -227,6 +229,25 @@ remote_browser = BaseProvider(
     ),
 )
 
+ffmpeg = BaseProvider(
+    provider="ffmpeg",
+    setup=None,
+    methods=[
+        BaseProviderMethod(
+            method="bash_cmd",
+            description="Run FFmpeg bash command",
+            arguments=FfmpegSearchArguments,
+            output=FfmpegSearchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://ffmpeg.org/",
+        docs="https://ffmpeg.org/documentation.html",
+        icon="https://upload.wikimedia.org/wikipedia/commons/5/5f/FFmpeg_Logo_new.svg",
+        friendly_name="Ffmpeg",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -236,4 +257,5 @@ available_providers: dict[str, BaseProvider] = {
     "browserbase": browserbase,
     "remote_browser": remote_browser,
     "llama_parse": llama_parse,
+    "ffmpeg": ffmpeg,
 }

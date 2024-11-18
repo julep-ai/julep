@@ -6574,6 +6574,7 @@ components:
             - email
             - remote_browser
             - llama_parse
+            - ffmpeg
           description: The provider of the integration
         method:
           type: string
@@ -6593,6 +6594,7 @@ components:
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDef'
+          ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -6609,6 +6611,7 @@ components:
             - email
             - remote_browser
             - llama_parse
+            - ffmpeg
           description: The provider of the integration
         method:
           type: string
@@ -6628,6 +6631,7 @@ components:
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
+          ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -7340,6 +7344,7 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
+            - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -7504,6 +7509,76 @@ components:
           type: string
           description: The password of the email server
       description: Setup parameters for Email integration
+    Tools.FfmpegIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - ffmpeg
+          description: The provider must be "ffmpeg"
+          default: ffmpeg
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          nullable: true
+          description: The setup parameters for Ffmpeg
+          default: null
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.FfmpegSearchArguments'
+          description: The arguments for Ffmpeg Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Ffmpeg integration definition
+    Tools.FfmpegIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - ffmpeg
+          description: The provider must be "ffmpeg"
+          default: ffmpeg
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          nullable: true
+          description: The setup parameters for Ffmpeg
+          default: null
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.FfmpegSearchArgumentsUpdate'
+          description: The arguments for Ffmpeg Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Ffmpeg integration definition
+    Tools.FfmpegSearchArguments:
+      type: object
+      required:
+        - cmd
+      properties:
+        cmd:
+          type: string
+          description: The bash command string
+        file:
+          type: string
+          description: The base64 string of the file
+      description: Arguments for Ffmpeg CMD
+    Tools.FfmpegSearchArgumentsUpdate:
+      type: object
+      properties:
+        cmd:
+          type: string
+          description: The bash command string
+        file:
+          type: string
+          description: The base64 string of the file
+      description: Arguments for Ffmpeg CMD
     Tools.FunctionCallOption:
       type: object
       required:
@@ -7702,6 +7777,7 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -8106,6 +8182,7 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
+            - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -8198,6 +8275,7 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
+            - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
           description: The integration to call
         system:
           allOf:

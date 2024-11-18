@@ -199,6 +199,7 @@ class BaseIntegrationDef(BaseModel):
         "email",
         "remote_browser",
         "llama_parse",
+        "ffmpeg",
     ]
     """
     The provider of the integration
@@ -236,6 +237,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "email",
             "remote_browser",
             "llama_parse",
+            "ffmpeg",
         ]
         | None
     ) = None
@@ -732,6 +734,7 @@ class CreateToolRequest(BaseModel):
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
+        | FfmpegIntegrationDef
         | None
     ) = None
     """
@@ -920,6 +923,94 @@ class EmailSetupUpdate(BaseModel):
     password: str | None = None
     """
     The password of the email server
+    """
+
+
+class FfmpegIntegrationDef(BaseIntegrationDef):
+    """
+    Ffmpeg integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["ffmpeg"] = "ffmpeg"
+    """
+    The provider must be "ffmpeg"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: Any | None = None
+    """
+    The setup parameters for Ffmpeg
+    """
+    arguments: FfmpegSearchArguments | None = None
+    """
+    The arguments for Ffmpeg Search
+    """
+
+
+class FfmpegIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Ffmpeg integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["ffmpeg"] = "ffmpeg"
+    """
+    The provider must be "ffmpeg"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: Any | None = None
+    """
+    The setup parameters for Ffmpeg
+    """
+    arguments: FfmpegSearchArgumentsUpdate | None = None
+    """
+    The arguments for Ffmpeg Search
+    """
+
+
+class FfmpegSearchArguments(BaseModel):
+    """
+    Arguments for Ffmpeg CMD
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    cmd: str
+    """
+    The bash command string
+    """
+    file: str | None = None
+    """
+    The base64 string of the file
+    """
+
+
+class FfmpegSearchArgumentsUpdate(BaseModel):
+    """
+    Arguments for Ffmpeg CMD
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    cmd: str | None = None
+    """
+    The bash command string
+    """
+    file: str | None = None
+    """
+    The base64 string of the file
     """
 
 
@@ -1166,6 +1257,7 @@ class PatchToolRequest(BaseModel):
         | BrowserbaseGetSessionConnectUrlIntegrationDefUpdate
         | RemoteBrowserIntegrationDefUpdate
         | LlamaParseIntegrationDefUpdate
+        | FfmpegIntegrationDefUpdate
         | None
     ) = None
     """
@@ -1590,6 +1682,7 @@ class Tool(BaseModel):
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
+        | FfmpegIntegrationDef
         | None
     ) = None
     """
@@ -1680,6 +1773,7 @@ class UpdateToolRequest(BaseModel):
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
+        | FfmpegIntegrationDef
         | None
     ) = None
     """

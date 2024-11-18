@@ -18,6 +18,7 @@ from ..autogen.Tools import (
     BrowserbaseSetup,
     EmailArguments,
     EmailSetup,
+    FfmpegSearchArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
     RemoteBrowserArguments,
@@ -40,6 +41,7 @@ from .browserbase import (
     BrowserbaseListSessionsOutput,
 )
 from .email import EmailOutput
+from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
 from .remote_browser import RemoteBrowserOutput
 from .spider import SpiderFetchOutput
@@ -80,6 +82,7 @@ ExecutionArguments = Union[
     BrowserbaseListSessionsArguments,
     RemoteBrowserArguments,
     LlamaParseFetchArguments,
+    FfmpegSearchArguments,
 ]
 
 ExecutionResponse = Union[
@@ -98,6 +101,7 @@ ExecutionResponse = Union[
     BrowserbaseListSessionsOutput,
     RemoteBrowserOutput,
     LlamaParseFetchOutput,
+    FfmpegSearchOutput,
     ExecutionError,
 ]
 
