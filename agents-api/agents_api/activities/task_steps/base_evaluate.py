@@ -7,7 +7,7 @@ from box import Box
 from openai import BaseModel
 
 # Increase the max string length to 300000
-simpleeval.MAX_STRING_LENGTH = 300000
+simpleeval.MAX_STRING_LENGTH = 2048000
 
 from simpleeval import NameNotDefined, SimpleEval
 from temporalio import activity
