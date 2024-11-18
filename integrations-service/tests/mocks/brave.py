@@ -1,7 +1,6 @@
 """Mock implementation of Brave Search API client"""
 
 
-
 class MockBraveSearchClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
