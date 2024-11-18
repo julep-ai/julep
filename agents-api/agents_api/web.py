@@ -29,6 +29,7 @@ from .routers import (
     docs,
     internal,
     jobs,
+    files,
     sessions,
     tasks,
     users,
@@ -182,6 +183,7 @@ app.include_router(agents.router, dependencies=[Depends(get_api_key)])
 app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
 app.include_router(users.router, dependencies=[Depends(get_api_key)])
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
+app.include_router(files.router, dependencies=[Depends(get_api_key)])
 app.include_router(docs.router, dependencies=[Depends(get_api_key)])
 app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
 app.include_router(internal.router)

@@ -13,9 +13,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from agents_api.common.utils.datetime import utcnow
-
-from ...autogen.openapi_model import CreateFileRequest, ResourceCreatedResponse
+from ...autogen.openapi_model import CreateFileRequest, File
 from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
@@ -55,12 +53,12 @@ T = TypeVar("T")
     }
 )
 @wrap_in_class(
-    ResourceCreatedResponse,
+    File,
     one=True,
     transform=lambda d: {
-        "id": UUID(d.pop("file_id")),
-        "created_at": utcnow(),
-        "jobs": [],
+        **d,
+        "id": d["file_id"],
+        "content": "DUMMY: NEED TO FETCH CONTENT FROM BLOB STORAGE",
     },
     _kind="inserted",
 )
