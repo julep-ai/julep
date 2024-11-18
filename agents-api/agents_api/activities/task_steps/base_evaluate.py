@@ -9,13 +9,13 @@ from openai import BaseModel
 # Increase the max string length to 300000
 simpleeval.MAX_STRING_LENGTH = 300000
 
-from simpleeval import NameNotDefined, SimpleEval
-from temporalio import activity
-from thefuzz import fuzz
+from simpleeval import NameNotDefined, SimpleEval  # noqa: E402
+from temporalio import activity  # noqa: E402
+from thefuzz import fuzz  # noqa: E402
 
-from ...common.storage_handler import auto_blob_store
-from ...env import testing
-from ..utils import get_evaluator
+from ...common.storage_handler import auto_blob_store  # noqa: E402
+from ...env import testing  # noqa: E402
+from ..utils import get_evaluator  # noqa: E402
 
 
 class EvaluateError(Exception):
