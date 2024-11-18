@@ -27,9 +27,9 @@ from .exceptions import PromptTooBigError
 from .routers import (
     agents,
     docs,
+    files,
     internal,
     jobs,
-    files,
     sessions,
     tasks,
     users,
