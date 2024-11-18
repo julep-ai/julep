@@ -26,6 +26,7 @@ COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
 def format_tool(tool: Tool) -> dict:
+    # FIXME: Wrong format for computer_20241022 for litellm
     if tool.type == "computer_20241022":
         return {
             "type": tool.type,

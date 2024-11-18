@@ -231,8 +231,11 @@ async def chat(
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
 
+    # Check if using Claude model and has specific tool types
+    is_claude_model = settings["model"].lower().startswith("claude-3.5")
+
     # Format tools for litellm
-    formatted_tools = [format_tool(tool) for tool in tools]
+    formatted_tools = tools if is_claude_model else [format_tool(tool) for tool in tools]
 
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
@@ -250,27 +253,24 @@ async def chat(
         for m in messages
     ]
 
-    # Check if using Claude model and has specific tool types
-    is_claude_model = settings["model"].lower().startswith("claude-3.5")
     has_special_tools = any(
         tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
         for tool in formatted_tools
     )
+    print("*" * 100)
+    print("modell", settings["model"])
+    print("*" * 100)
 
-    if is_claude_model and has_special_tools:
-        model_response = await request_anthropic(messages, formatted_tools, settings)
-    else:
-        # FIXME: hardcoded tool to a None value as the tool calls are not implemented yet
-        formatted_tools = None
-        # Use litellm for other models
-        model_response = await litellm.acompletion(
-            messages=messages,
-            tools=formatted_tools or None,
-            user=str(developer.id),
-            tags=developer.tags,
-            custom_api_key=x_custom_api_key,
-            **settings,
-        )
+    # formatted_tools = None
+    # Use litellm for other models
+    model_response = await litellm.acompletion(
+        messages=messages,
+        tools=formatted_tools or None,
+        user=str(developer.id),
+        tags=developer.tags,
+        custom_api_key=x_custom_api_key,
+        **settings,
+    )
 
     # Save the input and the response to the session history
     if chat_input.save:
