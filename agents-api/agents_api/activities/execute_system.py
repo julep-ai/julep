@@ -7,15 +7,16 @@ from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
-from ..autogen.Chat import ChatInput
-from ..autogen.Docs import (
+from ..autogen.openapi_model import (
+    ChatInput,
+    SystemDef,
+    CreateSessionRequest,
     CreateDocRequest,
     HybridDocSearchRequest,
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from ..autogen.Sessions import CreateSessionRequest
-from ..autogen.Tools import SystemDef
+
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
 from ..env import testing
@@ -23,7 +24,7 @@ from ..models.developer import get_developer
 from .utils import get_handler
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def execute_system(
     context: StepContext,
@@ -80,24 +81,31 @@ async def execute_system(
             arguments["x_developer_id"] = arguments.pop("developer_id")
             search_params = _create_search_request(arguments)
             return await handler(search_params=search_params, **arguments)
+        
+        try: 
+            # Handle chat operations
+            if system.operation == "chat" and system.resource == "session":
+                developer = get_developer(developer_id=arguments.get("developer_id"))
+                session_id = arguments.get("session_id")
+                x_custom_api_key = arguments.get("x_custom_api_key", None)
+                chat_input = ChatInput(**arguments)
+                bg_runner = BackgroundTasks()
+                res = await handler(
+                    developer=developer,
+                    session_id=session_id,
+                    background_tasks=bg_runner,
+                    x_custom_api_key=x_custom_api_key,
+                    chat_input=chat_input,
+                )
 
-        # Handle chat operations
-        if system.operation == "chat" and system.resource == "session":
-            developer = get_developer(developer_id=arguments.pop("developer_id"))
-            session_id = arguments.pop("session_id")
-            x_custom_api_key = arguments.pop("x_custom_api_key", None)
-            chat_input = ChatInput(**arguments)
-            bg_runner = BackgroundTasks()
-            res = await handler(
-                developer=developer,
-                session_id=session_id,
-                background_tasks=bg_runner,
-                x_custom_api_key=x_custom_api_key,
-                chat_input=chat_input,
-            )
-
-            await bg_runner()
-            return res
+                await bg_runner()
+                return res
+        except Exception as e:
+            activity.logger.error(f"Error in execute_system_call: {e}")
+            activity.logger.error(f"arguments: {arguments}")
+            activity.logger.error(f"session_id: {session_id}")
+            activity.logger.error(f"chat_input: {chat_input}")
+            raise
 
         if system.operation == "create" and system.resource == "session":
             developer_id = arguments.pop("developer_id")

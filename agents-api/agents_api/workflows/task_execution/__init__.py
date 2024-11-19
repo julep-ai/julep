@@ -39,8 +39,8 @@ with workflow.unsafe.imports_passed_through():
         WaitForInputStep,
         WorkflowStep,
         YieldStep,
+        SystemDef
     )
-    from ...autogen.Tools import SystemDef
     from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,
