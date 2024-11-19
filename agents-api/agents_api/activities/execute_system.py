@@ -64,11 +64,14 @@ async def execute_system(
         # Handle special cases for doc operations
         if system.operation == "create" and system.subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
-            return await handler(
+            bg_runner = BackgroundTasks()
+            res = await handler(
                 data=CreateDocRequest(**arguments.pop("data")),
-                background_tasks=BackgroundTasks(),
+                background_tasks=bg_runner,
                 **arguments,
             )
+            await bg_runner()
+            return res
 
         # Handle search operations
         if system.operation == "search" and system.subresource == "doc":
@@ -82,13 +85,16 @@ async def execute_system(
             session_id = arguments.pop("session_id")
             x_custom_api_key = arguments.pop("x_custom_api_key", None)
             chat_input = ChatInput(**arguments)
-            return await handler(
+            bg_runner = BackgroundTasks()
+            res = await handler(
                 developer=developer,
                 session_id=session_id,
-                background_tasks=BackgroundTasks(),
+                background_tasks=bg_runner,
                 x_custom_api_key=x_custom_api_key,
                 chat_input=chat_input,
             )
+            await bg_runner()
+            return res
 
         # Handle regular operations
         if asyncio.iscoroutinefunction(handler):
