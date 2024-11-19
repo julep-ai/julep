@@ -34,120 +34,6 @@ from .router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
-
-async def request_anthropic(
-    messages: list[dict], formatted_tools: list[dict], settings: dict
-) -> ModelResponse:
-    # Use Anthropic API directly
-    client = AsyncAnthropic(api_key=anthropic_api_key)
-
-    # Filter tools for specific types
-    filtered_tools = [
-        tool
-        for tool in formatted_tools
-        if tool["type"]
-        in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
-    ]
-
-    # Format messages for Claude
-    claude_messages = []
-    for msg in messages:
-        # Skip messages that are not assistant or user
-        if msg["role"] not in ["assistant", "user"]:
-            continue
-
-        # FIXME: return the tool call ids (save assistant message in entries as json dump)
-        # Transform the message content and tool calls
-        if msg["role"] == "assistant":
-            transformed_content = [
-                {
-                    "text": "Let's do this action"
-                    if msg["content"] == []
-                    else msg["content"],
-                    "type": "text",
-                }
-            ]
-            transformed_content.extend(
-                {
-                    "id": f"{tool_call['id']}",
-                    "input": json.loads(tool_call["function"]["arguments"]),
-                    "name": tool_call["function"]["name"],
-                    "type": "tool_use",
-                }
-                for tool_call in msg.get("tool_calls", [])
-            )
-            claude_message = {
-                "role": msg["role"],
-                "content": transformed_content,
-            }
-        elif msg["role"] == "user":
-            try:
-                transformed_content = json.loads(msg["content"])
-            except Exception:
-                transformed_content = msg["content"]
-            claude_message = {"role": msg["role"], "content": transformed_content}
-
-        claude_messages.append(claude_message)
-    # Call Claude API
-    claude_response: BetaMessage = await client.beta.messages.create(
-        model="claude-3-5-sonnet-20241022",
-        messages=claude_messages,
-        tools=filtered_tools,
-        max_tokens=settings.get("max_tokens", 1024),
-        betas=[COMPUTER_USE_BETA_FLAG],
-    )
-    # Convert Claude response to litellm format
-    text_block = next(
-        (block for block in claude_response.content if block.type == "text"),
-        None,
-    )
-
-    if claude_response.stop_reason == "tool_use":
-        choice = Choices(
-            message=Message(
-                role="assistant",
-                content=text_block.text if text_block else None,
-                tool_calls=[
-                    ChatCompletionMessageToolCall(
-                        type="function",
-                        function=Function(
-                            name=block.name,
-                            arguments=block.input,
-                        ),
-                    )
-                    for block in claude_response.content
-                    if block.type == "tool_use"
-                ],
-            ),
-            finish_reason="tool_calls",
-        )
-    else:
-        assert (
-            text_block
-        ), "Claude should always return a text block for stop_reason=stop"
-        choice = Choices(
-            message=Message(
-                role="assistant",
-                content=text_block.text,
-            ),
-            finish_reason="stop",
-        )
-
-    model_response = ModelResponse(
-        id=claude_response.id,
-        choices=[choice],
-        created=int(datetime.now().timestamp()),
-        model=claude_response.model,
-        object="text_completion",
-        usage={
-            "total_tokens": claude_response.usage.input_tokens
-            + claude_response.usage.output_tokens
-        },
-    )
-
-    return model_response
-
-
 @router.post(
     "/sessions/{session_id}/chat",
     status_code=HTTP_201_CREATED,
@@ -253,13 +139,32 @@ async def chat(
         for m in messages
     ]
 
-    has_special_tools = any(
-        tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
-        for tool in formatted_tools
-    )
-    print("*" * 100)
-    print("modell", settings["model"])
-    print("*" * 100)
+    # has_special_tools = any(
+    #     tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
+    #     for tool in formatted_tools
+    # )
+
+    
+    # FIXME: Hack to make the computer use tools compatible with litellm
+    # Issue was: litellm expects type to be `computer_20241022` and spec to be 
+    # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
+    # but we don't allow that (spec should match type).
+    for i, tool in enumerate(formatted_tools):
+        if tool.type == "computer_20241022":
+            function = tool.computer_20241022
+            tool = {
+                "type": tool.type,
+                "function": {
+                    "name": tool.name,
+                    "parameters": {
+                        k: v
+                        for k, v in function.model_dump().items()
+                        if k not in ["name", "type"]
+                    },
+                },
+            }
+            formatted_tools[i] = tool
+
 
     # formatted_tools = None
     # Use litellm for other models
