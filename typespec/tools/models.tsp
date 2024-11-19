@@ -25,6 +25,7 @@ alias integrationProvider = (
     | "remote_browser"
     | "llama_parse"
     | "ffmpeg"
+    | "cloudinary"
 );
 
 enum ToolType {
@@ -118,6 +119,7 @@ alias IntegrationDef = (
     | RemoteBrowserIntegrationDef
     | LlamaParseIntegrationDef
     | FfmpegIntegrationDef
+    | CloudinaryIntegrationDef
 );
 
 //

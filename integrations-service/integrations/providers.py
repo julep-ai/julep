@@ -1,5 +1,7 @@
 from .autogen.Tools import (
+    # Arguments imports
     BraveSearchArguments,
+    # Setup imports
     BraveSearchSetup,
     BrowserbaseCompleteSessionArguments,
     BrowserbaseCreateSessionArguments,
@@ -7,9 +9,10 @@ from .autogen.Tools import (
     BrowserbaseGetSessionArguments,
     BrowserbaseGetSessionConnectUrlArguments,
     BrowserbaseGetSessionLiveUrlsArguments,
-    # WikipediaSearchSetup,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
+    CloudinaryFetchArguments,
+    CloudinarySetup,
     EmailArguments,
     EmailSetup,
     FfmpegSearchArguments,
@@ -34,6 +37,7 @@ from .models import (
     BrowserbaseGetSessionLiveUrlsOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
+    CloudinaryOutput,
     EmailOutput,
     FfmpegSearchOutput,
     LlamaParseFetchOutput,
@@ -248,6 +252,25 @@ ffmpeg = BaseProvider(
     ),
 )
 
+cloudinary = BaseProvider(
+    provider="cloudinary",
+    setup=CloudinarySetup,
+    methods=[
+        BaseProviderMethod(
+            method="media_edit",
+            description="Edit media in Cloudinary",
+            arguments=CloudinaryFetchArguments,
+            output=CloudinaryOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://cloudinary.com/",
+        docs="https://cloudinary.com/documentation/python_quickstart",
+        icon="https://cloudinary.com/favicon.ico",
+        friendly_name="Cloudinary",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -258,4 +281,5 @@ available_providers: dict[str, BaseProvider] = {
     "remote_browser": remote_browser,
     "llama_parse": llama_parse,
     "ffmpeg": ffmpeg,
+    "cloudinary": cloudinary,
 }

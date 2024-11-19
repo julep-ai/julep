@@ -6575,6 +6575,7 @@ components:
             - remote_browser
             - llama_parse
             - ffmpeg
+            - cloudinary
           description: The provider of the integration
         method:
           type: string
@@ -6595,6 +6596,7 @@ components:
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDef'
           ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDef'
+          cloudinary: '#/components/schemas/Tools.CloudinaryIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -6612,6 +6614,7 @@ components:
             - remote_browser
             - llama_parse
             - ffmpeg
+            - cloudinary
           description: The provider of the integration
         method:
           type: string
@@ -6632,6 +6635,7 @@ components:
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
           ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
+          cloudinary: '#/components/schemas/Tools.CloudinaryIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -7227,6 +7231,117 @@ components:
             type: integer
             format: uint16
           description: The line range to view
+    Tools.CloudinaryFetchArguments:
+      type: object
+      required:
+        - file
+        - transformation
+      properties:
+        file:
+          type: string
+          description: The file to upload to Cloudinary
+        transformation:
+          type: object
+          additionalProperties: {}
+          description: The transformation to apply to the file
+      description: Arguments for Cloudinary integration
+    Tools.CloudinaryFetchArgumentsUpdate:
+      type: object
+      properties:
+        file:
+          type: string
+          description: The file to upload to Cloudinary
+        transformation:
+          type: object
+          additionalProperties: {}
+          description: The transformation to apply to the file
+      description: Arguments for Cloudinary integration
+    Tools.CloudinaryIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - cloudinary
+          description: The provider must be "cloudinary"
+          default: cloudinary
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.CloudinarySetup'
+          description: The setup parameters for Cloudinary
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.CloudinaryFetchArguments'
+          description: The arguments for Cloudinary
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Cloudinary integration definition
+    Tools.CloudinaryIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - cloudinary
+          description: The provider must be "cloudinary"
+          default: cloudinary
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.CloudinarySetupUpdate'
+          description: The setup parameters for Cloudinary
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.CloudinaryFetchArgumentsUpdate'
+          description: The arguments for Cloudinary
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Cloudinary integration definition
+    Tools.CloudinarySetup:
+      type: object
+      required:
+        - cloudinary_api_key
+        - cloudinary_api_secret
+        - cloudinary_cloud_name
+      properties:
+        cloudinary_api_key:
+          type: string
+          description: The API key for Cloudinary
+        cloudinary_api_secret:
+          type: string
+          description: The API secret for Cloudinary
+        cloudinary_cloud_name:
+          type: string
+          description: The Cloud name for Cloudinary
+        params:
+          type: object
+          additionalProperties: {}
+          description: Additional parameters for the Cloudinary API
+      description: Setup parameters for Cloudinary integration
+    Tools.CloudinarySetupUpdate:
+      type: object
+      properties:
+        cloudinary_api_key:
+          type: string
+          description: The API key for Cloudinary
+        cloudinary_api_secret:
+          type: string
+          description: The API secret for Cloudinary
+        cloudinary_cloud_name:
+          type: string
+          description: The Cloud name for Cloudinary
+        params:
+          type: object
+          additionalProperties: {}
+          description: Additional parameters for the Cloudinary API
+      description: Setup parameters for Cloudinary integration
     Tools.Computer20241022Action:
       type: string
       enum:
@@ -7345,6 +7460,7 @@ components:
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -7778,6 +7894,7 @@ components:
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.CloudinaryIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -8183,6 +8300,7 @@ components:
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -8276,6 +8394,7 @@ components:
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryIntegrationDef'
           description: The integration to call
         system:
           allOf:

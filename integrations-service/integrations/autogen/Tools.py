@@ -200,6 +200,7 @@ class BaseIntegrationDef(BaseModel):
         "remote_browser",
         "llama_parse",
         "ffmpeg",
+        "cloudinary",
     ]
     """
     The provider of the integration
@@ -238,6 +239,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "remote_browser",
             "llama_parse",
             "ffmpeg",
+            "cloudinary",
         ]
         | None
     ) = None
@@ -655,6 +657,146 @@ class ChosenTextEditor20241022(BaseModel):
     """
 
 
+class CloudinaryFetchArguments(BaseModel):
+    """
+    Arguments for Cloudinary integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    file: str
+    """
+    The file to upload to Cloudinary
+    """
+    transformation: dict[str, Any]
+    """
+    The transformation to apply to the file
+    """
+
+
+class CloudinaryFetchArgumentsUpdate(BaseModel):
+    """
+    Arguments for Cloudinary integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    file: str | None = None
+    """
+    The file to upload to Cloudinary
+    """
+    transformation: dict[str, Any] | None = None
+    """
+    The transformation to apply to the file
+    """
+
+
+class CloudinaryIntegrationDef(BaseIntegrationDef):
+    """
+    Cloudinary integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["cloudinary"] = "cloudinary"
+    """
+    The provider must be "cloudinary"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: CloudinarySetup | None = None
+    """
+    The setup parameters for Cloudinary
+    """
+    arguments: CloudinaryFetchArguments | None = None
+    """
+    The arguments for Cloudinary
+    """
+
+
+class CloudinaryIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Cloudinary integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["cloudinary"] = "cloudinary"
+    """
+    The provider must be "cloudinary"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: CloudinarySetupUpdate | None = None
+    """
+    The setup parameters for Cloudinary
+    """
+    arguments: CloudinaryFetchArgumentsUpdate | None = None
+    """
+    The arguments for Cloudinary
+    """
+
+
+class CloudinarySetup(BaseModel):
+    """
+    Setup parameters for Cloudinary integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    cloudinary_api_key: str
+    """
+    The API key for Cloudinary
+    """
+    cloudinary_api_secret: str
+    """
+    The API secret for Cloudinary
+    """
+    cloudinary_cloud_name: str
+    """
+    The Cloud name for Cloudinary
+    """
+    params: dict[str, Any] | None = None
+    """
+    Additional parameters for the Cloudinary API
+    """
+
+
+class CloudinarySetupUpdate(BaseModel):
+    """
+    Setup parameters for Cloudinary integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    cloudinary_api_key: str | None = None
+    """
+    The API key for Cloudinary
+    """
+    cloudinary_api_secret: str | None = None
+    """
+    The API secret for Cloudinary
+    """
+    cloudinary_cloud_name: str | None = None
+    """
+    The Cloud name for Cloudinary
+    """
+    params: dict[str, Any] | None = None
+    """
+    Additional parameters for the Cloudinary API
+    """
+
+
 class Computer20241022Def(BaseModel):
     """
     Anthropic new tools
@@ -735,6 +877,7 @@ class CreateToolRequest(BaseModel):
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
         | FfmpegIntegrationDef
+        | CloudinaryIntegrationDef
         | None
     ) = None
     """
@@ -1258,6 +1401,7 @@ class PatchToolRequest(BaseModel):
         | RemoteBrowserIntegrationDefUpdate
         | LlamaParseIntegrationDefUpdate
         | FfmpegIntegrationDefUpdate
+        | CloudinaryIntegrationDefUpdate
         | None
     ) = None
     """
@@ -1683,6 +1827,7 @@ class Tool(BaseModel):
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
         | FfmpegIntegrationDef
+        | CloudinaryIntegrationDef
         | None
     ) = None
     """
@@ -1774,6 +1919,7 @@ class UpdateToolRequest(BaseModel):
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
         | FfmpegIntegrationDef
+        | CloudinaryIntegrationDef
         | None
     ) = None
     """

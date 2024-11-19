@@ -16,6 +16,8 @@ from ..autogen.Tools import (
     BrowserbaseGetSessionLiveUrlsArguments,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
+    CloudinaryFetchArguments,
+    CloudinarySetup,
     EmailArguments,
     EmailSetup,
     FfmpegSearchArguments,
@@ -40,6 +42,7 @@ from .browserbase import (
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
 )
+from .cloudinary import CloudinaryOutput
 from .email import EmailOutput
 from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
@@ -56,6 +59,7 @@ class ExecutionError(BaseModel):
     """
 
 
+# Setup configurations
 ExecutionSetup = Union[
     EmailSetup,
     SpiderSetup,
@@ -64,8 +68,10 @@ ExecutionSetup = Union[
     BrowserbaseSetup,
     RemoteBrowserSetup,
     LlamaParseSetup,
+    CloudinarySetup,
 ]
 
+# Argument configurations
 ExecutionArguments = Union[
     SpiderFetchArguments,
     WeatherGetArguments,
@@ -83,6 +89,7 @@ ExecutionArguments = Union[
     RemoteBrowserArguments,
     LlamaParseFetchArguments,
     FfmpegSearchArguments,
+    CloudinaryFetchArguments,
 ]
 
 ExecutionResponse = Union[
@@ -102,6 +109,7 @@ ExecutionResponse = Union[
     RemoteBrowserOutput,
     LlamaParseFetchOutput,
     FfmpegSearchOutput,
+    CloudinaryOutput,
     ExecutionError,
 ]
 
