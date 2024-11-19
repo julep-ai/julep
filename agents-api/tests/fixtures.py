@@ -40,9 +40,10 @@ from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
 from agents_api.web import app
-
 from tests.utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
+)
+from tests.utils import (
     patch_s3_client,
 )
 

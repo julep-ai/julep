@@ -4,8 +4,8 @@ import logging
 from contextlib import asynccontextmanager, contextmanager
 from unittest.mock import patch
 
-from fastapi.testclient import TestClient
 from botocore import exceptions
+from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
 
