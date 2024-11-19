@@ -81,30 +81,23 @@ async def execute_system(
             search_params = _create_search_request(arguments)
             return await handler(search_params=search_params, **arguments)
 
-        try:
-            # Handle chat operations
-            if system.operation == "chat" and system.resource == "session":
-                developer = get_developer(developer_id=arguments.get("developer_id"))
-                session_id = arguments.get("session_id")
-                x_custom_api_key = arguments.get("x_custom_api_key", None)
-                chat_input = ChatInput(**arguments)
-                bg_runner = BackgroundTasks()
-                res = await handler(
-                    developer=developer,
-                    session_id=session_id,
-                    background_tasks=bg_runner,
-                    x_custom_api_key=x_custom_api_key,
-                    chat_input=chat_input,
-                )
+        # Handle chat operations
+        if system.operation == "chat" and system.resource == "session":
+            developer = get_developer(developer_id=arguments.get("developer_id"))
+            session_id = arguments.get("session_id")
+            x_custom_api_key = arguments.get("x_custom_api_key", None)
+            chat_input = ChatInput(**arguments)
+            bg_runner = BackgroundTasks()
+            res = await handler(
+                developer=developer,
+                session_id=session_id,
+                background_tasks=bg_runner,
+                x_custom_api_key=x_custom_api_key,
+                chat_input=chat_input,
+            )
 
-                await bg_runner()
-                return res
-        except Exception as e:
-            activity.logger.error(f"Error in execute_system_call: {e}")
-            activity.logger.error(f"arguments: {arguments}")
-            activity.logger.error(f"session_id: {session_id}")
-            activity.logger.error(f"chat_input: {chat_input}")
-            raise
+            await bg_runner()
+            return res
 
         if system.operation == "create" and system.resource == "session":
             developer_id = arguments.pop("developer_id")

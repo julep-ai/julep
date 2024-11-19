@@ -13,7 +13,7 @@ from ..models.docs.embed_snippets import embed_snippets as embed_snippets_query
 from .types import EmbedDocsPayload
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def embed_docs(
     payload: EmbedDocsPayload, cozo_client=None, max_batch_size: int = 100

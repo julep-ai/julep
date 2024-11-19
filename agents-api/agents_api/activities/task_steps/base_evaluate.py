@@ -63,7 +63,7 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
         raise ValueError(f"Invalid expression: {expr}")
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def base_evaluate(
     exprs: Any,

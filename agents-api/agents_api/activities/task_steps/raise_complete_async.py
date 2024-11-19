@@ -11,7 +11,7 @@ from .transition_step import original_transition_step
 
 
 @activity.defn
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def raise_complete_async(context: StepContext, output: Any) -> None:
     activity_info = activity.info()

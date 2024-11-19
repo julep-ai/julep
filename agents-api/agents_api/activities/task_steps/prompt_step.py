@@ -86,7 +86,7 @@ EVAL_PROMPT_PREFIX = "$_ "
 
 
 @activity.defn
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
