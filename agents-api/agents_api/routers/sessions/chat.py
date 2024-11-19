@@ -34,6 +34,7 @@ from .router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
+
 @router.post(
     "/sessions/{session_id}/chat",
     status_code=HTTP_201_CREATED,
@@ -146,9 +147,8 @@ async def chat(
     #     for tool in formatted_tools
     # )
 
-    
     # FIXME: Hack to make the computer use tools compatible with litellm
-    # Issue was: litellm expects type to be `computer_20241022` and spec to be 
+    # Issue was: litellm expects type to be `computer_20241022` and spec to be
     # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
     # but we don't allow that (spec should match type).
     for i, tool in enumerate(formatted_tools):
@@ -166,7 +166,6 @@ async def chat(
                 },
             }
             formatted_tools[i] = tool
-
 
     # formatted_tools = None
     # Use litellm for other models
