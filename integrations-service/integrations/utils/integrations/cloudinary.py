@@ -85,7 +85,7 @@ async def media_edit(
 
         # Generate transformed URL
         transformed_url = cloudinary.utils.cloudinary_url(
-            arguments.file, transformation=arguments.transformation
+            arguments.public_id, transformation=arguments.transformation
         )
 
         if not transformed_url or not transformed_url[0]:

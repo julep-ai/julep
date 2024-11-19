@@ -7387,10 +7387,10 @@ components:
     Tools.CloudinaryEditArguments:
       type: object
       required:
-        - file
+        - public_id
         - transformation
       properties:
-        file:
+        public_id:
           type: string
           description: The file Public ID in Cloudinary
         transformation:
@@ -7403,7 +7403,7 @@ components:
     Tools.CloudinaryEditArgumentsUpdate:
       type: object
       properties:
-        file:
+        public_id:
           type: string
           description: The file Public ID in Cloudinary
         transformation:

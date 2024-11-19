@@ -40,7 +40,7 @@ model CloudinaryUploadArguments {
 /** Arguments for Cloudinary media edit */
 model CloudinaryEditArguments {
     /** The file Public ID in Cloudinary */
-    file: string;
+    public_id: string;
 
     /** The transformation to apply to the file */
     transformation: Array<Record<unknown>>;

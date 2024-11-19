@@ -665,7 +665,7 @@ class CloudinaryEditArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    file: str
+    public_id: str
     """
     The file Public ID in Cloudinary
     """
@@ -683,7 +683,7 @@ class CloudinaryEditArgumentsUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    file: str | None = None
+    public_id: str | None = None
     """
     The file Public ID in Cloudinary
     """
