@@ -1,7 +1,5 @@
 """Mock implementation of Brave Search API client"""
 
-from typing import Optional
-
 
 class MockBraveSearchClient:
     def __init__(self, api_key: str):

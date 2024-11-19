@@ -755,6 +755,42 @@ paths:
             text/event-stream:
               schema:
                 type: string
+  /files:
+    post:
+      operationId: FilesRoute_create
+      description: Create a new File
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Files.CreateFileRequest'
+  /files/{id}:
+    get:
+      operationId: FilesRoute_get
+      description: Get a File by its id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Files.File'
   /jobs/{id}:
     get:
       operationId: JobRoute_get
@@ -2454,6 +2490,11 @@ components:
       format: float
       minimum: -100
       maximum: 100
+    Common.mimeType:
+      type: string
+      maxLength: 120
+      pattern: ^(application|audio|font|example|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)$
+      description: Valid mime types
     Common.offset:
       type: integer
       format: uint32
@@ -3186,6 +3227,80 @@ components:
         mapping:
           cancelled: '#/components/schemas/Executions.StopExecutionRequest'
           running: '#/components/schemas/Executions.ResumeExecutionRequest'
+    Files.CreateFileRequest:
+      type: object
+      required:
+        - name
+        - description
+        - mime_type
+        - content
+      properties:
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+          description: Name of the file
+        description:
+          type: string
+          description: Description of the file
+          default: ''
+        mime_type:
+          oneOf:
+            - $ref: '#/components/schemas/Common.mimeType'
+          nullable: true
+          description: MIME type of the file
+          default: null
+        content:
+          type: string
+          description: Base64 encoded content of the file
+      description: Payload for creating a file
+    Files.File:
+      type: object
+      required:
+        - id
+        - created_at
+        - name
+        - description
+        - mime_type
+        - content
+        - size
+        - hash
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          description: When this resource was created as UTC date-time
+          readOnly: true
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+          description: Name of the file
+        description:
+          type: string
+          description: Description of the file
+          default: ''
+        mime_type:
+          oneOf:
+            - $ref: '#/components/schemas/Common.mimeType'
+          nullable: true
+          description: MIME type of the file
+          default: null
+        content:
+          type: string
+          description: Base64 encoded content of the file
+        size:
+          type: integer
+          format: uint64
+          minimum: 1
+          description: Size of the file in bytes
+          readOnly: true
+        hash:
+          type: string
+          description: Hash of the file
+          readOnly: true
     Jobs.JobState:
       type: string
       enum:
