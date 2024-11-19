@@ -1,6 +1,6 @@
 from ward import test
 
-from tests.fixtures import client, make_request, test_session
+from tests.fixtures import make_request
 
 
 @test("model: list sessions")
