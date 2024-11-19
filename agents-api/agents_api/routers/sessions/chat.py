@@ -121,7 +121,9 @@ async def chat(
     is_claude_model = settings["model"].lower().startswith("claude-3.5")
 
     # Format tools for litellm
-    formatted_tools = tools if is_claude_model else [format_tool(tool) for tool in tools]
+    formatted_tools = (
+        tools if is_claude_model else [format_tool(tool) for tool in tools]
+    )
 
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
