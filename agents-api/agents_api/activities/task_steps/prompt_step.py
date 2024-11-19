@@ -11,7 +11,7 @@ from litellm.types.utils import Choices, ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from ...autogen.Tools import Tool
+from ...autogen.openapi_model import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
