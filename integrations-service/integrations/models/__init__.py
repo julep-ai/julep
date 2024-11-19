@@ -33,7 +33,12 @@ from .browserbase import (
 from .browserbase import (
     BrowserbaseListSessionsOutput as BrowserbaseListSessionsOutput,
 )
-from .cloudinary import CloudinaryOutput as CloudinaryOutput
+from .cloudinary import (
+    CloudinaryEditOutput as CloudinaryEditOutput,
+)
+from .cloudinary import (
+    CloudinaryUploadOutput as CloudinaryUploadOutput,
+)
 from .email import EmailOutput as EmailOutput
 from .ffmpeg import FfmpegSearchOutput as FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput as LlamaParseFetchOutput

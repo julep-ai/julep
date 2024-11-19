@@ -16,8 +16,9 @@ from ..autogen.Tools import (
     BrowserbaseGetSessionLiveUrlsArguments,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
-    CloudinaryFetchArguments,
+    CloudinaryEditArguments,
     CloudinarySetup,
+    CloudinaryUploadArguments,
     EmailArguments,
     EmailSetup,
     FfmpegSearchArguments,
@@ -42,7 +43,7 @@ from .browserbase import (
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
 )
-from .cloudinary import CloudinaryOutput
+from .cloudinary import CloudinaryEditOutput, CloudinaryUploadOutput
 from .email import EmailOutput
 from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
@@ -89,7 +90,8 @@ ExecutionArguments = Union[
     RemoteBrowserArguments,
     LlamaParseFetchArguments,
     FfmpegSearchArguments,
-    CloudinaryFetchArguments,
+    CloudinaryUploadArguments,
+    CloudinaryEditArguments,
 ]
 
 ExecutionResponse = Union[
@@ -109,7 +111,8 @@ ExecutionResponse = Union[
     RemoteBrowserOutput,
     LlamaParseFetchOutput,
     FfmpegSearchOutput,
-    CloudinaryOutput,
+    CloudinaryEditOutput,
+    CloudinaryUploadOutput,
     ExecutionError,
 ]
 

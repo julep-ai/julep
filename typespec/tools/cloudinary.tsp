@@ -19,8 +19,26 @@ model CloudinarySetup {
     params?: Record<unknown>;
 }
 
-/** Arguments for Cloudinary integration */
-model CloudinaryFetchArguments {
+alias CloudinaryMethod =
+    | /** Upload media to Cloudinary */
+      "media_upload"
+    | /** Edit media in Cloudinary */
+      "media_edit";
+
+/** Arguments for Cloudinary media upload */
+model CloudinaryUploadArguments {
+    /** The URL of the file upload */
+    file: string;
+
+    /** Optional public ID for the uploaded file */
+    public_id?: string;
+
+    /** Optional upload parameters */
+    upload_params?: Record<unknown>;
+}
+
+/** Arguments for Cloudinary media edit */
+model CloudinaryEditArguments {
     /** The file Public ID in Cloudinary */
     file: string;
 
@@ -28,26 +46,53 @@ model CloudinaryFetchArguments {
     transformation: Array<Record<unknown>>;
 }
 
-/** Cloudinary integration definition */
-model CloudinaryIntegrationDef extends BaseIntegrationDef {
-    /** The provider must be "cloudinary" */
+/** Base Cloudinary integration definition */
+model BaseCloudinaryIntegrationDef extends BaseIntegrationDef {
     provider: "cloudinary" = "cloudinary";
-    
-    /** The specific method of the integration to call */
-    method?: string;
-    
-    /** The setup parameters for Cloudinary */
     setup?: CloudinarySetup;
-    
-    /** The arguments for Cloudinary */
-    arguments?: CloudinaryFetchArguments;
+    method?: CloudinaryMethod;
 }
+
+/** Cloudinary upload integration definition */
+model CloudinaryUploadIntegrationDef extends BaseCloudinaryIntegrationDef {
+    method: "media_upload" = "media_upload";
+    arguments?: CloudinaryUploadArguments;
+}
+
+/** Cloudinary edit integration definition */
+model CloudinaryEditIntegrationDef extends BaseCloudinaryIntegrationDef {
+    method: "media_edit" = "media_edit";
+    arguments?: CloudinaryEditArguments;
+}
+
+alias CloudinaryIntegrationDef = CloudinaryUploadIntegrationDef | CloudinaryEditIntegrationDef;
+
+/** Output for Cloudinary upload */
+model CloudinaryUploadOutput {
+    /** The URL of the uploaded file */
+    url: string;
+    
+    /** The public ID of the uploaded file */
+    public_id: string;
+}
+
+/** Output for Cloudinary edit */
+model CloudinaryEditOutput {
+    /** The transformed URL from Cloudinary */
+    transformed_url: string;
+}
+
+alias CloudinaryOutput = CloudinaryUploadOutput | CloudinaryEditOutput;
 
 /** Cloudinary Provider Card */
 model CloudinaryProviderCard extends BaseProviderCard {
     provider: "cloudinary" = "cloudinary";
     setup: CloudinarySetup;
-    methods: ProviderMethod<CloudinaryFetchArguments, CloudinaryFetchOutput>[] = #[
+    methods: ProviderMethod<CloudinaryUploadArguments | CloudinaryEditArguments, CloudinaryOutput>[] = #[
+        #{
+            method: "media_upload",
+            description: "Upload media to Cloudinary",
+        },
         #{
             method: "media_edit",
             description: "Edit media in Cloudinary",
@@ -59,10 +104,4 @@ model CloudinaryProviderCard extends BaseProviderCard {
         icon: "https://cloudinary.com/favicon.ico",
         friendly_name: "Cloudinary",
     };
-}
-
-/** Cloudinary Fetch Output */
-model CloudinaryFetchOutput {
-    /** The transformed URL from Cloudinary */
-    transformed_url: string;
 }
