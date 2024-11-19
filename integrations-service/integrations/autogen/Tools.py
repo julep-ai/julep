@@ -12,6 +12,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    RootModel,
     StrictBool,
 )
 
@@ -666,9 +667,9 @@ class CloudinaryFetchArguments(BaseModel):
     )
     file: str
     """
-    The file to upload to Cloudinary
+    The file Public ID in Cloudinary
     """
-    transformation: dict[str, Any]
+    transformation: list[dict[str, Any]]
     """
     The transformation to apply to the file
     """
@@ -684,9 +685,9 @@ class CloudinaryFetchArgumentsUpdate(BaseModel):
     )
     file: str | None = None
     """
-    The file to upload to Cloudinary
+    The file Public ID in Cloudinary
     """
-    transformation: dict[str, Any] | None = None
+    transformation: list[dict[str, Any]] | None = None
     """
     The transformation to apply to the file
     """

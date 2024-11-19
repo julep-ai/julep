@@ -6,4 +6,4 @@ from .base_models import BaseOutput
 
 
 class CloudinaryOutput(BaseOutput):
-    result: bool = Field(..., description="The result of the Cloudinary command")
+    transformed_url: str = Field(..., description="The transformed URL")

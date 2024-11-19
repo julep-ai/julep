@@ -21,11 +21,11 @@ model CloudinarySetup {
 
 /** Arguments for Cloudinary integration */
 model CloudinaryFetchArguments {
-    /** The file to upload to Cloudinary */
+    /** The file Public ID in Cloudinary */
     file: string;
 
     /** The transformation to apply to the file */
-    transformation: Record<unknown>;
+    transformation: Array<Record<unknown>>;
 }
 
 /** Cloudinary integration definition */
@@ -63,6 +63,6 @@ model CloudinaryProviderCard extends BaseProviderCard {
 
 /** Cloudinary Fetch Output */
 model CloudinaryFetchOutput {
-    /** The result returned from the cloudinary */
-    result: string;
+    /** The transformed URL from Cloudinary */
+    transformed_url: string;
 }

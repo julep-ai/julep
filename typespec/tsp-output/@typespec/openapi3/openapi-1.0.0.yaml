@@ -7354,10 +7354,12 @@ components:
       properties:
         file:
           type: string
-          description: The file to upload to Cloudinary
+          description: The file Public ID in Cloudinary
         transformation:
-          type: object
-          additionalProperties: {}
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
           description: The transformation to apply to the file
       description: Arguments for Cloudinary integration
     Tools.CloudinaryFetchArgumentsUpdate:
@@ -7365,10 +7367,12 @@ components:
       properties:
         file:
           type: string
-          description: The file to upload to Cloudinary
+          description: The file Public ID in Cloudinary
         transformation:
-          type: object
-          additionalProperties: {}
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
           description: The transformation to apply to the file
       description: Arguments for Cloudinary integration
     Tools.CloudinaryIntegrationDef:
