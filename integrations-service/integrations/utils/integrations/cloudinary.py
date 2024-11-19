@@ -1,6 +1,5 @@
 import cloudinary
 from beartype import beartype
-
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import CloudinaryFetchArguments, CloudinarySetup
