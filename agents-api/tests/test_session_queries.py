@@ -5,8 +5,8 @@ from ward import test
 
 from agents_api.autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
-    Session,
     CreateSessionRequest,
+    Session,
 )
 from agents_api.models.session.create_or_update_session import create_or_update_session
 from agents_api.models.session.create_session import create_session

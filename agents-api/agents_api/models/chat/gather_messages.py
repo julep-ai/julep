@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import DocReference, History, ChatInput
+from ...autogen.openapi_model import ChatInput, DocReference, History
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext

@@ -9,14 +9,13 @@ from temporalio import activity
 
 from ..autogen.openapi_model import (
     ChatInput,
-    SystemDef,
-    CreateSessionRequest,
     CreateDocRequest,
+    CreateSessionRequest,
     HybridDocSearchRequest,
+    SystemDef,
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
 from ..env import testing
@@ -81,8 +80,8 @@ async def execute_system(
             arguments["x_developer_id"] = arguments.pop("developer_id")
             search_params = _create_search_request(arguments)
             return await handler(search_params=search_params, **arguments)
-        
-        try: 
+
+        try:
             # Handle chat operations
             if system.operation == "chat" and system.resource == "session":
                 developer = get_developer(developer_id=arguments.get("developer_id"))

@@ -4,9 +4,9 @@ from temporalio.client import WorkflowHandle
 from ward import test
 
 from agents_api.autogen.openapi_model import (
+    CreateExecutionRequest,
     CreateTransitionRequest,
     Execution,
-    CreateExecutionRequest
 )
 from agents_api.models.execution.create_execution import create_execution
 from agents_api.models.execution.create_execution_transition import (

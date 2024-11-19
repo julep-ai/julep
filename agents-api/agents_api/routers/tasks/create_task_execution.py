@@ -12,9 +12,9 @@ from temporalio.client import WorkflowHandle
 
 from ...autogen.openapi_model import (
     CreateExecutionRequest,
+    Execution,
     ResourceCreatedResponse,
     UpdateExecutionRequest,
-    Execution,
 )
 from ...clients.temporal import run_task_execution_workflow
 from ...dependencies.developer_id import get_developer_id

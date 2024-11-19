@@ -356,6 +356,7 @@ assert TransitionType == Transition.model_fields["type"].annotation
 
 from ..common.storage_handler import RemoteObject
 
+
 class SystemDef(SystemDef):
     arguments: dict[str, Any] | None | RemoteObject = None
 
