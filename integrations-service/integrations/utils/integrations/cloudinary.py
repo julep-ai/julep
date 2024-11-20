@@ -122,7 +122,7 @@ async def media_edit(
 
         return CloudinaryEditOutput(
             transformed_url=transformed_url[0],
-            base64=transformed_url_base64,
+            base64=transformed_url_base64 if arguments.return_base64 else None,
         )
 
     except cloudinary.exceptions.Error as e:
