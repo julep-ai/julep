@@ -18,3 +18,6 @@ class CloudinaryUploadOutput(BaseOutput):
 
 class CloudinaryEditOutput(BaseOutput):
     transformed_url: str = Field(..., description="The transformed URL")
+    base64: Optional[str] = Field(
+        None, description="The base64 encoded file if return_base64 is true"
+    )

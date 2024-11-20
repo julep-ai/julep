@@ -47,6 +47,9 @@ model CloudinaryEditArguments {
 
     /** The transformation to apply to the file */
     transformation: Array<Record<unknown>>;
+
+    /** Return base64 encoded file */
+    return_base64: boolean = false;
 }
 
 /** Base Cloudinary integration definition */
@@ -89,6 +92,9 @@ model CloudinaryUploadOutput {
 model CloudinaryEditOutput {
     /** The transformed URL from Cloudinary */
     transformed_url: string;
+
+    /** The base64 encoded file */
+    base64?: string;
 }
 
 alias CloudinaryOutput = CloudinaryUploadOutput | CloudinaryEditOutput;

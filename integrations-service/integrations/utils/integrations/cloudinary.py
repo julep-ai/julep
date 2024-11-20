@@ -103,11 +103,27 @@ async def media_edit(
         transformed_url = cloudinary.utils.cloudinary_url(
             arguments.public_id, transformation=arguments.transformation
         )
-
         if not transformed_url or not transformed_url[0]:
-            return CloudinaryEditOutput(transformed_url="The transformation failed")
+            return CloudinaryEditOutput(
+                transformed_url="The transformation failed",
+                base64=None,
+            )
+        if arguments.return_base64:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(transformed_url[0]) as response:
+                    if response.status == 200:
+                        content = await response.read()
+                        base64_encoded = base64.b64encode(content).decode("utf-8")
+                        transformed_url_base64 = base64_encoded
+                    else:
+                        raise RuntimeError(
+                            f"Failed to download file from URL: {transformed_url[0]}"
+                        )
 
-        return CloudinaryEditOutput(transformed_url=transformed_url[0])
+        return CloudinaryEditOutput(
+            transformed_url=transformed_url[0],
+            base64=transformed_url_base64,
+        )
 
     except cloudinary.exceptions.Error as e:
         raise RuntimeError(f"Cloudinary error occurred: {e}")

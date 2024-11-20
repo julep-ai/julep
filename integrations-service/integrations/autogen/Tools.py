@@ -673,6 +673,10 @@ class CloudinaryEditArguments(BaseModel):
     """
     The transformation to apply to the file
     """
+    return_base64: StrictBool = False
+    """
+    Return base64 encoded file
+    """
 
 
 class CloudinaryEditArgumentsUpdate(BaseModel):
@@ -690,6 +694,10 @@ class CloudinaryEditArgumentsUpdate(BaseModel):
     transformation: list[dict[str, Any]] | None = None
     """
     The transformation to apply to the file
+    """
+    return_base64: StrictBool = False
+    """
+    Return base64 encoded file
     """
 
 

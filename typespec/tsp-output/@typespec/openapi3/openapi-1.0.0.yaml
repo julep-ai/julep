@@ -7389,6 +7389,7 @@ components:
       required:
         - public_id
         - transformation
+        - return_base64
       properties:
         public_id:
           type: string
@@ -7399,6 +7400,10 @@ components:
             type: object
             additionalProperties: {}
           description: The transformation to apply to the file
+        return_base64:
+          type: boolean
+          description: Return base64 encoded file
+          default: false
       description: Arguments for Cloudinary media edit
     Tools.CloudinaryEditArgumentsUpdate:
       type: object
@@ -7412,6 +7417,10 @@ components:
             type: object
             additionalProperties: {}
           description: The transformation to apply to the file
+        return_base64:
+          type: boolean
+          description: Return base64 encoded file
+          default: false
       description: Arguments for Cloudinary media edit
     Tools.CloudinaryEditIntegrationDef:
       type: object
