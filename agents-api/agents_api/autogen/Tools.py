@@ -12,6 +12,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    RootModel,
     StrictBool,
 )
 
@@ -198,6 +199,8 @@ class BaseIntegrationDef(BaseModel):
         "email",
         "remote_browser",
         "llama_parse",
+        "ffmpeg",
+        "cloudinary",
     ]
     """
     The provider of the integration
@@ -235,6 +238,8 @@ class BaseIntegrationDefUpdate(BaseModel):
             "email",
             "remote_browser",
             "llama_parse",
+            "ffmpeg",
+            "cloudinary",
         ]
         | None
     ) = None
@@ -652,6 +657,154 @@ class ChosenTextEditor20241022(BaseModel):
     """
 
 
+class CloudinaryEditArguments(BaseModel):
+    """
+    Arguments for Cloudinary media edit
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    public_id: str
+    """
+    The file Public ID in Cloudinary
+    """
+    transformation: list[dict[str, Any]]
+    """
+    The transformation to apply to the file
+    """
+    return_base64: StrictBool = False
+    """
+    Return base64 encoded file
+    """
+
+
+class CloudinaryEditArgumentsUpdate(BaseModel):
+    """
+    Arguments for Cloudinary media edit
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    public_id: str | None = None
+    """
+    The file Public ID in Cloudinary
+    """
+    transformation: list[dict[str, Any]] | None = None
+    """
+    The transformation to apply to the file
+    """
+    return_base64: StrictBool = False
+    """
+    Return base64 encoded file
+    """
+
+
+class CloudinarySetup(BaseModel):
+    """
+    Setup parameters for Cloudinary integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    cloudinary_api_key: str
+    """
+    The API key for Cloudinary
+    """
+    cloudinary_api_secret: str
+    """
+    The API secret for Cloudinary
+    """
+    cloudinary_cloud_name: str
+    """
+    The Cloud name for Cloudinary
+    """
+    params: dict[str, Any] | None = None
+    """
+    Additional parameters for the Cloudinary API
+    """
+
+
+class CloudinarySetupUpdate(BaseModel):
+    """
+    Setup parameters for Cloudinary integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    cloudinary_api_key: str | None = None
+    """
+    The API key for Cloudinary
+    """
+    cloudinary_api_secret: str | None = None
+    """
+    The API secret for Cloudinary
+    """
+    cloudinary_cloud_name: str | None = None
+    """
+    The Cloud name for Cloudinary
+    """
+    params: dict[str, Any] | None = None
+    """
+    Additional parameters for the Cloudinary API
+    """
+
+
+class CloudinaryUploadArguments(BaseModel):
+    """
+    Arguments for Cloudinary media upload
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    file: str
+    """
+    The URL of the file upload
+    """
+    return_base64: StrictBool = False
+    """
+    Return base64 encoded file
+    """
+    public_id: str | None = None
+    """
+    Optional public ID for the uploaded file
+    """
+    upload_params: dict[str, Any] | None = None
+    """
+    Optional upload parameters
+    """
+
+
+class CloudinaryUploadArgumentsUpdate(BaseModel):
+    """
+    Arguments for Cloudinary media upload
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    file: str | None = None
+    """
+    The URL of the file upload
+    """
+    return_base64: StrictBool = False
+    """
+    Return base64 encoded file
+    """
+    public_id: str | None = None
+    """
+    Optional public ID for the uploaded file
+    """
+    upload_params: dict[str, Any] | None = None
+    """
+    Optional upload parameters
+    """
+
+
 class Computer20241022Def(BaseModel):
     """
     Anthropic new tools
@@ -731,6 +884,9 @@ class CreateToolRequest(BaseModel):
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
+        | FfmpegIntegrationDef
+        | CloudinaryUploadIntegrationDef
+        | CloudinaryEditIntegrationDef
         | None
     ) = None
     """
@@ -919,6 +1075,94 @@ class EmailSetupUpdate(BaseModel):
     password: str | None = None
     """
     The password of the email server
+    """
+
+
+class FfmpegIntegrationDef(BaseIntegrationDef):
+    """
+    Ffmpeg integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["ffmpeg"] = "ffmpeg"
+    """
+    The provider must be "ffmpeg"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: Any | None = None
+    """
+    The setup parameters for Ffmpeg
+    """
+    arguments: FfmpegSearchArguments | None = None
+    """
+    The arguments for Ffmpeg Search
+    """
+
+
+class FfmpegIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Ffmpeg integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["ffmpeg"] = "ffmpeg"
+    """
+    The provider must be "ffmpeg"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: Any | None = None
+    """
+    The setup parameters for Ffmpeg
+    """
+    arguments: FfmpegSearchArgumentsUpdate | None = None
+    """
+    The arguments for Ffmpeg Search
+    """
+
+
+class FfmpegSearchArguments(BaseModel):
+    """
+    Arguments for Ffmpeg CMD
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    cmd: str
+    """
+    The bash command string
+    """
+    file: str | None = None
+    """
+    The base64 string of the file
+    """
+
+
+class FfmpegSearchArgumentsUpdate(BaseModel):
+    """
+    Arguments for Ffmpeg CMD
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    cmd: str | None = None
+    """
+    The bash command string
+    """
+    file: str | None = None
+    """
+    The base64 string of the file
     """
 
 
@@ -1165,6 +1409,9 @@ class PatchToolRequest(BaseModel):
         | BrowserbaseGetSessionConnectUrlIntegrationDefUpdate
         | RemoteBrowserIntegrationDefUpdate
         | LlamaParseIntegrationDefUpdate
+        | FfmpegIntegrationDefUpdate
+        | CloudinaryUploadIntegrationDefUpdate
+        | CloudinaryEditIntegrationDefUpdate
         | None
     ) = None
     """
@@ -1589,6 +1836,9 @@ class Tool(BaseModel):
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
+        | FfmpegIntegrationDef
+        | CloudinaryUploadIntegrationDef
+        | CloudinaryEditIntegrationDef
         | None
     ) = None
     """
@@ -1679,6 +1929,9 @@ class UpdateToolRequest(BaseModel):
         | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
+        | FfmpegIntegrationDef
+        | CloudinaryUploadIntegrationDef
+        | CloudinaryEditIntegrationDef
         | None
     ) = None
     """
@@ -1954,6 +2207,32 @@ class BaseBrowserbaseIntegrationDefUpdate(BaseIntegrationDefUpdate):
     arguments: Any | None = None
 
 
+class BaseCloudinaryIntegrationDef(BaseIntegrationDef):
+    """
+    Base Cloudinary integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["cloudinary"] = "cloudinary"
+    setup: CloudinarySetup | None = None
+    method: Literal["media_upload", "media_edit"] | None = None
+
+
+class BaseCloudinaryIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Base Cloudinary integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["cloudinary"] = "cloudinary"
+    setup: CloudinarySetupUpdate | None = None
+    method: Literal["media_upload", "media_edit"] | None = None
+
+
 class BrowserbaseCompleteSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
     """
     browserbase complete session integration definition
@@ -2192,3 +2471,51 @@ class BrowserbaseListSessionsIntegrationDefUpdate(BaseBrowserbaseIntegrationDefU
     """
     The arguments for the method
     """
+
+
+class CloudinaryEditIntegrationDef(BaseCloudinaryIntegrationDef):
+    """
+    Cloudinary edit integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["media_edit"] = "media_edit"
+    arguments: CloudinaryEditArguments | None = None
+
+
+class CloudinaryEditIntegrationDefUpdate(BaseCloudinaryIntegrationDefUpdate):
+    """
+    Cloudinary edit integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["media_edit"] = "media_edit"
+    arguments: CloudinaryEditArgumentsUpdate | None = None
+
+
+class CloudinaryUploadIntegrationDef(BaseCloudinaryIntegrationDef):
+    """
+    Cloudinary upload integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["media_upload"] = "media_upload"
+    arguments: CloudinaryUploadArguments | None = None
+
+
+class CloudinaryUploadIntegrationDefUpdate(BaseCloudinaryIntegrationDefUpdate):
+    """
+    Cloudinary upload integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["media_upload"] = "media_upload"
+    arguments: CloudinaryUploadArgumentsUpdate | None = None

@@ -6,8 +6,8 @@ from beartype import beartype
 from box import Box
 from openai import BaseModel
 
-# Increase the max string length to 300000
-simpleeval.MAX_STRING_LENGTH = 300000
+# Increase the max string length to 2048000
+simpleeval.MAX_STRING_LENGTH = 2048000
 
 from simpleeval import NameNotDefined, SimpleEval  # noqa: E402
 from temporalio import activity  # noqa: E402
@@ -63,7 +63,7 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
         raise ValueError(f"Invalid expression: {expr}")
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def base_evaluate(
     exprs: Any,

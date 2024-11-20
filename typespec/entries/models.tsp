@@ -50,7 +50,25 @@ model ChatMLImageContentPart<T extends string = string> {
     type: "image_url" = "image_url";
 }
 
-alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart<T>;
+model ChatMLAnthropicImageSource<T extends string = string> {
+    type: "base64" = "base64";
+    media_type: string;
+    data: T;
+}
+
+model ChatMLAnthropicImageContentPart<T extends string = string> {
+    type: "image" = "image";
+    source: ChatMLAnthropicImageSource<T>;
+}
+
+/** Anthropic image content part */
+model ChatMLAnthropicContentPart<T extends string = string> {
+    tool_use_id: string;
+    type: "tool_result" = "tool_result";
+    content: ChatMLTextContentPart<T>[] | ChatMLAnthropicImageContentPart<T>[];
+}
+
+alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart<T> | ChatMLAnthropicContentPart<T>;
 
 model ChatMLMessage<T extends string = string> {
     /** The role of the message */

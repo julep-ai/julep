@@ -66,7 +66,10 @@ async def execute_switch_branch(
     case_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].case"
 
     case_task = execution_input.task.model_copy()
-    case_task.workflows = [Workflow(name=case_wf_name, steps=[chosen_branch.then])]
+    case_task.workflows = [
+        Workflow(name=case_wf_name, steps=[chosen_branch.then]),
+        *case_task.workflows,
+    ]
 
     case_execution_input = execution_input.model_copy()
     case_execution_input.task = case_task
@@ -99,7 +102,10 @@ async def execute_if_else_branch(
     if_else_wf_name += ".then" if condition else ".else"
 
     if_else_task = execution_input.task.model_copy()
-    if_else_task.workflows = [Workflow(name=if_else_wf_name, steps=[chosen_branch])]
+    if_else_task.workflows = [
+        Workflow(name=if_else_wf_name, steps=[chosen_branch]),
+        *if_else_task.workflows,
+    ]
 
     if_else_execution_input = execution_input.model_copy()
     if_else_execution_input.task = if_else_task
@@ -132,7 +138,10 @@ async def execute_foreach_step(
             f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
         )
         foreach_task = execution_input.task.model_copy()
-        foreach_task.workflows = [Workflow(name=foreach_wf_name, steps=[do_step])]
+        foreach_task.workflows = [
+            Workflow(name=foreach_wf_name, steps=[do_step]),
+            *foreach_task.workflows,
+        ]
 
         foreach_execution_input = execution_input.model_copy()
         foreach_execution_input.task = foreach_task
@@ -170,7 +179,10 @@ async def execute_map_reduce_step(
             f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
         )
         map_reduce_task = execution_input.task.model_copy()
-        map_reduce_task.workflows = [Workflow(name=workflow_name, steps=[map_defn])]
+        map_reduce_task.workflows = [
+            Workflow(name=workflow_name, steps=[map_defn]),
+            *map_reduce_task.workflows,
+        ]
 
         map_reduce_execution_input = execution_input.model_copy()
         map_reduce_execution_input.task = map_reduce_task
@@ -234,7 +246,10 @@ async def execute_map_reduce_step_parallel(
             # Note: Added PAR: prefix to easily identify parallel batches in logs
             workflow_name = f"PAR:`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}][{j}]"
             map_reduce_task = execution_input.task.model_copy()
-            map_reduce_task.workflows = [Workflow(name=workflow_name, steps=[map_defn])]
+            map_reduce_task.workflows = [
+                Workflow(name=workflow_name, steps=[map_defn]),
+                *map_reduce_task.workflows,
+            ]
 
             map_reduce_execution_input = execution_input.model_copy()
             map_reduce_execution_input.task = map_reduce_task

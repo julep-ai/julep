@@ -1,5 +1,7 @@
 from .autogen.Tools import (
+    # Arguments imports
     BraveSearchArguments,
+    # Setup imports
     BraveSearchSetup,
     BrowserbaseCompleteSessionArguments,
     BrowserbaseCreateSessionArguments,
@@ -7,11 +9,14 @@ from .autogen.Tools import (
     BrowserbaseGetSessionArguments,
     BrowserbaseGetSessionConnectUrlArguments,
     BrowserbaseGetSessionLiveUrlsArguments,
-    # WikipediaSearchSetup,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
+    CloudinaryEditArguments,
+    CloudinarySetup,
+    CloudinaryUploadArguments,
     EmailArguments,
     EmailSetup,
+    FfmpegSearchArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
     RemoteBrowserArguments,
@@ -33,7 +38,10 @@ from .models import (
     BrowserbaseGetSessionLiveUrlsOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
+    CloudinaryEditOutput,
+    CloudinaryUploadOutput,
     EmailOutput,
+    FfmpegSearchOutput,
     LlamaParseFetchOutput,
     ProviderInfo,
     RemoteBrowserOutput,
@@ -227,6 +235,50 @@ remote_browser = BaseProvider(
     ),
 )
 
+ffmpeg = BaseProvider(
+    provider="ffmpeg",
+    setup=None,
+    methods=[
+        BaseProviderMethod(
+            method="bash_cmd",
+            description="Run FFmpeg bash command",
+            arguments=FfmpegSearchArguments,
+            output=FfmpegSearchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://ffmpeg.org/",
+        docs="https://ffmpeg.org/documentation.html",
+        icon="https://upload.wikimedia.org/wikipedia/commons/5/5f/FFmpeg_Logo_new.svg",
+        friendly_name="Ffmpeg",
+    ),
+)
+
+cloudinary = BaseProvider(
+    provider="cloudinary",
+    setup=CloudinarySetup,
+    methods=[
+        BaseProviderMethod(
+            method="media_edit",
+            description="Edit media in Cloudinary",
+            arguments=CloudinaryEditArguments,
+            output=CloudinaryEditOutput,
+        ),
+        BaseProviderMethod(
+            method="media_upload",
+            description="Upload media to Cloudinary",
+            arguments=CloudinaryUploadArguments,
+            output=CloudinaryUploadOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://cloudinary.com/",
+        docs="https://cloudinary.com/documentation/python_quickstart",
+        icon="https://cloudinary.com/favicon.ico",
+        friendly_name="Cloudinary",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -236,4 +288,6 @@ available_providers: dict[str, BaseProvider] = {
     "browserbase": browserbase,
     "remote_browser": remote_browser,
     "llama_parse": llama_parse,
+    "ffmpeg": ffmpeg,
+    "cloudinary": cloudinary,
 }

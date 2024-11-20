@@ -1872,6 +1872,65 @@ components:
                                 - image_url
                               description: The type (fixed to 'image_url')
                               default: image_url
+                        - type: object
+                          required:
+                            - tool_use_id
+                            - type
+                            - content
+                          properties:
+                            tool_use_id:
+                              type: string
+                            type:
+                              type: string
+                              enum:
+                                - tool_result
+                              default: tool_result
+                            content:
+                              anyOf:
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - text
+                                      - type
+                                    properties:
+                                      text:
+                                        type: string
+                                      type:
+                                        type: string
+                                        enum:
+                                          - text
+                                        description: The type (fixed to 'text')
+                                        default: text
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - type
+                                      - source
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - image
+                                        default: image
+                                      source:
+                                        type: object
+                                        required:
+                                          - type
+                                          - media_type
+                                          - data
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - base64
+                                            default: base64
+                                          media_type:
+                                            type: string
+                                          data:
+                                            type: string
+                          description: Anthropic image content part
                 nullable: true
                 description: The content parts of the message
               name:
@@ -1972,6 +2031,65 @@ components:
                               - image_url
                             description: The type (fixed to 'image_url')
                             default: image_url
+                      - type: object
+                        required:
+                          - tool_use_id
+                          - type
+                          - content
+                        properties:
+                          tool_use_id:
+                            type: string
+                          type:
+                            type: string
+                            enum:
+                              - tool_result
+                            default: tool_result
+                          content:
+                            anyOf:
+                              - type: array
+                                items:
+                                  type: object
+                                  required:
+                                    - text
+                                    - type
+                                  properties:
+                                    text:
+                                      type: string
+                                    type:
+                                      type: string
+                                      enum:
+                                        - text
+                                      description: The type (fixed to 'text')
+                                      default: text
+                              - type: array
+                                items:
+                                  type: object
+                                  required:
+                                    - type
+                                    - source
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - image
+                                      default: image
+                                    source:
+                                      type: object
+                                      required:
+                                        - type
+                                        - media_type
+                                        - data
+                                      properties:
+                                        type:
+                                          type: string
+                                          enum:
+                                            - base64
+                                          default: base64
+                                        media_type:
+                                          type: string
+                                        data:
+                                          type: string
+                        description: Anthropic image content part
               nullable: true
               description: The content parts of the message
             name:
@@ -2203,6 +2321,65 @@ components:
                                 - image_url
                               description: The type (fixed to 'image_url')
                               default: image_url
+                        - type: object
+                          required:
+                            - tool_use_id
+                            - type
+                            - content
+                          properties:
+                            tool_use_id:
+                              type: string
+                            type:
+                              type: string
+                              enum:
+                                - tool_result
+                              default: tool_result
+                            content:
+                              anyOf:
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - text
+                                      - type
+                                    properties:
+                                      text:
+                                        type: string
+                                      type:
+                                        type: string
+                                        enum:
+                                          - text
+                                        description: The type (fixed to 'text')
+                                        default: text
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - type
+                                      - source
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - image
+                                        default: image
+                                      source:
+                                        type: object
+                                        required:
+                                          - type
+                                          - media_type
+                                          - data
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - base64
+                                            default: base64
+                                          media_type:
+                                            type: string
+                                          data:
+                                            type: string
+                          description: Anthropic image content part
                 nullable: true
                 description: The content parts of the message
               name:
@@ -2353,6 +2530,65 @@ components:
                               - image_url
                             description: The type (fixed to 'image_url')
                             default: image_url
+                      - type: object
+                        required:
+                          - tool_use_id
+                          - type
+                          - content
+                        properties:
+                          tool_use_id:
+                            type: string
+                          type:
+                            type: string
+                            enum:
+                              - tool_result
+                            default: tool_result
+                          content:
+                            anyOf:
+                              - type: array
+                                items:
+                                  type: object
+                                  required:
+                                    - text
+                                    - type
+                                  properties:
+                                    text:
+                                      type: string
+                                    type:
+                                      type: string
+                                      enum:
+                                        - text
+                                      description: The type (fixed to 'text')
+                                      default: text
+                              - type: array
+                                items:
+                                  type: object
+                                  required:
+                                    - type
+                                    - source
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - image
+                                      default: image
+                                    source:
+                                      type: object
+                                      required:
+                                        - type
+                                        - media_type
+                                        - data
+                                      properties:
+                                        type:
+                                          type: string
+                                          enum:
+                                            - base64
+                                          default: base64
+                                        media_type:
+                                          type: string
+                                        data:
+                                          type: string
+                        description: Anthropic image content part
               nullable: true
               description: The content parts of the message
             name:
@@ -2850,6 +3086,65 @@ components:
                           - image_url
                         description: The type (fixed to 'image_url')
                         default: image_url
+                  - type: object
+                    required:
+                      - tool_use_id
+                      - type
+                      - content
+                    properties:
+                      tool_use_id:
+                        type: string
+                      type:
+                        type: string
+                        enum:
+                          - tool_result
+                        default: tool_result
+                      content:
+                        anyOf:
+                          - type: array
+                            items:
+                              type: object
+                              required:
+                                - text
+                                - type
+                              properties:
+                                text:
+                                  type: string
+                                type:
+                                  type: string
+                                  enum:
+                                    - text
+                                  description: The type (fixed to 'text')
+                                  default: text
+                          - type: array
+                            items:
+                              type: object
+                              required:
+                                - type
+                                - source
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                    - image
+                                  default: image
+                                source:
+                                  type: object
+                                  required:
+                                    - type
+                                    - media_type
+                                    - data
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                        - base64
+                                      default: base64
+                                    media_type:
+                                      type: string
+                                    data:
+                                      type: string
+                    description: Anthropic image content part
             - $ref: '#/components/schemas/Tools.Tool'
             - $ref: '#/components/schemas/Tools.ChosenFunctionCall'
             - $ref: '#/components/schemas/Tools.ChosenComputer20241022'
@@ -2902,6 +3197,65 @@ components:
                                 - image_url
                               description: The type (fixed to 'image_url')
                               default: image_url
+                        - type: object
+                          required:
+                            - tool_use_id
+                            - type
+                            - content
+                          properties:
+                            tool_use_id:
+                              type: string
+                            type:
+                              type: string
+                              enum:
+                                - tool_result
+                              default: tool_result
+                            content:
+                              anyOf:
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - text
+                                      - type
+                                    properties:
+                                      text:
+                                        type: string
+                                      type:
+                                        type: string
+                                        enum:
+                                          - text
+                                        description: The type (fixed to 'text')
+                                        default: text
+                                - type: array
+                                  items:
+                                    type: object
+                                    required:
+                                      - type
+                                      - source
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - image
+                                        default: image
+                                      source:
+                                        type: object
+                                        required:
+                                          - type
+                                          - media_type
+                                          - data
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - base64
+                                            default: base64
+                                          media_type:
+                                            type: string
+                                          data:
+                                            type: string
+                          description: Anthropic image content part
                   - $ref: '#/components/schemas/Tools.Tool'
                   - $ref: '#/components/schemas/Tools.ChosenFunctionCall'
                   - $ref: '#/components/schemas/Tools.ChosenComputer20241022'
@@ -4899,6 +5253,65 @@ components:
                                     - image_url
                                   description: The type (fixed to 'image_url')
                                   default: image_url
+                            - type: object
+                              required:
+                                - tool_use_id
+                                - type
+                                - content
+                              properties:
+                                tool_use_id:
+                                  type: string
+                                type:
+                                  type: string
+                                  enum:
+                                    - tool_result
+                                  default: tool_result
+                                content:
+                                  anyOf:
+                                    - type: array
+                                      items:
+                                        type: object
+                                        required:
+                                          - text
+                                          - type
+                                        properties:
+                                          text:
+                                            $ref: '#/components/schemas/Common.JinjaTemplate'
+                                          type:
+                                            type: string
+                                            enum:
+                                              - text
+                                            description: The type (fixed to 'text')
+                                            default: text
+                                    - type: array
+                                      items:
+                                        type: object
+                                        required:
+                                          - type
+                                          - source
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - image
+                                            default: image
+                                          source:
+                                            type: object
+                                            required:
+                                              - type
+                                              - media_type
+                                              - data
+                                            properties:
+                                              type:
+                                                type: string
+                                                enum:
+                                                  - base64
+                                                default: base64
+                                              media_type:
+                                                type: string
+                                              data:
+                                                $ref: '#/components/schemas/Common.JinjaTemplate'
+                              description: Anthropic image content part
                     nullable: true
                     description: The content parts of the message
                   name:
@@ -5049,6 +5462,65 @@ components:
                                     - image_url
                                   description: The type (fixed to 'image_url')
                                   default: image_url
+                            - type: object
+                              required:
+                                - tool_use_id
+                                - type
+                                - content
+                              properties:
+                                tool_use_id:
+                                  type: string
+                                type:
+                                  type: string
+                                  enum:
+                                    - tool_result
+                                  default: tool_result
+                                content:
+                                  anyOf:
+                                    - type: array
+                                      items:
+                                        type: object
+                                        required:
+                                          - text
+                                          - type
+                                        properties:
+                                          text:
+                                            $ref: '#/components/schemas/Common.JinjaTemplate'
+                                          type:
+                                            type: string
+                                            enum:
+                                              - text
+                                            description: The type (fixed to 'text')
+                                            default: text
+                                    - type: array
+                                      items:
+                                        type: object
+                                        required:
+                                          - type
+                                          - source
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - image
+                                            default: image
+                                          source:
+                                            type: object
+                                            required:
+                                              - type
+                                              - media_type
+                                              - data
+                                            properties:
+                                              type:
+                                                type: string
+                                                enum:
+                                                  - base64
+                                                default: base64
+                                              media_type:
+                                                type: string
+                                              data:
+                                                $ref: '#/components/schemas/Common.JinjaTemplate'
+                              description: Anthropic image content part
                     nullable: true
                     description: The content parts of the message
                   name:
@@ -6200,6 +6672,44 @@ components:
           type: string
           readOnly: true
       description: The response tool value generated by the model
+    Tools.BaseCloudinaryIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - cloudinary
+          default: cloudinary
+        setup:
+          $ref: '#/components/schemas/Tools.CloudinarySetup'
+        method:
+          type: string
+          enum:
+            - media_upload
+            - media_edit
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Base Cloudinary integration definition
+    Tools.BaseCloudinaryIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - cloudinary
+          default: cloudinary
+        setup:
+          $ref: '#/components/schemas/Tools.CloudinarySetupUpdate'
+        method:
+          type: string
+          enum:
+            - media_upload
+            - media_edit
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Base Cloudinary integration definition
     Tools.BaseIntegrationDef:
       type: object
       required:
@@ -6217,6 +6727,8 @@ components:
             - email
             - remote_browser
             - llama_parse
+            - ffmpeg
+            - cloudinary
           description: The provider of the integration
         method:
           type: string
@@ -6236,6 +6748,8 @@ components:
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDef'
+          ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDef'
+          cloudinary: '#/components/schemas/Tools.BaseCloudinaryIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -6252,6 +6766,8 @@ components:
             - email
             - remote_browser
             - llama_parse
+            - ffmpeg
+            - cloudinary
           description: The provider of the integration
         method:
           type: string
@@ -6271,6 +6787,8 @@ components:
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
+          ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
+          cloudinary: '#/components/schemas/Tools.BaseCloudinaryIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -6866,6 +7384,177 @@ components:
             type: integer
             format: uint16
           description: The line range to view
+    Tools.CloudinaryEditArguments:
+      type: object
+      required:
+        - public_id
+        - transformation
+        - return_base64
+      properties:
+        public_id:
+          type: string
+          description: The file Public ID in Cloudinary
+        transformation:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: The transformation to apply to the file
+        return_base64:
+          type: boolean
+          description: Return base64 encoded file
+          default: false
+      description: Arguments for Cloudinary media edit
+    Tools.CloudinaryEditArgumentsUpdate:
+      type: object
+      properties:
+        public_id:
+          type: string
+          description: The file Public ID in Cloudinary
+        transformation:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: The transformation to apply to the file
+        return_base64:
+          type: boolean
+          description: Return base64 encoded file
+          default: false
+      description: Arguments for Cloudinary media edit
+    Tools.CloudinaryEditIntegrationDef:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          enum:
+            - media_edit
+          default: media_edit
+        arguments:
+          $ref: '#/components/schemas/Tools.CloudinaryEditArguments'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseCloudinaryIntegrationDef'
+      description: Cloudinary edit integration definition
+    Tools.CloudinaryEditIntegrationDefUpdate:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+            - media_edit
+          default: media_edit
+        arguments:
+          $ref: '#/components/schemas/Tools.CloudinaryEditArgumentsUpdate'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseCloudinaryIntegrationDefUpdate'
+      description: Cloudinary edit integration definition
+    Tools.CloudinarySetup:
+      type: object
+      required:
+        - cloudinary_api_key
+        - cloudinary_api_secret
+        - cloudinary_cloud_name
+      properties:
+        cloudinary_api_key:
+          type: string
+          description: The API key for Cloudinary
+        cloudinary_api_secret:
+          type: string
+          description: The API secret for Cloudinary
+        cloudinary_cloud_name:
+          type: string
+          description: The Cloud name for Cloudinary
+        params:
+          type: object
+          additionalProperties: {}
+          description: Additional parameters for the Cloudinary API
+      description: Setup parameters for Cloudinary integration
+    Tools.CloudinarySetupUpdate:
+      type: object
+      properties:
+        cloudinary_api_key:
+          type: string
+          description: The API key for Cloudinary
+        cloudinary_api_secret:
+          type: string
+          description: The API secret for Cloudinary
+        cloudinary_cloud_name:
+          type: string
+          description: The Cloud name for Cloudinary
+        params:
+          type: object
+          additionalProperties: {}
+          description: Additional parameters for the Cloudinary API
+      description: Setup parameters for Cloudinary integration
+    Tools.CloudinaryUploadArguments:
+      type: object
+      required:
+        - file
+        - return_base64
+      properties:
+        file:
+          type: string
+          description: The URL of the file upload
+        return_base64:
+          type: boolean
+          description: Return base64 encoded file
+          default: false
+        public_id:
+          type: string
+          description: Optional public ID for the uploaded file
+        upload_params:
+          type: object
+          additionalProperties: {}
+          description: Optional upload parameters
+      description: Arguments for Cloudinary media upload
+    Tools.CloudinaryUploadArgumentsUpdate:
+      type: object
+      properties:
+        file:
+          type: string
+          description: The URL of the file upload
+        return_base64:
+          type: boolean
+          description: Return base64 encoded file
+          default: false
+        public_id:
+          type: string
+          description: Optional public ID for the uploaded file
+        upload_params:
+          type: object
+          additionalProperties: {}
+          description: Optional upload parameters
+      description: Arguments for Cloudinary media upload
+    Tools.CloudinaryUploadIntegrationDef:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          enum:
+            - media_upload
+          default: media_upload
+        arguments:
+          $ref: '#/components/schemas/Tools.CloudinaryUploadArguments'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseCloudinaryIntegrationDef'
+      description: Cloudinary upload integration definition
+    Tools.CloudinaryUploadIntegrationDefUpdate:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+            - media_upload
+          default: media_upload
+        arguments:
+          $ref: '#/components/schemas/Tools.CloudinaryUploadArgumentsUpdate'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseCloudinaryIntegrationDefUpdate'
+      description: Cloudinary upload integration definition
     Tools.Computer20241022Action:
       type: string
       enum:
@@ -6983,6 +7672,9 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
+            - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -7147,6 +7839,76 @@ components:
           type: string
           description: The password of the email server
       description: Setup parameters for Email integration
+    Tools.FfmpegIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - ffmpeg
+          description: The provider must be "ffmpeg"
+          default: ffmpeg
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          nullable: true
+          description: The setup parameters for Ffmpeg
+          default: null
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.FfmpegSearchArguments'
+          description: The arguments for Ffmpeg Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Ffmpeg integration definition
+    Tools.FfmpegIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - ffmpeg
+          description: The provider must be "ffmpeg"
+          default: ffmpeg
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          nullable: true
+          description: The setup parameters for Ffmpeg
+          default: null
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.FfmpegSearchArgumentsUpdate'
+          description: The arguments for Ffmpeg Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Ffmpeg integration definition
+    Tools.FfmpegSearchArguments:
+      type: object
+      required:
+        - cmd
+      properties:
+        cmd:
+          type: string
+          description: The bash command string
+        file:
+          type: string
+          description: The base64 string of the file
+      description: Arguments for Ffmpeg CMD
+    Tools.FfmpegSearchArgumentsUpdate:
+      type: object
+      properties:
+        cmd:
+          type: string
+          description: The bash command string
+        file:
+          type: string
+          description: The base64 string of the file
+      description: Arguments for Ffmpeg CMD
     Tools.FunctionCallOption:
       type: object
       required:
@@ -7345,6 +8107,9 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -7749,6 +8514,9 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
+            - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -7841,6 +8609,9 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
+            - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
+            - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
           description: The integration to call
         system:
           allOf:
