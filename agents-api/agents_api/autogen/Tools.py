@@ -757,6 +757,10 @@ class CloudinaryUploadArguments(BaseModel):
     """
     The URL of the file upload
     """
+    return_base64: StrictBool = False
+    """
+    Return base64 encoded file
+    """
     public_id: str | None = None
     """
     Optional public ID for the uploaded file
@@ -778,6 +782,10 @@ class CloudinaryUploadArgumentsUpdate(BaseModel):
     file: str | None = None
     """
     The URL of the file upload
+    """
+    return_base64: StrictBool = False
+    """
+    Return base64 encoded file
     """
     public_id: str | None = None
     """

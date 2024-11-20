@@ -1,3 +1,6 @@
+import base64
+
+import aiohttp
 import cloudinary
 import cloudinary.uploader
 from beartype import beartype
@@ -47,10 +50,23 @@ async def media_upload(
             for key, value in result.items()
             if key not in ["secure_url", "public_id"]
         }
+
+        if arguments.return_base64:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(result["secure_url"]) as response:
+                    if response.status == 200:
+                        content = await response.read()
+                        base64_encoded = base64.b64encode(content).decode("utf-8")
+                        result["base64"] = base64_encoded
+                    else:
+                        raise RuntimeError(
+                            f"Failed to download file from URL: {result['secure_url']}"
+                        )
         return CloudinaryUploadOutput(
             url=result["secure_url"],
             public_id=result["public_id"],
             meta_data=meta_data,
+            base64=result["base64"] if arguments.return_base64 else None,
         )
 
     except cloudinary.exceptions.Error as e:

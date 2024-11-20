@@ -30,6 +30,9 @@ model CloudinaryUploadArguments {
     /** The URL of the file upload */
     file: string;
 
+    /** Return base64 encoded file */
+    return_base64: boolean = false;
+
     /** Optional public ID for the uploaded file */
     public_id?: string;
 
@@ -74,6 +77,12 @@ model CloudinaryUploadOutput {
     
     /** The public ID of the uploaded file */
     public_id: string;
+
+    /** The base64 encoded file */
+    base64?: string;
+
+    /** The metadata of the uploaded file */
+    metadata: Record<unknown>;
 }
 
 /** Output for Cloudinary edit */

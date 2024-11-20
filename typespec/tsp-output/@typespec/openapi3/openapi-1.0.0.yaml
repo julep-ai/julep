@@ -7483,10 +7483,15 @@ components:
       type: object
       required:
         - file
+        - return_base64
       properties:
         file:
           type: string
           description: The URL of the file upload
+        return_base64:
+          type: boolean
+          description: Return base64 encoded file
+          default: false
         public_id:
           type: string
           description: Optional public ID for the uploaded file
@@ -7501,6 +7506,10 @@ components:
         file:
           type: string
           description: The URL of the file upload
+        return_base64:
+          type: boolean
+          description: Return base64 encoded file
+          default: false
         public_id:
           type: string
           description: Optional public ID for the uploaded file
