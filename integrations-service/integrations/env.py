@@ -5,10 +5,6 @@ env = Env()
 env.read_env()  # Read .env file, if it exists
 
 # Load environment variables
-rapid_api_key = env.str("RAPID_API_KEY")
-rapid_api_host = env.str("RAPID_API_HOST")
-aryshare_key = env.str("ARYSHARE_KEY")
-aryshare_profile_id = env.str("ARYSHARE_PROFILE_ID")
 browserbase_api_key = env.str("BROWSERBASE_API_KEY")
 browserbase_project_id = env.str("BROWSERBASE_PROJECT_ID")
 openweather_api_key = env.str("OPENWEATHER_API_KEY")
