@@ -1,9 +1,7 @@
-import json
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import Depends, Query
-from pydantic import BaseModel, BeforeValidator, ConfigDict
+from fastapi import Depends
 
 from ...autogen.openapi_model import Doc, ListResponse
 from ...dependencies.developer_id import get_developer_id
