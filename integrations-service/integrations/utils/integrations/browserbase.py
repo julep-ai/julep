@@ -22,6 +22,10 @@ from ...autogen.Tools import (
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
 )
+from ...env import (  # Import env to access environment variables
+    browserbase_api_key,
+    browserbase_project_id,
+)
 from ...models import (
     BrowserbaseCompleteSessionOutput,
     BrowserbaseCreateSessionOutput,
@@ -34,6 +38,11 @@ from ...models.browserbase import BrowserbaseExtensionOutput
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
+    if setup.api_key == "DEMO_API_KEY":
+        setup.api_key = browserbase_api_key
+    if setup.project_id == "DEMO_PROJECT_ID":
+        setup.project_id = browserbase_project_id
+
     return Browserbase(
         api_key=setup.api_key,
         project_id=setup.project_id,
@@ -70,6 +79,9 @@ async def create_session(
     setup: BrowserbaseSetup, arguments: BrowserbaseCreateSessionArguments
 ) -> BrowserbaseCreateSessionOutput:
     client = get_browserbase_client(setup)
+
+    if arguments.project_id == "DEMO_PROJECT_ID":
+        arguments.project_id = setup.browserbase_project_id
 
     options = CreateSessionOptions(
         projectId=arguments.project_id or setup.project_id,

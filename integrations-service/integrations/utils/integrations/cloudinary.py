@@ -11,6 +11,11 @@ from ...autogen.Tools import (
     CloudinarySetup,
     CloudinaryUploadArguments,
 )
+from ...env import (  # Import env to access environment variables
+    cloudinary_api_key,
+    cloudinary_api_secret,
+    cloudinary_cloud_name,
+)
 from ...models.cloudinary import CloudinaryEditOutput, CloudinaryUploadOutput
 
 
@@ -32,9 +37,15 @@ async def media_upload(
     try:
         # Configure Cloudinary with credentials
         cloudinary.config(
-            cloud_name=setup.cloudinary_cloud_name,
-            api_key=setup.cloudinary_api_key,
-            api_secret=setup.cloudinary_api_secret,
+            cloud_name=setup.cloudinary_cloud_name
+            if setup.cloudinary_cloud_name != "DEMO_CLOUD_NAME"
+            else cloudinary_cloud_name,
+            api_key=setup.cloudinary_api_key
+            if setup.cloudinary_api_key != "DEMO_API_KEY"
+            else cloudinary_api_key,
+            api_secret=setup.cloudinary_api_secret
+            if setup.cloudinary_api_secret != "DEMO_API_SECRET"
+            else cloudinary_api_secret,
             **(setup.params or {}),
         )
 
@@ -93,9 +104,15 @@ async def media_edit(
     try:
         # Configure Cloudinary with credentials
         cloudinary.config(
-            cloud_name=setup.cloudinary_cloud_name,
-            api_key=setup.cloudinary_api_key,
-            api_secret=setup.cloudinary_api_secret,
+            cloud_name=setup.cloudinary_cloud_name
+            if setup.cloudinary_cloud_name != "DEMO_CLOUD_NAME"
+            else cloudinary_cloud_name,
+            api_key=setup.cloudinary_api_key
+            if setup.cloudinary_api_key != "DEMO_API_KEY"
+            else cloudinary_api_key,
+            api_secret=setup.cloudinary_api_secret
+            if setup.cloudinary_api_secret != "DEMO_API_SECRET"
+            else cloudinary_api_secret,
             **(setup.params or {}),
         )
 

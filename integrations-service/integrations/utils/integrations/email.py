@@ -5,6 +5,7 @@ from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import EmailArguments, EmailSetup
+from ...env import mailgun_password  # Import env to access environment variables
 from ...models import EmailOutput
 
 
@@ -24,6 +25,9 @@ async def send(setup: EmailSetup, arguments: EmailArguments) -> EmailOutput:
     message["Subject"] = arguments.subject
     message["From"] = arguments.from_
     message["To"] = arguments.to
+
+    if setup.password == "DEMO_PASSWORD":
+        setup.password = mailgun_password
 
     with SMTP(setup.host, setup.port) as server:
         server.login(setup.user, setup.password)
