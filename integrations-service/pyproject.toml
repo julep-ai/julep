@@ -31,6 +31,7 @@ pillow = "^11.0.0"
 llama-index = "^0.11.22"
 llama-parse = "^0.5.13"
 cloudinary = "^1.41.0"
+environs = "^11.2.1"
 
 [tool.poe.tasks]
 format = "ruff format"
