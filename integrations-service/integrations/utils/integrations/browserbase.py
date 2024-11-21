@@ -81,7 +81,7 @@ async def create_session(
     client = get_browserbase_client(setup)
 
     if arguments.project_id == "DEMO_PROJECT_ID":
-        arguments.project_id = setup.browserbase_project_id
+        arguments.project_id = browserbase_project_id
 
     options = CreateSessionOptions(
         projectId=arguments.project_id or setup.project_id,
@@ -174,7 +174,7 @@ async def install_extension_from_github(
     github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{
             arguments.ref}.zip"
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=600) as client:
         # Download the extension zip
         response = await client.get(github_url, follow_redirects=True)
         response.raise_for_status()
