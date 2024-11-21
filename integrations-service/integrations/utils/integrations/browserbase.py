@@ -81,7 +81,7 @@ async def create_session(
     client = get_browserbase_client(setup)
 
     if arguments.project_id == "DEMO_PROJECT_ID":
-        arguments.project_id = setup.browserbase_project_id
+        arguments.project_id = browserbase_project_id
 
     options = CreateSessionOptions(
         projectId=arguments.project_id or setup.project_id,
