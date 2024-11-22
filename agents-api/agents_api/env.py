@@ -67,6 +67,8 @@ if api_key == _random_generated_key:
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
 
+max_free_sessions: int = env.int("MAX_FREE_SESSIONS", default=50)
+max_free_executions: int = env.int("MAX_FREE_EXECUTIONS", default=50)
 
 # Litellm API
 # -----------

@@ -1,5 +1,6 @@
 # ruff: noqa: F401, F403, F405
 
+from .count_executions import count_executions
 from .create_execution import create_execution
 from .create_execution_transition import create_execution_transition
 from .get_execution import get_execution

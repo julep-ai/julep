@@ -17,7 +17,13 @@ from ...autogen.openapi_model import (
     UpdateExecutionRequest,
 )
 from ...clients.temporal import run_task_execution_workflow
+from ...common.protocol.developers import Developer
 from ...dependencies.developer_id import get_developer_id
+from ...env import max_free_executions
+from ...models.developer.get_developer import get_developer
+from ...models.execution.count_executions import (
+    count_executions as count_executions_query,
+)
 from ...models.execution.create_execution import (
     create_execution as create_execution_query,
 )
@@ -112,6 +118,22 @@ async def create_task_execution(
             )
 
         raise
+
+    # get developer data
+    developer: Developer = get_developer(developer_id=x_developer_id)
+
+    # # check if the developer is paid
+    if "paid" not in developer.tags:
+        executions = count_executions_query(
+            developer_id=x_developer_id, task_id=task_id
+        )
+
+        execution_count = executions["count"]
+        if execution_count > max_free_executions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Execution count exceeded the free tier limit",
+            )
 
     execution, handle = await start_execution(
         developer_id=x_developer_id,

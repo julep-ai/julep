@@ -8,6 +8,7 @@ from agents_api.autogen.openapi_model import (
     CreateTransitionRequest,
     Execution,
 )
+from agents_api.models.execution.count_executions import count_executions
 from agents_api.models.execution.create_execution import create_execution
 from agents_api.models.execution.create_execution_transition import (
     create_execution_transition,
@@ -89,6 +90,23 @@ def _(
     assert isinstance(result, list)
     assert len(result) >= 1
     assert result[0].status == "queued"
+
+
+@test("model: count executions")
+def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    execution=test_execution,
+    task=test_task,
+):
+    result = count_executions(
+        developer_id=developer_id,
+        task_id=task.id,
+        client=client,
+    )
+
+    assert isinstance(result, dict)
+    assert result["count"] > 0
 
 
 @test("model: create execution transition")

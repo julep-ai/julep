@@ -19,18 +19,6 @@ model_list:
     api_key: os.environ/GEMINI_API_KEY
     tags: ["paid"]
 
-- model_name: gemini-1.5-pro
-  litellm_params:
-    model: vertex_ai_beta/gemini-1.5-pro
-    tags: ["paid"]
-    vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
-
-- model_name: claude-3.5-sonnet-20240620
-  litellm_params:
-    model: vertex_ai/claude-3-5-sonnet@20240620
-    tags: ["paid"]
-    vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
-
 # OpenAI models
 - model_name: "gpt-4-turbo"
   litellm_params:
