@@ -17,9 +17,11 @@ from ...common.protocol.sessions import ChatContext
 from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
+from ...env import max_free_sessions
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
+from ...models.session.count_sessions import count_sessions as count_sessions_query
 from .metrics import total_tokens_per_user
 from .router import router
 
@@ -50,16 +52,16 @@ async def chat(
         ChatResponse: The chat response.
     """
 
-    # check for the tags in the developer data, inisde tags check for the whther the use is paid or not. If not then check if the session lenght is more than the MAX_SESSION_LENGTH.
-    if "tags" in developer:
-        if "paid" not in developer.tags:
-            # get the session length
-            session_length = developer.session_length
-            if session_length > MAX_SESSION_LENGTH:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Session length exceeded",
-                )
+    # check if the developer is paid
+    if "paid" not in developer.tags:
+        # get the session length
+        sessions = count_sessions_query(developer_id=developer.id)
+        session_length = sessions['count']
+        if session_length > max_free_sessions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Session length exceeded the free tier limit",
+            )
 
     if chat_input.stream:
         raise NotImplementedError("Streaming is not yet implemented")
