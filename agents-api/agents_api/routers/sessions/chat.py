@@ -1,16 +1,11 @@
-import json
 from datetime import datetime
 from typing import Annotated, Callable, Optional
 from uuid import UUID, uuid4
 
-from anthropic import AsyncAnthropic
 from anthropic.types.beta.beta_message import BetaMessage
 from fastapi import BackgroundTasks, Depends, Header
-from litellm import ChatCompletionMessageToolCall, Function, Message
-from litellm.types.utils import Choices, ModelResponse
 from starlette.status import HTTP_201_CREATED
 
-from ...activities.task_steps.prompt_step import format_tool
 from ...autogen.openapi_model import (
     ChatInput,
     ChatResponse,
@@ -18,14 +13,12 @@ from ...autogen.openapi_model import (
     CreateEntryRequest,
     MessageChatResponse,
 )
-from ...autogen.Tools import Tool
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
-from ...env import anthropic_api_key
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
@@ -122,9 +115,9 @@ async def chat(
     is_claude_model = settings["model"].lower().startswith("claude-3.5")
 
     # Format tools for litellm
-    formatted_tools = (
-        tools if is_claude_model else [format_tool(tool) for tool in tools]
-    )
+    # formatted_tools = (
+    #     tools if is_claude_model else [format_tool(tool) for tool in tools]
+    # )
 
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
@@ -142,17 +135,13 @@ async def chat(
         for m in messages
     ]
 
-    # has_special_tools = any(
-    #     tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
-    #     for tool in formatted_tools
-    # )
-
     # FIXME: Hack to make the computer use tools compatible with litellm
     # Issue was: litellm expects type to be `computer_20241022` and spec to be
     # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
     # but we don't allow that (spec should match type).
-    for i, tool in enumerate(formatted_tools):
-        if tool.type == "computer_20241022":
+    formatted_tools = []
+    for i, tool in enumerate(tools):
+        if tool.type == "computer_20241022" and tool.computer_20241022:
             function = tool.computer_20241022
             tool = {
                 "type": tool.type,
@@ -165,9 +154,13 @@ async def chat(
                     },
                 },
             }
-            formatted_tools[i] = tool
+            formatted_tools.append(tool)
 
-    # formatted_tools = None
+    # If not using Claude model,
+
+    if not is_claude_model:
+        formatted_tools = None
+
     # Use litellm for other models
     model_response = await litellm.acompletion(
         messages=messages,

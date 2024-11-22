@@ -69,10 +69,7 @@ async def execute_system(
             arguments["x_developer_id"] = arguments.pop("developer_id")
             bg_runner = BackgroundTasks()
             res = await handler(
-            bg_runner = BackgroundTasks()
-            res = await handler(
                 data=CreateDocRequest(**arguments.pop("data")),
-                background_tasks=bg_runner,
                 background_tasks=bg_runner,
                 **arguments,
             )
