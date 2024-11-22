@@ -34,13 +34,13 @@ with workflow.unsafe.imports_passed_through():
         SleepFor,
         SleepStep,
         SwitchStep,
+        SystemDef,
         ToolCallStep,
         TransitionTarget,
         WaitForInputStep,
         WorkflowStep,
         YieldStep,
     )
-    from ...autogen.Tools import SystemDef
     from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,

@@ -20,7 +20,7 @@ class RequestArgs(TypedDict):
     headers: Optional[dict[str, str]]
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def execute_api_call(
     api_call: ApiCallDef,

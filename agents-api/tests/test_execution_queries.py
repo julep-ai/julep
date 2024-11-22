@@ -3,8 +3,10 @@
 from temporalio.client import WorkflowHandle
 from ward import test
 
-from agents_api.autogen.Executions import (
+from agents_api.autogen.openapi_model import (
     CreateExecutionRequest,
+    CreateTransitionRequest,
+    Execution,
 )
 from agents_api.autogen.openapi_model import CreateTransitionRequest, Execution
 from agents_api.models.execution.count_executions import count_executions

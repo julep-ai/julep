@@ -11,7 +11,7 @@ from ...env import testing
 
 # TODO: We should use this step to signal to the parent workflow and set the value on the workflow context
 # SCRUM-2
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def set_value_step(
     context: StepContext,

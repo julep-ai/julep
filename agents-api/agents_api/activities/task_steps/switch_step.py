@@ -11,7 +11,7 @@ from ...env import testing
 from ..utils import get_evaluator
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def switch_step(context: StepContext) -> StepOutcome:
     try:

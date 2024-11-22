@@ -25,7 +25,6 @@ protocol: str = env.str("AGENTS_API_PROTOCOL", default="http")
 hostname: str = env.str("AGENTS_API_HOSTNAME", default="localhost")
 public_port: int = env.int("AGENTS_API_PUBLIC_PORT", default=80)
 api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
-anthropic_api_key: str = env.str("ANTHROPIC_API_KEY", default=None)
 
 # Tasks
 # -----

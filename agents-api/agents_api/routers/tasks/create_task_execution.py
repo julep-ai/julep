@@ -10,9 +10,9 @@ from pycozo.client import QueryException
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import WorkflowHandle
 
-from ...autogen.Executions import Execution
 from ...autogen.openapi_model import (
     CreateExecutionRequest,
+    Execution,
     ResourceCreatedResponse,
     UpdateExecutionRequest,
 )
