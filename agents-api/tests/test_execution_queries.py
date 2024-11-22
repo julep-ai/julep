@@ -8,7 +8,6 @@ from agents_api.autogen.openapi_model import (
     CreateTransitionRequest,
     Execution,
 )
-from agents_api.autogen.openapi_model import CreateTransitionRequest, Execution
 from agents_api.models.execution.count_executions import count_executions
 from agents_api.models.execution.create_execution import create_execution
 from agents_api.models.execution.create_execution_transition import (
