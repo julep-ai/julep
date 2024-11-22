@@ -1,7 +1,7 @@
 from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
-from fastapi import BackgroundTasks, Depends, Header
+from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
@@ -20,7 +20,6 @@ from ...dependencies.developer_id import get_developer_data
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
-from fastapi import BackgroundTasks, Depends, HTTPException, status
 from .metrics import total_tokens_per_user
 from .router import router
 
