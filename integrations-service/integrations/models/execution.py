@@ -16,8 +16,12 @@ from ..autogen.Tools import (
     BrowserbaseGetSessionLiveUrlsArguments,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
+    CloudinaryEditArguments,
+    CloudinarySetup,
+    CloudinaryUploadArguments,
     EmailArguments,
     EmailSetup,
+    FfmpegSearchArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
     RemoteBrowserArguments,
@@ -39,7 +43,9 @@ from .browserbase import (
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
 )
+from .cloudinary import CloudinaryEditOutput, CloudinaryUploadOutput
 from .email import EmailOutput
+from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
 from .remote_browser import RemoteBrowserOutput
 from .spider import SpiderFetchOutput
@@ -54,6 +60,7 @@ class ExecutionError(BaseModel):
     """
 
 
+# Setup configurations
 ExecutionSetup = Union[
     EmailSetup,
     SpiderSetup,
@@ -62,8 +69,10 @@ ExecutionSetup = Union[
     BrowserbaseSetup,
     RemoteBrowserSetup,
     LlamaParseSetup,
+    CloudinarySetup,
 ]
 
+# Argument configurations
 ExecutionArguments = Union[
     SpiderFetchArguments,
     WeatherGetArguments,
@@ -80,6 +89,9 @@ ExecutionArguments = Union[
     BrowserbaseListSessionsArguments,
     RemoteBrowserArguments,
     LlamaParseFetchArguments,
+    FfmpegSearchArguments,
+    CloudinaryUploadArguments,
+    CloudinaryEditArguments,
 ]
 
 ExecutionResponse = Union[
@@ -98,6 +110,9 @@ ExecutionResponse = Union[
     BrowserbaseListSessionsOutput,
     RemoteBrowserOutput,
     LlamaParseFetchOutput,
+    FfmpegSearchOutput,
+    CloudinaryEditOutput,
+    CloudinaryUploadOutput,
     ExecutionError,
 ]
 

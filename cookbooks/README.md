@@ -1,5 +1,5 @@
-<div align="center">
-    <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Build%20AI%20agents%20and%20workflows%20with%20a%20simple%20API&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
+<div align="center" id="top">
+ <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
 </div>
 
 # Julep AI - Notebook Overview
@@ -8,21 +8,16 @@ Welcome to the **Julep AI Notebook Collection**! This directory contains a set o
 
 Each notebook explores a unique use case, demonstrating different aspects of Julep's capabilities. Below is a quick overview of the notebooks, their purpose, and a link to run each of them on Google Colab.
 
-| **Notebook Name**                                | **Colab Link**                                                              | **Description**                                                    | **Implemented** |
-|------------------------------------------------- |---------------------------------------------------------------------------- |--------------------------------------------------------------------|-----------------|
-| `01-Website_Crawler_using_Spider.ipynb`          | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)           | Implements a web crawler using a spider to extract website content. | Yes |
-| `02-Sarcastic_News_Headline_Generator.ipynb`     | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/02-Sarcastic_News_Headline_Generator.ipynb)           | Generates sarcastic news headlines using a Brave Search Tool.  | Yes |
-| `03-SmartResearcher_With_WebSearch.ipynb`        | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)           | Searches and aggregates web information for research purposes using Brave Search.     | Yes |
-| `04-TripPlanner_With_Weather_And_WikiInfo.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)           | Plans trips using weather data and Wikipedia information.          | Yes |
-| `05-Basic_Agent_Creation_and_Interaction.ipynb`  | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/05-Basic_Agent_Creation_and_Interaction.ipynb)           | Demonstrates how to create a basic agent and interact with it.    | No |
-| `06-Designing_Multi-Step_Tasks.ipynb`            | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/06-Designing_Multi-Step_Tasks.ipynb)           | Explores creating tasks with various step types.                   | No |
-| `07-Integrating_External_Tools_and_APIs.ipynb`   | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/07-Integrating_External_Tools_and_APIs.ipynb)           | Shows how to integrate and use external tools and APIs.           | No |
-| `08-Managing_Persistent_Sessions.ipynb`          | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/08-Managing_Persistent_Sessions.ipynb)           | Covers creating and managing persistent sessions with context.    | No |
-| `09-User_Management_and_Personalization.ipynb`   | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/09-User_Management_and_Personalization.ipynb)           | Demonstrates user management and personalized interactions.       | No |
-| `10-Document_Management_and_Search.ipynb`        | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.ipynb)           | Explores document upload, management, and search capabilities.    | No |
-| `11-Advanced_Chat_Interactions.ipynb`            | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/11-Advanced_Chat_Interactions.ipynb)           | Covers advanced chat features and context handling.               | No |
-| `12-Monitoring_Task_Executions.ipynb`            | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/12-Monitoring_Task_Executions.ipynb)           | Shows how to monitor and manage task executions.                  | No |
-| `13-Error_Handling_and_Recovery.ipynb`           | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.ipynb)           | Demonstrates implementing error handling and recovery in tasks.   | No |
+| **Notebook Name** | **Colab Link** | **Description** | **Implemented** |
+|------------------ |--------------- |----------------- |----------------- |
+| `00-Devfest-Email-Assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb) | Email assistant for managing DevFest communications | Yes |
+| `01-Website_Crawler_using_Spider.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb) | Implements a web crawler using a spider to extract website content | Yes |
+| `02-Sarcastic_News_Headline_Generator.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/02-Sarcastic_News_Headline_Generator.ipynb) | Generates sarcastic news headlines using a Brave Search Tool | Yes |
+| `03-Trip_Planning_Assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/03-Trip_Planning_Assistant.ipynb) | Plans trips using weather data and location information | Yes |
+| `04-Hook_Generator_Trending_Reels.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-Hook_Generator_Trending_Reels.ipynb) | Generates engaging hooks for trending social media reels | Yes |
+| `05-Video_Processing_With_Natural_Language.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/05-Video_Processing_With_Natural_Language.ipynb) | Processes videos using natural language commands | Yes |
+| `06-Browser_Use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/06-Browser_Use.ipynb) | Demonstrates browser automation capabilities | Yes |
+
 
 ## Potential Cookbooks for Contributors
 

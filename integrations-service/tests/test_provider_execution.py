@@ -1,16 +1,10 @@
 """Tests for provider execution using mocks"""
 
 import pytest
-from pydantic import AnyUrl
 
 from integrations.autogen.Tools import (
-    BraveSearchArguments,
-    EmailArguments,
-    SpiderFetchArguments,
-    WeatherGetArguments,
     WikipediaSearchArguments,
 )
-from integrations.providers import available_providers
 from integrations.utils.execute_integration import execute_integration
 
 

@@ -6,6 +6,7 @@ from llama_parse import LlamaParse
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import LlamaParseFetchArguments, LlamaParseSetup
+from ...env import llama_api_key  # Import env to access environment variables
 from ...models import LlamaParseFetchOutput
 
 
@@ -24,6 +25,9 @@ async def parse(
 
     assert isinstance(setup, LlamaParseSetup), "Invalid setup"
     assert isinstance(arguments, LlamaParseFetchArguments), "Invalid arguments"
+
+    if setup.llamaparse_api_key == "DEMO_API_KEY":
+        setup.llamaparse_api_key = llama_api_key
 
     parser = LlamaParse(
         api_key=setup.llamaparse_api_key,

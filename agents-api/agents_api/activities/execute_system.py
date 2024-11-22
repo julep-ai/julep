@@ -16,6 +16,8 @@ from ..autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
+from ..autogen.Sessions import CreateSessionRequest
+from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
 from ..env import testing
@@ -67,11 +69,13 @@ async def execute_system(
             arguments["x_developer_id"] = arguments.pop("developer_id")
             bg_runner = BackgroundTasks()
             res = await handler(
+            bg_runner = BackgroundTasks()
+            res = await handler(
                 data=CreateDocRequest(**arguments.pop("data")),
+                background_tasks=bg_runner,
                 background_tasks=bg_runner,
                 **arguments,
             )
-
             await bg_runner()
             return res
 
@@ -95,7 +99,6 @@ async def execute_system(
                 x_custom_api_key=x_custom_api_key,
                 chat_input=chat_input,
             )
-
             await bg_runner()
             return res
 

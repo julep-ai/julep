@@ -2,7 +2,6 @@
 
 # %%
 # Global UUID is generated for agent and task
-%time
 import time, yaml
 from dotenv import load_dotenv
 import os

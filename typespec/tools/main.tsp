@@ -9,6 +9,8 @@ import "./wikipedia.tsp";
 import "./browserbase";
 import "./remote_browser.tsp";
 import "./llama_parse.tsp";
+import "./ffmpeg.tsp";
+import "./cloudinary.tsp";
 
 namespace Tools;
 
