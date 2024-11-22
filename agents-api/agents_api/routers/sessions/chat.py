@@ -1,6 +1,8 @@
-from typing import Annotated, Optional
+from datetime import datetime
+from typing import Annotated, Callable, Optional
 from uuid import UUID, uuid4
 
+from anthropic.types.beta.beta_message import BetaMessage
 from fastapi import BackgroundTasks, Depends, Header
 from starlette.status import HTTP_201_CREATED
 
@@ -22,6 +24,8 @@ from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
 from .metrics import total_tokens_per_user
 from .router import router
+
+COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
 @router.post(
@@ -106,27 +110,14 @@ async def chat(
 
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
-    tools = [tool.model_dump(mode="json") for tool in tools]
 
-    # Convert anthropic tools to `function`
-    for tool in tools:
-        if tool.get("type") == "computer_20241022":
-            tool["function"] = {
-                "name": tool["name"],
-                "parameters": tool.pop("computer_20241022"),
-            }
+    # Check if using Claude model and has specific tool types
+    is_claude_model = settings["model"].lower().startswith("claude-3.5")
 
-        elif tool.get("type") == "bash_20241022":
-            tool["function"] = {
-                "name": tool["name"],
-                "parameters": tool.pop("bash_20241022"),
-            }
-
-        elif tool.get("type") == "text_editor_20241022":
-            tool["function"] = {
-                "name": tool["name"],
-                "parameters": tool.pop("text_editor_20241022"),
-            }
+    # Format tools for litellm
+    # formatted_tools = (
+    #     tools if is_claude_model else [format_tool(tool) for tool in tools]
+    # )
 
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
@@ -144,12 +135,38 @@ async def chat(
         for m in messages
     ]
 
-    # Get the response from the model
+    # FIXME: Hack to make the computer use tools compatible with litellm
+    # Issue was: litellm expects type to be `computer_20241022` and spec to be
+    # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
+    # but we don't allow that (spec should match type).
+    formatted_tools = []
+    for i, tool in enumerate(tools):
+        if tool.type == "computer_20241022" and tool.computer_20241022:
+            function = tool.computer_20241022
+            tool = {
+                "type": tool.type,
+                "function": {
+                    "name": tool.name,
+                    "parameters": {
+                        k: v
+                        for k, v in function.model_dump().items()
+                        if k not in ["name", "type"]
+                    },
+                },
+            }
+            formatted_tools.append(tool)
+
+    # If not using Claude model,
+
+    if not is_claude_model:
+        formatted_tools = None
+
+    # Use litellm for other models
     model_response = await litellm.acompletion(
         messages=messages,
-        tools=tools or None,
-        user=str(developer.id),  # For tracking usage
-        tags=developer.tags,  # For filtering models in litellm
+        tools=formatted_tools or None,
+        user=str(developer.id),
+        tags=developer.tags,
         custom_api_key=x_custom_api_key,
         **settings,
     )

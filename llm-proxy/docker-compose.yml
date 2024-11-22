@@ -1,7 +1,7 @@
 name: julep-llm-proxy
 
 x--litellm-base: &litellm-base
-  image: ghcr.io/berriai/litellm-database:main-v1.52.0-stable
+  image: julepai/litellm-database:fix_anthropic_tool_image_content-amd64
   restart: unless-stopped
   hostname: litellm
   ports:
@@ -52,6 +52,7 @@ services:
     <<: *litellm-base
     profiles:
       - self-hosted-db
+    platform: linux/amd64
 
     depends_on:
       - litellm-db

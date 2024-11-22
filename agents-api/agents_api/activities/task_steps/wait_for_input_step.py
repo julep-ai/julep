@@ -8,7 +8,7 @@ from ...env import testing
 from .base_evaluate import base_evaluate
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def wait_for_input_step(context: StepContext) -> StepOutcome:
     try:

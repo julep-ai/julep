@@ -8,7 +8,7 @@ from ...common.storage_handler import auto_blob_store
 from ...env import testing
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def cozo_query_step(
     query_name: str,

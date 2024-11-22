@@ -7,10 +7,12 @@ from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
-from ..autogen.Chat import ChatInput
-from ..autogen.Docs import (
+from ..autogen.openapi_model import (
+    ChatInput,
     CreateDocRequest,
+    CreateSessionRequest,
     HybridDocSearchRequest,
+    SystemDef,
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
@@ -23,7 +25,7 @@ from ..models.developer import get_developer
 from .utils import get_handler
 
 
-@auto_blob_store
+@auto_blob_store(deep=True)
 @beartype
 async def execute_system(
     context: StepContext,
@@ -82,9 +84,9 @@ async def execute_system(
 
         # Handle chat operations
         if system.operation == "chat" and system.resource == "session":
-            developer = get_developer(developer_id=arguments.pop("developer_id"))
-            session_id = arguments.pop("session_id")
-            x_custom_api_key = arguments.pop("x_custom_api_key", None)
+            developer = get_developer(developer_id=arguments.get("developer_id"))
+            session_id = arguments.get("session_id")
+            x_custom_api_key = arguments.get("x_custom_api_key", None)
             chat_input = ChatInput(**arguments)
             bg_runner = BackgroundTasks()
             res = await handler(
