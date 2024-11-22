@@ -10,7 +10,6 @@ from temporalio.common import (
 )
 
 from ..autogen.openapi_model import TransitionTarget
-from ..common.protocol.remote import RemoteList
 from ..common.protocol.tasks import ExecutionInput
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..common.storage_handler import store_in_blob_store_if_large

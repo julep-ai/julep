@@ -3,8 +3,12 @@ from uuid import uuid4
 
 from ward import test
 
-from agents_api.autogen.openapi_model import CreateOrUpdateSessionRequest, Session
-from agents_api.autogen.Sessions import CreateSessionRequest
+from agents_api.autogen.openapi_model import (
+    CreateOrUpdateSessionRequest,
+    CreateSessionRequest,
+    Session,
+)
+from agents_api.models.session.count_sessions import count_sessions
 from agents_api.models.session.create_or_update_session import create_or_update_session
 from agents_api.models.session.create_session import create_session
 from agents_api.models.session.delete_session import delete_session
@@ -115,6 +119,17 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
 
     assert isinstance(result, list)
     assert len(result) > 0
+
+
+@test("model: count sessions")
+def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
+    result = count_sessions(
+        developer_id=developer_id,
+        client=client,
+    )
+
+    assert isinstance(result, dict)
+    assert result["count"] > 0
 
 
 @test("model: create or update session")
