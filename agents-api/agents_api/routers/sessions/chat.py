@@ -20,6 +20,7 @@ from ...dependencies.developer_id import get_developer_data
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
+from fastapi import BackgroundTasks, Depends, HTTPException, status
 from .metrics import total_tokens_per_user
 from .router import router
 
@@ -49,6 +50,17 @@ async def chat(
     Returns:
         ChatResponse: The chat response.
     """
+
+    # check for the tags in the developer data, inisde tags check for the whther the use is paid or not. If not then check if the session lenght is more than the MAX_SESSION_LENGTH.
+    if "tags" in developer:
+        if "paid" not in developer.tags:
+            # get the session length
+            session_length = developer.session_length
+            if session_length > MAX_SESSION_LENGTH:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Session length exceeded",
+                )
 
     if chat_input.stream:
         raise NotImplementedError("Streaming is not yet implemented")
