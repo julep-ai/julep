@@ -43,7 +43,7 @@ Nous sommes ravis d'accueillir de nouveaux contributeurs au projet Julep ! Nous 
 2. Parcourez nos [bons premiers numéros](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) pour trouver une tâche qui vous intéresse.
 3. Si vous avez des questions ou avez besoin d'aide, n'hésitez pas à nous contacter sur notre chaîne [Discord](https://discord.com/invite/JTSBGRZrzj).
 
-Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons ensemble quelque chose d'extraordinaire ! 🚀
+Vos contributions, grandes ou petites, nous sont précieuses. Construisons ensemble quelque chose d'extraordinaire ! 🚀
 
 ### 🎉 DevFest.AI octobre 2024
 
@@ -429,7 +429,7 @@ agent_id=agent.id,
 ### Étape 3 : Exécuter la tâche
 
 exécution = client.executions.create(
-task_id=task.id,
+task_id=tâche.id,
 input={"idea": "Un chat qui apprend à voler"}
 )
 
@@ -782,7 +782,7 @@ Execute an integrated tool or API that you have previously declared in the task.
 <td>
 
 ```YAML
-- outil : recherche_sur_le_web
+- outil : recherche sur le Web
 Arguments:
 requête : « Derniers développements de l'IA » # <-- il s'agit d'une expression Python (remarquez les guillemets)
 num_results: len(_.topics) # <-- expression python pour accéder à la longueur d'une liste
@@ -948,7 +948,7 @@ Run multiple steps in parallel
 
 ```YAML
 - parallèle:
-- outil : recherche_sur_le_web
+- outil : recherche sur le Web
 Arguments:
 requête : « Actualités sur l'IA »
 - outil : weather_check
@@ -1068,7 +1068,7 @@ Run a subworkflow and await its completion
 - rendement:
 flux de travail : données_de_processus
 Arguments:
-données_d'entrée : _. données_raw # <-- expression python
+données d'entrée : _. données brutes # <-- expression Python
 ```
 
 </td>
@@ -1354,7 +1354,7 @@ spider_api_key : chaîne # La clé API pour Spider
 Arguments:
 url : chaîne # L'URL pour laquelle récupérer les données
 mode : chaîne # Le type de robots d'exploration (par défaut : « scrape »)
-paramètres : dict # (facultatif) Les paramètres de l'API Spider
+paramètres : dict # (facultatif) Les paramètres de l'API Spider
 
 sortir:
 documents : liste # Les documents renvoyés par l'araignée
@@ -1561,7 +1561,7 @@ Julep, en revanche, s'intéresse davantage à la création d'agents d'IA persist
 Utilisez Julep si vous imaginez créer un assistant IA complexe qui doit :
 
 - Suivez les interactions des utilisateurs sur plusieurs jours ou semaines.
-- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance des sources de données.
+- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance de sources de données.
 - Prendre des décisions basées sur des interactions antérieures ou des données stockées.
 - Interagir avec plusieurs services externes dans le cadre de son flux de travail.
 

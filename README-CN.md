@@ -81,7 +81,7 @@
 - [用户定义的`函数`](#user-defined-functions)
 - [`系统` 工具](#system-tools)
 - [内置 `integrations`](#built-in-integrations)
--[直接`api_calls`]（#direct-api_calls）
+-[直接`api_calls`](#direct-api_calls)
 - [集成](#integrations)
 - [其他功能](#other-features)
 - [向代理添加工具](#adding-tools-to-agents)
@@ -113,7 +113,7 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 - 长时间运行。
 
 > [!提示]
-> 想象一下，您想要构建一个 AI 代理，它不仅可以回答简单的问题，还可以处理复杂的任务、记住过去的交互，甚至可能使用其他工具或 API。这就是 Julep 的作用所在。阅读 [了解任务](#understanding-tasks) 了解更多信息。
+> 假设您想要构建一个 AI 代理，它不仅可以回答简单的问题，还可以处理复杂的任务、记住过去的交互，甚至可能使用其他工具或 API。这就是 Julep 的作用所在。阅读 [了解任务](#understanding-tasks) 了解更多信息。
 
 ## 主要特点
 
@@ -361,7 +361,7 @@ main:
 
 为了发展故事情节，我们需要研究情节思路。
 我们应该研究什么？写下你认为有趣的情节想法的维基百科搜索查询。
-将输出作为 yaml 列表返回```yaml tags at the end of your response.
+将您的输出作为 yaml 列表返回```yaml tags at the end of your response.
     unwrap: true
     settings:
       model: gpt-4o-mini
@@ -590,7 +590,7 @@ const task = 等待客户端.tasks.创建（agentId， yaml.parse(taskYaml)）;
 
 异步函数 executeTask (taskId) {
 const 执行 = 等待客户端.执行.创建（taskId，{
-输入：{想法：“一只学飞的猫”}，
+输入：{想法：“一只学会飞翔的猫”}，
   });
 
 // 🎉 观看故事和漫画面板的生成
@@ -1001,7 +1001,7 @@ Execute steps based on multiple conditions
 - 日志：“A 类处理”
 - 案例：_.category =='B'
 然后：
-- 日志：“B类处理”
+- 日志：“B 类处理”
 - case: _ # 默认情况
 然后：
 - 错误：未知类别
@@ -1031,7 +1031,7 @@ Pause the workflow for a specified duration
 秒：30
 # 分钟：1
 #小时数：1
-#天数：1
+# 天数：1
 ```
 
 </td>
