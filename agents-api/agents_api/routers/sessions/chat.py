@@ -56,7 +56,7 @@ async def chat(
     if "paid" not in developer.tags:
         # get the session length
         sessions = count_sessions_query(developer_id=developer.id)
-        session_length = sessions['count']
+        session_length = sessions["count"]
         if session_length > max_free_sessions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

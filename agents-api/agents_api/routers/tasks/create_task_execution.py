@@ -126,7 +126,7 @@ async def create_task_execution(
         executions = count_executions_query(
             developer_id=x_developer_id, task_id=task_id
         )
-        execution_count = executions['count']
+        execution_count = executions["count"]
         if execution_count > max_free_executions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
