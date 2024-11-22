@@ -11,12 +11,12 @@ Each notebook explores a unique use case, demonstrating different aspects of Jul
 | **Notebook Name** | **Colab Link** | **Description** | **Implemented** |
 |------------------ |--------------- |----------------- |----------------- |
 | `00-Devfest-Email-Assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb) | Email assistant for managing DevFest communications | Yes |
-| `01-Website_Crawler_using_Spider.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb) | Implements a web crawler using a spider to extract website content | Yes |
-| `02-Sarcastic_News_Headline_Generator.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/02-Sarcastic_News_Headline_Generator.ipynb) | Generates sarcastic news headlines using a Brave Search Tool | Yes |
-| `03-Trip_Planning_Assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/03-Trip_Planning_Assistant.ipynb) | Plans trips using weather data and location information | Yes |
-| `04-Hook_Generator_Trending_Reels.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-Hook_Generator_Trending_Reels.ipynb) | Generates engaging hooks for trending social media reels | Yes |
-| `05-Video_Processing_With_Natural_Language.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/05-Video_Processing_With_Natural_Language.ipynb) | Processes videos using natural language commands | Yes |
-| `06-Browser_Use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/06-Browser_Use.ipynb) | Demonstrates browser automation capabilities | Yes |
+| `01-website-crawler.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb) | Implements a web crawler using a spider to extract website content | Yes |
+| `02-sarcastic-news-headline-generator.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/02-sarcastic-news-headline-generator.ipynb) | Generates sarcastic news headlines using a Brave Search Tool | Yes |
+| `03-trip-planning-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb) | Plans trips using weather data and location information | Yes |
+| `04-hook-generator-trending-reels.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-hook-generator-trending-reels.ipynb) | Generates engaging hooks for trending social media reels | Yes |
+| `05-video-processing-with-natural-language.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb) | Processes videos using natural language commands | Yes |
+| `06-browser-use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/`06-browser-use.ipynb) | Demonstrates browser automation capabilities | Yes |
 
 
 ## Potential Cookbooks for Contributors
