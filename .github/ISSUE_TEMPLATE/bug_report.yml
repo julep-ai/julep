@@ -3,22 +3,16 @@ description: "Submit a bug report to help us improve"
 title: "[Bug]: "
 labels: ["bug"]
 body:
-  - type: markdown
-    attributes:
-      value: We value your time and your efforts to submit this bug report is appreciated. 🙏
-
   - type: textarea
     id: description
     attributes:
       label: "📜 Description"
-      description: "A clear and concise description of what the bug is."
-      placeholder: "It bugs out when ..."
+      placeholder: "A clear and concise description of what the bug is."
 
   - type: textarea
     id: steps-to-reproduce
     attributes:
       label: "👟 Reproduction steps"
-      description: "How do you trigger this bug? Please walk us through it step by step."
       placeholder: "1. Go to '...'
         2. Click on '....'
         3. Scroll down to '....'
@@ -27,7 +21,7 @@ body:
   - type: checkboxes
     id: no-duplicate-issues
     attributes:
-      label: "👀 Have you spent some time to check if this bug has been raised before?"
+      label: "👀 Have you searched previous issues to see if this has been raised before?"
       options:
         - label: "I checked and didn't find similar issue"
           required: true

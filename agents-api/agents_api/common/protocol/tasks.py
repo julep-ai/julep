@@ -75,7 +75,15 @@ with workflow.unsafe.imports_passed_through():
 valid_transitions: dict[TransitionType, list[TransitionType]] = {
     # Start state
     "init": ["wait", "error", "step", "cancelled", "init_branch", "finish"],
-    "init_branch": ["wait", "error", "step", "cancelled", "finish_branch"],
+    "init_branch": [
+        "wait",
+        "error",
+        "step",
+        "cancelled",
+        "init_branch",
+        "finish_branch",
+        "finish",
+    ],
     # End states
     "finish": [],
     "error": [],
@@ -137,7 +145,7 @@ class ExecutionInput(BaseModel):
     task: TaskSpecDef
     agent: Agent
     agent_tools: list[Tool | CreateToolRequest]
-    arguments: dict[str, Any]
+    arguments: dict[str, Any] | RemoteObject
 
     # Not used at the moment
     user: User | None = None
@@ -235,14 +243,17 @@ class StepContext(BaseRemoteModel):
 
     def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
+        inputs = self.inputs
         if activity.in_activity():
+            inputs = [load_from_blob_store_if_remote(input) for input in inputs]
             current_input = load_from_blob_store_if_remote(current_input)
 
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
+        dump["inputs"] = inputs
         prepared = dump | {"_": current_input}
 
-        for i, input in enumerate(self.inputs):
+        for i, input in enumerate(inputs):
             prepared = prepared | {f"_{i}": input}
             if i >= 100:
                 break

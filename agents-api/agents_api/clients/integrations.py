@@ -21,7 +21,7 @@ async def run_integration_service(
 
     setup = setup or None
 
-    async with AsyncClient(timeout=60) as client:
+    async with AsyncClient(timeout=600) as client:
         response = await client.post(
             url,
             json={"arguments": arguments, "setup": setup},

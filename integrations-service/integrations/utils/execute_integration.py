@@ -5,7 +5,12 @@ from fastapi import HTTPException
 
 from .. import providers as available_providers
 from ..models.base_models import BaseProvider, IdentifierName
-from ..models.execution import ExecutionArguments, ExecutionResponse, ExecutionSetup
+from ..models.execution import (
+    ExecutionArguments,
+    ExecutionError,
+    ExecutionResponse,
+    ExecutionSetup,
+)
 
 
 @beartype
@@ -54,8 +59,10 @@ async def execute_integration(
         parsed_arguments = arguments_class(**arguments.model_dump())
     else:
         parsed_arguments = arguments
-
-    if setup_obj:
-        return await execution_function(setup=setup_obj, arguments=parsed_arguments)
-    else:
-        return await execution_function(arguments=parsed_arguments)
+    try:
+        if setup_obj:
+            return await execution_function(setup=setup_obj, arguments=parsed_arguments)
+        else:
+            return await execution_function(arguments=parsed_arguments)
+    except BaseException as e:
+        return ExecutionError(error=str(e))

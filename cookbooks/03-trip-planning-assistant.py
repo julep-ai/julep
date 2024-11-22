@@ -1,6 +1,10 @@
 import uuid
 import yaml
 from julep import Client
+import os
+
+openweathermap_api_key = os.getenv("OPENWEATHERMAP_API_KEY")
+brave_api_key = os.getenv("BRAVE_API_KEY")
 
 # Global UUID is generated for agent and task
 AGENT_UUID = uuid.uuid4()
@@ -31,7 +35,8 @@ agent = client.agents.create_or_update(
 )
 
 # Defining a Task
-task_def = yaml.safe_load("""
+# Defining the task
+task_def = yaml.safe_load(f"""
 name: Tourist Plan With Weather And Attractions
 
 input_schema:
@@ -54,7 +59,14 @@ tools:
   integration:
     provider: weather
     setup:
-      openweathermap_api_key: "YOUR_API_KEY"
+      openweathermap_api_key: {openweathermap_api_key}
+
+- name: internet_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: {brave_api_key}
 
 main:
 - over: inputs[0].locations
@@ -65,29 +77,47 @@ main:
 
 - over: inputs[0].locations
   map:
-    tool: wikipedia
+    tool: internet_search
     arguments:
-      query: "_ + ' tourist attractions'"
+      query: "'tourist attractions in ' + _"
 
+# Zip locations, weather, and attractions into a list of tuples [(location, weather, attractions)]
 - evaluate:
-    zipped: "list(zip(inputs[0].locations, [output['result'] for output in outputs[0]], [output['documents'][0]['page_content'] for output in outputs[1]]))"  # [(location, weather, attractions)]
+    zipped: |-
+      list(
+        zip(
+          inputs[0].locations,
+          [output['result'] for output in outputs[0]],
+          outputs[1]
+        )
+      )
+
 
 - over: _['zipped']
   parallelism: 3
+  # Inside the map step, each `_` represents the current element in the list
+  # which is a tuple of (location, weather, attractions)
   map:
     prompt:
     - role: system
       content: >-
-        You are a travel assistant. Your task is to create a detailed itinerary for visiting tourist attractions in "{{_[0]}}" based on the weather conditions and the top tourist attractions provided.
-        
-        Current weather condition at "{{_[0]}}":
-        "{{_[1]}}"
+        You are {{{{agent.name}}}}. Your task is to create a detailed itinerary
+        for visiting tourist attractions in some locations.
+        The user will give you the following information for each location:
 
-        Top tourist attractions in "{{_[0]}}":
-        "{{_[2]}}"
-
-        Suggest outdoor or indoor activities based on the above information.
+        - The location
+        - The current weather condition
+        - The top tourist attractions
+    - role: user
+      content: >-
+        Location: "{{{{_[0]}}}}"
+        Weather: "{{{{_[1]}}}}"
+        Attractions: "{{{{_[2]}}}}"
     unwrap: true
+
+- evaluate:
+    final_plan: |-
+      '\\n---------------\\n'.join(activity for activity in _)
 """)
 
 # Creating/Updating a task
@@ -109,20 +139,23 @@ print(f"Execution ID: {execution.id}")
 
 # Wait for the execution to complete
 import time
-time.sleep(10)
+time.sleep(200)
 
 # Getting the execution details
+# Get execution details
 execution = client.executions.get(execution.id)
-print("Execution Output:")
+# Print the output
 print(execution.output)
+print("-"*50)
 
-# List all steps of the executed task
-print("Execution Steps:")
+if 'final_plan' in execution.output:
+    print(execution.output['final_plan'])
+
+# Lists all the task steps that have been executed up to this point in time
 transitions = client.executions.transitions.list(execution_id=execution.id).items
-print("Execution Steps:")
-for transition in transitions:
-    print(transition)
 
-# Stream the steps of the defined task
-print("Streaming execution transitions:")
-print(client.executions.transitions.stream(execution_id=execution.id))
+# Transitions are retreived in reverse chronological order
+for transition in reversed(transitions):
+    print("Transition type: ", transition.type)
+    print("Transition output: ", transition.output)
+    print("-"*50)

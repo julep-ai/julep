@@ -6,13 +6,11 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.Chat import ChatInput
-from ...autogen.openapi_model import DocReference, History
+from ...autogen.openapi_model import ChatInput, DocReference, History
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ..docs import search_docs_by_embedding
-from ..docs.search_docs_hybrid import search_docs_hybrid
 from ..entry.get_history import get_history
 from ..utils import (
     partialclass,
@@ -96,7 +94,7 @@ async def gather_messages(
     )
 
     # Truncate on the right to take only the first `search_query_chars` characters
-    query_text = search_messages[-1]["content"].strip()[:search_query_chars]
+    search_messages[-1]["content"].strip()[:search_query_chars]
 
     # List all the applicable owners to search docs from
     active_agent_id = chat_context.get_active_agent().id

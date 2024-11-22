@@ -3,6 +3,7 @@ from langchain_community.document_loaders import SpiderLoader
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import SpiderFetchArguments, SpiderSetup
+from ...env import spider_api_key  # Import env to access environment variables
 from ...models import SpiderFetchOutput
 
 
@@ -26,6 +27,9 @@ async def crawl(
 
     if not url:
         raise ValueError("URL parameter is required for spider")
+
+    if setup.spider_api_key == "DEMO_API_KEY":
+        setup.spider_api_key = spider_api_key
 
     spider_loader = SpiderLoader(
         api_key=setup.spider_api_key,

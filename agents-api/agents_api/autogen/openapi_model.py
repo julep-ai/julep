@@ -21,6 +21,7 @@ from .Common import *
 from .Docs import *
 from .Entries import *
 from .Executions import *
+from .Files import *
 from .Jobs import *
 from .Sessions import *
 from .Tasks import *
@@ -353,6 +354,12 @@ assert TransitionType == Transition.model_fields["type"].annotation
 
 # Create models
 # -------------
+
+from ..common.storage_handler import RemoteObject
+
+
+class SystemDef(SystemDef):
+    arguments: dict[str, Any] | None | RemoteObject = None
 
 
 class CreateTransitionRequest(Transition):

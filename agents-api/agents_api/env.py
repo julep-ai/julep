@@ -25,7 +25,6 @@ protocol: str = env.str("AGENTS_API_PROTOCOL", default="http")
 hostname: str = env.str("AGENTS_API_HOSTNAME", default="localhost")
 public_port: int = env.int("AGENTS_API_PUBLIC_PORT", default=80)
 api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
-anthropic_api_key: str = env.str("ANTHROPIC_API_KEY", default=None)
 
 # Tasks
 # -----
@@ -68,6 +67,8 @@ if api_key == _random_generated_key:
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
 
+max_free_sessions: int = env.int("MAX_FREE_SESSIONS", default=50)
+max_free_executions: int = env.int("MAX_FREE_EXECUTIONS", default=50)
 
 # Litellm API
 # -----------
