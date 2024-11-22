@@ -15,9 +15,9 @@ from ...clients import (
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
+from ...env import debug
 from ..utils import get_handler_with_filtered_params
 from .base_evaluate import base_evaluate
-from ...env import debug
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
