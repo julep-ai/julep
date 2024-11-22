@@ -17,7 +17,7 @@ from ...autogen.openapi_model import (
     UpdateExecutionRequest,
 )
 from ...clients.temporal import run_task_execution_workflow
-from ...dependencies.developer_id import get_developer_id
+from ...dependencies.developer_id import get_developer_data, get_developer_id
 from ...models.execution.create_execution import (
     create_execution as create_execution_query,
 )
@@ -42,6 +42,20 @@ async def start_execution(
     client=None,
 ) -> tuple[Execution, WorkflowHandle]:
     execution_id = uuid4()
+
+    # get developer data
+    developer = get_developer_data(developer_id=developer_id)
+
+    # check for the tags in the developer data, inisde tags check for the whther the use is paid or not. If not then check if the session lenght is more than the MAX_SESSION_LENGTH.
+    if "tags" in developer:
+        if "paid" not in developer.tags:
+            # get the session length
+            session_length = developer.session_length
+            if session_length > MAX_SESSION_LENGTH:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Session length exceeded",
+                )
 
     execution = create_execution_query(
         developer_id=developer_id,

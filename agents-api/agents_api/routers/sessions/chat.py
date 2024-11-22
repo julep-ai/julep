@@ -1,7 +1,7 @@
 from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
-from fastapi import BackgroundTasks, Depends, Header
+from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
@@ -49,6 +49,17 @@ async def chat(
     Returns:
         ChatResponse: The chat response.
     """
+
+    # check for the tags in the developer data, inisde tags check for the whther the use is paid or not. If not then check if the session lenght is more than the MAX_SESSION_LENGTH.
+    if "tags" in developer:
+        if "paid" not in developer.tags:
+            # get the session length
+            session_length = developer.session_length
+            if session_length > MAX_SESSION_LENGTH:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Session length exceeded",
+                )
 
     if chat_input.stream:
         raise NotImplementedError("Streaming is not yet implemented")
