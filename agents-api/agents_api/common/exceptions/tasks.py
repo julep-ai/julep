@@ -25,6 +25,7 @@ import pydantic
 import requests
 import temporalio.exceptions
 from tenacity import RetryError
+from .tools import IntegrationExecutionException
 
 # 🚫 The "No Second Chances" Club - errors that we won't retry
 # Because sometimes, no means no!
@@ -134,6 +135,9 @@ RETRYABLE_ERROR_TYPES = (
     #
     # Tenacity exceptions (retry when retrying goes wrong lol)
     RetryError,
+    #
+    # Tools-related exceptions (when tools have a bad day)
+    IntegrationExecutionException,
 )
 
 # HTTP status codes that say "maybe try again later?"
