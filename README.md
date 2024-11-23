@@ -346,6 +346,7 @@ description: Create a story based on an idea.
 
 tools:
   - name: research_wikipedia
+    type: integration
     integration:
       provider: wikipedia
       method: search
