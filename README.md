@@ -28,14 +28,12 @@
 ---
 
 > [!NOTE]
-> 👨‍💻 Here for the devfest.ai event? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
->
 > Get your API key [here](https://dashboard-dev.julep.ai).
 
 <details>
-<summary><b>🌟 Contributors and DevFest.AI Participants</b> (Click to expand)</summary>
+<summary><b>Contributions 🌟</b> (Click to expand)</summary>
 
-## 🌟 Call for Contributors!
+## Call for Contributors 🌟 
 
 We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started. Here's how you can contribute:
 
@@ -45,41 +43,34 @@ We're excited to welcome new contributors to the Julep project! We've created se
 
 Your contributions, big or small, are valuable to us. Let's build something amazing together! 🚀
 
-### 🎉 DevFest.AI October 2024
-
-Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓️
-
-- Contribute to Julep during this event and get a chance to win awesome Julep merch and swag! 🎁
-- Join developers from around the world in contributing to AI repositories and participating in amazing events.
-- A big thank you to DevFest.AI for organizing this fantastic initiative!
-
-> [!TIP]
-> Ready to join the fun? **[Tweet that you are participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
-
-![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
-
 </details>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 Table of Contents</h3>
 
+- [Call for Contributors 🌟](#call-for-contributors-)
 - [Introduction](#introduction)
 - [Key Features](#key-features)
 - [Quick Example](#quick-example)
 - [Installation](#installation)
 - [Python Quick Start 🐍](#python-quick-start-)
 - [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
 - [Components](#components)
   - [Mental Model](#mental-model)
 - [Concepts](#concepts)
 - [Understanding Tasks](#understanding-tasks)
   - [Lifecycle of a Task](#lifecycle-of-a-task)
   - [Types of Workflow Steps](#types-of-workflow-steps)
+    - [Common Steps](#common-steps)
+    - [Key-Value Steps](#key-value-steps)
+    - [Iteration Steps](#iteration-steps)
+    - [Conditional Steps](#conditional-steps)
+    - [Other Control Flow](#other-control-flow)
 - [Tool Types](#tool-types)
   - [User-defined `functions`](#user-defined-functions)
   - [`system` tools](#system-tools)
+    - [Available `system` resources and operations](#available-system-resources-and-operations)
   - [Built-in `integrations`](#built-in-integrations)
   - [Direct `api_calls`](#direct-api_calls)
 - [Integrations](#integrations)
@@ -135,7 +126,7 @@ While many AI applications are limited to simple, linear chains of prompts and A
 Imagine a Research AI agent that can do the following:
 
 1. **Take a topic**,
-2. **Come up with 100 search queries** for that topic,
+2. **Come up with 30 search queries** for that topic,
 3. Perform those web **searches in parallel**,
 4. **Summarize** the results,
 5. Send the **summary to Discord**.
@@ -155,6 +146,9 @@ input_schema:
     topic:
       type: string
       description: The main topic to research
+    num_questions:
+      type: integer
+      description: The number of search queries to generate
 
 # Define the tools that the agent can use
 tools:
@@ -163,12 +157,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d... # dummy key
+        api_key: <your-brave-api-key>
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
+      url: https://discord.com/api/webhooks/<your-webhook-id>/<your-webhook-token>
       method: POST
       headers:
         Content-Type: application/json
@@ -180,52 +174,57 @@ tools:
 
 # Define the main workflow
 main:
-  - prompt:
-      - role: system
-        content: >-
-          You are a research assistant.
-          Generate 100 diverse search queries related to the topic:
-          {{inputs[0].topic}}
+- prompt:
+    - role: system
+      content: >-
+        You are a research assistant.
+        Generate {{inputs[0].num_questions|default(30, true)}} diverse search queries related to the topic:
+        {{inputs[0].topic}}
 
-          Write one query per line.
-    unwrap: true
+        Write one query per line.
+  unwrap: true
 
-  # Evaluate the search queries using a simple python expression
-  - evaluate:
-      search_queries: "_.split('\n')"
+# Evaluate the search queries using a simple python expression
+- evaluate:
+    search_queries: "_.split(NEWLINE)"
 
-  # Run the web search in parallel for each query
-  - over: "_.search_queries"
-    map:
-      tool: web_search
-      arguments:
-        query: "_"
-    parallelism: 10
+# Run the web search in parallel for each query
+- over: "_.search_queries"
+  map:
+    tool: web_search
+    arguments:
+      query: "_"
+  parallelism: 5
 
-  # Collect the results from the web search
-  - evaluate:
-      results: "'\n'.join([item.result for item in _])"
+# Collect the results from the web search
+- evaluate:
+    search_results: _
 
-  # Summarize the results
-  - prompt:
-      - role: system
-        content: >
-          You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
-          The summary should be well-structured, informative, and highlight key findings and insights:
-          {{_.results}}
-    unwrap: true
-    settings:
-      model: gpt-4o-mini
+# Summarize the results
+- prompt:
+    - role: system
+      content: >
+        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
+        The summary should be well-structured, informative, and highlight key findings and insights. Keep the summary concise and to the point.
+        The length of the summary should be less than 150 words.
+        Here are the search results:
+        {{_.search_results}}
+  unwrap: true
+  settings:
+    model: gpt-4o-mini
+
+- evaluate:
+    discord_message: |-
+      f'''
+      **Research Summary for {inputs[0].topic}**
+      {_}
+      '''
 
   # Send the summary to Discord
-  - tool: discord_webhook
-    arguments:
-      content: |-
-        f'''
-        **Research Summary for {inputs[0].topic}**
-
-        {_}
-        '''
+- tool: discord_webhook
+  arguments:
+    json_: 
+      content: _.discord_message[:2000] # Discord has a 2000 character limit
 ```
 
 In this example, Julep will automatically manage parallel executions, retry failed steps, resend API requests, and keep the tasks running reliably until completion.
@@ -331,6 +330,7 @@ description: Create a story based on an idea.
 
 tools:
   - name: research_wikipedia
+    type: integration
     integration:
       provider: wikipedia
       method: search
