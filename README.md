@@ -31,7 +31,7 @@
 > Get your API key [here](https://dashboard-dev.julep.ai).
 
 <details>
-<summary><b>🌟 Contributors and DevFest.AI Participants</b> (Click to expand)</summary>
+<summary><b>Contributions 🌟</b> (Click to expand)</summary>
 
 ## Call for Contributors 🌟 
 
@@ -49,24 +49,28 @@ Your contributions, big or small, are valuable to us. Let's build something amaz
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 Table of Contents</h3>
 
-- [🌟 Call for Contributors!](#-call-for-contributors)
-  - [🎉 DevFest.AI October 2024](#-devfestai-october-2024)
+- [Call for Contributors 🌟](#call-for-contributors-)
 - [Introduction](#introduction)
 - [Key Features](#key-features)
 - [Quick Example](#quick-example)
 - [Installation](#installation)
 - [Python Quick Start 🐍](#python-quick-start-)
 - [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
 - [Components](#components)
   - [Mental Model](#mental-model)
 - [Concepts](#concepts)
 - [Understanding Tasks](#understanding-tasks)
   - [Lifecycle of a Task](#lifecycle-of-a-task)
   - [Types of Workflow Steps](#types-of-workflow-steps)
+    - [Common Steps](#common-steps)
+    - [Key-Value Steps](#key-value-steps)
+    - [Iteration Steps](#iteration-steps)
+    - [Conditional Steps](#conditional-steps)
+    - [Other Control Flow](#other-control-flow)
 - [Tool Types](#tool-types)
   - [User-defined `functions`](#user-defined-functions)
   - [`system` tools](#system-tools)
+    - [Available `system` resources and operations](#available-system-resources-and-operations)
   - [Built-in `integrations`](#built-in-integrations)
   - [Direct `api_calls`](#direct-api_calls)
 - [Integrations](#integrations)
