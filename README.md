@@ -28,14 +28,12 @@
 ---
 
 > [!NOTE]
-> 👨‍💻 Here for the devfest.ai event? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
->
 > Get your API key [here](https://dashboard-dev.julep.ai).
 
 <details>
 <summary><b>🌟 Contributors and DevFest.AI Participants</b> (Click to expand)</summary>
 
-## 🌟 Call for Contributors!
+## Call for Contributors 🌟 
 
 We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started. Here's how you can contribute:
 
@@ -44,19 +42,6 @@ We're excited to welcome new contributors to the Julep project! We've created se
 3. If you have any questions or need help, don't hesitate to reach out on our [Discord](https://discord.com/invite/JTSBGRZrzj) channel.
 
 Your contributions, big or small, are valuable to us. Let's build something amazing together! 🚀
-
-### 🎉 DevFest.AI October 2024
-
-Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓️
-
-- Contribute to Julep during this event and get a chance to win awesome Julep merch and swag! 🎁
-- Join developers from around the world in contributing to AI repositories and participating in amazing events.
-- A big thank you to DevFest.AI for organizing this fantastic initiative!
-
-> [!TIP]
-> Ready to join the fun? **[Tweet that you are participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
-
-![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
 </details>
 
@@ -72,21 +57,16 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 - [Installation](#installation)
 - [Python Quick Start 🐍](#python-quick-start-)
 - [Node.js Quick Start 🟩](#nodejs-quick-start-)
+  - [Step 1: Create an Agent](#step-1-create-an-agent)
 - [Components](#components)
   - [Mental Model](#mental-model)
 - [Concepts](#concepts)
 - [Understanding Tasks](#understanding-tasks)
   - [Lifecycle of a Task](#lifecycle-of-a-task)
   - [Types of Workflow Steps](#types-of-workflow-steps)
-    - [Common Steps](#common-steps)
-    - [Key-Value Steps](#key-value-steps)
-    - [Iteration Steps](#iteration-steps)
-    - [Conditional Steps](#conditional-steps)
-    - [Other Control Flow](#other-control-flow)
 - [Tool Types](#tool-types)
   - [User-defined `functions`](#user-defined-functions)
   - [`system` tools](#system-tools)
-    - [Available `system` resources and operations](#available-system-resources-and-operations)
   - [Built-in `integrations`](#built-in-integrations)
   - [Direct `api_calls`](#direct-api_calls)
 - [Integrations](#integrations)
