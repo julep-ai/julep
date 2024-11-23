@@ -2,8 +2,8 @@
 Defines tools-related exceptions for the agents API.
 """
 
-from . import BaseCommonException
 from ...autogen.openapi_model import BaseIntegrationDef
+from . import BaseCommonException
 
 
 class BaseToolsException(BaseCommonException):

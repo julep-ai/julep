@@ -25,6 +25,7 @@ import pydantic
 import requests
 import temporalio.exceptions
 from tenacity import RetryError
+
 from .tools import IntegrationExecutionException
 
 # 🚫 The "No Second Chances" Club - errors that we won't retry
