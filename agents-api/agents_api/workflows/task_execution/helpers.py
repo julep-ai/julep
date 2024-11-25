@@ -12,6 +12,7 @@ with workflow.unsafe.imports_passed_through():
     from ...autogen.openapi_model import (
         TransitionTarget,
         Workflow,
+        EvaluateStep,
         WorkflowStep,
     )
     from ...common.protocol.remote import RemoteList
@@ -90,7 +91,7 @@ async def execute_if_else_branch(
     context: StepContext,
     execution_input: ExecutionInput,
     then_branch: WorkflowStep,
-    else_branch: WorkflowStep,
+    else_branch: WorkflowStep | None,
     condition: bool,
     previous_inputs: RemoteList | list[Any],
     user_state: dict[str, Any] = {},
@@ -98,6 +99,9 @@ async def execute_if_else_branch(
     workflow.logger.info(f"If-Else step: Condition evaluated to {condition}")
     chosen_branch = then_branch if condition else else_branch
 
+    if chosen_branch is None:
+        chosen_branch = EvaluateStep(evaluate={"output": "_"})
+        
     if_else_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].if_else"
     if_else_wf_name += ".then" if condition else ".else"
 

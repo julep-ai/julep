@@ -44,6 +44,10 @@ def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
     elif isinstance(x, RemoteList):
         x = list(x)
 
+    elif isinstance(x, dict) and set(x.keys()) == {"bucket", "key"}:
+        fetched = s3.get_object(x["key"])
+        return deserialize(fetched)
+
     return x
 
 
