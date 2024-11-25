@@ -19,6 +19,7 @@ class TruncationWorkflow:
             truncation,
             args=[session_id, token_count_threshold],
             schedule_to_close_timeout=timedelta(
-                seconds=temporal_schedule_to_close_timeout),
+                seconds=temporal_schedule_to_close_timeout
+            ),
             retry_policy=DEFAULT_RETRY_POLICY,
         )
