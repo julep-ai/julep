@@ -171,6 +171,11 @@ async def chat(
     # If not using Claude model,
 
     if not is_claude_model:
+        # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
+        # messages = [
+        #     {k: v for k, v in message.items() if k not in ["tool_calls", "tool_call_id", "user"]}
+        #     for message in messages
+        # ]
         formatted_tools = None
 
     # Use litellm for other models
