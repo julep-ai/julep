@@ -16,6 +16,14 @@ services:
     ports:
       - "9070:9070"
 
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./options
+          target: /data/cozo.db/options
+        - action: rebuild
+          path: Dockerfile
+
     labels:
       ofelia.enabled: "true"
       ofelia.job-exec.backupcron.schedule: "@every 3h"

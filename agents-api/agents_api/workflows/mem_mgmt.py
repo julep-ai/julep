@@ -8,6 +8,7 @@ from temporalio import workflow
 with workflow.unsafe.imports_passed_through():
     from ..activities.mem_mgmt import mem_mgmt
     from ..autogen.openapi_model import InputChatMLMessage
+    from ..env import temporal_schedule_to_close_timeout
 
 
 @workflow.defn
@@ -22,5 +23,7 @@ class MemMgmtWorkflow:
         return await workflow.execute_activity(
             mem_mgmt,
             [dialog, session_id, previous_memories],
-            schedule_to_close_timeout=timedelta(seconds=600),
+            schedule_to_close_timeout=timedelta(
+                seconds=temporal_schedule_to_close_timeout
+            ),
         )
