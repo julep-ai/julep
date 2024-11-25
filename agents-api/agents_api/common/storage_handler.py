@@ -11,7 +11,13 @@ from ..activities.sync_items_remote import load_inputs_remote
 from ..clients import s3
 from ..common.protocol.remote import BaseRemoteModel, RemoteList, RemoteObject
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
-from ..env import blob_store_cutoff_kb, debug, testing, use_blob_store_for_temporal
+from ..env import (
+    blob_store_cutoff_kb,
+    debug,
+    testing,
+    use_blob_store_for_temporal,
+    temporal_schedule_to_close_timeout,
+)
 from ..worker.codec import deserialize, serialize
 
 
@@ -195,7 +201,8 @@ def auto_blob_store_workflow(f: Callable) -> Callable:
         loaded = await workflow.execute_local_activity(
             load_inputs_remote,
             args=[[*args, *values]],
-            schedule_to_close_timeout=timedelta(seconds=10 if debug or testing else 60),
+            schedule_to_close_timeout=timedelta(
+                seconds=60 if debug or testing else temporal_schedule_to_close_timeout),
             retry_policy=DEFAULT_RETRY_POLICY,
         )
 
