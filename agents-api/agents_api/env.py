@@ -100,7 +100,9 @@ temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
 temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
-
+temporal_schedule_to_close_timeout: int = env.int(
+    "TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT", default=3600
+)
 
 # Consolidate environment variables
 environment: Dict[str, Any] = dict(
