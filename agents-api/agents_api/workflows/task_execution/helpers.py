@@ -10,9 +10,9 @@ from ...common.retry_policies import DEFAULT_RETRY_POLICY
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
+        EvaluateStep,
         TransitionTarget,
         Workflow,
-        EvaluateStep,
         WorkflowStep,
     )
     from ...common.protocol.remote import RemoteList
@@ -101,7 +101,7 @@ async def execute_if_else_branch(
 
     if chosen_branch is None:
         chosen_branch = EvaluateStep(evaluate={"output": "_"})
-        
+
     if_else_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].if_else"
     if_else_wf_name += ".then" if condition else ".else"
 
