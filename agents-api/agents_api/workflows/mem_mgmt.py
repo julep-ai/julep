@@ -10,6 +10,7 @@ with workflow.unsafe.imports_passed_through():
     from ..autogen.openapi_model import InputChatMLMessage
     from ..env import temporal_schedule_to_close_timeout
 
+
 @workflow.defn
 class MemMgmtWorkflow:
     @workflow.run
@@ -23,5 +24,6 @@ class MemMgmtWorkflow:
             mem_mgmt,
             [dialog, session_id, previous_memories],
             schedule_to_close_timeout=timedelta(
-                seconds=temporal_schedule_to_close_timeout),
+                seconds=temporal_schedule_to_close_timeout
+            ),
         )

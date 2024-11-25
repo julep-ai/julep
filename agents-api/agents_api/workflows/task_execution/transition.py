@@ -13,7 +13,7 @@ from ...common.protocol.tasks import PartialTransition, StepContext
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
 
 with workflow.unsafe.imports_passed_through():
-    from ...env import debug, testing, temporal_schedule_to_close_timeout
+    from ...env import debug, temporal_schedule_to_close_timeout, testing
 
 
 async def transition(

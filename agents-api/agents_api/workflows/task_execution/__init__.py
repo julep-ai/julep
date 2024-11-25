@@ -49,7 +49,7 @@ with workflow.unsafe.imports_passed_through():
         StepOutcome,
     )
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
-    from ...env import debug, testing, temporal_schedule_to_close_timeout
+    from ...env import debug, temporal_schedule_to_close_timeout, testing
     from .helpers import (
         continue_as_child,
         execute_foreach_step,
@@ -177,7 +177,9 @@ class TaskExecutionWorkflow:
                     context,
                     #
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
                     retry_policy=DEFAULT_RETRY_POLICY,
                 )
@@ -424,7 +426,9 @@ class TaskExecutionWorkflow:
                     task_steps.prompt_step,
                     context,
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
                     retry_policy=DEFAULT_RETRY_POLICY,
                 )
@@ -552,7 +556,9 @@ class TaskExecutionWorkflow:
                     execute_integration,
                     args=[context, tool_name, integration, arguments],
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
                     retry_policy=DEFAULT_RETRY_POLICY,
                 )
@@ -593,7 +599,9 @@ class TaskExecutionWorkflow:
                         arguments,
                     ],
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
                 )
 
@@ -611,7 +619,9 @@ class TaskExecutionWorkflow:
                     execute_system,
                     args=[context, system_call],
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
                 )
 
