@@ -107,3 +107,4 @@ services:
 
 volumes:
   temporal-db-data:
+    external: true
