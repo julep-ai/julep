@@ -94,6 +94,18 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/GROQ_API_KEY
 
+# OpenRouter models
+- model_name: "mistral-large-2411"
+  litellm_params:
+    model: "openrouter/mistral/mistral-large-2411"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+  
+- model_name: "qwen-2.5-72b-instruct"
+  litellm_params:
+    model: "openrouter/qwen/qwen-2.5-72b-instruct"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
 
 # -*= Embedding models =*-
 # ------------------------
