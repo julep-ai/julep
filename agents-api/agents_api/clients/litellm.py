@@ -38,6 +38,13 @@ async def acompletion(
     supported_params = get_supported_openai_params(model)
     settings = {k: v for k, v in kwargs.items() if k in supported_params}
 
+    # FIXME: This is a hotfix for Mistral API, which expects a different message format
+    if model[7:].startswith("mistral"):
+        messages = [
+            {"role": message["role"], "content": message["content"]}
+            for message in messages
+        ]
+
     return await _acompletion(
         model=model,
         messages=messages,

@@ -97,7 +97,7 @@ model_list:
 # OpenRouter models
 - model_name: "mistral-large-2411"
   litellm_params:
-    model: "openrouter/mistral/mistral-large-2411"
+    model: "openrouter/mistralai/mistral-large-2411"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
   
