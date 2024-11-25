@@ -1,3 +1,7 @@
+import asyncio
+from functools import lru_cache
+from typing import Any, Dict
+
 from beartype import beartype
 from langchain_community.document_loaders import SpiderLoader
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -5,6 +9,12 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from ...autogen.Tools import SpiderFetchArguments, SpiderSetup
 from ...env import spider_api_key  # Import env to access environment variables
 from ...models import SpiderFetchOutput
+
+
+# Cache spider client instances
+@lru_cache(maxsize=100)
+def get_spider_client(api_key: str, **kwargs) -> SpiderLoader:
+    return SpiderLoader(api_key=api_key, **kwargs)
 
 
 @beartype
@@ -23,21 +33,18 @@ async def crawl(
     assert isinstance(setup, SpiderSetup), "Invalid setup"
     assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
 
-    url = arguments.url
+    api_key = (
+        setup.spider_api_key
+        if setup.spider_api_key != "DEMO_API_KEY"
+        else spider_api_key
+    )
 
-    if not url:
-        raise ValueError("URL parameter is required for spider")
-
-    if setup.spider_api_key == "DEMO_API_KEY":
-        setup.spider_api_key = spider_api_key
-
-    spider_loader = SpiderLoader(
-        api_key=setup.spider_api_key,
-        url=str(url),
+    spider_loader = get_spider_client(
+        api_key=api_key,
+        url=str(arguments.url),
         mode=arguments.mode,
         params=arguments.params,
     )
 
-    documents = spider_loader.load()
-
+    documents = await asyncio.to_thread(spider_loader.load)
     return SpiderFetchOutput(documents=documents)

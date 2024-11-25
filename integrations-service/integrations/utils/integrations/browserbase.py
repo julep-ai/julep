@@ -1,5 +1,8 @@
+import asyncio
 import os
 import tempfile
+from functools import lru_cache
+from typing import Optional
 
 import httpx
 from beartype import beartype
@@ -37,17 +40,19 @@ from ...models import (
 from ...models.browserbase import BrowserbaseExtensionOutput
 
 
-def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
-    if setup.api_key == "DEMO_API_KEY":
-        setup.api_key = browserbase_api_key
-    if setup.project_id == "DEMO_PROJECT_ID":
-        setup.project_id = browserbase_project_id
-
+# Cache client instances
+@lru_cache(maxsize=50)
+def get_browserbase_client(
+    api_key: str,
+    project_id: str,
+    api_url: Optional[str] = None,
+    connect_url: Optional[str] = None,
+) -> Browserbase:
     return Browserbase(
-        api_key=setup.api_key,
-        project_id=setup.project_id,
-        api_url=setup.api_url,
-        connect_url=setup.connect_url,
+        api_key=api_key,
+        project_id=project_id,
+        api_url=api_url,
+        connect_url=connect_url,
     )
 
 
@@ -60,12 +65,18 @@ def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
 async def list_sessions(
     setup: BrowserbaseSetup, arguments: BrowserbaseListSessionsArguments
 ) -> BrowserbaseListSessionsOutput:
-    client = get_browserbase_client(setup)
+    client = get_browserbase_client(
+        api_key=setup.api_key
+        if setup.api_key != "DEMO_API_KEY"
+        else browserbase_api_key,
+        project_id=setup.project_id
+        if setup.project_id != "DEMO_PROJECT_ID"
+        else browserbase_project_id,
+        api_url=setup.api_url,
+        connect_url=setup.connect_url,
+    )
 
-    # FIXME: Implement status filter
-    # Run the list_sessions method
-    sessions: list[Session] = client.list_sessions()
-
+    sessions = await asyncio.to_thread(client.list_sessions)
     return BrowserbaseListSessionsOutput(sessions=sessions)
 
 

@@ -23,6 +23,16 @@ from ...models import RemoteBrowserOutput
 
 CURSOR_PATH = Path(__file__).parent / "assets" / "cursor-small.png"
 
+# Add connection pooling
+_browser_pool = {}
+
+
+async def get_browser(connect_url: str):
+    if connect_url not in _browser_pool:
+        p = await async_playwright().start()
+        _browser_pool[connect_url] = await p.chromium.connect_over_cdp(connect_url)
+    return _browser_pool[connect_url]
+
 
 class PlaywrightActions:
     """Class to handle browser automation actions using Playwright."""
@@ -380,12 +390,10 @@ class PlaywrightActions:
 async def perform_action(
     setup: RemoteBrowserSetup, arguments: RemoteBrowserArguments
 ) -> RemoteBrowserOutput:
-    p: PlaywrightContextManager = await async_playwright().start()
     connect_url = setup.connect_url if setup.connect_url else arguments.connect_url
-    browser = await p.chromium.connect_over_cdp(connect_url)
+    browser = await get_browser(connect_url)
 
     automation = PlaywrightActions(browser, width=setup.width, height=setup.height)
-
     await automation.initialize()
 
     return await automation.perform_action(
