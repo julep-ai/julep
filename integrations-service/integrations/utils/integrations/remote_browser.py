@@ -13,12 +13,12 @@ from playwright.async_api import (
     Keyboard,
     Mouse,
     Page,
-    PlaywrightContextManager,
     async_playwright,
 )
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import RemoteBrowserArguments, RemoteBrowserSetup
+from ...env import max_pool_size
 from ...models import RemoteBrowserOutput
 
 CURSOR_PATH = Path(__file__).parent / "assets" / "cursor-small.png"
@@ -27,10 +27,27 @@ CURSOR_PATH = Path(__file__).parent / "assets" / "cursor-small.png"
 _browser_pool = {}
 
 
+async def cleanup_browser_pool():
+    """Remove disconnected browsers from the pool."""
+    for connect_url, browser in list(_browser_pool.items()):
+        if not browser.is_connected():
+            await browser.close()  # Ensure the browser is closed
+            del _browser_pool[connect_url]
+
+
 async def get_browser(connect_url: str):
+    await cleanup_browser_pool()  # Clean up before getting a new browser
+
     if connect_url not in _browser_pool:
+        if len(_browser_pool) >= max_pool_size:
+            # Remove the oldest entry to make space
+            oldest_url = next(iter(_browser_pool))
+            await _browser_pool[oldest_url].close()
+            del _browser_pool[oldest_url]
+
         p = await async_playwright().start()
         _browser_pool[connect_url] = await p.chromium.connect_over_cdp(connect_url)
+
     return _browser_pool[connect_url]
 
 

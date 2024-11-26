@@ -11,8 +11,7 @@ from ...env import spider_api_key  # Import env to access environment variables
 from ...models import SpiderFetchOutput
 
 
-# Cache spider client instances
-@lru_cache(maxsize=100)
+# Spider client instances
 def get_spider_client(api_key: str, **kwargs) -> SpiderLoader:
     return SpiderLoader(api_key=api_key, **kwargs)
 
