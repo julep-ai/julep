@@ -42,8 +42,7 @@ async def parse(
 
     # Parse the document (decode inline)
     documents = await parser.aload_data(
-        base64.b64decode(arguments.file), 
-        extra_info=extra_info
+        base64.b64decode(arguments.file), extra_info=extra_info
     )
 
     return LlamaParseFetchOutput(documents=documents)
