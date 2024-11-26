@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dpkg-dev \
     gcc \
     g++ \
+    libboost-all-dev \
     libbluetooth-dev \
     libbz2-dev \
     libc6-dev \

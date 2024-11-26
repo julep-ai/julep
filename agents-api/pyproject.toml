@@ -51,6 +51,7 @@ anthropic = "^0.37.1"
 simsimd = "^5.9.4"
 langchain-core = "^0.3.14"
 litellm = {git = "https://github.com/julep-ai/litellm.git", rev = "fix_anthropic_tool_image_content"}
+larch-pickle = "^1.4.3"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 ruff = "^0.5.5"
