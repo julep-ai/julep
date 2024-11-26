@@ -6,10 +6,11 @@
 
 import dataclasses
 import logging
-import pickle
 import sys
+import time
 from typing import Any, Optional, Type
 
+import larch.pickle as pickle
 import temporalio.converter
 
 # from beartype import BeartypeConf
@@ -24,15 +25,25 @@ from temporalio.converter import (
 
 
 def serialize(x: Any) -> bytes:
-    pickled = pickle.dumps(x, protocol=pickle.HIGHEST_PROTOCOL)
+    start_time = time.time()
+    pickled = pickle.dumps(x, protocol=-1)
     compressed = compress(pickled)
+
+    duration = time.time() - start_time
+    if duration > 1:
+        print(f"||| [SERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(x) / 1000}kb")
 
     return compressed
 
 
 def deserialize(b: bytes) -> Any:
+    start_time = time.time()
     decompressed = decompress(b)
     object = pickle.loads(decompressed)
+
+    duration = time.time() - start_time
+    if duration > 1:
+        print(f"||| [DESERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(b) / 1000}kb")
 
     return object
 

@@ -2247,6 +2247,22 @@ build = ["build", "twine"]
 test = ["pytest", "pytest-cov"]
 
 [[package]]
+name = "larch-pickle"
+version = "1.4.3"
+description = "A faster python pickle replacement"
+optional = false
+python-versions = "*"
+files = [
+    {file = "larch-pickle-1.4.3.tar.gz", hash = "sha256:560575f0061bf4e598adfc10f2b84b0ae3b61f8c27734fdd62775a5659c3a611"},
+    {file = "larch_pickle-1.4.3-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:d9de944a602fb8621e0ad841641924353dbf5594bfecb2c262742b3b26f2a83b"},
+    {file = "larch_pickle-1.4.3-cp310-cp310-win_amd64.whl", hash = "sha256:462be1dcaaaa88fef0d473d0ac8ae431f0e172778c44b080dbd68233731c3d51"},
+    {file = "larch_pickle-1.4.3-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:01bafdb4322c3d7cf111b9df5f4cbcdbfb5ffdd6ad3eecd4a40c57fedff52d5b"},
+    {file = "larch_pickle-1.4.3-cp311-cp311-win_amd64.whl", hash = "sha256:0af8866c6d2d6b7e211ea7ac7d202fe2fc8bfa15774dfec686cb1c75f9e0e2c6"},
+    {file = "larch_pickle-1.4.3-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:43aa630e586c564605325effe87fd3f38692b71cf3f960efe48c2df4f7967a06"},
+    {file = "larch_pickle-1.4.3-cp312-cp312-win_amd64.whl", hash = "sha256:18c74fde0bdd0382598745633b6a230a28707bbd382e695fae1518324d926b8a"},
+]
+
+[[package]]
 name = "libcst"
 version = "1.5.1"
 description = "A concrete syntax tree with AST-like properties for Python 3.0 through 3.13 programs."
@@ -2312,6 +2328,7 @@ files = [
     {file = "litellm-1.52.10-py3-none-any.whl", hash = "sha256:f2bf35b1409729253eb70a6d575cb8ccf71373358e109b0f4653b5bcd9a65467"},
     {file = "litellm-1.52.10.tar.gz", hash = "sha256:8ceaa016cd8ff3a11783d57f862f3157cd764947c60b8f0c4fb04d927d5fe4c1"},
 ]
+develop = false
 
 [package.dependencies]
 aiohttp = "*"
@@ -6351,4 +6368,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "b285c4b4ba58272c3c3e6a8cb57538b37b5367a69c711275f1be3ba1e55a7d5a"
+content-hash = "6b4355e58ed4a00fbffb222be30208d27d3f539514ae47082df38061e8a74a23"
