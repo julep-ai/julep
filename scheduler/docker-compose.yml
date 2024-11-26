@@ -1,7 +1,7 @@
 name: julep-scheduler
 
 x--temporal-base: &temporal-base
-  image: temporalio/auto-setup:1.25
+  image: temporalio/auto-setup:1.25.2
   hostname: temporal
   environment:
     - POSTGRES_PWD=${TEMPORAL_POSTGRES_PASSWORD}
@@ -43,6 +43,7 @@ services:
   temporal-db:
     image: postgres:16
     restart: unless-stopped
+    command: -c 'max_connections=1000'
     volumes:
       - temporal-db-data:/var/lib/postgresql/data
     profiles:
