@@ -26,23 +26,24 @@ async def parse(
     assert isinstance(setup, LlamaParseSetup), "Invalid setup"
     assert isinstance(arguments, LlamaParseFetchArguments), "Invalid arguments"
 
-    if setup.llamaparse_api_key == "DEMO_API_KEY":
-        setup.llamaparse_api_key = llama_api_key
+    # Use walrus operator to simplify assignment and condition
+    if (api_key := setup.llamaparse_api_key) == "DEMO_API_KEY":
+        api_key = llama_api_key
 
     parser = LlamaParse(
-        api_key=setup.llamaparse_api_key,
+        api_key=api_key,  # Use the local variable instead
         result_type=arguments.result_format,
         num_workers=arguments.num_workers,
         language=arguments.language,
     )
 
-    # Decode base64 file content
-    file_content = base64.b64decode(arguments.file)
-    extra_info = {
-        "file_name": arguments.filename if arguments.filename else str(uuid.uuid4())
-    }
+    # Simplify filename assignment using or operator
+    extra_info = {"file_name": arguments.filename or str(uuid.uuid4())}
 
-    # Parse the document
-    documents = await parser.aload_data(file_content, extra_info=extra_info)
+    # Parse the document (decode inline)
+    documents = await parser.aload_data(
+        base64.b64decode(arguments.file), 
+        extra_info=extra_info
+    )
 
     return LlamaParseFetchOutput(documents=documents)
