@@ -1446,7 +1446,7 @@ setup:
   params: dict # (Optional) Additional parameters for the Llama Parse integration
 
 arguments:
-  file: string | Array<string> # The base64 encoded file to parse or an array of URLs to load.
+  file: string | Array<string> # The base64 encoded file to parse or an array of http/https URLs to load.
   filename: string # (Optional). The filename of the file. Default is a random UUID. Only used if file is a base64 encoded string.
   params: dict # (Optional) Additional parameters for the Llama Parse integration. Overrides the setup parameters.
   base64: boolean # Whether the input file is base64 encoded. Default is false.
