@@ -3,6 +3,7 @@ from typing import Optional, Union
 from pydantic import BaseModel
 
 from ..autogen.Tools import (
+    ArxivSearchArguments,
     # Arguments
     BraveSearchArguments,
     # Setup
@@ -32,6 +33,7 @@ from ..autogen.Tools import (
     WeatherSetup,
     WikipediaSearchArguments,
 )
+from .arxiv import ArxivSearchOutput
 from .brave import BraveSearchOutput
 from .browserbase import (
     BrowserbaseCompleteSessionOutput,
@@ -92,6 +94,7 @@ ExecutionArguments = Union[
     FfmpegSearchArguments,
     CloudinaryUploadArguments,
     CloudinaryEditArguments,
+    ArxivSearchArguments,
 ]
 
 ExecutionResponse = Union[
@@ -114,6 +117,7 @@ ExecutionResponse = Union[
     CloudinaryEditOutput,
     CloudinaryUploadOutput,
     ExecutionError,
+    ArxivSearchOutput,
 ]
 
 

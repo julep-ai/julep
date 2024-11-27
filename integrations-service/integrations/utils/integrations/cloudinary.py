@@ -1,4 +1,5 @@
 import base64
+import uuid
 
 import aiohttp
 import cloudinary
@@ -51,8 +52,9 @@ async def media_upload(
 
         # Upload the file
         upload_params = arguments.upload_params or {}
-        if arguments.public_id:
-            upload_params["public_id"] = arguments.public_id
+        upload_params["public_id"] = (
+            arguments.public_id if arguments.public_id else str(uuid.uuid4())
+        )
 
         result = cloudinary.uploader.upload(arguments.file, **upload_params)
 

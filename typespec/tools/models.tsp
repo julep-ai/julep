@@ -26,6 +26,7 @@ alias integrationProvider = (
     | "llama_parse"
     | "ffmpeg"
     | "cloudinary"
+    | "arxiv"
 );
 
 enum ToolType {
@@ -120,6 +121,7 @@ alias IntegrationDef = (
     | LlamaParseIntegrationDef
     | FfmpegIntegrationDef
     | CloudinaryIntegrationDef
+    | ArxivIntegrationDef
 );
 
 //
