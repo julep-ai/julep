@@ -7,17 +7,29 @@ import uvicorn
 import uvloop
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from .routers.execution.router import router as execution_router
 from .routers.integrations.router import router as integrations_router
 
-app: FastAPI = FastAPI()
+app: FastAPI = FastAPI(
+    title="Integrations Service",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    default_response_class=JSONResponse,
+)
+
+# Add GZIP compression
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Add routers
 app.include_router(integrations_router)
 app.include_router(execution_router)
 
+# Optimize event loop policy
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -84,6 +96,3 @@ def main(
         workers=workers,
         reload=reload,
     )
-
-
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())

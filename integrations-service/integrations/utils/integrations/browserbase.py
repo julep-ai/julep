@@ -38,10 +38,14 @@ from ...models.browserbase import BrowserbaseExtensionOutput
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
-    if setup.api_key == "DEMO_API_KEY":
-        setup.api_key = browserbase_api_key
-    if setup.project_id == "DEMO_PROJECT_ID":
-        setup.project_id = browserbase_project_id
+    setup.api_key = (
+        browserbase_api_key if setup.api_key == "DEMO_API_KEY" else setup.api_key
+    )
+    setup.project_id = (
+        browserbase_project_id
+        if setup.project_id == "DEMO_PROJECT_ID"
+        else setup.project_id
+    )
 
     return Browserbase(
         api_key=setup.api_key,

@@ -1143,8 +1143,6 @@ main:
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP] > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
-
 ### `system` tools
 
 Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
@@ -1224,7 +1222,7 @@ Additional operations available for some resources:
 
 Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-> [!TIP] > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> [!TIP] > **Example cookbook**: [cookbooks/06-browser-use.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb)
 
 ### Built-in `integrations`
 
@@ -1232,7 +1230,7 @@ Julep comes with a number of built-in integrations (as described in the section 
 
 See [Integrations](#integrations) for details on the available integrations.
 
-> [!TIP] > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+> [!TIP] > **Example cookbook**: [cookbooks/01-website-crawler.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb)
 
 ### Direct `api_calls`
 
@@ -1290,7 +1288,7 @@ output:
 
 <td>
 
-**Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+**Example cookbook**: [cookbooks/02-sarcastic-news-headline-generator.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/02-sarcastic-news-headline-generator.ipynb)
 
 </td>
 </tr>
@@ -1313,6 +1311,11 @@ output:
 
 </td>
 
+<td>
+
+**Example cookbook**: [cookbooks/06-browser-use.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb)
+
+</td>
 </tr>
 <tr>
 <td> <b>Email</b> </td>
@@ -1364,7 +1367,7 @@ output:
 
 <td>
 
-**Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+**Example cookbook**: [cookbooks/01-website-crawler.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb)
 
 </td>
 </tr>
@@ -1387,7 +1390,7 @@ output:
 
 <td>
 
-**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
 
 </td>
 </tr>
@@ -1409,10 +1412,87 @@ output:
 
 <td>
 
-**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
 
 </td>
 </tr>
+
+<tr>
+<td> <b>FFmpeg</b> </td>
+<td>
+
+```yaml
+arguments:
+  cmd: string # The FFmpeg command to execute
+  file: string # The base64 encoded file to process
+
+output:
+  fileoutput: string # The output file from the FFmpeg command in base64 encoding
+  result: boolean # Whether the FFmpeg command was executed successfully
+  mime_type: string # The MIME type of the output file
+```
+
+</td>
+
+</tr>
+
+<tr>
+<td> <b>Llama Parse</b> </td>
+<td>
+
+```yaml
+setup:
+  llamaparse_api_key: string # The API key for Llama Parse
+
+arguments:
+  file: string # The base64 encoded file to parse
+  filename: string # The filename of the file
+
+output:
+  documents: list # The parsed data from the document
+```
+
+</td>
+
+</tr>
+
+<tr>
+<td> <b>Cloudinary</b> </td>
+<td>
+
+```yaml
+
+method: media_upload | media_edit # The method to use for the Cloudinary integration
+
+setup:
+  cloudinary_cloud_name: string # Your Cloudinary cloud name
+  cloudinary_api_key: string # Your Cloudinary API key
+  cloudinary_api_secret: string # Your Cloudinary API secret
+
+arguments:
+  file: string # The URL of the file upload. Only available for media_upload method.
+  upload_params: dict # Additional parameters for the upload. Only available for media_upload method.
+  public_id: string # The public ID for the file. For media_edit method it is MANDATORY. For media_upload method it is optional.
+  transformation: list[dict] # The transformations to apply to the file
+  return_base64: boolean # Whether to return the file in base64 encoding
+
+output:
+  url: string # The URL of the uploaded file. Only available for media_upload method.
+  meta_data: dict # Additional metadata from the upload response. Only available for media_upload method.
+  public_id: string # The public ID of the uploaded file. Only available for media_upload method.
+  transformed_url: string # The transformed URL. Only available for media_edit method.
+  base64: string # The base64 encoded file. Only available for media_edit method.
+```
+
+</td>
+
+<td>
+
+**Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
+
+</td>
+</tr>
+
 </table>
 
 For more details, refer to our [Integrations Documentation](#integrations).
