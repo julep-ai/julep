@@ -13,7 +13,6 @@ x--shared-environment: &shared-environment
   CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
   CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
   MAILGUN_PASSWORD: ${MAILGUN_PASSWORD}
-  MAX_POOL_SIZE: ${MAX_POOL_SIZE}
 
 services:
   integrations:
