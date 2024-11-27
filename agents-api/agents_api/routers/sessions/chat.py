@@ -25,8 +25,28 @@ from ...models.entry.create_entries import create_entries
 from ...models.session.count_sessions import count_sessions as count_sessions_query
 from .metrics import total_tokens_per_user
 from .router import router
+from litellm.utils import CustomStreamWrapper, ModelResponse
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
+
+
+def patch_litellm_response(
+    model_response: ModelResponse | CustomStreamWrapper,
+) -> ModelResponse | CustomStreamWrapper:
+    """
+    Patches the response we get from litellm to handle unexpected response formats.
+    """
+
+    if isinstance(model_response, ModelResponse):
+        for choice in model_response.choices:
+            if choice.finish_reason == "eos":
+                choice.finish_reason = "stop"
+
+    elif isinstance(model_response, CustomStreamWrapper):
+        if model_response.received_finish_reason == "eos":
+            model_response.received_finish_reason = "stop"
+    
+    return model_response
 
 
 @router.post(
@@ -182,6 +202,8 @@ async def chat(
         custom_api_key=x_custom_api_key,
         **settings,
     )
+
+    model_response = patch_litellm_response(model_response)
 
     # Save the input and the response to the session history
     if chat_input.save:
