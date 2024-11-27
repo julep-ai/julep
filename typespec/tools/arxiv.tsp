@@ -15,7 +15,7 @@ model ArxivSearchArguments {
     /** The maximum number of results to return */
     @minValue(1)
     @maxValue(300000)
-    max_results?: int16 = 10;
+    max_results?: int16 = 5;
 
     /** The download the pdf of the results */
     download_pdf?: boolean = false;
