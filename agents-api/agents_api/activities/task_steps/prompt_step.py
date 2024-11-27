@@ -167,9 +167,24 @@ async def prompt_step(context: StepContext) -> StepOutcome:
                 },
             }
             formatted_tools.append(tool)
-
+    # For non-Claude models, we don't need to send tools
+    # FIXME: Enable formatted_tools once format-tools PR is merged.
     if not is_claude_model:
         formatted_tools = None
+
+    # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
+    # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
+    # FIXME: Enable formatted_tools once format-tools PR is merged.
+    is_groq_model = agent_model.lower().startswith("llama-3.1")
+    if is_groq_model:
+        prompt = [
+            {
+                k: v
+                for k, v in message.items()
+                if k not in ["tool_calls", "tool_call_id", "user", "continue_", "name"]
+            }
+            for message in prompt
+        ]
 
     # Use litellm for other models
     completion_data: dict = {

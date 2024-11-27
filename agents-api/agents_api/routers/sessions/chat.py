@@ -168,10 +168,23 @@ async def chat(
             }
             formatted_tools.append(tool)
 
-    # If not using Claude model,
-
+    # If not using Claude model
+    # FIXME: Enable formatted_tools once format-tools PR is merged.
     if not is_claude_model:
         formatted_tools = None
+
+    # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
+    # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
+    is_groq_model = settings["model"].lower().startswith("llama-3.1")
+    if is_groq_model:
+        messages = [
+            {
+                k: v
+                for k, v in message.items()
+                if k not in ["tool_calls", "tool_call_id", "user", "continue_", "name"]
+            }
+            for message in messages
+        ]
 
     # Use litellm for other models
     model_response = await litellm.acompletion(
