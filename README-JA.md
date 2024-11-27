@@ -28,14 +28,12 @@
 ---
 
 > [!注意]
-> 👨‍💻 devfest.ai イベントに参加しませんか? [Discord](https://discord.com/invite/JTSBGRZrzj) に参加して、以下の詳細を確認してください。
->
 > API キーを [こちら](https://dashboard-dev.julep.ai) から取得します。
 
 <details>
-<summary><b>🌟 貢献者とDevFest.AI参加者</b>（クリックして拡大）</summary>
+<summary><b>貢献🌟</b>（クリックして拡大）</summary>
 
-## 🌟 貢献者を募集します!
+## 貢献者募集🌟
 
 Julep プロジェクトに新しい貢献者を迎えられることを嬉しく思います。プロジェクトを始めるのに役立つ「最初の良い問題」をいくつか作成しました。貢献する方法は次のとおりです。
 
@@ -45,41 +43,34 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 
 あなたの貢献は、大小を問わず私たちにとって貴重です。一緒に素晴らしいものを作りましょう！🚀
 
-### 🎉 DevFest.AI 2024年10月
-
-嬉しいニュースです！2024 年 10 月を通して DevFest.AI に参加します！🗓️
-
-- このイベント中に Julep に貢献すると、素晴らしい Julep のグッズや景品を獲得するチャンスが得られます! 🎁
-- 世界中の開発者とともに AI リポジトリに貢献し、素晴らしいイベントに参加しましょう。
-- この素晴らしい取り組みを企画してくださった DevFest.AI に心から感謝します。
-
-> [!ヒント]
-> 楽しみに参加する準備はできましたか? **[参加することをツイート](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)**して、コーディングを始めましょう! 🖥️
-
-![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
-
 </details>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 目次</h3>
 
+- [貢献者募集🌟](#call-for-contributors-)
 - [はじめに](#introduction)
 - [主な特徴](#key-features)
 - [簡単な例](#quick-example)
 - [インストール](#installation)
 - [Python クイックスタート 🐍](#python-quick-start-)
 - [Node.js クイック スタート 🟩](#nodejs-quick-start-)
-- [ステップ 1: エージェントを作成する](#step-1-create-an-agent)
 - [コンポーネント](#components)
 - [メンタルモデル](#mental-model)
 - [コンセプト](#concepts)
 - [タスクの理解](#understanding-tasks)
 - [タスクのライフサイクル](#lifecycle-of-a-task)
 - [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [共通手順](#common-steps)
+- [キーと値のステップ](#key-value-steps)
+- [反復ステップ](#iteration-steps)
+- [条件付きステップ](#conditional-steps)
+- [その他の制御フロー](#other-control-flow)
 - [ツールの種類](#tool-types)
 - [ユーザー定義の `functions`](#user-defined-functions)
 - [`システム` ツール](#system-tools)
+- [利用可能な `system` リソースと操作](#available-system-resources-and-operations)
 - [組み込みの `integrations`](#built-in-integrations)
 - [直接の `api_calls`](#direct-api_calls)
 - [統合](#integrations)
@@ -107,7 +98,7 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 多くの AI アプリケーションは、最小限の分岐によるプロンプトと API 呼び出しの単純な線形チェーンに制限されていますが、Julep は次のようなより複雑なシナリオを処理できるように構築されています。
 
 - 複数のステップがある、
-- モデルの出力に基づいて意思決定を行う
+- モデルの出力に基づいて決定を下す、
 - 平行枝を生成し、
 - たくさんのツールを使い、
 - 長時間走る。
@@ -135,7 +126,7 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 次のことができる研究 AI エージェントを想像してください。
 
 1. **トピックを選ぶ**、
-2. そのトピックについて**100個の検索クエリを考え出す**
+2. そのトピックについて**30個の検索クエリを考え出す**
 3. ウェブ検索を並行して実行する
 4. 結果を**要約**します。
 5. **要約を Discord に送信**します。
@@ -155,6 +146,9 @@ input_schema:
     topic:
       type: string
       description: The main topic to research
+    num_questions:
+      type: integer
+      description: The number of search queries to generate
 
 # Define the tools that the agent can use
 tools:
@@ -163,12 +157,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d... # dummy key
+        api_key: <your-brave-api-key>
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
+      url: https://discord.com/api/webhooks/<your-webhook-id>/<your-webhook-token>
       method: POST
       headers:
         Content-Type: application/json
@@ -180,52 +174,57 @@ tools:
 
 # Define the main workflow
 main:
-  - prompt:
-      - role: system
-        content: >-
-          You are a research assistant.
-          Generate 100 diverse search queries related to the topic:
-          {{inputs[0].topic}}
+- prompt:
+    - role: system
+      content: >-
+        You are a research assistant.
+        Generate {{inputs[0].num_questions|default(30, true)}} diverse search queries related to the topic:
+        {{inputs[0].topic}}
 
-          Write one query per line.
-    unwrap: true
+        Write one query per line.
+  unwrap: true
 
-  # Evaluate the search queries using a simple python expression
-  - evaluate:
-      search_queries: "_.split('\n')"
+# Evaluate the search queries using a simple python expression
+- evaluate:
+    search_queries: "_.split(NEWLINE)"
 
-  # Run the web search in parallel for each query
-  - over: "_.search_queries"
-    map:
-      tool: web_search
-      arguments:
-        query: "_"
-    parallelism: 10
+# Run the web search in parallel for each query
+- over: "_.search_queries"
+  map:
+    tool: web_search
+    arguments:
+      query: "_"
+  parallelism: 5
 
-  # Collect the results from the web search
-  - evaluate:
-      results: "'\n'.join([item.result for item in _])"
+# Collect the results from the web search
+- evaluate:
+    search_results: _
 
-  # Summarize the results
-  - prompt:
-      - role: system
-        content: >
-          You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
-          The summary should be well-structured, informative, and highlight key findings and insights:
-          {{_.results}}
-    unwrap: true
-    settings:
-      model: gpt-4o-mini
+# Summarize the results
+- prompt:
+    - role: system
+      content: >
+        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
+        The summary should be well-structured, informative, and highlight key findings and insights. Keep the summary concise and to the point.
+        The length of the summary should be less than 150 words.
+        Here are the search results:
+        {{_.search_results}}
+  unwrap: true
+  settings:
+    model: gpt-4o-mini
+
+- evaluate:
+    discord_message: |-
+      f'''
+      **Research Summary for {inputs[0].topic}**
+      {_}
+      '''
 
   # Send the summary to Discord
-  - tool: discord_webhook
-    arguments:
-      content: |-
-        f'''
-        **Research Summary for {inputs[0].topic}**
-
-        {_}
-        '''
+- tool: discord_webhook
+  arguments:
+    json_: 
+      content: _.discord_message[:2000] # Discord has a 2000 character limit
 ```
 
 この例では、Julep は並列実行を自動的に管理し、失敗したステップを再試行し、API リクエストを再送信し、タスクが完了するまで確実に実行し続けます。
@@ -331,6 +330,7 @@ description: Create a story based on an idea.
 
 tools:
   - name: research_wikipedia
+    type: integration
     integration:
       provider: wikipedia
       method: search

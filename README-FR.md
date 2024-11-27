@@ -28,14 +28,12 @@
 ---
 
 > [!REMARQUE]
-> 👨‍💻 Vous êtes ici pour l'événement devfest.ai ? Rejoignez notre [Discord](https://discord.com/invite/JTSBGRZrzj) et consultez les détails ci-dessous.
->
 > Obtenez votre clé API [ici](https://dashboard-dev.julep.ai).
 
 <details>
-<summary><b>🌟 Contributeurs et participants au DevFest.AI</b>(Cliquez pour agrandir)</summary>
+<summary><b>Contributions 🌟</b>(Cliquez pour agrandir)</summary>
 
-## 🌟 Appel aux contributeurs !
+## Appel aux contributeurs 🌟
 
 Nous sommes ravis d'accueillir de nouveaux contributeurs au projet Julep ! Nous avons créé plusieurs « bons premiers numéros » pour vous aider à démarrer. Voici comment vous pouvez contribuer :
 
@@ -45,41 +43,34 @@ Nous sommes ravis d'accueillir de nouveaux contributeurs au projet Julep ! Nous 
 
 Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons ensemble quelque chose d'extraordinaire ! 🚀
 
-### 🎉 DevFest.AI octobre 2024
-
-Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du mois d'octobre 2024 ! 🗓️
-
-- Contribuez à Julep pendant cet événement et obtenez une chance de gagner de superbes produits et cadeaux Julep ! 🎁
-- Rejoignez des développeurs du monde entier pour contribuer aux référentiels d'IA et participer à des événements incroyables.
-- Un grand merci à DevFest.AI pour l'organisation de cette fantastique initiative !
-
-> [!TIP]
-> Prêt à vous joindre à la fête ? **[Tweetez que vous participez](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** et commençons à coder ! 🖥️
-
-![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
-
 </details>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 Table des matières</h3>
 
+- [Appel à contributeurs 🌟](#call-for-contributors-)
 - [Présentation](#introduction)
 - [Caractéristiques principales](#key-features)
 - [Exemple rapide](#quick-example)
 - [Installation](#installation)
 - [Démarrage rapide de Python 🐍](#python-quick-start-)
 - [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
-- [Étape 1 : Créer un agent](#step-1-create-an-agent)
 - [Composants](#composants)
 - [Modèle mental](#mental-model)
 - [Concepts](#concepts)
 - [Comprendre les tâches](#understanding-tasks)
 - [Cycle de vie d'une tâche](#cycle-de-vie-d-une-tâche)
 - [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Étapes courantes](#étapes-communes)
+- [Étapes clé-valeur](#étapes-clé-valeur)
+- [Étapes d'itération](#iteration-steps)
+- [Étapes conditionnelles](#étapes-conditionnelles)
+- [Autre flux de contrôle](#other-control-flow)
 - [Types d'outils](#types-d'outils)
 - [`Fonctions` définies par l'utilisateur](#user-defined-functions)
 - [outils système](#outils-système)
+- [Ressources et opérations « système » disponibles](#available-system-resources-and-operations)
 - [`Intégrations` intégrées](#integrations-integrées)
 - [Appels directs `api_calls`](#appels directs-api_calls)
 - [Intégrations](#intégrations)
@@ -135,7 +126,7 @@ Alors que de nombreuses applications d'IA se limitent à des chaînes simples et
 Imaginez un agent d’IA de recherche capable d’effectuer les opérations suivantes :
 
 1. **Prenez un sujet**,
-2. **Proposez 100 requêtes de recherche** pour ce sujet,
+2. **Proposez 30 requêtes de recherche** pour ce sujet,
 3. Effectuez ces **recherches Web en parallèle**,
 4. **Résumez** les résultats,
 5. Envoyez le **résumé à Discord**.
@@ -155,6 +146,9 @@ input_schema:
     topic:
       type: string
       description: The main topic to research
+    num_questions:
+      type: integer
+      description: The number of search queries to generate
 
 # Define the tools that the agent can use
 tools:
@@ -163,12 +157,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d... # dummy key
+        api_key: <your-brave-api-key>
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
+      url: https://discord.com/api/webhooks/<your-webhook-id>/<your-webhook-token>
       method: POST
       headers:
         Content-Type: application/json
@@ -180,52 +174,57 @@ tools:
 
 # Define the main workflow
 main:
-  - prompt:
-      - role: system
-        content: >-
-          You are a research assistant.
-          Generate 100 diverse search queries related to the topic:
-          {{inputs[0].topic}}
+- prompt:
+    - role: system
+      content: >-
+        You are a research assistant.
+        Generate {{inputs[0].num_questions|default(30, true)}} diverse search queries related to the topic:
+        {{inputs[0].topic}}
 
-          Write one query per line.
-    unwrap: true
+        Write one query per line.
+  unwrap: true
 
-  # Evaluate the search queries using a simple python expression
-  - evaluate:
-      search_queries: "_.split('\n')"
+# Evaluate the search queries using a simple python expression
+- evaluate:
+    search_queries: "_.split(NEWLINE)"
 
-  # Run the web search in parallel for each query
-  - over: "_.search_queries"
-    map:
-      tool: web_search
-      arguments:
-        query: "_"
-    parallelism: 10
+# Run the web search in parallel for each query
+- over: "_.search_queries"
+  map:
+    tool: web_search
+    arguments:
+      query: "_"
+  parallelism: 5
 
-  # Collect the results from the web search
-  - evaluate:
-      results: "'\n'.join([item.result for item in _])"
+# Collect the results from the web search
+- evaluate:
+    search_results: _
 
-  # Summarize the results
-  - prompt:
-      - role: system
-        content: >
-          You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
-          The summary should be well-structured, informative, and highlight key findings and insights:
-          {{_.results}}
-    unwrap: true
-    settings:
-      model: gpt-4o-mini
+# Summarize the results
+- prompt:
+    - role: system
+      content: >
+        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
+        The summary should be well-structured, informative, and highlight key findings and insights. Keep the summary concise and to the point.
+        The length of the summary should be less than 150 words.
+        Here are the search results:
+        {{_.search_results}}
+  unwrap: true
+  settings:
+    model: gpt-4o-mini
+
+- evaluate:
+    discord_message: |-
+      f'''
+      **Research Summary for {inputs[0].topic}**
+      {_}
+      '''
 
   # Send the summary to Discord
-  - tool: discord_webhook
-    arguments:
-      content: |-
-        f'''
-        **Research Summary for {inputs[0].topic}**
-
-        {_}
-        '''
+- tool: discord_webhook
+  arguments:
+    json_: 
+      content: _.discord_message[:2000] # Discord has a 2000 character limit
 ```
 
 Dans cet exemple, Julep gérera automatiquement les exécutions parallèles, réessayera les étapes ayant échoué, renverra les requêtes API et maintiendra les tâches en cours d'exécution de manière fiable jusqu'à leur achèvement.
@@ -331,6 +330,7 @@ description: Create a story based on an idea.
 
 tools:
   - name: research_wikipedia
+    type: integration
     integration:
       provider: wikipedia
       method: search
@@ -429,11 +429,11 @@ agent_id=agent.id,
 ### Étape 3 : Exécuter la tâche
 
 exécution = client.executions.create(
-task_id=task.id,
+task_id=tâche.id,
 input={"idea": "Un chat qui apprend à voler"}
 )
 
-# 🎉 Regardez l'histoire et les panneaux de bande dessinée se générer
+# 🎉 Regardez l'histoire et les panneaux de bandes dessinées se générer
 while (result := client.executions.get(execution.id)).status n'est pas dans ['réussi', 'échec'] :
 print(résultat.statut, résultat.sortie)
 heure.sommeil(1)
@@ -1068,7 +1068,7 @@ Run a subworkflow and await its completion
 - rendement:
 flux de travail : données_de_processus
 Arguments:
-données_d'entrée : _. données_raw # <-- expression python
+données d'entrée : _. données brutes # <-- expression Python
 ```
 
 </td>
@@ -1561,7 +1561,7 @@ Julep, en revanche, s'intéresse davantage à la création d'agents d'IA persist
 Utilisez Julep si vous imaginez créer un assistant IA complexe qui doit :
 
 - Suivez les interactions des utilisateurs sur plusieurs jours ou semaines.
-- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance des sources de données.
+- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance de sources de données.
 - Prendre des décisions basées sur des interactions antérieures ou des données stockées.
 - Interagir avec plusieurs services externes dans le cadre de son flux de travail.
 
