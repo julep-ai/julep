@@ -21,8 +21,8 @@ async def search(arguments: ArxivSearchArguments) -> ArxivSearchOutput:
     Searches Arxiv with the provided query.
 
     Args:
-        arguments (ArxivSearchArguments): The search parameters including query, 
-                                           maximum results, sorting criteria, and 
+        arguments (ArxivSearchArguments): The search parameters including query,
+                                           maximum results, sorting criteria, and
                                            download options.
 
     Returns:
@@ -71,7 +71,9 @@ async def search(arguments: ArxivSearchArguments) -> ArxivSearchOutput:
                 "base64": pdf_content,
                 "mime_type": "application/pdf",
                 "title": result.title,
-            } if pdf_content else None,
+            }
+            if pdf_content
+            else None,
         )
 
     if arguments.download_pdf:
