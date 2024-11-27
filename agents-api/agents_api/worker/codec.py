@@ -31,7 +31,9 @@ def serialize(x: Any) -> bytes:
 
     duration = time.time() - start_time
     if duration > 1:
-        print(f"||| [SERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(x) / 1000}kb")
+        print(
+            f"||| [SERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(x) / 1000}kb"
+        )
 
     return compressed
 
@@ -43,7 +45,9 @@ def deserialize(b: bytes) -> Any:
 
     duration = time.time() - start_time
     if duration > 1:
-        print(f"||| [DESERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(b) / 1000}kb")
+        print(
+            f"||| [DESERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(b) / 1000}kb"
+        )
 
     return object
 

@@ -27,6 +27,25 @@ __all__: List[str] = ["acompletion"]
 litellm.drop_params = True
 
 
+def patch_litellm_response(
+    model_response: ModelResponse | CustomStreamWrapper,
+) -> ModelResponse | CustomStreamWrapper:
+    """
+    Patches the response we get from litellm to handle unexpected response formats.
+    """
+
+    if isinstance(model_response, ModelResponse):
+        for choice in model_response.choices:
+            if choice.finish_reason == "eos":
+                choice.finish_reason = "stop"
+
+    elif isinstance(model_response, CustomStreamWrapper):
+        if model_response.received_finish_reason == "eos":
+            model_response.received_finish_reason = "stop"
+
+    return model_response
+
+
 @wraps(_acompletion)
 @beartype
 async def acompletion(
@@ -45,13 +64,17 @@ async def acompletion(
             for message in messages
         ]
 
-    return await _acompletion(
+    model_response = await _acompletion(
         model=model,
         messages=messages,
         **settings,
         base_url=None if custom_api_key else litellm_url,
         api_key=custom_api_key or litellm_master_key,
     )
+
+    model_response = patch_litellm_response(model_response)
+
+    return model_response
 
 
 @wraps(_aembedding)
