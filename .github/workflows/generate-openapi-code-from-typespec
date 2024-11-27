@@ -26,6 +26,9 @@ jobs:
           cache: npm
           cache-dependency-path: 'typespec/package-lock.json'
 
+      - name: Install libboost
+        run: sudo apt-get install -y libboost-all-dev
+
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
 
