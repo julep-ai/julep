@@ -5,6 +5,9 @@ from typing import Any
 from temporalio.client import Client
 from temporalio.worker import Worker
 
+MAX_CONCURRENT_WORKFLOW_TASKS = None  # default None
+MAX_CONCURRENT_ACTIVITIES = 100  # default None
+
 
 def create_worker(client: Client) -> Any:
     """
@@ -66,6 +69,8 @@ def create_worker(client: Client) -> Any:
             load_inputs_remote,
         ],
         interceptors=[CustomInterceptor()],
+        max_concurrent_workflow_tasks=MAX_CONCURRENT_WORKFLOW_TASKS,
+        max_concurrent_activities=MAX_CONCURRENT_ACTIVITIES,
     )
 
     return worker
