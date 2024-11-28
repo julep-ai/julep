@@ -2,12 +2,10 @@
 
 <div align="center" id="top">
  <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">探索文档（正在开发中）</a>
   <a href="https://docs.julep.ai" rel="dofollow">探索文档（正在开发中）</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和谐</a>
@@ -1302,7 +1300,7 @@ result: string # Brave Search 的结果
 设置：
 api_key: string # BrowserBase 的 API 密钥
 project_id: string # BrowserBase 的项目 ID
-session_id: string #（可选）BrowserBase 的会话 ID
+session_id: string # （可选）BrowserBase 的会话 ID
 
 参数：
 urls: list[string] # 使用 BrowserBase 加载的 URL
