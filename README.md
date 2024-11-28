@@ -1402,7 +1402,7 @@ output:
 ```yaml
 arguments:
   query: string # The search query string
-  load_max_docs: integer # Maximum number of documents to load (default: 2)
+  load_max_docs: integer # (Optional) Maximum number of documents to load. Default is 2.
 
 output:
   documents: list # The documents returned from the Wikipedia search
@@ -1443,10 +1443,13 @@ output:
 ```yaml
 setup:
   llamaparse_api_key: string # The API key for Llama Parse
+  params: dict # (Optional) Additional parameters for the Llama Parse integration
 
 arguments:
-  file: string # The base64 encoded file to parse
-  filename: string # The filename of the file
+  file: string | Array<string> # The base64 encoded file to parse or an array of http/https URLs to load.
+  filename: string # (Optional). The filename of the file. Default is a random UUID. Only used if file is a base64 encoded string.
+  params: dict # (Optional) Additional parameters for the Llama Parse integration. Overrides the setup parameters.
+  base64: boolean # Whether the input file is base64 encoded. Default is false.
 
 output:
   documents: list # The parsed data from the document
@@ -1468,20 +1471,21 @@ setup:
   cloudinary_cloud_name: string # Your Cloudinary cloud name
   cloudinary_api_key: string # Your Cloudinary API key
   cloudinary_api_secret: string # Your Cloudinary API secret
+  params: dict # (Optional) Additional parameters for the Cloudinary integration
 
 arguments:
   file: string # The URL of the file upload. Only available for media_upload method.
-  upload_params: dict # Additional parameters for the upload. Only available for media_upload method.
-  public_id: string # The public ID for the file. For media_edit method it is MANDATORY. For media_upload method it is optional.
-  transformation: list[dict] # The transformations to apply to the file
-  return_base64: boolean # Whether to return the file in base64 encoding
+  upload_params: dict # (Optional) Additional parameters for the upload. Only available for media_upload method.
+  public_id: string # (Optional) The public ID for the file. For media_edit method it is MANDATORY. For media_upload method it is optional. Default is a random UUID.
+  transformation: list[dict] # The transformations to apply to the file. Only available for media_edit method.
+  return_base64: boolean # Whether to return the file in base64 encoding. Default is false.
 
 output:
   url: string # The URL of the uploaded file. Only available for media_upload method.
   meta_data: dict # Additional metadata from the upload response. Only available for media_upload method.
   public_id: string # The public ID of the uploaded file. Only available for media_upload method.
-  transformed_url: string # The transformed URL. Only available for media_edit method.
-  base64: string # The base64 encoded file. Only available for media_edit method.
+  transformed_url: string # (Optional) The transformed URL. Only available for media_edit method.
+  base64: string # (Optional) The base64 encoded file if return_base64 is true.
 ```
 
 </td>

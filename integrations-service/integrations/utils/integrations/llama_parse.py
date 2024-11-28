@@ -30,19 +30,26 @@ async def parse(
     if (api_key := setup.llamaparse_api_key) == "DEMO_API_KEY":
         api_key = llama_api_key
 
+    # get the additional params
+    params = (
+        {**setup.params, **arguments.params}
+        if setup.params and arguments.params
+        else setup.params or arguments.params
+    )
+
     parser = LlamaParse(
         api_key=api_key,  # Use the local variable instead
-        result_type=arguments.result_format,
-        num_workers=arguments.num_workers,
-        language=arguments.language,
+        **(params if params is not None else None),
     )
 
-    # Simplify filename assignment using or operator
-    extra_info = {"file_name": arguments.filename or str(uuid.uuid4())}
-
-    # Parse the document (decode inline)
-    documents = await parser.aload_data(
-        base64.b64decode(arguments.file), extra_info=extra_info
-    )
+    if isinstance(arguments.file, str) and arguments.base64:
+        extra_info = {"file_name": arguments.filename or str(uuid.uuid4())}
+        # Parse the document (decode inline)
+        documents = await parser.aload_data(
+            base64.b64decode(arguments.file), extra_info=extra_info
+        )
+    else:
+        # Parse the document (decode inline)
+        documents = await parser.aload_data(arguments.file)
 
     return LlamaParseFetchOutput(documents=documents)

@@ -6588,6 +6588,132 @@ components:
           format: uint8
           description: The timeout for the request
       description: API call definition
+    Tools.ArxivIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - arxiv
+          description: The provider must be "arxiv"
+          default: arxiv
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          nullable: true
+          description: The setup parameters for Arxiv
+          default: null
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ArxivSearchArguments'
+          description: The arguments for Arxiv Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Arxiv integration definition
+    Tools.ArxivIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - arxiv
+          description: The provider must be "arxiv"
+          default: arxiv
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          nullable: true
+          description: The setup parameters for Arxiv
+          default: null
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ArxivSearchArgumentsUpdate'
+          description: The arguments for Arxiv Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Arxiv integration definition
+    Tools.ArxivSearchArguments:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: The search query for searching with Arxiv
+        id_list:
+          type: array
+          items:
+            type: string
+          description: The list of Arxiv IDs to search with
+        max_results:
+          type: integer
+          format: int16
+          minimum: 1
+          maximum: 300000
+          description: The maximum number of results to return
+          default: 10
+        download_pdf:
+          type: boolean
+          description: The download the pdf of the results
+          default: false
+        sort_by:
+          type: string
+          enum:
+            - relevance
+            - lastUpdatedDate
+            - submittedDate
+          description: The sort criterion for the results
+          default: relevance
+        sort_order:
+          type: string
+          enum:
+            - ascending
+            - descending
+          description: The sort order for the results
+          default: descending
+      description: Arguments for Arxiv Search
+    Tools.ArxivSearchArgumentsUpdate:
+      type: object
+      properties:
+        query:
+          type: string
+          description: The search query for searching with Arxiv
+        id_list:
+          type: array
+          items:
+            type: string
+          description: The list of Arxiv IDs to search with
+        max_results:
+          type: integer
+          format: int16
+          minimum: 1
+          maximum: 300000
+          description: The maximum number of results to return
+          default: 10
+        download_pdf:
+          type: boolean
+          description: The download the pdf of the results
+          default: false
+        sort_by:
+          type: string
+          enum:
+            - relevance
+            - lastUpdatedDate
+            - submittedDate
+          description: The sort criterion for the results
+          default: relevance
+        sort_order:
+          type: string
+          enum:
+            - ascending
+            - descending
+          description: The sort order for the results
+          default: descending
+      description: Arguments for Arxiv Search
     Tools.BaseBrowserbaseIntegrationDef:
       type: object
       required:
@@ -6729,6 +6855,7 @@ components:
             - llama_parse
             - ffmpeg
             - cloudinary
+            - arxiv
           description: The provider of the integration
         method:
           type: string
@@ -6750,6 +6877,7 @@ components:
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDef'
           ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDef'
           cloudinary: '#/components/schemas/Tools.BaseCloudinaryIntegrationDef'
+          arxiv: '#/components/schemas/Tools.ArxivIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -6768,6 +6896,7 @@ components:
             - llama_parse
             - ffmpeg
             - cloudinary
+            - arxiv
           description: The provider of the integration
         method:
           type: string
@@ -6789,6 +6918,7 @@ components:
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
           ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
           cloudinary: '#/components/schemas/Tools.BaseCloudinaryIntegrationDefUpdate'
+          arxiv: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -7675,6 +7805,7 @@ components:
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
+            - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -7941,66 +8072,46 @@ components:
       required:
         - file
       properties:
-        result_format:
-          type: string
-          enum:
-            - text
-            - markdown
-          description: The format of the result. Can be "text" or "markdown". Default is "text".
-          default: text
-        num_workers:
-          type: integer
-          format: uint8
-          minimum: 1
-          maximum: 10
-          description: Number of workers for parallel processing. Default is 2, but can be set between 1 and 10.
-          default: 2
-        verbose:
-          type: boolean
-          description: Verbose mode for detailed logging. Default is true.
-          default: true
-        language:
-          type: string
-          description: Language of the text. Default is English.
-          default: en
         filename:
           type: string
           description: File Name. If not provided, a random name will be generated.
         file:
-          type: string
-          description: The base64 string of the file
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: The base64 string of the file, which can be a single string or a list of strings
+        params:
+          type: object
+          additionalProperties: {}
+          description: Optional upload parameters
+        base64:
+          type: boolean
+          description: The input file is base64
+          default: false
       description: Arguments for LlamaParse integration
     Tools.LlamaParseFetchArgumentsUpdate:
       type: object
       properties:
-        result_format:
-          type: string
-          enum:
-            - text
-            - markdown
-          description: The format of the result. Can be "text" or "markdown". Default is "text".
-          default: text
-        num_workers:
-          type: integer
-          format: uint8
-          minimum: 1
-          maximum: 10
-          description: Number of workers for parallel processing. Default is 2, but can be set between 1 and 10.
-          default: 2
-        verbose:
-          type: boolean
-          description: Verbose mode for detailed logging. Default is true.
-          default: true
-        language:
-          type: string
-          description: Language of the text. Default is English.
-          default: en
         filename:
           type: string
           description: File Name. If not provided, a random name will be generated.
         file:
-          type: string
-          description: The base64 string of the file
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: The base64 string of the file, which can be a single string or a list of strings
+        params:
+          type: object
+          additionalProperties: {}
+          description: Optional upload parameters
+        base64:
+          type: boolean
+          description: The input file is base64
+          default: false
       description: Arguments for LlamaParse integration
     Tools.LlamaParseIntegrationDef:
       type: object
@@ -8058,6 +8169,10 @@ components:
         llamaparse_api_key:
           type: string
           description: The API key for LlamaParse
+        params:
+          type: object
+          additionalProperties: {}
+          description: Optional upload parameters
       description: Setup parameters for LlamaParse integration
     Tools.LlamaParseSetupUpdate:
       type: object
@@ -8065,6 +8180,10 @@ components:
         llamaparse_api_key:
           type: string
           description: The API key for LlamaParse
+        params:
+          type: object
+          additionalProperties: {}
+          description: Optional upload parameters
       description: Setup parameters for LlamaParse integration
     Tools.NamedToolChoice:
       type: object
@@ -8110,6 +8229,7 @@ components:
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -8517,6 +8637,7 @@ components:
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
+            - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -8612,6 +8733,7 @@ components:
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
+            - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
           description: The integration to call
         system:
           allOf:
