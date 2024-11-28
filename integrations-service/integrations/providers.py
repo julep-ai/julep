@@ -287,7 +287,7 @@ arxiv = BaseProvider(
     methods=[
         BaseProviderMethod(
             method="search",
-            description="Search with Arxiv",
+            description="Search in Arxiv",
             arguments=ArxivSearchArguments,
             output=ArxivSearchOutput,
         ),

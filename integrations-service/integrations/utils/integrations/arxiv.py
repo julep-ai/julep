@@ -19,8 +19,15 @@ from ...models import ArxivSearchOutput, ArxivSearchResult
 async def search(arguments: ArxivSearchArguments) -> ArxivSearchOutput:
     """
     Searches Arxiv with the provided query.
-    """
 
+    Args:
+        arguments (ArxivSearchArguments): The search parameters including query,
+                                           maximum results, sorting criteria, and
+                                           download options.
+
+    Returns:
+        ArxivSearchOutput: The search results wrapped in an output object.
+    """
     assert isinstance(arguments, ArxivSearchArguments), "Invalid arguments"
 
     client = arxiv.Client()
@@ -79,8 +86,5 @@ async def search(arguments: ArxivSearchArguments) -> ArxivSearchOutput:
     else:
         for result in search_results:
             results.append(create_arxiv_search_result(result))
-
-    print("-" * 30)
-    print(results)
 
     return ArxivSearchOutput(result=results)

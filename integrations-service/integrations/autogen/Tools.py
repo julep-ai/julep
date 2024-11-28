@@ -164,7 +164,7 @@ class ArxivSearchArguments(BaseModel):
     """
     The list of Arxiv IDs to search with
     """
-    max_results: Annotated[int, Field(ge=1, le=300000)] = 10
+    max_results: Annotated[int, Field(ge=1, le=300000)] = 5
     """
     The maximum number of results to return
     """
@@ -198,7 +198,7 @@ class ArxivSearchArgumentsUpdate(BaseModel):
     """
     The list of Arxiv IDs to search with
     """
-    max_results: Annotated[int, Field(ge=1, le=300000)] = 10
+    max_results: Annotated[int, Field(ge=1, le=300000)] = 5
     """
     The maximum number of results to return
     """

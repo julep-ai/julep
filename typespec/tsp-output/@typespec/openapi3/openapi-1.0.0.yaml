@@ -6655,7 +6655,7 @@ components:
           minimum: 1
           maximum: 300000
           description: The maximum number of results to return
-          default: 10
+          default: 5
         download_pdf:
           type: boolean
           description: The download the pdf of the results
@@ -6693,7 +6693,7 @@ components:
           minimum: 1
           maximum: 300000
           description: The maximum number of results to return
-          default: 10
+          default: 5
         download_pdf:
           type: boolean
           description: The download the pdf of the results
