@@ -7,6 +7,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import LlamaParseFetchArguments, LlamaParseSetup
 from ...env import llama_api_key  # Import env to access environment variables
+from ...env import llama_api_key  # Import env to access environment variables
 from ...models import LlamaParseFetchOutput
 
 
@@ -22,6 +23,7 @@ async def parse(
     """
     Parse and extract content from files using LlamaParse.
     """
+
 
     assert isinstance(setup, LlamaParseSetup), "Invalid setup"
     assert isinstance(arguments, LlamaParseFetchArguments), "Invalid arguments"

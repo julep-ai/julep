@@ -8,6 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import SpiderFetchArguments, SpiderSetup
 from ...env import spider_api_key  # Import env to access environment variables
+from ...env import spider_api_key  # Import env to access environment variables
 from ...models import SpiderFetchOutput
 
 
