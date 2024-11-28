@@ -39,18 +39,19 @@ def format_tool(tool: Tool) -> dict:
         "function": {"name": tool.name, "description": tool.description},
     }
 
-    if tool.type == "system":
-        handler: Callable = get_handler_with_filtered_params(tool.system)
+    # FIXME: Implement system tools
+    # if tool.type == "system":
+    #     handler: Callable = get_handler_with_filtered_params(tool.system)
 
-        lc_tool: BaseTool = tool_decorator(handler)
+    #     lc_tool: BaseTool = tool_decorator(handler)
 
-        json_schema: dict = lc_tool.get_input_jsonschema()
+    #     json_schema: dict = lc_tool.get_input_jsonschema()
 
-        formatted["function"]["description"] = formatted["function"][
-            "description"
-        ] or json_schema.get("description")
+    #     formatted["function"]["description"] = formatted["function"][
+    #         "description"
+    #     ] or json_schema.get("description")
 
-        formatted["function"]["parameters"] = json_schema
+    #     formatted["function"]["parameters"] = json_schema
 
     # # FIXME: Implement integration tools
     # elif tool.type == "integration":
