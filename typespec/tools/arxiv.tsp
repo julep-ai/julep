@@ -31,16 +31,16 @@ model ArxivSearchArguments {
 model ArxivIntegrationDef extends BaseIntegrationDef {
     /** The provider must be "arxiv" */
     provider: "arxiv" = "arxiv";
-    
+
     /** The specific method of the integration to call */
     method?: string;
-    
+
     /** The setup parameters for Arxiv */
     setup?: null = null;
-    
+
     /** The arguments for Arxiv Search */
     arguments?: ArxivSearchArguments;
-} 
+}
 
 /** The result of the Arxiv Search */
 model ArxivSearchOutput {
