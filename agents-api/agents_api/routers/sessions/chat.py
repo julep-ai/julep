@@ -218,9 +218,6 @@ async def chat(
         tools=formatted_tools or None,
         user=str(developer.id),
         tags=developer.tags,
-        tools=formatted_tools or None,
-        user=str(developer.id),
-        tags=developer.tags,
         custom_api_key=x_custom_api_key,
         **settings,
     )
