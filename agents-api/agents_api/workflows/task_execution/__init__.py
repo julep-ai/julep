@@ -16,6 +16,11 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
     from ...activities.sync_items_remote import load_inputs_remote, save_inputs_remote
+    from ...activities.task_steps.base_evaluate import base_evaluate
+    from ...activities.task_steps.tool_call_step import (
+        construct_tool_call,
+        generate_call_id,
+    )
     from ...autogen.openapi_model import (
         ApiCallDef,
         BaseIntegrationDef,
@@ -35,8 +40,10 @@ with workflow.unsafe.imports_passed_through():
         SleepStep,
         SwitchStep,
         SystemDef,
+        Tool,
         ToolCallStep,
         TransitionTarget,
+        WaitForInputInfo,
         WaitForInputStep,
         WorkflowStep,
         YieldStep,
@@ -49,6 +56,8 @@ with workflow.unsafe.imports_passed_through():
         StepOutcome,
     )
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
+    from ...common.storage_handler import auto_blob_store
+    from ...common.utils.template import render_template
     from ...env import debug, temporal_schedule_to_close_timeout, testing
     from .helpers import (
         continue_as_child,
@@ -88,18 +97,6 @@ with workflow.unsafe.imports_passed_through():
 # Mapping of step types to their corresponding activities
 STEP_TO_ACTIVITY = {
     PromptStep: task_steps.prompt_step,
-    ToolCallStep: task_steps.tool_call_step,
-    WaitForInputStep: task_steps.wait_for_input_step,
-    SwitchStep: task_steps.switch_step,
-    LogStep: task_steps.log_step,
-    EvaluateStep: task_steps.evaluate_step,
-    ReturnStep: task_steps.return_step,
-    YieldStep: task_steps.yield_step,
-    IfElseWorkflowStep: task_steps.if_else_step,
-    ForeachStep: task_steps.for_each_step,
-    MapReduceStep: task_steps.map_reduce_step,
-    SetStep: task_steps.set_value_step,
-    # GetStep: task_steps.get_value_step,
 }
 
 
@@ -116,6 +113,78 @@ GenericStep = RootModel[WorkflowStep]
 
 # TODO: Review the current user state storage method
 #       Probably can be implemented much more efficiently
+
+
+@auto_blob_store(deep=True)
+async def _eval_step_exprs(context: StepContext, step_type: WorkflowStep):
+    expr, output, transition_to = None, None, None
+
+    match step_type:
+        case ForeachStep(foreach=ForeachDo(in_=in_)):
+            expr = in_
+        case IfElseWorkflowStep(if_=if_):
+            expr = if_
+        case ReturnStep(return_=return_):
+            expr = return_
+        case WaitForInputStep(wait_for_input=WaitForInputInfo(info=info)):
+            expr = info
+        case EvaluateStep(evaluate=evaluate):
+            expr = evaluate
+        case MapReduceStep(over=over):
+            expr = over
+        case SetStep(set=set):
+            expr = set
+        case LogStep(log=log):
+            output = await render_template(
+                log,
+                context.prepare_for_step(include_remote=True),
+                skip_vars=["developer_id"],
+            )
+        case SwitchStep(switch=switch):
+            output: int = -1
+            cases: list[str] = [c.case for c in switch]
+            for i, case in enumerate(cases):
+                result = await base_evaluate(case, context.prepare_for_step())
+
+                if result:
+                    output = i
+                    break
+        case ToolCallStep(arguments=arguments):
+            tools: list[Tool] = context.tools
+            tool_name = context.current_step.tool
+
+            tool = next((t for t in tools if t.name == tool_name), None)
+
+            if tool is None:
+                raise ApplicationError(f"Tool {tool_name} not found in the toolset")
+
+            arguments = await base_evaluate(arguments, context.prepare_for_step())
+
+            call_id = generate_call_id()
+            output = construct_tool_call(tool, arguments, call_id)
+        case YieldStep(arguments=arguments, workflow=workflow):
+            assert isinstance(context.current_step, YieldStep)
+
+            all_workflows = context.execution_input.task.workflows
+
+            assert workflow in [
+                wf.name for wf in all_workflows
+            ], f"Workflow {workflow} not found in task"
+
+            # Evaluate the expressions in the arguments
+            output = await base_evaluate(arguments, context.prepare_for_step())
+
+            # Transition to the first step of that workflow
+            transition_target = TransitionTarget(
+                workflow=workflow,
+                step=0,
+            )
+            transition_to = ("step", transition_target)
+
+    if expr is not None:
+        output = await base_evaluate(expr, context.prepare_for_step())
+
+    return StepOutcome(output=output, transition_to=transition_to)
 
 
 # Main workflow definition
@@ -170,8 +239,8 @@ class TaskExecutionWorkflow:
 
         outcome = None
 
-        if activity:
-            try:
+        try:
+            if activity:
                 outcome = await workflow.execute_activity(
                     activity,
                     context,
@@ -186,12 +255,17 @@ class TaskExecutionWorkflow:
                 workflow.logger.debug(
                     f"Step {context.cursor.step} completed successfully"
                 )
-
-            except Exception as e:
-                workflow.logger.error(f"Error in step {context.cursor.step}: {str(e)}")
-                await transition(context, type="error", output=str(e))
-                raise ApplicationError(f"Activity {activity} threw error: {e}") from e
-
+            else:
+                outcome = await _eval_step_exprs(context, step_type)
+        except Exception as e:
+            workflow.logger.error(f"Error in step {context.cursor.step}: {str(e)}")
+            await transition(context, type="error", output=str(e))
+            err_msg = (
+                f"Activity {activity} threw error: {e}"
+                if activity
+                else f"Step {context.cursor.step} threw error: {e}"
+            )
+            raise ApplicationError(err_msg) from e
         # ---
 
         # 3. Then, based on the outcome and step type, decide what to do next

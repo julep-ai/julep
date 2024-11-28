@@ -44,27 +44,3 @@ def construct_tool_call(
         "id": call_id,
         "type": tool.type,
     }
-
-
-@activity.defn
-@auto_blob_store(deep=True)
-@beartype
-async def tool_call_step(context: StepContext) -> StepOutcome:
-    assert isinstance(context.current_step, ToolCallStep)
-
-    tools: list[Tool] = context.tools
-    tool_name = context.current_step.tool
-
-    tool = next((t for t in tools if t.name == tool_name), None)
-
-    if tool is None:
-        raise ApplicationError(f"Tool {tool_name} not found in the toolset")
-
-    arguments = await base_evaluate(
-        context.current_step.arguments, context.prepare_for_step()
-    )
-
-    call_id = generate_call_id()
-    tool_call = construct_tool_call(tool, arguments, call_id)
-
-    return StepOutcome(output=tool_call)
