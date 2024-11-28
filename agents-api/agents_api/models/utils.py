@@ -213,7 +213,7 @@ def cozo_query(
             return isinstance(e, HTTPException) and e.status_code == 429
 
         @retry(
-            stop=stop_after_attempt(2),
+            stop=stop_after_attempt(4),
             wait=wait_exponential(multiplier=1, min=4, max=10),
             retry=retry_if_exception(is_resource_busy),
         )
@@ -254,7 +254,7 @@ def cozo_query(
 
                 debug and print(repr(e))
 
-                if "busy" in str(getattr(e, "resp", e)).lower():
+                if "busy" in (str(e) + str(getattr(e, "resp", e))).lower():
                     raise HTTPException(
                         status_code=429, detail="Resource busy. Please try again later."
                     ) from e

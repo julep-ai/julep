@@ -12,12 +12,12 @@
   compaction_readahead_size=2097152
   strict_bytes_per_sync=false
   bytes_per_sync=1048576
-  max_background_jobs=16
+  max_background_jobs=32
   avoid_flush_during_shutdown=false
   max_background_flushes=-1
   delayed_write_rate=16777216
   max_open_files=-1
-  max_subcompactions=2
+  max_subcompactions=8
   writable_file_max_buffer_size=5048576
   wal_bytes_per_sync=0
   max_background_compactions=-1
@@ -100,10 +100,10 @@
   memtable_protection_bytes_per_key=0
   target_file_size_multiplier=1
   report_bg_io_stats=false
-  write_buffer_size=267108864
+  write_buffer_size=534217728
   memtable_huge_page_size=0
   max_successive_merges=0
-  max_write_buffer_number=25
+  max_write_buffer_number=50
   prefix_extractor=rocksdb.CappedPrefix.9
   bottommost_compression_opts={checksum=false;max_dict_buffer_bytes=0;enabled=false;max_dict_bytes=0;max_compressed_bytes_per_kb=896;parallel_threads=1;zstd_max_train_bytes=0;level=32767;use_zstd_dict_trainer=true;strategy=0;window_bits=-14;}
   paranoid_file_checks=false

@@ -8,29 +8,24 @@ namespace Tools;
 model LlamaParseSetup {
     /** The API key for LlamaParse */
     llamaparse_api_key: string;
+
+    /** Optional upload parameters */
+    params?: Record<unknown>;
 }
 
 /** Arguments for LlamaParse integration */
 model LlamaParseFetchArguments {
-    /** The format of the result. Can be "text" or "markdown". Default is "text". */
-    result_format?: "text" | "markdown" = "text";
-
-    /** Number of workers for parallel processing. Default is 2, but can be set between 1 and 10. */
-    @minValue(1)
-    @maxValue(10)
-    num_workers?: uint8 = 2;
-
-    /** Verbose mode for detailed logging. Default is true. */
-    verbose?: boolean = true;
-
-    /** Language of the text. Default is English.*/
-    language?: string = "en";
-
     /** File Name. If not provided, a random name will be generated. */
     filename?: string;
 
-    /** The base64 string of the file*/
-    file: string;
+    /** The base64 string of the file, which can be a single string or a list of strings */
+    file: string | Array<string>;
+
+    /** Optional upload parameters */
+    params?: Record<unknown>;
+
+     /** The input file is base64 */
+    base64?: boolean = false;
 }
 
 /** LlamaParse integration definition */

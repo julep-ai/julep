@@ -5,6 +5,7 @@ from temporalio import activity
 
 from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
+from ..common.exceptions.tools import IntegrationExecutionException
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
 from ..env import testing
@@ -43,6 +44,7 @@ async def execute_integration(
             return arguments
 
         integration_service_response = await integrations.run_integration_service(
+        integration_service_response = await integrations.run_integration_service(
             provider=integration.provider,
             setup=setup,
             method=integration.method,
@@ -53,13 +55,21 @@ async def execute_integration(
             "error" in integration_service_response
             and integration_service_response["error"]
         ):
-            raise Exception(integration_service_response["error"])
+            raise IntegrationExecutionException(
+                integration=integration,
+                error=integration_service_response["error"],
+            )
 
         return integration_service_response
 
     except BaseException as e:
         if activity.in_activity():
-            activity.logger.error(f"Error in execute_integration: {e}")
+            integration_str = integration.provider + (
+                "." + integration.method if integration.method else ""
+            )
+            activity.logger.error(
+                f"Error in execute_integration {integration_str}: {e}"
+            )
 
         raise
 

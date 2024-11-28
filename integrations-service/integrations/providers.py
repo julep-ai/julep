@@ -1,6 +1,8 @@
 from .autogen.Tools import (
+    ArxivSearchArguments,
     # Arguments imports
     BraveSearchArguments,
+    # Setup imports
     # Setup imports
     BraveSearchSetup,
     BrowserbaseCompleteSessionArguments,
@@ -28,6 +30,7 @@ from .autogen.Tools import (
     WikipediaSearchArguments,
 )
 from .models import (
+    ArxivSearchOutput,
     BaseProvider,
     BaseProviderMethod,
     BraveSearchOutput,
@@ -279,6 +282,25 @@ cloudinary = BaseProvider(
     ),
 )
 
+arxiv = BaseProvider(
+    provider="arxiv",
+    setup=None,
+    methods=[
+        BaseProviderMethod(
+            method="search",
+            description="Search in Arxiv",
+            arguments=ArxivSearchArguments,
+            output=ArxivSearchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://pypi.org/project/arxiv/",
+        docs="https://info.arxiv.org/help/api/index.html",
+        icon="https://arxiv.com/favicon.ico",
+        friendly_name="Arxiv Search",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -290,4 +312,5 @@ available_providers: dict[str, BaseProvider] = {
     "llama_parse": llama_parse,
     "ffmpeg": ffmpeg,
     "cloudinary": cloudinary,
+    "arxiv": arxiv,
 }
