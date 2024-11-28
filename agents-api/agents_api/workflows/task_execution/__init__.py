@@ -128,6 +128,7 @@ class TaskExecutionWorkflow:
         execution_input: ExecutionInput,
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
         previous_inputs: RemoteList | None = None,
+        previous_labels: dict[str, Any] | None = None,
     ) -> Any:
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
@@ -136,11 +137,13 @@ class TaskExecutionWorkflow:
 
         # 0. Prepare context
         previous_inputs = previous_inputs or RemoteList([execution_input.arguments])
+        previous_labels = previous_labels or {}
 
         context = StepContext(
             execution_input=execution_input,
             inputs=previous_inputs,
             cursor=start,
+            labels=previous_labels,
         )
 
         step_type = type(context.current_step)
@@ -670,6 +673,11 @@ class TaskExecutionWorkflow:
             retry_policy=DEFAULT_RETRY_POLICY,
         )
 
+        current_label = context.current_step.label
+
+        if current_label:
+            previous_labels[current_label] = final_output
+
         previous_inputs.append(final_output)
 
         # Continue as a child workflow
@@ -677,5 +685,6 @@ class TaskExecutionWorkflow:
             context.execution_input,
             start=final_state.next,
             previous_inputs=previous_inputs,
+            previous_labels=previous_labels,
             user_state=state.user_state,
         )

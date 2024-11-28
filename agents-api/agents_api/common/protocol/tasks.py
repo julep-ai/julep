@@ -156,6 +156,7 @@ class StepContext(BaseRemoteModel):
     execution_input: ExecutionInput | RemoteObject
     inputs: list[Any] | RemoteObject
     cursor: TransitionTarget
+    labels: dict[str, Any] | RemoteObject
 
     @computed_field
     @property
@@ -244,13 +245,22 @@ class StepContext(BaseRemoteModel):
     def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
         inputs = self.inputs
+
         if activity.in_activity():
             inputs = [load_from_blob_store_if_remote(input) for input in inputs]
             current_input = load_from_blob_store_if_remote(current_input)
 
+        inputs = {i: input for i, input in enumerate(inputs)}
+        inputs.update(self.labels)
+
+        outputs = {i: output for i, output in enumerate(self.outputs)}
+        outputs.update(self.labels)
+
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
         dump["inputs"] = inputs
+        dump["outputs"] = outputs
+
         prepared = dump | {"_": current_input}
 
         for i, input in enumerate(inputs):
