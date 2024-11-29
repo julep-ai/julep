@@ -243,7 +243,7 @@ class StepContext(BaseRemoteModel):
         return dump | execution_input
 
     async def prepare_for_step(
-        self, *args, include_remote: bool = False, **kwargs
+        self, *args, include_remote: bool = True, **kwargs
     ) -> dict[str, Any]:
         current_input = self.current_input
         inputs = self.inputs

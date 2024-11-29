@@ -97,7 +97,7 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                             }
                         )
                     elif isinstance(arg, BaseRemoteModel):
-                        new_args.append(arg.unload_all())
+                        new_args.append(await arg.unload_all())
 
                     elif isinstance(arg, BaseModel):
                         for field in arg.model_fields.keys():
@@ -119,7 +119,11 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                     ],
                                 )
                             elif isinstance(getattr(arg, field), BaseRemoteModel):
-                                setattr(arg, field, getattr(arg, field).unload_all())
+                                setattr(
+                                    arg,
+                                    field,
+                                    await getattr(arg, field).unload_all(),
+                                )
 
                         new_args.append(arg)
 
@@ -163,7 +167,11 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                     ],
                                 )
                             elif isinstance(getattr(v, field), BaseRemoteModel):
-                                setattr(v, field, getattr(v, field).unload_all())
+                                setattr(
+                                    v,
+                                    field,
+                                    await getattr(v, field).unload_all(),
+                                )
                         new_kwargs[k] = v
 
                     else:
