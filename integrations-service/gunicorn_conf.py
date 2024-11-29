@@ -3,9 +3,14 @@ import os
 
 TESTING = os.getenv("TESTING", "false").lower() == "true"
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+AGENTS_API_DEBUG = os.getenv("AGENTS_API_DEBUG", "false").lower() == "true"
 
 # Gunicorn config variables
-workers = multiprocessing.cpu_count() // 2 if not (TESTING or DEBUG) else 1
+workers = (
+    (multiprocessing.cpu_count() // 2)
+    if not (TESTING or AGENTS_API_DEBUG or DEBUG)
+    else 1
+)
 worker_class = "uvicorn.workers.UvicornWorker"
 bind = "0.0.0.0:8000"
 keepalive = 120
