@@ -67,7 +67,7 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
             new_args = await asyncio.gather(
                 *[load_from_blob_store_if_remote(arg) for arg in args]
             )
-            kwargs_keys, kwargs_values = zip(*kwargs.items())
+            kwargs_keys, kwargs_values = list(zip(*kwargs.items())) or ([], [])
             new_kwargs = await asyncio.gather(
                 *[load_from_blob_store_if_remote(v) for v in kwargs_values]
             )
@@ -87,7 +87,7 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                             )
                         )
                     elif isinstance(arg, dict):
-                        keys, values = zip(*arg.items())
+                        keys, values = list(zip(*arg.items())) or ([], [])
                         values = await asyncio.gather(
                             *[load_from_blob_store_if_remote(value) for value in values]
                         )
@@ -138,7 +138,7 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                         )
 
                     elif isinstance(v, dict):
-                        keys, values = zip(*v.items())
+                        keys, values = list(zip(*v.items())) or ([], [])
                         values = await asyncio.gather(
                             *[load_from_blob_store_if_remote(value) for value in values]
                         )
