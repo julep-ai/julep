@@ -2,7 +2,7 @@ import inspect
 import re
 import time
 from functools import partialmethod, wraps
-from typing import Any, Callable, ParamSpec, Type, TypeVar
+from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar
 from uuid import UUID
 
 import pandas as pd
@@ -284,39 +284,160 @@ def cozo_query(
     return cozo_query_dec
 
 
-def wrap_in_class(
-    cls: Type[ModelT] | Callable[..., ModelT],
-    one: bool = False,
-    transform: Callable[[dict], dict] | None = None,
-    _kind: str | None = None,
+def cozo_query_async(
+    func: Callable[
+        P,
+        tuple[str | list[str | None], dict]
+        | Awaitable[tuple[str | list[str | None], dict]],
+    ]
+    | None = None,
+    debug: bool | None = None,
+    only_on_error: bool = False,
+    timeit: bool = False,
 ):
-    def decorator(func: Callable[P, pd.DataFrame]):
+    def cozo_query_dec(
+        func: Callable[
+            P, tuple[str | list[Any], dict] | Awaitable[tuple[str | list[Any], dict]]
+        ],
+    ):
+        """
+        Decorator that wraps a function that takes arbitrary arguments, and
+        returns a (query string, variables) tuple.
+
+        The wrapped function should additionally take a client keyword argument
+        and then run the query using the client, returning a DataFrame.
+        """
+
+        from pprint import pprint
+
+        from tenacity import (
+            retry,
+            retry_if_exception,
+            stop_after_attempt,
+            wait_exponential,
+        )
+
+        def is_resource_busy(e: Exception) -> bool:
+            return isinstance(e, HTTPException) and e.status_code == 429
+
+        @retry(
+            stop=stop_after_attempt(4),
+            wait=wait_exponential(multiplier=1, min=4, max=10),
+            retry=retry_if_exception(is_resource_busy),
+        )
         @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
-            df = func(*args, **kwargs)
+        async def wrapper(
+            *args: P.args, client=None, **kwargs: P.kwargs
+        ) -> pd.DataFrame:
+            if inspect.iscoroutinefunction(func):
+                queries, variables = await func(*args, **kwargs)
+            else:
+                queries, variables = func(*args, **kwargs)
 
-            # Convert df to list of dicts
-            if _kind:
-                df = df[df["_kind"] == _kind]
+            if isinstance(queries, str):
+                query = queries
+            else:
+                queries = [str(query) for query in queries if query]
+                query = "}\n\n{\n".join(queries)
+                query = f"{{ {query} }}"
 
-            data = df.to_dict(orient="records")
+            not only_on_error and debug and print(query)
+            not only_on_error and debug and pprint(
+                dict(
+                    variables=variables,
+                )
+            )
 
-            nonlocal transform
-            transform = transform or (lambda x: x)
+            # Run the query
+            from ..clients import cozo
 
-            if one:
-                assert len(data) >= 1, "Expected one result, got none"
-                obj: ModelT = cls(**transform(data[0]))
-                return obj
+            try:
+                client = client or cozo.get_async_cozo_client()
 
-            objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
-            return objs
+                start = timeit and time.perf_counter()
+                result = await client.run(query, variables)
+                end = timeit and time.perf_counter()
+
+                timeit and print(f"Cozo query time: {end - start:.2f} seconds")
+
+            except Exception as e:
+                if only_on_error and debug:
+                    print(query)
+                    pprint(variables)
+
+                debug and print(repr(e))
+
+                if "busy" in (str(e) + str(getattr(e, "resp", e))).lower():
+                    raise HTTPException(
+                        status_code=429, detail="Resource busy. Please try again later."
+                    ) from e
+
+                raise
+
+            # Need to fix the UUIDs in the result
+            result = result.map(fix_uuid_if_present)
+
+            not only_on_error and debug and pprint(
+                dict(
+                    result=result.to_dict(orient="records"),
+                )
+            )
+
+            return result
 
         # Set the wrapped function as an attribute of the wrapper,
         # forwards the __wrapped__ attribute if it exists.
         setattr(wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
 
         return wrapper
+
+    if func is not None and callable(func):
+        return cozo_query_dec(func)
+
+    return cozo_query_dec
+
+
+def wrap_in_class(
+    cls: Type[ModelT] | Callable[..., ModelT],
+    one: bool = False,
+    transform: Callable[[dict], dict] | None = None,
+    _kind: str | None = None,
+):
+    def _return_data(df: pd.DataFrame):
+        # Convert df to list of dicts
+        if _kind:
+            df = df[df["_kind"] == _kind]
+
+        data = df.to_dict(orient="records")
+
+        nonlocal transform
+        transform = transform or (lambda x: x)
+
+        if one:
+            assert len(data) >= 1, "Expected one result, got none"
+            obj: ModelT = cls(**transform(data[0]))
+            return obj
+
+        objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
+        return objs
+
+    def decorator(func: Callable[P, pd.DataFrame | Awaitable[pd.DataFrame]]):
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
+            return _return_data(func(*args, **kwargs))
+
+        @wraps(func)
+        async def async_wrapper(
+            *args: P.args, **kwargs: P.kwargs
+        ) -> ModelT | list[ModelT]:
+            return _return_data(await func(*args, **kwargs))
+
+        # Set the wrapped function as an attribute of the wrapper,
+        # forwards the __wrapped__ attribute if it exists.
+        setattr(wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
+        setattr(async_wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
+
+        return async_wrapper if inspect.iscoroutinefunction(func) else wrapper
 
     return decorator
 
@@ -328,33 +449,42 @@ def rewrap_exceptions(
     ],
     /,
 ):
-    def decorator(func: Callable[P, T]):
+    def _check_error(error):
+        nonlocal mapping
+
+        for check, transform in mapping.items():
+            should_catch = (
+                isinstance(error, check) if isinstance(check, type) else check(error)
+            )
+
+            if should_catch:
+                new_error = (
+                    transform(str(error))
+                    if isinstance(transform, type)
+                    else transform(error)
+                )
+
+                setattr(new_error, "__cause__", error)
+
+                raise new_error from error
+
+    def decorator(func: Callable[P, T | Awaitable[T]]):
+        @wraps(func)
+        async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            try:
+                result: T = await func(*args, **kwargs)
+            except BaseException as error:
+                _check_error(error)
+                raise
+
+            return result
+
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            nonlocal mapping
-
             try:
                 result: T = func(*args, **kwargs)
-
             except BaseException as error:
-                for check, transform in mapping.items():
-                    should_catch = (
-                        isinstance(error, check)
-                        if isinstance(check, type)
-                        else check(error)
-                    )
-
-                    if should_catch:
-                        new_error = (
-                            transform(str(error))
-                            if isinstance(transform, type)
-                            else transform(error)
-                        )
-
-                        setattr(new_error, "__cause__", error)
-
-                        raise new_error from error
-
+                _check_error(error)
                 raise
 
             return result
@@ -362,7 +492,8 @@ def rewrap_exceptions(
         # Set the wrapped function as an attribute of the wrapper,
         # forwards the __wrapped__ attribute if it exists.
         setattr(wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
+        setattr(async_wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
 
-        return wrapper
+        return async_wrapper if inspect.iscoroutinefunction(func) else wrapper
 
     return decorator
