@@ -14,6 +14,7 @@ from pydantic import ValidationError
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateTaskRequest
 from ...common.protocol.tasks import task_to_spec
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -45,6 +46,7 @@ T = TypeVar("T")
     },
 )
 @cozo_query
+@increase_counter("update_task")
 @beartype
 def update_task(
     *,
@@ -53,6 +55,19 @@ def update_task(
     task_id: UUID,
     data: UpdateTaskRequest,
 ) -> tuple[list[str], dict]:
+    """
+    Updates a task.
+
+    Parameters:
+        developer_id (UUID): The unique identifier of the developer associated with the task.
+        agent_id (UUID): The unique identifier of the agent associated with the task.
+        task_id (UUID): The unique identifier of the task to update.
+        data (UpdateTaskRequest): The data to update the task with.
+
+    Returns:
+        ResourceUpdatedResponse: The updated task.
+    """
+
     developer_id = str(developer_id)
     agent_id = str(agent_id)
     task_id = str(task_id)

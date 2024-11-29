@@ -1,25 +1,55 @@
-from .models import (
-    BaseProvider,
-    BaseProviderMethod,
+from .autogen.Tools import (
+    ArxivSearchArguments,
+    # Arguments imports
     BraveSearchArguments,
-    BraveSearchOutput,
+    # Setup imports
+    # Setup imports
     BraveSearchSetup,
-    BrowserBaseLoadArguments,
-    BrowserBaseLoadOutput,
-    BrowserBaseSetup,
+    BrowserbaseCompleteSessionArguments,
+    BrowserbaseCreateSessionArguments,
+    BrowserbaseExtensionArguments,
+    BrowserbaseGetSessionArguments,
+    BrowserbaseGetSessionConnectUrlArguments,
+    BrowserbaseGetSessionLiveUrlsArguments,
+    BrowserbaseListSessionsArguments,
+    BrowserbaseSetup,
+    CloudinaryEditArguments,
+    CloudinarySetup,
+    CloudinaryUploadArguments,
     EmailArguments,
-    EmailOutput,
     EmailSetup,
-    HackerNewsFetchArguments,
-    HackerNewsFetchOutput,
-    ProviderInfo,
+    FfmpegSearchArguments,
+    LlamaParseFetchArguments,
+    LlamaParseSetup,
+    RemoteBrowserArguments,
+    RemoteBrowserSetup,
     SpiderFetchArguments,
-    SpiderFetchOutput,
     SpiderSetup,
     WeatherGetArguments,
-    WeatherGetOutput,
     WeatherSetup,
     WikipediaSearchArguments,
+)
+from .models import (
+    ArxivSearchOutput,
+    BaseProvider,
+    BaseProviderMethod,
+    BraveSearchOutput,
+    BrowserbaseCompleteSessionOutput,
+    BrowserbaseCreateSessionOutput,
+    BrowserbaseExtensionOutput,
+    BrowserbaseGetSessionConnectUrlOutput,
+    BrowserbaseGetSessionLiveUrlsOutput,
+    BrowserbaseGetSessionOutput,
+    BrowserbaseListSessionsOutput,
+    CloudinaryEditOutput,
+    CloudinaryUploadOutput,
+    EmailOutput,
+    FfmpegSearchOutput,
+    LlamaParseFetchOutput,
+    ProviderInfo,
+    RemoteBrowserOutput,
+    SpiderFetchOutput,
+    WeatherGetOutput,
     WikipediaSearchOutput,
 )
 
@@ -61,25 +91,6 @@ weather = BaseProvider(
     ),
 )
 
-hacker_news = BaseProvider(
-    provider="hacker_news",
-    setup=None,
-    methods=[
-        BaseProviderMethod(
-            method="fetch",
-            description="Get the top stories from Hacker News",
-            arguments=HackerNewsFetchArguments,
-            output=HackerNewsFetchOutput,
-        ),
-    ],
-    info=ProviderInfo(
-        url="https://news.ycombinator.com/",
-        docs="https://news.ycombinator.com/newsguidelines.html",
-        icon="https://news.ycombinator.com/favicon.ico",
-        friendly_name="Hacker News",
-    ),
-)
-
 spider = BaseProvider(
     provider="spider",
     setup=SpiderSetup,
@@ -118,22 +129,22 @@ brave = BaseProvider(
     ),
 )
 
-browserbase = BaseProvider(
-    provider="browserbase",
-    setup=BrowserBaseSetup,
+llama_parse = BaseProvider(
+    provider="llama_parse",
+    setup=LlamaParseSetup,
     methods=[
         BaseProviderMethod(
-            method="load",
-            description="Load documents from the provided urls",
-            arguments=BrowserBaseLoadArguments,
-            output=BrowserBaseLoadOutput,
+            method="parse",
+            description="Parse and extract the files",
+            arguments=LlamaParseFetchArguments,
+            output=LlamaParseFetchOutput,
         ),
     ],
     info=ProviderInfo(
-        url="https://browserbase.com/",
-        docs="https://browserbase.com/docs/",
-        icon="https://browserbase.com/favicon.ico",
-        friendly_name="BrowserBase",
+        friendly_name="LlamaParse",
+        url="https://www.llamaindex.ai/",
+        docs="https://docs.cloud.llamaindex.ai/llamaparse/getting_started",
+        icon="https://www.llamaindex.ai/favicon.ico",
     ),
 )
 
@@ -153,12 +164,153 @@ email = BaseProvider(
     ),
 )
 
-providers = {
+browserbase = BaseProvider(
+    provider="browserbase",
+    setup=BrowserbaseSetup,
+    methods=[
+        BaseProviderMethod(
+            method="list_sessions",
+            description="List sessions in Browserbase",
+            arguments=BrowserbaseListSessionsArguments,
+            output=BrowserbaseListSessionsOutput,
+        ),
+        BaseProviderMethod(
+            method="create_session",
+            description="Create a session in Browserbase",
+            arguments=BrowserbaseCreateSessionArguments,
+            output=BrowserbaseCreateSessionOutput,
+        ),
+        BaseProviderMethod(
+            method="get_session",
+            description="Get a session in Browserbase",
+            arguments=BrowserbaseGetSessionArguments,
+            output=BrowserbaseGetSessionOutput,
+        ),
+        BaseProviderMethod(
+            method="complete_session",
+            description="Complete a session in Browserbase",
+            arguments=BrowserbaseCompleteSessionArguments,
+            output=BrowserbaseCompleteSessionOutput,
+        ),
+        BaseProviderMethod(
+            method="get_live_urls",
+            description="Get sessions' live urls in Browserbase",
+            arguments=BrowserbaseGetSessionLiveUrlsArguments,
+            output=BrowserbaseGetSessionLiveUrlsOutput,
+        ),
+        BaseProviderMethod(
+            method="install_extension_from_github",
+            description="Install an extension from GitHub to the browserbase context",
+            arguments=BrowserbaseExtensionArguments,
+            output=BrowserbaseExtensionOutput,
+        ),
+        BaseProviderMethod(
+            method="get_connect_url",
+            description="Get the connection URL for a session",
+            arguments=BrowserbaseGetSessionConnectUrlArguments,
+            output=BrowserbaseGetSessionConnectUrlOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        friendly_name="BrowserBase",
+        url="https://browserbase.com/",
+        docs="https://browserbase.com/docs/",
+        icon="https://browserbase.com/favicon.ico",
+    ),
+)
+
+remote_browser = BaseProvider(
+    provider="remote_browser",
+    setup=RemoteBrowserSetup,
+    methods=[
+        BaseProviderMethod(
+            method="perform_action",
+            description="Perform an action in the browser",
+            arguments=RemoteBrowserArguments,
+            output=RemoteBrowserOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        friendly_name="Remote Browser",
+        url="https://playwright.dev/",
+        docs="https://playwright.dev/docs/",
+        icon="https://playwright.dev/favicon.ico",
+    ),
+)
+
+ffmpeg = BaseProvider(
+    provider="ffmpeg",
+    setup=None,
+    methods=[
+        BaseProviderMethod(
+            method="bash_cmd",
+            description="Run FFmpeg bash command",
+            arguments=FfmpegSearchArguments,
+            output=FfmpegSearchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://ffmpeg.org/",
+        docs="https://ffmpeg.org/documentation.html",
+        icon="https://upload.wikimedia.org/wikipedia/commons/5/5f/FFmpeg_Logo_new.svg",
+        friendly_name="Ffmpeg",
+    ),
+)
+
+cloudinary = BaseProvider(
+    provider="cloudinary",
+    setup=CloudinarySetup,
+    methods=[
+        BaseProviderMethod(
+            method="media_edit",
+            description="Edit media in Cloudinary",
+            arguments=CloudinaryEditArguments,
+            output=CloudinaryEditOutput,
+        ),
+        BaseProviderMethod(
+            method="media_upload",
+            description="Upload media to Cloudinary",
+            arguments=CloudinaryUploadArguments,
+            output=CloudinaryUploadOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://cloudinary.com/",
+        docs="https://cloudinary.com/documentation/python_quickstart",
+        icon="https://cloudinary.com/favicon.ico",
+        friendly_name="Cloudinary",
+    ),
+)
+
+arxiv = BaseProvider(
+    provider="arxiv",
+    setup=None,
+    methods=[
+        BaseProviderMethod(
+            method="search",
+            description="Search in Arxiv",
+            arguments=ArxivSearchArguments,
+            output=ArxivSearchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://pypi.org/project/arxiv/",
+        docs="https://info.arxiv.org/help/api/index.html",
+        icon="https://arxiv.com/favicon.ico",
+        friendly_name="Arxiv Search",
+    ),
+)
+
+available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
-    "hacker_news": hacker_news,
     "spider": spider,
     "brave": brave,
-    "browserbase": browserbase,
     "email": email,
+    "browserbase": browserbase,
+    "remote_browser": remote_browser,
+    "llama_parse": llama_parse,
+    "ffmpeg": ffmpeg,
+    "cloudinary": cloudinary,
+    "arxiv": arxiv,
 }

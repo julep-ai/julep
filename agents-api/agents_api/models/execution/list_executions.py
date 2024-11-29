@@ -15,6 +15,7 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -27,7 +28,15 @@ T = TypeVar("T")
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(Execution)
+@wrap_in_class(
+    Execution,
+    transform=lambda d: {
+        **d,
+        "output": d["output"][OUTPUT_UNNEST_KEY]
+        if isinstance(d.get("output"), dict) and OUTPUT_UNNEST_KEY in d["output"]
+        else d.get("output"),
+    },
+)
 @cozo_query
 @beartype
 def list_executions(
@@ -49,6 +58,7 @@ def list_executions(
         task_id,
         status,
         input,
+        output,
         session_id,
         metadata,
         created_at,
@@ -59,6 +69,7 @@ def list_executions(
             execution_id: id,
             status,
             input,
+            output,
             session_id,
             metadata,
             created_at,

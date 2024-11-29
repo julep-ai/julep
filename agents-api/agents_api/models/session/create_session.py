@@ -12,6 +12,7 @@ from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import CreateSessionRequest, Session
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -44,6 +45,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @cozo_query
+@increase_counter("create_session")
 @beartype
 def create_session(
     *,
@@ -58,7 +60,7 @@ def create_session(
     session_id = session_id or uuid4()
 
     data.metadata = data.metadata or {}
-    session_data = data.model_dump()
+    session_data = data.model_dump(exclude={"auto_run_tools", "disable_cache"})
 
     user = session_data.pop("user")
     agent = session_data.pop("agent")

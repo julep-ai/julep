@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -35,6 +36,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @cozo_query
+@increase_counter("update_agent")
 @beartype
 def update_agent(
     *,

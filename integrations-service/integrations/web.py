@@ -1,20 +1,35 @@
+import asyncio
 import logging
+import os
 from typing import Any, Callable
 
-import fire
 import uvicorn
+import uvloop
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
-from .routers import execution_router, integrations_router
+from .routers.execution.router import router as execution_router
+from .routers.integrations.router import router as integrations_router
 
-app: FastAPI = FastAPI()
+app: FastAPI = FastAPI(
+    title="Integrations Service",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    default_response_class=JSONResponse,
+)
+
+# Add GZIP compression
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Add routers
 app.include_router(integrations_router)
 app.include_router(execution_router)
 
+# Optimize event loop policy
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -67,17 +82,17 @@ def main(
     timeout_keep_alive=30,
     workers=None,
     log_level="info",
+    reload=bool(os.environ.get("RELOAD")),
 ) -> None:
+    print(f"Reload: {reload}")
+
     uvicorn.run(
-        app,
+        "integrations.web:app",
         host=host,
         port=port,
         log_level=log_level,
         timeout_keep_alive=timeout_keep_alive,
         backlog=backlog,
         workers=workers,
+        reload=reload,
     )
-
-
-if __name__ == "__main__":
-    fire.Fire(main)

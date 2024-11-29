@@ -8,16 +8,20 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from .base_evaluate import base_evaluate
 
 
+@auto_blob_store(deep=True)
 @beartype
 async def map_reduce_step(context: StepContext) -> StepOutcome:
     try:
         assert isinstance(context.current_step, MapReduceStep)
 
-        output = await base_evaluate(context.current_step.over, context.model_dump())
+        output = await base_evaluate(
+            context.current_step.over, await context.prepare_for_step()
+        )
 
         return StepOutcome(output=output)
 

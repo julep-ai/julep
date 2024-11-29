@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
+from ...common.protocol.tasks import spec_to_task
 from ..utils import (
     cozo_query,
     partialclass,
@@ -14,7 +15,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-from .create_task import spec_to_task
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -39,6 +39,21 @@ def list_tasks(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> tuple[list[str], dict]:
+    """
+    Lists tasks for a given agent.
+
+    Parameters:
+        developer_id (UUID): The unique identifier of the developer associated with the tasks.
+        agent_id (UUID): The unique identifier of the agent associated with the tasks.
+        limit (int): The maximum number of tasks to return.
+        offset (int): The number of tasks to skip before returning the results.
+        sort_by (Literal["created_at", "updated_at"]): The field to sort the tasks by.
+        direction (Literal["asc", "desc"]): The direction to sort the tasks in.
+
+    Returns:
+        Task[] | CreateTaskRequest[]: The list of tasks.
+    """
+
     sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
 
     list_query = f"""

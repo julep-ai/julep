@@ -11,6 +11,7 @@ This module plays a crucial role in the application by facilitating the manageme
 
 # ruff: noqa: F401, F403, F405
 
+from .count_sessions import count_sessions
 from .create_or_update_session import create_or_update_session
 from .create_session import create_session
 from .delete_session import delete_session

@@ -6,17 +6,18 @@ model_list:
 # -------------------
 
 # Gemini models
+
 - model_name: gemini-1.5-pro
   litellm_params:
-    model: vertex_ai_beta/gemini-1.5-pro
+    model: gemini/gemini-1.5-pro
+    api_key: os.environ/GEMINI_API_KEY
     tags: ["paid"]
-    vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
 
-- model_name: claude-3.5-sonnet
+- model_name: gemini-1.5-pro-latest
   litellm_params:
-    model: vertex_ai/claude-3-5-sonnet@20240620
+    model: gemini/gemini-1.5-pro-latest
+    api_key: os.environ/GEMINI_API_KEY
     tags: ["paid"]
-    vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
 
 # OpenAI models
 - model_name: "gpt-4-turbo"
@@ -31,10 +32,34 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/OPENAI_API_KEY
 
+- model_name: o1-mini
+  litellm_params:
+    model: openai/o1-mini
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["paid"]
+
+- model_name: o1-preview
+  litellm_params:
+    model: openai/o1-preview
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["paid"]
+
 # Anthropic models
-- model_name: "claude-3.5-sonnet"
+- model_name: "claude-3.5-sonnet-20240620"
   litellm_params:
     model: "claude-3-5-sonnet-20240620"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
+- model_name: "claude-3.5-sonnet"
+  litellm_params:
+    model: "claude-3-5-sonnet-20241022"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
+- model_name: "claude-3.5-sonnet-20241022"
+  litellm_params:
+    model: "claude-3-5-sonnet-20241022"
     tags: ["paid"]
     api_key: os.environ/ANTHROPIC_API_KEY
 
@@ -69,6 +94,18 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/GROQ_API_KEY
 
+# OpenRouter models
+- model_name: "mistral-large-2411"
+  litellm_params:
+    model: "openrouter/mistralai/mistral-large-2411"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+  
+- model_name: "qwen-2.5-72b-instruct"
+  litellm_params:
+    model: "openrouter/qwen/qwen-2.5-72b-instruct"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
 
 # -*= Embedding models =*-
 # ------------------------

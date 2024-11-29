@@ -1,1 +1,1 @@
-from .execute import execute
+from .execute import execute as execute

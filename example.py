@@ -1,107 +1,137 @@
-from julep import Julep, AsyncJulep
+### Step 0: Setup
 
-# 🔑 Initialize the Julep client
-#     Or alternatively, use AsyncJulep for async operations
-client = Julep(api_key="your_api_key")
+import os
+import time
+import yaml
+from julep import Julep # or AsyncJulep
 
-##################
-## 🤖 Agent 🤖 ##
-##################
+client = Julep(api_key=os.environ["JULEP_API_KEY"])
 
-# Create a research agent
+### Step 1: Create an Agent
+
 agent = client.agents.create(
-    name="Research Agent",
-    about="You are a research agent designed to handle research inquiries.",
+    name="Storytelling Agent",
     model="claude-3.5-sonnet",
+    about="You are a creative storyteller that crafts engaging stories on a myriad of topics.",
 )
 
-# 🔍 Add a web search tool to the agent
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="web_search",  # Should be python valid variable name
-    description="Use this tool to research inquiries.",
-    integration={
-        "provider": "brave",
-        "method": "search",
-        "setup": {
-            "api_key": "your_brave_api_key",
-        },
-    },
-)
+### Step 2: Create a Task that generates a story and comic strip
 
-#################
-## 💬 Chat 💬 ##
-#################
+task_yaml = """
+name: Storyteller
+description: Create a story based on an idea.
 
-# Start an interactive chat session with the agent
-session = client.sessions.create(
-    agent_id=agent.id,
-    context_overflow="adaptive",  # 🧠 Julep will dynamically compute the context window if needed
-)
+tools:
+  - name: research_wikipedia
+    integration:
+      provider: wikipedia
+      method: search
 
-# 🔄 Chat loop
-while (user_input := input("You: ")) != "exit":
-    response = client.sessions.chat(
-        session_id=session.id,
-        message=user_input,
-    )
+main:
+  # Step 1: Generate plot idea
+  - prompt:
+      - role: system
+        content: You are {{agent.name}}. {{agent.about}}
+      - role: user
+        content: >
+          Based on the idea '{{_.idea}}', generate a list of 5 plot ideas. Go crazy and be as creative as possible. Return your output as a list of long strings inside ```yaml tags at the end of your response.
+    unwrap: true
 
-    print("Agent: ", response.choices[0].message.content)
+  - evaluate:
+      plot_ideas: load_yaml(_.split('```yaml')[1].split('```')[0].strip())
 
+  # Step 2: Extract research fields from the plot ideas
+  - prompt:
+      - role: system
+        content: You are {{agent.name}}. {{agent.about}}
+      - role: user
+        content: >
+          Here are some plot ideas for a story:
+          {% for idea in _.plot_ideas %}
+          - {{idea}}
+          {% endfor %}
 
-#################
-## 📋 Task 📋 ##
-#################
+          To develop the story, we need to research for the plot ideas.
+          What should we research? Write down wikipedia search queries for the plot ideas you think are interesting.
+          Return your output as a yaml list inside ```yaml tags at the end of your response.
+    unwrap: true
+    settings:
+      model: gpt-4o-mini
+      temperature: 0.7
 
-# Create a recurring research task for the agent
+  - evaluate:
+      research_queries: load_yaml(_.split('```yaml')[1].split('```')[0].strip())
+
+  # Step 3: Research each plot idea
+  - foreach:
+      in: _.research_queries
+      do:
+        tool: research_wikipedia
+        arguments:
+          query: _
+
+  - evaluate:
+      wikipedia_results: 'NEWLINE.join([f"- {doc.metadata.title}: {doc.metadata.summary}" for item in _ for doc in item.documents])'
+
+  # Step 4: Think and deliberate
+  - prompt:
+      - role: system
+        content: You are {{agent.name}}. {{agent.about}}
+      - role: user
+        content: |-
+          Before we write the story, let's think and deliberate. Here are some plot ideas:
+          {% for idea in outputs[1].plot_ideas %}
+          - {{idea}}
+          {% endfor %}
+          
+          Here are the results from researching the plot ideas on Wikipedia:
+          {{_.wikipedia_results}}
+
+          Think about the plot ideas critically. Combine the plot ideas with the results from Wikipedia to create a detailed plot for a story.
+          Write down all your notes and thoughts.
+          Then finally write the plot as a yaml object inside ```yaml tags at the end of your response. The yaml object should have the following structure:
+
+          ```yaml
+          title: "<string>"
+          characters:
+          - name: "<string>"
+            about: "<string>"
+          synopsis: "<string>"
+          scenes:
+          - title: "<string>"
+            description: "<string>"
+            characters:
+            - name: "<string>"
+              role: "<string>"
+            plotlines:
+            - "<string>"```
+
+          Make sure the yaml is valid and the characters and scenes are not empty. Also take care of semicolons and other gotchas of writing yaml.
+    unwrap: true
+
+  - evaluate:
+      plot: "load_yaml(_.split('```yaml')[1].split('```')[0].strip())"
+"""
+
 task = client.tasks.create(
     agent_id=agent.id,
-    name="Research Task",
-    description="Research the given topic every 24 hours.",
-    #
-    # 🛠️ Task specific tools
-    tools=[
-        {
-            "name": "send_email",
-            "description": "Send an email to the user with the results.",
-            "api_call": {
-                "method": "post",
-                "url": "https://api.sendgrid.com/v3/mail/send",
-                "headers": {"Authorization": "Bearer YOUR_SENDGRID_API_KEY"},
-            },
-        }
-    ],
-    #
-    # 🔢 Task main steps
-    main=[
-        #
-        # Step 1: Research the topic
-        {
-            # `_` (underscore) variable refers to the previous step's output
-            # Here, it points to the topic input from the user
-            "prompt": "Look up topic '{{_.topic}}' and summarize the results.",
-            "tools": [{"ref": {"name": "web_search"}}],  # 🔍 Use the web search tool from the agent
-            "unwrap": True,
-        },
-        #
-        # Step 2: Send email with research results
-        {
-            "tool": "send_email",
-            "arguments": {
-                "subject": "Research Results",
-                "body": "'Here are the research results for today: ' + _.content",
-                "to": "inputs[0].email",  # Reference the email from the user's input
-            },
-        },
-        #
-        # Step 3: Wait for 24 hours before repeating
-        {"sleep": "24 * 60 * 60"},
-    ],
+    **yaml.safe_load(task_yaml)
 )
 
-# 🚀 Start the recurring task
-client.executions.create(task_id=task.id, input={"topic": "Python"})
+### Step 3: Execute the Task
 
-# 🔁 This will run the task every 24 hours,
-#    research for the topic "Python", and
-#    send the results to the user's email
+execution = client.executions.create(
+    task_id=task.id,
+    input={"idea": "A cat who learns to fly"}
+)
+
+# 🎉 Watch as the story and comic panels are generated
+while (result := client.executions.get(execution.id)).status not in ['succeeded', 'failed']:
+    print(result.status, result.output)
+    time.sleep(1)
+
+# 📦 Once the execution is finished, retrieve the results
+if result.status == "succeeded":
+    print(result.output)
+else:
+    raise Exception(result.error)

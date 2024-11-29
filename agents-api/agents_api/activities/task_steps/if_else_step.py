@@ -6,10 +6,12 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from .base_evaluate import base_evaluate
 
 
+@auto_blob_store(deep=True)
 @beartype
 async def if_else_step(context: StepContext) -> StepOutcome:
     # NOTE: This activity is only for logging, so we just evaluate the expression
@@ -18,7 +20,7 @@ async def if_else_step(context: StepContext) -> StepOutcome:
         assert isinstance(context.current_step, IfElseWorkflowStep)
 
         expr: str = context.current_step.if_
-        output = await base_evaluate(expr, context.model_dump())
+        output = await base_evaluate(expr, await context.prepare_for_step())
         output: bool = bool(output)
 
         result = StepOutcome(output=output)

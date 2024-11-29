@@ -1,9 +1,11 @@
 import "@typespec/http";
+import "@typespec/sse";
 
 import "./scalars.tsp";
 import "./types.tsp";
 
 using TypeSpec.Http;
+using TypeSpec.SSE;
 
 namespace Common;
 
@@ -140,28 +142,6 @@ interface ChildLimitOffsetPagination<
     };
 }
 
-interface ChildStreamEndpoint<
-    T,
-    DocString extends valueof string = "Stream events emitted by the parent"
-> {
-    @get
-    @doc(DocString)
-    stream(
-        @path
-        @doc("ID of parent")
-        id: uuid,
-
-        @query
-        @doc("Next page token")
-        next_token: string | null = null,
-    ): {
-        @header contentType: eventStream;
-
-        @body
-        @doc("Stream of events emitted by the parent")
-        body: T;
-    };
-}
 
 interface ChildCreateEndpoint<
     CreateType,
@@ -273,4 +253,21 @@ interface ChildPatchEndpoint<
         @doc("Details of the resource patched along with ID")
         body: ResourceUpdatedResponse;
     };
+}
+
+interface ChildStreamEndpoint<
+    T,
+    DocString extends valueof string = "Stream events emitted by the parent"
+> {
+    @get
+    @doc(DocString)
+    stream(
+        @path
+        @doc("ID of parent")
+        id: uuid,
+
+        @query
+        @doc("Next page token")
+        next_token: string | null = null,
+    ): SSEStream<StreamEvent<T>>;
 }

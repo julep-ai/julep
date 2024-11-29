@@ -1,6 +1,8 @@
+import "@typespec/events";
 import "@typespec/http";
 import "@typespec/openapi";
 
+using TypeSpec.Events;
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
 
@@ -11,7 +13,7 @@ namespace Common;
 //
 
 alias Metadata = Record<unknown>;
-alias MetadataFilter = Record<concreteType>;
+alias MetadataFilter = Record<unknown>;
 
 model ResourceCreatedResponse {
     @doc("ID of created resource")
@@ -50,5 +52,10 @@ model PaginationOptions {
     @query direction: sortDirection = "asc",
 
     /** Object to filter results by metadata */
-    @query metadata_filter: MetadataFilter,
+    @query metadata_filter: Record<unknown> = #{},
+}
+
+@events
+union StreamEvent<T> {
+    T;
 }

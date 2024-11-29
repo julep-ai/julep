@@ -10,6 +10,7 @@ from ...autogen.openapi_model import CreateEntryRequest, Entry, Relation
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     mark_session_updated_query,
@@ -40,6 +41,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @cozo_query
+@increase_counter("create_entries")
 @beartype
 def create_entries(
     *,
@@ -51,10 +53,10 @@ def create_entries(
     developer_id = str(developer_id)
     session_id = str(session_id)
 
-    data_dicts = [item.model_dump(exclude_unset=True) for item in data]
+    data_dicts = [item.model_dump(mode="json") for item in data]
 
     for item in data_dicts:
-        item["content"] = content_to_json(item["content"])
+        item["content"] = content_to_json(item["content"] or [])
         item["session_id"] = session_id
         item["entry_id"] = item.pop("id", None) or str(uuid4())
         item["created_at"] = (item.get("created_at") or utcnow()).timestamp()

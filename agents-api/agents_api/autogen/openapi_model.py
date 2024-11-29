@@ -14,6 +14,7 @@ from pydantic import (
     model_validator,
 )
 
+from ..common.storage_handler import RemoteObject
 from ..common.utils.datetime import utcnow
 from .Agents import *
 from .Chat import *
@@ -21,6 +22,7 @@ from .Common import *
 from .Docs import *
 from .Entries import *
 from .Executions import *
+from .Files import *
 from .Jobs import *
 from .Sessions import *
 from .Tasks import *
@@ -75,6 +77,14 @@ class ChatMLImageContentPart(ContentModel):
 class InputChatMLMessage(Message):
     pass
 
+
+IntegrationDef = (
+    BraveIntegrationDef
+    | EmailIntegrationDef
+    | SpiderIntegrationDef
+    | WikipediaIntegrationDef
+    | WeatherIntegrationDef
+)
 
 # Patches
 # -------
@@ -312,13 +322,13 @@ CreateTaskRequest.validate_subworkflows = validate_subworkflows
 ChatMLContent = (
     list[ChatMLTextContentPart | ChatMLImageContentPart]
     | Tool
-    | ChosenToolCall
+    | BaseChosenToolCall
     | str
     | ToolResponse
     | list[
         list[ChatMLTextContentPart | ChatMLImageContentPart]
         | Tool
-        | ChosenToolCall
+        | BaseChosenToolCall
         | str
         | ToolResponse
     ]
@@ -347,6 +357,10 @@ assert TransitionType == Transition.model_fields["type"].annotation
 # -------------
 
 
+class SystemDef(SystemDef):
+    arguments: dict[str, Any] | None | RemoteObject = None
+
+
 class CreateTransitionRequest(Transition):
     # The following fields are optional in this
 
@@ -369,7 +383,7 @@ class CreateEntryRequest(BaseEntry):
         model: str,
         *,
         role: ChatMLRole,
-        content: ChatMLContent,
+        content: ChatMLContent | None = None,
         name: str | None = None,
         source: ChatMLSource,
         **kwargs: dict,
@@ -381,7 +395,7 @@ class CreateEntryRequest(BaseEntry):
 
         return cls(
             role=role,
-            content=content,
+            content=content or [],
             name=name,
             source=source,
             tokenizer=tokenizer["type"],

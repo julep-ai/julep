@@ -65,7 +65,7 @@ Enabling Adaptive Context is straightforward and can be done when creating a new
 from julep import Client
 
 # Initialize the Julep client
-client = Client(api_key="your_api_key")
+client = Client(api_key="your_api_key", environment=“dev”)
 
 # Create a new session with Adaptive Context enabled
 session = client.sessions.create(
@@ -84,7 +84,7 @@ session = client.sessions.create(
 import { Client } from "@julep/sdk";
 
 // Initialize the Julep client
-const client = new Client({ apiKey: "your-api-key" });
+const client = new Client({ apiKey: "your-api-key", environment:“dev” });
 
 // Create a new session with Adaptive Context enabled
 const session = await client.sessions.create({

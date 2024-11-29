@@ -1,5 +1,6 @@
 # Managing Sessions
 
+
 This tutorial will guide you through creating and managing sessions with your Julep agents.
 
 ## Creating a Session
@@ -7,7 +8,7 @@ This tutorial will guide you through creating and managing sessions with your Ju
 To create a new session with an agent:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/sessions" \
+curl -X POST "https://dev.julep.ai/api/sessions" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -22,7 +23,7 @@ curl -X POST "https://api.julep.ai/api/sessions" \
 To send a message in a session:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/messages" \
+curl -X POST "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID/messages" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -36,7 +37,7 @@ curl -X POST "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/messages" \
 If you're dealing with long conversations, you may need to handle context overflow:
 
 ```bash
-curl -X PUT "https://api.julep.ai/api/sessions/YOUR_SESSION_ID" \
+curl -X PUT "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{

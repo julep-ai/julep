@@ -1,0 +1,29 @@
+name: 🚀 Feature
+description: "Submit a proposal for a new feature"
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: feature-description
+    validations:
+      required: true
+    attributes:
+      label: "🔖 Feature description"
+      placeholder: "A clear and concise description of what the feature is."
+  - type: textarea
+    id: pitch
+    attributes:
+      label: "🎤 Why is this feature needed ?"
+      placeholder: "Please explain why this feature should be implemented and how it would be used. Add examples, if applicable."
+  - type: textarea
+    id: solution
+    attributes:
+      label: "✌️ How do you aim to achieve this?"
+      placeholder: "A clear and concise description of what you want to happen."
+  - type: checkboxes
+    id: no-duplicate-issues
+    attributes:
+      label: "👀 Have you searched issues and PRs to see if this feature request has been raised before?"
+      options:
+        - label: "I checked and didn't find similar issue"
+          required: true

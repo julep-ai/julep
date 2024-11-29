@@ -33,7 +33,7 @@ model TaskTool extends CreateToolRequest {
 /** Reference to a tool by id */
 model ToolRefById {
     @visibility("read", "create")
-    id?: uuid;
+    id?: string;
 }
 
 /** Reference to a tool by name */
@@ -65,8 +65,8 @@ model Task {
     /** Tools defined specifically for this task not included in the Agent itself. */
     tools: TaskTool[] = #[];
 
-    /** Whether to inherit tools from the parent agent or not. Defaults to true. */
-    inherit_tools: boolean = true;
+    /** Whether to inherit tools from the parent agent or not. Defaults to false. */
+    inherit_tools: boolean = false;
 
     ...HasId;
     ...HasTimestamps;

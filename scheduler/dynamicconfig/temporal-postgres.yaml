@@ -4,3 +4,40 @@ limit.maxIDLength:
 system.forceSearchAttributesCacheRefreshOnRead:
   - value: false
     constraints: {}
+
+matching.rps:
+  - value: 600 # default 1200
+    constraints: {}
+
+limit.blobSize.error:
+  - value: 4194304 # default 2*1024*1024
+    constraints: {}
+
+limit.historySize.error:
+  - value: 104857600 # default 50*1024*1024
+    constraints: {}
+
+limit.historyCount.error:
+  - value: 102400 # default 50*1024
+    constraints: {}
+
+limit.numPendingActivities.error:
+  - value: 4000 # default 2000
+    constraints: {}
+
+limit.numPendingChildExecutions.error:
+  - value: 4000 # default 2000
+    constraints: {}
+
+frontend.MaxExecutionCountBatchOperationPerNamespace:
+  - value: 10000
+    constraints: {}
+
+frontend.MaxConcurrentBatchOperationPerNamespace:
+  - value: 100
+    constraints: {}
+
+# worker.ScannerMaxConcurrentWorkflowTaskExecutionSize (10 default), worker.ParentCloseMaxConcurrentWorkflowTaskExecutionSize (1000 default) (reduce?)
+
+
+# worker.ScannerMaxConcurrentActivityExecutionSize (10 default), worker.ParentCloseMaxConcurrentActivityExecutionSize (1000 default) (reduce?)

@@ -71,7 +71,9 @@ def get_history(
                 token_count,
                 tokenizer,
                 created_at,
+                tool_calls,
                 timestamp,
+                tool_call_id,
             },
             source in $allowed_sources,
             session_id = to_uuid($session_id),
@@ -85,7 +87,9 @@ def get_history(
                 "token_count": token_count,
                 "tokenizer":   tokenizer,
                 "created_at":  created_at,
-                "timestamp":   timestamp
+                "timestamp":   timestamp,
+                "tool_calls":  tool_calls,
+                "tool_call_id": tool_call_id,
             }
 
         session_relations[unique(item)] :=

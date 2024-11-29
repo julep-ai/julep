@@ -7,6 +7,7 @@ import "./chat";
 import "./docs";
 import "./entries";
 import "./executions";
+import "./files";
 import "./jobs";
 import "./sessions";
 import "./tasks";
@@ -95,6 +96,9 @@ namespace Api {
     @route("/docs")
     interface IndividualDocsRoute extends Docs.IndividualDocEndpoints {}
 
+    @route("/tasks")
+    interface TasksGetRoute extends Tasks.GetEndpoints {}
+
     @route("/agents/{id}/tasks")
     interface TasksRoute extends Tasks.Endpoints {}
 
@@ -115,4 +119,7 @@ namespace Api {
 
     @route("/jobs")
     interface JobRoute extends Jobs.Endpoints {}
+
+    @route("/files")
+    interface FilesRoute extends Files.Endpoints {}
 }

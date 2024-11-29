@@ -1,7 +1,7 @@
 from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
-from fastapi import BackgroundTasks, Depends, Header
+from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
@@ -17,10 +17,17 @@ from ...common.protocol.sessions import ChatContext
 from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
+from ...env import max_free_sessions
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
+from ...models.session.count_sessions import count_sessions as count_sessions_query
+from .metrics import total_tokens_per_user
 from .router import router
+
+COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
+
+COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
 @router.post(
@@ -35,6 +42,42 @@ async def chat(
     background_tasks: BackgroundTasks,
     x_custom_api_key: Optional[str] = Header(None, alias="X-Custom-Api-Key"),
 ) -> ChatResponse:
+    """
+    Initiates a chat session.
+
+    Parameters:
+        developer (Developer): The developer associated with the chat session.
+        session_id (UUID): The unique identifier of the chat session.
+        chat_input (ChatInput): The chat input data.
+        background_tasks (BackgroundTasks): The background tasks to run.
+        x_custom_api_key (Optional[str]): The custom API key.
+
+    Returns:
+        ChatResponse: The chat response.
+    """
+
+    # check if the developer is paid
+    if "paid" not in developer.tags:
+        # get the session length
+        sessions = count_sessions_query(developer_id=developer.id)
+        session_length = sessions["count"]
+        if session_length > max_free_sessions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Session length exceeded the free tier limit",
+            )
+
+    # check if the developer is paid
+    if "paid" not in developer.tags:
+        # get the session length
+        sessions = count_sessions_query(developer_id=developer.id)
+        session_length = sessions["count"]
+        if session_length > max_free_sessions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Session length exceeded the free tier limit",
+            )
+
     if chat_input.stream:
         raise NotImplementedError("Streaming is not yet implemented")
 
@@ -46,7 +89,7 @@ async def chat(
 
     # Merge the settings and prepare environment
     chat_context.merge_settings(chat_input)
-    settings: dict = chat_context.settings.model_dump()
+    settings: dict = chat_context.settings.model_dump(mode="json", exclude_none=True)
 
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(
@@ -61,7 +104,7 @@ async def chat(
     env["docs"] = [
         dict(
             title=ref.title,
-            content=[snippet.content for snippet in ref.snippets],
+            content=[ref.snippet.content],
         )
         for ref in doc_references
     ]
@@ -79,7 +122,7 @@ async def chat(
         past_messages = system_messages + past_messages
 
     # Render the incoming messages
-    new_raw_messages = [msg.model_dump() for msg in chat_input.messages]
+    new_raw_messages = [msg.model_dump(mode="json") for msg in chat_input.messages]
 
     if chat_context.session.render_templates:
         new_messages = await render_template(new_raw_messages, variables=env)
@@ -92,6 +135,22 @@ async def chat(
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
 
+    # Check if using Claude model and has specific tool types
+    is_claude_model = settings["model"].lower().startswith("claude-3.5")
+
+    # Format tools for litellm
+    # formatted_tools = (
+    #     tools if is_claude_model else [format_tool(tool) for tool in tools]
+    # )
+
+    # Check if using Claude model and has specific tool types
+    is_claude_model = settings["model"].lower().startswith("claude-3.5")
+
+    # Format tools for litellm
+    # formatted_tools = (
+    #     tools if is_claude_model else [format_tool(tool) for tool in tools]
+    # )
+
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
     if chat_context.session.context_overflow == "truncate":
@@ -100,19 +159,61 @@ async def chat(
 
     # FIXME: Hotfix for datetime not serializable. Needs investigation
     messages = [
-        msg.model_dump() if hasattr(msg, "model_dump") else msg for msg in messages
+        {
+            k: v
+            for k, v in m.items()
+            if k in ["role", "content", "tool_calls", "tool_call_id", "user"]
+        }
+        for m in messages
     ]
 
-    messages = [
-        dict(role=m["role"], content=m["content"], user=m.get("user")) for m in messages
-    ]
+    # FIXME: Hack to make the computer use tools compatible with litellm
+    # Issue was: litellm expects type to be `computer_20241022` and spec to be
+    # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
+    # but we don't allow that (spec should match type).
+    formatted_tools = []
+    for i, tool in enumerate(tools):
+        if tool.type == "computer_20241022" and tool.computer_20241022:
+            function = tool.computer_20241022
+            tool = {
+                "type": tool.type,
+                "function": {
+                    "name": tool.name,
+                    "parameters": {
+                        k: v
+                        for k, v in function.model_dump().items()
+                        if k not in ["name", "type"]
+                    }
+                    if function is not None
+                    else {},
+                },
+            }
+            formatted_tools.append(tool)
 
-    # Get the response from the model
+    # If not using Claude model
+    # FIXME: Enable formatted_tools once format-tools PR is merged.
+    if not is_claude_model:
+        formatted_tools = None
+
+    # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
+    # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
+    is_groq_model = settings["model"].lower().startswith("llama-3.1")
+    if is_groq_model:
+        messages = [
+            {
+                k: v
+                for k, v in message.items()
+                if k not in ["tool_calls", "tool_call_id", "user", "continue_", "name"]
+            }
+            for message in messages
+        ]
+
+    # Use litellm for other models
     model_response = await litellm.acompletion(
         messages=messages,
-        tools=tools or None,
-        user=str(developer.id),  # For tracking usage
-        tags=developer.tags,  # For filtering models in litellm
+        tools=formatted_tools or None,
+        user=str(developer.id),
+        tags=developer.tags,
         custom_api_key=x_custom_api_key,
         **settings,
     )
@@ -164,6 +265,12 @@ async def chat(
         docs=doc_references,
         usage=model_response.usage.model_dump(),
         choices=[choice.model_dump() for choice in model_response.choices],
+    )
+
+    total_tokens_per_user.labels(str(developer.id)).inc(
+        amount=chat_response.usage.total_tokens
+        if chat_response.usage is not None
+        else 0
     )
 
     return chat_response

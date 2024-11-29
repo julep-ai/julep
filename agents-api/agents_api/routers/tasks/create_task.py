@@ -23,7 +23,6 @@ async def create_task(
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the task spec
     # SCRUM-10
-    # TODO: Validate the jinja templates
 
     # Validate the input schema
     try:
@@ -36,10 +35,8 @@ async def create_task(
     except ValidationError:
         pass
 
-    task = create_task_query(
+    return create_task_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=data,
     )
-
-    return ResourceCreatedResponse(id=task.id, created_at=task.created_at, jobs=[])

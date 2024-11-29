@@ -14,6 +14,8 @@ group "default" {
     "memory-store",
     "integrations",
     "gateway",
+    "blob-store",
+    "code-interpreter",
   ]
 }
 
@@ -68,5 +70,23 @@ target "gateway" {
   tags = [
     "julepai/gateway:${TAG}",
     "julepai/gateway:git-${GIT_SHA}"
+  ]
+}
+
+target "blob-store" {
+  context = "./blob-store"
+  dockerfile = "Dockerfile"
+  tags = [
+    "julepai/blob-store:${TAG}",
+    "julepai/blob-store:git-${GIT_SHA}"
+  ]
+}
+
+target "code-interpreter" {
+  context = "./code-interpreter/vendor/cohere-ai/cohere-terrarium"
+  dockerfile = "Dockerfile"
+  tags = [
+    "julepai/code-interpreter:${TAG}",
+    "julepai/code-interpreter:git-${GIT_SHA}"
   ]
 }

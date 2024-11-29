@@ -1,3 +1,3 @@
-from .get_integration import get_integration
-from .get_integration_tool import get_integration_tool
-from .get_integrations import get_integrations
+from .get_integration import get_integration as get_integration
+from .get_integration_tool import get_integration_tool as get_integration_tool
+from .get_integrations import get_integrations as get_integrations

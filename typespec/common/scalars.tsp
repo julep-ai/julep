@@ -18,6 +18,11 @@ alias concreteType = numeric | string | boolean | null;
 @pattern("^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$")
 scalar identifierSafeUnicode extends string;
 
+/** Valid mime types */
+@maxLength(120)
+@pattern("^(application|audio|font|example|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)$")
+scalar mimeType extends string;
+
 /** Valid python identifier names */
 @pattern("^[^\\W0-9]\\w*$")
 @maxLength(40)
@@ -48,7 +53,13 @@ alias json = "application/json";
 alias eventStream = "text/event-stream";
 
 /** Different possible sources that can produce new entries */
-alias entrySource = "api_request" | "api_response" | "tool_response" | "internal" | "summarizer" | "meta";
+alias entrySource =
+    | "api_request"
+    | "api_response"
+    | "tool_response"
+    | "internal"
+    | "summarizer"
+    | "meta";
 
 /** A simple python expression compatible with SimpleEval. */
 scalar PyExpression extends string;

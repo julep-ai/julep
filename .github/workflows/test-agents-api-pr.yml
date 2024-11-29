@@ -20,6 +20,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install libboost
+        run: sudo apt-get install -y libboost-all-dev
+
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
 
@@ -44,7 +47,7 @@ jobs:
       - name: Run tests
         run: |
           cd agents-api
-          poetry run poe test --fail-limit 1
+          poetry run poe test --fail-limit 3
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.types import dict_like
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -17,6 +18,7 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -36,6 +38,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @cozo_query
+@increase_counter("create_execution")
 @beartype
 def create_execution(
     *,
@@ -56,6 +59,11 @@ def create_execution(
     else:
         data["metadata"] = data.get("metadata", {})
         execution_data = data
+
+    if execution_data["output"] is not None and not isinstance(
+        execution_data["output"], dict
+    ):
+        execution_data["output"] = {OUTPUT_UNNEST_KEY: execution_data["output"]}
 
     columns, values = cozo_process_mutate_data(
         {

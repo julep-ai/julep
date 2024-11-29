@@ -46,8 +46,8 @@ This guide provides a brief overview for new contributors to get started with th
 
 ## Schema
 
-### Relation `agent_default_settings`
 ```
+[agent_default_settings]
 ┌───┬────────────────────┬────────┬─────────┬─────────────┐
 │   │ column             │ is_key │ type    │ has_default │
 ├───┼────────────────────┼────────┼─────────┼─────────────┤
@@ -61,10 +61,8 @@ This guide provides a brief overview for new contributors to get started with th
 │ 7 │ min_p              │ False  │ Float   │ True        │
 │ 8 │ preset             │ False  │ String? │ True        │
 └───┴────────────────────┴────────┴─────────┴─────────────┘
-```
 
-### Relation `agents`
-```
+[agents]
 ┌───┬──────────────┬────────┬──────────┬─────────────┐
 │   │ column       │ is_key │ type     │ has_default │
 ├───┼──────────────┼────────┼──────────┼─────────────┤
@@ -78,10 +76,8 @@ This guide provides a brief overview for new contributors to get started with th
 │ 7 │ updated_at   │ False  │ Float    │ True        │
 │ 8 │ metadata     │ False  │ Json     │ True        │
 └───┴──────────────┴────────┴──────────┴─────────────┘
-```
 
-### Relation `developers`
-```
+[developers]
 ┌───┬──────────────┬────────┬──────────┬─────────────┐
 │   │ column       │ is_key │ type     │ has_default │
 ├───┼──────────────┼────────┼──────────┼─────────────┤
@@ -93,10 +89,8 @@ This guide provides a brief overview for new contributors to get started with th
 │ 5 │ created_at   │ False  │ Float    │ True        │
 │ 6 │ updated_at   │ False  │ Float    │ True        │
 └───┴──────────────┴────────┴──────────┴─────────────┘
-```
 
-### Relation `docs`
-```
+[docs]
 ┌───┬────────────┬────────┬────────┬─────────────┐
 │   │ column     │ is_key │ type   │ has_default │
 ├───┼────────────┼────────┼────────┼─────────────┤
@@ -107,28 +101,25 @@ This guide provides a brief overview for new contributors to get started with th
 │ 4 │ created_at │ False  │ Float  │ True        │
 │ 5 │ metadata   │ False  │ Json   │ True        │
 └───┴────────────┴────────┴────────┴─────────────┘
-```
 
-### Relation `entries`
-```
-┌───┬─────────────┬────────┬─────────┬─────────────┐
-│   │ column      │ is_key │ type    │ has_default │
-├───┼─────────────┼────────┼─────────┼─────────────┤
-│ 0 │ session_id  │ True   │ Uuid    │ False       │
-│ 1 │ entry_id    │ True   │ Uuid    │ True        │
-│ 2 │ source      │ True   │ String  │ False       │
-│ 3 │ role        │ True   │ String  │ False       │
-│ 4 │ name        │ True   │ String? │ True        │
-│ 5 │ content     │ False  │ [Json]  │ False       │
-│ 6 │ token_count │ False  │ Int     │ False       │
-│ 7 │ tokenizer   │ False  │ String  │ False       │
-│ 8 │ created_at  │ False  │ Float   │ True        │
-│ 9 │ timestamp   │ False  │ Float   │ True        │
-└───┴─────────────┴────────┴─────────┴─────────────┘
-```
+[entries]
+┌────┬──────────────┬────────┬─────────┬─────────────┐
+│    │ column       │ is_key │ type    │ has_default │
+├────┼──────────────┼────────┼─────────┼─────────────┤
+│ 0  │ session_id   │ True   │ Uuid    │ False       │
+│ 1  │ entry_id     │ True   │ Uuid    │ True        │
+│ 2  │ source       │ True   │ String  │ False       │
+│ 3  │ role         │ True   │ String  │ False       │
+│ 4  │ name         │ True   │ String? │ True        │
+│ 5  │ content      │ False  │ String  │ False       │
+│ 6  │ tool_call_id │ False  │ String? │ True        │
+│ 7  │ token_count  │ False  │ Int     │ False       │
+│ 8  │ tokenizer    │ False  │ String  │ False       │
+│ 9  │ created_at   │ False  │ Float   │ True        │
+│ 10 │ timestamp    │ False  │ Float   │ True        │
+└────┴──────────────┴────────┴─────────┴─────────────┘
 
-### Relation `executions`
-```
+[executions]
 ┌───┬──────────────┬────────┬─────────┬─────────────┐
 │   │ column       │ is_key │ type    │ has_default │
 ├───┼──────────────┼────────┼─────────┼─────────────┤
@@ -143,10 +134,22 @@ This guide provides a brief overview for new contributors to get started with th
 │ 8 │ created_at   │ False  │ Float   │ True        │
 │ 9 │ updated_at   │ False  │ Float   │ True        │
 └───┴──────────────┴────────┴─────────┴─────────────┘
-```
 
-### Relation `memories`
-```
+[files]
+┌───┬──────────────┬────────┬─────────┬─────────────┐
+│   │ column       │ is_key │ type    │ has_default │
+├───┼──────────────┼────────┼─────────┼─────────────┤
+│ 0 │ developer_id │ True   │ Uuid    │ False       │
+│ 1 │ file_id      │ True   │ Uuid    │ False       │
+│ 2 │ name         │ False  │ String  │ False       │
+│ 3 │ description  │ False  │ String  │ True        │
+│ 4 │ mime_type    │ False  │ String? │ True        │
+│ 5 │ size         │ False  │ Int     │ False       │
+│ 6 │ hash         │ False  │ String  │ False       │
+│ 7 │ created_at   │ False  │ Float   │ True        │
+└───┴──────────────┴────────┴─────────┴─────────────┘
+
+[memories]
 ┌───┬──────────────────┬────────┬────────────┬─────────────┐
 │   │ column           │ is_key │ type       │ has_default │
 ├───┼──────────────────┼────────┼────────────┼─────────────┤
@@ -159,10 +162,8 @@ This guide provides a brief overview for new contributors to get started with th
 │ 6 │ created_at       │ False  │ Float      │ True        │
 │ 7 │ embedding        │ False  │ <F32;768>? │ True        │
 └───┴──────────────────┴────────┴────────────┴─────────────┘
-```
 
-### Relation `memory_lookup`
-```
+[memory_lookup]
 ┌───┬───────────┬────────┬───────┬─────────────┐
 │   │ column    │ is_key │ type  │ has_default │
 ├───┼───────────┼────────┼───────┼─────────────┤
@@ -170,10 +171,8 @@ This guide provides a brief overview for new contributors to get started with th
 │ 1 │ user_id   │ True   │ Uuid? │ True        │
 │ 2 │ memory_id │ True   │ Uuid  │ False       │
 └───┴───────────┴────────┴───────┴─────────────┘
-```
 
-### Relation `relations`
-```
+[relations]
 ┌───┬──────────┬────────┬────────┬─────────────┐
 │   │ column   │ is_key │ type   │ has_default │
 ├───┼──────────┼────────┼────────┼─────────────┤
@@ -181,20 +180,16 @@ This guide provides a brief overview for new contributors to get started with th
 │ 1 │ relation │ True   │ String │ False       │
 │ 2 │ tail     │ True   │ Uuid   │ False       │
 └───┴──────────┴────────┴────────┴─────────────┘
-```
 
-### Relation `session_cache`
-```
+[session_cache]
 ┌───┬────────┬────────┬────────┬─────────────┐
 │   │ column │ is_key │ type   │ has_default │
 ├───┼────────┼────────┼────────┼─────────────┤
 │ 0 │ key    │ True   │ String │ False       │
 │ 1 │ value  │ False  │ Json   │ False       │
 └───┴────────┴────────┴────────┴─────────────┘
-```
 
-### Relation `session_lookup`
-```
+[session_lookup]
 ┌───┬──────────────────┬────────┬────────┬─────────────┐
 │   │ column           │ is_key │ type   │ has_default │
 ├───┼──────────────────┼────────┼────────┼─────────────┤
@@ -202,28 +197,25 @@ This guide provides a brief overview for new contributors to get started with th
 │ 1 │ participant_type │ True   │ String │ False       │
 │ 2 │ participant_id   │ True   │ Uuid   │ False       │
 └───┴──────────────────┴────────┴────────┴─────────────┘
-```
 
-### Relation `sessions`
-```
-┌───┬──────────────────┬────────┬──────────┬─────────────┐
-│   │ column           │ is_key │ type     │ has_default │
-├───┼──────────────────┼────────┼──────────┼─────────────┤
-│ 0 │ developer_id     │ True   │ Uuid     │ False       │
-│ 1 │ session_id       │ True   │ Uuid     │ False       │
-│ 2 │ updated_at       │ True   │ Validity │ True        │
-│ 3 │ situation        │ False  │ String   │ False       │
-│ 4 │ summary          │ False  │ String?  │ True        │
-│ 5 │ created_at       │ False  │ Float    │ True        │
-│ 6 │ metadata         │ False  │ Json     │ True        │
-│ 7 │ render_templates │ False  │ Bool     │ True        │
-│ 8 │ token_budget     │ False  │ Int?     │ True        │
-│ 9 │ context_overflow │ False  │ String?  │ True        │
-└───┴──────────────────┴────────┴──────────┴─────────────┘
-```
+[sessions]
+┌────┬────────────────────┬────────┬──────────┬─────────────┐
+│    │ column             │ is_key │ type     │ has_default │
+├────┼────────────────────┼────────┼──────────┼─────────────┤
+│ 0  │ developer_id       │ True   │ Uuid     │ False       │
+│ 1  │ session_id         │ True   │ Uuid     │ False       │
+│ 2  │ updated_at         │ True   │ Validity │ True        │
+│ 3  │ situation          │ False  │ String   │ False       │
+│ 4  │ summary            │ False  │ String?  │ True        │
+│ 5  │ created_at         │ False  │ Float    │ True        │
+│ 6  │ metadata           │ False  │ Json     │ True        │
+│ 7  │ render_templates   │ False  │ Bool     │ True        │
+│ 8  │ token_budget       │ False  │ Int?     │ True        │
+│ 9  │ context_overflow   │ False  │ String?  │ True        │
+│ 10 │ forward_tool_calls │ False  │ Bool?    │ True        │
+└────┴────────────────────┴────────┴──────────┴─────────────┘
 
-### Relation `snippets`
-```
+[snippets]
 ┌───┬───────────┬────────┬─────────────┬─────────────┐
 │   │ column    │ is_key │ type        │ has_default │
 ├───┼───────────┼────────┼─────────────┼─────────────┤
@@ -232,10 +224,8 @@ This guide provides a brief overview for new contributors to get started with th
 │ 2 │ content   │ False  │ String      │ False       │
 │ 3 │ embedding │ False  │ <F32;1024>? │ True        │
 └───┴───────────┴────────┴─────────────┴─────────────┘
-```
 
-### Relation `tasks`
-```
+[tasks]
 ┌────┬───────────────┬────────┬──────────┬─────────────┐
 │    │ column        │ is_key │ type     │ has_default │
 ├────┼───────────────┼────────┼──────────┼─────────────┤
@@ -251,10 +241,8 @@ This guide provides a brief overview for new contributors to get started with th
 │ 9  │ created_at    │ False  │ Float    │ True        │
 │ 10 │ metadata      │ False  │ Json     │ True        │
 └────┴───────────────┴────────┴──────────┴─────────────┘
-```
 
-### Relation `temporal_executions_lookup`
-```
+[temporal_executions_lookup]
 ┌───┬────────────────────────┬────────┬─────────┬─────────────┐
 │   │ column                 │ is_key │ type    │ has_default │
 ├───┼────────────────────────┼────────┼─────────┼─────────────┤
@@ -265,25 +253,22 @@ This guide provides a brief overview for new contributors to get started with th
 │ 4 │ result_run_id          │ False  │ String? │ False       │
 │ 5 │ created_at             │ False  │ Float   │ True        │
 └───┴────────────────────────┴────────┴─────────┴─────────────┘
-```
 
-### Relation `tools`
-```
-┌───┬────────────┬────────┬────────┬─────────────┐
-│   │ column     │ is_key │ type   │ has_default │
-├───┼────────────┼────────┼────────┼─────────────┤
-│ 0 │ agent_id   │ True   │ Uuid   │ False       │
-│ 1 │ tool_id    │ True   │ Uuid   │ False       │
-│ 2 │ type       │ False  │ String │ False       │
-│ 3 │ name       │ False  │ String │ False       │
-│ 4 │ spec       │ False  │ Json   │ False       │
-│ 5 │ updated_at │ False  │ Float  │ True        │
-│ 6 │ created_at │ False  │ Float  │ True        │
-└───┴────────────┴────────┴────────┴─────────────┘
-```
+[tools]
+┌───┬─────────────┬────────┬─────────┬─────────────┐
+│   │ column      │ is_key │ type    │ has_default │
+├───┼─────────────┼────────┼─────────┼─────────────┤
+│ 0 │ agent_id    │ True   │ Uuid    │ False       │
+│ 1 │ tool_id     │ True   │ Uuid    │ False       │
+│ 2 │ type        │ False  │ String  │ False       │
+│ 3 │ name        │ False  │ String  │ False       │
+│ 4 │ description │ False  │ String? │ False       │
+│ 5 │ spec        │ False  │ Json    │ False       │
+│ 6 │ updated_at  │ False  │ Float   │ True        │
+│ 7 │ created_at  │ False  │ Float   │ True        │
+└───┴─────────────┴────────┴─────────┴─────────────┘
 
-### Relation `transitions`
-```
+[transitions]
 ┌───┬───────────────┬────────┬───────────────┬─────────────┐
 │   │ column        │ is_key │ type          │ has_default │
 ├───┼───────────────┼────────┼───────────────┼─────────────┤
@@ -298,10 +283,8 @@ This guide provides a brief overview for new contributors to get started with th
 │ 8 │ created_at    │ False  │ Float         │ True        │
 │ 9 │ updated_at    │ False  │ Float         │ True        │
 └───┴───────────────┴────────┴───────────────┴─────────────┘
-```
 
-### Relation `users`
-```
+[users]
 ┌───┬──────────────┬────────┬────────┬─────────────┐
 │   │ column       │ is_key │ type   │ has_default │
 ├───┼──────────────┼────────┼────────┼─────────────┤
@@ -313,6 +296,5 @@ This guide provides a brief overview for new contributors to get started with th
 │ 5 │ updated_at   │ False  │ Float  │ True        │
 │ 6 │ metadata     │ False  │ Json   │ True        │
 └───┴──────────────┴────────┴────────┴─────────────┘
+
 ```
-
-

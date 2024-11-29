@@ -6,4 +6,4 @@ options:
     file-type: yaml
     output-file: "openapi-{version}.yaml"
     new-line: lf
-      # omit-unreachable-types: true
+    omit-unreachable-types: true

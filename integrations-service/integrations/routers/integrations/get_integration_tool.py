@@ -27,18 +27,18 @@ def convert_to_openai_tool(
 @router.get("/integrations/{provider}/tool", tags=["integration_tool"])
 @router.get("/integrations/{provider}/{method}/tool", tags=["integration_tool"])
 async def get_integration_tool(provider: str, method: Optional[str] = None):
-    from ...providers import providers
+    from ...providers import available_providers
 
-    provider: BaseProvider | None = providers.get(provider, None)
+    provider_obj: BaseProvider | None = available_providers.get(provider, None)
 
-    if not provider:
+    if not provider_obj:
         raise HTTPException(status_code=404, detail="Integration not found")
 
     if method:
-        for m in provider.methods:
+        for m in provider_obj.methods:
             if m.method == method:
-                return convert_to_openai_tool(provider, m)
+                return convert_to_openai_tool(provider_obj, m)
     else:
-        return convert_to_openai_tool(provider)
+        return convert_to_openai_tool(provider_obj)
 
     raise HTTPException(status_code=404, detail="Integration not found")

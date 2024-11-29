@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateSessionRequest
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -51,6 +52,7 @@ _fields: List[str] = [
     _kind="inserted",
 )
 @cozo_query
+@increase_counter("update_session")
 @beartype
 def update_session(
     *,
@@ -58,6 +60,18 @@ def update_session(
     developer_id: UUID,
     data: UpdateSessionRequest,
 ) -> tuple[list[str], dict]:
+    """
+    Updates a session with the provided data.
+
+    Parameters:
+        session_id (UUID): The unique identifier of the session to update.
+        developer_id (UUID): The unique identifier of the developer associated with the session.
+        data (UpdateSessionRequest): The data to update the session with.
+
+    Returns:
+        ResourceUpdatedResponse: The updated session.
+    """
+
     update_data = data.model_dump(exclude_unset=True)
 
     session_update_cols, session_update_vals = cozo_process_mutate_data(

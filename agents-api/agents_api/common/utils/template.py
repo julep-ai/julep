@@ -1,14 +1,12 @@
-import json
 import re
 from typing import List, TypeVar
 
-import arrow
-import re2
-import yaml
 from beartype import beartype
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2schema import infer, to_json_schema
 from jsonschema import validate
+
+from ...activities.utils import ALLOWED_FUNCTIONS, constants, stdlib
 
 __all__: List[str] = [
     "render_template",
@@ -26,17 +24,8 @@ jinja_env: ImmutableSandboxedEnvironment = ImmutableSandboxedEnvironment(
 
 # Add arrow to jinja
 
-jinja_env.globals["dump_yaml"] = yaml.dump
-jinja_env.globals["match_regex"] = lambda pattern, string: bool(
-    re2.fullmatch(pattern, string)
-)
-jinja_env.globals["search_regex"] = lambda pattern, string: re2.search(pattern, string)
-jinja_env.globals["dump_json"] = json.dumps
-jinja_env.globals["arrow"] = arrow
-jinja_env.globals["true"] = True
-jinja_env.globals["false"] = False
-jinja_env.globals["null"] = None
-
+for k, v in (constants | stdlib | ALLOWED_FUNCTIONS).items():
+    jinja_env.globals[k] = v
 
 simple_jinja_regex = re.compile(r"{{|{%.+}}|%}", re.DOTALL)
 

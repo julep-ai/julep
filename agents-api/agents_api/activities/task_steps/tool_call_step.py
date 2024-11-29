@@ -6,11 +6,12 @@ from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
 from ...activities.task_steps.base_evaluate import base_evaluate
-from ...autogen.openapi_model import TaskToolDef, Tool, ToolCallStep
+from ...autogen.openapi_model import CreateToolRequest, Tool, ToolCallStep
 from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
+from ...common.storage_handler import auto_blob_store
 
 
 # FIXME: This shouldn't be here.
@@ -24,7 +25,9 @@ def generate_call_id():
 
 
 # FIXME: This shouldn't be here, and shouldn't be done this way. Should be refactored.
-def construct_tool_call(tool: TaskToolDef, arguments: dict, call_id: str) -> dict:
+def construct_tool_call(
+    tool: CreateToolRequest | Tool, arguments: dict, call_id: str
+) -> dict:
     return {
         tool.type: {
             "arguments": arguments,
@@ -32,10 +35,10 @@ def construct_tool_call(tool: TaskToolDef, arguments: dict, call_id: str) -> dic
         }
         if tool.type != "system"
         else {
-            "resource": tool.spec["resource"],
-            "operation": tool.spec["operation"],
-            "resource_id": tool.spec["resource_id"],
-            "subresource": tool.spec["subresource"],
+            "resource": tool.system and tool.system.resource,
+            "operation": tool.system and tool.system.operation,
+            "resource_id": tool.system and tool.system.resource_id,
+            "subresource": tool.system and tool.system.subresource,
             "arguments": arguments,
         },
         "id": call_id,
@@ -44,6 +47,7 @@ def construct_tool_call(tool: TaskToolDef, arguments: dict, call_id: str) -> dic
 
 
 @activity.defn
+@auto_blob_store(deep=True)
 @beartype
 async def tool_call_step(context: StepContext) -> StepOutcome:
     assert isinstance(context.current_step, ToolCallStep)
@@ -57,7 +61,7 @@ async def tool_call_step(context: StepContext) -> StepOutcome:
         raise ApplicationError(f"Tool {tool_name} not found in the toolset")
 
     arguments = await base_evaluate(
-        context.current_step.arguments, context.model_dump()
+        context.current_step.arguments, await context.prepare_for_step()
     )
 
     call_id = generate_call_id()

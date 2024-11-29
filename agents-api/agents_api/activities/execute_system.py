@@ -1,161 +1,168 @@
+import asyncio
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from typing import Any
 from uuid import UUID
 
 from beartype import beartype
+from box import Box, BoxList
+from fastapi.background import BackgroundTasks
 from temporalio import activity
 
-from ..autogen.Tools import SystemDef
+from ..autogen.openapi_model import (
+    ChatInput,
+    CreateDocRequest,
+    CreateSessionRequest,
+    HybridDocSearchRequest,
+    SystemDef,
+    TextOnlyDocSearchRequest,
+    VectorDocSearchRequest,
+)
 from ..common.protocol.tasks import StepContext
+from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
 from ..env import testing
-from ..models.agent.create_agent import create_agent as create_agent_query
-from ..models.agent.delete_agent import delete_agent as delete_agent_query
-from ..models.agent.get_agent import get_agent as get_agent_query
-from ..models.agent.list_agents import list_agents as list_agents_query
-from ..models.agent.update_agent import update_agent as update_agent_query
-from ..models.docs.create_doc import create_doc as create_doc_query
-from ..models.docs.delete_doc import delete_doc as delete_doc_query
-from ..models.docs.get_doc import get_doc as get_doc_query
-from ..models.docs.list_docs import list_docs as list_docs_query
-from ..models.session.create_session import create_session as create_session_query
-from ..models.session.delete_session import delete_session as delete_session_query
-from ..models.session.get_session import get_session as get_session_query
-from ..models.session.list_sessions import list_sessions as list_sessions_query
-from ..models.session.update_session import update_session as update_session_query
-from ..models.task.create_task import create_task as create_task_query
-from ..models.task.delete_task import delete_task as delete_task_query
-from ..models.task.get_task import get_task as get_task_query
-from ..models.task.list_tasks import list_tasks as list_tasks_query
-from ..models.task.update_task import update_task as update_task_query
-from ..models.user.create_user import create_user as create_user_query
-from ..models.user.delete_user import delete_user as delete_user_query
-from ..models.user.get_user import get_user as get_user_query
-from ..models.user.list_users import list_users as list_users_query
-from ..models.user.update_user import update_user as update_user_query
+from ..models.developer import get_developer
+from .utils import get_handler
+
+# For running synchronous code in the background
+process_pool_executor = ProcessPoolExecutor()
 
 
+@auto_blob_store(deep=True)
 @beartype
 async def execute_system(
     context: StepContext,
     system: SystemDef,
 ) -> Any:
-    arguments = system.arguments
+    """Execute a system call with the appropriate handler and transformed arguments."""
+    arguments: dict[str, Any] = system.arguments or {}
+
+    if set(arguments.keys()) == {"bucket", "key"}:
+        arguments = await load_from_blob_store_if_remote(arguments)
+
     arguments["developer_id"] = context.execution_input.developer_id
 
+    # Unbox all the arguments
+    for key, value in arguments.items():
+        if isinstance(value, Box):
+            arguments[key] = value.to_dict()
+        elif isinstance(value, BoxList):
+            arguments[key] = value.to_list()
+
     # Convert all UUIDs to UUID objects
-    if "agent_id" in arguments:
-        arguments["agent_id"] = UUID(arguments["agent_id"])
-    if "user_id" in arguments:
-        arguments["user_id"] = UUID(arguments["user_id"])
-    if "task_id" in arguments:
-        arguments["task_id"] = UUID(arguments["task_id"])
-    if "session_id" in arguments:
-        arguments["session_id"] = UUID(arguments["session_id"])
-    if "doc_id" in arguments:
-        arguments["doc_id"] = UUID(arguments["doc_id"])
+    uuid_fields = ["agent_id", "user_id", "task_id", "session_id", "doc_id"]
+    for field in uuid_fields:
+        if field in arguments:
+            arguments[field] = UUID(arguments[field])
 
-    # FIXME: This is a total mess. Should be refactored.
     try:
-        # AGENTS
-        if system.resource == "agent":
-            # DOCS SUBRESOURCE
-            if system.subresource == "doc":
-                # Define the arguments for the agent doc queries
-                agent_doc_args = {
-                    **{
-                        "owner_type": "agent",
-                        "owner_id": arguments.pop("agent_id"),
-                    },
+        handler = get_handler(system)
+
+        # Transform arguments for doc-related operations (except create and search
+        # as we're calling the endpoint function rather than the model method)
+        if system.subresource == "doc" and system.operation not in ["create", "search"]:
+            owner_id_field = f"{system.resource}_id"
+            if owner_id_field in arguments:
+                doc_args = {
+                    "owner_type": system.resource,
+                    "owner_id": arguments[owner_id_field],
                     **arguments,
                 }
-                if system.operation == "list":
-                    return list_docs_query(**agent_doc_args)
-                elif system.operation == "create":
-                    return create_doc_query(**agent_doc_args)
-                elif system.operation == "delete":
-                    return delete_doc_query(**agent_doc_args)
+                doc_args.pop(owner_id_field)
+                arguments = doc_args
 
-            # NO SUBRESOURCE
-            elif system.subresource == None:
-                if system.operation == "list":
-                    return list_agents_query(**arguments)
-                elif system.operation == "get":
-                    return get_agent_query(**arguments)
-                elif system.operation == "create":
-                    return create_agent_query(**arguments)
-                elif system.operation == "update":
-                    return update_agent_query(**arguments)
-                elif system.operation == "delete":
-                    return delete_agent_query(**arguments)
+        # Handle special cases for doc operations
+        if system.operation == "create" and system.subresource == "doc":
+            arguments["x_developer_id"] = arguments.pop("developer_id")
+            bg_runner = BackgroundTasks()
+            res = await handler(
+                data=CreateDocRequest(**arguments.pop("data")),
+                background_tasks=bg_runner,
+                **arguments,
+            )
+            await bg_runner()
+            return res
 
-        # USERS
-        elif system.resource == "user":
-            # DOCS SUBRESOURCE
-            if system.subresource == "doc":
-                # Define the arguments for the user doc queries
-                user_doc_args = {
-                    **{
-                        "owner_type": "user",
-                        "owner_id": arguments.pop("user_id"),
-                    },
-                    **arguments,
-                }
-                if system.operation == "list":
-                    return list_docs_query(**user_doc_args)
-                elif system.operation == "create":
-                    return create_doc_query(**user_doc_args)
-                elif system.operation == "delete":
-                    return delete_doc_query(**user_doc_args)
+        # Handle search operations
+        if system.operation == "search" and system.subresource == "doc":
+            arguments["x_developer_id"] = arguments.pop("developer_id")
+            search_params = _create_search_request(arguments)
+            return await handler(search_params=search_params, **arguments)
 
-            # NO SUBRESOURCE
-            elif system.subresource == None:
-                if system.operation == "list":
-                    return list_users_query(**arguments)
-                elif system.operation == "get":
-                    return get_user_query(**arguments)
-                elif system.operation == "create":
-                    return create_user_query(**arguments)
-                elif system.operation == "update":
-                    return update_user_query(**arguments)
-                elif system.operation == "delete":
-                    return delete_user_query(**arguments)
+        # Handle chat operations
+        if system.operation == "chat" and system.resource == "session":
+            developer = get_developer(developer_id=arguments.get("developer_id"))
+            session_id = arguments.get("session_id")
+            x_custom_api_key = arguments.get("x_custom_api_key", None)
+            chat_input = ChatInput(**arguments)
+            bg_runner = BackgroundTasks()
+            res = await handler(
+                developer=developer,
+                session_id=session_id,
+                background_tasks=bg_runner,
+                x_custom_api_key=x_custom_api_key,
+                chat_input=chat_input,
+            )
+            await bg_runner()
+            return res
 
-        # SESSIONS
-        elif system.resource == "session":
-            if system.operation == "list":
-                return list_sessions_query(**arguments)
-            elif system.operation == "get":
-                return get_session_query(**arguments)
-            elif system.operation == "create":
-                return create_session_query(**arguments)
-            elif system.operation == "update":
-                return update_session_query(**arguments)
-            elif system.operation == "delete":
-                return update_session_query(**arguments)
-            elif system.operation == "delete":
-                return delete_session_query(**arguments)
-        # TASKS
-        elif system.resource == "task":
-            if system.operation == "list":
-                return list_tasks_query(**arguments)
-            elif system.operation == "get":
-                return get_task_query(**arguments)
-            elif system.operation == "create":
-                return create_task_query(**arguments)
-            elif system.operation == "update":
-                return update_task_query(**arguments)
-            elif system.operation == "delete":
-                return delete_task_query(**arguments)
+        if system.operation == "create" and system.resource == "session":
+            developer_id = arguments.pop("developer_id")
+            session_id = arguments.pop("session_id", None)
+            data = CreateSessionRequest(**arguments)
 
-        raise NotImplementedError(f"System call not implemented for {
-                                  system.resource}.{system.operation}")
+            # In case sessions.create becomes asynchronous in the future
+            if asyncio.iscoroutinefunction(handler):
+                return await handler()
 
+            # Run the synchronous function in another process
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(
+                process_pool_executor, partial(handler, developer_id, session_id, data)
+            )
+
+        # Handle regular operations
+        if asyncio.iscoroutinefunction(handler):
+            return await handler(**arguments)
+
+        # Run the synchronous function in another process
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            process_pool_executor, partial(handler, **arguments)
+        )
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in execute_system_call: {e}")
         raise
 
 
-# Mock and activity definition
+def _create_search_request(arguments: dict) -> Any:
+    """Create appropriate search request based on available parameters."""
+    if "text" in arguments and "vector" in arguments:
+        return HybridDocSearchRequest(
+            text=arguments.pop("text"),
+            mmr_strength=arguments.pop("mmr_strength", 0),
+            vector=arguments.pop("vector"),
+            alpha=arguments.pop("alpha", 0.75),
+            confidence=arguments.pop("confidence", 0.5),
+            limit=arguments.get("limit", 10),
+        )
+    elif "text" in arguments:
+        return TextOnlyDocSearchRequest(
+            text=arguments.pop("text"),
+            mmr_strength=arguments.pop("mmr_strength", 0),
+            limit=arguments.get("limit", 10),
+        )
+    elif "vector" in arguments:
+        return VectorDocSearchRequest(
+            vector=arguments.pop("vector"),
+            mmr_strength=arguments.pop("mmr_strength", 0),
+            confidence=arguments.pop("confidence", 0.7),
+            limit=arguments.get("limit", 10),
+        )
+
+
+# Keep the existing mock and activity definition
 mock_execute_system = execute_system
 
 execute_system = activity.defn(name="execute_system")(

@@ -1,22 +1,6 @@
 from pydantic import Field
 
-from .base_models import (
-    BaseArguments,
-    BaseOutput,
-    BaseSetup,
-)
-
-
-class WeatherSetup(BaseSetup):
-    openweathermap_api_key: str = Field(
-        ..., description="The api key for OpenWeatherMap"
-    )
-
-
-class WeatherGetArguments(BaseArguments):
-    location: str = Field(
-        ..., description="The location for which to fetch weather data"
-    )
+from .base_models import BaseOutput
 
 
 class WeatherGetOutput(BaseOutput):

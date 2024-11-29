@@ -22,9 +22,21 @@ T = TypeVar("T")
 
 @rewrap_exceptions(
     {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
+        QueryException: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A database query failed to return the expected results. This might occur if the requested resource doesn't exist or your query parameters are incorrect.",
+        ),
+        ValidationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Input validation failed. Please check the provided data for missing or incorrect fields, and ensure it matches the required format.",
+        ),
+        TypeError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A type mismatch occurred. This likely means the data provided is of an incorrect type (e.g., string instead of integer). Please review the input and try again.",
+        ),
     }
 )
 @wrap_in_class(User)
@@ -46,6 +58,8 @@ def list_users(
         developer_id (UUID): The unique identifier of the developer.
         limit (int): The maximum number of users to return. Defaults to 100.
         offset (int): The number of users to skip before starting to collect the result set. Defaults to 0.
+        sort_by (Literal["created_at", "updated_at"]): The field to sort the users by. Defaults to "created_at".
+        direction (Literal["asc", "desc"]): The direction to sort the users in. Defaults to "desc".
         metadata_filter (dict[str, Any]): A dictionary representing filters to apply on user metadata.
 
     Returns:

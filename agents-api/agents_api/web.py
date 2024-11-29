@@ -2,18 +2,21 @@
 This module initializes the FastAPI application, registers routes, sets up middleware, and configures exception handlers.
 """
 
+import asyncio
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Union, cast
 
-import fire
 import sentry_sdk
 import uvicorn
+import uvloop
 from fastapi import APIRouter, Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
+from prometheus_fastapi_instrumentator import Instrumentator
 from pycozo.client import QueryException
+from pydantic import ValidationError
 from scalar_fastapi import get_scalar_api_reference
 from temporalio.service import RPCError
 
@@ -24,6 +27,7 @@ from .exceptions import PromptTooBigError
 from .routers import (
     agents,
     docs,
+    files,
     internal,
     jobs,
     sessions,
@@ -43,22 +47,77 @@ else:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def make_exception_handler(status: int) -> Callable[[Any, Any], Any]:
+def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
     """
     Creates a custom exception handler for the application.
 
     Parameters:
-    - status (int): The HTTP status code to return for this exception.
+    - status_code (int): The HTTP status code to return for this exception.
 
     Returns:
     A callable exception handler that logs the exception and returns a JSON response with the specified status code.
     """
 
-    async def _handler(request: Request, exc):
-        exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
-        logger.exception(exc)
-        content = {"status_code": status, "message": exc_str, "data": None}
-        return JSONResponse(content=content, status_code=status)
+    async def _handler(request: Request, exc: Exception):
+        location = None
+        offending_input = None
+
+        # Return the deepest matching possibility
+        if isinstance(exc, (ValidationError, RequestValidationError)):
+            exc = cast(Union[ValidationError, RequestValidationError], exc)
+            errors = exc.errors()
+
+            # Get the deepest matching errors
+            max_depth = max(len(error["loc"]) for error in errors)
+            errors = [error for error in errors if len(error["loc"]) == max_depth]
+
+            # Get the common location
+            location = errors[0]["loc"]
+            for error in errors[1:]:
+                for a, b in zip(location, error["loc"]):
+                    if a == b:
+                        continue
+                    location = location[:-1]
+                    break
+
+            location = location[1:]  # Skip the first element ("body")
+
+            # Get the part of the input that caused the error
+            offending_input = exc.body
+            for loc in location:
+                match offending_input:
+                    case dict():
+                        if loc not in offending_input:
+                            break
+                    case list():
+                        if not (
+                            isinstance(loc, int) and 0 <= loc < len(offending_input)
+                        ):
+                            break
+                    case _:
+                        break
+
+                offending_input = offending_input[loc]
+
+                # Keep only the message from the error
+                errors = [
+                    error.get("msg", error)
+                    if isinstance(error, dict)
+                    else getattr(error, "msg", error)
+                    for error in errors
+                ]
+
+            else:
+                errors = exc.errors() if hasattr(exc, "errors") else [exc]
+
+        return JSONResponse(
+            content={
+                "errors": errors,
+                "offending_input": offending_input,
+                "location": location,
+            },
+            status_code=status_code,
+        )
 
     return _handler
 
@@ -100,6 +159,9 @@ app: FastAPI = FastAPI(
     root_path=api_prefix,
 )
 
+# Enable metrics
+Instrumentator().instrument(app).expose(app, include_in_schema=False)
+
 # Create a new router for the docs
 scalar_router = APIRouter()
 
@@ -121,6 +183,7 @@ app.include_router(agents.router, dependencies=[Depends(get_api_key)])
 app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
 app.include_router(users.router, dependencies=[Depends(get_api_key)])
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
+app.include_router(files.router, dependencies=[Depends(get_api_key)])
 app.include_router(docs.router, dependencies=[Depends(get_api_key)])
 app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
 app.include_router(internal.router)
@@ -203,6 +266,4 @@ def main(
     )
 
 
-# Check if the script is being run directly and, if so, start the Uvicorn server with the specified configuration.
-if __name__ == "__main__":
-    fire.Fire(main)
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())

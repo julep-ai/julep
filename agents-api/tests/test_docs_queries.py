@@ -1,5 +1,7 @@
 # Tests for entry queries
 
+import asyncio
+
 from ward import test
 
 from agents_api.autogen.openapi_model import CreateDocRequest
@@ -41,7 +43,6 @@ def _(
     )
 
 
-# TODO: Execute embedding workflow to fix this test and other docs tests
 @test("model: get docs")
 def _(client=cozo_client, doc=test_doc, developer_id=test_developer_id):
     get_doc(
@@ -79,13 +80,14 @@ def _(
         owner_type="agent",
         owner_id=agent.id,
         client=client,
+        include_without_embeddings=True,
     )
 
     assert len(result) >= 1
 
 
 @test("model: search docs by text")
-def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
+async def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
     create_doc(
         developer_id=developer_id,
         owner_type="agent",
@@ -96,6 +98,8 @@ def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
         client=client,
     )
 
+    await asyncio.sleep(1)
+
     result = search_docs_by_text(
         developer_id=developer_id,
         owners=[("agent", agent.id)],
@@ -104,10 +108,11 @@ def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
     )
 
     assert len(result) >= 1
+    assert result[0].metadata is not None
 
 
 @test("model: search docs by embedding")
-def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
+async def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
     doc = create_doc(
         developer_id=developer_id,
         owner_type="agent",
@@ -125,6 +130,8 @@ def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
         client=client,
     )
 
+    await asyncio.sleep(1)
+
     ### Search
     query_embedding = [0.99] * EMBEDDING_SIZE
 
@@ -136,6 +143,7 @@ def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
     )
 
     assert len(result) >= 1
+    assert result[0].metadata is not None
 
 
 @test("model: embed snippets")

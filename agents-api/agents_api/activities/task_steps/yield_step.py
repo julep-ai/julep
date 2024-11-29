@@ -3,17 +3,16 @@ from typing import Callable
 from beartype import beartype
 from temporalio import activity
 
-from agents_api.autogen.openapi_model import TransitionTarget, YieldStep
-
+from ...autogen.openapi_model import TransitionTarget, YieldStep
 from ...common.protocol.tasks import StepContext, StepOutcome
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from .base_evaluate import base_evaluate
 
 
+@auto_blob_store(deep=True)
 @beartype
 async def yield_step(context: StepContext) -> StepOutcome:
-    # NOTE: This activity is only for returning immediately, so we just evaluate the expression
-    #       Hence, it's a local activity and SHOULD NOT fail
     try:
         assert isinstance(context.current_step, YieldStep)
 
@@ -26,7 +25,7 @@ async def yield_step(context: StepContext) -> StepOutcome:
         ], f"Workflow {workflow} not found in task"
 
         # Evaluate the expressions in the arguments
-        arguments = await base_evaluate(exprs, context.model_dump())
+        arguments = await base_evaluate(exprs, await context.prepare_for_step())
 
         # Transition to the first step of that workflow
         transition_target = TransitionTarget(

@@ -15,6 +15,8 @@ namespace Tasks;
 // TASK ENDPOINTS
 //
 
+interface GetEndpoints extends GetEndpoint<Task, "Get a task by id"> {}
+
 interface CreateOrUpdateEndpoints {
     @post
     @doc("Create or update a task")

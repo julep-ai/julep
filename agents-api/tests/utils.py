@@ -1,8 +1,10 @@
 import asyncio
+import io
 import logging
 from contextlib import asynccontextmanager, contextmanager
 from unittest.mock import patch
 
+from botocore import exceptions
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
@@ -102,3 +104,53 @@ def patch_integration_service(output: dict = {"result": "ok"}):
         run_integration_service.return_value = output
 
         yield run_integration_service
+
+
+@contextmanager
+def patch_s3_client():
+    class InMemoryS3Client:
+        def __init__(self):
+            self.store = {}
+
+        def list_buckets(self):
+            return {"Buckets": [{"Name": bucket} for bucket in self.store.keys()]}
+
+        def create_bucket(self, Bucket):
+            self.store[Bucket] = {}
+
+        def head_object(self, Bucket, Key):
+            obj = self.store.get(Bucket, {}).get(Key)
+
+            if obj is None:
+                raise exceptions.ClientError(
+                    {"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject"
+                )
+
+            return obj
+
+        def put_object(self, Bucket, Key, Body):
+            self.store[Bucket] = self.store.get(Bucket, {})
+            self.store[Bucket][Key] = Body
+
+        def get_object(self, Bucket, Key):
+            obj = self.store.get(Bucket, {}).get(Key)
+
+            if obj is None:
+                raise exceptions.ClientError(
+                    {"Error": {"Code": "404", "Message": "Not Found"}}, "GetObject"
+                )
+
+            file_io = io.BytesIO(obj)
+
+            return {"Body": file_io}
+
+        def delete_object(self, Bucket, Key):
+            self.store[Bucket] = self.store.get(Bucket, {})
+            del self.store[Bucket][Key]
+
+    in_memory_s3_client = InMemoryS3Client()
+
+    with patch("agents_api.clients.s3.get_s3_client") as get_s3_client:
+        get_s3_client.return_value = in_memory_s3_client
+
+        yield get_s3_client

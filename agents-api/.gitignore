@@ -5,6 +5,10 @@ temporal.db
 *.dat
 *.dir
 
+# jupyterlab stuff
+notebooks/Untitled*.ipynb
+.virtual_documents/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

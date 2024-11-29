@@ -33,6 +33,9 @@ model Doc {
 @withVisibility("create")
 model CreateDocRequest {
     ...Doc;
+
+    /** Instruction for the embedding model. */
+    embed_instruction: string | null = null;
 }
 
 model DocOwner {
@@ -43,9 +46,12 @@ model DocOwner {
 model Snippet {
     index: uint16;
     content: string;
+    embedding?: float[];
 }
 
 model DocReference {
+    ...HasMetadata;
+
     /** The owner of this document. */
     owner: DocOwner;
 
@@ -53,16 +59,30 @@ model DocReference {
     id: Doc.id;
 
     title?: string;
-    
-    @minItems(1)
-    snippets: Snippet[];
+
+    snippet: Snippet;
     distance: float | null = null;
 }
 
-model EmbedQueryRequest {
-    /** Text or texts to embed */
-    text: string | string[];
+model SingleEmbedQueryRequest {
+    /** Text to embed */
+    text: string;
+
+    /** Instruction for the embedding model. */
+    embed_instruction: string = "";
 }
+
+model MultipleEmbedQueryRequest {
+    /** Texts to embed */
+    @minItems(1)
+    @maxItems(100)
+    text: string[];
+
+    /** Instruction for the embedding model. */
+    embed_instruction: string = "";
+}
+
+alias EmbedQueryRequest = SingleEmbedQueryRequest | MultipleEmbedQueryRequest;
 
 model EmbedQueryResponse {
     /** The embedded vectors */
@@ -71,11 +91,17 @@ model EmbedQueryResponse {
 
 model BaseDocSearchRequest {
     @minValue(1)
-    @maxValue(100)
+    @maxValue(50)
     limit: uint16 = 10;
 
     /** The language to be used for text-only search. Support for other languages coming soon. */
     lang: "en-US" = "en-US";
+    metadata_filter: MetadataFilter = #{},
+
+    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
+    @minValue(0)
+    @maxValueExclusive(1)
+    mmr_strength?: float = 0.0;
 }
 
 model VectorDocSearchRequest extends BaseDocSearchRequest {
@@ -88,6 +114,8 @@ model VectorDocSearchRequest extends BaseDocSearchRequest {
     vector: float[];
 
     text?: never;
+
+    mmr_strength?: never;
 }
 
 model TextOnlyDocSearchRequest extends BaseDocSearchRequest {

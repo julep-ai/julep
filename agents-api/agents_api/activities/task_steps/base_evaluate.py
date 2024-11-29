@@ -1,18 +1,72 @@
 import ast
 from typing import Any
 
+import simpleeval
 from beartype import beartype
 from box import Box
 from openai import BaseModel
-from temporalio import activity
 
-from ...env import testing
-from ..utils import get_evaluator
+# Increase the max string length to 2048000
+simpleeval.MAX_STRING_LENGTH = 2048000
+
+from simpleeval import NameNotDefined, SimpleEval  # noqa: E402
+from temporalio import activity  # noqa: E402
+from thefuzz import fuzz  # noqa: E402
+
+from ...common.storage_handler import auto_blob_store  # noqa: E402
+from ...env import testing  # noqa: E402
+from ..utils import get_evaluator  # noqa: E402
 
 
+class EvaluateError(Exception):
+    def __init__(self, error, expression, values):
+        error_message = error.message if hasattr(error, "message") else str(error)
+        message = error_message
+
+        # Catch a possible jinja template error
+        if "unhashable" in error_message and "{{" in expression:
+            message += "\nSuggestion: It seems like you used a jinja template, did you mean to use a python expression?"
+
+        # Catch a possible misspell in a variable name
+        if isinstance(error, NameNotDefined):
+            misspelledName = error_message.split("'")[1]
+            for variableName in values.keys():
+                if fuzz.ratio(variableName, misspelledName) >= 90.0:
+                    message += f"\nDid you mean '{variableName}' instead of '{misspelledName}'?"
+        super().__init__(message)
+
+
+# Recursive evaluation helper function
+def _recursive_evaluate(expr, evaluator: SimpleEval):
+    if isinstance(expr, str):
+        try:
+            return evaluator.eval(expr)
+        except Exception as e:
+            if activity.in_activity():
+                evaluate_error = EvaluateError(e, expr, evaluator.names)
+
+                variables_accessed = {
+                    name: value
+                    for name, value in evaluator.names.items()
+                    if name in expr
+                }
+
+                activity.logger.error(
+                    f"Error in base_evaluate: {evaluate_error}\nVariables accessed: {variables_accessed}"
+                )
+            raise evaluate_error from e
+    elif isinstance(expr, list):
+        return [_recursive_evaluate(e, evaluator) for e in expr]
+    elif isinstance(expr, dict):
+        return {k: _recursive_evaluate(v, evaluator) for k, v in expr.items()}
+    else:
+        raise ValueError(f"Invalid expression: {expr}")
+
+
+@auto_blob_store(deep=True)
 @beartype
 async def base_evaluate(
-    exprs: str | list[str] | dict[str, str] | dict[str, dict[str, str]],
+    exprs: Any,
     values: dict[str, Any] = {},
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
@@ -43,33 +97,11 @@ async def base_evaluate(
     # frozen_box doesn't work coz we need some mutability in the values
     values = Box(values, frozen_box=False, conversion_box=True)
 
-    evaluator = get_evaluator(names=values, extra_functions=extra_lambdas)
+    evaluator: SimpleEval = get_evaluator(names=values, extra_functions=extra_lambdas)
 
-    try:
-        match exprs:
-            case str():
-                return evaluator.eval(exprs)
-
-            case list():
-                return [evaluator.eval(expr) for expr in exprs]
-
-            case dict() as d if all(isinstance(v, dict) for v in d.values()):
-                return {
-                    k: {ik: evaluator.eval(iv) for ik, iv in v.items()}
-                    for k, v in d.items()
-                }
-
-            case dict():
-                return {k: evaluator.eval(v) for k, v in exprs.items()}
-
-            case _:
-                raise ValueError(f"Invalid expression: {exprs}")
-
-    except BaseException as e:
-        if activity.in_activity():
-            activity.logger.error(f"Error in base_evaluate: {e}")
-
-        raise
+    # Recursively evaluate the expression
+    result = _recursive_evaluate(exprs, evaluator)
+    return result
 
 
 # Note: This is here just for clarity. We could have just imported base_evaluate directly

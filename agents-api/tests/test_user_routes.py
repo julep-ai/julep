@@ -165,3 +165,21 @@ def _(make_request=make_request):
 
     assert isinstance(users, list)
     assert len(users) > 0
+
+
+@test("model: list users with right metadata filter")
+def _(make_request=make_request, user=test_user):
+    response = make_request(
+        method="GET",
+        url="/users",
+        params={
+            "metadata_filter": {"test": "test"},
+        },
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    users = response["items"]
+
+    assert isinstance(users, list)
+    assert len(users) > 0

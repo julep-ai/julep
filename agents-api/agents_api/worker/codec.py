@@ -6,10 +6,11 @@
 
 import dataclasses
 import logging
-import pickle
 import sys
+import time
 from typing import Any, Optional, Type
 
+import larch.pickle as pickle
 import temporalio.converter
 
 # from beartype import BeartypeConf
@@ -24,11 +25,31 @@ from temporalio.converter import (
 
 
 def serialize(x: Any) -> bytes:
-    return compress(pickle.dumps(x, protocol=pickle.HIGHEST_PROTOCOL))
+    start_time = time.time()
+    pickled = pickle.dumps(x, protocol=-1)
+    compressed = compress(pickled)
+
+    duration = time.time() - start_time
+    if duration > 1:
+        print(
+            f"||| [SERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(x) / 1000}kb"
+        )
+
+    return compressed
 
 
 def deserialize(b: bytes) -> Any:
-    return pickle.loads(decompress(b))
+    start_time = time.time()
+    decompressed = decompress(b)
+    object = pickle.loads(decompressed)
+
+    duration = time.time() - start_time
+    if duration > 1:
+        print(
+            f"||| [DESERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(b) / 1000}kb"
+        )
+
+    return object
 
 
 def from_payload_data(data: bytes, type_hint: Optional[Type] = None) -> Any:
@@ -108,10 +129,21 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
             f"{sys.version_info.major}.{sys.version_info.minor}".encode()
         )
 
-        assert payload.metadata["encoding"] == self.b_encoding
-        assert payload.metadata["python_version"] == current_python_version
+        # Check if this is a payload we can handle
+        if (
+            "encoding" not in payload.metadata
+            or payload.metadata["encoding"] != self.b_encoding
+            or "python_version" not in payload.metadata
+            or payload.metadata["python_version"] != current_python_version
+        ):
+            # Return the payload data as-is if we can't handle it
+            return payload.data
 
-        return from_payload_data(payload.data, type_hint)
+        try:
+            return from_payload_data(payload.data, type_hint)
+        except Exception as e:
+            logging.warning(f"Failed to decode payload with our encoder: {e}")
+            return None
 
 
 class PydanticPayloadConverter(CompositePayloadConverter):
