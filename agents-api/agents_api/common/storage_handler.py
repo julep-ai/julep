@@ -198,7 +198,7 @@ def auto_blob_store_workflow(f: Callable) -> Callable:
         keys = kwargs.keys()
         values = [kwargs[k] for k in keys]
 
-        loaded = await workflow.execute_local_activity(
+        loaded = await workflow.execute_activity(
             load_inputs_remote,
             args=[[*args, *values]],
             schedule_to_close_timeout=timedelta(
