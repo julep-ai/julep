@@ -29,6 +29,7 @@ async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
     previous_inputs: RemoteList | list[Any],
+    previous_labels: dict[str, Any] | None = None,
     user_state: dict[str, Any] = {},
 ) -> Any:
     info = workflow.info()
@@ -45,6 +46,7 @@ async def continue_as_child(
             execution_input,
             start,
             previous_inputs,
+            previous_labels,
         ],
         retry_policy=DEFAULT_RETRY_POLICY,
         memo=workflow.memo() | user_state,
