@@ -22,14 +22,10 @@ from ...autogen.Tools import (
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
 )
-from ...env import (  # Import env to access environment variables
+from ...env import (
     browserbase_api_key,
     browserbase_project_id,
-)
-from ...env import (  # Import env to access environment variables
-    browserbase_api_key,
-    browserbase_project_id,
-)
+)  # Import env to access environment variables
 from ...models import (
     BrowserbaseCompleteSessionOutput,
     BrowserbaseCreateSessionOutput,
@@ -182,11 +178,9 @@ async def install_extension_from_github(
 ) -> BrowserbaseExtensionOutput:
     """Download and install an extension from GitHub to the user's Browserbase account."""
 
-
     github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{
             arguments.ref}.zip"
 
-    async with httpx.AsyncClient(timeout=600) as client:
     async with httpx.AsyncClient(timeout=600) as client:
         # Download the extension zip
         response = await client.get(github_url, follow_redirects=True)

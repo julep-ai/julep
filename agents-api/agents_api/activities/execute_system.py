@@ -16,8 +16,6 @@ from ..autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from ..autogen.Sessions import CreateSessionRequest
-from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
 from ..env import testing
@@ -35,7 +33,7 @@ async def execute_system(
     arguments: dict[str, Any] = system.arguments or {}
 
     if set(arguments.keys()) == {"bucket", "key"}:
-        arguments = load_from_blob_store_if_remote(arguments)
+        arguments = await load_from_blob_store_if_remote(arguments)
 
     arguments["developer_id"] = context.execution_input.developer_id
 
