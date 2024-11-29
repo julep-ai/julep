@@ -184,7 +184,9 @@ async def chat(
                         k: v
                         for k, v in function.model_dump().items()
                         if k not in ["name", "type"]
-                    },
+                    }
+                    if function is not None
+                    else {},
                 },
             }
             formatted_tools.append(tool)
