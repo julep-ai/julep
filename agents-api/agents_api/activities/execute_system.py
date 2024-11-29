@@ -18,7 +18,6 @@ from ..autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
 from ..env import testing

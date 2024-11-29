@@ -51,10 +51,6 @@ async def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
         fetched = await async_s3.get_object(x["key"])
         return deserialize(fetched)
 
-    elif isinstance(x, dict) and set(x.keys()) == {"bucket", "key"}:
-        fetched = s3.get_object(x["key"])
-        return deserialize(fetched)
-
     return x
 
 
