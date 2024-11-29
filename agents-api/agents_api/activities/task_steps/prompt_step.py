@@ -1,15 +1,8 @@
-from typing import Callable
-
-from anthropic.types.beta.beta_message import BetaMessage
 from beartype import beartype
-from langchain_core.tools import BaseTool
-from langchain_core.tools.convert import tool as tool_decorator
-from litellm.types.utils import ModelResponse
 from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from ...autogen.openapi_model import Tool
 from ...autogen.openapi_model import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
@@ -18,7 +11,6 @@ from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import debug
-from ..utils import get_handler_with_filtered_params
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -75,7 +67,7 @@ EVAL_PROMPT_PREFIX = "$_ "
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
-    context_data: dict = context.prepare_for_step(include_remote=True)
+    context_data: dict = await context.prepare_for_step(include_remote=True)
 
     # If the prompt is a string and starts with $_ then we need to evaluate it
     should_evaluate_prompt = isinstance(prompt, str) and prompt.startswith(

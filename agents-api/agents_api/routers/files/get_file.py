@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import Depends
 
 from ...autogen.openapi_model import File
-from ...clients import s3
+from ...clients import async_s3
 from ...dependencies.developer_id import get_developer_id
 from ...models.files.get_file import get_file as get_file_query
 from .router import router
@@ -13,9 +13,9 @@ from .router import router
 
 async def fetch_file_content(file_id: UUID) -> str:
     """Fetch file content from blob storage using the file ID as the key"""
-    s3.setup()
+    await async_s3.setup()
     key = str(file_id)
-    content = s3.get_object(key)
+    content = await async_s3.get_object(key)
     return base64.b64encode(content).decode("utf-8")
 
 

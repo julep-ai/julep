@@ -41,7 +41,6 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
         YieldStep,
     )
-    from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,
         PartialTransition,
@@ -127,15 +126,16 @@ class TaskExecutionWorkflow:
         self,
         execution_input: ExecutionInput,
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
-        previous_inputs: RemoteList | None = None,
+        previous_inputs: list | None = None,
     ) -> Any:
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
             f" [LOC {start.workflow}.{start.step}]"
         )
 
+        # FIXME: Look into saving arguments to the blob store if necessary
         # 0. Prepare context
-        previous_inputs = previous_inputs or RemoteList([execution_input.arguments])
+        previous_inputs = previous_inputs or [execution_input.arguments]
 
         context = StepContext(
             execution_input=execution_input,
@@ -197,7 +197,7 @@ class TaskExecutionWorkflow:
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
 
-        [outcome] = await workflow.execute_local_activity(
+        [outcome] = await workflow.execute_activity(
             load_inputs_remote,
             args=[[outcome]],
             schedule_to_close_timeout=timedelta(
@@ -661,7 +661,7 @@ class TaskExecutionWorkflow:
         )
 
         # Save the final output to the blob store
-        [final_output] = await workflow.execute_local_activity(
+        [final_output] = await workflow.execute_activity(
             save_inputs_remote,
             args=[[final_state.output]],
             schedule_to_close_timeout=timedelta(

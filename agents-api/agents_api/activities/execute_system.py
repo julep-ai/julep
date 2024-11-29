@@ -1,4 +1,6 @@
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from typing import Any
 from uuid import UUID
 
@@ -16,14 +18,14 @@ from ..autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from ..autogen.Sessions import CreateSessionRequest
-from ..autogen.Tools import SystemDef
-from ..common.protocol.remote import RemoteObject
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
 from ..env import testing
 from ..models.developer import get_developer
 from .utils import get_handler
+
+# For running synchronous code in the background
+process_pool_executor = ProcessPoolExecutor()
 
 
 @auto_blob_store(deep=True)
@@ -36,7 +38,7 @@ async def execute_system(
     arguments: dict[str, Any] = system.arguments or {}
 
     if set(arguments.keys()) == {"bucket", "key"}:
-        arguments = load_from_blob_store_if_remote(arguments)
+        arguments = await load_from_blob_store_if_remote(arguments)
 
     arguments["developer_id"] = context.execution_input.developer_id
 
@@ -108,13 +110,26 @@ async def execute_system(
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id", None)
             data = CreateSessionRequest(**arguments)
-            return handler(developer_id=developer_id, session_id=session_id, data=data)
+
+            # In case sessions.create becomes asynchronous in the future
+            if asyncio.iscoroutinefunction(handler):
+                return await handler()
+
+            # Run the synchronous function in another process
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(
+                process_pool_executor, partial(handler, developer_id, session_id, data)
+            )
 
         # Handle regular operations
         if asyncio.iscoroutinefunction(handler):
             return await handler(**arguments)
-        return handler(**arguments)
 
+        # Run the synchronous function in another process
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            process_pool_executor, partial(handler, **arguments)
+        )
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in execute_system_call: {e}")

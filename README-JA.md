@@ -2,10 +2,12 @@
 
 <div align="center" id="top">
  <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
   <br />
+  <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを探索 (wip)</a>
   <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを探索 (wip)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和</a>
@@ -49,43 +51,41 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 目次</h3>
 
-- [貢献者募集🌟](#call-for-contributors-)
-- [はじめに](#introduction)
-- [主な特徴](#key-features)
-- [簡単な例](#quick-example)
-- [インストール](#installation)
-- [Python クイックスタート 🐍](#python-quick-start-)
-- [Node.js クイック スタート 🟩](#nodejs-quick-start-)
-- [コンポーネント](#components)
-- [メンタルモデル](#mental-model)
-- [コンセプト](#concepts)
-- [タスクの理解](#understanding-tasks)
-- [タスクのライフサイクル](#lifecycle-of-a-task)
-- [ワークフロー ステップの種類](#types-of-workflow-steps)
-- [共通手順](#common-steps)
-- [キーと値のステップ](#key-value-steps)
-- [反復ステップ](#iteration-steps)
-- [条件付きステップ](#conditional-steps)
-- [その他の制御フロー](#other-control-flow)
-- [ツールの種類](#tool-types)
-- [ユーザー定義の `functions`](#user-defined-functions)
-- [`システム` ツール](#system-tools)
-- [利用可能な `system` リソースと操作](#available-system-resources-and-operations)
-- [組み込みの `integrations`](#built-in-integrations)
-- [直接の `api_calls`](#direct-api_calls)
-- [統合](#integrations)
-- [その他の機能](#other-features)
-- [エージェントへのツールの追加](#adding-tools-to-agents)
-- [セッションとユーザーの管理](#managing-sessions-and-users)
-- [ドキュメントの統合と検索](#document-integration-and-search)
-- [参考](#reference)
-- [SDKリファレンス](#sdk-reference)
-- [APIリファレンス](#api-reference)
-- [ローカルクイックスタート](#local-quickstart)
-- [Julep と LangChain などの違いは何ですか?](#whats-the-difference-between-julep-and-langchain-etc)
-- [さまざまなユースケース](#different-use-cases)
-- [異なるフォームファクター](#different-form-factor)
-- [要約](#in-summary)
+- [貢献者募集🌟](#貢献者募集)
+- [主な特徴](#主な特徴)
+- [簡単な例](#簡単な例)
+- [インストール](#インストール)
+- [Python クイックスタート 🐍](#python-クイックスタート-)
+- [Node.js Quick Start 🟩](#nodejs-quick-start-)
+- [Components](#components)
+  - [Mental Model](#mental-model)
+- [Concepts](#concepts)
+- [Understanding Tasks](#understanding-tasks)
+  - [Lifecycle of a Task](#lifecycle-of-a-task)
+  - [Types of Workflow Steps](#types-of-workflow-steps)
+    - [Common Steps](#common-steps)
+    - [Key-Value Steps](#key-value-steps)
+    - [Iteration Steps](#iteration-steps)
+    - [Conditional Steps](#conditional-steps)
+    - [Other Control Flow](#other-control-flow)
+- [Tool Types](#tool-types)
+  - [User-defined `functions`](#user-defined-functions)
+  - [`system` tools](#system-tools)
+    - [Available `system` resources and operations](#available-system-resources-and-operations)
+  - [Built-in `integrations`](#built-in-integrations)
+  - [Direct `api_calls`](#direct-api_calls)
+- [Integrations](#integrations)
+- [Other Features](#other-features)
+  - [Adding Tools to Agents](#adding-tools-to-agents)
+  - [Managing Sessions and Users](#managing-sessions-and-users)
+  - [Document Integration and Search](#document-integration-and-search)
+  - [SDK リファレンス](#sdk-リファレンス)
+  - [API リファレンス](#api-リファレンス)
+- [ローカルクイックスタート](#ローカルクイックスタート)
+- [Julep と LangChain などの違いは何ですか?](#julep-と-langchain-などの違いは何ですか)
+  - [さまざまなユースケース](#さまざまなユースケース)
+  - [異なるフォームファクタ](#異なるフォームファクタ)
+
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -113,6 +113,7 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 3. 🔄 **複数ステップのタスク**: ループと意思決定を含む複雑な複数ステップのプロセスを構築します。
 4. ⏳ **タスク管理**: 無期限に実行される可能性のある長時間実行タスクを処理します。
 5. 🛠️ **組み込みツール**: タスクで組み込みツールと外部 API を使用します。
+6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、一般的にタスクがスムーズに実行されるようにします。
 6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、一般的にタスクがスムーズに実行されるようにします。
 7. 📚 **RAG**: Julep のドキュメント ストアを使用して、独自のデータを取得して使用するためのシステムを構築します。
 
@@ -589,6 +590,7 @@ const タスク = client.tasks.create(agentId, yaml.parse(taskYaml)) を待機�
 /* ステップ 3: タスクを実行する */
 
 非同期関数executeTask(taskId) {
+const 実行 = クライアント.実行.作成(taskId, {
 const 実行 = クライアント.実行.作成(taskId, {
 入力: { アイデア: 「飛ぶことを学ぶ猫」 },
   });
@@ -1493,8 +1495,8 @@ base64: 文字列 # (オプション) return_base64 が true の場合、base64 
 <td>
 
 **Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
-
 </td>
+
 </tr>
 
 </table>
@@ -1544,6 +1546,7 @@ context_overflow="適応型"
 
 # 同じセッションで会話を続ける
 レスポンス = client.sessions.chat(
+session_id=セッションID、
 session_id=セッションID、
 メッセージ=[
       {
@@ -1617,6 +1620,7 @@ metadata_filter={"category": "研究論文"}
 1. `git clone https://github.com/julep-ai/julep.git`
 2. `cd ジュレップ`
 3. `docker volume create cozo_backup`
+4. docker ボリュームを作成します cozo_data
 4. docker ボリュームを作成します cozo_data
 5. `cp .env.example .env # <-- このファイルを編集します`
 6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`

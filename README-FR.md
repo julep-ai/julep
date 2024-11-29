@@ -2,10 +2,12 @@
 
 <div align="center" id="top">
  <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
   <br />
+  <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents (en cours)</a>
   <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents (en cours)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discorde</a>
@@ -79,13 +81,13 @@ Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons 
 - [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
 - [Intégration et recherche de documents](#document-integration-and-search)
 - [Référence](#référence)
-- [Référence SDK](#sdk-reference)
-- [Référence API](#api-reference)
-- [Démarrage rapide local](#local-quickstart)
-- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-différence-entre-julep-et-langchain-etc)
-- [Différents cas d'utilisation](#different-use-cases)
-- [Facteur de forme différent](#different-form-factor)
-- [En résumé](#en-resumé)
+  - [Référence du SDK](#référence-du-sdk)
+  - [Référence API](#référence-api)
+- [Démarrage rapide local](#démarrage-rapide-local)
+- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-différence-entre-julep-et-langchain-etc-)
+  - [Différents cas d'utilisation](#différents-cas-dutilisation)
+  - [Facteur de forme différent](#facteur-de-forme-différent)
+  - [En résumé](#en-résumé)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

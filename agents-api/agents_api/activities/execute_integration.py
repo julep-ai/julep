@@ -44,7 +44,6 @@ async def execute_integration(
             return arguments
 
         integration_service_response = await integrations.run_integration_service(
-        integration_service_response = await integrations.run_integration_service(
             provider=integration.provider,
             setup=setup,
             method=integration.method,

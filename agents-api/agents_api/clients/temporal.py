@@ -61,7 +61,9 @@ async def run_task_execution_workflow(
     client = client or (await get_client())
     execution_id = execution_input.execution.id
     execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
-    execution_input.arguments = store_in_blob_store_if_large(execution_input.arguments)
+    execution_input.arguments = await store_in_blob_store_if_large(
+        execution_input.arguments
+    )
 
     return await client.start_workflow(
         TaskExecutionWorkflow.run,

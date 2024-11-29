@@ -10,7 +10,7 @@ from ...autogen.openapi_model import (
     File,
     ResourceCreatedResponse,
 )
-from ...clients import s3
+from ...clients import async_s3
 from ...dependencies.developer_id import get_developer_id
 from ...models.files.create_file import create_file as create_file_query
 from .router import router
@@ -18,10 +18,10 @@ from .router import router
 
 async def upload_file_content(file_id: UUID, content: str) -> None:
     """Upload file content to blob storage using the file ID as the key"""
-    s3.setup()
+    await async_s3.setup()
     key = str(file_id)
     content_bytes = base64.b64decode(content)
-    s3.add_object(key, content_bytes)
+    await async_s3.add_object(key, content_bytes)
 
 
 @router.post("/files", status_code=HTTP_201_CREATED, tags=["files"])

@@ -1,10 +1,6 @@
-from datetime import datetime
-from typing import Annotated, Callable, Optional
-from datetime import datetime
-from typing import Annotated, Callable, Optional
+from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
-from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
 from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
 from starlette.status import HTTP_201_CREATED
 
@@ -22,11 +18,9 @@ from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
 from ...env import max_free_sessions
-from ...env import max_free_sessions
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
-from ...models.session.count_sessions import count_sessions as count_sessions_query
 from ...models.session.count_sessions import count_sessions as count_sessions_query
 from .metrics import total_tokens_per_user
 from .router import router
@@ -189,7 +183,9 @@ async def chat(
                         k: v
                         for k, v in function.model_dump().items()
                         if k not in ["name", "type"]
-                    },
+                    }
+                    if function is not None
+                    else {},
                 },
             }
             formatted_tools.append(tool)
@@ -215,9 +211,6 @@ async def chat(
     # Use litellm for other models
     model_response = await litellm.acompletion(
         messages=messages,
-        tools=formatted_tools or None,
-        user=str(developer.id),
-        tags=developer.tags,
         tools=formatted_tools or None,
         user=str(developer.id),
         tags=developer.tags,
