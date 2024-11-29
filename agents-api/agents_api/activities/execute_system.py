@@ -1,4 +1,6 @@
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from typing import Any
 from uuid import UUID
 
@@ -21,8 +23,6 @@ from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_re
 from ..env import testing
 from ..models.developer import get_developer
 from .utils import get_handler
-from concurrent.futures import ProcessPoolExecutor
-from functools import partial
 
 # For running synchronous code in the background
 process_pool_executor = ProcessPoolExecutor()
@@ -114,18 +114,22 @@ async def execute_system(
             # In case sessions.create becomes asynchronous in the future
             if asyncio.iscoroutinefunction(handler):
                 return await handler()
-            
+
             # Run the synchronous function in another process
             loop = asyncio.get_running_loop()
-            return await loop.run_in_executor(process_pool_executor, partial(handler, developer_id, session_id, data))
+            return await loop.run_in_executor(
+                process_pool_executor, partial(handler, developer_id, session_id, data)
+            )
 
         # Handle regular operations
         if asyncio.iscoroutinefunction(handler):
             return await handler(**arguments)
-        
+
         # Run the synchronous function in another process
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(process_pool_executor, partial(handler, **arguments))
+        return await loop.run_in_executor(
+            process_pool_executor, partial(handler, **arguments)
+        )
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in execute_system_call: {e}")
