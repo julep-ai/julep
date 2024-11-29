@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 from ..clients import s3
 from ..common.protocol.remote import BaseRemoteModel, RemoteList, RemoteObject
-from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..env import (
     blob_store_cutoff_kb,
     use_blob_store_for_temporal,

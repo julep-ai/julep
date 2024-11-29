@@ -40,6 +40,8 @@ def on_starting(server):
 def worker_exit(server, worker):
     """Clean up on worker exit."""
     server.log.info(f"Worker {worker.pid} exiting gracefully")
+
+
 loglevel = "info"
 graceful_timeout = 30
 max_requests = 1000

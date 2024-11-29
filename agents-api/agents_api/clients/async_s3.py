@@ -1,11 +1,10 @@
-from functools import cache, lru_cache
-
 from beartype import beartype
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    import aioboto3
     import botocore
+    from aiobotocore.session import get_session
+    from async_lru import alru_cache
     from xxhash import xxh3_64_hexdigest as xxhash_key
 
     from ..env import (
@@ -17,71 +16,101 @@ with workflow.unsafe.imports_passed_through():
     )
 
 
-@cache
-async def get_s3_client():
-    return await aioboto3.session.client(
+async def list_buckets() -> list[str]:
+    session = get_session()
+
+    async with session.create_client(
         "s3",
         endpoint_url=s3_endpoint,
         aws_access_key_id=s3_access_key,
         aws_secret_access_key=s3_secret_key,
-    )
+    ) as client:
+        data = await client.list_buckets()
+        buckets = [bucket["Name"] for bucket in data["Buckets"]]
+        return buckets
 
 
-async def list_buckets() -> list[str]:
-    client = await get_s3_client()
-    data = await client.list_buckets()
-    buckets = [bucket["Name"] for bucket in data["Buckets"]]
-
-    return buckets
-
-
-@cache
+@alru_cache(maxsize=1)
 async def setup():
-    client = await get_s3_client()
-    if blob_store_bucket not in await list_buckets():
-        await client.create_bucket(Bucket=blob_store_bucket)
+    session = get_session()
+
+    async with session.create_client(
+        "s3",
+        aws_access_key_id=s3_access_key,
+        aws_secret_access_key=s3_secret_key,
+        endpoint_url=s3_endpoint,
+    ) as client:
+        if blob_store_bucket not in await list_buckets():
+            await client.create_bucket(Bucket=blob_store_bucket)
 
 
-@lru_cache(maxsize=10_000)
+@alru_cache(maxsize=10_000)
 async def exists(key: str) -> bool:
-    client = await get_s3_client()
+    session = get_session()
 
-    try:
-        client.head_object(Bucket=blob_store_bucket, Key=key)
-        return True
-
-    except botocore.exceptions.ClientError as e:
-        if e.response["Error"]["Code"] == "404":
-            return False
-        else:
-            raise e
+    async with session.create_client(
+        "s3",
+        aws_access_key_id=s3_access_key,
+        aws_secret_access_key=s3_secret_key,
+        endpoint_url=s3_endpoint,
+    ) as client:
+        try:
+            await client.head_object(Bucket=blob_store_bucket, Key=key)
+            return True
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                return False
+            else:
+                raise e
 
 
 @beartype
 async def add_object(key: str, body: bytes, replace: bool = False) -> None:
-    client = await get_s3_client()
+    session = get_session()
 
-    if replace:
-        client.put_object(Bucket=blob_store_bucket, Key=key, Body=body)
-        return
+    async with session.create_client(
+        "s3",
+        aws_access_key_id=s3_access_key,
+        aws_secret_access_key=s3_secret_key,
+        endpoint_url=s3_endpoint,
+    ) as client:
+        if replace:
+            await client.put_object(Bucket=blob_store_bucket, Key=key, Body=body)
+            return
 
-    if exists(key):
-        return
+        if await exists(key):
+            return
 
-    client.put_object(Bucket=blob_store_bucket, Key=key, Body=body)
+        await client.put_object(Bucket=blob_store_bucket, Key=key, Body=body)
 
 
-@lru_cache(maxsize=256 * 1024 // max(1, blob_store_cutoff_kb))  # 256mb in cache
+@alru_cache(maxsize=256 * 1024 // max(1, blob_store_cutoff_kb))  # 256mb in cache
 @beartype
 async def get_object(key: str) -> bytes:
-    client = await get_s3_client()
-    return (await client.get_object(Bucket=blob_store_bucket, Key=key))["Body"].read()
+    session = get_session()
+
+    async with session.create_client(
+        "s3",
+        aws_access_key_id=s3_access_key,
+        aws_secret_access_key=s3_secret_key,
+        endpoint_url=s3_endpoint,
+    ) as client:
+        response = await client.get_object(Bucket=blob_store_bucket, Key=key)
+        body = await response["Body"].read()
+        return body
 
 
 @beartype
 async def delete_object(key: str) -> None:
-    client = await get_s3_client()
-    await client.delete_object(Bucket=blob_store_bucket, Key=key)
+    session = get_session()
+
+    async with session.create_client(
+        "s3",
+        aws_access_key_id=s3_access_key,
+        aws_secret_access_key=s3_secret_key,
+        endpoint_url=s3_endpoint,
+    ) as client:
+        await client.delete_object(Bucket=blob_store_bucket, Key=key)
 
 
 @beartype
