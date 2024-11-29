@@ -67,9 +67,11 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
             new_args = await asyncio.gather(
                 *[load_from_blob_store_if_remote(arg) for arg in args]
             )
-            new_kwargs = {
-                k: await load_from_blob_store_if_remote(v) for k, v in kwargs.items()
-            }
+            kwargs_keys, kwargs_values = zip(*kwargs.items())
+            new_kwargs = await asyncio.gather(
+                *[load_from_blob_store_if_remote(v) for v in kwargs_values]
+            )
+            new_kwargs = dict(zip(kwargs_keys, new_kwargs))
 
             if deep:
                 args = new_args
@@ -85,12 +87,12 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                             )
                         )
                     elif isinstance(arg, dict):
-                        new_args.append(
-                            {
-                                key: await load_from_blob_store_if_remote(value)
-                                for key, value in arg.items()
-                            }
+                        keys, values = zip(*arg.items())
+                        values = await asyncio.gather(
+                            *[load_from_blob_store_if_remote(value) for value in values]
                         )
+                        new_args.append(dict(zip(keys, values)))
+
                     elif isinstance(arg, BaseRemoteModel):
                         new_args.append(await arg.unload_all())
 
@@ -110,7 +112,7 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                     field,
                                     await asyncio.gather(
                                         *[
-                                            await load_from_blob_store_if_remote(item)
+                                            load_from_blob_store_if_remote(item)
                                             for item in getattr(arg, field)
                                         ]
                                     ),
@@ -131,18 +133,19 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
 
                 for k, v in kwargs.items():
                     if isinstance(v, list):
-                        new_kwargs[k] = [
-                            await load_from_blob_store_if_remote(item) for item in v
-                        ]
+                        new_kwargs[k] = await asyncio.gather(
+                            *[load_from_blob_store_if_remote(item) for item in v]
+                        )
 
                     elif isinstance(v, dict):
-                        new_kwargs[k] = {
-                            key: await load_from_blob_store_if_remote(value)
-                            for key, value in v.items()
-                        }
+                        keys, values = zip(*v.items())
+                        values = await asyncio.gather(
+                            *[load_from_blob_store_if_remote(value) for value in values]
+                        )
+                        new_kwargs[k] = dict(zip(keys, values))
 
                     elif isinstance(v, BaseRemoteModel):
-                        new_kwargs[k] = v.unload_all()
+                        new_kwargs[k] = await v.unload_all()
 
                     elif isinstance(v, BaseModel):
                         for field in v.model_fields.keys():
@@ -160,7 +163,7 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                     field,
                                     await asyncio.gather(
                                         *[
-                                            await load_from_blob_store_if_remote(item)
+                                            load_from_blob_store_if_remote(item)
                                             for item in getattr(v, field)
                                         ]
                                     ),
