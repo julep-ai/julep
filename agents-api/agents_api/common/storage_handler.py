@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import sys
 from datetime import timedelta
@@ -8,9 +9,10 @@ from pydantic import BaseModel
 from temporalio import workflow
 
 from ..activities.sync_items_remote import load_inputs_remote
-from ..clients import s3
+from ..clients import async_s3
 from ..common.protocol.remote import BaseRemoteModel, RemoteList, RemoteObject
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
+from ..common.sync_storage_handler import sync_load_args
 from ..env import (
     blob_store_cutoff_kb,
     debug,
@@ -21,37 +23,37 @@ from ..env import (
 from ..worker.codec import deserialize, serialize
 
 
-def store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
+async def store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
     if not use_blob_store_for_temporal:
         return x
 
-    s3.setup()
+    await async_s3.setup()
 
     serialized = serialize(x)
     data_size = sys.getsizeof(serialized)
 
     if data_size > blob_store_cutoff_kb * 1024:
-        key = s3.add_object_with_hash(serialized)
+        key = await async_s3.add_object_with_hash(serialized)
         return RemoteObject(key=key)
 
     return x
 
 
-def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
+async def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
     if not use_blob_store_for_temporal:
         return x
 
-    s3.setup()
+    await async_s3.setup()
 
     if isinstance(x, RemoteObject):
-        fetched = s3.get_object(x.key)
+        fetched = await async_s3.get_object(x.key)
         return deserialize(fetched)
 
     elif isinstance(x, RemoteList):
         x = list(x)
 
     elif isinstance(x, dict) and set(x.keys()) == {"bucket", "key"}:
-        fetched = s3.get_object(x["key"])
+        fetched = await async_s3.get_object(x["key"])
         return deserialize(fetched)
 
     return x
@@ -64,12 +66,14 @@ def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
 
 def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callable:
     def auto_blob_store_decorator(f: Callable) -> Callable:
-        def load_args(
+        async def load_args(
             args: list | tuple, kwargs: dict[str, Any]
         ) -> tuple[list | tuple, dict[str, Any]]:
-            new_args = [load_from_blob_store_if_remote(arg) for arg in args]
+            new_args = await asyncio.gather(
+                *[load_from_blob_store_if_remote(arg) for arg in args]
+            )
             new_kwargs = {
-                k: load_from_blob_store_if_remote(v) for k, v in kwargs.items()
+                k: await load_from_blob_store_if_remote(v) for k, v in kwargs.items()
             }
 
             if deep:
@@ -81,12 +85,14 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                 for arg in args:
                     if isinstance(arg, list):
                         new_args.append(
-                            [load_from_blob_store_if_remote(item) for item in arg]
+                            await asyncio.gather(
+                                *[load_from_blob_store_if_remote(item) for item in arg]
+                            )
                         )
                     elif isinstance(arg, dict):
                         new_args.append(
                             {
-                                key: load_from_blob_store_if_remote(value)
+                                key: await load_from_blob_store_if_remote(value)
                                 for key, value in arg.items()
                             }
                         )
@@ -99,14 +105,14 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                 setattr(
                                     arg,
                                     field,
-                                    load_from_blob_store_if_remote(getattr(arg, field)),
+                                    await load_from_blob_store_if_remote(getattr(arg, field)),
                                 )
                             elif isinstance(getattr(arg, field), RemoteList):
                                 setattr(
                                     arg,
                                     field,
                                     [
-                                        load_from_blob_store_if_remote(item)
+                                        await load_from_blob_store_if_remote(item)
                                         for item in getattr(arg, field)
                                     ],
                                 )
@@ -123,12 +129,12 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                 for k, v in kwargs.items():
                     if isinstance(v, list):
                         new_kwargs[k] = [
-                            load_from_blob_store_if_remote(item) for item in v
+                            await load_from_blob_store_if_remote(item) for item in v
                         ]
 
                     elif isinstance(v, dict):
                         new_kwargs[k] = {
-                            key: load_from_blob_store_if_remote(value)
+                            key: await load_from_blob_store_if_remote(value)
                             for key, value in v.items()
                         }
 
@@ -141,14 +147,14 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                 setattr(
                                     v,
                                     field,
-                                    load_from_blob_store_if_remote(getattr(v, field)),
+                                    await load_from_blob_store_if_remote(getattr(v, field)),
                                 )
                             elif isinstance(getattr(v, field), RemoteList):
                                 setattr(
                                     v,
                                     field,
                                     [
-                                        load_from_blob_store_if_remote(item)
+                                        await load_from_blob_store_if_remote(item)
                                         for item in getattr(v, field)
                                     ],
                                 )
@@ -161,28 +167,28 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
 
             return new_args, new_kwargs
 
-        def unload_return_value(x: Any | BaseRemoteModel | RemoteList) -> Any:
+        async def unload_return_value(x: Any | BaseRemoteModel | RemoteList) -> Any:
             if isinstance(x, (BaseRemoteModel, RemoteList)):
                 x.unload_all()
 
-            return store_in_blob_store_if_large(x)
+            return await store_in_blob_store_if_large(x)
 
         if inspect.iscoroutinefunction(f):
 
             @wraps(f)
             async def async_wrapper(*args, **kwargs) -> Any:
-                new_args, new_kwargs = load_args(args, kwargs)
+                new_args, new_kwargs = await load_args(args, kwargs)
                 output = await f(*new_args, **new_kwargs)
 
-                return unload_return_value(output)
+                return await unload_return_value(output)
 
             return async_wrapper if use_blob_store_for_temporal else f
 
         else:
-
+            # FIXME: Remove sync wrapper
             @wraps(f)
             def wrapper(*args, **kwargs) -> Any:
-                new_args, new_kwargs = load_args(args, kwargs)
+                new_args, new_kwargs = sync_load_args(deep, args, kwargs)
                 output = f(*new_args, **new_kwargs)
 
                 return unload_return_value(output)

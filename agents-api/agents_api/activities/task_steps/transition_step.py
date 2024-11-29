@@ -14,7 +14,7 @@ async def transition_step(
     transition_info: CreateTransitionRequest,
 ) -> Transition:
     # Load output from blob store if it is a remote object
-    transition_info.output = load_from_blob_store_if_remote(transition_info.output)
+    transition_info.output = await load_from_blob_store_if_remote(transition_info.output)
 
     # Create transition
     transition = create_execution_transition(

@@ -36,7 +36,7 @@ async def execute_system(
     arguments: dict[str, Any] = system.arguments or {}
 
     if set(arguments.keys()) == {"bucket", "key"}:
-        arguments = load_from_blob_store_if_remote(arguments)
+        arguments = await load_from_blob_store_if_remote(arguments)
 
     arguments["developer_id"] = context.execution_input.developer_id
 

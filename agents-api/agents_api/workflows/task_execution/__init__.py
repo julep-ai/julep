@@ -134,8 +134,9 @@ class TaskExecutionWorkflow:
             f" [LOC {start.workflow}.{start.step}]"
         )
 
+        # FIXME: Look into saving arguments to the blob store if necessary
         # 0. Prepare context
-        previous_inputs = previous_inputs or RemoteList([execution_input.arguments])
+        previous_inputs = previous_inputs or [execution_input.arguments]
 
         context = StepContext(
             execution_input=execution_input,

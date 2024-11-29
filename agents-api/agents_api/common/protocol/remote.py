@@ -25,23 +25,23 @@ class BaseRemoteModel(BaseModel):
         super().__init__(**data)
         self._remote_cache = {}
 
-    def __load_item(self, item: Any | RemoteObject) -> Any:
+    async def load_item(self, item: Any | RemoteObject) -> Any:
         if not activity.in_activity():
             return item
 
         from ..storage_handler import load_from_blob_store_if_remote
 
-        return load_from_blob_store_if_remote(item)
+        return await load_from_blob_store_if_remote(item)
 
-    def __save_item(self, item: Any) -> Any:
+    async def save_item(self, item: Any) -> Any:
         if not activity.in_activity():
             return item
 
         from ..storage_handler import store_in_blob_store_if_large
 
-        return store_in_blob_store_if_large(item)
+        return await store_in_blob_store_if_large(item)
 
-    def __getattribute__(self, name: str) -> Any:
+    async def get_attribute(self, name: str) -> Any:
         if name.startswith("_"):
             return super().__getattribute__(name)
 
@@ -57,45 +57,37 @@ class BaseRemoteModel(BaseModel):
             if name in cache:
                 return cache[name]
 
-            loaded_data = self.__load_item(value)
+            loaded_data = await self.load_item(value)
             cache[name] = loaded_data
             return loaded_data
 
         return value
 
-    def __setattr__(self, name: str, value: Any) -> None:
+    async def set_attribute(self, name: str, value: Any) -> None:
         if name.startswith("_"):
             super().__setattr__(name, value)
             return
 
-        stored_value = self.__save_item(value)
+        stored_value = await self.save_item(value)
         super().__setattr__(name, stored_value)
 
         if isinstance(stored_value, RemoteObject):
             cache = self.__dict__.get("_remote_cache", {})
             cache.pop(name, None)
 
-    def load_all(self) -> None:
+    async def load_all(self) -> None:
         for name in self.model_fields_set:
-            self.__getattribute__(name)
+            await self.get_attribute(name)
 
-    def model_dump(
-        self, *args, include_remote: bool = False, **kwargs
-    ) -> dict[str, Any]:
-        if include_remote:
-            self.load_all()
-
-        return super().model_dump(*args, **kwargs)
-
-    def unload_attribute(self, name: str) -> None:
+    async def unload_attribute(self, name: str) -> None:
         if name in self._remote_cache:
             data = self._remote_cache.pop(name)
-            remote_obj = self.__save_item(data)
+            remote_obj = await self.save_item(data)
             super().__setattr__(name, remote_obj)
 
-    def unload_all(self) -> "BaseRemoteModel":
+    async def unload_all(self) -> "BaseRemoteModel":
         for name in list(self._remote_cache.keys()):
-            self.unload_attribute(name)
+            await self.unload_attribute(name)
         return self
 
 
