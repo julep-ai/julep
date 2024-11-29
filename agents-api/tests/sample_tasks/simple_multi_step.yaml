@@ -20,4 +20,4 @@ main:
   - log: _
 
   - evaluate:
-      result: _[0]["choices"][0]["message"].content.strip()
+      result: '[item["choices"][0]["message"].content.strip() for item in _]'

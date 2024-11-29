@@ -54,6 +54,7 @@ larch-pickle = "^1.4.3"
 aiobotocore = "^2.15.2"
 boto3 = "^1.35.36"
 async-lru = "^2.0.4"
+pycozo-async = "^0.7.6"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
