@@ -519,25 +519,6 @@ files = [
 numpy = ">=2.0.0,<3.0.0"
 
 [[package]]
-name = "boto3"
-version = "1.35.36"
-description = "The AWS SDK for Python"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "boto3-1.35.36-py3-none-any.whl", hash = "sha256:33735b9449cd2ef176531ba2cb2265c904a91244440b0e161a17da9d24a1e6d1"},
-    {file = "boto3-1.35.36.tar.gz", hash = "sha256:586524b623e4fbbebe28b604c6205eb12f263cc4746bccb011562d07e217a4cb"},
-]
-
-[package.dependencies]
-botocore = ">=1.35.36,<1.36.0"
-jmespath = ">=0.7.1,<2.0.0"
-s3transfer = ">=0.10.0,<0.11.0"
-
-[package.extras]
-crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
-
-[[package]]
 name = "botocore"
 version = "1.35.36"
 description = "Low-level, data-driven core of boto 3."
@@ -4865,23 +4846,6 @@ files = [
 ]
 
 [[package]]
-name = "s3transfer"
-version = "0.10.4"
-description = "An Amazon S3 Transfer Manager"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "s3transfer-0.10.4-py3-none-any.whl", hash = "sha256:244a76a24355363a68164241438de1b72f8781664920260c48465896b712a41e"},
-    {file = "s3transfer-0.10.4.tar.gz", hash = "sha256:29edc09801743c21eb5ecbc617a152df41d3c287f67b615f73e5f750583666a7"},
-]
-
-[package.dependencies]
-botocore = ">=1.33.2,<2.0a.0"
-
-[package.extras]
-crt = ["botocore[crt] (>=1.33.2,<2.0a.0)"]
-
-[[package]]
 name = "scalar-fastapi"
 version = "1.0.3"
 description = "This plugin provides an easy way to render a beautiful API reference based on a OpenAPI/Swagger file with FastAPI."
@@ -6367,4 +6331,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "dfbd32380af8941e913b36f859bbf6779066a0dedad414dc5d1693426f3500af"
+content-hash = "49d72de9b129ab135480de0f7ddf2dd0c4e120dc69b49bf581ca9f78c386e6f3"

@@ -14,6 +14,7 @@ from pydantic import (
     model_validator,
 )
 
+from ..common.storage_handler import RemoteObject
 from ..common.utils.datetime import utcnow
 from .Agents import *
 from .Chat import *
@@ -354,8 +355,6 @@ assert TransitionType == Transition.model_fields["type"].annotation
 
 # Create models
 # -------------
-
-from ..common.storage_handler import RemoteObject
 
 
 class SystemDef(SystemDef):

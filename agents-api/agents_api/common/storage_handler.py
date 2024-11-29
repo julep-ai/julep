@@ -1,5 +1,4 @@
 import asyncio
-import inspect
 import sys
 from datetime import timedelta
 from functools import wraps
@@ -10,9 +9,8 @@ from temporalio import workflow
 
 from ..activities.sync_items_remote import load_inputs_remote
 from ..clients import async_s3
-from ..common.protocol.remote import BaseRemoteModel, RemoteList, RemoteObject
+from ..common.protocol.remote import BaseRemoteModel, RemoteObject
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
-from ..common.sync_storage_handler import sync_load_args
 from ..env import (
     blob_store_cutoff_kb,
     debug,
@@ -48,9 +46,6 @@ async def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
     if isinstance(x, RemoteObject):
         fetched = await async_s3.get_object(x.key)
         return deserialize(fetched)
-
-    elif isinstance(x, RemoteList):
-        x = list(x)
 
     elif isinstance(x, dict) and set(x.keys()) == {"bucket", "key"}:
         fetched = await async_s3.get_object(x["key"])
@@ -109,14 +104,16 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                         getattr(arg, field)
                                     ),
                                 )
-                            elif isinstance(getattr(arg, field), RemoteList):
+                            elif isinstance(getattr(arg, field), list):
                                 setattr(
                                     arg,
                                     field,
-                                    [
-                                        await load_from_blob_store_if_remote(item)
-                                        for item in getattr(arg, field)
-                                    ],
+                                    await asyncio.gather(
+                                        *[
+                                            await load_from_blob_store_if_remote(item)
+                                            for item in getattr(arg, field)
+                                        ]
+                                    ),
                                 )
                             elif isinstance(getattr(arg, field), BaseRemoteModel):
                                 setattr(
@@ -157,14 +154,16 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                         getattr(v, field)
                                     ),
                                 )
-                            elif isinstance(getattr(v, field), RemoteList):
+                            elif isinstance(getattr(v, field), list):
                                 setattr(
                                     v,
                                     field,
-                                    [
-                                        await load_from_blob_store_if_remote(item)
-                                        for item in getattr(v, field)
-                                    ],
+                                    await asyncio.gather(
+                                        *[
+                                            await load_from_blob_store_if_remote(item)
+                                            for item in getattr(v, field)
+                                        ]
+                                    ),
                                 )
                             elif isinstance(getattr(v, field), BaseRemoteModel):
                                 setattr(
@@ -179,33 +178,20 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
 
             return new_args, new_kwargs
 
-        async def unload_return_value(x: Any | BaseRemoteModel | RemoteList) -> Any:
-            if isinstance(x, (BaseRemoteModel, RemoteList)):
-                x.unload_all()
+        async def unload_return_value(x: Any | BaseRemoteModel) -> Any:
+            if isinstance(x, BaseRemoteModel):
+                await x.unload_all()
 
             return await store_in_blob_store_if_large(x)
 
-        if inspect.iscoroutinefunction(f):
+        @wraps(f)
+        async def async_wrapper(*args, **kwargs) -> Any:
+            new_args, new_kwargs = await load_args(args, kwargs)
+            output = await f(*new_args, **new_kwargs)
 
-            @wraps(f)
-            async def async_wrapper(*args, **kwargs) -> Any:
-                new_args, new_kwargs = await load_args(args, kwargs)
-                output = await f(*new_args, **new_kwargs)
+            return await unload_return_value(output)
 
-                return await unload_return_value(output)
-
-            return async_wrapper if use_blob_store_for_temporal else f
-
-        else:
-            # FIXME: Remove sync wrapper
-            @wraps(f)
-            def wrapper(*args, **kwargs) -> Any:
-                new_args, new_kwargs = sync_load_args(deep, args, kwargs)
-                output = f(*new_args, **new_kwargs)
-
-                return unload_return_value(output)
-
-            return wrapper if use_blob_store_for_temporal else f
+        return async_wrapper if use_blob_store_for_temporal else f
 
     return auto_blob_store_decorator(f) if f else auto_blob_store_decorator
 
