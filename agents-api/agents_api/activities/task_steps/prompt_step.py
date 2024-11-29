@@ -1,4 +1,3 @@
-
 from beartype import beartype
 from litellm.types.utils import ModelResponse
 from temporalio import activity
