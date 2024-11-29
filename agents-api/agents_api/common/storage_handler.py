@@ -105,7 +105,9 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                 setattr(
                                     arg,
                                     field,
-                                    await load_from_blob_store_if_remote(getattr(arg, field)),
+                                    await load_from_blob_store_if_remote(
+                                        getattr(arg, field)
+                                    ),
                                 )
                             elif isinstance(getattr(arg, field), RemoteList):
                                 setattr(
@@ -147,7 +149,9 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                                 setattr(
                                     v,
                                     field,
-                                    await load_from_blob_store_if_remote(getattr(v, field)),
+                                    await load_from_blob_store_if_remote(
+                                        getattr(v, field)
+                                    ),
                                 )
                             elif isinstance(getattr(v, field), RemoteList):
                                 setattr(

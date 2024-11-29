@@ -12,6 +12,7 @@ from ..env import (
 )
 from ..worker.codec import deserialize, serialize
 
+
 def sync_store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
     if not use_blob_store_for_temporal:
         return x
@@ -26,6 +27,7 @@ def sync_store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
         return RemoteObject(key=key)
 
     return x
+
 
 def sync_load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
     if not use_blob_store_for_temporal:
@@ -46,13 +48,12 @@ def sync_load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
 
     return x
 
+
 def sync_load_args(
     deep: bool, args: list | tuple, kwargs: dict[str, Any]
 ) -> tuple[list | tuple, dict[str, Any]]:
     new_args = [sync_load_from_blob_store_if_remote(arg) for arg in args]
-    new_kwargs = {
-        k: sync_load_from_blob_store_if_remote(v) for k, v in kwargs.items()
-    }
+    new_kwargs = {k: sync_load_from_blob_store_if_remote(v) for k, v in kwargs.items()}
 
     if deep:
         args = new_args
