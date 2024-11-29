@@ -1,8 +1,10 @@
 from beartype import beartype
 from litellm.types.utils import ModelResponse
+from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
+from ...autogen.openapi_model import Tool
 from ...autogen.openapi_model import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it

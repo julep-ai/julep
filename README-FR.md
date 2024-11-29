@@ -50,37 +50,36 @@ Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 Table des matières</h3>
-<h3>📖 Table des matières</h3>
 
-- [Appel aux contributeurs 🌟](#appel-aux-contributeurs-)
-- [Introduction](#introduction)
-- [Principales caractéristiques](#principales-caractéristiques)
-- [Exemple rapide](#exemple-rapide)
+- [Appel à contributeurs 🌟](#call-for-contributors-)
+- [Présentation](#introduction)
+- [Caractéristiques principales](#key-features)
+- [Exemple rapide](#quick-example)
 - [Installation](#installation)
-- [Démarrage rapide de Python 🐍](#démarrage-rapide-de-python-)
-- [Node.js Quick Start 🟩](#nodejs-quick-start-)
-- [Components](#components)
-  - [Mental Model](#mental-model)
+- [Démarrage rapide de Python 🐍](#python-quick-start-)
+- [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
+- [Composants](#composants)
+- [Modèle mental](#mental-model)
 - [Concepts](#concepts)
-- [Understanding Tasks](#understanding-tasks)
-  - [Lifecycle of a Task](#lifecycle-of-a-task)
-  - [Types of Workflow Steps](#types-of-workflow-steps)
-    - [Common Steps](#common-steps)
-    - [Key-Value Steps](#key-value-steps)
-    - [Iteration Steps](#iteration-steps)
-    - [Conditional Steps](#conditional-steps)
-    - [Other Control Flow](#other-control-flow)
-- [Tool Types](#tool-types)
-  - [User-defined `functions`](#user-defined-functions)
-  - [`system` tools](#system-tools)
-    - [Available `system` resources and operations](#available-system-resources-and-operations)
-  - [Built-in `integrations`](#built-in-integrations)
-  - [Direct `api_calls`](#direct-api_calls)
-- [Integrations](#integrations)
-- [Other Features](#other-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
+- [Comprendre les tâches](#understanding-tasks)
+- [Cycle de vie d'une tâche](#cycle-de-vie-d-une-tâche)
+- [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Étapes courantes](#étapes-communes)
+- [Étapes clé-valeur](#étapes-clé-valeur)
+- [Étapes d'itération](#iteration-steps)
+- [Étapes conditionnelles](#étapes-conditionnelles)
+- [Autre flux de contrôle](#other-control-flow)
+- [Types d'outils](#types-d'outils)
+- [`Fonctions` définies par l'utilisateur](#user-defined-functions)
+- [outils système](#outils-système)
+- [Ressources et opérations « système » disponibles](#available-system-resources-and-operations)
+- [`Intégrations` intégrées](#integrations-integrées)
+- [Appels directs `api_calls`](#appels directs-api_calls)
+- [Intégrations](#intégrations)
+- [Autres fonctionnalités](#other-features)
+- [Ajout d'outils aux agents](#adding-tools-to-agents)
+- [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
+- [Intégration et recherche de documents](#document-integration-and-search)
 - [Référence](#référence)
   - [Référence du SDK](#référence-du-sdk)
   - [Référence API](#référence-api)
@@ -687,7 +686,7 @@ Agent --> Documents[Documents]
 Documents --> VectorDB[Base de données vectorielles]
 Tâches --> Exécutions[Exécutions]
 
-client classDef remplissage : #9ff, trait : #333, largeur du trait : 1 px ;
+client classDef fill:#9ff,trait:#333,largeur-trait:1px;
 classe Utilisateur client ;
 
 classDef core fill:#f9f,trait:#333,largeur-trait:2px;
@@ -1160,7 +1159,7 @@ description : Lister les agents à l'aide d'un appel système
 
 outils:
 - nom : list_agent_docs
-description : liste tous les documents pour l'agent donné
+description : Liste tous les documents pour l'agent donné
 type : système
 système:
 ressource : agent

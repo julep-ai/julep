@@ -1302,7 +1302,7 @@ result: string # Brave Search 的结果
 设置：
 api_key: string # BrowserBase 的 API 密钥
 project_id: string # BrowserBase 的项目 ID
-session_id: string #（可选）BrowserBase 的会话 ID
+session_id: string # （可选）BrowserBase 的会话 ID
 
 参数：
 urls: list[string] # 使用 BrowserBase 加载的 URL

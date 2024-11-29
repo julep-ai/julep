@@ -86,6 +86,7 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
   - [さまざまなユースケース](#さまざまなユースケース)
   - [異なるフォームファクタ](#異なるフォームファクタ)
 
+
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ＃＃ 導入
@@ -1307,7 +1308,7 @@ session_id: 文字列 # (オプション) BrowserBaseのセッションID
 urls: list[string] # BrowserBaseで読み込むURL
 
 出力：
-documents: list # URLから読み込まれたドキュメント
+ドキュメント: リスト # URLから読み込まれたドキュメント
 ```
 
 </td>
@@ -1494,8 +1495,8 @@ base64: 文字列 # (オプション) return_base64 が true の場合、base64 
 <td>
 
 **Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
-
 </td>
+
 </tr>
 
 </table>
