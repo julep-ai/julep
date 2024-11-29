@@ -197,7 +197,7 @@ class TaskExecutionWorkflow:
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
 
-        [outcome] = await workflow.execute_local_activity(
+        [outcome] = await workflow.execute_activity(
             load_inputs_remote,
             args=[[outcome]],
             schedule_to_close_timeout=timedelta(
@@ -661,7 +661,7 @@ class TaskExecutionWorkflow:
         )
 
         # Save the final output to the blob store
-        [final_output] = await workflow.execute_local_activity(
+        [final_output] = await workflow.execute_activity(
             save_inputs_remote,
             args=[[final_state.output]],
             schedule_to_close_timeout=timedelta(
