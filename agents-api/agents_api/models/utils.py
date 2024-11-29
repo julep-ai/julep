@@ -7,7 +7,10 @@ from uuid import UUID
 
 import pandas as pd
 from fastapi import HTTPException
+from httpcore import NetworkError, TimeoutException
+from httpx import RequestError
 from pydantic import BaseModel
+from requests.exceptions import ConnectionError, Timeout
 
 from ..common.utils.cozo import uuid_int_list_to_uuid4
 from ..env import do_verify_developer, do_verify_developer_owns_resource
@@ -254,7 +257,21 @@ def cozo_query(
 
                 debug and print(repr(e))
 
-                if "busy" in (str(e) + str(getattr(e, "resp", e))).lower():
+                pretty_error = repr(e).lower()
+                cozo_busy = ("busy" in pretty_error) or (
+                    "when executing against relation '_" in pretty_error
+                )
+                connection_error = isinstance(
+                    e,
+                    (
+                        ConnectionError,
+                        Timeout,
+                        TimeoutException,
+                        NetworkError,
+                        RequestError,
+                    ),
+                )
+                if cozo_busy or connection_error:
                     raise HTTPException(
                         status_code=429, detail="Resource busy. Please try again later."
                     ) from e
@@ -321,9 +338,10 @@ def cozo_query_async(
             return isinstance(e, HTTPException) and e.status_code == 429
 
         @retry(
-            stop=stop_after_attempt(4),
-            wait=wait_exponential(multiplier=1, min=4, max=10),
+            stop=stop_after_attempt(6),
+            wait=wait_exponential(multiplier=1.2, min=3, max=10),
             retry=retry_if_exception(is_resource_busy),
+            reraise=True,
         )
         @wraps(func)
         async def wrapper(
@@ -367,7 +385,21 @@ def cozo_query_async(
 
                 debug and print(repr(e))
 
-                if "busy" in (str(e) + str(getattr(e, "resp", e))).lower():
+                pretty_error = repr(e).lower()
+                cozo_busy = ("busy" in pretty_error) or (
+                    "when executing against relation '_" in pretty_error
+                )
+                connection_error = isinstance(
+                    e,
+                    (
+                        ConnectionError,
+                        Timeout,
+                        TimeoutException,
+                        NetworkError,
+                        RequestError,
+                    ),
+                )
+                if cozo_busy or connection_error:
                     raise HTTPException(
                         status_code=429, detail="Resource busy. Please try again later."
                     ) from e
