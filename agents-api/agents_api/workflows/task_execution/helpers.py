@@ -15,7 +15,6 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
-    from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,
         StepContext,
@@ -28,7 +27,7 @@ with workflow.unsafe.imports_passed_through():
 async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
-    previous_inputs: RemoteList | list[Any],
+    previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
     info = workflow.info()
@@ -58,7 +57,7 @@ async def execute_switch_branch(
     execution_input: ExecutionInput,
     switch: list,
     index: int,
-    previous_inputs: RemoteList | list[Any],
+    previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"Switch step: Chose branch {index}")
@@ -93,7 +92,7 @@ async def execute_if_else_branch(
     then_branch: WorkflowStep,
     else_branch: WorkflowStep | None,
     condition: bool,
-    previous_inputs: RemoteList | list[Any],
+    previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"If-Else step: Condition evaluated to {condition}")
@@ -131,7 +130,7 @@ async def execute_foreach_step(
     execution_input: ExecutionInput,
     do_step: WorkflowStep,
     items: list[Any],
-    previous_inputs: RemoteList | list[Any],
+    previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"Foreach step: Iterating over {len(items)} items")
@@ -169,7 +168,7 @@ async def execute_map_reduce_step(
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    previous_inputs: RemoteList | list[Any],
+    previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
     reduce: str | None = None,
     initial: Any = [],
@@ -216,7 +215,7 @@ async def execute_map_reduce_step_parallel(
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    previous_inputs: RemoteList | list[Any],
+    previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
     initial: Any = [],
     reduce: str | None = None,

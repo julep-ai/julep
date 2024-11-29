@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import Annotated, Callable, Optional
+from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
@@ -184,7 +183,9 @@ async def chat(
                         k: v
                         for k, v in function.model_dump().items()
                         if k not in ["name", "type"]
-                    },
+                    }
+                    if function is not None
+                    else {},
                 },
             }
             formatted_tools.append(tool)
