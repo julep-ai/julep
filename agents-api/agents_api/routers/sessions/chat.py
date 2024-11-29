@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import Annotated, Callable, Optional
+from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks, Depends, Header, HTTPException, status

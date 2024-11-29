@@ -1,9 +1,5 @@
-from typing import Callable
 
-from anthropic.types.beta.beta_message import BetaMessage
 from beartype import beartype
-from langchain_core.tools import BaseTool
-from langchain_core.tools.convert import tool as tool_decorator
 from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
@@ -16,7 +12,6 @@ from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import debug
-from ..utils import get_handler_with_filtered_params
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
