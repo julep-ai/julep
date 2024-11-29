@@ -29,6 +29,14 @@ limit.numPendingChildExecutions.error:
   - value: 4000 # default 2000
     constraints: {}
 
+frontend.MaxExecutionCountBatchOperationPerNamespace:
+  - value: 10000
+    constraints: {}
+
+frontend.MaxConcurrentBatchOperationPerNamespace:
+  - value: 100
+    constraints: {}
+
 # worker.ScannerMaxConcurrentWorkflowTaskExecutionSize (10 default), worker.ParentCloseMaxConcurrentWorkflowTaskExecutionSize (1000 default) (reduce?)
 
 

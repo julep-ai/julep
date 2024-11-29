@@ -1993,13 +1993,13 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "julep"
-version = "1.43.0"
+version = "1.43.1"
 description = "The official Python library for the julep API"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "julep-1.43.0-py3-none-any.whl", hash = "sha256:33e385747dafb915cff80e926384bcdda4d811a6b49ad8671221aa7734c8a281"},
-    {file = "julep-1.43.0.tar.gz", hash = "sha256:c6043560e2d8fa6068f996aa7d7f3d9cfd38bc183c1f1f0e04fc31d8287b347a"},
+    {file = "julep-1.43.1-py3-none-any.whl", hash = "sha256:a9a5d8c92b77d1983bd0b4edf8c493e0db1db65713b78ca87f247fc8e23bd785"},
+    {file = "julep-1.43.1.tar.gz", hash = "sha256:24bd12445afd6e5a55612d6172f9776262a21c044aaeebd11f943f1b9a52b59a"},
 ]
 
 [package.dependencies]
@@ -3189,13 +3189,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.55.2"
+version = "1.55.3"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "openai-1.55.2-py3-none-any.whl", hash = "sha256:3027c7fa4a33ed759f4a3d076093fcfa1c55658660c889bec33f651e2dc77922"},
-    {file = "openai-1.55.2.tar.gz", hash = "sha256:5cc0b1162b65dcdf670b4b41448f18dd470d2724ca04821ab1e86b6b4e88650b"},
+    {file = "openai-1.55.3-py3-none-any.whl", hash = "sha256:2a235d0e1e312cd982f561b18c27692e253852f4e5fb6ccf08cb13540a9bdaa1"},
+    {file = "openai-1.55.3.tar.gz", hash = "sha256:547e85b94535469f137a779d8770c8c5adebd507c2cc6340ca401a7c4d5d16f0"},
 ]
 
 [package.dependencies]
@@ -5770,13 +5770,13 @@ test = ["argcomplete (>=3.0.3)", "mypy (>=1.7.0)", "pre-commit", "pytest (>=7.0,
 
 [[package]]
 name = "typer"
-version = "0.13.1"
+version = "0.14.0"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "typer-0.13.1-py3-none-any.whl", hash = "sha256:5b59580fd925e89463a29d363e0a43245ec02765bde9fb77d39e5d0f29dd7157"},
-    {file = "typer-0.13.1.tar.gz", hash = "sha256:9d444cb96cc268ce6f8b94e13b4335084cef4c079998a9f4851a90229a3bd25c"},
+    {file = "typer-0.14.0-py3-none-any.whl", hash = "sha256:f476233a25770ab3e7b2eebf7c68f3bc702031681a008b20167573a4b7018f09"},
+    {file = "typer-0.14.0.tar.gz", hash = "sha256:af58f737f8d0c0c37b9f955a6d39000b9ff97813afcbeef56af5e37cf743b45a"},
 ]
 
 [package.dependencies]
@@ -6381,4 +6381,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "9942b29b33d07428cc06dc2e6b00eaf9d292523b69e7926f6b89a81a68a87ea8"
+content-hash = "5037589f836705e7d4ae16c954af20ab9da403dffe9c70f8ad48592cea11c17b"
