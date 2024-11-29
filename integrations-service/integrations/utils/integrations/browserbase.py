@@ -22,11 +22,7 @@ from ...autogen.Tools import (
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
 )
-from ...env import (  # Import env to access environment variables
-    browserbase_api_key,
-    browserbase_project_id,
-)
-from ...env import (  # Import env to access environment variables
+from ...env import (  # Import env to access environment variables  # Import env to access environment variables
     browserbase_api_key,
     browserbase_project_id,
 )
