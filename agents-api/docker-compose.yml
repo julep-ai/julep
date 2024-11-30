@@ -62,7 +62,7 @@ x--base-agents-api: &base-agents-api
         ignore:
           - ./gunicorn_conf.pyc
       - action: rebuild
-        path: poetry.lock
+        path: uv.lock
       - action: rebuild
         path: Dockerfile
 
@@ -99,7 +99,7 @@ services:
           ignore:
             - ./**/*.pyc
         - action: rebuild
-          path: poetry.lock
+          path: uv.lock
         - action: rebuild
           path: Dockerfile.worker
 

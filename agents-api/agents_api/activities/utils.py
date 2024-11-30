@@ -9,10 +9,10 @@ import statistics
 import string
 import time
 import urllib.parse
+import zoneinfo
 from typing import Any, Callable, ParamSpec, TypeVar
 
 import re2
-import zoneinfo
 from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
 
