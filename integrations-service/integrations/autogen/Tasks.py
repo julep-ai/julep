@@ -9,7 +9,6 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 from .Chat import ChatSettings
-from .Common import JinjaTemplate
 from .Tools import (
     ChosenBash20241022,
     ChosenComputer20241022,

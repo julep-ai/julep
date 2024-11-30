@@ -67,7 +67,7 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
         # Decode base64 input
         try:
             input_data = base64.b64decode(arguments.file)
-        except:
+        except Exception as e:
             return FfmpegSearchOutput(
                 fileoutput="Error: Invalid base64 input", result=False, mime_type=None
             )

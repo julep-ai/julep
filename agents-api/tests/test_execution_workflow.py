@@ -1370,9 +1370,10 @@ async def _(
         object="text_completion",
     )
 
-    with patch("agents_api.clients.litellm.acompletion") as acompletion, open(
-        "./tests/sample_tasks/find_selector.yaml", "r"
-    ) as task_file:
+    with (
+        patch("agents_api.clients.litellm.acompletion") as acompletion,
+        open("./tests/sample_tasks/find_selector.yaml", "r") as task_file,
+    ):
         input = dict(
             screenshot_base64="iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA",
             network_requests=[{"request": {}, "response": {"body": "Lady Gaga"}}],
