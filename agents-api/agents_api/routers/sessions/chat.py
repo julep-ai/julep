@@ -27,9 +27,6 @@ from .router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
-COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
-
-
 @router.post(
     "/sessions/{session_id}/chat",
     status_code=HTTP_201_CREATED,
@@ -122,14 +119,6 @@ async def chat(
 
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
-
-    # Check if using Claude model and has specific tool types
-    is_claude_model = settings["model"].lower().startswith("claude-3.5")
-
-    # Format tools for litellm
-    # formatted_tools = (
-    #     tools if is_claude_model else [format_tool(tool) for tool in tools]
-    # )
 
     # Check if using Claude model and has specific tool types
     is_claude_model = settings["model"].lower().startswith("claude-3.5")
