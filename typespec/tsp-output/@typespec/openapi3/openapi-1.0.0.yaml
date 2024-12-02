@@ -8381,6 +8381,7 @@ components:
         mode:
           type: string
           enum:
+            - crawl
             - scrape
           description: The type of crawler to use
           default: scrape
@@ -8399,6 +8400,7 @@ components:
         mode:
           type: string
           enum:
+            - crawl
             - scrape
           description: The type of crawler to use
           default: scrape

@@ -67,17 +67,6 @@ async def chat(
                 detail="Session length exceeded the free tier limit",
             )
 
-    # check if the developer is paid
-    if "paid" not in developer.tags:
-        # get the session length
-        sessions = count_sessions_query(developer_id=developer.id)
-        session_length = sessions["count"]
-        if session_length > max_free_sessions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Session length exceeded the free tier limit",
-            )
-
     if chat_input.stream:
         raise NotImplementedError("Streaming is not yet implemented")
 
@@ -108,7 +97,6 @@ async def chat(
         )
         for ref in doc_references
     ]
-
     # Render the system message
     if situation := chat_context.session.situation:
         system_message = dict(

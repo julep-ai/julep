@@ -1639,7 +1639,7 @@ class SpiderFetchArguments(BaseModel):
     """
     The URL to fetch data from
     """
-    mode: Literal["scrape"] = "scrape"
+    mode: Literal["crawl", "scrape"] = "scrape"
     """
     The type of crawler to use
     """
@@ -1661,7 +1661,7 @@ class SpiderFetchArgumentsUpdate(BaseModel):
     """
     The URL to fetch data from
     """
-    mode: Literal["scrape"] = "scrape"
+    mode: Literal["crawl", "scrape"] = "scrape"
     """
     The type of crawler to use
     """

@@ -1,5 +1,3 @@
-import asyncio
-
 from beartype import beartype
 from langchain_community.document_loaders import SpiderLoader
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -45,5 +43,5 @@ async def crawl(
         params=arguments.params,
     )
 
-    documents = await asyncio.to_thread(spider_loader.load)
+    documents = await spider_loader.aload()
     return SpiderFetchOutput(documents=documents)

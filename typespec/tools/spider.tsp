@@ -16,7 +16,7 @@ model SpiderFetchArguments {
     url: url;
 
     /** The type of crawler to use */
-    mode?: "scrape" = "scrape";
+    mode?: "crawl" | "scrape" = "scrape";
 
     /** Additional parameters for the Spider API */
     params?: Record<unknown>;

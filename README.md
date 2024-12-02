@@ -76,7 +76,6 @@ Your contributions, big or small, are valuable to us. Let's build something amaz
 - [Integrations](#integrations)
 - [Other Features](#other-features)
   - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
   - [Document Integration and Search](#document-integration-and-search)
 - [Reference](#reference)
   - [SDK Reference](#sdk-reference)
@@ -86,6 +85,15 @@ Your contributions, big or small, are valuable to us. Let's build something amaz
   - [Different Use Cases](#different-use-cases)
   - [Different Form Factor](#different-form-factor)
   - [In Summary](#in-summary)
+  - [Document Integration and Search](#document-integration-and-search-1)
+- [Reference](#reference-1)
+  - [SDK Reference](#sdk-reference-1)
+  - [API Reference](#api-reference-1)
+- [Local Quickstart](#local-quickstart-1)
+- [What's the difference between Julep and LangChain etc?](#whats-the-difference-between-julep-and-langchain-etc-1)
+  - [Different Use Cases](#different-use-cases-1)
+  - [Different Form Factor](#different-form-factor-1)
+  - [In Summary](#in-summary-1)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1400,6 +1408,9 @@ output:
 <td>
 
 ```yaml
+setup:
+  # No specific setup parameters are required for Wikipedia
+
 arguments:
   query: string # The search query string
   load_max_docs: integer # (Optional) Maximum number of documents to load. Default is 2.
@@ -1409,7 +1420,6 @@ output:
 ```
 
 </td>
-
 <td>
 
 **Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
@@ -1433,7 +1443,6 @@ output:
 ```
 
 </td>
-
 </tr>
 
 <tr>
@@ -1456,8 +1465,13 @@ output:
 ```
 
 </td>
+<td>
 
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
 </tr>
+
 
 <tr>
 <td> <b>Cloudinary</b> </td>
@@ -1489,7 +1503,6 @@ output:
 ```
 
 </td>
-
 <td>
 
 **Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
@@ -1497,13 +1510,47 @@ output:
 </td>
 </tr>
 
-</table>
+<tr>
+<td> <b>Arxiv</b> </td>
+<td>
 
+```yaml
+method: search # The method to use for the Arxiv integration
+
+setup:
+  # No specific setup parameters are required for Arxiv
+
+arguments:
+  query: string # The search query for searching with Arxiv
+  id_list: list[string] | None # (Optional) The list of Arxiv IDs to search with
+  max_results: integer # The maximum number of results to return, must be between 1 and 300000
+  download_pdf: boolean # Whether to download the PDF of the results. Default is false.
+  sort_by: string # The sort criterion for the results, options: relevance, lastUpdatedDate, submittedDate
+  sort_order: string # The sort order for the results, options: ascending, descending
+
+output:
+  result: list # A list of search results, each containing: entry_id, title, updated, published, authors, summary, comment, journal_ref, doi, primary_category, categories, links, pdf_url, pdf_downloaded
+```
+
+</td>
+
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
+</tr>
+
+</table>
 For more details, refer to our [Integrations Documentation](#integrations).
 
 <div align="center">
     <a href="#top">
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
     </a>&nbsp;|&nbsp;
     <a href="#-table-of-contents">
         <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
@@ -1524,6 +1571,158 @@ client.agents.tools.create(
     name="web_search",
     description="Search the web for information.",
     integration={
+        "provider": "brave",
+        "method": "search",
+        "setup": {"api_key": "your_brave_api_key"},
+    },
+)
+
+Julep offers a range of advanced features to enhance your AI workflows:
+### Managing Sessions and Users
+### Adding Tools to Agents
+Julep provides robust session management for persistent interactions:
+Extend your agent's capabilities by integrating external tools and APIs:
+```python
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id,
+    context_overflow="adaptive"
+)
+```python
+# Continue conversation in the same session
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[
+      {
+        "role": "user",
+        "content": "Follow up on the previous conversation."
+      }
+    ]
+)
+```
+
+### Document Integration and Search
+
+Easily manage and search through documents for your agents:
+
+```python
+# Upload a document
+document = client.agents.docs.create(
+    title="AI advancements",
+    content="AI is changing the world...",
+    metadata={"category": "research_paper"}
+)
+
+# Search documents
+results = client.agents.docs.search(
+    text="AI advancements",
+    metadata_filter={"category": "research_paper"}
+)
+```
+    agent_id=agent.id,
+    name="web_search",
+    description="Search the web for information.",
+    integration={
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
+
+## Reference
+
+### SDK Reference
+
+- **Node.js** [SDK Reference](https://github.com/julep-ai/node-sdk/blob/main/api.md) | [NPM Package](https://www.npmjs.com/package/@julep/sdk)
+- **Python** [SDK Reference](https://github.com/julep-ai/python-sdk/blob/main/api.md) | [PyPI Package](https://pypi.org/project/julep/)
+
+### API Reference
+
+Explore our API documentation to learn more about agents, tasks, and executions:
+
+- [Agents API](https://dev.julep.ai/api/docs#tag/agents)
+- [Tasks API](https://dev.julep.ai/api/docs#tag/tasks)
+- [Executions API](https://dev.julep.ai/api/docs#tag/executions)
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
+
+## Local Quickstart
+
+**Requirements**:
+
+- latest docker compose installed
+
+**Steps**:
+
+1. `git clone https://github.com/julep-ai/julep.git`
+2. `cd julep`
+3. `docker volume create cozo_backup`
+4. `docker volume create cozo_data`
+5. `cp .env.example .env  # <-- Edit this file`
+6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
+
+---
+
+## What's the difference between Julep and LangChain etc?
+
+### Different Use Cases
+
+Think of LangChain and Julep as tools with different focuses within the AI development stack.
+
+LangChain is great for creating sequences of prompts and managing interactions with LLMs. It has a large ecosystem with lots of pre-built integrations, which makes it convenient if you want to get something up and running quickly. LangChain fits well with simple use cases that involve a linear chain of prompts and API calls.
+
+Julep, on the other hand, is more about building persistent AI agents that can maintain context over long-term interactions. It shines when you need complex workflows that involve multi-step tasks, conditional logic, and integration with various tools or APIs directly within the agent's process. It's designed from the ground up to manage persistent sessions and complex workflows.
+
+Use Julep if you imagine building a complex AI assistant that needs to:
+
+- Keep track of user interactions over days or weeks.
+- Perform scheduled tasks, like sending daily summaries or monitoring data sources.
+- Make decisions based on prior interactions or stored data.
+- Interact with multiple external services as part of its workflow.
+
+Then Julep provides the infrastructure to support all that without you having to build it from scratch.
+
+### Different Form Factor
+
+Julep is a **platform** that includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform. In order to build something with Julep, you write a description of the workflow in `YAML`, and then run the workflow in the cloud.
+
+Julep is built for heavy-lifting, multi-step, and long-running workflows and there's no limit to how complex the workflow can be.
+
+LangChain is a **library** that includes a few tools and a framework for building linear chains of prompts and tools. In order to build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.
+
+LangChain might be sufficient and quicker to implement for simple use cases that involve a linear chain of prompts and API calls.
+
+### In Summary
+
+Use LangChain when you need to manage LLM interactions and prompt sequences in a stateless or short-term context.
+
+Choose Julep when you need a robust framework for stateful agents with advanced workflow capabilities, persistent sessions, and complex task orchestration.
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
+
         "provider": "brave",
         "method": "search",
         "setup": {"api_key": "your_brave_api_key"},
