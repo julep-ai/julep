@@ -25,7 +25,7 @@ from ...autogen.Tools import (
 from ...env import (
     browserbase_api_key,
     browserbase_project_id,
-)  # Import env to access environment variables
+)
 from ...models import (
     BrowserbaseCompleteSessionOutput,
     BrowserbaseCreateSessionOutput,
