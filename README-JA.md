@@ -1,13 +1,11 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center" id="top">
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを探索 (wip)</a>
   <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを探索 (wip)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和</a>
@@ -51,41 +49,43 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 目次</h3>
 
-- [貢献者募集🌟](#貢献者募集)
-- [主な特徴](#主な特徴)
-- [簡単な例](#簡単な例)
-- [インストール](#インストール)
-- [Python クイックスタート 🐍](#python-クイックスタート-)
-- [Node.js Quick Start 🟩](#nodejs-quick-start-)
-- [Components](#components)
-  - [Mental Model](#mental-model)
-- [Concepts](#concepts)
-- [Understanding Tasks](#understanding-tasks)
-  - [Lifecycle of a Task](#lifecycle-of-a-task)
-  - [Types of Workflow Steps](#types-of-workflow-steps)
-    - [Common Steps](#common-steps)
-    - [Key-Value Steps](#key-value-steps)
-    - [Iteration Steps](#iteration-steps)
-    - [Conditional Steps](#conditional-steps)
-    - [Other Control Flow](#other-control-flow)
-- [Tool Types](#tool-types)
-  - [User-defined `functions`](#user-defined-functions)
-  - [`system` tools](#system-tools)
-    - [Available `system` resources and operations](#available-system-resources-and-operations)
-  - [Built-in `integrations`](#built-in-integrations)
-  - [Direct `api_calls`](#direct-api_calls)
-- [Integrations](#integrations)
-- [Other Features](#other-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
-  - [SDK リファレンス](#sdk-リファレンス)
-  - [API リファレンス](#api-リファレンス)
-- [ローカルクイックスタート](#ローカルクイックスタート)
-- [Julep と LangChain などの違いは何ですか?](#julep-と-langchain-などの違いは何ですか)
-  - [さまざまなユースケース](#さまざまなユースケース)
-  - [異なるフォームファクタ](#異なるフォームファクタ)
-
+- [貢献者募集🌟](#call-for-contributors-)
+- [はじめに](#introduction)
+- [主な特徴](#key-features)
+- [簡単な例](#quick-example)
+- [インストール](#installation)
+- [Python クイックスタート 🐍](#python-quick-start-)
+- [Node.js クイック スタート 🟩](#nodejs-quick-start-)
+- [コンポーネント](#components)
+- [メンタルモデル](#mental-model)
+- [コンセプト](#concepts)
+- [タスクの理解](#understanding-tasks)
+- [タスクのライフサイクル](#lifecycle-of-a-task)
+- [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [共通手順](#common-steps)
+- [キーと値のステップ](#key-value-steps)
+- [反復ステップ](#iteration-steps)
+- [条件付きステップ](#conditional-steps)
+- [その他の制御フロー](#other-control-flow)
+- [ツールの種類](#tool-types)
+- [ユーザー定義の `functions`](#user-defined-functions)
+- [`システム` ツール](#system-tools)
+- [利用可能な `system` リソースと操作](#available-system-resources-and-operations)
+- [組み込みの `integrations`](#built-in-integrations)
+- [直接の `api_calls`](#direct-api_calls)
+- [統合](#integrations)
+- [その他の機能](#other-features)
+- [エージェントへのツールの追加](#adding-tools-to-agents)
+- [セッションとユーザーの管理](#managing-sessions-and-users)
+- [ドキュメントの統合と検索](#document-integration-and-search)
+- [参考](#reference)
+- [SDKリファレンス](#sdk-reference)
+- [APIリファレンス](#api-reference)
+- [ローカルクイックスタート](#local-quickstart)
+- [Julep と LangChain などの違いは何ですか?](#whats-the-difference-between-julep-and-langchain-etc)
+- [さまざまなユースケース](#different-use-cases)
+- [異なるフォームファクター](#different-form-factor)
+- [要約](#in-summary)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -113,7 +113,6 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 3. 🔄 **複数ステップのタスク**: ループと意思決定を含む複雑な複数ステップのプロセスを構築します。
 4. ⏳ **タスク管理**: 無期限に実行される可能性のある長時間実行タスクを処理します。
 5. 🛠️ **組み込みツール**: タスクで組み込みツールと外部 API を使用します。
-6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、一般的にタスクがスムーズに実行されるようにします。
 6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、一般的にタスクがスムーズに実行されるようにします。
 7. 📚 **RAG**: Julep のドキュメント ストアを使用して、独自のデータを取得して使用するためのシステムを構築します。
 
@@ -590,8 +589,7 @@ const タスク = client.tasks.create(agentId, yaml.parse(taskYaml)) を待機�
 /* ステップ 3: タスクを実行する */
 
 非同期関数executeTask(taskId) {
-const 実行 = クライアント.実行.作成(taskId, {
-const 実行 = クライアント.実行.作成(taskId, {
+const 実行 = クライアントの実行の作成を待機します(taskId、{
 入力: { アイデア: 「飛ぶことを学ぶ猫」 },
   });
 
@@ -926,7 +924,7 @@ over: _.numbers # <-- コンテキスト変数にアクセスするための Pyt
 地図：
 - 評価する：
 二乗: "_ ** 2"
-Reduce: results + [_] # <-- (オプション) 結果を削減する Python 式。省略した場合、これがデフォルトになります。
+Reduce: 結果 + [_] # <-- (オプション) 結果を削減する Python 式。省略した場合、これがデフォルトになります。
 ```
 
 ```ヤム
@@ -1283,7 +1281,7 @@ api_key: 文字列 # Brave SearchのAPIキー
 query: 文字列 # Braveで検索するための検索クエリ
 
 出力：
-result: 文字列 # Brave Searchの結果
+result: list[dict] # 検索結果のリスト。それぞれにタイトル、リンク、スニペットが含まれます。
 ```
 
 </td>
@@ -1358,11 +1356,11 @@ spider_api_key: 文字列 # SpiderのAPIキー
 
 引数:
 url: 文字列 # データを取得するURL
-mode: 文字列 # クローラーのタイプ (デフォルト: "scrape")
 params: dict # (オプション) Spider APIのパラメータ
+content_type: 文字列 # (オプション) 返されるコンテンツ タイプ。デフォルトは「application/json」です。その他のオプション: 「text/csv」、「application/xml」、「application/jsonl」
 
 出力：
-ドキュメント: リスト # スパイダーから返されたドキュメント
+result: list[dict] # 結果のリスト。それぞれにコンテンツ、エラー、ステータス、コスト、URLが含まれます。
 ```
 
 </td>
@@ -1454,12 +1452,17 @@ params: dict # (オプション) Llama Parse 統合の追加パラメータ。�
 base64: boolean # 入力ファイルが base64 でエンコードされているかどうか。デフォルトは false です。
 
 出力：
-ドキュメント: リスト # ドキュメントから解析されたデータ
+documents: list[Document] # 解析されたドキュメントのリスト
 ```
 
 </td>
+<td>
 
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
 </tr>
+
 
 <tr>
 <td> <b>Cloudinary</b> </td>
@@ -1491,12 +1494,42 @@ base64: 文字列 # (オプション) return_base64 が true の場合、base64 
 ```
 
 </td>
-
 <td>
 
 **Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
+
+</td>
+</tr>
+
+<tr>
+<td> <b>Arxiv</b> </td>
+<td>
+
+```ヤム
+method: search # Arxiv統合に使用するメソッド
+
+設定：
+# Arxivには特別な設定パラメータは必要ありません
+
+引数:
+query: 文字列 # Arxivで検索するための検索クエリ
+id_list: list[string] | None # (オプション) 検索するArxiv IDのリスト
+max_results: 整数 # 返される結果の最大数は 1 から 300000 の間でなければなりません
+download_pdf: boolean # 結果の PDF をダウンロードするかどうか。デフォルトは false です。
+sort_by: 文字列 # 結果の並べ替え基準。オプション: 関連性、lastUpdatedDate、submittedDate
+sort_order: 文字列 # 結果の並べ替え順序。オプション: 昇順、降順
+
+出力：
+result: list[dict] # 検索結果のリスト。それぞれに、entry_id、title、updated、published、authors、summary、comment、journal_ref、doi、primary_category、categories、links、pdf_url、pdf_downloaded が含まれます。
+```
+
 </td>
 
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
 </tr>
 
 </table>
@@ -1546,7 +1579,6 @@ context_overflow="適応型"
 
 # 同じセッションで会話を続ける
 レスポンス = client.sessions.chat(
-session_id=セッションID、
 session_id=セッションID、
 メッセージ=[
       {
@@ -1620,7 +1652,6 @@ metadata_filter={"category": "研究論文"}
 1. `git clone https://github.com/julep-ai/julep.git`
 2. `cd ジュレップ`
 3. `docker volume create cozo_backup`
-4. docker ボリュームを作成します cozo_data
 4. docker ボリュームを作成します cozo_data
 5. `cp .env.example .env # <-- このファイルを編集します`
 6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`

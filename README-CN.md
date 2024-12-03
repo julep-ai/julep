@@ -1,13 +1,11 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center" id="top">
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">探索文档（正在开发中）</a>
   <a href="https://docs.julep.ai" rel="dofollow">探索文档（正在开发中）</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和谐</a>
@@ -74,7 +72,7 @@
 - [`系统` 工具](#system-tools)
 - [可用的系统资源和操作](#available-system-resources-and-operations)
 - [内置 `integrations`](#built-in-integrations)
--[直接`api_calls`]（#direct-api_calls）
+-[直接`api_calls`](#direct-api_calls)
 - [集成](#integrations)
 - [其他功能](#other-features)
 - [向代理添加工具](#adding-tools-to-agents)
@@ -436,7 +434,7 @@ agent_id=代理.id，
 )
 
 # 🎉 观看故事和漫画面板的生成
-当（result：= client.executions.get（execution.id））.status 不在['succeeded'，'failed']中时：
+while (result := client.executions.get(execution.id)).status 不在 ['成功', '失败'] 中：
 打印（结果.状态，结果.输出）
 时间.睡眠(1)
 
@@ -498,7 +496,7 @@ const taskYaml = `
 方法：搜索
 
 主要的：
-# 步骤 1：生成情节想法
+# 步骤 1：产生情节想法
 - 迅速的：
 - 角色：系统
 内容：您是 {{agent.name}}。{{agent.about}}
@@ -597,11 +595,11 @@ const 执行 = 等待客户端.执行.创建（taskId，{
 
 // 🎉 观看故事和漫画面板的生成
 while (真) {
-const result = 等待客户端.executions.get（execution.id）;
+const result = 等待客户端.executions.get(execution.id);
 控制台.log（结果.状态，结果.输出）；
 
 if (result.status === "成功" || result.status === "失败") {
-// 📦执行完成后，检索结果
+// 📦 执行完成后，检索结果
 如果 (result.status === "成功") {
 控制台.log（结果.输出）；
 } 别的 {
@@ -1003,7 +1001,7 @@ Execute steps based on multiple conditions
 - 日志：“A 类处理”
 - 案例：_.category =='B'
 然后：
-- 日志：“B 类处理”
+- 日志：“B类处理”
 - case: _ # 默认情况
 然后：
 - 错误：未知类别
@@ -1283,7 +1281,7 @@ api_key: string # Brave Search 的 API 密钥
 query: string # 使用 Brave 搜索的搜索查询
 
 输出：
-result: string # Brave Search 的结果
+result: list[dict] # 搜索结果列表，每个结果包含：标题、链接、摘要
 ```
 
 </td>
@@ -1302,7 +1300,7 @@ result: string # Brave Search 的结果
 设置：
 api_key: string # BrowserBase 的 API 密钥
 project_id: string # BrowserBase 的项目 ID
-session_id: string # （可选）BrowserBase 的会话 ID
+session_id: string #（可选）BrowserBase 的会话 ID
 
 参数：
 urls: list[string] # 使用 BrowserBase 加载的 URL
@@ -1358,11 +1356,11 @@ spider_api_key: string # Spider 的 API 密钥
 
 参数：
 url: string # 获取数据的 URL
-mode: string # 爬虫的类型（默认值：“scrape”）
 params: dict # （可选）Spider API 的参数
+content_type：字符串 #（可选）要返回的内容类型。默认为“application/json”。其他选项：“text/csv”、“application/xml”、“application/jsonl”
 
 输出：
-documents: list # 从蜘蛛返回的文档
+result: list[dict] # 结果列表，每个结果包含：内容、错误、状态、费用、网址
 ```
 
 </td>
@@ -1454,12 +1452,17 @@ params: dict #（可选）Llama Parse 集成的附加参数。覆盖设置参数
 base64：boolean # 输入文件是否为 base64 编码。默认为 false。
 
 输出：
-documents: list # 从文档中解析的数据
+documents: list[Document] # 已解析文档的列表
 ```
 
 </td>
+<td>
 
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
 </tr>
+
 
 <tr>
 <td> <b>Cloudinary</b> </td>
@@ -1491,10 +1494,40 @@ base64：字符串#（可选）如果 return_base64 为真，则为 base64 编�
 ```
 
 </td>
-
 <td>
 
 **Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
+
+</td>
+</tr>
+
+<tr>
+<td> <b>Arxiv</b> </td>
+<td>
+
+```yaml
+方法：搜索#用于 Arxiv 集成的方法
+
+设置：
+# Arxiv 不需要任何特殊设置参数
+
+参数：
+query: string # 使用 Arxiv 搜索的搜索查询
+id_list：list[string] | None # （可选）要搜索的 Arxiv ID 列表
+max_results: 整数 # 返回的最大结果数，必须介于 1 到 300000 之间
+download_pdf：boolean # 是否下载结果的 PDF。默认为 false。
+sort_by: string # 结果的排序标准，选项：relevance、lastUpdatedDate、submittedDate
+sort_order: string # 结果的排序顺序，选项：升序、降序
+
+输出：
+result: list[dict] # 搜索结果列表，每个结果包含：entry_id、title、updated、published、authors、summary、comment、journal_ref、doi、primary_category、categories、links、pdf_url、pdf_downloaded
+```
+
+</td>
+
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
 
 </td>
 </tr>

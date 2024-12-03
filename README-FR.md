@@ -1,13 +1,11 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center" id="top">
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents (en cours)</a>
   <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents (en cours)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discorde</a>
@@ -81,13 +79,13 @@ Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons 
 - [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
 - [Intégration et recherche de documents](#document-integration-and-search)
 - [Référence](#référence)
-  - [Référence du SDK](#référence-du-sdk)
-  - [Référence API](#référence-api)
-- [Démarrage rapide local](#démarrage-rapide-local)
-- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-différence-entre-julep-et-langchain-etc-)
-  - [Différents cas d'utilisation](#différents-cas-dutilisation)
-  - [Facteur de forme différent](#facteur-de-forme-différent)
-  - [En résumé](#en-résumé)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
+- [Démarrage rapide local](#local-quickstart)
+- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-différence-entre-julep-et-langchain-etc)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -822,7 +820,7 @@ Pause workflow until input is received. It accepts an `info` field that can be u
 ```YAML
 - attendre_la_saisie :
 info:
-message : « Veuillez fournir des informations supplémentaires sur {_.required_info}. » # <-- expression Python pour accéder à la variable de contexte
+message : « Veuillez fournir des informations supplémentaires sur {_.required_info}. » # <-- expression Python pour accéder à la variable de contexte
 ```
 
 </td>
@@ -1283,7 +1281,7 @@ Arguments:
 requête : chaîne # La requête de recherche pour rechercher avec Brave
 
 sortir:
-résultat : chaîne # Le résultat de la recherche Brave
+résultat : liste[dict] # Une liste de résultats de recherche, chacun contenant : titre, lien, extrait
 ```
 
 </td>
@@ -1358,11 +1356,11 @@ spider_api_key : chaîne # La clé API pour Spider
 
 Arguments:
 url : chaîne # L'URL pour laquelle récupérer les données
-mode : chaîne # Le type de robots d'exploration (par défaut : « scrape »)
-paramètres : dict # (facultatif) Les paramètres de l'API Spider
+paramètres : dict # (facultatif) Les paramètres de l'API Spider
+content_type : chaîne # (facultatif) Le type de contenu à renvoyer. La valeur par défaut est « application/json ». Autres options : « text/csv », « application/xml », « application/jsonl »
 
 sortir:
-documents : liste # Les documents renvoyés par l'araignée
+résultat : liste[dict] # Une liste de résultats, chacun contenant : contenu, erreur, statut, coûts, url
 ```
 
 </td>
@@ -1454,12 +1452,17 @@ params : dict # (facultatif) Paramètres supplémentaires pour l'intégration 
 base64 : booléen # Indique si le fichier d'entrée est encodé en base64. La valeur par défaut est false.
 
 sortir:
-documents : liste # Les données analysées du document
+documents : liste[Document] # Une liste de documents analysés
 ```
 
 </td>
+<td>
 
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
 </tr>
+
 
 <tr>
 <td> <b>Cloudinary</b> </td>
@@ -1491,10 +1494,40 @@ base64 : chaîne # (Facultatif) Le fichier codé en base64 si return_base64 est
 ```
 
 </td>
-
 <td>
 
 **Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
+
+</td>
+</tr>
+
+<tr>
+<td> <b>Arxiv</b> </td>
+<td>
+
+```YAML
+méthode : recherche # La méthode à utiliser pour l'intégration d'Arxiv
+
+installation:
+# Aucun paramètre de configuration spécifique n'est requis pour Arxiv
+
+Arguments:
+requête : chaîne # La requête de recherche pour la recherche avec Arxiv
+id_list : liste[chaîne] | None # (Facultatif) La liste des identifiants Arxiv à utiliser pour la recherche
+max_results : entier # Le nombre maximal de résultats à renvoyer doit être compris entre 1 et 300 000
+download_pdf : booléen # S'il faut télécharger le PDF des résultats. La valeur par défaut est false.
+sort_by : chaîne # Le critère de tri pour les résultats, options : relevance, lastUpdatedDate, submitDate
+sort_order : chaîne # L'ordre de tri des résultats, options : croissant, décroissant
+
+sortir:
+résultat : liste[dict] # Une liste de résultats de recherche, chacun contenant : entry_id, title, updated, published, authors, summary, comment, journal_ref, doi, primary_category, categorys, links, pdf_url, pdf_downloaded
+```
+
+</td>
+
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
 
 </td>
 </tr>
@@ -1647,7 +1680,7 @@ Julep, en revanche, s'intéresse davantage à la création d'agents d'IA persist
 Utilisez Julep si vous imaginez créer un assistant IA complexe qui doit :
 
 - Suivez les interactions des utilisateurs sur plusieurs jours ou semaines.
-- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance de sources de données.
+- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance des sources de données.
 - Prendre des décisions basées sur des interactions antérieures ou des données stockées.
 - Interagir avec plusieurs services externes dans le cadre de son flux de travail.
 
