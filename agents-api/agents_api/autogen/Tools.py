@@ -1639,9 +1639,11 @@ class SpiderFetchArguments(BaseModel):
     """
     The URL to fetch data from
     """
-    mode: Literal["crawl", "scrape"] = "scrape"
+    content_type: Literal[
+        "application/json", "text/csv", "application/xml", "application/jsonl"
+    ] = "application/json"
     """
-    The type of crawler to use
+    The content type to return
     """
     params: dict[str, Any] | None = None
     """
@@ -1661,9 +1663,11 @@ class SpiderFetchArgumentsUpdate(BaseModel):
     """
     The URL to fetch data from
     """
-    mode: Literal["crawl", "scrape"] = "scrape"
+    content_type: Literal[
+        "application/json", "text/csv", "application/xml", "application/jsonl"
+    ] = "application/json"
     """
-    The type of crawler to use
+    The content type to return
     """
     params: dict[str, Any] | None = None
     """
@@ -1683,7 +1687,7 @@ class SpiderIntegrationDef(BaseIntegrationDef):
     """
     The provider must be "spider"
     """
-    method: str | None = None
+    method: Literal["crawl", "links", "screenshot", "search"] | None = None
     """
     The specific method of the integration to call
     """
@@ -1709,7 +1713,7 @@ class SpiderIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The provider must be "spider"
     """
-    method: str | None = None
+    method: Literal["crawl", "links", "screenshot", "search"] | None = None
     """
     The specific method of the integration to call
     """

@@ -8378,13 +8378,15 @@ components:
           type: string
           format: uri
           description: The URL to fetch data from
-        mode:
+        content_type:
           type: string
           enum:
-            - crawl
-            - scrape
-          description: The type of crawler to use
-          default: scrape
+            - application/json
+            - text/csv
+            - application/xml
+            - application/jsonl
+          description: The content type to return
+          default: application/json
         params:
           type: object
           additionalProperties: {}
@@ -8397,13 +8399,15 @@ components:
           type: string
           format: uri
           description: The URL to fetch data from
-        mode:
+        content_type:
           type: string
           enum:
-            - crawl
-            - scrape
-          description: The type of crawler to use
-          default: scrape
+            - application/json
+            - text/csv
+            - application/xml
+            - application/jsonl
+          description: The content type to return
+          default: application/json
         params:
           type: object
           additionalProperties: {}
@@ -8422,6 +8426,11 @@ components:
           default: spider
         method:
           type: string
+          enum:
+            - crawl
+            - links
+            - screenshot
+            - search
           description: The specific method of the integration to call
         setup:
           allOf:
@@ -8445,6 +8454,11 @@ components:
           default: spider
         method:
           type: string
+          enum:
+            - crawl
+            - links
+            - screenshot
+            - search
           description: The specific method of the integration to call
         setup:
           allOf:

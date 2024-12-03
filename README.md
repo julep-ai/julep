@@ -1281,7 +1281,7 @@ arguments:
   query: string # The search query for searching with Brave
 
 output:
-  result: string # The result of the Brave Search
+  result: list[dict] # A list of search results, each containing: title, link, snippet
 ```
 
 </td>
@@ -1356,11 +1356,11 @@ setup:
 
 arguments:
   url: string # The URL for which to fetch data
-  mode: string # The type of crawlers (default: "scrape")
   params: dict # (Optional) The parameters for the Spider API
+  content_type: string # (Optional) The content type to return. Default is "application/json". Other options: "text/csv", "application/xml", "application/jsonl"
 
 output:
-  documents: list # The documents returned from the spider
+  result: list[dict] # A list of results, each containing: content, error, status, costs, url
 ```
 
 </td>
@@ -1452,7 +1452,7 @@ arguments:
   base64: boolean # Whether the input file is base64 encoded. Default is false.
 
 output:
-  documents: list # The parsed data from the document
+  documents: list[Document] # A list of parsed documents
 ```
 
 </td>
@@ -1520,7 +1520,7 @@ arguments:
   sort_order: string # The sort order for the results, options: ascending, descending
 
 output:
-  result: list # A list of search results, each containing: entry_id, title, updated, published, authors, summary, comment, journal_ref, doi, primary_category, categories, links, pdf_url, pdf_downloaded
+  result: list[dict] # A list of search results, each containing: entry_id, title, updated, published, authors, summary, comment, journal_ref, doi, primary_category, categories, links, pdf_url, pdf_downloaded
 ```
 
 </td>

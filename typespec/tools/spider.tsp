@@ -15,12 +15,22 @@ model SpiderFetchArguments {
     /** The URL to fetch data from */
     url: url;
 
-    /** The type of crawler to use */
-    mode?: "crawl" | "scrape" = "scrape";
+    /** The content type to return */
+    content_type?: "application/json" | "text/csv" | "application/xml" | "application/jsonl" = "application/json";
 
     /** Additional parameters for the Spider API */
     params?: Record<unknown>;
 }
+
+alias SpiderMethod =
+    | /** Crawl a website and extract data */
+      "crawl"
+    | /** Retrieve links from the specified URL. */
+      "links"
+    | /** Take a screenshot of the specified URL. */
+      "screenshot"
+    | /** Perform a search and gather a list of websites to start crawling and collect resources. */
+      "search";
 
 /** Spider integration definition */
 model SpiderIntegrationDef extends BaseIntegrationDef {
@@ -28,7 +38,7 @@ model SpiderIntegrationDef extends BaseIntegrationDef {
     provider: "spider" = "spider";
     
     /** The specific method of the integration to call */
-    method?: string;
+    method?: SpiderMethod;
     
     /** The setup parameters for Spider */
     setup?: SpiderSetup;
