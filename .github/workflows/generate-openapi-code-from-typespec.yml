@@ -31,9 +31,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install tsp
-        run: npm install -g tsp
-
       - name: Generate openapi code
         run: |
           bash scripts/generate_openapi_code.sh
