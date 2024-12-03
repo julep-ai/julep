@@ -17,6 +17,7 @@ from ..env import (
     temporal_schedule_to_close_timeout,
     testing,
     use_blob_store_for_temporal,
+    temporal_heartbeat_timeout,
 )
 from ..worker.codec import deserialize, serialize
 
@@ -212,6 +213,7 @@ def auto_blob_store_workflow(f: Callable) -> Callable:
                 seconds=60 if debug or testing else temporal_schedule_to_close_timeout
             ),
             retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
 
         loaded_args = loaded[: len(args)]

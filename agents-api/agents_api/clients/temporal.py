@@ -2,6 +2,8 @@ from datetime import timedelta
 from uuid import UUID
 
 from beartype import beartype
+from temporalio.runtime import Runtime, TelemetryConfig, PrometheusConfig
+from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.client import Client, TLSConfig
 from temporalio.common import (
     SearchAttributeKey,
@@ -19,6 +21,8 @@ from ..env import (
     temporal_private_key,
     temporal_task_queue,
     temporal_worker_url,
+    temporal_metrics_bind_port,
+    temporal_metrics_bind_host,
 )
 from ..worker.codec import pydantic_data_converter
 
@@ -41,6 +45,37 @@ async def get_client(
         namespace=namespace,
         tls=tls_config,
         data_converter=data_converter,
+    )
+
+
+async def get_client_with_metrics(
+    worker_url: str = temporal_worker_url,
+    namespace: str = temporal_namespace,
+    data_converter=pydantic_data_converter,
+):
+    tls_config = False
+
+    if temporal_private_key and temporal_client_cert:
+        tls_config = TLSConfig(
+            client_cert=temporal_client_cert.encode(),
+            client_private_key=temporal_private_key.encode(),
+        )
+
+    new_runtime = Runtime(
+        telemetry=TelemetryConfig(
+            metrics=PrometheusConfig(
+                bind_address=f"{temporal_metrics_bind_host}:{temporal_metrics_bind_port}"
+            ),
+        ),
+    )
+
+    return await Client.connect(
+        worker_url,
+        namespace=namespace,
+        tls=tls_config,
+        data_converter=data_converter,
+        runtime=new_runtime,
+        interceptors=[TracingInterceptor()],
     )
 
 

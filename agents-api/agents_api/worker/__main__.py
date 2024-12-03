@@ -32,7 +32,7 @@ async def main():
     then starts the worker to listen for tasks on the configured task queue.
     """
 
-    client = await temporal.get_client()
+    client = await temporal.get_client_with_metrics()
     worker = create_worker(client)
 
     # Start the worker to listen for and process tasks
