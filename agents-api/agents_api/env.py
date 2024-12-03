@@ -103,6 +103,11 @@ temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-qu
 temporal_schedule_to_close_timeout: int = env.int(
     "TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT", default=3600
 )
+temporal_heartbeat_timeout: int = env.int("TEMPORAL_HEARTBEAT_TIMEOUT", default=5)
+temporal_metrics_bind_host: str = env.str(
+    "TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0"
+)
+temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=14000)
 
 # Consolidate environment variables
 environment: Dict[str, Any] = dict(
