@@ -25,6 +25,47 @@ def get_api_key(setup: SpiderSetup) -> str:
     )
 
 
+def create_spider_response(pages: list[dict]) -> list[SpiderResponse]:
+    return [
+        SpiderResponse(
+            url=page.get("url", "Not available"),
+            content=page.get("content", "Not available"),
+            error=page.get("error", "Not available"),
+            status=page.get("status", "Not available"),
+            costs=page.get("costs", "Not available"),
+        )
+        for page in pages
+    ]
+
+
+async def execute_spider_method(
+    method_name: str, setup: SpiderSetup, arguments: SpiderFetchArguments
+) -> SpiderOutput:
+    api_key = get_api_key(setup)
+    final_result = []
+    results = None
+
+    try:
+        async with get_spider_client(api_key=api_key) as spider_client:
+            async for result in getattr(spider_client, method_name)(
+                url=str(arguments.url),
+                params=arguments.params,
+                stream=False,
+                content_type=arguments.content_type,
+            ):
+                results = result
+
+        if results is None:
+            raise ValueError("No results found")
+        else:
+            final_result = create_spider_response(results)
+    except Exception as e:
+        # Log the exception or handle it as needed
+        raise RuntimeError(f"Error executing spider method '{method_name}': {e}")
+
+    return SpiderOutput(result=final_result)
+
+
 @beartype
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
@@ -37,35 +78,7 @@ async def crawl(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderOu
     """
     assert isinstance(setup, SpiderSetup), "Invalid setup"
     assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
-
-    api_key = get_api_key(setup)
-
-    # Initialize final_result
-    final_result = []
-    results = None
-
-    # Initialize spider_client
-    async with get_spider_client(api_key=api_key) as spider_client:
-        async for result in spider_client.crawl_url(
-            url=str(arguments.url),
-            params=arguments.params,
-            stream=False,
-            content_type=arguments.content_type,
-        ):
-            results = result
-
-        for page in results:
-            final_result.append(
-                SpiderResponse(
-                    url=page["url"] if page["url"] is not None else None,
-                    content=page["content"] if page["content"] is not None else None,
-                    error=page["error"] if page["error"] is not None else None,
-                    status=page["status"] if page["status"] is not None else None,
-                    costs=page["costs"] if page["costs"] is not None else None,
-                )
-            )
-    # Return final_result
-    return SpiderOutput(result=final_result)
+    return await execute_spider_method("crawl_url", setup, arguments)
 
 
 @beartype
@@ -80,35 +93,7 @@ async def links(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderOu
     """
     assert isinstance(setup, SpiderSetup), "Invalid setup"
     assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
-
-    api_key = get_api_key(setup)
-
-    # Initialize final_result
-    final_result = []
-    results = None
-
-    # Initialize spider_client
-    async with get_spider_client(api_key=api_key) as spider_client:
-        async for result in spider_client.links(
-            url=str(arguments.url),
-            params=arguments.params,
-            stream=False,
-            content_type=arguments.content_type,
-        ):
-            results = result
-
-        for page in results:
-            final_result.append(
-                SpiderResponse(
-                    url=page["url"] if page["url"] is not None else None,
-                    content=page["content"] if page["content"] is not None else None,
-                    error=page["error"] if page["error"] is not None else None,
-                    status=page["status"] if page["status"] is not None else None,
-                    costs=page["costs"] if page["costs"] is not None else None,
-                )
-            )
-    # Return final_result
-    return SpiderOutput(result=final_result)
+    return await execute_spider_method("links", setup, arguments)
 
 
 @beartype
@@ -125,35 +110,7 @@ async def screenshot(
     """
     assert isinstance(setup, SpiderSetup), "Invalid setup"
     assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
-
-    api_key = get_api_key(setup)
-
-    # Initialize final_result
-    final_result = []
-    results = None
-
-    # Initialize spider_client
-    async with get_spider_client(api_key=api_key) as spider_client:
-        async for result in spider_client.screenshot(
-            url=str(arguments.url),
-            params=arguments.params,
-            stream=False,
-            content_type=arguments.content_type,
-        ):
-            results = result
-
-        for page in results:
-            final_result.append(
-                SpiderResponse(
-                    url=page["url"] if page["url"] is not None else None,
-                    content=page["content"] if page["content"] is not None else None,
-                    error=page["error"] if page["error"] is not None else None,
-                    status=page["status"] if page["status"] is not None else None,
-                    costs=page["costs"] if page["costs"] is not None else None,
-                )
-            )
-    # Return final_result
-    return SpiderOutput(result=final_result)
+    return await execute_spider_method("screenshot", setup, arguments)
 
 
 @beartype
@@ -168,32 +125,4 @@ async def search(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderO
     """
     assert isinstance(setup, SpiderSetup), "Invalid setup"
     assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
-
-    api_key = get_api_key(setup)
-
-    # Initialize final_result
-    final_result = []
-    results = None
-
-    # Initialize spider_client
-    async with get_spider_client(api_key=api_key) as spider_client:
-        async for result in spider_client.search(
-            url=str(arguments.url),
-            params=arguments.params,
-            stream=False,
-            content_type=arguments.content_type,
-        ):
-            results = result
-
-        for page in results:
-            final_result.append(
-                SpiderResponse(
-                    url=page["url"] if page["url"] is not None else None,
-                    content=page["content"] if page["content"] is not None else None,
-                    error=page["error"] if page["error"] is not None else None,
-                    status=page["status"] if page["status"] is not None else None,
-                    costs=page["costs"] if page["costs"] is not None else None,
-                )
-            )
-    # Return final_result
-    return SpiderOutput(result=final_result)
+    return await execute_spider_method("search", setup, arguments)
