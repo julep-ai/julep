@@ -32,6 +32,7 @@ x--shared-environment: &shared-environment
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
   MAX_FREE_SESSIONS: ${MAX_FREE_SESSIONS:-50}
   MAX_FREE_EXECUTIONS: ${MAX_FREE_EXECUTIONS:-50}
+  SENTRY_DSN: ${SENTRY_DSN}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}
