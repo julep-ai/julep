@@ -27,6 +27,7 @@ from .router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
+
 @router.post(
     "/sessions/{session_id}/chat",
     status_code=HTTP_201_CREATED,
