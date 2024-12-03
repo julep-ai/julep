@@ -50,9 +50,9 @@ with workflow.unsafe.imports_passed_through():
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
     from ...env import (
         debug,
+        temporal_heartbeat_timeout,
         temporal_schedule_to_close_timeout,
         testing,
-        temporal_heartbeat_timeout,
     )
     from .helpers import (
         continue_as_child,
