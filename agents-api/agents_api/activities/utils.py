@@ -17,8 +17,8 @@ from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
 
 from ..autogen.openapi_model import SystemDef
-from ..common.utils import yaml
 from ..common.nlp import nlp
+from ..common.utils import yaml
 
 T = TypeVar("T")
 R = TypeVar("R")
