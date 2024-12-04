@@ -59,6 +59,8 @@ async def _(
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=False),
+        search_threshold=4,
+        search_query_chars=1000,
     )
 
     assert isinstance(past_messages, list)
@@ -98,6 +100,8 @@ async def _(
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=True),
+        search_threshold=4,
+        search_query_chars=1000,
     )
 
     assert isinstance(past_messages, list)

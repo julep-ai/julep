@@ -34,6 +34,8 @@ async def gather_messages(
     session_id: UUID,
     chat_context: ChatContext,
     chat_input: ChatInput,
+    search_threshold: int = 4,
+    search_query_chars: int = 1000,
 ) -> tuple[list[dict], list[DocReference]]:
     new_raw_messages = [msg.model_dump(mode="json") for msg in chat_input.messages]
     recall = chat_input.recall
@@ -67,9 +69,7 @@ async def gather_messages(
     if not recall:
         return past_messages, []
 
-    # TODO: Make this configurable?
-    search_threshold = 4
-    search_query_chars = 1000
+    # search the last `search_threshold` messages
     search_messages = [
         msg
         for msg in (past_messages + new_raw_messages)[-(search_threshold):]

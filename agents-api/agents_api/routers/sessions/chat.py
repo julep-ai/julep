@@ -53,7 +53,6 @@ async def chat(
     Returns:
         ChatResponse: The chat response.
     """
-
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
@@ -78,12 +77,18 @@ async def chat(
     chat_context.merge_settings(chat_input)
     settings: dict = chat_context.settings.model_dump(mode="json", exclude_none=True)
 
+    # get the search parameters from the metadata
+    search_threshold = chat_context.session.metadata.get("search_threshold", 4)
+    search_query_chars = chat_context.session.metadata.get("search_query_chars", 1000)
+
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(
         developer=developer,
         session_id=session_id,
         chat_context=chat_context,
         chat_input=chat_input,
+        search_threshold=search_threshold,
+        search_query_chars=search_query_chars,
     )
 
     # Prepare the environment
