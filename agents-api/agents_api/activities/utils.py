@@ -18,6 +18,7 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 
 from ..autogen.openapi_model import SystemDef
 from ..common.utils import yaml
+from ..common.nlp import nlp
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -54,6 +55,7 @@ ALLOWED_FUNCTIONS = {
     "dump_json": json.dumps,
     "dump_yaml": yaml.dump,
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
+    "nlp": nlp.__call__,
 }
 
 
