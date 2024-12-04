@@ -32,8 +32,24 @@ services:
     profiles:
       - multi-tenant
 
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - 8383:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    environment:
+      - ADMIN_USERNAME=${PORTAINER_ADMIN_USER}
+      - ADMIN_PASSWORD=${PORTAINER_ADMIN_PASSWORD}
+    profiles:
+      - monitor
+
 volumes:
   prometheus_data:
     external: true
   grafana_data:
+    external: true
+  portainer_data:
     external: true
