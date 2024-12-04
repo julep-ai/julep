@@ -360,7 +360,11 @@ class TaskExecutionWorkflow:
                 workflow.logger.error(f"Error step: {error}")
 
                 state = PartialTransition(type="error", output=error)
-                await transition(context, state, last_error=self.last_error,)
+                await transition(
+                    context,
+                    state,
+                    last_error=self.last_error,
+                )
 
                 raise ApplicationError(f"Error raised by ErrorWorkflowStep: {error}")
 
@@ -659,7 +663,11 @@ class TaskExecutionWorkflow:
                     f"Unhandled step type: {type(context.current_step).__name__}"
                 )
                 state = PartialTransition(type="error", output="Not implemented")
-                await transition(context, state, last_error=self.last_error,)
+                await transition(
+                    context,
+                    state,
+                    last_error=self.last_error,
+                )
 
                 raise ApplicationError("Not implemented")
 
@@ -668,7 +676,11 @@ class TaskExecutionWorkflow:
 
         # The returned value is the transition finally created
         state = state or PartialTransition(type="error", output="Not implemented")
-        final_state = await transition(context, state, last_error=self.last_error,)
+        final_state = await transition(
+            context,
+            state,
+            last_error=self.last_error,
+        )
 
         # ---
 
