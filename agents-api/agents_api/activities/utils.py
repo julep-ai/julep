@@ -24,6 +24,15 @@ T = TypeVar("T")
 R = TypeVar("R")
 P = ParamSpec("P")
 
+def chunk_doc(string: str) -> list[str]:
+    """
+    Chunk a string into sentences.
+    """
+    doc = nlp(string)   
+    return [
+        " ".join([sent.text for sent in chunk])
+        for chunk in doc._.chunks
+    ]
 
 # TODO: We need to make sure that we dont expose any security issues
 ALLOWED_FUNCTIONS = {
@@ -55,10 +64,8 @@ ALLOWED_FUNCTIONS = {
     "dump_json": json.dumps,
     "dump_yaml": yaml.dump,
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
-    "nlp": lambda string: [
-        " ".join([token.text for token in chunk])
-        for chunk in nlp.__call__(string)._.chunks
-    ],
+    "nlp": nlp.__call__,
+    "chunk_doc": chunk_doc,
 }
 
 

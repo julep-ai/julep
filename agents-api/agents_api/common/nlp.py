@@ -12,7 +12,7 @@ WHITESPACE_RE = re.compile(r"\s+")
 NON_ALPHANUM_RE = re.compile(r"[^\w\s\-_]+")
 
 # Initialize spaCy with minimal pipeline
-nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat", "tok2vec"])
+nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat"])
 
 # Add sentencizer for faster sentence tokenization
 sentencizer = nlp.add_pipe("sentencizer")
