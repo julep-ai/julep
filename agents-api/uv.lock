@@ -102,7 +102,7 @@ requires-dist = [
     { name = "prometheus-client", specifier = "~=0.21.0" },
     { name = "prometheus-fastapi-instrumentator", specifier = "~=7.0.0" },
     { name = "pycozo", extras = ["embedded"], specifier = "~=0.7.6" },
-    { name = "pycozo-async", specifier = "~=0.7.6" },
+    { name = "pycozo-async", specifier = "~=0.7.7" },
     { name = "pydantic", extras = ["email"], specifier = "~=2.10.2" },
     { name = "pydantic-partial", specifier = "~=0.5.5" },
     { name = "python-box", specifier = "~=7.2.0" },
@@ -2202,7 +2202,7 @@ embedded = [
 
 [[package]]
 name = "pycozo-async"
-version = "0.7.6"
+version = "0.7.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cozo-embedded" },
@@ -2210,9 +2210,9 @@ dependencies = [
     { name = "ipython" },
     { name = "pandas" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1f/0a/9a23a6d8a7d140bb4fc3c081f7e5f7b87f33138269371c81980461531fda/pycozo_async-0.7.6.tar.gz", hash = "sha256:20c66aade516abe0ed273c5955807a4ebd753e17fecad14f4f05277213f08d28", size = 21492 }
+sdist = { url = "https://files.pythonhosted.org/packages/01/17/2fc41dd8311f366625fc6fb70fe2dc27c345da8db0a4de78f39ccf759977/pycozo_async-0.7.7.tar.gz", hash = "sha256:fae95d8e9e11448263a752983b12a5a05b7656fa1dda0eeeb6f213d6fc592e1d", size = 21559 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/06/b4942e4dcf419bef844d4c19472b2b1c685ac7559196420349900089a964/pycozo_async-0.7.6-py3-none-any.whl", hash = "sha256:f4c798ccf1315bff16c705792ff566e4e32e0e002dab5eb98d9e7c959015167a", size = 22711 },
+    { url = "https://files.pythonhosted.org/packages/22/64/63330e6bd9bc30abfc863bd392c20c81f8ad1d6b5d1b6511d477496a6fbe/pycozo_async-0.7.7-py3-none-any.whl", hash = "sha256:2c23b184f6295d4dc6178350425110467e512638b3f4def937ed0609df321dd1", size = 22714 },
 ]
 
 [[package]]
