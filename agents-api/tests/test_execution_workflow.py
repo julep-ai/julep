@@ -15,7 +15,7 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.models.task.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
-from tests.fixtures import cozo_client, test_agent, test_developer_id
+from tests.fixtures import cozo_client, async_cozo_client, test_agent, test_developer_id
 from tests.utils import patch_integration_service, patch_testing_temporal
 
 EMBEDDING_SIZE: int = 1024
@@ -24,6 +24,7 @@ EMBEDDING_SIZE: int = 1024
 @test("workflow: evaluate step single")
 async def _(
     client=cozo_client,
+    async_client=async_cozo_client,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
