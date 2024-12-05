@@ -9,7 +9,7 @@ from ...clients.temporal import get_workflow_handle
 from ...common.protocol.tasks import StepContext
 from ...common.storage_handler import load_from_blob_store_if_remote
 from ...env import temporal_activity_after_retry_timeout, testing
-from ...exceptions import LastErrorInput
+from ...exceptions import LastErrorInput, TooManyRequestsError
 from ...models.execution.create_execution_transition import (
     create_execution_transition_async,
 )
@@ -52,7 +52,8 @@ async def transition_step(
     except Exception as e:
         if isinstance(e, HTTPException) and e.status_code == 429:
             await wf_handle.signal(
-                TaskExecutionWorkflow.set_last_error, LastErrorInput(last_error=e)
+                TaskExecutionWorkflow.set_last_error,
+                LastErrorInput(last_error=TooManyRequestsError()),
             )
 
         raise e
