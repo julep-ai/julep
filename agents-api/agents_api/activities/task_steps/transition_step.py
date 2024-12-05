@@ -1,5 +1,6 @@
 import asyncio
 
+from fastapi import HTTPException
 from beartype import beartype
 from temporalio import activity
 
@@ -49,9 +50,11 @@ async def transition_step(
         )
 
     except Exception as e:
-        await wf_handle.signal(
-            TaskExecutionWorkflow.set_last_error, LastErrorInput(last_error=e)
-        )
+        if isinstance(e, HTTPException) and e.status_code == 429:
+            await wf_handle.signal(
+                TaskExecutionWorkflow.set_last_error, LastErrorInput(last_error=e)
+            )
+
         raise e
 
     return transition
