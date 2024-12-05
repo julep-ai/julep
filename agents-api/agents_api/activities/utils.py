@@ -55,7 +55,10 @@ ALLOWED_FUNCTIONS = {
     "dump_json": json.dumps,
     "dump_yaml": yaml.dump,
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
-    "nlp": nlp.__call__,
+    "nlp": lambda string: [
+        " ".join([token.text for token in chunk])
+        for chunk in nlp.__call__(string)._.chunks
+    ],
 }
 
 
