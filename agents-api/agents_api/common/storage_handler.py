@@ -14,10 +14,10 @@ from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..env import (
     blob_store_cutoff_kb,
     debug,
+    temporal_heartbeat_timeout,
     temporal_schedule_to_close_timeout,
     testing,
     use_blob_store_for_temporal,
-    temporal_heartbeat_timeout,
 )
 from ..worker.codec import deserialize, serialize
 

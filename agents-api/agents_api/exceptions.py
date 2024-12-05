@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+
+
 class AgentsBaseException(Exception):
     pass
 
@@ -23,3 +26,8 @@ class UnknownTokenizerError(AgentsBaseException):
 
     def __init__(self) -> None:
         super().__init__("unknown tokenizer")
+
+
+@dataclass
+class LastErrorInput:
+    last_error: BaseException | None

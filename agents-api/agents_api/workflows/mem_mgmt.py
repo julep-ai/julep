@@ -8,7 +8,7 @@ from temporalio import workflow
 with workflow.unsafe.imports_passed_through():
     from ..activities.mem_mgmt import mem_mgmt
     from ..autogen.openapi_model import InputChatMLMessage
-    from ..env import temporal_schedule_to_close_timeout, temporal_heartbeat_timeout
+    from ..env import temporal_heartbeat_timeout, temporal_schedule_to_close_timeout
 
 
 @workflow.defn
