@@ -28,6 +28,10 @@ class UnknownTokenizerError(AgentsBaseException):
         super().__init__("unknown tokenizer")
 
 
+class TooManyRequestsError(Exception):
+    pass
+
+
 @dataclass
 class LastErrorInput:
     last_error: BaseException | None
