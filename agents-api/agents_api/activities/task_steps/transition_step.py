@@ -1,7 +1,7 @@
 import asyncio
 
-from fastapi import HTTPException
 from beartype import beartype
+from fastapi import HTTPException
 from temporalio import activity
 
 from ...autogen.openapi_model import CreateTransitionRequest, Transition
