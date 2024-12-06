@@ -14,13 +14,13 @@
   bytes_per_sync=0
   max_background_jobs=16
   avoid_flush_during_shutdown=false
-  max_background_flushes=-1
+  max_background_flushes=1
   delayed_write_rate=16777216
   max_open_files=-1
   max_subcompactions=1
   writable_file_max_buffer_size=1048576
   wal_bytes_per_sync=0
-  max_background_compactions=-1
+  max_background_compactions=6
   max_total_wal_size=0
   delete_obsolete_files_period_micros=21600000000
   stats_dump_period_sec=600
@@ -108,12 +108,12 @@
   bottommost_file_compaction_delay=0
   memtable_protection_bytes_per_key=0
   experimental_mempurge_threshold=0.000000
-  bottommost_compression=kDisableCompressionOption
+  bottommost_compression=kZSTD
   sample_for_compression=0
   prepopulate_blob_cache=kDisable
   table_factory=BlockBasedTable
   max_successive_merges=0
-  max_write_buffer_number=2
+  max_write_buffer_number=8
   prefix_extractor=nullptr
   memtable_huge_page_size=0
   write_buffer_size=67108864
@@ -146,7 +146,7 @@
   max_bytes_for_level_multiplier=10.000000
   max_bytes_for_level_multiplier_additional=1:1:1:1:1:1:1
   max_sequential_skip_in_iterations=8
-  compression=kSnappyCompression
+  compression=kLZ4Compression
   default_write_temperature=kUnknown
   compaction_options_universal={incremental=false;compression_size_percent=-1;allow_trivial_move=false;max_size_amplification_percent=200;max_merge_width=4294967295;stop_style=kCompactionStopStyleTotalSize;min_merge_width=2;max_read_amp=-1;size_ratio=1;}
   blob_garbage_collection_age_cutoff=0.250000
@@ -194,7 +194,7 @@
   max_auto_readahead_size=262144
   index_block_restart_interval=1
   block_size_deviation=10
-  block_size=4096
+  block_size=16384
   detect_filter_construct_corruption=false
   no_block_cache=false
   checksum=kXXH3
@@ -202,12 +202,12 @@
   data_block_hash_table_util_ratio=0.750000
   block_restart_interval=16
   index_type=kBinarySearch
-  pin_l0_filter_and_index_blocks_in_cache=false
+  pin_l0_filter_and_index_blocks_in_cache=true
   data_block_index_type=kDataBlockBinarySearch
   cache_index_and_filter_blocks_with_high_priority=true
   whole_key_filtering=true
   index_shortening=kShortenSeparators
-  cache_index_and_filter_blocks=false
+  cache_index_and_filter_blocks=true
   block_align=false
   optimize_filters_for_memory=true
   flush_block_policy_factory=FlushBlockBySizePolicyFactory
