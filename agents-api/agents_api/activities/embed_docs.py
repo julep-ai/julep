@@ -26,11 +26,10 @@ async def embed_docs(
     async def embed_batch(snippets):
         return await litellm.aembedding(
             inputs=[
-                (
-                    embed_instruction + (title + "\n\n" + snippet) if title else snippet
-                ).strip()
+                ((title + "\n\n" + snippet) if title else snippet).strip()
                 for snippet in snippets
-            ]
+            ],
+            embed_instruction=embed_instruction,
         )
 
     embeddings = reduce(
