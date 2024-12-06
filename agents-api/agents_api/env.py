@@ -108,6 +108,9 @@ temporal_metrics_bind_host: str = env.str(
     "TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0"
 )
 temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=14000)
+temporal_activity_after_retry_timeout: int = env.int(
+    "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
+)
 
 # Consolidate environment variables
 environment: Dict[str, Any] = dict(

@@ -50,10 +50,11 @@ with workflow.unsafe.imports_passed_through():
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
     from ...env import (
         debug,
+        temporal_heartbeat_timeout,
         temporal_schedule_to_close_timeout,
         testing,
-        temporal_heartbeat_timeout,
     )
+    from ...exceptions import LastErrorInput
     from .helpers import (
         continue_as_child,
         execute_foreach_step,
@@ -125,6 +126,15 @@ GenericStep = RootModel[WorkflowStep]
 # Main workflow definition
 @workflow.defn
 class TaskExecutionWorkflow:
+    last_error: BaseException | None = None
+
+    def __init__(self):
+        self.last_error = None
+
+    @workflow.signal
+    async def set_last_error(self, value: LastErrorInput):
+        self.last_error = value.last_error
+
     # Main workflow run method
     @workflow.run
     async def run(
@@ -162,6 +172,7 @@ class TaskExecutionWorkflow:
                 output=context.current_input,
                 next=context.cursor,
                 metadata={},
+                last_error=self.last_error,
             )
 
         # ---
@@ -246,6 +257,7 @@ class TaskExecutionWorkflow:
                     output=output,
                     type="finish" if context.is_main else "finish_branch",
                     next=None,
+                    last_error=self.last_error,
                 )
                 return output  # <--- Byeeee!
 
@@ -348,7 +360,11 @@ class TaskExecutionWorkflow:
                 workflow.logger.error(f"Error step: {error}")
 
                 state = PartialTransition(type="error", output=error)
-                await transition(context, state)
+                await transition(
+                    context,
+                    state,
+                    last_error=self.last_error,
+                )
 
                 raise ApplicationError(f"Error raised by ErrorWorkflowStep: {error}")
 
@@ -363,6 +379,7 @@ class TaskExecutionWorkflow:
                     output=output,
                     type=yield_transition_type,
                     next=yield_next_target,
+                    last_error=self.last_error,
                 )
 
                 result = await continue_as_child(
@@ -646,7 +663,11 @@ class TaskExecutionWorkflow:
                     f"Unhandled step type: {type(context.current_step).__name__}"
                 )
                 state = PartialTransition(type="error", output="Not implemented")
-                await transition(context, state)
+                await transition(
+                    context,
+                    state,
+                    last_error=self.last_error,
+                )
 
                 raise ApplicationError("Not implemented")
 
@@ -655,7 +676,11 @@ class TaskExecutionWorkflow:
 
         # The returned value is the transition finally created
         state = state or PartialTransition(type="error", output="Not implemented")
-        final_state = await transition(context, state)
+        final_state = await transition(
+            context,
+            state,
+            last_error=self.last_error,
+        )
 
         # ---
 

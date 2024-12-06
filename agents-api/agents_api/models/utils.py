@@ -7,7 +7,8 @@ from uuid import UUID
 
 import pandas as pd
 from fastapi import HTTPException
-from httpcore import NetworkError, TimeoutException
+from httpcore import ConnectError, NetworkError, TimeoutException
+from httpx import ConnectError as HttpxConnectError
 from httpx import RequestError
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, Timeout
@@ -213,7 +214,11 @@ def cozo_query(
         )
 
         def is_resource_busy(e: Exception) -> bool:
-            return isinstance(e, HTTPException) and e.status_code == 429
+            return (
+                isinstance(e, HTTPException)
+                and e.status_code == 429
+                and not getattr(e, "cozo_offline", False)
+            )
 
         @retry(
             stop=stop_after_attempt(4),
@@ -261,6 +266,10 @@ def cozo_query(
                 cozo_busy = ("busy" in pretty_error) or (
                     "when executing against relation '_" in pretty_error
                 )
+                cozo_offline = isinstance(e, ConnectionError) and (
+                    ("connection refused" in pretty_error)
+                    or ("name or service not known" in pretty_error)
+                )
                 connection_error = isinstance(
                     e,
                     (
@@ -271,10 +280,13 @@ def cozo_query(
                         RequestError,
                     ),
                 )
-                if cozo_busy or connection_error:
-                    raise HTTPException(
+
+                if cozo_busy or connection_error or cozo_offline:
+                    exc = HTTPException(
                         status_code=429, detail="Resource busy. Please try again later."
-                    ) from e
+                    )
+                    exc.cozo_offline = cozo_offline
+                    raise exc from e
 
                 raise
 
@@ -335,7 +347,11 @@ def cozo_query_async(
         )
 
         def is_resource_busy(e: Exception) -> bool:
-            return isinstance(e, HTTPException) and e.status_code == 429
+            return (
+                isinstance(e, HTTPException)
+                and e.status_code == 429
+                and not getattr(e, "cozo_offline", False)
+            )
 
         @retry(
             stop=stop_after_attempt(6),
@@ -389,20 +405,31 @@ def cozo_query_async(
                 cozo_busy = ("busy" in pretty_error) or (
                     "when executing against relation '_" in pretty_error
                 )
+                cozo_offline = (
+                    isinstance(e, ConnectError)
+                    or isinstance(e, HttpxConnectError)
+                    and (
+                        ("all connection attempts failed" in pretty_error)
+                        or ("name or service not known" in pretty_error)
+                    )
+                )
                 connection_error = isinstance(
                     e,
                     (
-                        ConnectionError,
-                        Timeout,
+                        ConnectError,
+                        HttpxConnectError,
                         TimeoutException,
                         NetworkError,
                         RequestError,
                     ),
                 )
-                if cozo_busy or connection_error:
-                    raise HTTPException(
+
+                if cozo_busy or connection_error or cozo_offline:
+                    exc = HTTPException(
                         status_code=429, detail="Resource busy. Please try again later."
-                    ) from e
+                    )
+                    exc.cozo_offline = cozo_offline
+                    raise exc from e
 
                 raise
 
