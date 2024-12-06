@@ -36,8 +36,7 @@ async def run_embed_docs_task(
         content=content,
         title=title,
         # Default embed instruction for docs. See https://docs.voyageai.com/docs/embeddings
-        embed_instruction=embed_instruction
-        or "Represent the document for retrieval: ",
+        embed_instruction=embed_instruction or "Represent the document for retrieval: ",
     )
 
     handle = await client.start_workflow(
