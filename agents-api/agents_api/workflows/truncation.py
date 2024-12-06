@@ -8,7 +8,7 @@ from temporalio import workflow
 with workflow.unsafe.imports_passed_through():
     from ..activities.truncation import truncation
     from ..common.retry_policies import DEFAULT_RETRY_POLICY
-    from ..env import temporal_schedule_to_close_timeout, temporal_heartbeat_timeout
+    from ..env import temporal_heartbeat_timeout, temporal_schedule_to_close_timeout
 
 
 @workflow.defn

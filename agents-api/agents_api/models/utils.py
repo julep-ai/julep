@@ -7,8 +7,9 @@ from uuid import UUID
 
 import pandas as pd
 from fastapi import HTTPException
-from httpcore import NetworkError, TimeoutException, ConnectError
-from httpx import RequestError, ConnectError as HttpxConnectError
+from httpcore import ConnectError, NetworkError, TimeoutException
+from httpx import ConnectError as HttpxConnectError
+from httpx import RequestError
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, Timeout
 

@@ -2,14 +2,14 @@ from datetime import timedelta
 from uuid import UUID
 
 from beartype import beartype
-from temporalio.runtime import Runtime, TelemetryConfig, PrometheusConfig
-from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.client import Client, TLSConfig
 from temporalio.common import (
     SearchAttributeKey,
     SearchAttributePair,
     TypedSearchAttributes,
 )
+from temporalio.contrib.opentelemetry import TracingInterceptor
+from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 
 from ..autogen.openapi_model import TransitionTarget
 from ..common.protocol.tasks import ExecutionInput
@@ -17,12 +17,12 @@ from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..common.storage_handler import store_in_blob_store_if_large
 from ..env import (
     temporal_client_cert,
+    temporal_metrics_bind_host,
+    temporal_metrics_bind_port,
     temporal_namespace,
     temporal_private_key,
     temporal_task_queue,
     temporal_worker_url,
-    temporal_metrics_bind_port,
-    temporal_metrics_bind_host,
 )
 from ..worker.codec import pydantic_data_converter
 
