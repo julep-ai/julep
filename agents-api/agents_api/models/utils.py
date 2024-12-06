@@ -1,3 +1,4 @@
+import concurrent.futures
 import inspect
 import re
 import time
@@ -556,3 +557,21 @@ def rewrap_exceptions(
         return async_wrapper if inspect.iscoroutinefunction(func) else wrapper
 
     return decorator
+
+
+def run_concurrently(
+    fns: list[Callable[..., Any]],
+    *,
+    args_list: list[tuple] = [],
+    kwargs_list: list[dict] = [],
+) -> list[Any]:
+    args_list = args_list or [tuple()] * len(fns)
+    kwargs_list = kwargs_list or [dict()] * len(fns)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(fn, *args, **kwargs)
+            for fn, args, kwargs in zip(fns, args_list, kwargs_list)
+        ]
+
+        return [future.result() for future in concurrent.futures.as_completed(futures)]
