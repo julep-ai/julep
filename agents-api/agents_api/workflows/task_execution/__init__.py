@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -55,6 +54,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_schedule_to_close_timeout,
         testing,
     )
+    from ...exceptions import LastErrorInput
     from .helpers import (
         continue_as_child,
         execute_foreach_step,
@@ -123,14 +123,14 @@ GenericStep = RootModel[WorkflowStep]
 #       Probably can be implemented much more efficiently
 
 
-@dataclass
-class LastErrorInput:
-    last_error: BaseException | None
-
-
 # Main workflow definition
 @workflow.defn
 class TaskExecutionWorkflow:
+    last_error: BaseException | None = None
+
+    def __init__(self):
+        self.last_error = None
+
     @workflow.signal
     async def set_last_error(self, value: LastErrorInput):
         self.last_error = value.last_error

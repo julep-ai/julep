@@ -1,20 +1,17 @@
-import asyncio
 from datetime import timedelta
 
-from temporalio import workflow, activity
+from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from ...activities import task_steps
-from ...autogen.openapi_model import (
-    CreateTransitionRequest,
-    Transition,
-    TransitionTarget,
-)
-from ...common.protocol.tasks import PartialTransition, StepContext
-from ...common.retry_policies import DEFAULT_RETRY_POLICY
-from . import TaskExecutionWorkflow, LastErrorInput
-
 with workflow.unsafe.imports_passed_through():
+    from ...activities import task_steps
+    from ...autogen.openapi_model import (
+        CreateTransitionRequest,
+        Transition,
+        TransitionTarget,
+    )
+    from ...common.protocol.tasks import PartialTransition, StepContext
+    from ...common.retry_policies import DEFAULT_RETRY_POLICY
     from ...env import (
         debug,
         temporal_activity_after_retry_timeout,
@@ -54,16 +51,6 @@ async def transition(
     )
 
     try:
-        last_error = kwargs.pop("last_error", None)
-        activity_info = activity.info()
-        wf_handle = workflow.get_external_workflow_handle(activity_info.workflow_id)
-
-        if last_error is not None:
-            await wf_handle.signal(
-                TaskExecutionWorkflow.set_last_error, LastErrorInput(last_error=None)
-            )
-            await asyncio.sleep(temporal_activity_after_retry_timeout)
-
         return await workflow.execute_activity(
             task_steps.transition_step,
             args=[context, transition_request],
@@ -76,7 +63,4 @@ async def transition(
 
     except Exception as e:
         workflow.logger.error(f"Error in transition: {str(e)}")
-        await wf_handle.signal(
-            TaskExecutionWorkflow.set_last_error, LastErrorInput(last_error=e)
-        )
         raise ApplicationError(f"Error in transition: {e}") from e
