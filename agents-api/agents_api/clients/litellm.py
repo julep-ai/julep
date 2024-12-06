@@ -99,7 +99,7 @@ async def aembedding(
         input = ["\n\n".join(inputs)] if join_inputs else inputs
 
     if embed_instruction:
-        input = [embed_instruction] + [input]
+        input = [embed_instruction] + input
 
     response = await _aembedding(
         model=model,
