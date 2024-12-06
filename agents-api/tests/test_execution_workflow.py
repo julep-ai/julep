@@ -15,7 +15,7 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.models.task.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
-from tests.fixtures import cozo_client, async_cozo_client, test_agent, test_developer_id
+from tests.fixtures import cozo_client, async_cozo_client, test_agent, test_developer_id, cozo_clients_with_migrations
 from tests.utils import patch_integration_service, patch_testing_temporal
 
 EMBEDDING_SIZE: int = 1024
@@ -23,11 +23,11 @@ EMBEDDING_SIZE: int = 1024
 
 @test("workflow: evaluate step single")
 async def _(
-    client=cozo_client,
-    async_client=async_cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -63,10 +63,11 @@ async def _(
 
 @test("workflow: evaluate step multiple")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -105,10 +106,11 @@ async def _(
 
 @test("workflow: variable access in expressions")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -147,10 +149,11 @@ async def _(
 
 @test("workflow: yield step")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -196,10 +199,11 @@ async def _(
 
 @test("workflow: sleep step")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -246,10 +250,11 @@ async def _(
 
 @test("workflow: return step direct")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -290,10 +295,11 @@ async def _(
 
 @test("workflow: return step nested")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -341,10 +347,11 @@ async def _(
 
 @test("workflow: log step")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -391,10 +398,11 @@ async def _(
 
 @test("workflow: log step expression fail")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -444,10 +452,11 @@ async def _(
 
 @test("workflow: system call - list agents")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={})
 
     task = create_task(
@@ -504,10 +513,11 @@ async def _(
 
 @test("workflow: tool call api_call")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -563,10 +573,11 @@ async def _(
 
 @test("workflow: tool call api_call test retry")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
     status_codes_to_retry = ",".join(str(code) for code in (408, 429, 503, 504))
 
@@ -636,10 +647,11 @@ async def _(
 
 @test("workflow: tool call integration dummy")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -690,10 +702,11 @@ async def _(
 @skip("integration service patch not working")
 @test("workflow: tool call integration mocked weather")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -749,10 +762,11 @@ async def _(
 
 @test("workflow: wait for input step start")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -813,10 +827,11 @@ async def _(
 
 @test("workflow: foreach wait for input step start")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -882,10 +897,11 @@ async def _(
 
 @test("workflow: if-else step")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task_def = CreateTaskRequest(
@@ -930,10 +946,11 @@ async def _(
 
 @test("workflow: switch step")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -987,10 +1004,11 @@ async def _(
 
 @test("workflow: for each step")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -1034,10 +1052,11 @@ async def _(
 
 @test("workflow: map reduce step")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     map_step = {
@@ -1136,10 +1155,11 @@ for p in [1, 3, 5]:
 
 @test("workflow: prompt step (python expression)")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
@@ -1192,10 +1212,11 @@ async def _(
 
 @test("workflow: prompt step")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
@@ -1253,10 +1274,11 @@ async def _(
 
 @test("workflow: prompt step unwrap")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
@@ -1313,10 +1335,11 @@ async def _(
 
 @test("workflow: set and get steps")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = create_task(
@@ -1356,10 +1379,11 @@ async def _(
 
 @test("workflow: execute yaml task")
 async def _(
-    client=cozo_client,
+    clients=cozo_clients_with_migrations,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    client, _ = clients
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[

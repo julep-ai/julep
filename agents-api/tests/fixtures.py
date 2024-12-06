@@ -66,6 +66,15 @@ def cozo_client(migrations_dir: str = "./migrations"):
 
 
 @fixture(scope="global")
+def cozo_clients_with_migrations(sync_client=cozo_client):
+    async_client = AsyncCozoClient()
+    async_client.embedded = sync_client.embedded
+    setattr(app.state, "async_cozo_client", async_client)
+
+    return sync_client, async_client
+
+
+@fixture(scope="global")
 def async_cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.
