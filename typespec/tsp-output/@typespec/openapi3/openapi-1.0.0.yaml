@@ -3831,6 +3831,12 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptions'
+          nullable: true
+          default: null
         metadata:
           type: object
           additionalProperties: {}
@@ -3942,6 +3948,12 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptions'
+          nullable: true
+          default: null
         metadata:
           type: object
           additionalProperties: {}
@@ -4075,10 +4087,70 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptionsUpdate'
+          nullable: true
+          default: null
         metadata:
           type: object
           additionalProperties: {}
       description: Payload for patching a session
+    Sessions.RecallOptions:
+      type: object
+      required:
+        - mode
+        - num_search_messages
+        - max_query_length
+        - hybrid_alpha
+        - confidence
+      properties:
+        mode:
+          allOf:
+            - $ref: '#/components/schemas/Sessions.SearchMode'
+          default: vector
+        num_search_messages:
+          type: integer
+          format: uint32
+          default: 4
+        max_query_length:
+          type: integer
+          format: uint32
+          default: 1000
+        hybrid_alpha:
+          type: number
+          default: 0.7
+        confidence:
+          type: number
+          default: 0.6
+    Sessions.RecallOptionsUpdate:
+      type: object
+      properties:
+        mode:
+          allOf:
+            - $ref: '#/components/schemas/Sessions.SearchMode'
+          default: vector
+        num_search_messages:
+          type: integer
+          format: uint32
+          default: 4
+        max_query_length:
+          type: integer
+          format: uint32
+          default: 1000
+        hybrid_alpha:
+          type: number
+          default: 0.7
+        confidence:
+          type: number
+          default: 0.6
+    Sessions.SearchMode:
+      type: string
+      enum:
+        - hybrid
+        - vector
+        - text
     Sessions.Session:
       type: object
       required:
@@ -4179,6 +4251,12 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptions'
+          nullable: true
+          default: null
         id:
           allOf:
             - $ref: '#/components/schemas/Common.uuid'
@@ -4334,6 +4412,12 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptions'
+          nullable: true
+          default: null
         metadata:
           type: object
           additionalProperties: {}

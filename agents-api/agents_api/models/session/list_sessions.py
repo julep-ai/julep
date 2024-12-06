@@ -90,6 +90,8 @@ def list_sessions(
             metadata,
             token_budget,
             context_overflow,
+            recall_options,
+            forward_tool_calls,
         ] :=
             input[developer_id],
             *sessions{{
@@ -102,6 +104,8 @@ def list_sessions(
                 metadata,
                 token_budget,
                 context_overflow,
+                recall_options,
+                forward_tool_calls,
                 @ "END"
             }},
             users_p[users, id],
