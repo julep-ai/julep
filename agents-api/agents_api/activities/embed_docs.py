@@ -42,7 +42,9 @@ async def embed_docs(
     # Gather embeddings with their corresponding indices
     indexed_embeddings = reduce(
         operator.add,
-        await asyncio.gather(*[embed_batch(batch) for batch in batched_indexed_snippets]),
+        await asyncio.gather(
+            *[embed_batch(batch) for batch in batched_indexed_snippets]
+        ),
     )
 
     # Split indices and embeddings after all batches are processed
