@@ -20,7 +20,7 @@ services:
       watch:
         - action: sync+restart
           path: ./options
-          target: /data/cozo.db/options
+          target: /data/cozo.db/OPTIONS-000007
         - action: rebuild
           path: Dockerfile
 
