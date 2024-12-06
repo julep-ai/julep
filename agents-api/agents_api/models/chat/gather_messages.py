@@ -91,6 +91,8 @@ async def gather_messages(
     [query_embedding, *_] = await litellm.aembedding(
         # Truncate on the left to keep the last `search_query_chars` characters
         inputs=embed_text[-(search_query_chars):],
+        # TODO: Make this configurable once it's added to the ChatInput model
+        embed_instruction="Represent the query for retrieving supporting documents: ",
     )
 
     # Truncate on the right to take only the first `search_query_chars` characters
