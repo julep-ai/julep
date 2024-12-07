@@ -29,6 +29,9 @@ api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
 # Tasks
 # -----
 task_max_parallelism: int = env.int("AGENTS_API_TASK_MAX_PARALLELISM", default=100)
+transition_requests_per_minute: int = env.int(
+    "AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE", default=100
+)
 
 
 # Blob Store
