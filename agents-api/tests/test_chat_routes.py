@@ -59,8 +59,6 @@ async def _(
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=False),
-        search_threshold=4,
-        search_query_chars=1000,
     )
 
     assert isinstance(past_messages, list)
@@ -78,11 +76,25 @@ async def _(
     client=cozo_client,
     developer_id=test_developer_id,
     agent=test_agent,
-    session=test_session,
+    # session=test_session,
     tool=test_tool,
     user=test_user,
     mocks=patch_embed_acompletion,
 ):
+    session = create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test session about",
+            recall_options={
+                "mode": "text",
+                "num_search_messages": 10,
+                "max_query_length": 1001,
+            },
+        ),
+        client=client,
+    )
+
     (embed, _) = mocks
 
     chat_context = prepare_chat_context(
@@ -100,8 +112,6 @@ async def _(
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=True),
-        search_threshold=4,
-        search_query_chars=1000,
     )
 
     assert isinstance(past_messages, list)
@@ -124,6 +134,11 @@ async def _(
         data=CreateSessionRequest(
             agent=agent.id,
             situation="test session about",
+            recall_options={
+                "mode": "vector",
+                "num_search_messages": 5,
+                "max_query_length": 1001,
+            },
         ),
         client=client,
     )

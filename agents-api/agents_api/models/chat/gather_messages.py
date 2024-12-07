@@ -37,8 +37,6 @@ async def gather_messages(
     session_id: UUID,
     chat_context: ChatContext,
     chat_input: ChatInput,
-    search_threshold: int = 4,
-    search_query_chars: int = 1000,
 ) -> tuple[list[dict], list[DocReference]]:
     new_raw_messages = [msg.model_dump(mode="json") for msg in chat_input.messages]
     recall = chat_input.recall
@@ -117,6 +115,8 @@ async def gather_messages(
     user_ids = [user.id for user in chat_context.users]
     owners = [("user", user_id) for user_id in user_ids] + [("agent", active_agent_id)]
 
+    # Search for doc references
+    doc_references: list[DocReference] = []
     match recall_options.mode:
         case "vector":
             doc_references: list[DocReference] = search_docs_by_embedding(
