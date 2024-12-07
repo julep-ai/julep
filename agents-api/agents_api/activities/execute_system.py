@@ -6,9 +6,9 @@ from uuid import UUID
 
 from beartype import beartype
 from box import Box, BoxList
+from fastapi import HTTPException
 from fastapi.background import BackgroundTasks
 from temporalio import activity
-from fastapi import HTTPException
 
 from ..autogen.openapi_model import (
     ChatInput,
