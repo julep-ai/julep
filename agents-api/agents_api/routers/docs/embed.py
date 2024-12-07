@@ -19,11 +19,9 @@ async def embed(
     data: SingleEmbedQueryRequest | MultipleEmbedQueryRequest,
 ) -> EmbedQueryResponse:
     text_to_embed: str | list[str] = data.text
-    text_to_embed: list[str] = (
-        [text_to_embed] if isinstance(text_to_embed, str) else text_to_embed
-    )
     vectors = await litellm.aembedding(
-        inputs=[data.embed_instruction + text for text in text_to_embed]
+        inputs=text_to_embed,
+        embed_instruction=data.embed_instruction,
     )
 
     return EmbedQueryResponse(vectors=vectors)

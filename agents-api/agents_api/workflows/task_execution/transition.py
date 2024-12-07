@@ -14,6 +14,7 @@ with workflow.unsafe.imports_passed_through():
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
     from ...env import (
         debug,
+        temporal_activity_after_retry_timeout,
         temporal_heartbeat_timeout,
         temporal_schedule_to_close_timeout,
         testing,

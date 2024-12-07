@@ -1,4 +1,5 @@
 import asyncio
+from typing import cast
 
 from beartype import beartype
 from fastapi import HTTPException
@@ -6,7 +7,7 @@ from temporalio import activity
 
 from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...clients.temporal import get_workflow_handle
-from ...common.protocol.tasks import StepContext
+from ...common.protocol.tasks import ExecutionInput, StepContext
 from ...common.storage_handler import load_from_blob_store_if_remote
 from ...env import temporal_activity_after_retry_timeout, testing
 from ...exceptions import LastErrorInput, TooManyRequestsError
@@ -38,6 +39,9 @@ async def transition_step(
         transition_info.output
     )
 
+    if not isinstance(context.execution_input, ExecutionInput):
+        raise TypeError("Expected ExecutionInput type for context.execution_input")
+
     # Create transition
     try:
         transition = await create_execution_transition_async(
@@ -50,12 +54,11 @@ async def transition_step(
         )
 
     except Exception as e:
-        if isinstance(e, HTTPException) and e.status_code == 429:
+        if isinstance(e, HTTPException) and cast(HTTPException, e).status_code == 429:
             await wf_handle.signal(
                 TaskExecutionWorkflow.set_last_error,
                 LastErrorInput(last_error=TooManyRequestsError()),
             )
-
         raise e
 
     return transition

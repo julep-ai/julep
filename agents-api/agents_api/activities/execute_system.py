@@ -6,6 +6,7 @@ from uuid import UUID
 
 from beartype import beartype
 from box import Box, BoxList
+from fastapi import HTTPException
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
@@ -18,7 +19,7 @@ from ..autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from ..common.protocol.tasks import StepContext
+from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
 from ..env import testing
 from ..models.developer import get_developer
@@ -39,6 +40,9 @@ async def execute_system(
 
     if set(arguments.keys()) == {"bucket", "key"}:
         arguments = await load_from_blob_store_if_remote(arguments)
+
+    if not isinstance(context.execution_input, ExecutionInput):
+        raise TypeError("Expected ExecutionInput type for context.execution_input")
 
     arguments["developer_id"] = context.execution_input.developer_id
 

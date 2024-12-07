@@ -80,6 +80,8 @@ def get_session(
         render_templates,
         token_budget,
         context_overflow,
+        recall_options,
+        forward_tool_calls,
     ] := input[developer_id, id],
         users_p[users],
         participants[agents, "agent"],
@@ -94,6 +96,8 @@ def get_session(
             render_templates,
             token_budget,
             context_overflow,
+            recall_options,
+            forward_tool_calls,
             @ "END"
         },
         updated_at = to_int(validity)
