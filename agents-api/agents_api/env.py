@@ -115,16 +115,16 @@ temporal_activity_after_retry_timeout: int = env.int(
     "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
 )
 temporal_max_concurrent_workflow_tasks: int = env.int(
-    "TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS", default=5
+    "TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS", default=None
 )
 temporal_max_concurrent_activities: int = env.int(
-    "TEMPORAL_MAX_CONCURRENT_ACTIVITIES", default=5
+    "TEMPORAL_MAX_CONCURRENT_ACTIVITIES", default=100
 )
 temporal_max_activities_per_second: int = env.int(
-    "TEMPORAL_MAX_ACTIVITIES_PER_SECOND", default=5
+    "TEMPORAL_MAX_ACTIVITIES_PER_SECOND", default=None
 )
 temporal_max_task_queue_activities_per_second: int = env.int(
-    "TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND", default=5
+    "TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND", default=None
 )
 
 # Consolidate environment variables
