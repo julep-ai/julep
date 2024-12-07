@@ -19,4 +19,5 @@ ${APP_HOME:=.}/bin/cozo server \
     --engine newrocksdb \
     --path $COZO_MNT_DIR/${COZO_ROCKSDB_DIR} \
     --bind 0.0.0.0 \
-    --port ${COZO_PORT:=9070}
+    --port ${COZO_PORT:=9070} \
+    -c '{"enable_write_buffer_manager": true, "allow_stall": true, "lru_cache_mb": 1024, "write_buffer_mb": 1024}'
