@@ -41,12 +41,30 @@ tools:
 
 # Define the steps of the workflow
 main:
+
 # Define a tool call step that calls the spider_crawler tool with the url input
 - tool: spider_crawler
   arguments:
     url: "_['url']" # You can also use 'inputs[0]['url']'
-  
-    
+    params:
+      request: "'smart_mode'"
+      limit: "1"
+      return_format: "'markdown'"
+      proxy_enabled: "True"
+      filter_output_images: "True"
+      filter_output_svg: "True"
+      readability: "True"
+
+# Evaluate step to create a summary of the results
+- evaluate:
+    documents: |
+      " ".join(
+      list(
+        page['content'] for page in _['result']
+        )
+      )
+      
+# Prompt step to create a summary of the results
 - prompt: |
     You are {{{{agent.about}}}}
     I have given you this url: {{{{inputs[0]['url']}}}}

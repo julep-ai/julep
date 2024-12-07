@@ -50,7 +50,7 @@ from .email import EmailOutput
 from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
 from .remote_browser import RemoteBrowserOutput
-from .spider import SpiderFetchOutput
+from .spider import SpiderOutput
 from .weather import WeatherGetOutput
 from .wikipedia import WikipediaSearchOutput
 
@@ -98,7 +98,6 @@ ExecutionArguments = Union[
 ]
 
 ExecutionResponse = Union[
-    SpiderFetchOutput,
     WeatherGetOutput,
     EmailOutput,
     WikipediaSearchOutput,
@@ -118,6 +117,7 @@ ExecutionResponse = Union[
     CloudinaryUploadOutput,
     ExecutionError,
     ArxivSearchOutput,
+    SpiderOutput,
 ]
 
 

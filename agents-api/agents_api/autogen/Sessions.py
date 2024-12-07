@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel, StrictBool
 
 
 class CreateSessionRequest(BaseModel):
@@ -51,6 +51,7 @@ class CreateSessionRequest(BaseModel):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None
 
 
@@ -86,7 +87,30 @@ class PatchSessionRequest(BaseModel):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptionsUpdate | None = None
     metadata: dict[str, Any] | None = None
+
+
+class RecallOptions(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    mode: Literal["hybrid", "vector", "text"] = "vector"
+    num_search_messages: int = 4
+    max_query_length: int = 1000
+    hybrid_alpha: float = 0.7
+    confidence: float = 0.6
+
+
+class RecallOptionsUpdate(RecallOptions):
+    pass
+
+
+class SearchMode(RootModel[Literal["hybrid", "vector", "text"]]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Literal["hybrid", "vector", "text"]
 
 
 class Session(BaseModel):
@@ -121,6 +145,7 @@ class Session(BaseModel):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptions | None = None
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -192,6 +217,7 @@ class UpdateSessionRequest(BaseModel):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None
 
 
@@ -234,6 +260,7 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None
 
 

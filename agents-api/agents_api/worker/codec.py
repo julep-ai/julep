@@ -133,7 +133,9 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
             # TODO: In production, we don't want to crash the workflow
             #       But the sentinel object must be handled by the caller
             logging.warning(f"WARNING: Could not encode {value}: {e}")
-            return FailedEncodingSentinel(payload_data=value)
+            # Convert the value to bytes using str() representation if needed
+            error_bytes = str(value).encode("utf-8")
+            return FailedEncodingSentinel(payload_data=error_bytes)
 
     def from_payload(self, payload: Payload, type_hint: Optional[Type] = None) -> Any:
         current_python_version = (

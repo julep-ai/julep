@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 
 # Build cozo-ce-bin from crates.io
 WORKDIR /usr/src
-RUN cargo install cozo-ce-bin@0.7.12 --features "requests graph-algo storage-new-rocksdb storage-sqlite jemalloc io-uring malloc-usable-size"
+RUN cargo install cozo-ce-bin@0.7.13-alpha.1 --features "requests graph-algo storage-new-rocksdb storage-sqlite jemalloc io-uring malloc-usable-size"
 
 # Copy the built binary to /usr/local/bin
 RUN cp /usr/local/cargo/bin/cozo-ce-bin /usr/local/bin/cozo
@@ -51,7 +51,7 @@ RUN \
     mkdir -p $COZO_MNT_DIR $COZO_BACKUP_DIR && \
     chmod +x $APP_HOME/bin/cozo && \
     chmod +x $APP_HOME/run.sh
-    
+
 # Copy the options file into the image
 COPY ./options ./options
 
