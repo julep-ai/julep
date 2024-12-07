@@ -9,11 +9,19 @@ from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...clients.temporal import get_workflow_handle
 from ...common.protocol.tasks import ExecutionInput, StepContext
 from ...common.storage_handler import load_from_blob_store_if_remote
-from ...env import temporal_activity_after_retry_timeout, testing
+from ...env import (
+    temporal_activity_after_retry_timeout,
+    testing,
+    transition_requests_per_minute,
+)
 from ...exceptions import LastErrorInput, TooManyRequestsError
 from ...models.execution.create_execution_transition import (
     create_execution_transition_async,
 )
+from ..utils import RateLimiter
+
+# Global rate limiter instance
+rate_limiter = RateLimiter(max_requests=transition_requests_per_minute)
 
 
 @beartype
@@ -22,6 +30,12 @@ async def transition_step(
     transition_info: CreateTransitionRequest,
     last_error: BaseException | None = None,
 ) -> Transition:
+    # Check rate limit first
+    if not await rate_limiter.acquire():
+        raise TooManyRequestsError(
+            f"Rate limit exceeded. Maximum {transition_requests_per_minute} requests per minute allowed."
+        )
+
     from ...workflows.task_execution import TaskExecutionWorkflow
 
     activity_info = activity.info()
