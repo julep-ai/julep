@@ -6,7 +6,7 @@
 # Then copy the run.sh script to the ./run.sh file
 
 # First stage: Build the Rust project
-FROM rust:1.80.1-bookworm AS builder
+FROM rust:1.81.0-bookworm AS builder
 
 # Install required dependencies
 RUN apt-get update && apt-get install -y \
