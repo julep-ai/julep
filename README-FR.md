@@ -1,13 +1,11 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center" id="top">
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents (en cours)</a>
   <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents (en cours)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discorde</a>
@@ -43,7 +41,7 @@ Nous sommes ravis d'accueillir de nouveaux contributeurs au projet Julep ! Nous 
 2. Parcourez nos [bons premiers numéros](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) pour trouver une tâche qui vous intéresse.
 3. Si vous avez des questions ou avez besoin d'aide, n'hésitez pas à nous contacter sur notre chaîne [Discord](https://discord.com/invite/JTSBGRZrzj).
 
-Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons ensemble quelque chose d'extraordinaire ! 🚀
+Vos contributions, grandes ou petites, nous sont précieuses. Construisons ensemble quelque chose d'extraordinaire ! 🚀
 
 </details>
 
@@ -81,13 +79,13 @@ Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons 
 - [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
 - [Intégration et recherche de documents](#document-integration-and-search)
 - [Référence](#référence)
-  - [Référence du SDK](#référence-du-sdk)
-  - [Référence API](#référence-api)
-- [Démarrage rapide local](#démarrage-rapide-local)
-- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-différence-entre-julep-et-langchain-etc-)
-  - [Différents cas d'utilisation](#différents-cas-dutilisation)
-  - [Facteur de forme différent](#facteur-de-forme-différent)
-  - [En résumé](#en-résumé)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
+- [Démarrage rapide local](#local-quickstart)
+- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-différence-entre-julep-et-langchain-etc)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -431,11 +429,11 @@ agent_id=agent.id,
 ### Étape 3 : Exécuter la tâche
 
 exécution = client.executions.create(
-task_id=task.id,
+task_id=tâche.id,
 input={"idea": "Un chat qui apprend à voler"}
 )
 
-# 🎉 Regardez l'histoire et les panneaux de bandes dessinées se générer
+# 🎉 Regardez l'histoire et les panneaux de bande dessinée se générer
 while (result := client.executions.get(execution.id)).status n'est pas dans ['réussi', 'échec'] :
 print(résultat.statut, résultat.sortie)
 heure.sommeil(1)
@@ -686,7 +684,7 @@ Agent --> Documents[Documents]
 Documents --> VectorDB[Base de données vectorielles]
 Tâches --> Exécutions[Exécutions]
 
-client classDef fill:#9ff,trait:#333,largeur-trait:1px;
+client classDef remplissage : #9ff, trait : #333, largeur du trait : 1 px ;
 classe Utilisateur client ;
 
 classDef core fill:#f9f,trait:#333,largeur-trait:2px;
@@ -784,7 +782,7 @@ Execute an integrated tool or API that you have previously declared in the task.
 <td>
 
 ```YAML
-- outil : recherche_sur_le_web
+- outil : recherche sur le Web
 Arguments:
 requête : « Derniers développements de l'IA » # <-- il s'agit d'une expression Python (remarquez les guillemets)
 num_results: len(_.topics) # <-- expression python pour accéder à la longueur d'une liste
@@ -950,7 +948,7 @@ Run multiple steps in parallel
 
 ```YAML
 - parallèle:
-- outil : recherche_sur_le_web
+- outil : recherche sur le Web
 Arguments:
 requête : « Actualités sur l'IA »
 - outil : weather_check
@@ -1070,7 +1068,7 @@ Run a subworkflow and await its completion
 - rendement:
 flux de travail : données_de_processus
 Arguments:
-données_d'entrée : _. données_raw # <-- expression python
+données d'entrée : _. données brutes # <-- expression Python
 ```
 
 </td>
@@ -1159,7 +1157,7 @@ description : Lister les agents à l'aide d'un appel système
 
 outils:
 - nom : list_agent_docs
-description : Liste tous les documents pour l'agent donné
+description : liste tous les documents pour l'agent donné
 type : système
 système:
 ressource : agent
@@ -1283,7 +1281,7 @@ Arguments:
 requête : chaîne # La requête de recherche pour rechercher avec Brave
 
 sortir:
-résultat : chaîne # Le résultat de la recherche Brave
+résultat : liste[dict] # Une liste de résultats de recherche, chacun contenant : titre, lien, extrait
 ```
 
 </td>
@@ -1358,11 +1356,11 @@ spider_api_key : chaîne # La clé API pour Spider
 
 Arguments:
 url : chaîne # L'URL pour laquelle récupérer les données
-mode : chaîne # Le type de robots d'exploration (par défaut : « scrape »)
-paramètres : dict # (facultatif) Les paramètres de l'API Spider
+paramètres : dict # (facultatif) Les paramètres de l'API Spider
+content_type : chaîne # (facultatif) Le type de contenu à renvoyer. La valeur par défaut est « application/json ». Autres options : « text/csv », « application/xml », « application/jsonl »
 
 sortir:
-documents : liste # Les documents renvoyés par l'araignée
+résultat : liste[dict] # Une liste de résultats, chacun contenant : contenu, erreur, statut, coûts, url
 ```
 
 </td>
@@ -1451,15 +1449,20 @@ Arguments:
 fichier : chaîne | tableau<string># Le fichier codé en base64 à analyser ou un tableau d'URL http/https à charger.
 nom de fichier : chaîne # (facultatif). Le nom de fichier du fichier. La valeur par défaut est un UUID aléatoire. Utilisé uniquement si le fichier est une chaîne codée en base64.
 params : dict # (facultatif) Paramètres supplémentaires pour l'intégration de Llama Parse. Remplace les paramètres de configuration.
-base64 : booléen # Indique si le fichier d'entrée est encodé en base64. La valeur par défaut est false.
+base64 : booléen # Indique si le fichier d'entrée est codé en base64. La valeur par défaut est false.
 
 sortir:
-documents : liste # Les données analysées du document
+documents : liste[Document] # Une liste de documents analysés
 ```
 
 </td>
+<td>
 
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
 </tr>
+
 
 <tr>
 <td> <b>Cloudinary</b> </td>
@@ -1491,10 +1494,40 @@ base64 : chaîne # (Facultatif) Le fichier codé en base64 si return_base64 est
 ```
 
 </td>
-
 <td>
 
 **Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
+
+</td>
+</tr>
+
+<tr>
+<td> <b>Arxiv</b> </td>
+<td>
+
+```YAML
+méthode : recherche # La méthode à utiliser pour l'intégration d'Arxiv
+
+installation:
+# Aucun paramètre de configuration spécifique n'est requis pour Arxiv
+
+Arguments:
+requête : chaîne # La requête de recherche pour la recherche avec Arxiv
+id_list : liste[string] | None # (Facultatif) La liste des identifiants Arxiv à utiliser pour la recherche
+max_results : entier # Le nombre maximal de résultats à renvoyer doit être compris entre 1 et 300 000
+download_pdf : booléen # S'il faut télécharger le PDF des résultats. La valeur par défaut est false.
+sort_by : chaîne # Le critère de tri pour les résultats, options : relevance, lastUpdatedDate, submitDate
+sort_order : chaîne # L'ordre de tri des résultats, options : croissant, décroissant
+
+sortir:
+résultat : liste[dict] # Une liste de résultats de recherche, chacun contenant : entry_id, title, updated, published, authors, summary, comment, journal_ref, doi, primary_category, categories, links, pdf_url, pdf_downloaded
+```
+
+</td>
+
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
 
 </td>
 </tr>
