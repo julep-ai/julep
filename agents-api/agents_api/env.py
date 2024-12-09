@@ -115,10 +115,12 @@ temporal_activity_after_retry_timeout: int = env.int(
     "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
 )
 
+
 def _parse_optional_int(val: str | None) -> int | None:
     if not val or val.lower() == "none":
         return None
     return int(val)
+
 
 # Temporal worker configuration
 temporal_max_concurrent_workflow_tasks: int | None = _parse_optional_int(
