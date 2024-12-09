@@ -6,15 +6,17 @@
 
 import dataclasses
 import logging
-import pickle
 import sys
+import time
 from typing import Any, Optional, Type
 
+import larch.pickle as pickle
 import temporalio.converter
 
 # from beartype import BeartypeConf
 # from beartype.door import is_bearable, is_subhint
 from lz4.frame import compress, decompress
+from temporalio import workflow
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import (
     CompositePayloadConverter,
@@ -22,17 +24,35 @@ from temporalio.converter import (
     EncodingPayloadConverter,
 )
 
+with workflow.unsafe.imports_passed_through():
+    from ..env import debug, testing
+    from ..exceptions import FailedDecodingSentinel, FailedEncodingSentinel
+
 
 def serialize(x: Any) -> bytes:
-    pickled = pickle.dumps(x, protocol=pickle.HIGHEST_PROTOCOL)
+    start_time = time.time()
+    pickled = pickle.dumps(x, protocol=-1)
     compressed = compress(pickled)
+
+    duration = time.time() - start_time
+    if duration > 1:
+        print(
+            f"||| [SERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(x) / 1000}kb"
+        )
 
     return compressed
 
 
 def deserialize(b: bytes) -> Any:
+    start_time = time.time()
     decompressed = decompress(b)
     object = pickle.loads(decompressed)
+
+    duration = time.time() - start_time
+    if duration > 1:
+        print(
+            f"||| [DESERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(b) / 1000}kb"
+        )
 
     return object
 
@@ -97,6 +117,7 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
 
         try:
             data = serialize(value)
+
             return Payload(
                 metadata={
                     "encoding": self.b_encoding,
@@ -106,8 +127,15 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
             )
 
         except Exception as e:
+            if debug or testing:
+                raise e
+
+            # TODO: In production, we don't want to crash the workflow
+            #       But the sentinel object must be handled by the caller
             logging.warning(f"WARNING: Could not encode {value}: {e}")
-            return None
+            # Convert the value to bytes using str() representation if needed
+            error_bytes = str(value).encode("utf-8")
+            return FailedEncodingSentinel(payload_data=error_bytes)
 
     def from_payload(self, payload: Payload, type_hint: Optional[Type] = None) -> Any:
         current_python_version = (
@@ -127,8 +155,13 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
         try:
             return from_payload_data(payload.data, type_hint)
         except Exception as e:
+            if debug or testing:
+                raise e
+
+            # TODO: In production, we don't want to crash the workflow
+            #       But the sentinel object must be handled by the caller
             logging.warning(f"Failed to decode payload with our encoder: {e}")
-            return None
+            return FailedDecodingSentinel(payload_data=payload.data)
 
 
 class PydanticPayloadConverter(CompositePayloadConverter):

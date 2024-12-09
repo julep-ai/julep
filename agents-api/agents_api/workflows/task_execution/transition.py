@@ -3,17 +3,22 @@ from datetime import timedelta
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from ...activities import task_steps
-from ...autogen.openapi_model import (
-    CreateTransitionRequest,
-    Transition,
-    TransitionTarget,
-)
-from ...common.protocol.tasks import PartialTransition, StepContext
-from ...common.retry_policies import DEFAULT_RETRY_POLICY
-
 with workflow.unsafe.imports_passed_through():
-    from ...env import debug, testing
+    from ...activities import task_steps
+    from ...autogen.openapi_model import (
+        CreateTransitionRequest,
+        Transition,
+        TransitionTarget,
+    )
+    from ...common.protocol.tasks import PartialTransition, StepContext
+    from ...common.retry_policies import DEFAULT_RETRY_POLICY
+    from ...env import (
+        debug,
+        temporal_activity_after_retry_timeout,
+        temporal_heartbeat_timeout,
+        temporal_schedule_to_close_timeout,
+        testing,
+    )
 
 
 async def transition(
@@ -50,9 +55,10 @@ async def transition(
             task_steps.transition_step,
             args=[context, transition_request],
             schedule_to_close_timeout=timedelta(
-                seconds=30 if debug or testing else 600
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout
             ),
             retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
 
     except Exception as e:

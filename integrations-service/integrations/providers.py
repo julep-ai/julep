@@ -1,4 +1,5 @@
 from .autogen.Tools import (
+    ArxivSearchArguments,
     # Arguments imports
     BraveSearchArguments,
     # Setup imports
@@ -28,6 +29,7 @@ from .autogen.Tools import (
     WikipediaSearchArguments,
 )
 from .models import (
+    ArxivSearchOutput,
     BaseProvider,
     BaseProviderMethod,
     BraveSearchOutput,
@@ -45,7 +47,7 @@ from .models import (
     LlamaParseFetchOutput,
     ProviderInfo,
     RemoteBrowserOutput,
-    SpiderFetchOutput,
+    SpiderOutput,
     WeatherGetOutput,
     WikipediaSearchOutput,
 )
@@ -96,7 +98,25 @@ spider = BaseProvider(
             method="crawl",
             description="Crawl a website and extract data",
             arguments=SpiderFetchArguments,
-            output=SpiderFetchOutput,
+            output=SpiderOutput,
+        ),
+        BaseProviderMethod(
+            method="links",
+            description="Extract all links from the webpage",
+            arguments=SpiderFetchArguments,
+            output=SpiderOutput,
+        ),
+        BaseProviderMethod(
+            method="screenshot",
+            description="Take a screenshot of the webpage",
+            arguments=SpiderFetchArguments,
+            output=SpiderOutput,
+        ),
+        BaseProviderMethod(
+            method="search",
+            description="Search content within the webpage",
+            arguments=SpiderFetchArguments,
+            output=SpiderOutput,
         ),
     ],
     info=ProviderInfo(
@@ -279,6 +299,25 @@ cloudinary = BaseProvider(
     ),
 )
 
+arxiv = BaseProvider(
+    provider="arxiv",
+    setup=None,
+    methods=[
+        BaseProviderMethod(
+            method="search",
+            description="Search in Arxiv",
+            arguments=ArxivSearchArguments,
+            output=ArxivSearchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://pypi.org/project/arxiv/",
+        docs="https://info.arxiv.org/help/api/index.html",
+        icon="https://arxiv.com/favicon.ico",
+        friendly_name="Arxiv Search",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -290,4 +329,5 @@ available_providers: dict[str, BaseProvider] = {
     "llama_parse": llama_parse,
     "ffmpeg": ffmpeg,
     "cloudinary": cloudinary,
+    "arxiv": arxiv,
 }

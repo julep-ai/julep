@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import Annotated, Callable, Optional
+from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
@@ -54,7 +53,6 @@ async def chat(
     Returns:
         ChatResponse: The chat response.
     """
-
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
@@ -96,7 +94,6 @@ async def chat(
         )
         for ref in doc_references
     ]
-
     # Render the system message
     if situation := chat_context.session.situation:
         system_message = dict(
@@ -163,15 +160,30 @@ async def chat(
                         k: v
                         for k, v in function.model_dump().items()
                         if k not in ["name", "type"]
-                    },
+                    }
+                    if function is not None
+                    else {},
                 },
             }
             formatted_tools.append(tool)
 
-    # If not using Claude model,
-
+    # If not using Claude model
+    # FIXME: Enable formatted_tools once format-tools PR is merged.
     if not is_claude_model:
         formatted_tools = None
+
+    # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
+    # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
+    is_groq_model = settings["model"].lower().startswith("llama-3.1")
+    if is_groq_model:
+        messages = [
+            {
+                k: v
+                for k, v in message.items()
+                if k not in ["tool_calls", "tool_call_id", "user", "continue_", "name"]
+            }
+            for message in messages
+        ]
 
     # Use litellm for other models
     model_response = await litellm.acompletion(

@@ -41,7 +41,6 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
         YieldStep,
     )
-    from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,
         PartialTransition,
@@ -49,7 +48,13 @@ with workflow.unsafe.imports_passed_through():
         StepOutcome,
     )
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
-    from ...env import debug, testing
+    from ...env import (
+        debug,
+        temporal_heartbeat_timeout,
+        temporal_schedule_to_close_timeout,
+        testing,
+    )
+    from ...exceptions import LastErrorInput
     from .helpers import (
         continue_as_child,
         execute_foreach_step,
@@ -121,21 +126,31 @@ GenericStep = RootModel[WorkflowStep]
 # Main workflow definition
 @workflow.defn
 class TaskExecutionWorkflow:
+    last_error: BaseException | None = None
+
+    def __init__(self):
+        self.last_error = None
+
+    @workflow.signal
+    async def set_last_error(self, value: LastErrorInput):
+        self.last_error = value.last_error
+
     # Main workflow run method
     @workflow.run
     async def run(
         self,
         execution_input: ExecutionInput,
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
-        previous_inputs: RemoteList | None = None,
+        previous_inputs: list | None = None,
     ) -> Any:
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
             f" [LOC {start.workflow}.{start.step}]"
         )
 
+        # FIXME: Look into saving arguments to the blob store if necessary
         # 0. Prepare context
-        previous_inputs = previous_inputs or RemoteList([execution_input.arguments])
+        previous_inputs = previous_inputs or [execution_input.arguments]
 
         context = StepContext(
             execution_input=execution_input,
@@ -157,6 +172,7 @@ class TaskExecutionWorkflow:
                 output=context.current_input,
                 next=context.cursor,
                 metadata={},
+                last_error=self.last_error,
             )
 
         # ---
@@ -177,9 +193,12 @@ class TaskExecutionWorkflow:
                     context,
                     #
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else 600
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
                     retry_policy=DEFAULT_RETRY_POLICY,
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
                 workflow.logger.debug(
                     f"Step {context.cursor.step} completed successfully"
@@ -195,11 +214,14 @@ class TaskExecutionWorkflow:
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
 
-        [outcome] = await workflow.execute_local_activity(
+        [outcome] = await workflow.execute_activity(
             load_inputs_remote,
             args=[[outcome]],
-            schedule_to_close_timeout=timedelta(seconds=10 if debug or testing else 60),
+            schedule_to_close_timeout=timedelta(
+                seconds=60 if debug or testing else temporal_schedule_to_close_timeout
+            ),
             retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
 
         # Init state
@@ -235,6 +257,7 @@ class TaskExecutionWorkflow:
                     output=output,
                     type="finish" if context.is_main else "finish_branch",
                     next=None,
+                    last_error=self.last_error,
                 )
                 return output  # <--- Byeeee!
 
@@ -337,7 +360,11 @@ class TaskExecutionWorkflow:
                 workflow.logger.error(f"Error step: {error}")
 
                 state = PartialTransition(type="error", output=error)
-                await transition(context, state)
+                await transition(
+                    context,
+                    state,
+                    last_error=self.last_error,
+                )
 
                 raise ApplicationError(f"Error raised by ErrorWorkflowStep: {error}")
 
@@ -352,6 +379,7 @@ class TaskExecutionWorkflow:
                     output=output,
                     type=yield_transition_type,
                     next=yield_next_target,
+                    last_error=self.last_error,
                 )
 
                 result = await continue_as_child(
@@ -370,6 +398,7 @@ class TaskExecutionWorkflow:
                     args=[context, output],
                     schedule_to_close_timeout=timedelta(days=31),
                     retry_policy=DEFAULT_RETRY_POLICY,
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
 
                 state = PartialTransition(type="resume", output=result)
@@ -413,6 +442,7 @@ class TaskExecutionWorkflow:
                     args=[context, tool_calls_input],
                     schedule_to_close_timeout=timedelta(days=31),
                     retry_policy=DEFAULT_RETRY_POLICY,
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
 
                 # Feed the tool call results back to the model
@@ -422,9 +452,12 @@ class TaskExecutionWorkflow:
                     task_steps.prompt_step,
                     context,
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else 600
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
                     retry_policy=DEFAULT_RETRY_POLICY,
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
                 state = PartialTransition(output=new_response.output, type="resume")
 
@@ -513,6 +546,7 @@ class TaskExecutionWorkflow:
                     args=[context, tool_call],
                     schedule_to_close_timeout=timedelta(days=31),
                     retry_policy=DEFAULT_RETRY_POLICY,
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
 
                 state = PartialTransition(output=tool_call_response, type="resume")
@@ -550,9 +584,12 @@ class TaskExecutionWorkflow:
                     execute_integration,
                     args=[context, tool_name, integration, arguments],
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else 600
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
                     retry_policy=DEFAULT_RETRY_POLICY,
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
 
                 state = PartialTransition(output=tool_call_response)
@@ -591,8 +628,11 @@ class TaskExecutionWorkflow:
                         arguments,
                     ],
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else 600
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
 
                 state = PartialTransition(output=tool_call_response)
@@ -609,8 +649,11 @@ class TaskExecutionWorkflow:
                     execute_system,
                     args=[context, system_call],
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else 600
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout
                     ),
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
 
                 state = PartialTransition(output=tool_call_response)
@@ -620,7 +663,11 @@ class TaskExecutionWorkflow:
                     f"Unhandled step type: {type(context.current_step).__name__}"
                 )
                 state = PartialTransition(type="error", output="Not implemented")
-                await transition(context, state)
+                await transition(
+                    context,
+                    state,
+                    last_error=self.last_error,
+                )
 
                 raise ApplicationError("Not implemented")
 
@@ -629,7 +676,11 @@ class TaskExecutionWorkflow:
 
         # The returned value is the transition finally created
         state = state or PartialTransition(type="error", output="Not implemented")
-        final_state = await transition(context, state)
+        final_state = await transition(
+            context,
+            state,
+            last_error=self.last_error,
+        )
 
         # ---
 
@@ -649,11 +700,14 @@ class TaskExecutionWorkflow:
         )
 
         # Save the final output to the blob store
-        [final_output] = await workflow.execute_local_activity(
+        [final_output] = await workflow.execute_activity(
             save_inputs_remote,
             args=[[final_state.output]],
-            schedule_to_close_timeout=timedelta(seconds=10 if debug or testing else 60),
+            schedule_to_close_timeout=timedelta(
+                seconds=10 if debug or testing else temporal_schedule_to_close_timeout
+            ),
             retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
 
         previous_inputs.append(final_output)

@@ -12,6 +12,20 @@ namespace Sessions;
 // SESSION MODELS
 //
 
+enum SearchMode {
+    hybrid,
+    vector,
+    text,
+}
+
+model RecallOptions {
+    mode: SearchMode = SearchMode.vector;
+    num_search_messages: uint32 = 4;
+    max_query_length: uint32 = 1000;
+    hybrid_alpha: float = 0.7;
+    confidence: float = 0.6;
+}
+
 enum ContextOverflowType {
     /** Truncate the context from the top except the system prompt. */
     truncate,
@@ -68,6 +82,8 @@ model Session {
      * If a tool call is made, the tool's output will be sent back to the model as the model's input.
      * If a tool call is not made, the model's output will be returned as is. */
     auto_run_tools: boolean = false;
+
+    recall_options?: RecallOptions | null = null;
 
     ...HasId;
     ...HasMetadata;

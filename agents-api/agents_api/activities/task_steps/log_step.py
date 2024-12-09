@@ -22,7 +22,7 @@ async def log_step(context: StepContext) -> StepOutcome:
         template: str = context.current_step.log
         output = await render_template(
             template,
-            context.prepare_for_step(include_remote=True),
+            await context.prepare_for_step(include_remote=True),
             skip_vars=["developer_id"],
         )
 

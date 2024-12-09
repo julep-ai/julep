@@ -1,3 +1,9 @@
+from .arxiv import (
+    ArxivSearchOutput as ArxivSearchOutput,
+)
+from .arxiv import (
+    ArxivSearchResult as ArxivSearchResult,
+)
 from .base_models import (
     BaseOutput as BaseOutput,
 )
@@ -10,8 +16,12 @@ from .base_models import (
 from .base_models import (
     ProviderInfo as ProviderInfo,
 )
-from .brave import BraveSearchOutput as BraveSearchOutput
-from .brave import SearchResult as SearchResult
+from .brave import (
+    BraveSearchOutput as BraveSearchOutput,
+)
+from .brave import (
+    SearchResult as SearchResult,
+)
 from .browserbase import (
     BrowserbaseCompleteSessionOutput as BrowserbaseCompleteSessionOutput,
 )
@@ -43,6 +53,11 @@ from .email import EmailOutput as EmailOutput
 from .ffmpeg import FfmpegSearchOutput as FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput as LlamaParseFetchOutput
 from .remote_browser import RemoteBrowserOutput as RemoteBrowserOutput
-from .spider import SpiderFetchOutput as SpiderFetchOutput
+from .spider import (
+    SpiderOutput as SpiderOutput,
+)
+from .spider import (
+    SpiderResponse as SpiderResponse,
+)
 from .weather import WeatherGetOutput as WeatherGetOutput
 from .wikipedia import WikipediaSearchOutput as WikipediaSearchOutput

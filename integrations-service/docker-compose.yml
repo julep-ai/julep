@@ -13,15 +13,16 @@ x--shared-environment: &shared-environment
   CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
   CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
   MAILGUN_PASSWORD: ${MAILGUN_PASSWORD}
+  SENTRY_DSN: ${INTEGRATIONS_SENTRY_DSN}
 
 services:
   integrations:
     image: julepai/integrations:${TAG:-dev}
     build: .
-    
+
     environment:
       <<: *shared-environment
-    
+
     ports:
       - "${INTEGRATIONS_SERVICE_PORT:-8000}:${INTEGRATIONS_SERVICE_PORT:-8000}" # map host to container port
 
@@ -33,6 +34,6 @@ services:
           ignore:
             - ./**/*.pyc
         - action: rebuild
-          path: poetry.lock
+          path: uv.lock
         - action: rebuild
           path: Dockerfile

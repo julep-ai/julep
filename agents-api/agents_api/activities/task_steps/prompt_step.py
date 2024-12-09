@@ -1,9 +1,4 @@
-from typing import Callable
-
-from anthropic.types.beta.beta_message import BetaMessage
 from beartype import beartype
-from langchain_core.tools import BaseTool
-from langchain_core.tools.convert import tool as tool_decorator
 from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
@@ -12,11 +7,10 @@ from ...autogen.openapi_model import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
-from ...common.protocol.tasks import StepContext, StepOutcome
+from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import debug
-from ..utils import get_handler_with_filtered_params
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -39,18 +33,19 @@ def format_tool(tool: Tool) -> dict:
         "function": {"name": tool.name, "description": tool.description},
     }
 
-    if tool.type == "system":
-        handler: Callable = get_handler_with_filtered_params(tool.system)
+    # FIXME: Implement system tools
+    # if tool.type == "system":
+    #     handler: Callable = get_handler_with_filtered_params(tool.system)
 
-        lc_tool: BaseTool = tool_decorator(handler)
+    #     lc_tool: BaseTool = tool_decorator(handler)
 
-        json_schema: dict = lc_tool.get_input_jsonschema()
+    #     json_schema: dict = lc_tool.get_input_jsonschema()
 
-        formatted["function"]["description"] = formatted["function"][
-            "description"
-        ] or json_schema.get("description")
+    #     formatted["function"]["description"] = formatted["function"][
+    #         "description"
+    #     ] or json_schema.get("description")
 
-        formatted["function"]["parameters"] = json_schema
+    #     formatted["function"]["parameters"] = json_schema
 
     # # FIXME: Implement integration tools
     # elif tool.type == "integration":
@@ -72,7 +67,7 @@ EVAL_PROMPT_PREFIX = "$_ "
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
-    context_data: dict = context.prepare_for_step(include_remote=True)
+    context_data: dict = await context.prepare_for_step(include_remote=True)
 
     # If the prompt is a string and starts with $_ then we need to evaluate it
     should_evaluate_prompt = isinstance(prompt, str) and prompt.startswith(
@@ -102,6 +97,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             context_data,
             skip_vars=["developer_id"],
         )
+
+    if not isinstance(context.execution_input, ExecutionInput):
+        raise TypeError("Expected ExecutionInput type for context.execution_input")
 
     # Get settings and run llm
     agent_default_settings: dict = (
@@ -167,9 +165,24 @@ async def prompt_step(context: StepContext) -> StepOutcome:
                 },
             }
             formatted_tools.append(tool)
-
+    # For non-Claude models, we don't need to send tools
+    # FIXME: Enable formatted_tools once format-tools PR is merged.
     if not is_claude_model:
         formatted_tools = None
+
+    # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
+    # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
+    # FIXME: Enable formatted_tools once format-tools PR is merged.
+    is_groq_model = agent_model.lower().startswith("llama-3.1")
+    if is_groq_model:
+        prompt = [
+            {
+                k: v
+                for k, v in message.items()
+                if k not in ["tool_calls", "tool_call_id", "user", "continue_", "name"]
+            }
+            for message in prompt
+        ]
 
     # Use litellm for other models
     completion_data: dict = {

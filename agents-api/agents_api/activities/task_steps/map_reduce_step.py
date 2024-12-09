@@ -20,7 +20,7 @@ async def map_reduce_step(context: StepContext) -> StepOutcome:
         assert isinstance(context.current_step, MapReduceStep)
 
         output = await base_evaluate(
-            context.current_step.over, context.prepare_for_step()
+            context.current_step.over, await context.prepare_for_step()
         )
 
         return StepOutcome(output=output)

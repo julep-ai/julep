@@ -18,7 +18,7 @@ async def for_each_step(context: StepContext) -> StepOutcome:
         assert isinstance(context.current_step, ForeachStep)
 
         output = await base_evaluate(
-            context.current_step.foreach.in_, context.prepare_for_step()
+            context.current_step.foreach.in_, await context.prepare_for_step()
         )
         return StepOutcome(output=output)
 

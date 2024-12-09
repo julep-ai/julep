@@ -16,35 +16,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: "3.12"
+          enable-cache: true
 
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
-
-      - name: Configure Poetry to use .venv
+      - name: Set up python and install dependencies
         run: |
           cd integrations-service
-          poetry config virtualenvs.in-project true
-
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v4
-        with:
-          path: integrations-service/.venv
-          key: ${{ runner.os }}-integrations-service-poetry-${{ hashFiles('integrations-service/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-integrations-service-poetry-
-
-      - name: Install dependencies
-        run: |
-          cd integrations-service
-          poetry install
+          uv python install
+          uv sync --all-extras --dev
 
       - name: Run tests
         run: |
           cd integrations-service
-          poetry run poe test
+          uv run poe test
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }} 
+  group: ${{ github.workflow }}-${{ github.ref }}

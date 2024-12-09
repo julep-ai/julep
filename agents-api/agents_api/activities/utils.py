@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import datetime as dt
 import functools
@@ -9,19 +10,31 @@ import statistics
 import string
 import time
 import urllib.parse
+import zoneinfo
+from collections import deque
+from dataclasses import dataclass
+from threading import Lock as ThreadLock
 from typing import Any, Callable, ParamSpec, TypeVar
 
 import re2
-import zoneinfo
 from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
 
 from ..autogen.openapi_model import SystemDef
+from ..common.nlp import nlp
 from ..common.utils import yaml
 
 T = TypeVar("T")
 R = TypeVar("R")
 P = ParamSpec("P")
+
+
+def chunk_doc(string: str) -> list[str]:
+    """
+    Chunk a string into sentences.
+    """
+    doc = nlp(string)
+    return [" ".join([sent.text for sent in chunk]) for chunk in doc._.chunks]
 
 
 # TODO: We need to make sure that we dont expose any security issues
@@ -54,6 +67,8 @@ ALLOWED_FUNCTIONS = {
     "dump_json": json.dumps,
     "dump_yaml": yaml.dump,
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
+    "nlp": nlp.__call__,
+    "chunk_doc": chunk_doc,
 }
 
 
@@ -378,3 +393,38 @@ def get_handler(system: SystemDef) -> Callable:
             raise NotImplementedError(
                 f"System call not implemented for {system.resource}.{system.operation}"
             )
+
+
+@dataclass
+class RateLimiter:
+    max_requests: int  # Maximum requests per minute
+    window_size: int = 60  # Window size in seconds (1 minute)
+
+    def __post_init__(self):
+        self._requests = deque()
+        self._lock = ThreadLock()  # Thread-safe lock
+        self._async_lock = asyncio.Lock()  # Async-safe lock
+
+    def _clean_old_requests(self):
+        now = time.time()
+        while self._requests and now - self._requests[0] > self.window_size:
+            self._requests.popleft()
+
+    async def acquire(self):
+        async with self._async_lock:
+            with self._lock:
+                now = time.time()
+                self._clean_old_requests()
+
+                if len(self._requests) >= self.max_requests:
+                    return False
+
+                self._requests.append(now)
+                return True
+
+    @property
+    def current_usage(self) -> int:
+        """Return current number of requests in the window"""
+        with self._lock:
+            self._clean_old_requests()
+            return len(self._requests)

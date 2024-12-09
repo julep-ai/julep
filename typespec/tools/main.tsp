@@ -11,6 +11,7 @@ import "./remote_browser.tsp";
 import "./llama_parse.tsp";
 import "./ffmpeg.tsp";
 import "./cloudinary.tsp";
+import "./arxiv.tsp";
 
 namespace Tools;
 

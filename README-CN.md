@@ -1,7 +1,7 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center" id="top">
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
@@ -28,14 +28,12 @@
 ---
 
 > [!注意]
-> 👨‍💻 来参加 devfest.ai 活动了吗？加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 并查看以下详细信息。
->
 > 从[此处](https://dashboard-dev.julep.ai)获取您的 API 密钥。
 
 <details>
-<summary><b>🌟 贡献者和 DevFest.AI 参与者</b>（点击展开）</summary>
+<summary><b>贡献🌟</b>（点击展开）</summary>
 
-## 🌟 招募贡献者！
+## 征集贡献者🌟
 
 我们很高兴欢迎新贡献者加入 Julep 项目！我们创建了几个“好的第一个问题”来帮助您入门。以下是您可以做出贡献的方式：
 
@@ -45,43 +43,36 @@
 
 您的贡献，无论大小，对我们来说都是宝贵的。让我们一起创造一些了不起的东西！🚀
 
-### 🎉 DevFest.AI 2024 年 10 月
-
-令人兴奋的消息！我们将参加 2024 年 10 月的 DevFest.AI！🗓️
-
-- 在本次活动期间为 Julep 做出贡献，就有机会赢得超棒的 Julep 商品和赃物！🎁
-- 与来自世界各地的开发人员一起为 AI 资源库做出贡献并参与精彩的活动。
-- 非常感谢 DevFest.AI 组织这次精彩的活动！
-
-> [!提示]
-> 准备好加入这场有趣的活动了吗？**[发推文表示你正在参与](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** 让我们开始编码吧！🖥️
-
-![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
-
 </details>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 目录</h3>
 
+- [呼吁贡献者🌟]（#call-for-contributors-）
 - [简介](#introduction)
 - [主要特点](#key-features)
 - [快速示例](#quick-example)
 - [安装](#安装)
 - [Python 快速入门 🐍](#python-quick-start-)
 - [Node.js 快速入门🟩](#nodejs-quick-start-)
-- [步骤 1：创建代理](#step-1-create-an-agent)
 - [组件](#components)
 - [心智模型](#mental-model)
 - [概念](#concepts)
 - [理解任务](#understanding-tasks)
 - [任务的生命周期](#lifecycle-of-a-task)
 - [工作流步骤的类型](#types-of-workflow-steps)
+- [常见步骤](#common-steps)
+- [键值步骤](#key-value-steps)
+- [迭代步骤](#iteration-steps)
+- [条件步骤](#conditional-steps)
+- [其他控制流](#other-control-flow)
 - [工具类型](#tool-types)
 - [用户定义的`函数`](#user-defined-functions)
 - [`系统` 工具](#system-tools)
+- [可用的系统资源和操作](#available-system-resources-and-operations)
 - [内置 `integrations`](#built-in-integrations)
--[直接`api_calls`]（#direct-api_calls）
+-[直接`api_calls`](#direct-api_calls)
 - [集成](#integrations)
 - [其他功能](#other-features)
 - [向代理添加工具](#adding-tools-to-agents)
@@ -119,7 +110,7 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 
 1. 🧠 **持久 AI 代理**：在长期交互​​中记住上下文和信息。
 2. 💾 **状态会话**：跟踪过去的互动以获得个性化回应。
-3. 🔄 **多步骤任务**：使用循环和决策构建复杂的多步骤流程。
+3. 🔄 **多步骤任务**：通过循环和决策构建复杂的多步骤流程。
 4. ⏳ **任务管理**：处理可以无限期运行的长时间运行的任务。
 5.🛠️**内置工具**：在您的任务中使用内置工具和外部 API。
 6. 🔧 **自我修复**：Julep 将自动重试失败的步骤、重新发送消息，并确保您的任务顺利运行。
@@ -135,7 +126,7 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 想象一下一个可以执行以下操作的研究 AI 代理：
 
 1. **选择一个主题**，
-2. 针对该主题提出 100 个搜索查询，
+2. 针对该主题提出 30 个搜索查询，
 3. 同时进行网页搜索，
 4. **总结**结果，
 5. 将**摘要发送至 Discord**。
@@ -155,6 +146,9 @@ input_schema:
     topic:
       type: string
       description: The main topic to research
+    num_questions:
+      type: integer
+      description: The number of search queries to generate
 
 # Define the tools that the agent can use
 tools:
@@ -163,12 +157,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d... # dummy key
+        api_key: <your-brave-api-key>
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
+      url: https://discord.com/api/webhooks/<your-webhook-id>/<your-webhook-token>
       method: POST
       headers:
         Content-Type: application/json
@@ -180,52 +174,57 @@ tools:
 
 # Define the main workflow
 main:
-  - prompt:
-      - role: system
-        content: >-
-          You are a research assistant.
-          Generate 100 diverse search queries related to the topic:
-          {{inputs[0].topic}}
+- prompt:
+    - role: system
+      content: >-
+        You are a research assistant.
+        Generate {{inputs[0].num_questions|default(30, true)}} diverse search queries related to the topic:
+        {{inputs[0].topic}}
 
-          Write one query per line.
-    unwrap: true
+        Write one query per line.
+  unwrap: true
 
-  # Evaluate the search queries using a simple python expression
-  - evaluate:
-      search_queries: "_.split('\n')"
+# Evaluate the search queries using a simple python expression
+- evaluate:
+    search_queries: "_.split(NEWLINE)"
 
-  # Run the web search in parallel for each query
-  - over: "_.search_queries"
-    map:
-      tool: web_search
-      arguments:
-        query: "_"
-    parallelism: 10
+# Run the web search in parallel for each query
+- over: "_.search_queries"
+  map:
+    tool: web_search
+    arguments:
+      query: "_"
+  parallelism: 5
 
-  # Collect the results from the web search
-  - evaluate:
-      results: "'\n'.join([item.result for item in _])"
+# Collect the results from the web search
+- evaluate:
+    search_results: _
 
-  # Summarize the results
-  - prompt:
-      - role: system
-        content: >
-          You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
-          The summary should be well-structured, informative, and highlight key findings and insights:
-          {{_.results}}
-    unwrap: true
-    settings:
-      model: gpt-4o-mini
+# Summarize the results
+- prompt:
+    - role: system
+      content: >
+        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
+        The summary should be well-structured, informative, and highlight key findings and insights. Keep the summary concise and to the point.
+        The length of the summary should be less than 150 words.
+        Here are the search results:
+        {{_.search_results}}
+  unwrap: true
+  settings:
+    model: gpt-4o-mini
+
+- evaluate:
+    discord_message: |-
+      f'''
+      **Research Summary for {inputs[0].topic}**
+      {_}
+      '''
 
   # Send the summary to Discord
-  - tool: discord_webhook
-    arguments:
-      content: |-
-        f'''
-        **Research Summary for {inputs[0].topic}**
-
-        {_}
-        '''
+- tool: discord_webhook
+  arguments:
+    json_: 
+      content: _.discord_message[:2000] # Discord has a 2000 character limit
 ```
 
 在这个例子中，Julep 将自动管理并行执行，重试失败的步骤，重新发送 API 请求，并保持任务可靠运行直到完成。
@@ -331,6 +330,7 @@ description: Create a story based on an idea.
 
 tools:
   - name: research_wikipedia
+    type: integration
     integration:
       provider: wikipedia
       method: search
@@ -1143,8 +1143,6 @@ These are function signatures that you can give the model to choose from, simila
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP] > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
-
 ### `system` tools
 
 Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
@@ -1224,7 +1222,7 @@ Additional operations available for some resources:
 
 Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-> [!TIP] > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> [!TIP] > **Example cookbook**: [cookbooks/06-browser-use.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb)
 
 ### Built-in `integrations`
 
@@ -1232,7 +1230,7 @@ Julep comes with a number of built-in integrations (as described in the section 
 
 See [Integrations](#integrations) for details on the available integrations.
 
-> [!TIP] > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+> [!TIP] > **Example cookbook**: [cookbooks/01-website-crawler.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb)
 
 ### Direct `api_calls`
 
@@ -1283,14 +1281,14 @@ api_key: string # Brave Search 的 API 密钥
 query: string # 使用 Brave 搜索的搜索查询
 
 输出：
-result: string # Brave Search 的结果
+result: list[dict] # 搜索结果列表，每个结果包含：标题、链接、摘要
 ```
 
 </td>
 
 <td>
 
-**Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+**Example cookbook**: [cookbooks/02-sarcastic-news-headline-generator.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/02-sarcastic-news-headline-generator.ipynb)
 
 </td>
 </tr>
@@ -1313,6 +1311,11 @@ documents: list # 从 URL 加载的文档
 
 </td>
 
+<td>
+
+**Example cookbook**: [cookbooks/06-browser-use.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb)
+
+</td>
 </tr>
 <tr>
 <td> <b>Email</b> </td>
@@ -1353,18 +1356,18 @@ spider_api_key: string # Spider 的 API 密钥
 
 参数：
 url: string # 获取数据的 URL
-mode: string # 爬虫的类型（默认值：“scrape”）
 params: dict # （可选）Spider API 的参数
+content_type：字符串 #（可选）要返回的内容类型。默认为“application/json”。其他选项：“text/csv”、“application/xml”、“application/jsonl”
 
 输出：
-documents: list # 蜘蛛返回的文档
+result: list[dict] # 结果列表，每个结果包含：内容、错误、状态、费用、网址
 ```
 
 </td>
 
 <td>
 
-**Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+**Example cookbook**: [cookbooks/01-website-crawler.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb)
 
 </td>
 </tr>
@@ -1387,7 +1390,7 @@ result: string # 指定位置的天气数据
 
 <td>
 
-**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
 
 </td>
 </tr>
@@ -1399,7 +1402,7 @@ result: string # 指定位置的天气数据
 ```yaml
 参数：
 query: string # 搜索查询字符串
-load_max_docs：整数#要加载的最大文档数（默认值：2）
+load_max_docs：整数 #（可选）要加载的最大文档数。默认值为 2。
 
 输出：
 documents: list # 从 Wikipedia 搜索返回的文档
@@ -1409,10 +1412,126 @@ documents: list # 从 Wikipedia 搜索返回的文档
 
 <td>
 
-**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
 
 </td>
 </tr>
+
+<tr>
+<td> <b>FFmpeg</b> </td>
+<td>
+
+```yaml
+参数：
+cmd: string # 要执行的 FFmpeg 命令
+file: string # 要处理的 base64 编码文件
+
+输出：
+fileoutput: string # FFmpeg 命令以 base64 编码输出的文件
+result: boolean # FFmpeg命令是否执行成功
+mime_type: string # 输出文件的 MIME 类型
+```
+
+</td>
+
+</tr>
+
+<tr>
+<td> <b>Llama Parse</b> </td>
+<td>
+
+```yaml
+设置：
+llamaparse_api_key: string # Llama Parse 的 API 密钥
+params: dict #（可选）Llama Parse 集成的附加参数
+
+参数：
+文件：字符串 | 数组<string># 要解析的 base64 编码文件或要加载的 http/https URL 数组。
+filename：string #（可选）。文件的文件名。默认为随机 UUID。仅当文件是 base64 编码字符串时才使用。
+params: dict #（可选）Llama Parse 集成的附加参数。覆盖设置参数。
+base64：boolean # 输入文件是否为 base64 编码。默认为 false。
+
+输出：
+documents: list[Document] # 已解析文档的列表
+```
+
+</td>
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
+</tr>
+
+
+<tr>
+<td> <b>Cloudinary</b> </td>
+<td>
+
+```yaml
+
+方法：media_upload | media_edit # 用于 Cloudinary 集成的方法
+
+设置：
+cloudinary_cloud_name: string # 您的 Cloudinary 云名称
+cloudinary_api_key: string # 您的 Cloudinary API 密钥
+cloudinary_api_secret: string # 您的 Cloudinary API 密钥
+params: dict # （可选）Cloudinary 集成的附加参数
+
+参数：
+file: string # 文件上传的 URL。仅适用于 media_upload 方法。
+upload_params：dict #（可选）上传的附加参数。仅适用于 media_upload 方法。
+public_id：字符串 #（可选）文件的公共 ID。对于 media_edit 方法，它是必需的。对于 media_upload 方法，它是可选的。默认为随机 UUID。
+transformation：list[dict] # 应用于文件的转换。仅适用于 media_edit 方法。
+return_base64: boolean # 是否以 base64 编码返回文件。默认为 false。
+
+输出：
+url：string # 上传文件的 URL。仅适用于 media_upload 方法。
+meta_data: dict # 来自上传响应的附加元数据。仅适用于 media_upload 方法。
+public_id: string # 上传文件的公共 ID。仅适用于 media_upload 方法。
+经过转换的 URL：字符串 #（可选）转换后的 URL。仅适用于 media_edit 方法。
+base64：字符串#（可选）如果 return_base64 为真，则为 base64 编码的文件。
+```
+
+</td>
+<td>
+
+**Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
+
+</td>
+</tr>
+
+<tr>
+<td> <b>Arxiv</b> </td>
+<td>
+
+```yaml
+方法：搜索#用于 Arxiv 集成的方法
+
+设置：
+# Arxiv 不需要任何特殊设置参数
+
+参数：
+query: string # 使用 Arxiv 搜索的搜索查询
+id_list：list[string] | None # （可选）要搜索的 Arxiv ID 列表
+max_results: 整数 # 返回的最大结果数，必须介于 1 到 300000 之间
+download_pdf：boolean # 是否下载结果的 PDF。默认为 false。
+sort_by: string # 结果的排序标准，选项：relevance、lastUpdatedDate、submittedDate
+sort_order: string # 结果的排序顺序，选项：升序、降序
+
+输出：
+result: list[dict] # 搜索结果列表，每个结果包含：entry_id、title、updated、published、authors、summary、comment、journal_ref、doi、primary_category、categories、links、pdf_url、pdf_downloaded
+```
+
+</td>
+
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
+</tr>
+
 </table>
 
 For more details, refer to our [Integrations Documentation](#integrations).

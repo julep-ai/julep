@@ -1,7 +1,7 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center" id="top">
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
@@ -28,14 +28,12 @@
 ---
 
 > [!注意]
-> 👨‍💻 devfest.ai イベントに参加しませんか? [Discord](https://discord.com/invite/JTSBGRZrzj) に参加して、以下の詳細を確認してください。
->
 > API キーを [こちら](https://dashboard-dev.julep.ai) から取得します。
 
 <details>
-<summary><b>🌟 貢献者とDevFest.AI参加者</b>（クリックして拡大）</summary>
+<summary><b>貢献🌟</b>（クリックして拡大）</summary>
 
-## 🌟 貢献者を募集します!
+## 貢献者募集🌟
 
 Julep プロジェクトに新しい貢献者を迎えられることを嬉しく思います。プロジェクトを始めるのに役立つ「最初の良い問題」をいくつか作成しました。貢献する方法は次のとおりです。
 
@@ -45,41 +43,34 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 
 あなたの貢献は、大小を問わず私たちにとって貴重です。一緒に素晴らしいものを作りましょう！🚀
 
-### 🎉 DevFest.AI 2024年10月
-
-嬉しいニュースです！2024 年 10 月を通して DevFest.AI に参加します！🗓️
-
-- このイベント中に Julep に貢献すると、素晴らしい Julep のグッズや景品を獲得するチャンスが得られます! 🎁
-- 世界中の開発者とともに AI リポジトリに貢献し、素晴らしいイベントに参加しましょう。
-- この素晴らしい取り組みを企画してくださった DevFest.AI に心から感謝します。
-
-> [!ヒント]
-> 楽しみに参加する準備はできましたか? **[参加することをツイート](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)**して、コーディングを始めましょう! 🖥️
-
-![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
-
 </details>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 目次</h3>
 
+- [貢献者募集🌟](#call-for-contributors-)
 - [はじめに](#introduction)
 - [主な特徴](#key-features)
 - [簡単な例](#quick-example)
 - [インストール](#installation)
 - [Python クイックスタート 🐍](#python-quick-start-)
 - [Node.js クイック スタート 🟩](#nodejs-quick-start-)
-- [ステップ 1: エージェントを作成する](#step-1-create-an-agent)
 - [コンポーネント](#components)
 - [メンタルモデル](#mental-model)
 - [コンセプト](#concepts)
 - [タスクの理解](#understanding-tasks)
 - [タスクのライフサイクル](#lifecycle-of-a-task)
 - [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [共通手順](#common-steps)
+- [キーと値のステップ](#key-value-steps)
+- [反復ステップ](#iteration-steps)
+- [条件付きステップ](#conditional-steps)
+- [その他の制御フロー](#other-control-flow)
 - [ツールの種類](#tool-types)
 - [ユーザー定義の `functions`](#user-defined-functions)
 - [`システム` ツール](#system-tools)
+- [利用可能な `system` リソースと操作](#available-system-resources-and-operations)
 - [組み込みの `integrations`](#built-in-integrations)
 - [直接の `api_calls`](#direct-api_calls)
 - [統合](#integrations)
@@ -135,7 +126,7 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 次のことができる研究 AI エージェントを想像してください。
 
 1. **トピックを選ぶ**、
-2. そのトピックについて**100個の検索クエリを考え出す**
+2. そのトピックについて**30個の検索クエリを考え出す**
 3. ウェブ検索を並行して実行する
 4. 結果を**要約**します。
 5. **要約を Discord に送信**します。
@@ -155,6 +146,9 @@ input_schema:
     topic:
       type: string
       description: The main topic to research
+    num_questions:
+      type: integer
+      description: The number of search queries to generate
 
 # Define the tools that the agent can use
 tools:
@@ -163,12 +157,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d... # dummy key
+        api_key: <your-brave-api-key>
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
+      url: https://discord.com/api/webhooks/<your-webhook-id>/<your-webhook-token>
       method: POST
       headers:
         Content-Type: application/json
@@ -180,52 +174,57 @@ tools:
 
 # Define the main workflow
 main:
-  - prompt:
-      - role: system
-        content: >-
-          You are a research assistant.
-          Generate 100 diverse search queries related to the topic:
-          {{inputs[0].topic}}
+- prompt:
+    - role: system
+      content: >-
+        You are a research assistant.
+        Generate {{inputs[0].num_questions|default(30, true)}} diverse search queries related to the topic:
+        {{inputs[0].topic}}
 
-          Write one query per line.
-    unwrap: true
+        Write one query per line.
+  unwrap: true
 
-  # Evaluate the search queries using a simple python expression
-  - evaluate:
-      search_queries: "_.split('\n')"
+# Evaluate the search queries using a simple python expression
+- evaluate:
+    search_queries: "_.split(NEWLINE)"
 
-  # Run the web search in parallel for each query
-  - over: "_.search_queries"
-    map:
-      tool: web_search
-      arguments:
-        query: "_"
-    parallelism: 10
+# Run the web search in parallel for each query
+- over: "_.search_queries"
+  map:
+    tool: web_search
+    arguments:
+      query: "_"
+  parallelism: 5
 
-  # Collect the results from the web search
-  - evaluate:
-      results: "'\n'.join([item.result for item in _])"
+# Collect the results from the web search
+- evaluate:
+    search_results: _
 
-  # Summarize the results
-  - prompt:
-      - role: system
-        content: >
-          You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
-          The summary should be well-structured, informative, and highlight key findings and insights:
-          {{_.results}}
-    unwrap: true
-    settings:
-      model: gpt-4o-mini
+# Summarize the results
+- prompt:
+    - role: system
+      content: >
+        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
+        The summary should be well-structured, informative, and highlight key findings and insights. Keep the summary concise and to the point.
+        The length of the summary should be less than 150 words.
+        Here are the search results:
+        {{_.search_results}}
+  unwrap: true
+  settings:
+    model: gpt-4o-mini
+
+- evaluate:
+    discord_message: |-
+      f'''
+      **Research Summary for {inputs[0].topic}**
+      {_}
+      '''
 
   # Send the summary to Discord
-  - tool: discord_webhook
-    arguments:
-      content: |-
-        f'''
-        **Research Summary for {inputs[0].topic}**
-
-        {_}
-        '''
+- tool: discord_webhook
+  arguments:
+    json_: 
+      content: _.discord_message[:2000] # Discord has a 2000 character limit
 ```
 
 この例では、Julep は並列実行を自動的に管理し、失敗したステップを再試行し、API リクエストを再送信し、タスクが完了するまで確実に実行し続けます。
@@ -331,6 +330,7 @@ description: Create a story based on an idea.
 
 tools:
   - name: research_wikipedia
+    type: integration
     integration:
       provider: wikipedia
       method: search
@@ -397,7 +397,7 @@ plot_ideas: load_yaml(_.split('```yaml')[1].split('```')[0].ストリップ())
 
           Think about the plot ideas critically. Combine the plot ideas with the results from Wikipedia to create a detailed plot for a story.
           Write down all your notes and thoughts.
-          Then finally write the plot as a yaml object inside ```レスポンスの最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
+          Then finally write the plot as a yaml object inside ```応答の最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
 
           ```yaml
           title: "<string>"
@@ -535,7 +535,7 @@ plot_ideas: load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip())
 in: _.research_queries
 する：
 ツール: research_wikipedia
-引数:
+議論：
 クエリ: _
 
 - 評価する：
@@ -1143,8 +1143,6 @@ These are function signatures that you can give the model to choose from, simila
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP] > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
-
 ### `system` tools
 
 Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
@@ -1224,7 +1222,7 @@ Additional operations available for some resources:
 
 Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-> [!TIP] > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> [!TIP] > **Example cookbook**: [cookbooks/06-browser-use.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb)
 
 ### Built-in `integrations`
 
@@ -1232,7 +1230,7 @@ Julep comes with a number of built-in integrations (as described in the section 
 
 See [Integrations](#integrations) for details on the available integrations.
 
-> [!TIP] > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+> [!TIP] > **Example cookbook**: [cookbooks/01-website-crawler.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb)
 
 ### Direct `api_calls`
 
@@ -1283,14 +1281,14 @@ api_key: 文字列 # Brave SearchのAPIキー
 query: 文字列 # Braveで検索するための検索クエリ
 
 出力：
-result: 文字列 # Brave Searchの結果
+result: list[dict] # 検索結果のリスト。それぞれにタイトル、リンク、スニペットが含まれます。
 ```
 
 </td>
 
 <td>
 
-**Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+**Example cookbook**: [cookbooks/02-sarcastic-news-headline-generator.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/02-sarcastic-news-headline-generator.ipynb)
 
 </td>
 </tr>
@@ -1308,11 +1306,16 @@ session_id: 文字列 # (オプション) BrowserBaseのセッションID
 urls: list[string] # BrowserBaseで読み込むURL
 
 出力：
-documents: list # URLから読み込まれたドキュメント
+ドキュメント: リスト # URLから読み込まれたドキュメント
 ```
 
 </td>
 
+<td>
+
+**Example cookbook**: [cookbooks/06-browser-use.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb)
+
+</td>
 </tr>
 <tr>
 <td> <b>Email</b> </td>
@@ -1353,18 +1356,18 @@ spider_api_key: 文字列 # SpiderのAPIキー
 
 引数:
 url: 文字列 # データを取得するURL
-mode: 文字列 # クローラーのタイプ (デフォルト: "scrape")
 params: dict # (オプション) Spider APIのパラメータ
+content_type: 文字列 # (オプション) 返されるコンテンツ タイプ。デフォルトは「application/json」です。その他のオプション: 「text/csv」、「application/xml」、「application/jsonl」
 
 出力：
-ドキュメント: リスト # スパイダーから返されたドキュメント
+result: list[dict] # 結果のリスト。それぞれにコンテンツ、エラー、ステータス、コスト、URLが含まれます。
 ```
 
 </td>
 
 <td>
 
-**Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+**Example cookbook**: [cookbooks/01-website-crawler.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb)
 
 </td>
 </tr>
@@ -1387,7 +1390,7 @@ location: 文字列 # 気象データを取得する場所
 
 <td>
 
-**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
 
 </td>
 </tr>
@@ -1399,7 +1402,7 @@ location: 文字列 # 気象データを取得する場所
 ```ヤム
 引数:
 query: 文字列 # 検索クエリ文字列
-load_max_docs: 整数 # 読み込むドキュメントの最大数 (デフォルト: 2)
+load_max_docs: 整数 # (オプション) ロードするドキュメントの最大数。デフォルトは 2 です。
 
 出力：
 ドキュメント: リスト # Wikipedia 検索から返されたドキュメント
@@ -1409,10 +1412,126 @@ load_max_docs: 整数 # 読み込むドキュメントの最大数 (デフォル
 
 <td>
 
-**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
 
 </td>
 </tr>
+
+<tr>
+<td> <b>FFmpeg</b> </td>
+<td>
+
+```ヤム
+引数:
+cmd: 文字列 # 実行するFFmpegコマンド
+file: 文字列 # 処理するbase64エンコードされたファイル
+
+出力：
+fileoutput: 文字列 # FFmpeg コマンドからの出力ファイル（base64 エンコード）
+結果: ブール値 # FFmpeg コマンドが正常に実行されたかどうか
+mime_type: 文字列 # 出力ファイルのMIMEタイプ
+```
+
+</td>
+
+</tr>
+
+<tr>
+<td> <b>Llama Parse</b> </td>
+<td>
+
+```ヤム
+設定：
+llamaparse_api_key: string # Llama Parse の API キー
+params: dict # (オプション) Llama Parse 統合の追加パラメータ
+
+引数:
+ファイル: 文字列 | 配列<string># 解析する base64 でエンコードされたファイル、または読み込む http/https URL の配列。
+filename: 文字列 # (オプション)。ファイルのファイル名。デフォルトはランダムな UUID です。ファイルが base64 でエンコードされた文字列の場合にのみ使用されます。
+params: dict # (オプション) Llama Parse 統合の追加パラメータ。セットアップパラメータを上書きします。
+base64: boolean # 入力ファイルが base64 でエンコードされているかどうか。デフォルトは false です。
+
+出力：
+documents: list[Document] # 解析されたドキュメントのリスト
+```
+
+</td>
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
+</tr>
+
+
+<tr>
+<td> <b>Cloudinary</b> </td>
+<td>
+
+```ヤム
+
+method: media_upload | media_edit # Cloudinary統合に使用するメソッド
+
+設定：
+cloudinary_cloud_name: 文字列 # Cloudinary クラウド名
+cloudinary_api_key: 文字列 # Cloudinary API キー
+cloudinary_api_secret: 文字列 # Cloudinary API シークレット
+params: dict # (オプション) Cloudinary統合の追加パラメータ
+
+引数:
+file: 文字列 # ファイルのアップロード先の URL。media_upload メソッドでのみ使用できます。
+upload_params: dict # (オプション) アップロード用の追加パラメータ。media_upload メソッドでのみ使用できます。
+public_id: 文字列 # (オプション) ファイルのパブリック ID。media_edit メソッドの場合は必須です。media_upload メソッドの場合はオプションです。デフォルトはランダムな UUID です。
+transformation: list[dict] # ファイルに適用する変換。media_edit メソッドでのみ使用できます。
+return_base64: boolean # ファイルを base64 エンコードで返すかどうか。デフォルトは false です。
+
+出力：
+url: 文字列 # アップロードされたファイルの URL。media_upload メソッドでのみ使用できます。
+meta_data: dict # アップロード応答からの追加メタデータ。media_upload メソッドでのみ使用できます。
+public_id: 文字列 # アップロードされたファイルのパブリック ID。media_upload メソッドでのみ使用できます。
+transformed_url: 文字列 # (オプション) 変換された URL。media_edit メソッドでのみ使用できます。
+base64: 文字列 # (オプション) return_base64 が true の場合、base64 でエンコードされたファイル。
+```
+
+</td>
+<td>
+
+**Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
+
+</td>
+</tr>
+
+<tr>
+<td> <b>Arxiv</b> </td>
+<td>
+
+```ヤム
+method: search # Arxiv統合に使用するメソッド
+
+設定：
+# Arxivには特別な設定パラメータは必要ありません
+
+引数:
+query: 文字列 # Arxivで検索するための検索クエリ
+id_list: list[string] | None # (オプション) 検索するArxiv IDのリスト
+max_results: 整数 # 返される結果の最大数は 1 から 300000 の間でなければなりません
+download_pdf: boolean # 結果の PDF をダウンロードするかどうか。デフォルトは false です。
+sort_by: 文字列 # 結果の並べ替え基準。オプション: 関連性、lastUpdatedDate、submittedDate
+sort_order: 文字列 # 結果の並べ替え順序。オプション: 昇順、降順
+
+出力：
+result: list[dict] # 検索結果のリスト。それぞれに、entry_id、title、updated、published、authors、summary、comment、journal_ref、doi、primary_category、categories、links、pdf_url、pdf_downloaded が含まれます。
+```
+
+</td>
+
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
+</tr>
+
 </table>
 
 For more details, refer to our [Integrations Documentation](#integrations).

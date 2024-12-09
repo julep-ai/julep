@@ -21,17 +21,13 @@ async def execute_integration(
     setup: ExecutionSetup | None = None,
     arguments: ExecutionArguments,
 ) -> ExecutionResponse:
-    provider_obj: BaseProvider | None = getattr(available_providers, provider, None)
-
-    if not provider_obj:
+    provider_obj = getattr(available_providers, provider, None)
+    if not provider_obj or not isinstance(provider_obj, BaseProvider):
         raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
 
-    assert isinstance(provider_obj, BaseProvider)
-
-    if method is None:
-        method = provider_obj.methods[0].method
-
-    elif method not in [method.method for method in provider_obj.methods]:
+    method = method or provider_obj.methods[0].method
+    method_config = next((m for m in provider_obj.methods if m.method == method), None)
+    if not method_config:
         raise HTTPException(
             status_code=400, detail=f"Unknown method: {method} for provider: {provider}"
         )
@@ -41,28 +37,22 @@ async def execute_integration(
         package="integrations",
     )
 
-    execution_function = getattr(provider_module, method)
+    if (
+        setup is not None
+        and provider_obj.setup
+        and not isinstance(setup, provider_obj.setup)
+    ):
+        setup = provider_obj.setup(**setup.model_dump())
 
-    setup_obj = setup
+    arguments = (
+        method_config.arguments(**arguments.model_dump())
+        if not isinstance(arguments, method_config.arguments)
+        else arguments
+    )
 
-    if setup is not None:
-        setup_class = provider_obj.setup
-
-        if setup_class and not isinstance(setup, setup_class):
-            setup_obj = setup_class(**setup.model_dump())
-
-    arguments_class = next(
-        m for m in provider_obj.methods if m.method == method
-    ).arguments
-
-    if not isinstance(arguments, arguments_class):
-        parsed_arguments = arguments_class(**arguments.model_dump())
-    else:
-        parsed_arguments = arguments
     try:
-        if setup_obj:
-            return await execution_function(setup=setup_obj, arguments=parsed_arguments)
-        else:
-            return await execution_function(arguments=parsed_arguments)
+        return await getattr(provider_module, method)(
+            **({"setup": setup} if setup else {}), arguments=arguments
+        )
     except BaseException as e:
         return ExecutionError(error=str(e))

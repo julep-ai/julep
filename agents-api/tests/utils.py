@@ -1,7 +1,8 @@
 import asyncio
-import io
 import logging
 from contextlib import asynccontextmanager, contextmanager
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
 from unittest.mock import patch
 
 from botocore import exceptions
@@ -87,9 +88,10 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
         object="text_completion",
     )
 
-    with patch("agents_api.clients.litellm.aembedding") as embed, patch(
-        "agents_api.clients.litellm.acompletion"
-    ) as acompletion:
+    with (
+        patch("agents_api.clients.litellm.aembedding") as embed,
+        patch("agents_api.clients.litellm.acompletion") as acompletion,
+    ):
         embed.return_value = [[1.0] * EMBEDDING_SIZE]
         acompletion.return_value = mock_model_response
 
@@ -108,49 +110,63 @@ def patch_integration_service(output: dict = {"result": "ok"}):
 
 @contextmanager
 def patch_s3_client():
+    @dataclass
+    class AsyncBytesIO:
+        content: bytes
+
+        async def read(self) -> bytes:
+            return self.content
+
+    @dataclass
     class InMemoryS3Client:
-        def __init__(self):
+        store: Optional[Dict[str, Dict[str, Any]]] = None
+
+        def __post_init__(self):
             self.store = {}
 
-        def list_buckets(self):
-            return {"Buckets": [{"Name": bucket} for bucket in self.store.keys()]}
-
-        def create_bucket(self, Bucket):
-            self.store[Bucket] = {}
-
-        def head_object(self, Bucket, Key):
-            obj = self.store.get(Bucket, {}).get(Key)
-
+        def _get_object_or_raise(self, bucket: str, key: str, operation: str):
+            obj = self.store.get(bucket, {}).get(key)
             if obj is None:
                 raise exceptions.ClientError(
-                    {"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject"
+                    {"Error": {"Code": "404", "Message": "Not Found"}}, operation
                 )
-
             return obj
 
-        def put_object(self, Bucket, Key, Body):
-            self.store[Bucket] = self.store.get(Bucket, {})
-            self.store[Bucket][Key] = Body
+        async def list_buckets(self):
+            return {"Buckets": [{"Name": bucket} for bucket in self.store]}
 
-        def get_object(self, Bucket, Key):
-            obj = self.store.get(Bucket, {}).get(Key)
+        async def create_bucket(self, Bucket):
+            self.store.setdefault(Bucket, {})
 
-            if obj is None:
-                raise exceptions.ClientError(
-                    {"Error": {"Code": "404", "Message": "Not Found"}}, "GetObject"
-                )
+        async def head_object(self, Bucket, Key):
+            return self._get_object_or_raise(Bucket, Key, "HeadObject")
 
-            file_io = io.BytesIO(obj)
+        async def put_object(self, Bucket, Key, Body):
+            self.store.setdefault(Bucket, {})[Key] = Body
 
-            return {"Body": file_io}
+        async def get_object(self, Bucket, Key):
+            obj = self._get_object_or_raise(Bucket, Key, "GetObject")
+            return {"Body": AsyncBytesIO(obj)}
 
-        def delete_object(self, Bucket, Key):
-            self.store[Bucket] = self.store.get(Bucket, {})
-            del self.store[Bucket][Key]
+        async def delete_object(self, Bucket, Key):
+            if Bucket in self.store:
+                self.store[Bucket].pop(Key, None)
 
-    in_memory_s3_client = InMemoryS3Client()
+    class MockSession:
+        s3_client = InMemoryS3Client()
 
-    with patch("agents_api.clients.s3.get_s3_client") as get_s3_client:
-        get_s3_client.return_value = in_memory_s3_client
+        async def __aenter__(self):
+            return self.s3_client
 
-        yield get_s3_client
+        async def __aexit__(self, *_):
+            pass
+
+    mock_session = type(
+        "MockSessionFactory",
+        (),
+        {"create_client": lambda self, service_name, **kwargs: MockSession()},
+    )()
+
+    with patch("agents_api.clients.async_s3.get_session") as get_session:
+        get_session.return_value = mock_session
+        yield mock_session

@@ -4,7 +4,7 @@ from beartype import beartype
 from temporalio import activity
 
 from ...autogen.openapi_model import TransitionTarget, YieldStep
-from ...common.protocol.tasks import StepContext, StepOutcome
+from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from .base_evaluate import base_evaluate
@@ -16,6 +16,9 @@ async def yield_step(context: StepContext) -> StepOutcome:
     try:
         assert isinstance(context.current_step, YieldStep)
 
+        if not isinstance(context.execution_input, ExecutionInput):
+            raise TypeError("Expected ExecutionInput type for context.execution_input")
+
         all_workflows = context.execution_input.task.workflows
         workflow = context.current_step.workflow
         exprs = context.current_step.arguments
@@ -25,7 +28,7 @@ async def yield_step(context: StepContext) -> StepOutcome:
         ], f"Workflow {workflow} not found in task"
 
         # Evaluate the expressions in the arguments
-        arguments = await base_evaluate(exprs, context.prepare_for_step())
+        arguments = await base_evaluate(exprs, await context.prepare_for_step())
 
         # Transition to the first step of that workflow
         transition_target = TransitionTarget(

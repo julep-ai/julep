@@ -1,7 +1,7 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md) </sup>
 
 <div align="center" id="top">
- <img src="https://github.com/user-attachments/assets/10ba11e4-4ced-400e-a400-ee0f72541780" alt="julep" width="640" height="320" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
@@ -1143,8 +1143,6 @@ main:
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP] > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
-
 ### `system` tools
 
 Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
@@ -1224,7 +1222,7 @@ Additional operations available for some resources:
 
 Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-> [!TIP] > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> [!TIP] > **Example cookbook**: [cookbooks/06-browser-use.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb)
 
 ### Built-in `integrations`
 
@@ -1232,7 +1230,7 @@ Julep comes with a number of built-in integrations (as described in the section 
 
 See [Integrations](#integrations) for details on the available integrations.
 
-> [!TIP] > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+> [!TIP] > **Example cookbook**: [cookbooks/01-website-crawler.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb)
 
 ### Direct `api_calls`
 
@@ -1283,14 +1281,14 @@ arguments:
   query: string # The search query for searching with Brave
 
 output:
-  result: string # The result of the Brave Search
+  result: list[dict] # A list of search results, each containing: title, link, snippet
 ```
 
 </td>
 
 <td>
 
-**Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+**Example cookbook**: [cookbooks/02-sarcastic-news-headline-generator.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/02-sarcastic-news-headline-generator.ipynb)
 
 </td>
 </tr>
@@ -1313,6 +1311,11 @@ output:
 
 </td>
 
+<td>
+
+**Example cookbook**: [cookbooks/06-browser-use.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb)
+
+</td>
 </tr>
 <tr>
 <td> <b>Email</b> </td>
@@ -1353,18 +1356,18 @@ setup:
 
 arguments:
   url: string # The URL for which to fetch data
-  mode: string # The type of crawlers (default: "scrape")
   params: dict # (Optional) The parameters for the Spider API
+  content_type: string # (Optional) The content type to return. Default is "application/json". Other options: "text/csv", "application/xml", "application/jsonl"
 
 output:
-  documents: list # The documents returned from the spider
+  result: list[dict] # A list of results, each containing: content, error, status, costs, url
 ```
 
 </td>
 
 <td>
 
-**Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+**Example cookbook**: [cookbooks/01-website-crawler.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb)
 
 </td>
 </tr>
@@ -1387,7 +1390,7 @@ output:
 
 <td>
 
-**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
 
 </td>
 </tr>
@@ -1399,7 +1402,7 @@ output:
 ```yaml
 arguments:
   query: string # The search query string
-  load_max_docs: integer # Maximum number of documents to load (default: 2)
+  load_max_docs: integer # (Optional) Maximum number of documents to load. Default is 2.
 
 output:
   documents: list # The documents returned from the Wikipedia search
@@ -1409,10 +1412,126 @@ output:
 
 <td>
 
-**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/03-trip-planning-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb)
 
 </td>
 </tr>
+
+<tr>
+<td> <b>FFmpeg</b> </td>
+<td>
+
+```yaml
+arguments:
+  cmd: string # The FFmpeg command to execute
+  file: string # The base64 encoded file to process
+
+output:
+  fileoutput: string # The output file from the FFmpeg command in base64 encoding
+  result: boolean # Whether the FFmpeg command was executed successfully
+  mime_type: string # The MIME type of the output file
+```
+
+</td>
+
+</tr>
+
+<tr>
+<td> <b>Llama Parse</b> </td>
+<td>
+
+```yaml
+setup:
+  llamaparse_api_key: string # The API key for Llama Parse
+  params: dict # (Optional) Additional parameters for the Llama Parse integration
+
+arguments:
+  file: string | Array<string> # The base64 encoded file to parse or an array of http/https URLs to load.
+  filename: string # (Optional). The filename of the file. Default is a random UUID. Only used if file is a base64 encoded string.
+  params: dict # (Optional) Additional parameters for the Llama Parse integration. Overrides the setup parameters.
+  base64: boolean # Whether the input file is base64 encoded. Default is false.
+
+output:
+  documents: list[Document] # A list of parsed documents
+```
+
+</td>
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
+</tr>
+
+
+<tr>
+<td> <b>Cloudinary</b> </td>
+<td>
+
+```yaml
+
+method: media_upload | media_edit # The method to use for the Cloudinary integration
+
+setup:
+  cloudinary_cloud_name: string # Your Cloudinary cloud name
+  cloudinary_api_key: string # Your Cloudinary API key
+  cloudinary_api_secret: string # Your Cloudinary API secret
+  params: dict # (Optional) Additional parameters for the Cloudinary integration
+
+arguments:
+  file: string # The URL of the file upload. Only available for media_upload method.
+  upload_params: dict # (Optional) Additional parameters for the upload. Only available for media_upload method.
+  public_id: string # (Optional) The public ID for the file. For media_edit method it is MANDATORY. For media_upload method it is optional. Default is a random UUID.
+  transformation: list[dict] # The transformations to apply to the file. Only available for media_edit method.
+  return_base64: boolean # Whether to return the file in base64 encoding. Default is false.
+
+output:
+  url: string # The URL of the uploaded file. Only available for media_upload method.
+  meta_data: dict # Additional metadata from the upload response. Only available for media_upload method.
+  public_id: string # The public ID of the uploaded file. Only available for media_upload method.
+  transformed_url: string # (Optional) The transformed URL. Only available for media_edit method.
+  base64: string # (Optional) The base64 encoded file if return_base64 is true.
+```
+
+</td>
+<td>
+
+**Example cookbook**: [cookbooks/05-video-processing-with-natural-language.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb)
+
+</td>
+</tr>
+
+<tr>
+<td> <b>Arxiv</b> </td>
+<td>
+
+```yaml
+method: search # The method to use for the Arxiv integration
+
+setup:
+  # No specific setup parameters are required for Arxiv
+
+arguments:
+  query: string # The search query for searching with Arxiv
+  id_list: list[string] | None # (Optional) The list of Arxiv IDs to search with
+  max_results: integer # The maximum number of results to return, must be between 1 and 300000
+  download_pdf: boolean # Whether to download the PDF of the results. Default is false.
+  sort_by: string # The sort criterion for the results, options: relevance, lastUpdatedDate, submittedDate
+  sort_order: string # The sort order for the results, options: ascending, descending
+
+output:
+  result: list[dict] # A list of search results, each containing: entry_id, title, updated, published, authors, summary, comment, journal_ref, doi, primary_category, categories, links, pdf_url, pdf_downloaded
+```
+
+</td>
+
+<td>
+
+**Example cookbook**: [cookbooks/07-personalized-research-assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb)
+
+</td>
+</tr>
+
 </table>
 
 For more details, refer to our [Integrations Documentation](#integrations).

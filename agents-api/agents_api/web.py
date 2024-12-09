@@ -41,6 +41,7 @@ else:
     sentry_sdk.init(
         dsn=sentry_dsn,
         enable_tracing=True,
+        traces_sample_rate=1.0,
     )
 
 

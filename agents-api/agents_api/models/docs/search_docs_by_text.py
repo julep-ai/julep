@@ -98,22 +98,22 @@ def search_docs_by_text(
             }}
             {', ' + metadata_filter_str if metadata_filter_str.strip() else ''}
 
-        search_result[
-            doc_id,
-            snippet_data,
-            distance,
-        ] :=
-            candidate[doc_id],
-            ~snippets:lsh {{
-                doc_id,
-                index,
-                content
-                |
-                query: $query,
-                k: {k},
-            }},
-            distance = 10000000,  # Very large distance to depict no valid distance
-            snippet_data = [index, content]
+        # search_result[
+        #     doc_id,
+        #     snippet_data,
+        #     distance,
+        # ] :=
+        #     candidate[doc_id],
+        #     ~snippets:lsh {{
+        #         doc_id,
+        #         index,
+        #         content
+        #         |
+        #         query: $query,
+        #         k: {k},
+        #     }},
+        #     distance = 10000000,  # Very large distance to depict no valid distance
+        #     snippet_data = [index, content]
 
         search_result[
             doc_id,

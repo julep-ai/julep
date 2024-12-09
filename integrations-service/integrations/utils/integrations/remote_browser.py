@@ -1,6 +1,6 @@
 import base64
 import json
-from functools import partial, wraps
+from functools import partial
 from io import BytesIO
 from pathlib import Path
 from typing import Any

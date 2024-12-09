@@ -8,23 +8,18 @@
 # First stage: Build the Rust project
 FROM rust:1.80.1-bookworm AS builder
 
-# Install liburing-dev
-RUN apt-get update && apt-get install -y liburing-dev
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+    liburing-dev \
+    libclang-dev \
+    clang
 
-# Clone the CozoDB repository with submodules (checkout the specified commit)
-ARG COZO_COMMIT=695d0282fa9836bd93b4ff4313ec1cfb514c4f3b
-RUN \
-    git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/cozodb/cozo.git /usr/src/cozo && \
-    cd /usr/src/cozo && \
-    git checkout $COZO_COMMIT
-
-# Set the working directory
-WORKDIR /usr/src/cozo
-# Build CozoDB
-RUN cargo build --release -p cozo-bin --features "requests graph-algo storage-rocksdb storage-sqlite jemalloc io-uring"
+# Build cozo-ce-bin from crates.io
+WORKDIR /usr/src
+RUN cargo install cozo-ce-bin@0.7.13-alpha.1 --features "requests graph-algo storage-new-rocksdb storage-sqlite jemalloc io-uring malloc-usable-size"
 
 # Copy the built binary to /usr/local/bin
-RUN cp target/release/cozo-bin /usr/local/bin/cozo
+RUN cp /usr/local/cargo/bin/cozo-ce-bin /usr/local/bin/cozo
 
 # -------------------------------------------------------------------------------------------------
 
@@ -56,7 +51,7 @@ RUN \
     mkdir -p $COZO_MNT_DIR $COZO_BACKUP_DIR && \
     chmod +x $APP_HOME/bin/cozo && \
     chmod +x $APP_HOME/run.sh
-    
+
 # Copy the options file into the image
 COPY ./options ./options
 

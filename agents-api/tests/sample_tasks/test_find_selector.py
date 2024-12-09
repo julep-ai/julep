@@ -20,9 +20,10 @@ async def _(
     agent_id = str(agent.id)
     task_id = str(uuid4())
 
-    with patch_embed_acompletion(), open(
-        f"{this_dir}/find_selector.yaml", "r"
-    ) as sample_file:
+    with (
+        patch_embed_acompletion(),
+        open(f"{this_dir}/find_selector.yaml", "r") as sample_file,
+    ):
         task_def = sample_file.read()
 
         async with patch_http_client_with_temporal(
@@ -48,9 +49,10 @@ async def _(
     agent_id = str(agent.id)
     task_id = str(uuid4())
 
-    with patch_embed_acompletion(), open(
-        f"{this_dir}/find_selector.yaml", "r"
-    ) as sample_file:
+    with (
+        patch_embed_acompletion(),
+        open(f"{this_dir}/find_selector.yaml", "r") as sample_file,
+    ):
         task_def = sample_file.read()
 
         async with patch_http_client_with_temporal(
@@ -85,9 +87,12 @@ async def _(
     agent_id = str(agent.id)
     task_id = str(uuid4())
 
-    with patch_embed_acompletion(
-        output={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"}
-    ), open(f"{this_dir}/find_selector.yaml", "r") as sample_file:
+    with (
+        patch_embed_acompletion(
+            output={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"}
+        ),
+        open(f"{this_dir}/find_selector.yaml", "r") as sample_file,
+    ):
         task_def = sample_file.read()
 
         async with patch_http_client_with_temporal(

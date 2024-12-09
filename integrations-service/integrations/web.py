@@ -3,21 +3,43 @@ import logging
 import os
 from typing import Any, Callable
 
+import sentry_sdk
 import uvicorn
 import uvloop
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
+from .env import sentry_dsn
 from .routers.execution.router import router as execution_router
 from .routers.integrations.router import router as integrations_router
 
-app: FastAPI = FastAPI()
+if not sentry_dsn:
+    print("Sentry DSN not found. Sentry will not be enabled.")
+else:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        enable_tracing=True,
+    )
+
+app: FastAPI = FastAPI(
+    title="Integrations Service",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    default_response_class=JSONResponse,
+)
+
+# Add GZIP compression
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Add routers
 app.include_router(integrations_router)
 app.include_router(execution_router)
 
+# Optimize event loop policy
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -84,6 +106,3 @@ def main(
         workers=workers,
         reload=reload,
     )
-
-
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())

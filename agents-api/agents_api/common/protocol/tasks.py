@@ -1,3 +1,4 @@
+import asyncio
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -241,12 +242,17 @@ class StepContext(BaseRemoteModel):
 
         return dump | execution_input
 
-    def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
+    async def prepare_for_step(
+        self, *args, include_remote: bool = True, **kwargs
+    ) -> dict[str, Any]:
         current_input = self.current_input
         inputs = self.inputs
-        if activity.in_activity():
-            inputs = [load_from_blob_store_if_remote(input) for input in inputs]
-            current_input = load_from_blob_store_if_remote(current_input)
+        if activity.in_activity() and include_remote:
+            await self.load_all()
+            inputs = await asyncio.gather(
+                *[load_from_blob_store_if_remote(input) for input in inputs]
+            )
+            current_input = await load_from_blob_store_if_remote(current_input)
 
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
