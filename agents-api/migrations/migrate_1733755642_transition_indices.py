@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "transition_indices"
 CREATED_AT = 1733755642.881131
