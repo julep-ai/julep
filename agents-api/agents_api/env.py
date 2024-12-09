@@ -30,7 +30,7 @@ api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
 # -----
 task_max_parallelism: int = env.int("AGENTS_API_TASK_MAX_PARALLELISM", default=100)
 transition_requests_per_minute: int = env.int(
-    "AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE", default=100
+    "AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE", default=500
 )
 
 
@@ -114,17 +114,29 @@ temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=
 temporal_activity_after_retry_timeout: int = env.int(
     "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
 )
-temporal_max_concurrent_workflow_tasks: int = env.int(
-    "TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS", default=None
+
+
+def _parse_optional_int(val: str | None) -> int | None:
+    if not val or val.lower() == "none":
+        return None
+    return int(val)
+
+
+# Temporal worker configuration
+temporal_max_concurrent_workflow_tasks: int | None = _parse_optional_int(
+    env.str("TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS", default=None)
 )
-temporal_max_concurrent_activities: int = env.int(
-    "TEMPORAL_MAX_CONCURRENT_ACTIVITIES", default=100
+
+temporal_max_concurrent_activities: int | None = _parse_optional_int(
+    env.str("TEMPORAL_MAX_CONCURRENT_ACTIVITIES", default=None)
 )
-temporal_max_activities_per_second: int = env.int(
-    "TEMPORAL_MAX_ACTIVITIES_PER_SECOND", default=None
+
+temporal_max_activities_per_second: int | None = _parse_optional_int(
+    env.str("TEMPORAL_MAX_ACTIVITIES_PER_SECOND", default=None)
 )
-temporal_max_task_queue_activities_per_second: int = env.int(
-    "TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND", default=None
+
+temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
+    env.str("TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND", default=None)
 )
 
 # Consolidate environment variables
