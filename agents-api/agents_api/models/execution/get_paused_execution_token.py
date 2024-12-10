@@ -38,7 +38,7 @@ def get_paused_execution_token(
 
     check_status_query = """
     ?[execution_id, status] :=
-        *executions {
+        *executions:execution_id_status_idx {
             execution_id,
             status,
         },
@@ -55,7 +55,7 @@ def get_paused_execution_token(
         *executions {
             execution_id,
         },
-        *transitions {
+        *transitions:execution_id_type_created_at_idx {
             execution_id,
             created_at,
             task_token,

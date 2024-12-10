@@ -35,7 +35,7 @@ def list_execution_transitions(
 
     query = f"""
         ?[id, execution_id, type, current, next, output, metadata, updated_at, created_at] :=
-            *transitions {{
+            *transitions:execution_id_type_created_at_idx {{
                 execution_id,
                 transition_id: id,
                 type,

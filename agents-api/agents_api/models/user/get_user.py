@@ -85,7 +85,7 @@ def get_user(
         updated_at,
         metadata,
     ] := input[developer_id, id],
-        *users {
+        *users:developer_id_metadata_user_id_idx {
             user_id: id,
             developer_id,
             name,
