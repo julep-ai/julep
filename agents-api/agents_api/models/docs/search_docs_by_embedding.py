@@ -142,7 +142,7 @@ def search_docs_by_embedding(
                 input[owner_type, owner_id, query],
 
                 # Restrict the search to all documents that match the owner
-                *docs:owner_id_metadata_doc_id_idx {{
+                *docs {{
                     owner_type,
                     owner_id,
                     doc_id,
@@ -203,7 +203,7 @@ def search_docs_by_embedding(
                 input[owner_type, owner_id, query],
 
                 # Restrict the search to all documents that match the owner
-                *docs:owner_id_metadata_doc_id_idx {{
+                *docs {{
                     owner_type,
                     owner_id,
                     doc_id,
