@@ -82,6 +82,7 @@ def update_execution(
         *executions:execution_id_status_idx {
             status,
             execution_id: to_uuid($execution_id),
+            task_id: to_uuid($task_id),
         }, 
         status in $valid_previous_statuses
 
@@ -124,5 +125,6 @@ def update_execution(
             "values": values,
             "valid_previous_statuses": valid_previous_statuses,
             "execution_id": str(execution_id),
+            "task_id": task_id,
         },
     )
