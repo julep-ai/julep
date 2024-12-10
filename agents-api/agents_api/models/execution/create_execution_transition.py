@@ -214,10 +214,6 @@ def create_execution_transition(
         insert_query,
     ]
 
-    with open("out.txt", "w") as f:
-        print(queries, file=f)
-        raise Exception
-
     return (
         queries,
         {
