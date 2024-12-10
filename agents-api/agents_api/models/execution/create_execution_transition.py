@@ -250,7 +250,7 @@ create_execution_transition_async = rewrap_exceptions(
         _kind="inserted",
     )(
         cozo_query_async(
-            increase_counter("create_execution_transition")(
+            increase_counter("create_execution_transition_async")(
                 _create_execution_transition
             )
         )
