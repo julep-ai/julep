@@ -91,7 +91,7 @@ def patch_user(
         
         ?[{user_update_cols}, metadata] := 
             input[{user_update_cols}],
-            *users {{
+            *users:developer_id_metadata_user_id_idx {{
                 developer_id: to_uuid($developer_id),
                 user_id: to_uuid($user_id),
                 metadata: md,

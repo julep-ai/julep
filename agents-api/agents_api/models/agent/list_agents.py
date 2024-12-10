@@ -76,7 +76,7 @@ def list_agents(
             default_settings,
             instructions,
         ] := input[developer_id],
-            *agents {{
+            *agents:developer_id_metadata_agent_id_idx {{
                 developer_id,
                 agent_id: id,
                 model,

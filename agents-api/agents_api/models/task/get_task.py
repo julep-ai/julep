@@ -63,7 +63,7 @@ def get_task(
         metadata,
     ] := 
         input[task_id],
-        *tasks {
+        *tasks:task_id_agent_id_idx {
             agent_id,
             task_id,
             updated_at_ms,

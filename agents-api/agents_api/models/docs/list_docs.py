@@ -106,7 +106,7 @@ def list_docs(
         ] :=
             owner_type = $owner_type,
             owner_id = to_uuid($owner_id),
-            *docs {{
+            *docs:owner_id_metadata_doc_id_idx {{
                 owner_type,
                 owner_id,
                 doc_id: id,
