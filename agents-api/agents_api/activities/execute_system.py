@@ -108,7 +108,7 @@ async def execute_system(
             )
             await bg_runner()
             return res
-        
+
         # Handle create operations
         if system.operation == "create" and system.resource == "session":
             developer_id = arguments.pop("developer_id")
