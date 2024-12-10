@@ -91,7 +91,7 @@ def search_docs_by_embedding(
         snippet_counter[count(item)] :=
             owners[owner_type, owner_id_str],
             owner_id = to_uuid(owner_id_str),
-            *docs:owner_id_metadata_doc_id_idx {{
+            *docs {{
                 owner_type,
                 owner_id,
                 doc_id: item,

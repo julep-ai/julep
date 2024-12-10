@@ -88,7 +88,7 @@ def list_users(
         metadata,
     ] :=
         input[developer_id],
-        *users:developer_id_metadata_user_id_idx {{
+        *users {{
             user_id: id,
             developer_id,
             name,

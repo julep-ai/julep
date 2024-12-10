@@ -52,7 +52,7 @@ def get_execution(
 
       ?[id, task_id, status, input, output, error, session_id, metadata, created_at, updated_at] := 
           input[execution_id],
-          *executions:execution_id_status_idx {
+          *executions {
               task_id,
               execution_id,
               status,
