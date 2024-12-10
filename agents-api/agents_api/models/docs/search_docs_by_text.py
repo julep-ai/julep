@@ -90,7 +90,7 @@ def search_docs_by_text(
 
         candidate[doc_id] :=
             input[owner_type, owner_id],
-            *docs:owner_id_metadata_doc_id_idx {{
+            *docs {{
                 owner_type,
                 owner_id,
                 doc_id,

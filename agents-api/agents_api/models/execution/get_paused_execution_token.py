@@ -55,7 +55,7 @@ def get_paused_execution_token(
         *executions {
             execution_id,
         },
-        *transitions:execution_id_type_created_at_idx {
+        *transitions {
             execution_id,
             created_at,
             task_token,

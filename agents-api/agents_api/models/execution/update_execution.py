@@ -79,7 +79,7 @@ def update_execution(
 
     validate_status_query = """
     valid_status[count(status)] :=
-        *executions:execution_id_status_idx {
+        *executions {
             status,
             execution_id: to_uuid($execution_id),
             task_id: to_uuid($task_id),
