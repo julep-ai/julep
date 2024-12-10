@@ -140,7 +140,7 @@ def create_execution_transition(
     ]
 
     last_transition_type[min_cost(type_created_at)] :=
-        *transitions {{
+        *transitions:execution_id_type_idx {{
             execution_id: to_uuid("{str(execution_id)}"),
             type,
             created_at,
@@ -213,6 +213,10 @@ def create_execution_transition(
         check_last_transition_query if not is_parallel else None,
         insert_query,
     ]
+
+    with open("out.txt", "w") as f:
+        print(queries, file=f)
+        raise Exception
 
     return (
         queries,
