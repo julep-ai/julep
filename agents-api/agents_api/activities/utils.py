@@ -308,6 +308,7 @@ def get_handler(system: SystemDef) -> Callable:
     from ..models.session.get_session import get_session as get_session_query
     from ..models.session.list_sessions import list_sessions as list_sessions_query
     from ..models.session.update_session import update_session as update_session_query
+    from ..models.entry.get_history import get_history as get_history_query
     from ..models.task.create_task import create_task as create_task_query
     from ..models.task.delete_task import delete_task as delete_task_query
     from ..models.task.get_task import get_task as get_task_query
@@ -376,6 +377,8 @@ def get_handler(system: SystemDef) -> Callable:
             return delete_session_query
         case ("session", None, "chat"):
             return chat
+        case ("session", None, "history"):
+            return get_history_query
 
         # TASKS
         case ("task", None, "list"):
