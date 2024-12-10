@@ -8,6 +8,7 @@ create_transition_indices = dict(
     up="""
     ::index create executions:execution_id_status_idx { execution_id, status }
     ::index create executions:execution_id_task_id_idx { execution_id, task_id }
+    ::index create executions:task_id_execution_id_idx { task_id, execution_id }
     ::index create tasks:task_id_agent_id_idx { task_id, agent_id }
     ::index create agents:agent_id_developer_id_idx { agent_id, developer_id }
     ::index create sessions:session_id_developer_id_idx { session_id, developer_id }
@@ -19,6 +20,7 @@ create_transition_indices = dict(
     down="""
     ::index drop executions:execution_id_status_idx
     ::index drop executions:execution_id_task_id_idx
+    ::index drop executions:task_id_execution_id_idx
     ::index drop tasks:task_id_agent_id_idx
     ::index drop agents:agent_id_developer_id_idx
     ::index drop sessions:session_id_developer_id_idx
