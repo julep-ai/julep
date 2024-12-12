@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import PatchToolRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics_update
 from ..utils import (
     cozo_query,
     partialclass,
@@ -36,7 +36,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @cozo_query
-@increase_counter("patch_tool")
+@query_metrics_update("patch_tool")
 @beartype
 def patch_tool(
     *, developer_id: UUID, agent_id: UUID, tool_id: UUID, data: PatchToolRequest
