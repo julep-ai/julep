@@ -182,7 +182,7 @@ if __name__ == "__main__":
     try:
         # Read PR data from JSON file
         with open('pr_data.json', 'r') as file:
-            pr_data = json.load(file)
+            pr_data = file.read()
         main(pr_data)
     except Exception as e:
         logging.error(f"Script failed: {str(e)}")
