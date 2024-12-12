@@ -96,10 +96,41 @@ class RecallOptions(BaseModel):
         populate_by_name=True,
     )
     mode: Literal["hybrid", "vector", "text"] = "vector"
+    """
+    The mode to use for the search.
+    """
     num_search_messages: int = 4
+    """
+    The number of search messages to use for the search.
+    """
     max_query_length: int = 1000
-    hybrid_alpha: float = 0.7
-    confidence: float = 0.6
+    """
+    The maximum query length to use for the search.
+    """
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.7
+    """
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    """
+    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    """
+    The confidence cutoff level
+    """
+    limit: Annotated[int, Field(ge=1, le=50)] = 10
+    """
+    The limit of documents to return
+    """
+    lang: Literal["en-US"] = "en-US"
+    """
+    The language to be used for text-only search. Support for other languages coming soon.
+    """
+    metadata_filter: dict[str, Any] = {}
+    """
+    Metadata filter to apply to the search
+    """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
 
 
 class RecallOptionsUpdate(RecallOptions):

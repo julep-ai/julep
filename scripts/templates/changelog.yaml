@@ -1,0 +1,111 @@
+name: Changelog Generator
+description: Generates a changelog from a list of PRs.
+                                  
+main:
+- prompt:
+  - role: system
+    content: |
+      # AI Agent Prompt for Generating a Structured and Engaging Changelog
+
+      Generate a **detailed** and **engaging changelog** based on information from the PR comment, title, author, and any additional context. 
+      Your goal is to make the changelog both **informative** and **appealing** to the user.
+
+      ## 🔄 Steps to Generate the Changelog:
+
+      ### 1. **Extract Relevant Information** 📋
+      Gather all the important details from the following sources:
+      - **PR Title**: What is the overall summary of the change?
+      - **PR Comment**: Any detailed description of the changes and reasons for the change.
+      - **PR Author**: Who made the change? (Include name or GitHub handle)
+      - **Additional Context**: Include any extra context or notes provided for a clearer understanding of the changes.
+
+      ### 2. **Organize the Content** 🗂️
+      Structure the changelog into **clear sections**. These sections should be:
+      - **Features** ✨: New functionalities or major additions.
+      - **Fixes** 🔧: Bug fixes or issue resolutions.
+      - **Improvements** 📈: Enhancements or optimizations made.
+      - **Performance Enhancements** 🚀: Changes that improve speed, efficiency, or scalability.
+      - **Breaking Changes** 💥: Changes that could potentially break backward compatibility.
+
+      ### 3. **Detail the Changes** 📝
+      For each section, include:
+      - A **concise but clear description** of what has changed.
+      - The **reason** behind the change (why it was needed).
+      - The **benefit** or **impact** on the user experience.
+        
+      ### 4. **Engage the User** 🗣️
+      Write in a conversational and engaging tone. Try to:
+      - Highlight the **key updates** and their **user impact**.
+      - Encourage users to **take action** if necessary (e.g., “Please upgrade to this version to experience the new feature!”).
+
+      ### 5. **Format the Changelog** 🖋️
+      Make sure the changelog is visually clear and easy to read:
+      - Use **bullet points** for each change.
+      - Apply **headings** for sections like "Features", "Fixes", etc.
+      - Use **emojis** to visually separate and highlight sections.
+        
+      ### 6. **Output Format** 🗒️
+      The final changelog should follow this format:
+      - **Title**: "Julep AI Changelog for 12th December 2024" (Note: Use `datetime.datetime.now().strftime('%d %B %Y')` for auto-generating the date).
+      - **Sections**: Start with a header for each section (e.g., `## Features ✨`) and list items under it in bullet points.
+      - Use **bold** and **italic** where needed to emphasize key points.
+                                  
+      The final changelog should be **engaging**, **well-structured**, and easy to read, making it accessible to both technical and non-technical users.                 
+
+      Here are certain notes that you should follow:
+      - The output should be in markdown format as the output will be rendered in a markdown file.
+      - Wherever possible describe the changes in a way that is more engaging and conversational.
+      - Make it as visually appealing as possible. Add emojis to make it more engaging.
+      - Add empty lines between sections and make sure the output is formatted correctly.
+      - Add a footer with the all authors of the changelog at the bottom.
+      - Ensure that the output is formatted correctly.   
+      - No need to add a footer or author list or contributors list.
+
+      Please feel free to make changes to the output as you see fit. You only need to return me the changelog and nothing else.
+      Add markdown formatting to the output wherever needed to make it more visual attractive, readable and engaging.
+                                  
+      ### Example Output:
+
+      # **Julep AI Changelog for {{datetime.datetime.now().strftime('%d %B %Y')}}** ✨
+
+      ## **Features** ✨
+      - **Real-Time Analytics Dashboard**: A brand-new dashboard that provides real-time data visualizations of user activity.
+        - **Why**: We needed a way to track live data for quicker decision-making.
+        - **Impact**: Users can now see real-time metrics to improve decision-making on-the-go.
+
+      ## **Fixes** 🔧
+      - **Fixed an Issue with Data Export**: Resolved a bug preventing users from exporting large data sets.
+        - **Why**: Export failures were occurring due to improper handling of large files.
+        - **Impact**: Users can now export data without encountering errors.
+
+      ## **Improvements** 📈
+      - **Improved Search Functionality**: The search engine now returns results 20% faster.
+        - **Why**: To ensure quicker access to information.
+        - **Impact**: Users will notice faster search results, improving overall efficiency.
+
+      ## **Performance Enhancements** 🚀
+      - **Optimized Data Compression**: Reduced the size of stored data by 30%.
+        - **Why**: To make data storage more efficient.
+        - **Impact**: Faster data retrieval times and less storage usage.
+
+      ## **Breaking Changes** 💥
+      - **Deprecated Legacy API**: The old API version (v1) will no longer be supported from next month.
+        - **Why**: We’ve moved to a more secure and feature-rich version.
+        - **Impact**: Developers must upgrade to API v2 to continue using our services.
+
+      ## **Notes** 📝
+      - Please **update your version** to avoid issues with deprecated features.
+      - Known issues: Some users may experience temporary delays due to high traffic on the server.
+
+      ## 🔑 Key Notes:
+      - **Clarity**: Use clear, non-technical language where possible.
+      - **Version Specifics**: Mention if a particular version or update is affected by the changes.
+      - **Known Issues**: Document any known issues, especially those that might impact the user experience.
+                                  
+  - role: user
+    content: |
+      Here is the PR data:
+
+      {{inputs[0]['pr_data']}}                   
+                                  
+  unwrap: true

@@ -6,7 +6,6 @@ from uuid import UUID
 
 from beartype import beartype
 from box import Box, BoxList
-from fastapi import HTTPException
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
@@ -110,6 +109,7 @@ async def execute_system(
             await bg_runner()
             return res
 
+        # Handle create operations
         if system.operation == "create" and system.resource == "session":
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id", None)
