@@ -1,8 +1,7 @@
 name: Julep-Changelog-Generation
-run-name: ${{ github.actor }} is generating changelog for the last two weeks using Julep
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   changelog_generation:
@@ -22,7 +21,6 @@ jobs:
       - name: Collect merged PRs from the last two weeks
         id: collect_prs
         run: |
-          # Set date threshold for fetching PRs
           if [[ "$OSTYPE" == "darwin"* ]]; then
             date_threshold=$(date -v-14d +"%Y-%m-%d")
           else
@@ -31,8 +29,11 @@ jobs:
 
           echo "Fetching merged PRs since $date_threshold..."
 
-          # Find merged PRs from the last two weeks
-          merged_prs=$(gh pr list --state merged --json number,title,body,author --search "merged:>=$date_threshold" --jq 'map({number, title, body, author: .author.login})')
+          merged_prs=$(
+            gh pr list --state merged --json number,title,body,author \
+              --search "merged:>=$date_threshold" \
+              --jq 'map({number, title, body, author: .author.login})'
+          )
 
           if [ -z "$merged_prs" ] || [ "$merged_prs" = "null" ]; then
             echo "No merged PRs found in the last two weeks."
@@ -42,17 +43,17 @@ jobs:
           fi
 
           echo "pr_data=$merged_prs" >> $GITHUB_ENV
-          echo "pr_data=$merged_prs" >> "$GITHUB_OUTPUT"
           echo "{\"pr_data\": $merged_prs}" > pr_data.json
 
       - name: Setup Python v3.10.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.10.12"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install PyYAML julep git+https://github.com/Jwink3101/parmapper
+          python -m pip install PyYAML julep
 
       - name: Send PR data to Python script
         if: steps.collect_prs.outputs.pr_data != '[]'
@@ -74,7 +75,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore(changelog): update CHANGELOG.md"
           title: "Update CHANGELOG.md"
-          body: "This PR updates the changelog with PRs from the last two weeks."
+          body: "This PR updates the changelog with PRs from the last 2 weeks."
           branch: "update-changelog"
           delete-branch: true
           add-paths: |
