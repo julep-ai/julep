@@ -1,10 +1,11 @@
 from typing import Annotated, Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -47,7 +48,7 @@ def create_execution(
     execution_id: UUID | None = None,
     data: Annotated[CreateExecutionRequest | dict, dict_like(CreateExecutionRequest)],
 ) -> tuple[list[str], dict]:
-    execution_id = execution_id or uuid4()
+    execution_id = execution_id or uuid7()
 
     developer_id = str(developer_id)
     task_id = str(task_id)

@@ -4,12 +4,13 @@ It defines a query for inserting user data into the 'users' relation.
 """
 
 from typing import Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateUserRequest, User
 from ...metrics.counters import increase_counter
@@ -80,7 +81,7 @@ def create_user(
         pd.DataFrame: A DataFrame containing the result of the query execution.
     """
 
-    user_id = user_id or uuid4()
+    user_id = user_id or uuid7()
     data.metadata = data.metadata or {}
     user_data = data.model_dump()
 

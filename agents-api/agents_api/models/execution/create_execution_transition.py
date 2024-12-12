@@ -1,9 +1,10 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
     CreateTransitionRequest,
@@ -38,7 +39,7 @@ def _create_execution_transition(
     update_execution_status: bool = False,
     task_id: UUID | None = None,
 ) -> tuple[list[str | None], dict]:
-    transition_id = transition_id or uuid4()
+    transition_id = transition_id or uuid7()
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
 

@@ -4,12 +4,13 @@ It constructs and executes a datalog query to insert session data.
 """
 
 from typing import Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateSessionRequest, Session
 from ...metrics.counters import increase_counter
@@ -57,7 +58,7 @@ def create_session(
     Constructs and executes a datalog query to create a new session in the database.
     """
 
-    session_id = session_id or uuid4()
+    session_id = session_id or uuid7()
 
     data.metadata = data.metadata or {}
     session_data = data.model_dump(exclude={"auto_run_tools", "disable_cache"})

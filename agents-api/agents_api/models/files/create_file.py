@@ -6,12 +6,13 @@ It defines a query for inserting user data into the 'users' relation.
 import base64
 import hashlib
 from typing import Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateFileRequest, File
 from ...metrics.counters import increase_counter
@@ -79,7 +80,7 @@ def create_file(
         developer_id (UUID): The unique identifier for the developer creating the file.
     """
 
-    file_id = file_id or uuid4()
+    file_id = file_id or uuid7()
     file_data = data.model_dump(exclude={"content"})
 
     content_bytes = base64.b64decode(data.content)

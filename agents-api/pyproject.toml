@@ -50,6 +50,7 @@ dependencies = [
   "uvloop~=0.21.0",
   "xxhash~=3.5.0",
   "spacy-chunks>=0.0.2",
+  "uuid7>=0.1.0",
 ]
 
 [dependency-groups]

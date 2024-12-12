@@ -14,7 +14,7 @@ from httpx import RequestError
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, Timeout
 
-from ..common.utils.cozo import uuid_int_list_to_uuid4
+from ..common.utils.cozo import uuid_int_list_to_uuid
 from ..env import do_verify_developer, do_verify_developer_owns_resource
 
 P = ParamSpec("P")
@@ -36,7 +36,7 @@ def fix_uuid(
     fixed = {
         **item,
         **{
-            attr: uuid_int_list_to_uuid4(item[attr])
+            attr: uuid_int_list_to_uuid(item[attr])
             for attr in id_attrs
             if isinstance(item[attr], list)
         },

@@ -4,12 +4,13 @@ It constructs and executes a datalog query to insert Task data.
 """
 
 from typing import Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
     CreateTaskRequest,
@@ -74,7 +75,7 @@ def create_task(
     data.metadata = data.metadata or {}
     data.input_schema = data.input_schema or {}
 
-    task_id = task_id or uuid4()
+    task_id = task_id or uuid7()
     task_spec = task_to_spec(data)
 
     # Prepares the update data by filtering out None values and adding user_id and developer_id.

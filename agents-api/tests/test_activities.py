@@ -1,5 +1,5 @@
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import test
 
 from agents_api.activities.embed_docs import embed_docs
@@ -48,7 +48,7 @@ async def _():
         result = await client.execute_workflow(
             DemoWorkflow.run,
             args=[1, 2],
-            id=str(uuid4()),
+            id=str(uuid7()),
             task_queue=temporal_task_queue,
             retry_policy=DEFAULT_RETRY_POLICY,
         )

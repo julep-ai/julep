@@ -1,6 +1,6 @@
 # Tests for agent queries
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
@@ -52,7 +52,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
 def _(client=cozo_client, developer_id=test_developer_id):
     create_or_update_agent(
         developer_id=developer_id,
-        agent_id=uuid4(),
+        agent_id=uuid7(),
         data=CreateOrUpdateAgentRequest(
             name="test agent",
             about="test agent about",
@@ -65,7 +65,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
 
 @test("model: get agent not exists")
 def _(client=cozo_client, developer_id=test_developer_id):
-    agent_id = uuid4()
+    agent_id = uuid7()
 
     with raises(Exception):
         get_agent(agent_id=agent_id, developer_id=developer_id, client=client)

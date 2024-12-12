@@ -1,12 +1,13 @@
 """This module contains functions for creating tools in the CozoDB database."""
 
 from typing import Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateToolRequest, Tool
 from ...metrics.counters import increase_counter
@@ -70,7 +71,7 @@ def create_tools(
     tools_data = [
         [
             str(agent_id),
-            str(uuid4()),
+            str(uuid7()),
             tool.type,
             tool.name,
             getattr(tool, tool.type) and getattr(tool, tool.type).model_dump(),

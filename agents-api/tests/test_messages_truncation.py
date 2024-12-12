@@ -1,4 +1,5 @@
 # from uuid import uuid4
+# from uuid_extensions import uuid7
 
 # from ward import raises, test
 
@@ -26,9 +27,9 @@
 #     threshold = sum([len(c) // 3.5 for c in contents])
 
 #     messages: list[Entry] = [
-#         Entry(session_id=uuid4(), role=Role.user, content=contents[0][0]),
-#         Entry(session_id=uuid4(), role=Role.assistant, content=contents[1][0]),
-#         Entry(session_id=uuid4(), role=Role.user, content=contents[2][0]),
+#         Entry(session_id=uuid7(), role=Role.user, content=contents[0][0]),
+#         Entry(session_id=uuid7(), role=Role.assistant, content=contents[1][0]),
+#         Entry(session_id=uuid7(), role=Role.user, content=contents[2][0]),
 #     ]
 #     result = session.truncate(messages, threshold)
 
@@ -45,7 +46,7 @@
 #         ("content5", True),
 #         ("content6", True),
 #     ]
-#     session_ids = [uuid4()] * len(contents)
+#     session_ids = [uuid7()] * len(contents)
 #     threshold = sum([len(c) // 3.5 for c, i in contents if i])
 
 #     messages: list[Entry] = [
@@ -99,7 +100,7 @@
 #         ("content5", True),
 #         ("content6", True),
 #     ]
-#     session_ids = [uuid4()] * len(contents)
+#     session_ids = [uuid7()] * len(contents)
 #     threshold = sum([len(c) // 3.5 for c, i in contents if i])
 
 #     messages: list[Entry] = [
@@ -146,7 +147,7 @@
 #         ("content6", True),
 #         ("content7", False),
 #     ]
-#     session_ids = [uuid4()] * len(contents)
+#     session_ids = [uuid7()] * len(contents)
 #     threshold = sum([len(c) // 3.5 for c, i in contents if i])
 
 #     messages: list[Entry] = [
@@ -204,7 +205,7 @@
 #         ("content12", True),
 #         ("content13", False),
 #     ]
-#     session_ids = [uuid4()] * len(contents)
+#     session_ids = [uuid7()] * len(contents)
 #     threshold = sum([len(c) // 3.5 for c, i in contents if i])
 
 #     messages: list[Entry] = [
@@ -271,7 +272,7 @@
 #         ("content9", True),
 #         ("content10", False),
 #     ]
-#     session_ids = [uuid4()] * len(contents)
+#     session_ids = [uuid7()] * len(contents)
 #     threshold = sum([len(c) // 3.5 for c, i in contents if i])
 #     all_tokens = sum([len(c) // 3.5 for c, _ in contents])
 

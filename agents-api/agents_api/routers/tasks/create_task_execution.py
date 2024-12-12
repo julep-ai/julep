@@ -1,6 +1,6 @@
 import logging
 from typing import Annotated
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import BackgroundTasks, Depends, HTTPException, status
@@ -9,6 +9,7 @@ from jsonschema.exceptions import ValidationError
 from pycozo.client import QueryException
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import WorkflowHandle
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
     CreateExecutionRequest,
@@ -47,7 +48,7 @@ async def start_execution(
     data: CreateExecutionRequest,
     client=None,
 ) -> tuple[Execution, WorkflowHandle]:
-    execution_id = uuid4()
+    execution_id = uuid7()
 
     execution = create_execution_query(
         developer_id=developer_id,
@@ -64,7 +65,7 @@ async def start_execution(
         client=client,
     )
 
-    job_id = uuid4()
+    job_id = uuid7()
 
     try:
         handle = await run_task_execution_workflow(

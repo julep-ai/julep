@@ -4,12 +4,13 @@ It includes functions to construct and execute datalog queries for inserting new
 """
 
 from typing import Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import Agent, CreateAgentRequest
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -78,7 +79,7 @@ def create_agent(
         Agent: The newly created agent record.
     """
 
-    agent_id = agent_id or uuid4()
+    agent_id = agent_id or uuid7()
 
     # Extract the agent data from the payload
     data.metadata = data.metadata or {}

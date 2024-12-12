@@ -1,6 +1,6 @@
 # Tests for task queries
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import test
 
 from agents_api.autogen.openapi_model import (
@@ -20,7 +20,7 @@ from tests.fixtures import cozo_client, test_agent, test_developer_id, test_task
 
 @test("model: create task")
 def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-    task_id = uuid4()
+    task_id = uuid7()
 
     create_task(
         developer_id=developer_id,
@@ -40,7 +40,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
 
 @test("model: create or update task")
 def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-    task_id = uuid4()
+    task_id = uuid7()
 
     create_or_update_task(
         developer_id=developer_id,
@@ -60,7 +60,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
 
 @test("model: get task not exists")
 def _(client=cozo_client, developer_id=test_developer_id):
-    task_id = uuid4()
+    task_id = uuid7()
 
     try:
         get_task(

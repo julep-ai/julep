@@ -1,8 +1,7 @@
 # This module contains tests for user-related queries against the 'cozodb' database. It includes tests for creating, updating, and retrieving user information.
-
 # Tests for user queries
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import test
 
 from agents_api.autogen.openapi_model import (
@@ -40,7 +39,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
 
     create_or_update_user(
         developer_id=developer_id,
-        user_id=uuid4(),
+        user_id=uuid7(),
         data=CreateOrUpdateUserRequest(
             name="test user",
             about="test user about",
@@ -73,7 +72,7 @@ def _(client=cozo_client, developer_id=test_developer_id, user=test_user):
 def _(client=cozo_client, developer_id=test_developer_id):
     """Test that retrieving a non-existent user returns an empty result."""
 
-    user_id = uuid4()
+    user_id = uuid7()
 
     # Ensure that the query for an existing user returns exactly one result.
     try:
