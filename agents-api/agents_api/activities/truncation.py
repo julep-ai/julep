@@ -14,10 +14,10 @@ from ..autogen.openapi_model import Entry
 def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list[UUID]:
     raise NotImplementedError()
 
-    if not len(messages):
-        return messages
+    # if not len(messages):
+    #     return messages
 
-    _token_cnt, _offset = 0, 0
+    # _token_cnt, _offset = 0, 0
     # if messages[0].role == Role.system:
     #     token_cnt, offset = messages[0].token_count, 1
 
@@ -36,7 +36,8 @@ def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list
 @activity.defn
 @beartype
 async def truncation(session_id: str, token_count_threshold: int) -> None:
-    session_id = UUID(session_id)
+    raise NotImplementedError()
+    # session_id = UUID(session_id)
 
     # delete_entries(
     #     get_extra_entries(

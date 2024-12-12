@@ -60,12 +60,18 @@ dev = [
     "ipywidgets>=8.1.5",
     "julep>=1.43.1",
     "jupyterlab>=4.3.1",
+    "pip>=24.3.1",
     "poethepoet>=0.31.1",
     "pyjwt>=2.10.1",
     "pyright>=1.1.389",
     "pytype>=2024.10.11",
     "ruff>=0.8.1",
     "ward>=0.68.0b0",
+]
+
+[tool.setuptools]
+py-modules = [
+    "agents_api"
 ]
 
 [tool.uv.sources]
