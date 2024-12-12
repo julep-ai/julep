@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y \
 
 # Build cozo-ce-bin from crates.io
 WORKDIR /usr/src
-RUN cargo install cozo-ce-bin@0.7.13-alpha.3 --features "requests graph-algo storage-new-rocksdb storage-sqlite jemalloc io-uring malloc-usable-size"
-# RUN cargo install --git https://github.com/cozo-community/cozo.git --branch f/publish-crate --rev 592f49b --profile release -F graph-algo -F  jemalloc -F io-uring -F storage-new-rocksdb -F malloc-usable-size --target x86_64-unknown-linux-gnu cozo-ce-bin
+# RUN cargo install cozo-ce-bin@0.7.13-alpha.3 --features "requests graph-algo storage-new-rocksdb storage-sqlite jemalloc io-uring malloc-usable-size"
+RUN cargo install --git https://github.com/cozo-community/cozo.git --branch f/publish-crate --rev 592f49b --profile release -F graph-algo -F  jemalloc -F io-uring -F storage-new-rocksdb -F malloc-usable-size --target x86_64-unknown-linux-gnu cozo-ce-bin
 
 # Copy the built binary to /usr/local/bin
 RUN cp /usr/local/cargo/bin/cozo-ce-bin /usr/local/bin/cozo
