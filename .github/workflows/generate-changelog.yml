@@ -1,4 +1,5 @@
-name: Generate and Update Changelog
+name: Julep Changelog Generation
+run-name: ${{ github.actor }} is generating changelog for the last two weeks using Julep
 
 on:
   # schedule:
