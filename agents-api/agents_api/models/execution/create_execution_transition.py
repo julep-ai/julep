@@ -12,7 +12,7 @@ from ...autogen.openapi_model import (
 )
 from ...common.protocol.tasks import transition_to_execution_status, valid_transitions
 from ...common.utils.cozo import cozo_process_mutate_data
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics_update
 from ..utils import (
     cozo_query,
     cozo_query_async,
@@ -224,7 +224,7 @@ create_execution_transition = rewrap_exceptions(
         _kind="inserted",
     )(
         cozo_query(
-            increase_counter("create_execution_transition")(
+            query_metrics_update("create_execution_transition")(
                 _create_execution_transition
             )
         )
@@ -250,7 +250,7 @@ create_execution_transition_async = rewrap_exceptions(
         _kind="inserted",
     )(
         cozo_query_async(
-            increase_counter("create_execution_transition_async")(
+            query_metrics_update("create_execution_transition_async")(
                 _create_execution_transition
             )
         )
