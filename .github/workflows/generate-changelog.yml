@@ -1,0 +1,82 @@
+name: Julep-Changelog-Generation
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  changelog_generation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: dev
+
+      - name: Setup GitHub CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Collect merged PRs from the last two weeks
+        id: collect_prs
+        run: |
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            date_threshold=$(date -v-14d +"%Y-%m-%d")
+          else
+            date_threshold=$(date -d '-14 days' +"%Y-%m-%d")
+          fi
+
+          echo "Fetching merged PRs since $date_threshold..."
+
+          merged_prs=$(
+            gh pr list --state merged --json number,title,body,author \
+              --search "merged:>=$date_threshold" \
+              --jq 'map({number, title, body, author: .author.login})'
+          )
+
+          if [ -z "$merged_prs" ] || [ "$merged_prs" = "null" ]; then
+            echo "No merged PRs found in the last two weeks."
+            echo "pr_data=[]" >> $GITHUB_ENV
+            echo '{"pr_data": []}' > pr_data.json
+            exit 0
+          fi
+
+          echo "pr_data=$merged_prs" >> $GITHUB_ENV
+          echo "{\"pr_data\": $merged_prs}" > pr_data.json
+
+      - name: Setup Python v3.10.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install PyYAML julep
+
+      - name: Send PR data to Python script
+        if: steps.collect_prs.outputs.pr_data != '[]'
+        id: generate_changelog
+        run: |
+          if ! python scripts/generate_changelog.py; then
+            echo "Error: Failed to generate changelog"
+            exit 1
+          fi
+        env:
+          JULEP_API_KEY: ${{ secrets.JULEP_API_KEY }}
+          TASK_UUID: ${{ secrets.TASK_UUID }}
+          AGENT_UUID: ${{ secrets.AGENT_UUID }}
+
+      - name: Create Pull Request
+        if: success() && steps.collect_prs.outputs.pr_data != '[]'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(changelog): update CHANGELOG.md"
+          title: "Update CHANGELOG.md"
+          body: "This PR updates the changelog with PRs from the last 2 weeks."
+          branch: "update-changelog"
+          delete-branch: true
+          add-paths: |
+            CHANGELOG.md
