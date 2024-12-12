@@ -65,6 +65,7 @@ dev = [
     { name = "ipywidgets" },
     { name = "julep" },
     { name = "jupyterlab" },
+    { name = "pip" },
     { name = "poethepoet" },
     { name = "pyjwt" },
     { name = "pyright" },
@@ -130,6 +131,7 @@ dev = [
     { name = "ipywidgets", specifier = ">=8.1.5" },
     { name = "julep", specifier = ">=1.43.1" },
     { name = "jupyterlab", specifier = ">=4.3.1" },
+    { name = "pip", specifier = ">=24.3.1" },
     { name = "poethepoet", specifier = ">=0.31.1" },
     { name = "pyjwt", specifier = ">=2.10.1" },
     { name = "pyright", specifier = ">=1.1.389" },
@@ -2012,6 +2014,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9e/c3/059298687310d527a58bb01f3b1965787ee3b40dce76752eda8b44e9a2c5/pexpect-4.9.0-py2.py3-none-any.whl", hash = "sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523", size = 63772 },
+]
+
+[[package]]
+name = "pip"
+version = "24.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f4/b1/b422acd212ad7eedddaf7981eee6e5de085154ff726459cf2da7c5a184c1/pip-24.3.1.tar.gz", hash = "sha256:ebcb60557f2aefabc2e0f918751cd24ea0d56d8ec5445fe1807f1d2109660b99", size = 1931073 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ef/7d/500c9ad20238fcfcb4cb9243eede163594d7020ce87bd9610c9e02771876/pip-24.3.1-py3-none-any.whl", hash = "sha256:3790624780082365f47549d032f3770eeb2b1e8bd1f7b2e02dace1afa361b4ed", size = 1822182 },
 ]
 
 [[package]]
