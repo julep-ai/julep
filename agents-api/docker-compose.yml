@@ -111,21 +111,3 @@ services:
           path: uv.lock
         - action: rebuild
           path: Dockerfile.worker
-
-  cozo-migrate:
-    image: julepai/cozo-migrate:${TAG:-dev}
-    container_name: cozo-migrate
-    build:
-      context: .
-      dockerfile: Dockerfile.migration
-    restart: "no" # Make sure to double quote this
-    environment:
-      <<: *shared-environment
-
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./migrations
-          target: /app/migrations
-        - action: rebuild
-          path: Dockerfile.migration
