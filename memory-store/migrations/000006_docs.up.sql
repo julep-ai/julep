@@ -1,4 +1,6 @@
--- Create function to validate language
+BEGIN;
+
+-- Create function to validate language (make it OR REPLACE)
 CREATE OR REPLACE FUNCTION is_valid_language(lang text) 
 RETURNS boolean AS $$
 BEGIN
@@ -9,7 +11,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create docs table
-CREATE TABLE docs (
+CREATE TABLE IF NOT EXISTS docs (
     developer_id UUID NOT NULL,
     doc_id UUID NOT NULL,
     title TEXT NOT NULL,
@@ -31,28 +33,39 @@ CREATE TABLE docs (
         CHECK (is_valid_language(language))
 );
 
--- Create sorted index on doc_id (optimized for UUID v7)
-CREATE INDEX idx_docs_id_sorted ON docs (doc_id DESC);
+-- Create sorted index on doc_id if not exists
+CREATE INDEX IF NOT EXISTS idx_docs_id_sorted ON docs (doc_id DESC);
 
--- Create foreign key constraint and index on developer_id
-ALTER TABLE docs 
-    ADD CONSTRAINT fk_docs_developer 
-    FOREIGN KEY (developer_id) 
-    REFERENCES developers(developer_id);
+-- Create foreign key constraint if not exists (using DO block for safety)
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_docs_developer'
+    ) THEN
+        ALTER TABLE docs 
+        ADD CONSTRAINT fk_docs_developer 
+        FOREIGN KEY (developer_id) 
+        REFERENCES developers(developer_id);
+    END IF;
+END $$;
 
-CREATE INDEX idx_docs_developer ON docs (developer_id);
+CREATE INDEX IF NOT EXISTS idx_docs_developer ON docs (developer_id);
 
--- Create trigger to automatically update updated_at
-CREATE TRIGGER trg_docs_updated_at
-    BEFORE UPDATE ON docs
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Add comment to table
-COMMENT ON TABLE docs IS 'Stores document metadata for developers';
+-- Create trigger if not exists
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'trg_docs_updated_at'
+    ) THEN
+        CREATE TRIGGER trg_docs_updated_at
+        BEFORE UPDATE ON docs
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
 -- Create the user_docs table
-CREATE TABLE user_docs (
+CREATE TABLE IF NOT EXISTS user_docs (
     developer_id UUID NOT NULL,
     user_id UUID NOT NULL,
     doc_id UUID NOT NULL,
@@ -62,7 +75,7 @@ CREATE TABLE user_docs (
 );
 
 -- Create the agent_docs table
-CREATE TABLE agent_docs (
+CREATE TABLE IF NOT EXISTS agent_docs (
     developer_id UUID NOT NULL,
     agent_id UUID NOT NULL,
     doc_id UUID NOT NULL,
@@ -71,12 +84,10 @@ CREATE TABLE agent_docs (
     CONSTRAINT fk_agent_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs(developer_id, doc_id)
 );
 
--- Indexes for efficient querying
-CREATE INDEX idx_user_docs_user ON user_docs (developer_id, user_id);
-CREATE INDEX idx_agent_docs_agent ON agent_docs (developer_id, agent_id);
-
--- Create a GIN index on the metadata column for efficient searching
-CREATE INDEX idx_docs_metadata ON docs USING GIN (metadata);
+-- Create indexes if not exists
+CREATE INDEX IF NOT EXISTS idx_user_docs_user ON user_docs (developer_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_agent_docs_agent ON agent_docs (developer_id, agent_id);
+CREATE INDEX IF NOT EXISTS idx_docs_metadata ON docs USING GIN (metadata);
 
 -- Enable necessary PostgreSQL extensions
 CREATE EXTENSION IF NOT EXISTS unaccent;
@@ -109,8 +120,16 @@ BEGIN
 END
 $$;
 
--- Add the column (not generated)
-ALTER TABLE docs ADD COLUMN search_tsv tsvector;
+-- Add the search_tsv column if it doesn't exist
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'docs' AND column_name = 'search_tsv'
+    ) THEN
+        ALTER TABLE docs ADD COLUMN search_tsv tsvector;
+    END IF;
+END $$;
 
 -- Create function to update tsvector
 CREATE OR REPLACE FUNCTION docs_update_search_tsv()
@@ -123,24 +142,29 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger
-CREATE TRIGGER trg_docs_search_tsv
-    BEFORE INSERT OR UPDATE OF title, content, language
-    ON docs
-    FOR EACH ROW
-    EXECUTE FUNCTION docs_update_search_tsv();
+-- Create trigger if not exists
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'trg_docs_search_tsv'
+    ) THEN
+        CREATE TRIGGER trg_docs_search_tsv
+        BEFORE INSERT OR UPDATE OF title, content, language
+        ON docs
+        FOR EACH ROW
+        EXECUTE FUNCTION docs_update_search_tsv();
+    END IF;
+END $$;
 
--- Create the index
-CREATE INDEX idx_docs_search_tsv ON docs USING GIN (search_tsv);
+-- Create indexes if not exists
+CREATE INDEX IF NOT EXISTS idx_docs_search_tsv ON docs USING GIN (search_tsv);
+CREATE INDEX IF NOT EXISTS idx_docs_title_trgm ON docs USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_docs_content_trgm ON docs USING GIN (content gin_trgm_ops);
 
 -- Update existing rows (if any)
 UPDATE docs SET search_tsv = 
     setweight(to_tsvector(language::regconfig, unaccent(coalesce(title, ''))), 'A') ||
-    setweight(to_tsvector(language::regconfig, unaccent(coalesce(content, ''))), 'B');
+    setweight(to_tsvector(language::regconfig, unaccent(coalesce(content, ''))), 'B')
+WHERE search_tsv IS NULL;
 
--- Create GIN trigram indexes for both title and content
-CREATE INDEX idx_docs_title_trgm
-ON docs USING GIN (title gin_trgm_ops);
-
-CREATE INDEX idx_docs_content_trgm
-ON docs USING GIN (content gin_trgm_ops);
+COMMIT;

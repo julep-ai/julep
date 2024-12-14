@@ -1,5 +1,5 @@
 -- Create vector similarity search index using diskann and timescale vectorizer
-select ai.create_vectorizer(
+SELECT ai.create_vectorizer(
     source => 'docs',
     destination => 'docs_embeddings',
     embedding => ai.embedding_voyageai('voyage-3', 1024),  -- need to parameterize this

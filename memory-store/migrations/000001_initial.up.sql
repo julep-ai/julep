@@ -1,3 +1,5 @@
+BEGIN;
+
 -- init timescaledb
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 CREATE EXTENSION IF NOT EXISTS timescaledb_toolkit CASCADE;
@@ -23,3 +25,5 @@ END;
 $$ language 'plpgsql';
 
 COMMENT ON FUNCTION update_updated_at_column() IS 'Trigger function to automatically update updated_at timestamp';
+
+COMMIT;

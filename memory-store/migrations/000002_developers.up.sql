@@ -1,5 +1,7 @@
+BEGIN;
+
 -- Create developers table
-CREATE TABLE developers (
+CREATE TABLE IF NOT EXISTS developers (
     developer_id UUID NOT NULL,
     email TEXT NOT NULL CONSTRAINT ct_developers_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
     active BOOLEAN NOT NULL DEFAULT true,
@@ -12,22 +14,29 @@ CREATE TABLE developers (
 );
 
 -- Create sorted index on developer_id (optimized for UUID v7)
-CREATE INDEX idx_developers_id_sorted ON developers (developer_id DESC);
+CREATE INDEX IF NOT EXISTS idx_developers_id_sorted ON developers (developer_id DESC);
 
 -- Create index on email
-CREATE INDEX idx_developers_email ON developers (email);
+CREATE INDEX IF NOT EXISTS idx_developers_email ON developers (email);
 
 -- Create GIN index for tags array
-CREATE INDEX idx_developers_tags ON developers USING GIN (tags);
+CREATE INDEX IF NOT EXISTS idx_developers_tags ON developers USING GIN (tags);
 
 -- Create partial index for active developers
-CREATE INDEX idx_developers_active ON developers (developer_id) WHERE active = true;
+CREATE INDEX IF NOT EXISTS idx_developers_active ON developers (developer_id) WHERE active = true;
 
 -- Create trigger to automatically update updated_at
-CREATE TRIGGER trg_developers_updated_at
-    BEFORE UPDATE ON developers
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_developers_updated_at') THEN
+        CREATE TRIGGER trg_developers_updated_at
+            BEFORE UPDATE ON developers
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END
+$$;
 
 -- Add comment to table
 COMMENT ON TABLE developers IS 'Stores developer information including their settings and tags';
+COMMIT;

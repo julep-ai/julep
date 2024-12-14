@@ -1,5 +1,7 @@
+BEGIN;
+
 -- Create files table
-CREATE TABLE files (
+CREATE TABLE IF NOT EXISTS files (
     developer_id UUID NOT NULL,
     file_id UUID NOT NULL,
     name TEXT NOT NULL CONSTRAINT ct_files_name_length CHECK (length(name) >= 1 AND length(name) <= 255),
@@ -12,32 +14,41 @@ CREATE TABLE files (
     CONSTRAINT pk_files PRIMARY KEY (developer_id, file_id)
 );
 
--- Create sorted index on file_id (optimized for UUID v7)
-CREATE INDEX idx_files_id_sorted ON files (file_id DESC);
+-- Create sorted index on file_id if it doesn't exist
+CREATE INDEX IF NOT EXISTS idx_files_id_sorted ON files (file_id DESC);
 
--- Create foreign key constraint and index on developer_id
-ALTER TABLE files 
-    ADD CONSTRAINT fk_files_developer 
-    FOREIGN KEY (developer_id) 
-    REFERENCES developers(developer_id);
+-- Create foreign key constraint and index if they don't exist
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_files_developer') THEN
+        ALTER TABLE files 
+            ADD CONSTRAINT fk_files_developer 
+            FOREIGN KEY (developer_id) 
+            REFERENCES developers(developer_id);
+    END IF;
+END $$;
 
-CREATE INDEX idx_files_developer ON files (developer_id);
+CREATE INDEX IF NOT EXISTS idx_files_developer ON files (developer_id);
 
--- Before creating the user_files and agent_files tables, we need to ensure that the file_id is unique for each developer
-ALTER TABLE files
-    ADD CONSTRAINT uq_files_developer_id_file_id UNIQUE (developer_id, file_id);
+-- Add unique constraint if it doesn't exist
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_files_developer_id_file_id') THEN
+        ALTER TABLE files
+            ADD CONSTRAINT uq_files_developer_id_file_id UNIQUE (developer_id, file_id);
+    END IF;
+END $$;
 
--- Create trigger to automatically update updated_at
-CREATE TRIGGER trg_files_updated_at
-    BEFORE UPDATE ON files
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Add comment to table
-COMMENT ON TABLE files IS 'Stores file metadata and references for developers';
+-- Create trigger if it doesn't exist
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_files_updated_at') THEN
+        CREATE TRIGGER trg_files_updated_at
+            BEFORE UPDATE ON files
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
 -- Create the user_files table
-CREATE TABLE user_files (
+CREATE TABLE IF NOT EXISTS user_files (
     developer_id UUID NOT NULL,
     user_id UUID NOT NULL,
     file_id UUID NOT NULL,
@@ -46,11 +57,11 @@ CREATE TABLE user_files (
     CONSTRAINT fk_user_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files(developer_id, file_id)
 );
 
--- Indexes for efficient querying
-CREATE INDEX idx_user_files_user ON user_files (developer_id, user_id);
+-- Create index if it doesn't exist
+CREATE INDEX IF NOT EXISTS idx_user_files_user ON user_files (developer_id, user_id);
 
 -- Create the agent_files table
-CREATE TABLE agent_files (
+CREATE TABLE IF NOT EXISTS agent_files (
     developer_id UUID NOT NULL,
     agent_id UUID NOT NULL,
     file_id UUID NOT NULL,
@@ -59,5 +70,7 @@ CREATE TABLE agent_files (
     CONSTRAINT fk_agent_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files(developer_id, file_id)
 );
 
--- Indexes for efficient querying
-CREATE INDEX idx_agent_files_agent ON agent_files (developer_id, agent_id);
+-- Create index if it doesn't exist
+CREATE INDEX IF NOT EXISTS idx_agent_files_agent ON agent_files (developer_id, agent_id);
+
+COMMIT;
