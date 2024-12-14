@@ -6,28 +6,29 @@ It constructs and executes SQL queries to fetch agent details based on agent ID 
 from typing import Any, TypeVar
 from uuid import UUID
 
-from fastapi import HTTPException
-from ...metrics.counters import increase_counter
-from ..utils import (
-    pg_query,
-    partialclass,
-    rewrap_exceptions,
-    wrap_in_class,
-)
 from beartype import beartype
+from fastapi import HTTPException
 from psycopg import errors as psycopg_errors
 
 from ...autogen.openapi_model import Agent
+from ...metrics.counters import increase_counter
+from ..utils import (
+    partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
+)
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+
 @rewrap_exceptions(
     {
         psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="The specified developer does not exist."
+            detail="The specified developer does not exist.",
         )
     }
     # TODO: Add more exceptions

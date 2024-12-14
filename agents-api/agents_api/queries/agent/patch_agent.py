@@ -6,27 +6,29 @@ It constructs and executes SQL queries to update specific fields of an agent bas
 from typing import Any, TypeVar
 from uuid import UUID
 
-from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
+from beartype import beartype
 from fastapi import HTTPException
+from psycopg import errors as psycopg_errors
+
+from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
 from ...metrics.counters import increase_counter
 from ..utils import (
-    pg_query,
     partialclass,
+    pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
-from beartype import beartype
-from psycopg import errors as psycopg_errors
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+
 @rewrap_exceptions(
     {
         psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="The specified developer does not exist."
+            detail="The specified developer does not exist.",
         )
     }
     # TODO: Add more exceptions
@@ -41,10 +43,7 @@ T = TypeVar("T")
 @increase_counter("patch_agent")
 @beartype
 def patch_agent_query(
-    *,
-    agent_id: UUID,
-    developer_id: UUID,
-    data: PatchAgentRequest
+    *, agent_id: UUID, developer_id: UUID, data: PatchAgentRequest
 ) -> tuple[str, dict]:
     """
     Constructs the SQL query to partially update an agent's details.
@@ -67,7 +66,7 @@ def patch_agent_query(
             params[key] = value
 
     set_clause = ", ".join(set_clauses)
-    
+
     query = f"""
     UPDATE agents
     SET {set_clause}

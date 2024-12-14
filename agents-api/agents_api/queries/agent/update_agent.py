@@ -6,27 +6,29 @@ It constructs and executes SQL queries to replace an agent's details based on ag
 from typing import Any, TypeVar
 from uuid import UUID
 
-from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
+from beartype import beartype
 from fastapi import HTTPException
+from psycopg import errors as psycopg_errors
+
+from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
-    pg_query,
     partialclass,
+    pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
-from beartype import beartype
-from psycopg import errors as psycopg_errors
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+
 @rewrap_exceptions(
     {
         psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="The specified developer does not exist."
+            detail="The specified developer does not exist.",
         )
     }
     # TODO: Add more exceptions
@@ -41,10 +43,7 @@ T = TypeVar("T")
 @increase_counter("update_agent")
 @beartype
 def update_agent_query(
-    *,
-    agent_id: UUID,
-    developer_id: UUID,
-    data: UpdateAgentRequest
+    *, agent_id: UUID, developer_id: UUID, data: UpdateAgentRequest
 ) -> tuple[str, dict]:
     """
     Constructs the SQL query to fully update an agent's details.
@@ -57,7 +56,9 @@ def update_agent_query(
     Returns:
         tuple[str, dict]: A tuple containing the SQL query and its parameters.
     """
-    fields = ", ".join([f"{key} = %({key})s" for key in data.model_dump(exclude_unset=True).keys()])
+    fields = ", ".join(
+        [f"{key} = %({key})s" for key in data.model_dump(exclude_unset=True).keys()]
+    )
     params = {key: value for key, value in data.model_dump(exclude_unset=True).items()}
 
     query = f"""

@@ -16,8 +16,8 @@ from ...autogen.openapi_model import Agent, CreateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
-    pg_query,
     partialclass,
+    pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
@@ -91,7 +91,9 @@ def create_agent(
     )
 
     # Convert default_settings to dict if it exists
-    default_settings = data.default_settings.model_dump() if data.default_settings else None
+    default_settings = (
+        data.default_settings.model_dump() if data.default_settings else None
+    )
 
     # Set default values
     data.metadata = data.metadata or None

@@ -1,22 +1,22 @@
+import inspect
 import re
 import time
-from typing import Awaitable, Callable, ParamSpec, Type, TypeVar
-import inspect
-from fastapi import HTTPException
-import pandas as pd
-from pydantic import BaseModel
 from functools import partialmethod, wraps
+from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar
+
+import pandas as pd
+import sqlglot
 from asyncpg import Record
-from requests.exceptions import ConnectionError, Timeout
+from fastapi import HTTPException
 from httpcore import NetworkError, TimeoutException
 from httpx import RequestError
-import sqlglot
-
-from typing import Any
+from pydantic import BaseModel
+from requests.exceptions import ConnectionError, Timeout
 
 P = ParamSpec("P")
 T = TypeVar("T")
 ModelT = TypeVar("ModelT", bound=BaseModel)
+
 
 def generate_canonical_name(name: str) -> str:
     """Convert a display name to a canonical name.
@@ -31,6 +31,7 @@ def generate_canonical_name(name: str) -> str:
         canonical = f"a_{canonical}"
 
     return canonical
+
 
 def partialclass(cls, *args, **kwargs):
     cls_signature = inspect.signature(cls)
@@ -144,6 +145,7 @@ def rewrap_exceptions(
         return async_wrapper if inspect.iscoroutinefunction(func) else wrapper
 
     return decorator
+
 
 def pg_query(
     func: Callable[P, tuple[str | list[str | None], dict]] | None = None,

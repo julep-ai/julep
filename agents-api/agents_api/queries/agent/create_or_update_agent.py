@@ -6,29 +6,30 @@ It constructs and executes SQL queries to insert a new agent or update an existi
 from typing import Any, TypeVar
 from uuid import UUID
 
-from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
+from beartype import beartype
 from fastapi import HTTPException
+from psycopg import errors as psycopg_errors
+
+from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
-    pg_query,
     partialclass,
+    pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
 
-from beartype import beartype
-from psycopg import errors as psycopg_errors
-
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
+
 
 @rewrap_exceptions(
     {
         psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="The specified developer does not exist."
+            detail="The specified developer does not exist.",
         )
     }
 )
@@ -42,10 +43,7 @@ T = TypeVar("T")
 @increase_counter("create_or_update_agent")
 @beartype
 def create_or_update_agent_query(
-    *,
-    agent_id: UUID,
-    developer_id: UUID,
-    data: CreateOrUpdateAgentRequest
+    *, agent_id: UUID, developer_id: UUID, data: CreateOrUpdateAgentRequest
 ) -> tuple[list[str], dict]:
     """
     Constructs the SQL queries to create a new agent or update an existing agent's details.
@@ -67,7 +65,9 @@ def create_or_update_agent_query(
     )
 
     # Convert default_settings to dict if it exists
-    default_settings = data.default_settings.model_dump() if data.default_settings else None
+    default_settings = (
+        data.default_settings.model_dump() if data.default_settings else None
+    )
 
     # Set default values
     data.metadata = data.metadata or None

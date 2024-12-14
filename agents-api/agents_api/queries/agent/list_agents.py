@@ -6,28 +6,29 @@ It constructs and executes SQL queries to fetch a list of agents based on develo
 from typing import Any, Literal, TypeVar
 from uuid import UUID
 
-from fastapi import HTTPException
-from ...metrics.counters import increase_counter
-from ..utils import (
-    pg_query,
-    partialclass,
-    rewrap_exceptions,
-    wrap_in_class,
-)
 from beartype import beartype
+from fastapi import HTTPException
 from psycopg import errors as psycopg_errors
 
 from ...autogen.openapi_model import Agent
+from ...metrics.counters import increase_counter
+from ..utils import (
+    partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
+)
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+
 @rewrap_exceptions(
     {
         psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="The specified developer does not exist."
+            detail="The specified developer does not exist.",
         )
     }
     # TODO: Add more exceptions
@@ -47,7 +48,7 @@ def list_agents_query(
 ) -> tuple[str, dict]:
     """
     Constructs query to list agents for a developer with pagination.
-    
+
     Args:
         developer_id: UUID of the developer
         limit: Maximum number of records to return
@@ -55,7 +56,7 @@ def list_agents_query(
         sort_by: Field to sort by
         direction: Sort direction ('asc' or 'desc')
         metadata_filter: Optional metadata filters
-        
+
     Returns:
         Tuple of (query, params)
     """
@@ -67,7 +68,7 @@ def list_agents_query(
     metadata_clause = ""
     if metadata_filter:
         metadata_clause = "AND metadata @> %(metadata_filter)s::jsonb"
-        
+
     query = f"""
     SELECT 
         agent_id,
@@ -87,14 +88,10 @@ def list_agents_query(
     ORDER BY {sort_by} {direction}
     LIMIT %(limit)s OFFSET %(offset)s;
     """
-    
-    params = {
-        "developer_id": developer_id,
-        "limit": limit,
-        "offset": offset
-    }
-    
+
+    params = {"developer_id": developer_id, "limit": limit, "offset": offset}
+
     if metadata_filter:
         params["metadata_filter"] = metadata_filter
-        
+
     return query, params

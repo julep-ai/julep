@@ -6,28 +6,30 @@ It constructs and executes SQL queries to remove agent records and associated da
 from typing import Any, TypeVar
 from uuid import UUID
 
+from beartype import beartype
 from fastapi import HTTPException
+from psycopg import errors as psycopg_errors
+
+from ...autogen.openapi_model import ResourceDeletedResponse
+from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import (
-    pg_query,
     partialclass,
+    pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
-from beartype import beartype
-from psycopg import errors as psycopg_errors
-from ...autogen.openapi_model import ResourceDeletedResponse
-from ...common.utils.datetime import utcnow
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+
 @rewrap_exceptions(
     {
         psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="The specified developer does not exist."
+            detail="The specified developer does not exist.",
         )
     }
     # TODO: Add more exceptions
@@ -83,7 +85,7 @@ def delete_agent_query(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str]
         -- Delete the agent
         DELETE FROM agents
         WHERE agent_id = %(agent_id)s AND developer_id = %(developer_id)s;
-        """
+        """,
     ]
 
     params = {
