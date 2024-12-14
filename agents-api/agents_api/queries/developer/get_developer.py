@@ -7,6 +7,7 @@ from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from sqlglot import parse_one
 
 from ...common.protocol.developers import Developer
 from ..utils import (
@@ -17,6 +18,8 @@ from ..utils import (
     verify_developer_id_query,
     wrap_in_class,
 )
+
+query = parse_one("SELECT * FROM developers WHERE developer_id = $1").sql(pretty=True)
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -46,7 +49,6 @@ async def get_developer(
     developer_id: UUID,
 ) -> tuple[str, list]:
     developer_id = str(developer_id)
-    query = "SELECT * FROM developers WHERE developer_id = $1"
 
     return (
         query,

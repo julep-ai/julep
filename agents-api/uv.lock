@@ -48,6 +48,7 @@ dependencies = [
     { name = "simsimd" },
     { name = "spacy" },
     { name = "spacy-chunks" },
+    { name = "sqlglot" },
     { name = "sse-starlette" },
     { name = "temporalio", extra = ["opentelemetry"] },
     { name = "tenacity" },
@@ -116,6 +117,7 @@ requires-dist = [
     { name = "simsimd", specifier = "~=5.9.4" },
     { name = "spacy", specifier = "~=3.8.2" },
     { name = "spacy-chunks", specifier = ">=0.0.2" },
+    { name = "sqlglot", specifier = ">=26.0.0" },
     { name = "sse-starlette", specifier = "~=2.1.3" },
     { name = "temporalio", extras = ["opentelemetry"], specifier = "~=1.8" },
     { name = "tenacity", specifier = "~=9.0.0" },
@@ -2883,6 +2885,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/67/3d/926db774c9c98acf66cb4ed7faf6c377746f3e00b84b700d0868b95d0712/spacy-loggers-1.0.5.tar.gz", hash = "sha256:d60b0bdbf915a60e516cc2e653baeff946f0cfc461b452d11a4d5458c6fe5f24", size = 20811 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/33/78/d1a1a026ef3af911159398c939b1509d5c36fe524c7b644f34a5146c4e16/spacy_loggers-1.0.5-py3-none-any.whl", hash = "sha256:196284c9c446cc0cdb944005384270d775fdeaf4f494d8e269466cfa497ef645", size = 22343 },
+]
+
+[[package]]
+name = "sqlglot"
+version = "26.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fc/9a/a815124044d598b7f6174be176f379eccd9d583e3130594c381fdfb5736f/sqlglot-26.0.0.tar.gz", hash = "sha256:eb4470e8b3aa2cff1a4ecca4cfe36658e9797ab82416e566abe12672195e1ab8", size = 19775305 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6b/1e/af60a2188773414a9fa65d0e8a32e81342cfcbedf113a19df724d2968c04/sqlglot-26.0.0-py3-none-any.whl", hash = "sha256:1ee9b285e3138c2642a5670c0dbec9afd01860246837788b0f3d228aa6aff619", size = 435457 },
 ]
 
 [[package]]

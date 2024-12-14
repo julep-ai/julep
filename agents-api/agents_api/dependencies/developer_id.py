@@ -5,7 +5,7 @@ from fastapi import Header
 
 from ..common.protocol.developers import Developer
 from ..env import multi_tenant_mode
-from ..models.developer.get_developer import get_developer, verify_developer
+from ..queries.developer.get_developer import get_developer, verify_developer
 from .exceptions import InvalidHeaderFormat
 
 
