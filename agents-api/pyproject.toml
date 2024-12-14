@@ -51,6 +51,9 @@ dependencies = [
   "xxhash~=3.5.0",
   "spacy-chunks>=0.0.2",
   "uuid7>=0.1.0",
+  "psycopg>=3.2.3",
+  "asyncpg>=0.30.0",
+  "sqlglot>=26.0.0",
 ]
 
 [dependency-groups]
