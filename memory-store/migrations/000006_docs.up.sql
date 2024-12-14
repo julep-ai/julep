@@ -1,8 +1,8 @@
 BEGIN;
 
 -- Create function to validate language (make it OR REPLACE)
-CREATE OR REPLACE FUNCTION is_valid_language(lang text) 
-RETURNS boolean AS $$
+CREATE
+OR REPLACE FUNCTION is_valid_language (lang text) RETURNS boolean AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1 FROM pg_ts_config WHERE cfgname::text = lang
@@ -29,8 +29,7 @@ CREATE TABLE IF NOT EXISTS docs (
     CONSTRAINT ct_docs_embedding_dimensions_positive CHECK (embedding_dimensions > 0),
     CONSTRAINT ct_docs_valid_modality CHECK (modality IN ('text', 'image', 'mixed')),
     CONSTRAINT ct_docs_index_positive CHECK (index >= 0),
-    CONSTRAINT ct_docs_valid_language 
-        CHECK (is_valid_language(language))
+    CONSTRAINT ct_docs_valid_language CHECK (is_valid_language (language))
 );
 
 -- Create sorted index on doc_id if not exists
@@ -70,8 +69,8 @@ CREATE TABLE IF NOT EXISTS user_docs (
     user_id UUID NOT NULL,
     doc_id UUID NOT NULL,
     CONSTRAINT pk_user_docs PRIMARY KEY (developer_id, user_id, doc_id),
-    CONSTRAINT fk_user_docs_user FOREIGN KEY (developer_id, user_id) REFERENCES users(developer_id, user_id),
-    CONSTRAINT fk_user_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs(developer_id, doc_id)
+    CONSTRAINT fk_user_docs_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
+    CONSTRAINT fk_user_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id)
 );
 
 -- Create the agent_docs table
@@ -80,20 +79,26 @@ CREATE TABLE IF NOT EXISTS agent_docs (
     agent_id UUID NOT NULL,
     doc_id UUID NOT NULL,
     CONSTRAINT pk_agent_docs PRIMARY KEY (developer_id, agent_id, doc_id),
-    CONSTRAINT fk_agent_docs_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents(developer_id, agent_id),
-    CONSTRAINT fk_agent_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs(developer_id, doc_id)
+    CONSTRAINT fk_agent_docs_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
+    CONSTRAINT fk_agent_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id)
 );
 
 -- Create indexes if not exists
 CREATE INDEX IF NOT EXISTS idx_user_docs_user ON user_docs (developer_id, user_id);
+
 CREATE INDEX IF NOT EXISTS idx_agent_docs_agent ON agent_docs (developer_id, agent_id);
+
 CREATE INDEX IF NOT EXISTS idx_docs_metadata ON docs USING GIN (metadata);
 
 -- Enable necessary PostgreSQL extensions
 CREATE EXTENSION IF NOT EXISTS unaccent;
+
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE EXTENSION IF NOT EXISTS dict_int CASCADE;
+
 CREATE EXTENSION IF NOT EXISTS dict_xsyn CASCADE;
+
 CREATE EXTENSION IF NOT EXISTS fuzzystrmatch CASCADE;
 
 -- Configure text search for all supported languages
@@ -132,8 +137,8 @@ BEGIN
 END $$;
 
 -- Create function to update tsvector
-CREATE OR REPLACE FUNCTION docs_update_search_tsv()
-RETURNS trigger AS $$
+CREATE
+OR REPLACE FUNCTION docs_update_search_tsv () RETURNS trigger AS $$
 BEGIN
     NEW.search_tsv :=
         setweight(to_tsvector(NEW.language::regconfig, unaccent(coalesce(NEW.title, ''))), 'A') ||
@@ -158,13 +163,28 @@ END $$;
 
 -- Create indexes if not exists
 CREATE INDEX IF NOT EXISTS idx_docs_search_tsv ON docs USING GIN (search_tsv);
+
 CREATE INDEX IF NOT EXISTS idx_docs_title_trgm ON docs USING GIN (title gin_trgm_ops);
+
 CREATE INDEX IF NOT EXISTS idx_docs_content_trgm ON docs USING GIN (content gin_trgm_ops);
 
 -- Update existing rows (if any)
-UPDATE docs SET search_tsv = 
-    setweight(to_tsvector(language::regconfig, unaccent(coalesce(title, ''))), 'A') ||
-    setweight(to_tsvector(language::regconfig, unaccent(coalesce(content, ''))), 'B')
-WHERE search_tsv IS NULL;
+UPDATE docs
+SET
+    search_tsv = setweight(
+        to_tsvector(
+            language::regconfig,
+            unaccent (coalesce(title, ''))
+        ),
+        'A'
+    ) || setweight(
+        to_tsvector(
+            language::regconfig,
+            unaccent (coalesce(content, ''))
+        ),
+        'B'
+    )
+WHERE
+    search_tsv IS NULL;
 
 COMMIT;

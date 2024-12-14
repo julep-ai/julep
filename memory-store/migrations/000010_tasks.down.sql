@@ -4,11 +4,16 @@ BEGIN;
 DO $$ 
 BEGIN
     IF EXISTS (
-        SELECT 1 
-        FROM information_schema.table_constraints 
-        WHERE constraint_name = 'fk_tools_task_id'
+        SELECT
+            1
+        FROM
+            information_schema.table_constraints
+        WHERE
+            constraint_name = 'fk_tools_task_id'
     ) THEN
-        ALTER TABLE tools DROP CONSTRAINT fk_tools_task_id;
+    ALTER TABLE tools
+    DROP CONSTRAINT fk_tools_task_id;
+
     END IF;
 END $$;
 

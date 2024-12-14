@@ -7,19 +7,21 @@ CREATE TABLE IF NOT EXISTS sessions (
     situation TEXT,
     system_template TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    -- TODO: Derived from entries
+    -- NOTE: Derived from entries
     -- updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
-    render_templates BOOLEAN NOT NULL DEFAULT true,
+    render_templates BOOLEAN NOT NULL DEFAULT TRUE,
     token_budget INTEGER,
     context_overflow TEXT,
     forward_tool_calls BOOLEAN,
     recall_options JSONB NOT NULL DEFAULT '{}'::JSONB,
-    CONSTRAINT pk_sessions PRIMARY KEY (developer_id, session_id)
+    CONSTRAINT pk_sessions PRIMARY KEY (developer_id, session_id),
+    CONSTRAINT uq_sessions_session_id UNIQUE (session_id)
 );
 
 -- Create indexes if they don't exist
 CREATE INDEX IF NOT EXISTS idx_sessions_id_sorted ON sessions (session_id DESC);
+
 CREATE INDEX IF NOT EXISTS idx_sessions_metadata ON sessions USING GIN (metadata);
 
 -- Create foreign key if it doesn't exist
@@ -62,16 +64,23 @@ CREATE TABLE IF NOT EXISTS session_lookup (
     session_id UUID NOT NULL,
     participant_type participant_type NOT NULL,
     participant_id UUID NOT NULL,
-    PRIMARY KEY (developer_id, session_id, participant_type, participant_id),
-    FOREIGN KEY (developer_id, session_id) REFERENCES sessions(developer_id, session_id)
+    PRIMARY KEY (
+        developer_id,
+        session_id,
+        participant_type,
+        participant_id
+    ),
+    FOREIGN KEY (developer_id, session_id) REFERENCES sessions (developer_id, session_id)
 );
 
 -- Create indexes if they don't exist
 CREATE INDEX IF NOT EXISTS idx_session_lookup_by_session ON session_lookup (developer_id, session_id);
+
 CREATE INDEX IF NOT EXISTS idx_session_lookup_by_participant ON session_lookup (developer_id, participant_id);
 
 -- Create or replace the validation function
-CREATE OR REPLACE FUNCTION validate_participant() RETURNS trigger AS $$
+CREATE
+OR REPLACE FUNCTION validate_participant () RETURNS trigger AS $$
 BEGIN
     IF NEW.participant_type = 'user' THEN
         PERFORM 1 FROM users WHERE developer_id = NEW.developer_id AND user_id = NEW.participant_id;
@@ -101,7 +110,6 @@ BEGIN
         FOR EACH ROW
         EXECUTE FUNCTION validate_participant();
     END IF;
-
     IF NOT EXISTS (
         SELECT 1 FROM pg_trigger WHERE tgname = 'trg_validate_participant_before_update'
     ) THEN

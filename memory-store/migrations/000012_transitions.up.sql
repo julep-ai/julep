@@ -46,8 +46,19 @@ CREATE TABLE IF NOT EXISTS transitions (
 );
 
 -- Convert to hypertable if not already
-SELECT create_hypertable('transitions', by_range('created_at', INTERVAL '1 day'), if_not_exists => TRUE);
-SELECT add_dimension('transitions', by_hash('execution_id', 2), if_not_exists => TRUE);
+SELECT
+    create_hypertable (
+        'transitions',
+        by_range ('created_at', INTERVAL '1 day'),
+        if_not_exists => TRUE
+    );
+
+SELECT
+    add_dimension (
+        'transitions',
+        by_hash ('execution_id', 2),
+        if_not_exists => TRUE
+    );
 
 -- Create indexes if they don't exist
 DO $$ 
@@ -94,7 +105,8 @@ END $$;
 COMMENT ON TABLE transitions IS 'Stores transitions associated with AI agents for developers';
 
 -- Create a trigger function that checks for valid transitions
-CREATE OR REPLACE FUNCTION check_valid_transition() RETURNS trigger AS $$
+CREATE
+OR REPLACE FUNCTION check_valid_transition () RETURNS trigger AS $$
 DECLARE
     previous_type transition_type;
     valid_next_types transition_type[];
@@ -146,9 +158,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create a trigger on the transitions table
-CREATE TRIGGER validate_transition
-BEFORE INSERT ON transitions
-FOR EACH ROW
-EXECUTE FUNCTION check_valid_transition();
+CREATE TRIGGER validate_transition BEFORE INSERT ON transitions FOR EACH ROW
+EXECUTE FUNCTION check_valid_transition ();
 
 COMMIT;

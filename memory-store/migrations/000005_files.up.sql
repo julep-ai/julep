@@ -4,9 +4,18 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS files (
     developer_id UUID NOT NULL,
     file_id UUID NOT NULL,
-    name TEXT NOT NULL CONSTRAINT ct_files_name_length CHECK (length(name) >= 1 AND length(name) <= 255),
-    description TEXT DEFAULT NULL CONSTRAINT ct_files_description_length CHECK (description IS NULL OR length(description) <= 1000),
-    mime_type TEXT DEFAULT NULL CONSTRAINT ct_files_mime_type_length CHECK (mime_type IS NULL OR length(mime_type) <= 127),
+    name TEXT NOT NULL CONSTRAINT ct_files_name_length CHECK (
+        length(name) >= 1
+        AND length(name) <= 255
+    ),
+    description TEXT DEFAULT NULL CONSTRAINT ct_files_description_length CHECK (
+        description IS NULL
+        OR length(description) <= 1000
+    ),
+    mime_type TEXT DEFAULT NULL CONSTRAINT ct_files_mime_type_length CHECK (
+        mime_type IS NULL
+        OR length(mime_type) <= 127
+    ),
     size BIGINT NOT NULL CONSTRAINT ct_files_size_positive CHECK (size > 0),
     hash BYTEA NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -53,8 +62,8 @@ CREATE TABLE IF NOT EXISTS user_files (
     user_id UUID NOT NULL,
     file_id UUID NOT NULL,
     CONSTRAINT pk_user_files PRIMARY KEY (developer_id, user_id, file_id),
-    CONSTRAINT fk_user_files_user FOREIGN KEY (developer_id, user_id) REFERENCES users(developer_id, user_id),
-    CONSTRAINT fk_user_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files(developer_id, file_id)
+    CONSTRAINT fk_user_files_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
+    CONSTRAINT fk_user_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id)
 );
 
 -- Create index if it doesn't exist
@@ -66,8 +75,8 @@ CREATE TABLE IF NOT EXISTS agent_files (
     agent_id UUID NOT NULL,
     file_id UUID NOT NULL,
     CONSTRAINT pk_agent_files PRIMARY KEY (developer_id, agent_id, file_id),
-    CONSTRAINT fk_agent_files_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents(developer_id, agent_id),
-    CONSTRAINT fk_agent_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files(developer_id, file_id)
+    CONSTRAINT fk_agent_files_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
+    CONSTRAINT fk_agent_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id)
 );
 
 -- Create index if it doesn't exist
