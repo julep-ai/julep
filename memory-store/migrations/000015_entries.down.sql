@@ -1,5 +1,9 @@
 BEGIN;
 
+DROP TRIGGER IF EXISTS trg_optimized_update_token_count_after ON entries;
+
+DROP FUNCTION IF EXISTS optimized_update_token_count_after;
+
 -- Drop foreign key constraint if it exists
 ALTER TABLE IF EXISTS entries
 DROP CONSTRAINT IF EXISTS fk_entries_session;
