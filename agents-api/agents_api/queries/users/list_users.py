@@ -10,13 +10,16 @@ from ...autogen.openapi_model import User
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-@rewrap_exceptions({
-    psycopg_errors.ForeignKeyViolation: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer does not exist.",
-    )
-})
+
+@rewrap_exceptions(
+    {
+        psycopg_errors.ForeignKeyViolation: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        )
+    }
+)
 @wrap_in_class(User)
 @increase_counter("list_users")
 @pg_query
@@ -51,11 +54,7 @@ def list_users_query(
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
 
     metadata_clause = ""
-    params = {
-        "developer_id": developer_id,
-        "limit": limit,
-        "offset": offset
-    }
+    params = {"developer_id": developer_id, "limit": limit, "offset": offset}
 
     if metadata_filter:
         metadata_clause = "AND metadata @> %(metadata_filter)s"

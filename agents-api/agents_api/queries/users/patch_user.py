@@ -10,22 +10,22 @@ from ...autogen.openapi_model import PatchUserRequest, ResourceUpdatedResponse
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-@rewrap_exceptions({
-    psycopg_errors.ForeignKeyViolation: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer does not exist.",
-    )
-})
+
+@rewrap_exceptions(
+    {
+        psycopg_errors.ForeignKeyViolation: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        )
+    }
+)
 @wrap_in_class(ResourceUpdatedResponse, one=True)
 @increase_counter("patch_user")
 @pg_query
 @beartype
 def patch_user_query(
-    *, 
-    developer_id: UUID, 
-    user_id: UUID, 
-    data: PatchUserRequest
+    *, developer_id: UUID, user_id: UUID, data: PatchUserRequest
 ) -> tuple[str, dict]:
     """
     Constructs an optimized SQL query for partial user updates.

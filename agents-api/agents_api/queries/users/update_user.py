@@ -6,26 +6,26 @@ from fastapi import HTTPException
 from psycopg import errors as psycopg_errors
 from sqlglot import parse_one
 
-from ...autogen.openapi_model import UpdateUserRequest, ResourceUpdatedResponse
+from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateUserRequest
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-@rewrap_exceptions({
-    psycopg_errors.ForeignKeyViolation: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer does not exist.",
-    )
-})
+
+@rewrap_exceptions(
+    {
+        psycopg_errors.ForeignKeyViolation: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        )
+    }
+)
 @wrap_in_class(ResourceUpdatedResponse, one=True)
 @increase_counter("update_user")
 @pg_query
 @beartype
 def update_user_query(
-    *, 
-    developer_id: UUID, 
-    user_id: UUID, 
-    data: UpdateUserRequest
+    *, developer_id: UUID, user_id: UUID, data: UpdateUserRequest
 ) -> tuple[str, dict]:
     """
     Constructs an optimized SQL query to update a user's details.

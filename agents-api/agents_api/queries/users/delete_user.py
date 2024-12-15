@@ -10,13 +10,16 @@ from ...autogen.openapi_model import ResourceDeletedResponse
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-@rewrap_exceptions({
-    psycopg_errors.ForeignKeyViolation: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer does not exist.",
-    )
-})
+
+@rewrap_exceptions(
+    {
+        psycopg_errors.ForeignKeyViolation: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        )
+    }
+)
 @wrap_in_class(ResourceDeletedResponse, one=True)
 @increase_counter("delete_user")
 @pg_query

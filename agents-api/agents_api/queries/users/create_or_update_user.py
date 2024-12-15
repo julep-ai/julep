@@ -1,9 +1,9 @@
 from typing import Any
 from uuid import UUID
 
+from asyncpg import exceptions as asyncpg_exceptions
 from beartype import beartype
 from fastapi import HTTPException
-from asyncpg import exceptions as asyncpg_exceptions
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import CreateUserRequest, User
@@ -11,22 +11,21 @@ from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 
-@rewrap_exceptions({
-    asyncpg_exceptions.ForeignKeyViolationError: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer does not exist.",
-    )
-})
+@rewrap_exceptions(
+    {
+        asyncpg_exceptions.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        )
+    }
+)
 @wrap_in_class(User)
 @increase_counter("create_or_update_user")
 @pg_query
 @beartype
 def create_or_update_user_query(
-    *,
-    developer_id: UUID,
-    user_id: UUID,
-    data: CreateUserRequest
+    *, developer_id: UUID, user_id: UUID, data: CreateUserRequest
 ) -> tuple[str, dict]:
     """
     Constructs an SQL query to create or update a user.

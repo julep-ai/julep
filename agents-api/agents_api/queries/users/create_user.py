@@ -4,26 +4,29 @@ from uuid import UUID
 from beartype import beartype
 from fastapi import HTTPException
 from psycopg import errors as psycopg_errors
-from sqlglot import parse_one
 from pydantic import ValidationError
+from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateUserRequest, User
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-@rewrap_exceptions({
-    psycopg_errors.ForeignKeyViolation: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer does not exist.",
-    ),
-    ValidationError: partialclass(
-        HTTPException,
-        status_code=400,
-        detail="Input validation failed. Please check the provided data.",
-    ),
-})
+
+@rewrap_exceptions(
+    {
+        psycopg_errors.ForeignKeyViolation: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        ),
+        ValidationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Input validation failed. Please check the provided data.",
+        ),
+    }
+)
 @wrap_in_class(User)
 @increase_counter("create_user")
 @pg_query
@@ -46,7 +49,7 @@ def create_user(
         tuple[str, dict]: A tuple containing the SQL query and its parameters.
     """
     user_id = user_id or uuid7()
-    
+
     query = parse_one("""
     INSERT INTO users (
         developer_id,
