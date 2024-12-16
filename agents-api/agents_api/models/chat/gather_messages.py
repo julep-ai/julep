@@ -193,6 +193,12 @@ async def gather_messages(
         # MMR is not applied to text search
         and recall_options.mode != "text"
     ):
+        # FIXME: This is a temporary fix to ensure that the MMR algorithm works.
+        # We shouldn't be having references without embeddings.
+        doc_references = [
+            doc for doc in doc_references if doc.snippet.embedding is not None
+        ]
+
         # Apply MMR
         indices = maximal_marginal_relevance(
             np.asarray(query_embedding),

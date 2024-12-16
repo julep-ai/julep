@@ -6,7 +6,7 @@ from .base_models import BaseOutput
 
 
 class SpiderResponse(BaseModel):
-    content: Optional[str] = None
+    content: Optional[str | list[str]] = None
     error: Optional[str] = None
     status: Optional[int] = None
     costs: Optional[dict[Any, Any]] = None

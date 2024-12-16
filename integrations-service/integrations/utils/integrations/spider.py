@@ -28,11 +28,11 @@ def get_api_key(setup: SpiderSetup) -> str:
 def create_spider_response(pages: list[dict]) -> list[SpiderResponse]:
     return [
         SpiderResponse(
-            url=page.get("url", "Not available"),
-            content=(page.get("content") or "Not available").strip(),
-            error=page.get("error", "Not available"),
-            status=page.get("status", "Not available"),
-            costs=page.get("costs", "Not available"),
+            url=page.get("url"),
+            content=(page.get("content")),
+            error=page.get("error"),
+            status=page.get("status"),
+            costs=page.get("costs"),
         )
         for page in pages
     ]

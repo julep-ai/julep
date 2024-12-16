@@ -94,6 +94,7 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
         token_budget,
         context_overflow,
         updated_at,
+        recall_options,
     ] :=
         input[developer_id, session_id],
         *sessions {{
@@ -105,6 +106,7 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
             render_templates,
             token_budget,
             context_overflow,
+            recall_options,
             @ 'END'
         }},
         updated_at = [floor(now()), true]
@@ -119,6 +121,7 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
         render_templates,
         token_budget,
         context_overflow,
+        recall_options,
         updated_at,
     }}
     """

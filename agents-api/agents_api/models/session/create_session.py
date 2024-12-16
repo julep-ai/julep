@@ -104,7 +104,7 @@ def create_session(
 
     create_query = """
         # Insert the new session data into the 'session' table with the specified columns.
-        ?[session_id, developer_id, situation, metadata, render_templates, token_budget, context_overflow] <- [[
+        ?[session_id, developer_id, situation, metadata, render_templates, token_budget, context_overflow, recall_options] <- [[
             $session_id,
             $developer_id,
             $situation,
@@ -112,6 +112,7 @@ def create_session(
             $render_templates,
             $token_budget,
             $context_overflow,
+            $recall_options,
         ]]
 
         :insert sessions {
@@ -122,6 +123,7 @@ def create_session(
             render_templates,
             token_budget,
             context_overflow,
+            recall_options,
         }
         # Specify the data to return after the query execution, typically the newly created session's ID.
         :returning
