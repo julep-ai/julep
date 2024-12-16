@@ -1,5 +1,6 @@
 import concurrent.futures
 import inspect
+import socket
 import time
 from functools import partialmethod, wraps
 from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar
@@ -7,12 +8,7 @@ from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar
 import pandas as pd
 from asyncpg import Record
 from fastapi import HTTPException
-from httpcore import NetworkError, TimeoutException
-from httpx import RequestError
 from pydantic import BaseModel
-from requests.exceptions import ConnectionError, Timeout
-
-from ..common.utils.cozo import uuid_int_list_to_uuid
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -93,13 +89,7 @@ def pg_query(
                 debug and print(repr(e))
                 connection_error = isinstance(
                     e,
-                    (
-                        ConnectionError,
-                        Timeout,
-                        TimeoutException,
-                        NetworkError,
-                        RequestError,
-                    ),
+                    (socket.gaierror),
                 )
 
                 if connection_error:
