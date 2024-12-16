@@ -11,11 +11,8 @@ from sqlglot import parse_one
 
 from ...common.protocol.developers import Developer
 from ..utils import (
-    cozo_query,
-    partialclass,
     pg_query,
     rewrap_exceptions,
-    verify_developer_id_query,
     wrap_in_class,
 )
 
@@ -25,22 +22,12 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-@rewrap_exceptions({QueryException: partialclass(HTTPException, status_code=401)})
-@cozo_query
-@beartype
-def verify_developer(
-    *,
-    developer_id: UUID,
-) -> tuple[str, dict]:
-    return (verify_developer_id_query(developer_id), {})
-
-
-@rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=403),
-        ValidationError: partialclass(HTTPException, status_code=500),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         QueryException: partialclass(HTTPException, status_code=403),
+#         ValidationError: partialclass(HTTPException, status_code=500),
+#     }
+# )
 @wrap_in_class(Developer, one=True, transform=lambda d: {**d, "id": d["developer_id"]})
 @pg_query
 @beartype
