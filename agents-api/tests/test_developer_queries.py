@@ -4,7 +4,10 @@ from uuid_extensions import uuid7
 from ward import raises, test
 
 from agents_api.common.protocol.developers import Developer
-from agents_api.queries.developers.get_developer import get_developer # , verify_developer
+from agents_api.queries.developers.get_developer import (
+    get_developer,
+)  # , verify_developer
+
 from .fixtures import pg_client, test_developer_id
 
 

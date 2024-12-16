@@ -40,21 +40,24 @@ from agents_api.queries.developers.get_developer import get_developer
 # from agents_api.queries.tools.delete_tool import delete_tool
 from agents_api.queries.users.create_user import create_user
 from agents_api.queries.users.delete_user import delete_user
+
 # from agents_api.web import app
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
-    patch_pg_client,
 )
 from .utils import (
+    patch_pg_client,
     patch_s3_client,
 )
 
 EMBEDDING_SIZE: int = 1024
 
+
 @fixture(scope="global")
 async def pg_client():
     async with patch_pg_client() as pg_client:
         yield pg_client
+
 
 @fixture(scope="global")
 def test_developer_id():
@@ -65,6 +68,7 @@ def test_developer_id():
     developer_id = uuid7()
 
     yield developer_id
+
 
 # @fixture(scope="global")
 # def test_file(client=pg_client, developer_id=test_developer_id):
@@ -316,7 +320,7 @@ def test_user(pg_client=pg_client, developer_id=test_developer_id):
 #         data=[CreateToolRequest(**tool)],
 #         client=client,
 #     )
-# 
+#
 #     yield tool
 
 

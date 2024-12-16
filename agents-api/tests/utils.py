@@ -1,9 +1,9 @@
 import asyncio
 import json
 import logging
+import subprocess
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
-import subprocess
 from typing import Any, Dict, Optional
 from unittest.mock import patch
 
@@ -174,6 +174,7 @@ def patch_s3_client():
     with patch("agents_api.clients.async_s3.get_session") as get_session:
         get_session.return_value = mock_session
         yield mock_session
+
 
 @asynccontextmanager
 async def patch_pg_client():
