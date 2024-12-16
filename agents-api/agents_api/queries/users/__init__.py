@@ -11,11 +11,11 @@ in the TimescaleDB database. This includes operations for:
 
 from .create_or_update_user import create_or_update_user
 from .create_user import create_user
+from .delete_user import delete_user
 from .get_user import get_user
 from .list_users import list_users
 from .patch_user import patch_user
 from .update_user import update_user
-from .delete_user import delete_user
 
 __all__ = [
     "create_user",
