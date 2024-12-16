@@ -1,19 +1,44 @@
-from typing import Any
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
 from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# Define the raw SQL query outside the function
+raw_query = """
+WITH deleted_data AS (
+    DELETE FROM user_files 
+    WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s
+),
+deleted_docs AS (
+    DELETE FROM user_docs 
+    WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s
+)
+DELETE FROM users 
+WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s
+RETURNING user_id as id, developer_id;
+"""
+
+# Parse and optimize the query
+query = optimize(
+    parse_one(raw_query),
+    schema={
+        "user_files": {"developer_id": "UUID", "user_id": "UUID"},
+        "user_docs": {"developer_id": "UUID", "user_id": "UUID"},
+        "users": {"developer_id": "UUID", "user_id": "UUID"},
+    },
+).sql(pretty=True)
+
 
 @rewrap_exceptions(
     {
-        psycopg_errors.ForeignKeyViolation: partialclass(
+        asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
             detail="The specified developer does not exist.",
@@ -24,9 +49,9 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 @increase_counter("delete_user")
 @pg_query
 @beartype
-def delete_user_query(*, developer_id: UUID, user_id: UUID) -> tuple[list[str], dict]:
+def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
     """
-    Constructs optimized SQL queries to delete a user and related data.
+    Constructs optimized SQL query to delete a user and related data.
     Uses primary key for efficient deletion.
 
     Args:
@@ -34,15 +59,7 @@ def delete_user_query(*, developer_id: UUID, user_id: UUID) -> tuple[list[str], 
         user_id (UUID): The user's UUID
 
     Returns:
-        tuple[list[str], dict]: List of SQL queries and parameters
+        tuple[str, dict]: SQL query and parameters
     """
-    query = parse_one("""
-    BEGIN;
-    DELETE FROM user_files WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s;
-    DELETE FROM user_docs WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s;
-    DELETE FROM users WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s
-    RETURNING user_id as id, developer_id;
-    COMMIT;
-    """).sql()
 
-    return [query], {"developer_id": developer_id, "user_id": user_id}
+    return query, {"developer_id": developer_id, "user_id": user_id}

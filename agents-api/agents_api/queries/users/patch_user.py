@@ -1,19 +1,51 @@
-from typing import Any
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
 from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import PatchUserRequest, ResourceUpdatedResponse
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# Define the raw SQL query outside the function
+raw_query = """
+UPDATE users
+SET {update_parts}
+WHERE developer_id = %(developer_id)s 
+AND user_id = %(user_id)s
+RETURNING 
+    user_id as id,
+    developer_id,
+    name,
+    about,
+    metadata,
+    created_at,
+    updated_at;
+"""
+
+# Parse and optimize the query
+query_template = optimize(
+    parse_one(raw_query),
+    schema={
+        "users": {
+            "developer_id": "UUID",
+            "user_id": "UUID",
+            "name": "STRING",
+            "about": "STRING",
+            "metadata": "JSONB",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
+        }
+    },
+).sql(pretty=True)
+
 
 @rewrap_exceptions(
     {
-        psycopg_errors.ForeignKeyViolation: partialclass(
+        asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
             detail="The specified developer does not exist.",
@@ -24,7 +56,7 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 @increase_counter("patch_user")
 @pg_query
 @beartype
-def patch_user_query(
+def patch_user(
     *, developer_id: UUID, user_id: UUID, data: PatchUserRequest
 ) -> tuple[str, dict]:
     """
@@ -55,19 +87,6 @@ def patch_user_query(
         update_parts.append("metadata = metadata || %(metadata)s")
         params["metadata"] = data.metadata
 
-    query = parse_one(f"""
-    UPDATE users
-    SET {", ".join(update_parts)}
-    WHERE developer_id = %(developer_id)s 
-    AND user_id = %(user_id)s
-    RETURNING 
-        user_id as id,
-        developer_id,
-        name,
-        about,
-        metadata,
-        created_at,
-        updated_at;
-    """).sql()
+    query = query_template.format(update_parts=", ".join(update_parts))
 
     return query, params

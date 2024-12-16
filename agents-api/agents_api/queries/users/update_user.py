@@ -1,19 +1,54 @@
-from typing import Any
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
 from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateUserRequest
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# Define the raw SQL query outside the function
+raw_query = """
+UPDATE users
+SET 
+    name = %(name)s,
+    about = %(about)s,
+    metadata = %(metadata)s
+WHERE developer_id = %(developer_id)s 
+AND user_id = %(user_id)s
+RETURNING 
+    user_id as id,
+    developer_id,
+    name,
+    about,
+    metadata,
+    created_at,
+    updated_at;
+"""
+
+# Parse and optimize the query
+query = optimize(
+    parse_one(raw_query),
+    schema={
+        "users": {
+            "developer_id": "UUID",
+            "user_id": "UUID",
+            "name": "STRING",
+            "about": "STRING",
+            "metadata": "JSONB",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
+        }
+    },
+).sql(pretty=True)
+
 
 @rewrap_exceptions(
     {
-        psycopg_errors.ForeignKeyViolation: partialclass(
+        asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
             detail="The specified developer does not exist.",
@@ -24,7 +59,7 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 @increase_counter("update_user")
 @pg_query
 @beartype
-def update_user_query(
+def update_user(
     *, developer_id: UUID, user_id: UUID, data: UpdateUserRequest
 ) -> tuple[str, dict]:
     """
@@ -39,24 +74,6 @@ def update_user_query(
     Returns:
         tuple[str, dict]: SQL query and parameters
     """
-    query = parse_one("""
-    UPDATE users
-    SET 
-        name = %(name)s,
-        about = %(about)s,
-        metadata = %(metadata)s
-    WHERE developer_id = %(developer_id)s 
-    AND user_id = %(user_id)s
-    RETURNING 
-        user_id as id,
-        developer_id,
-        name,
-        about,
-        metadata,
-        created_at,
-        updated_at;
-    """).sql()
-
     params = {
         "developer_id": developer_id,
         "user_id": user_id,

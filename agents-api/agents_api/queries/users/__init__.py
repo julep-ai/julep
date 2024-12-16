@@ -9,20 +9,20 @@ in the TimescaleDB database. This includes operations for:
 - Deleting users
 """
 
-from .create_or_update_user import create_or_update_user_query
+from .create_or_update_user import create_or_update_user
 from .create_user import create_user
-from .delete_user import delete_user_query
-from .get_user import get_user_query
-from .list_users import list_users_query
-from .patch_user import patch_user_query
-from .update_user import update_user_query
+from .get_user import get_user
+from .list_users import list_users
+from .patch_user import patch_user
+from .update_user import update_user
+from .delete_user import delete_user
 
 __all__ = [
     "create_user",
-    "create_or_update_user_query",
-    "delete_user_query",
-    "get_user_query",
-    "list_users_query",
-    "patch_user_query",
-    "update_user_query",
+    "create_or_update_user",
+    "delete_user",
+    "get_user",
+    "list_users",
+    "patch_user",
+    "update_user",
 ]

@@ -1,29 +1,60 @@
-from typing import Any
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
-from pydantic import ValidationError
-from sqlglot import parse_one
+from sqlglot import optimize, parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateUserRequest, User
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# Define the raw SQL query outside the function
+raw_query = """
+INSERT INTO users (
+    developer_id,
+    user_id,
+    name,
+    about,
+    metadata
+)
+VALUES (
+    %(developer_id)s,
+    %(user_id)s,
+    %(name)s,
+    %(about)s,
+    %(metadata)s
+)
+RETURNING *;
+"""
+
+# Parse and optimize the query
+query = optimize(
+    parse_one(raw_query),
+    schema={
+        "users": {
+            "developer_id": "UUID",
+            "user_id": "UUID",
+            "name": "STRING",
+            "about": "STRING",
+            "metadata": "JSONB",
+        }
+    },
+).sql(pretty=True)
+
 
 @rewrap_exceptions(
     {
-        psycopg_errors.ForeignKeyViolation: partialclass(
+        asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
             detail="The specified developer does not exist.",
         ),
-        ValidationError: partialclass(
+        asyncpg.NullValueNoIndicatorParameterError: partialclass(
             HTTPException,
-            status_code=400,
-            detail="Input validation failed. Please check the provided data.",
+            status_code=404,
+            detail="The specified developer does not exist.",
         ),
     }
 )
@@ -49,24 +80,6 @@ def create_user(
         tuple[str, dict]: A tuple containing the SQL query and its parameters.
     """
     user_id = user_id or uuid7()
-
-    query = parse_one("""
-    INSERT INTO users (
-        developer_id,
-        user_id,
-        name,
-        about,
-        metadata
-    )
-    VALUES (
-        %(developer_id)s,
-        %(user_id)s,
-        %(name)s,
-        %(about)s,
-        %(metadata)s
-    )
-    RETURNING *;
-    """).sql()
 
     params = {
         "developer_id": developer_id,
