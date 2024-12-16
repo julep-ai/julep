@@ -66,3 +66,20 @@ scalar PyExpression extends string;
 
 /** A valid jinja template. */
 scalar JinjaTemplate extends string;
+
+/**
+ * For canonical names (machine-friendly identifiers)
+ * Must start with a letter and can only contain letters, numbers, and underscores
+ */
+@minLength(1)
+@maxLength(255)
+@pattern("^[a-zA-Z][a-zA-Z0-9_]*$")
+scalar canonicalName extends string;
+
+/**
+ * For display names
+ * Must be between 1 and 255 characters
+ */
+@minLength(1)
+@maxLength(255)
+scalar displayName extends string;

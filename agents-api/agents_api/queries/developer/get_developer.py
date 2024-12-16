@@ -7,15 +7,19 @@ from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from sqlglot import parse_one
 
 from ...common.protocol.developers import Developer
 from ..utils import (
     cozo_query,
     partialclass,
+    pg_query,
     rewrap_exceptions,
     verify_developer_id_query,
     wrap_in_class,
 )
+
+query = parse_one("SELECT * FROM developers WHERE developer_id = $1").sql(pretty=True)
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -38,37 +42,15 @@ def verify_developer(
     }
 )
 @wrap_in_class(Developer, one=True, transform=lambda d: {**d, "id": d["developer_id"]})
-@cozo_query
+@pg_query
 @beartype
-def get_developer(
+async def get_developer(
     *,
     developer_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     developer_id = str(developer_id)
 
-    query = """
-        input[developer_id] <- [[to_uuid($developer_id)]]
-        ?[
-            developer_id,
-            email,
-            active,
-            tags,
-            settings,
-            created_at,
-            updated_at,
-        ] :=
-            input[developer_id],
-            *developers {
-                developer_id,
-                email,
-                active,
-                tags,
-                settings,
-                created_at,
-                updated_at,
-            }
-
-        :limit 1
-    """
-
-    return (query, {"developer_id": developer_id})
+    return (
+        query,
+        [developer_id],
+    )
