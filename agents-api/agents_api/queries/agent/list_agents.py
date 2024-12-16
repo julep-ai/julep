@@ -35,7 +35,7 @@ T = TypeVar("T")
 )
 @wrap_in_class(Agent)
 @pg_query
-@increase_counter("list_agents")
+# @increase_counter("list_agents1")
 @beartype
 def list_agents_query(
     *,

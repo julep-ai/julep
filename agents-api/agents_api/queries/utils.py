@@ -50,12 +50,13 @@ def pg_query(
             stop_after_attempt,
             wait_exponential,
         )
-
-        @retry(
-            stop=stop_after_attempt(4),
-            wait=wait_exponential(multiplier=1, min=4, max=10),
-            # retry=retry_if_exception(is_resource_busy),
-        )
+        
+        # TODO: Remove all tenacity decorators
+        # @retry(
+        #     stop=stop_after_attempt(4),
+        #     wait=wait_exponential(multiplier=1, min=4, max=10),
+        #     # retry=retry_if_exception(is_resource_busy),
+        # )
         @wraps(func)
         async def wrapper(
             *args: P.args, client=None, **kwargs: P.kwargs
@@ -126,12 +127,12 @@ def wrap_in_class(
     transform: Callable[[dict], dict] | None = None,
     _kind: str | None = None,
 ):
-    def _return_data(rec: Record):
+    def _return_data(rec: list[Record]):
         # Convert df to list of dicts
         # if _kind:
         #     rec = rec[rec["_kind"] == _kind]
 
-        data = list(rec.items())
+        data = [dict(r.items()) for r in rec]
 
         nonlocal transform
         transform = transform or (lambda x: x)

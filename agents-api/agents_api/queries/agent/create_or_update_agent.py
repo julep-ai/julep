@@ -13,7 +13,7 @@ from psycopg import errors as psycopg_errors
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
-    generate_canonical_name,
+    # generate_canonical_name,
     partialclass,
     pg_query,
     rewrap_exceptions,
@@ -40,7 +40,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @pg_query
-@increase_counter("create_or_update_agent")
+# @increase_counter("create_or_update_agent1")
 @beartype
 def create_or_update_agent_query(
     *, agent_id: UUID, developer_id: UUID, data: CreateOrUpdateAgentRequest
@@ -71,7 +71,7 @@ def create_or_update_agent_query(
 
     # Set default values
     data.metadata = data.metadata or None
-    data.canonical_name = data.canonical_name or generate_canonical_name(data.name)
+    # data.canonical_name = data.canonical_name or generate_canonical_name(data.name)
 
     query = """
     INSERT INTO agents (

@@ -40,7 +40,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @pg_query
-@increase_counter("patch_agent")
+# @increase_counter("patch_agent1")
 @beartype
 def patch_agent_query(
     *, agent_id: UUID, developer_id: UUID, data: PatchAgentRequest

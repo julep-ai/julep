@@ -16,6 +16,9 @@ from ..utils import (
     wrap_in_class,
 )
 
+# TODO: Add verify_developer
+# verify_developer = None
+
 query = parse_one("SELECT * FROM developers WHERE developer_id = $1").sql(pretty=True)
 
 ModelT = TypeVar("ModelT", bound=Any)

@@ -1,17 +1,3 @@
--- First, drop any existing vectorizer functions and triggers
-DO $$ 
-BEGIN
-    -- Drop existing vectorizer triggers
-    DROP TRIGGER IF EXISTS _vectorizer_src_trg_1 ON docs;
-    
-    -- Drop existing vectorizer functions
-    DROP FUNCTION IF EXISTS _vectorizer_src_trg_1();
-    DROP FUNCTION IF EXISTS _vectorizer_src_trg_1_func();
-    
-    -- Drop existing vectorizer tables
-    DROP TABLE IF EXISTS docs_embeddings;
-END $$;
-
 -- Create vector similarity search index using diskann and timescale vectorizer
 SELECT
     ai.create_vectorizer (

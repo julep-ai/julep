@@ -15,7 +15,7 @@ from uuid_extensions import uuid7
 from ...autogen.openapi_model import Agent, CreateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
-    generate_canonical_name,
+    # generate_canonical_name,
     partialclass,
     pg_query,
     rewrap_exceptions,
@@ -62,7 +62,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @pg_query
-@increase_counter("create_agent")
+# @increase_counter("create_agent")
 @beartype
 def create_agent(
     *,
@@ -97,7 +97,7 @@ def create_agent(
 
     # Set default values
     data.metadata = data.metadata or None
-    data.canonical_name = data.canonical_name or generate_canonical_name(data.name)
+    # data.canonical_name = data.canonical_name or generate_canonical_name(data.name)
 
     query = """
     INSERT INTO agents (

@@ -35,7 +35,7 @@ T = TypeVar("T")
 )
 @wrap_in_class(Agent, one=True)
 @pg_query
-@increase_counter("get_agent")
+# @increase_counter("get_agent1")
 @beartype
 def get_agent_query(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str], dict]:
     """

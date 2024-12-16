@@ -45,7 +45,7 @@ T = TypeVar("T")
     _kind="deleted",
 )
 @pg_query
-@increase_counter("delete_agent")
+# @increase_counter("delete_agent1")
 @beartype
 def delete_agent_query(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str], dict]:
     """
