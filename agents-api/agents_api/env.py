@@ -59,6 +59,13 @@ do_verify_developer_owns_resource: bool = env.bool(
     "DO_VERIFY_DEVELOPER_OWNS_RESOURCE", default=True
 )
 
+# PostgreSQL
+# ----
+db_dsn: str = env.str(
+    "DB_DSN",
+    default="postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable",
+)
+
 
 # Auth
 # ----

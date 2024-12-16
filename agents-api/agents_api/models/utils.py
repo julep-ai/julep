@@ -7,6 +7,7 @@ from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar
 from uuid import UUID
 
 import pandas as pd
+from asyncpg import Record
 from fastapi import HTTPException
 from httpcore import ConnectError, NetworkError, TimeoutException
 from httpx import ConnectError as HttpxConnectError
@@ -463,12 +464,12 @@ def wrap_in_class(
     transform: Callable[[dict], dict] | None = None,
     _kind: str | None = None,
 ):
-    def _return_data(df: pd.DataFrame):
+    def _return_data(rec: Record):
         # Convert df to list of dicts
-        if _kind:
-            df = df[df["_kind"] == _kind]
+        # if _kind:
+        #     rec = rec[rec["_kind"] == _kind]
 
-        data = df.to_dict(orient="records")
+        data = list(rec.items())
 
         nonlocal transform
         transform = transform or (lambda x: x)
