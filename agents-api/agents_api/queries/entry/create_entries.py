@@ -5,13 +5,13 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 from sqlglot.optimizer import optimize
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateEntryRequest, Entry
-from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
-from uuid_extensions import uuid7
+from ...metrics.counters import increase_counter
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for creating entries
 raw_query = """
@@ -76,16 +76,15 @@ def create_entries(
     data: list[CreateEntryRequest],
     mark_session_as_updated: bool = True,
 ) -> tuple[str, list]:
-    
     data_dicts = [item.model_dump(mode="json") for item in data]
-    
+
     params = [
         (
             session_id,
             item.pop("id", None) or str(uuid7()),
             item.get("source"),
             item.get("role"),
-            item.get("event_type") or 'message.create',
+            item.get("event_type") or "message.create",
             item.get("name"),
             content_to_json(item.get("content") or []),
             item.get("tool_call_id"),
