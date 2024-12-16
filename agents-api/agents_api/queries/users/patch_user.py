@@ -13,9 +13,21 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 # Define the raw SQL query outside the function
 raw_query = """
 UPDATE users
-SET {update_parts}
-WHERE developer_id = %(developer_id)s 
-AND user_id = %(user_id)s
+SET 
+    name = CASE 
+        WHEN $3::text IS NOT NULL THEN $3 
+        ELSE name 
+    END,
+    about = CASE 
+        WHEN $4::text IS NOT NULL THEN $4 
+        ELSE about 
+    END,
+    metadata = CASE 
+        WHEN $5::jsonb IS NOT NULL THEN metadata || $5 
+        ELSE metadata 
+    END
+WHERE developer_id = $1 
+AND user_id = $2
 RETURNING 
     user_id as id,
     developer_id,
@@ -27,7 +39,7 @@ RETURNING
 """
 
 # Parse and optimize the query
-query_template = optimize(
+query = optimize(
     parse_one(raw_query),
     schema={
         "users": {
@@ -71,22 +83,12 @@ def patch_user(
     Returns:
         tuple[str, dict]: SQL query and parameters
     """
-    update_parts = []
-    params = {
-        "developer_id": developer_id,
-        "user_id": user_id,
-    }
-
-    if data.name is not None:
-        update_parts.append("name = %(name)s")
-        params["name"] = data.name
-    if data.about is not None:
-        update_parts.append("about = %(about)s")
-        params["about"] = data.about
-    if data.metadata is not None:
-        update_parts.append("metadata = metadata || %(metadata)s")
-        params["metadata"] = data.metadata
-
-    query = query_template.format(update_parts=", ".join(update_parts))
+    params = [
+        developer_id,
+        user_id,
+        data.name,  # Will be NULL if not provided
+        data.about,  # Will be NULL if not provided
+        data.metadata,  # Will be NULL if not provided
+    ]
 
     return query, params

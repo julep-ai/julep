@@ -20,11 +20,11 @@ INSERT INTO users (
     metadata
 )
 VALUES (
-    %(developer_id)s,
-    %(user_id)s,
-    %(name)s,
-    %(about)s,
-    %(metadata)s
+    $1,
+    $2,
+    $3,
+    $4,
+    $5
 )
 RETURNING *;
 """
@@ -81,12 +81,15 @@ def create_user(
     """
     user_id = user_id or uuid7()
 
-    params = {
-        "developer_id": developer_id,
-        "user_id": user_id,
-        "name": data.name,
-        "about": data.about,
-        "metadata": data.metadata or {},
-    }
+    params = [
+        developer_id,
+        user_id,
+        data.name,
+        data.about,
+        data.metadata or {},
+    ]
 
-    return query, params
+    return (
+        query,
+        params,
+    )

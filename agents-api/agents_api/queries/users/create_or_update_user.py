@@ -20,11 +20,11 @@ INSERT INTO users (
     metadata
 )
 VALUES (
-    %(developer_id)s,
-    %(user_id)s,
-    %(name)s,
-    %(about)s,
-    COALESCE(%(metadata)s, '{}'::jsonb)
+    $1,
+    $2,
+    $3,
+    $4,
+    COALESCE($5, '{}'::jsonb)
 )
 ON CONFLICT (developer_id, user_id) DO UPDATE SET
     name = EXCLUDED.name,
@@ -83,12 +83,15 @@ def create_or_update_user(
     Raises:
         HTTPException: If developer doesn't exist (404) or on unique constraint violation (409)
     """
-    params = {
-        "developer_id": developer_id,
-        "user_id": user_id,
-        "name": data.name,
-        "about": data.about,
-        "metadata": data.metadata,  # Let COALESCE handle None case in SQL
-    }
+    params = [
+        developer_id,
+        user_id,
+        data.name,
+        data.about,
+        data.metadata,  # Let COALESCE handle None case in SQL
+    ]
 
-    return query, params
+    return (
+        query,
+        params,
+    )

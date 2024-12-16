@@ -21,8 +21,8 @@ SELECT
     created_at,
     updated_at
 FROM users
-WHERE developer_id = %(developer_id)s 
-AND user_id = %(user_id)s;
+WHERE developer_id = $1 
+AND user_id = $2;
 """
 
 # Parse and optimize the query
@@ -68,4 +68,7 @@ def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
         tuple[str, dict]: SQL query and parameters.
     """
 
-    return query, {"developer_id": developer_id, "user_id": user_id}
+    return (
+        query,
+        [developer_id, user_id],
+    )

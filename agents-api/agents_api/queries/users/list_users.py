@@ -12,25 +12,33 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
 raw_query = """
-SELECT 
-    user_id as id,
-    developer_id,
-    name,
-    about,
-    metadata,
-    created_at,
-    updated_at
-FROM users
-WHERE developer_id = %(developer_id)s
-    {metadata_clause}
-    AND deleted_at IS NULL
-ORDER BY {sort_by} {direction} NULLS LAST
-LIMIT %(limit)s 
-OFFSET %(offset)s;
+WITH filtered_users AS (
+    SELECT 
+        user_id as id,
+        developer_id,
+        name,
+        about,
+        metadata,
+        created_at,
+        updated_at
+    FROM users
+    WHERE developer_id = $1
+        AND deleted_at IS NULL
+        AND ($4::jsonb IS NULL OR metadata @> $4)
+)
+SELECT *
+FROM filtered_users
+ORDER BY 
+    CASE WHEN $5 = 'created_at' AND $6 = 'asc' THEN created_at END ASC NULLS LAST,
+    CASE WHEN $5 = 'created_at' AND $6 = 'desc' THEN created_at END DESC NULLS LAST,
+    CASE WHEN $5 = 'updated_at' AND $6 = 'asc' THEN updated_at END ASC NULLS LAST,
+    CASE WHEN $5 = 'updated_at' AND $6 = 'desc' THEN updated_at END DESC NULLS LAST
+LIMIT $2 
+OFFSET $3;
 """
 
 # Parse and optimize the query
-query_template = optimize(
+query = optimize(
     parse_one(raw_query),
     schema={
         "users": {
@@ -88,15 +96,16 @@ def list_users(
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
 
-    metadata_clause = ""
-    params = {"developer_id": developer_id, "limit": limit, "offset": offset}
+    params = [
+        developer_id,
+        limit,
+        offset,
+        metadata_filter,  # Will be NULL if not provided
+        sort_by,
+        direction,
+    ]
 
-    if metadata_filter:
-        metadata_clause = "AND metadata @> %(metadata_filter)s"
-        params["metadata_filter"] = metadata_filter
-
-    query = query_template.format(
-        metadata_clause=metadata_clause, sort_by=sort_by, direction=direction
+    return (
+        query,
+        params,
     )
-
-    return query, params

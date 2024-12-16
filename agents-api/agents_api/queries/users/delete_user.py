@@ -14,14 +14,14 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 raw_query = """
 WITH deleted_data AS (
     DELETE FROM user_files 
-    WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s
+    WHERE developer_id = $1 AND user_id = $2
 ),
 deleted_docs AS (
     DELETE FROM user_docs 
-    WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s
+    WHERE developer_id = $1 AND user_id = $2
 )
 DELETE FROM users 
-WHERE developer_id = %(developer_id)s AND user_id = %(user_id)s
+WHERE developer_id = $1 AND user_id = $2
 RETURNING user_id as id, developer_id;
 """
 
@@ -62,4 +62,7 @@ def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
         tuple[str, dict]: SQL query and parameters
     """
 
-    return query, {"developer_id": developer_id, "user_id": user_id}
+    return (
+        query,
+        [developer_id, user_id],
+    )

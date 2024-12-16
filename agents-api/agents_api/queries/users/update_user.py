@@ -14,11 +14,11 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 raw_query = """
 UPDATE users
 SET 
-    name = %(name)s,
-    about = %(about)s,
-    metadata = %(metadata)s
-WHERE developer_id = %(developer_id)s 
-AND user_id = %(user_id)s
+    name = $3,
+    about = $4,
+    metadata = $5
+WHERE developer_id = $1 
+AND user_id = $2
 RETURNING 
     user_id as id,
     developer_id,
@@ -74,12 +74,15 @@ def update_user(
     Returns:
         tuple[str, dict]: SQL query and parameters
     """
-    params = {
-        "developer_id": developer_id,
-        "user_id": user_id,
-        "name": data.name,
-        "about": data.about,
-        "metadata": data.metadata or {},
-    }
+    params = [
+        developer_id,
+        user_id,
+        data.name,
+        data.about,
+        data.metadata or {},
+    ]
 
-    return query, params
+    return (
+        query,
+        params,
+    )
