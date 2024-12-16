@@ -26,20 +26,7 @@ AND user_id = $2;
 """
 
 # Parse and optimize the query
-query = optimize(
-    parse_one(raw_query),
-    schema={
-        "users": {
-            "developer_id": "UUID",
-            "user_id": "UUID",
-            "name": "STRING",
-            "about": "STRING",
-            "metadata": "JSONB",
-            "created_at": "TIMESTAMP",
-            "updated_at": "TIMESTAMP",
-        }
-    },
-).sql(pretty=True)
+query = parse_one(raw_query).sql(pretty=True)
 
 
 @rewrap_exceptions(

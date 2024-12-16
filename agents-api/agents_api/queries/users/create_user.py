@@ -3,7 +3,8 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import optimize, parse_one
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateUserRequest, User

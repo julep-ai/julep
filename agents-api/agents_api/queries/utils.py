@@ -128,17 +128,13 @@ def wrap_in_class(
     _kind: str | None = None,
 ):
     def _return_data(rec: list[Record]):
-        # Convert df to list of dicts
-        # if _kind:
-        #     rec = rec[rec["_kind"] == _kind]
-
         data = [dict(r.items()) for r in rec]
 
         nonlocal transform
         transform = transform or (lambda x: x)
 
         if one:
-            assert len(data) >= 1, "Expected one result, got none"
+            assert len(data) == 1, "Expected one result, got none"
             obj: ModelT = cls(**transform(data[0]))
             return obj
 

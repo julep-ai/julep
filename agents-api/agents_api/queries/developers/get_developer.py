@@ -5,7 +5,6 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from pycozo.client import QueryException
 from pydantic import ValidationError
 from sqlglot import parse_one
 
@@ -17,7 +16,7 @@ from ..utils import (
 )
 
 # TODO: Add verify_developer
-# verify_developer = None
+verify_developer = None
 
 query = parse_one("SELECT * FROM developers WHERE developer_id = $1").sql(pretty=True)
 

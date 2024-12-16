@@ -4,7 +4,8 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import optimize, parse_one
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import User
 from ...metrics.counters import increase_counter
@@ -38,20 +39,7 @@ OFFSET $3;
 """
 
 # Parse and optimize the query
-query = optimize(
-    parse_one(raw_query),
-    schema={
-        "users": {
-            "developer_id": "UUID",
-            "user_id": "UUID",
-            "name": "STRING",
-            "about": "STRING",
-            "metadata": "JSONB",
-            "created_at": "TIMESTAMP",
-            "updated_at": "TIMESTAMP",
-        }
-    },
-).sql(pretty=True)
+# query = parse_one(raw_query).sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -106,6 +94,6 @@ def list_users(
     ]
 
     return (
-        query,
+        raw_query,
         params,
     )

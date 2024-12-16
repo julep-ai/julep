@@ -1,20 +1,30 @@
 name: pgai
 services:
- db:
-   image: timescale/timescaledb-ha:pg17
-   environment:
-     - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-postgres}
-     - VOYAGE_API_KEY=${VOYAGE_API_KEY}
-   ports:
-     - "5432:5432"
-   volumes:
-     - memory_store_data:/home/postgres/pgdata/data
- vectorizer-worker:
-   image: timescale/pgai-vectorizer-worker:v0.3.0
-   environment:
-     - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@db:5432/postgres
-     - VOYAGE_API_KEY=${VOYAGE_API_KEY}
-   command: [ "--poll-interval", "5s" ]
+  db:
+    image: timescale/timescaledb-ha:pg17
+
+    # For timescaledb specific options,
+    # See: https://github.com/timescale/timescaledb-docker?tab=readme-ov-file#notes-on-timescaledb-tune
+    environment:
+      - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-postgres}
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
+    ports:
+      - "5432:5432"
+    volumes:
+      - memory_store_data:/home/postgres/pgdata/data
+
+    # TODO: Fix this to install pgaudit
+    # entrypoint: []
+    # command: >-
+    #   sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'pgaudit,\2'/;s/,'/'/" /home/postgres/pgdata/data/postgresql.conf
+    #   && exec /docker-entrypoint.sh
+
+  vectorizer-worker:
+    image: timescale/pgai-vectorizer-worker:v0.3.0
+    environment:
+      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@db:5432/postgres
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
+    command: [ "--poll-interval", "5s" ]
 
 volumes:
   memory_store_data:

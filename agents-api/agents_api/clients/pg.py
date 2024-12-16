@@ -6,9 +6,9 @@ from ..env import db_dsn
 from ..web import app
 
 
-async def get_pg_client():
+async def get_pg_client(dsn: str = db_dsn):
     # TODO: Create a postgres connection pool
-    client = getattr(app.state, "pg_client", await asyncpg.connect(db_dsn))
+    client = getattr(app.state, "pg_client", await asyncpg.connect(dsn))
     if not hasattr(app.state, "pg_client"):
         await client.set_type_codec(
             "jsonb",

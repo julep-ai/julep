@@ -1,10 +1,7 @@
 import time
 from uuid import UUID
 
-from cozo_migrate.api import apply, init
 from fastapi.testclient import TestClient
-from pycozo import Client as CozoClient
-from pycozo_async import Client as AsyncCozoClient
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
 from ward import fixture
@@ -21,128 +18,75 @@ from agents_api.autogen.openapi_model import (
     CreateUserRequest,
 )
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
-from agents_api.models.agent.create_agent import create_agent
-from agents_api.models.agent.delete_agent import delete_agent
-from agents_api.models.developer.get_developer import get_developer
-from agents_api.models.docs.create_doc import create_doc
-from agents_api.models.docs.delete_doc import delete_doc
-from agents_api.models.execution.create_execution import create_execution
-from agents_api.models.execution.create_execution_transition import (
-    create_execution_transition,
-)
-from agents_api.models.execution.create_temporal_lookup import create_temporal_lookup
-from agents_api.models.files.create_file import create_file
-from agents_api.models.files.delete_file import delete_file
-from agents_api.models.session.create_session import create_session
-from agents_api.models.session.delete_session import delete_session
-from agents_api.models.task.create_task import create_task
-from agents_api.models.task.delete_task import delete_task
-from agents_api.models.tools.create_tools import create_tools
-from agents_api.models.tools.delete_tool import delete_tool
-from agents_api.models.user.create_user import create_user
-from agents_api.models.user.delete_user import delete_user
-from agents_api.web import app
-from tests.utils import (
+
+# from agents_api.queries.agents.create_agent import create_agent
+# from agents_api.queries.agents.delete_agent import delete_agent
+from agents_api.queries.developers.get_developer import get_developer
+
+# from agents_api.queries.docs.create_doc import create_doc
+# from agents_api.queries.docs.delete_doc import delete_doc
+# from agents_api.queries.execution.create_execution import create_execution
+# from agents_api.queries.execution.create_execution_transition import (
+#     create_execution_transition,
+# )
+# from agents_api.queries.execution.create_temporal_lookup import create_temporal_lookup
+# from agents_api.queries.files.create_file import create_file
+# from agents_api.queries.files.delete_file import delete_file
+# from agents_api.queries.session.create_session import create_session
+# from agents_api.queries.session.delete_session import delete_session
+# from agents_api.queries.task.create_task import create_task
+# from agents_api.queries.task.delete_task import delete_task
+# from agents_api.queries.tools.create_tools import create_tools
+# from agents_api.queries.tools.delete_tool import delete_tool
+from agents_api.queries.users.create_user import create_user
+from agents_api.queries.users.delete_user import delete_user
+# from agents_api.web import app
+from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
+    patch_pg_client,
 )
-from tests.utils import (
+from .utils import (
     patch_s3_client,
 )
 
 EMBEDDING_SIZE: int = 1024
 
+@fixture(scope="global")
+async def pg_client():
+    async with patch_pg_client() as pg_client:
+        yield pg_client
 
 @fixture(scope="global")
-def cozo_client(migrations_dir: str = "./migrations"):
-    # Create a new client for each test
-    # and initialize the schema.
-    client = CozoClient()
-
-    setattr(app.state, "cozo_client", client)
-
-    init(client)
-    apply(client, migrations_dir=migrations_dir, all_=True)
-
-    return client
-
-
-@fixture(scope="global")
-def cozo_clients_with_migrations(sync_client=cozo_client):
-    async_client = AsyncCozoClient()
-    async_client.embedded = sync_client.embedded
-    setattr(app.state, "async_cozo_client", async_client)
-
-    return sync_client, async_client
-
-
-@fixture(scope="global")
-def async_cozo_client(migrations_dir: str = "./migrations"):
-    # Create a new client for each test
-    # and initialize the schema.
-    client = AsyncCozoClient()
-    migrations_client = CozoClient()
-    setattr(migrations_client, "embedded", client.embedded)
-
-    setattr(app.state, "async_cozo_client", client)
-
-    init(migrations_client)
-    apply(migrations_client, migrations_dir=migrations_dir, all_=True)
-
-    return client
-
-
-@fixture(scope="global")
-def test_developer_id(cozo_client=cozo_client):
+def test_developer_id():
     if not multi_tenant_mode:
         yield UUID(int=0)
         return
 
     developer_id = uuid7()
 
-    cozo_client.run(
-        f"""
-    ?[developer_id, email, settings] <- [["{str(developer_id)}", "developers@julep.ai", {{}}]]
-    :insert developers {{ developer_id, email, settings }}
-    """
-    )
-
     yield developer_id
 
-    cozo_client.run(
-        f"""
-    ?[developer_id, email] <- [["{str(developer_id)}", "developers@julep.ai"]]
-    :delete developers {{ developer_id, email }}
-    """
-    )
+# @fixture(scope="global")
+# def test_file(client=pg_client, developer_id=test_developer_id):
+#     file = create_file(
+#         developer_id=developer_id,
+#         data=CreateFileRequest(
+#             name="Hello",
+#             description="World",
+#             mime_type="text/plain",
+#             content="eyJzYW1wbGUiOiAidGVzdCJ9",
+#         ),
+#         client=client,
+#     )
+
+#     yield file
 
 
 @fixture(scope="global")
-def test_file(client=cozo_client, developer_id=test_developer_id):
-    file = create_file(
+async def test_developer(pg_client=pg_client, developer_id=test_developer_id):
+    return await get_developer(
         developer_id=developer_id,
-        data=CreateFileRequest(
-            name="Hello",
-            description="World",
-            mime_type="text/plain",
-            content="eyJzYW1wbGUiOiAidGVzdCJ9",
-        ),
-        client=client,
-    )
-
-    yield file
-
-    delete_file(
-        developer_id=developer_id,
-        file_id=file.id,
-        client=client,
-    )
-
-
-@fixture(scope="global")
-def test_developer(cozo_client=cozo_client, developer_id=test_developer_id):
-    return get_developer(
-        developer_id=developer_id,
-        client=cozo_client,
+        client=pg_client,
     )
 
 
@@ -154,323 +98,250 @@ def patch_embed_acompletion():
         yield embed, acompletion
 
 
-@fixture(scope="global")
-def test_agent(cozo_client=cozo_client, developer_id=test_developer_id):
-    agent = create_agent(
-        developer_id=developer_id,
-        data=CreateAgentRequest(
-            model="gpt-4o-mini",
-            name="test agent",
-            about="test agent about",
-            metadata={"test": "test"},
-        ),
-        client=cozo_client,
-    )
+# @fixture(scope="global")
+# def test_agent(pg_client=pg_client, developer_id=test_developer_id):
+#     agent = create_agent(
+#         developer_id=developer_id,
+#         data=CreateAgentRequest(
+#             model="gpt-4o-mini",
+#             name="test agent",
+#             about="test agent about",
+#             metadata={"test": "test"},
+#         ),
+#         client=pg_client,
+#     )
 
-    yield agent
-
-    delete_agent(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        client=cozo_client,
-    )
+#     yield agent
 
 
 @fixture(scope="global")
-def test_user(cozo_client=cozo_client, developer_id=test_developer_id):
+def test_user(pg_client=pg_client, developer_id=test_developer_id):
     user = create_user(
         developer_id=developer_id,
         data=CreateUserRequest(
             name="test user",
             about="test user about",
         ),
-        client=cozo_client,
+        client=pg_client,
     )
 
     yield user
 
-    delete_user(
-        developer_id=developer_id,
-        user_id=user.id,
-        client=cozo_client,
-    )
+
+# @fixture(scope="global")
+# def test_session(
+#     pg_client=pg_client,
+#     developer_id=test_developer_id,
+#     test_user=test_user,
+#     test_agent=test_agent,
+# ):
+#     session = create_session(
+#         developer_id=developer_id,
+#         data=CreateSessionRequest(
+#             agent=test_agent.id, user=test_user.id, metadata={"test": "test"}
+#         ),
+#         client=pg_client,
+#     )
+
+#     yield session
 
 
-@fixture(scope="global")
-def test_session(
-    cozo_client=cozo_client,
-    developer_id=test_developer_id,
-    test_user=test_user,
-    test_agent=test_agent,
-):
-    session = create_session(
-        developer_id=developer_id,
-        data=CreateSessionRequest(
-            agent=test_agent.id, user=test_user.id, metadata={"test": "test"}
-        ),
-        client=cozo_client,
-    )
+# @fixture(scope="global")
+# def test_doc(
+#     client=pg_client,
+#     developer_id=test_developer_id,
+#     agent=test_agent,
+# ):
+#     doc = create_doc(
+#         developer_id=developer_id,
+#         owner_type="agent",
+#         owner_id=agent.id,
+#         data=CreateDocRequest(title="Hello", content=["World"]),
+#         client=client,
+#     )
 
-    yield session
-
-    delete_session(
-        developer_id=developer_id,
-        session_id=session.id,
-        client=cozo_client,
-    )
+#     yield doc
 
 
-@fixture(scope="global")
-def test_doc(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    doc = create_doc(
-        developer_id=developer_id,
-        owner_type="agent",
-        owner_id=agent.id,
-        data=CreateDocRequest(title="Hello", content=["World"]),
-        client=client,
-    )
+# @fixture(scope="global")
+# def test_user_doc(
+#     client=pg_client,
+#     developer_id=test_developer_id,
+#     user=test_user,
+# ):
+#     doc = create_doc(
+#         developer_id=developer_id,
+#         owner_type="user",
+#         owner_id=user.id,
+#         data=CreateDocRequest(title="Hello", content=["World"]),
+#         client=client,
+#     )
 
-    time.sleep(0.5)
-
-    yield doc
-
-    delete_doc(
-        developer_id=developer_id,
-        doc_id=doc.id,
-        owner_type="agent",
-        owner_id=agent.id,
-        client=client,
-    )
+#     yield doc
 
 
-@fixture(scope="global")
-def test_user_doc(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    user=test_user,
-):
-    doc = create_doc(
-        developer_id=developer_id,
-        owner_type="user",
-        owner_id=user.id,
-        data=CreateDocRequest(title="Hello", content=["World"]),
-        client=client,
-    )
+# @fixture(scope="global")
+# def test_task(
+#     client=pg_client,
+#     developer_id=test_developer_id,
+#     agent=test_agent,
+# ):
+#     task = create_task(
+#         developer_id=developer_id,
+#         agent_id=agent.id,
+#         data=CreateTaskRequest(
+#             **{
+#                 "name": "test task",
+#                 "description": "test task about",
+#                 "input_schema": {"type": "object", "additionalProperties": True},
+#                 "main": [{"evaluate": {"hello": '"world"'}}],
+#             }
+#         ),
+#         client=client,
+#     )
 
-    time.sleep(0.5)
-
-    yield doc
-
-    delete_doc(
-        developer_id=developer_id,
-        doc_id=doc.id,
-        owner_type="user",
-        owner_id=user.id,
-        client=client,
-    )
+#     yield task
 
 
-@fixture(scope="global")
-def test_task(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    task = create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [{"evaluate": {"hello": '"world"'}}],
-            }
-        ),
-        client=client,
-    )
+# @fixture(scope="global")
+# def test_execution(
+#     client=pg_client,
+#     developer_id=test_developer_id,
+#     task=test_task,
+# ):
+#     workflow_handle = WorkflowHandle(
+#         client=None,
+#         id="blah",
+#     )
 
-    yield task
+#     execution = create_execution(
+#         developer_id=developer_id,
+#         task_id=task.id,
+#         data=CreateExecutionRequest(input={"test": "test"}),
+#         client=client,
+#     )
+#     create_temporal_lookup(
+#         developer_id=developer_id,
+#         execution_id=execution.id,
+#         workflow_handle=workflow_handle,
+#         client=client,
+#     )
 
-    delete_task(
-        developer_id=developer_id,
-        task_id=task.id,
-        client=client,
-    )
+#     yield execution
 
 
-@fixture(scope="global")
-def test_execution(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    task=test_task,
-):
-    workflow_handle = WorkflowHandle(
-        client=None,
-        id="blah",
-    )
+# @fixture(scope="test")
+# def test_execution_started(
+#     client=pg_client,
+#     developer_id=test_developer_id,
+#     task=test_task,
+# ):
+#     workflow_handle = WorkflowHandle(
+#         client=None,
+#         id="blah",
+#     )
 
-    execution = create_execution(
-        developer_id=developer_id,
-        task_id=task.id,
-        data=CreateExecutionRequest(input={"test": "test"}),
-        client=client,
-    )
-    create_temporal_lookup(
-        developer_id=developer_id,
-        execution_id=execution.id,
-        workflow_handle=workflow_handle,
-        client=client,
-    )
+#     execution = create_execution(
+#         developer_id=developer_id,
+#         task_id=task.id,
+#         data=CreateExecutionRequest(input={"test": "test"}),
+#         client=client,
+#     )
+#     create_temporal_lookup(
+#         developer_id=developer_id,
+#         execution_id=execution.id,
+#         workflow_handle=workflow_handle,
+#         client=client,
+#     )
 
-    yield execution
+#     # Start the execution
+#     create_execution_transition(
+#         developer_id=developer_id,
+#         task_id=task.id,
+#         execution_id=execution.id,
+#         data=CreateTransitionRequest(
+#             type="init",
+#             output={},
+#             current={"workflow": "main", "step": 0},
+#             next={"workflow": "main", "step": 0},
+#         ),
+#         update_execution_status=True,
+#         client=client,
+#     )
 
-    client.run(
-        f"""
-    ?[execution_id] <- ["{str(execution.id)}"]
-    :delete executions {{ execution_id  }}
-    """
-    )
-
-
-@fixture(scope="test")
-def test_execution_started(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    task=test_task,
-):
-    workflow_handle = WorkflowHandle(
-        client=None,
-        id="blah",
-    )
-
-    execution = create_execution(
-        developer_id=developer_id,
-        task_id=task.id,
-        data=CreateExecutionRequest(input={"test": "test"}),
-        client=client,
-    )
-    create_temporal_lookup(
-        developer_id=developer_id,
-        execution_id=execution.id,
-        workflow_handle=workflow_handle,
-        client=client,
-    )
-
-    # Start the execution
-    create_execution_transition(
-        developer_id=developer_id,
-        task_id=task.id,
-        execution_id=execution.id,
-        data=CreateTransitionRequest(
-            type="init",
-            output={},
-            current={"workflow": "main", "step": 0},
-            next={"workflow": "main", "step": 0},
-        ),
-        update_execution_status=True,
-        client=client,
-    )
-
-    yield execution
-
-    client.run(
-        f"""
-    ?[execution_id, task_id] <- [[to_uuid("{str(execution.id)}"), to_uuid("{str(task.id)}")]]
-    :delete executions {{ execution_id, task_id }}
-    """
-    )
+#     yield execution
 
 
-@fixture(scope="global")
-def test_transition(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    execution=test_execution,
-):
-    transition = create_execution_transition(
-        developer_id=developer_id,
-        execution_id=execution.id,
-        data=CreateTransitionRequest(
-            type="step",
-            output={},
-            current={"workflow": "main", "step": 0},
-            next={"workflow": "wf1", "step": 1},
-        ),
-        client=client,
-    )
+# @fixture(scope="global")
+# def test_transition(
+#     client=pg_client,
+#     developer_id=test_developer_id,
+#     execution=test_execution,
+# ):
+#     transition = create_execution_transition(
+#         developer_id=developer_id,
+#         execution_id=execution.id,
+#         data=CreateTransitionRequest(
+#             type="step",
+#             output={},
+#             current={"workflow": "main", "step": 0},
+#             next={"workflow": "wf1", "step": 1},
+#         ),
+#         client=client,
+#     )
 
-    yield transition
-
-    client.run(
-        f"""
-    ?[transition_id] <- ["{str(transition.id)}"]
-    :delete transitions {{ transition_id  }}
-    """
-    )
+#     yield transition
 
 
-@fixture(scope="global")
-def test_tool(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    function = {
-        "description": "A function that prints hello world",
-        "parameters": {"type": "object", "properties": {}},
-    }
+# @fixture(scope="global")
+# def test_tool(
+#     client=pg_client,
+#     developer_id=test_developer_id,
+#     agent=test_agent,
+# ):
+#     function = {
+#         "description": "A function that prints hello world",
+#         "parameters": {"type": "object", "properties": {}},
+#     }
 
-    tool = {
-        "function": function,
-        "name": "hello_world1",
-        "type": "function",
-    }
+#     tool = {
+#         "function": function,
+#         "name": "hello_world1",
+#         "type": "function",
+#     }
 
-    [tool, *_] = create_tools(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        data=[CreateToolRequest(**tool)],
-        client=client,
-    )
-
-    yield tool
-
-    delete_tool(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        tool_id=tool.id,
-        client=client,
-    )
+#     [tool, *_] = create_tools(
+#         developer_id=developer_id,
+#         agent_id=agent.id,
+#         data=[CreateToolRequest(**tool)],
+#         client=client,
+#     )
+# 
+#     yield tool
 
 
-@fixture(scope="global")
-def client(cozo_client=cozo_client):
-    client = TestClient(app=app)
-    app.state.cozo_client = cozo_client
+# @fixture(scope="global")
+# def client(pg_client=pg_client):
+#     client = TestClient(app=app)
+#     client.state.pg_client = pg_client
 
-    return client
+#     return client
 
+# @fixture(scope="global")
+# def make_request(client=client, developer_id=test_developer_id):
+#     def _make_request(method, url, **kwargs):
+#         headers = kwargs.pop("headers", {})
+#         headers = {
+#             **headers,
+#             api_key_header_name: api_key,
+#         }
 
-@fixture(scope="global")
-def make_request(client=client, developer_id=test_developer_id):
-    def _make_request(method, url, **kwargs):
-        headers = kwargs.pop("headers", {})
-        headers = {
-            **headers,
-            api_key_header_name: api_key,
-        }
+#         if multi_tenant_mode:
+#             headers["X-Developer-Id"] = str(developer_id)
 
-        if multi_tenant_mode:
-            headers["X-Developer-Id"] = str(developer_id)
+#         return client.request(method, url, headers=headers, **kwargs)
 
-        return client.request(method, url, headers=headers, **kwargs)
-
-    return _make_request
+#     return _make_request
 
 
 @fixture(scope="global")
