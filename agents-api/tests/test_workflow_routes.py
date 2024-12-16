@@ -1,7 +1,6 @@
 # Tests for task queries
 
-from uuid import uuid4
-
+from uuid_extensions import uuid7
 from ward import test
 
 from tests.fixtures import cozo_client, test_agent, test_developer_id
@@ -15,7 +14,7 @@ async def _(
     agent=test_agent,
 ):
     agent_id = str(agent.id)
-    task_id = str(uuid4())
+    task_id = str(uuid7())
 
     async with patch_http_client_with_temporal(
         cozo_client=cozo_client, developer_id=developer_id
@@ -100,7 +99,7 @@ async def _(
     agent=test_agent,
 ):
     agent_id = str(agent.id)
-    task_id = str(uuid4())
+    task_id = str(uuid7())
 
     async with patch_http_client_with_temporal(
         cozo_client=cozo_client, developer_id=developer_id

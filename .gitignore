@@ -10,3 +10,4 @@ ngrok*
 */node_modules/
 .aider*
 .vscode/
+schema.sql

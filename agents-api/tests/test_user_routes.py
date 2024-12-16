@@ -1,6 +1,6 @@
 # Tests for user routes
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import test
 
 from tests.fixtures import client, make_request, test_user
@@ -40,7 +40,7 @@ def _(make_request=make_request):
 
 @test("route: get user not exists")
 def _(make_request=make_request):
-    user_id = str(uuid4())
+    user_id = str(uuid7())
 
     response = make_request(
         method="GET",

@@ -1,10 +1,11 @@
 from typing import Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateEntryRequest, Entry, Relation
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -58,7 +59,7 @@ def create_entries(
     for item in data_dicts:
         item["content"] = content_to_json(item["content"] or [])
         item["session_id"] = session_id
-        item["entry_id"] = item.pop("id", None) or str(uuid4())
+        item["entry_id"] = item.pop("id", None) or str(uuid7())
         item["created_at"] = (item.get("created_at") or utcnow()).timestamp()
 
     cols, rows = cozo_process_mutate_data(data_dicts)

@@ -1,6 +1,6 @@
 # Tests for session queries
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import test
 
 from agents_api.autogen.openapi_model import (
@@ -54,7 +54,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
 
 @test("model: get session not exists")
 def _(client=cozo_client, developer_id=test_developer_id):
-    session_id = uuid4()
+    session_id = uuid7()
 
     try:
         get_session(
@@ -136,7 +136,7 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
 def _(
     client=cozo_client, developer_id=test_developer_id, agent=test_agent, user=test_user
 ):
-    session_id = uuid4()
+    session_id = uuid7()
 
     create_or_update_session(
         session_id=session_id,

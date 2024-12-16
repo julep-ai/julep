@@ -7,6 +7,7 @@ from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar
 from uuid import UUID
 
 import pandas as pd
+from asyncpg import Record
 from fastapi import HTTPException
 from httpcore import ConnectError, NetworkError, TimeoutException
 from httpx import ConnectError as HttpxConnectError
@@ -14,7 +15,7 @@ from httpx import RequestError
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, Timeout
 
-from ..common.utils.cozo import uuid_int_list_to_uuid4
+from ..common.utils.cozo import uuid_int_list_to_uuid
 from ..env import do_verify_developer, do_verify_developer_owns_resource
 
 P = ParamSpec("P")
@@ -36,7 +37,7 @@ def fix_uuid(
     fixed = {
         **item,
         **{
-            attr: uuid_int_list_to_uuid4(item[attr])
+            attr: uuid_int_list_to_uuid(item[attr])
             for attr in id_attrs
             if isinstance(item[attr], list)
         },
@@ -466,12 +467,12 @@ def wrap_in_class(
     transform: Callable[[dict], dict] | None = None,
     _kind: str | None = None,
 ):
-    def _return_data(df: pd.DataFrame):
+    def _return_data(rec: Record):
         # Convert df to list of dicts
-        if _kind:
-            df = df[df["_kind"] == _kind]
+        # if _kind:
+        #     rec = rec[rec["_kind"] == _kind]
 
-        data = df.to_dict(orient="records")
+        data = list(rec.items())
 
         nonlocal transform
         transform = transform or (lambda x: x)

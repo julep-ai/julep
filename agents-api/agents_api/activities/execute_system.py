@@ -21,7 +21,7 @@ from ..autogen.openapi_model import (
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
 from ..env import testing
-from ..models.developer import get_developer
+from ..queries.developer import get_developer
 from .utils import get_handler
 
 # For running synchronous code in the background
@@ -94,7 +94,7 @@ async def execute_system(
 
         # Handle chat operations
         if system.operation == "chat" and system.resource == "session":
-            developer = get_developer(developer_id=arguments.get("developer_id"))
+            developer = await get_developer(developer_id=arguments.get("developer_id"))
             session_id = arguments.get("session_id")
             x_custom_api_key = arguments.get("x_custom_api_key", None)
             chat_input = ChatInput(**arguments)

@@ -1,7 +1,6 @@
 # Tests for task routes
 
-from uuid import uuid4
-
+from uuid_extensions import uuid7
 from ward import test
 
 from tests.fixtures import (
@@ -79,7 +78,7 @@ async def _(make_request=make_request, task=test_task):
 
 @test("route: get execution not exists")
 def _(make_request=make_request):
-    execution_id = str(uuid4())
+    execution_id = str(uuid7())
 
     response = make_request(
         method="GET",
@@ -101,7 +100,7 @@ def _(make_request=make_request, execution=test_execution):
 
 @test("route: get task not exists")
 def _(make_request=make_request):
-    task_id = str(uuid4())
+    task_id = str(uuid7())
 
     response = make_request(
         method="GET",

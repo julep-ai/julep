@@ -1,6 +1,6 @@
 # Tests for agent queries
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import raises, test
 
 from agents_api.common.protocol.developers import Developer
@@ -31,6 +31,6 @@ def _(client=cozo_client, developer_id=test_developer_id):
 def _(client=cozo_client):
     with raises(Exception):
         verify_developer(
-            developer_id=uuid4(),
+            developer_id=uuid7(),
             client=client,
         )

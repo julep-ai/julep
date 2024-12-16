@@ -1,6 +1,6 @@
 # Tests for agent queries
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import test
 
 from tests.fixtures import client, make_request, test_agent
@@ -60,7 +60,7 @@ def _(make_request=make_request):
 
 @test("route: create or update agent")
 def _(make_request=make_request):
-    agent_id = str(uuid4())
+    agent_id = str(uuid7())
 
     data = dict(
         name="test agent",
@@ -80,7 +80,7 @@ def _(make_request=make_request):
 
 @test("route: get agent not exists")
 def _(make_request=make_request):
-    agent_id = str(uuid4())
+    agent_id = str(uuid7())
 
     response = make_request(
         method="GET",

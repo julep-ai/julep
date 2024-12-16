@@ -7,7 +7,7 @@ from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import History
-from ...common.utils.cozo import uuid_int_list_to_uuid4 as fix_uuid
+from ...common.utils.cozo import uuid_int_list_to_uuid as fix_uuid
 from ..utils import (
     cozo_query,
     partialclass,

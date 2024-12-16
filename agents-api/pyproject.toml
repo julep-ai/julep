@@ -50,6 +50,9 @@ dependencies = [
   "uvloop~=0.21.0",
   "xxhash~=3.5.0",
   "spacy-chunks>=0.0.2",
+  "uuid7>=0.1.0",
+  "asyncpg>=0.30.0",
+  "sqlglot>=26.0.0",
 ]
 
 [dependency-groups]
@@ -60,12 +63,18 @@ dev = [
     "ipywidgets>=8.1.5",
     "julep>=1.43.1",
     "jupyterlab>=4.3.1",
+    "pip>=24.3.1",
     "poethepoet>=0.31.1",
     "pyjwt>=2.10.1",
     "pyright>=1.1.389",
     "pytype>=2024.10.11",
     "ruff>=0.8.1",
     "ward>=0.68.0b0",
+]
+
+[tool.setuptools]
+py-modules = [
+    "agents_api"
 ]
 
 [tool.uv.sources]

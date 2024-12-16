@@ -1,11 +1,12 @@
 import time
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from cozo_migrate.api import apply, init
 from fastapi.testclient import TestClient
 from pycozo import Client as CozoClient
 from pycozo_async import Client as AsyncCozoClient
 from temporalio.client import WorkflowHandle
+from uuid_extensions import uuid7
 from ward import fixture
 
 from agents_api.autogen.openapi_model import (
@@ -96,7 +97,7 @@ def test_developer_id(cozo_client=cozo_client):
         yield UUID(int=0)
         return
 
-    developer_id = uuid4()
+    developer_id = uuid7()
 
     cozo_client.run(
         f"""

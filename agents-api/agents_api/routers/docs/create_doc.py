@@ -1,9 +1,10 @@
 from typing import Annotated
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import Client as TemporalClient
+from uuid_extensions import uuid7
 
 from ...activities.types import EmbedDocsPayload
 from ...autogen.openapi_model import CreateDocRequest, Doc, ResourceCreatedResponse
@@ -82,7 +83,7 @@ async def create_user_doc(
         data=data,
     )
 
-    embed_job_id = uuid4()
+    embed_job_id = uuid7()
 
     await run_embed_docs_task(
         developer_id=x_developer_id,
@@ -113,7 +114,7 @@ async def create_agent_doc(
         data=data,
     )
 
-    embed_job_id = uuid4()
+    embed_job_id = uuid7()
 
     await run_embed_docs_task(
         developer_id=x_developer_id,

@@ -12,7 +12,7 @@ services:
     environment:
       - S3_ACCESS_KEY=${S3_ACCESS_KEY}
       - S3_SECRET_KEY=${S3_SECRET_KEY}
-      - DEBUG=${DEBUG:-true}
+      - DEBUG=${DEBUG:-false}
 
     ports:
       - 9333:9333  # master port

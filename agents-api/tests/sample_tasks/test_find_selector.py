@@ -1,8 +1,7 @@
 # Tests for task queries
-
 import os
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import raises, test
 
 from ..fixtures import cozo_client, test_agent, test_developer_id
@@ -18,7 +17,7 @@ async def _(
     agent=test_agent,
 ):
     agent_id = str(agent.id)
-    task_id = str(uuid4())
+    task_id = str(uuid7())
 
     with (
         patch_embed_acompletion(),
@@ -47,7 +46,7 @@ async def _(
     agent=test_agent,
 ):
     agent_id = str(agent.id)
-    task_id = str(uuid4())
+    task_id = str(uuid7())
 
     with (
         patch_embed_acompletion(),
@@ -85,7 +84,7 @@ async def _(
     agent=test_agent,
 ):
     agent_id = str(agent.id)
-    task_id = str(uuid4())
+    task_id = str(uuid7())
 
     with (
         patch_embed_acompletion(

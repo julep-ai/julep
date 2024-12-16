@@ -1,10 +1,11 @@
 from typing import Any, Literal, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateDocRequest, Doc
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -58,7 +59,7 @@ def create_doc(
         data (CreateDocRequest): The content of the document.
     """
 
-    doc_id = str(doc_id or uuid4())
+    doc_id = str(doc_id or uuid7())
     owner_id = str(owner_id)
 
     if isinstance(data.content, str):

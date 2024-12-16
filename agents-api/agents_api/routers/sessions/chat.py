@@ -1,8 +1,9 @@
 from typing import Annotated, Optional
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
 from starlette.status import HTTP_201_CREATED
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
     ChatInput,
@@ -236,7 +237,7 @@ async def chat(
         ChunkChatResponse if chat_input.stream else MessageChatResponse
     )
     chat_response: ChatResponse = chat_response_class(
-        id=uuid4(),
+        id=uuid7(),
         created_at=utcnow(),
         jobs=jobs,
         docs=doc_references,

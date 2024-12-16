@@ -20,7 +20,10 @@ model Agent {
     ...HasTimestamps;
 
     /** Name of the agent */
-    name: identifierSafeUnicode = identifierSafeUnicode("");
+    name: displayName;
+
+    /** Canonical name of the agent */
+    canonical_name?: canonicalName;
 
     /** About the agent */
     about: string = "";

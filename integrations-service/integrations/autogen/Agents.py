@@ -25,15 +25,16 @@ class Agent(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
-    name: Annotated[
-        str,
-        Field(
-            max_length=120,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ] = ""
+    name: Annotated[str, Field(max_length=255, min_length=1)]
     """
     Name of the agent
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Canonical name of the agent
     """
     about: str = ""
     """
@@ -62,15 +63,16 @@ class CreateAgentRequest(BaseModel):
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
-    name: Annotated[
-        str,
-        Field(
-            max_length=120,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ] = ""
+    name: Annotated[str, Field(max_length=255, min_length=1)]
     """
     Name of the agent
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Canonical name of the agent
     """
     about: str = ""
     """
@@ -96,15 +98,16 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     )
     id: UUID
     metadata: dict[str, Any] | None = None
-    name: Annotated[
-        str,
-        Field(
-            max_length=120,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ] = ""
+    name: Annotated[str, Field(max_length=255, min_length=1)]
     """
     Name of the agent
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Canonical name of the agent
     """
     about: str = ""
     """
@@ -133,15 +136,16 @@ class PatchAgentRequest(BaseModel):
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
-    name: Annotated[
-        str,
-        Field(
-            max_length=120,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ] = ""
+    name: Annotated[str | None, Field(max_length=255, min_length=1)] = None
     """
     Name of the agent
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Canonical name of the agent
     """
     about: str = ""
     """
@@ -170,15 +174,16 @@ class UpdateAgentRequest(BaseModel):
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
-    name: Annotated[
-        str,
-        Field(
-            max_length=120,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ] = ""
+    name: Annotated[str, Field(max_length=255, min_length=1)]
     """
     Name of the agent
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Canonical name of the agent
     """
     about: str = ""
     """
