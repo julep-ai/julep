@@ -50,7 +50,7 @@ def pg_query(
             stop_after_attempt,
             wait_exponential,
         )
-        
+
         # TODO: Remove all tenacity decorators
         # @retry(
         #     stop=stop_after_attempt(4),

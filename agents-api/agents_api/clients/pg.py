@@ -1,5 +1,6 @@
-import asyncpg
 import json
+
+import asyncpg
 
 from ..env import db_dsn
 from ..web import app
