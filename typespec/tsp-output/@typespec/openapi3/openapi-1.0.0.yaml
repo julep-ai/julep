@@ -1449,9 +1449,12 @@ components:
           readOnly: true
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -1485,9 +1488,12 @@ components:
           additionalProperties: {}
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -1525,9 +1531,12 @@ components:
           additionalProperties: {}
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -1558,9 +1567,12 @@ components:
           additionalProperties: {}
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -1595,9 +1607,12 @@ components:
           additionalProperties: {}
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -2706,6 +2721,21 @@ components:
           description: IDs (if any) of jobs created as part of this request
           default: []
           readOnly: true
+    Common.canonicalName:
+      type: string
+      minLength: 1
+      maxLength: 255
+      pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+      description: |-
+        For canonical names (machine-friendly identifiers)
+        Must start with a letter and can only contain letters, numbers, and underscores
+    Common.displayName:
+      type: string
+      minLength: 1
+      maxLength: 255
+      description: |-
+        For display names
+        Must be between 1 and 255 characters
     Common.identifierSafeUnicode:
       type: string
       maxLength: 120

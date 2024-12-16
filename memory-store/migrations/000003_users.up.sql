@@ -46,4 +46,5 @@ END $$;
 
 -- Add comment to table (comments are idempotent by default)
 COMMENT ON TABLE users IS 'Stores user information linked to developers';
+
 COMMIT;

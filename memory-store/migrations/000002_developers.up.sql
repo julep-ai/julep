@@ -3,8 +3,10 @@ BEGIN;
 -- Create developers table
 CREATE TABLE IF NOT EXISTS developers (
     developer_id UUID NOT NULL,
-    email TEXT NOT NULL CONSTRAINT ct_developers_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-    active BOOLEAN NOT NULL DEFAULT true,
+    email TEXT NOT NULL CONSTRAINT ct_developers_email_format CHECK (
+        email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    ),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
     tags TEXT[] DEFAULT ARRAY[]::TEXT[],
     settings JSONB NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -23,7 +25,9 @@ CREATE INDEX IF NOT EXISTS idx_developers_email ON developers (email);
 CREATE INDEX IF NOT EXISTS idx_developers_tags ON developers USING GIN (tags);
 
 -- Create partial index for active developers
-CREATE INDEX IF NOT EXISTS idx_developers_active ON developers (developer_id) WHERE active = true;
+CREATE INDEX IF NOT EXISTS idx_developers_active ON developers (developer_id)
+WHERE
+    active = TRUE;
 
 -- Create trigger to automatically update updated_at
 DO $$ 
@@ -39,4 +43,5 @@ $$;
 
 -- Add comment to table
 COMMENT ON TABLE developers IS 'Stores developer information including their settings and tags';
+
 COMMIT;

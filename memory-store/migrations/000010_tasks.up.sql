@@ -3,13 +3,22 @@ BEGIN;
 -- Create tasks table if it doesn't exist
 CREATE TABLE IF NOT EXISTS tasks (
     developer_id UUID NOT NULL,
-    canonical_name CITEXT NOT NULL CONSTRAINT ct_tasks_canonical_name_length CHECK (length(canonical_name) >= 1 AND length(canonical_name) <= 255),
+    canonical_name CITEXT NOT NULL CONSTRAINT ct_tasks_canonical_name_length CHECK (
+        length(canonical_name) >= 1
+        AND length(canonical_name) <= 255
+    ),
     agent_id UUID NOT NULL,
     task_id UUID NOT NULL,
-    version INTEGER NOT NULL DEFAULT 1,
+    VERSION INTEGER NOT NULL DEFAULT 1,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    name TEXT NOT NULL CONSTRAINT ct_tasks_name_length CHECK (length(name) >= 1 AND length(name) <= 255),
-    description TEXT DEFAULT NULL CONSTRAINT ct_tasks_description_length CHECK (description IS NULL OR length(description) <= 1000),
+    name TEXT NOT NULL CONSTRAINT ct_tasks_name_length CHECK (
+        length(name) >= 1
+        AND length(name) <= 255
+    ),
+    description TEXT DEFAULT NULL CONSTRAINT ct_tasks_description_length CHECK (
+        description IS NULL
+        OR length(description) <= 1000
+    ),
     input_schema JSON NOT NULL,
     inherit_tools BOOLEAN DEFAULT FALSE,
     workflows JSON[] DEFAULT ARRAY[]::JSON[],
@@ -17,10 +26,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     metadata JSONB DEFAULT '{}'::JSONB,
     CONSTRAINT pk_tasks PRIMARY KEY (developer_id, task_id),
     CONSTRAINT uq_tasks_canonical_name_unique UNIQUE (developer_id, canonical_name),
-    CONSTRAINT uq_tasks_version_unique UNIQUE (task_id, version),
-    CONSTRAINT fk_tasks_agent
-        FOREIGN KEY (developer_id, agent_id)
-        REFERENCES agents(developer_id, agent_id),
+    CONSTRAINT uq_tasks_version_unique UNIQUE (task_id, VERSION),
+    CONSTRAINT fk_tasks_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
     CONSTRAINT ct_tasks_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$')
 );
 
