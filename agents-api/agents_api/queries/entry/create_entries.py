@@ -13,7 +13,7 @@ from ...common.utils.messages import content_to_json
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-# Define the raw SQL query for creating entries
+# Define the raw SQL query for creating entries with a developer check
 raw_query = """
 INSERT INTO entries (
     session_id,
@@ -30,9 +30,12 @@ INSERT INTO entries (
     created_at,
     timestamp
 )
-VALUES (
+SELECT
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
-)
+FROM
+    developers
+WHERE
+    developer_id = $14
 RETURNING *;
 """
 
@@ -93,6 +96,7 @@ def create_entries(
             item.get("token_count"),
             (item.get("created_at") or utcnow()).timestamp(),
             utcnow().timestamp(),
+            developer_id
         )
         for item in data_dicts
     ]

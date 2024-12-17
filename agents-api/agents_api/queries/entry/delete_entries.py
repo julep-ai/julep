@@ -10,11 +10,13 @@ from ...autogen.openapi_model import ResourceDeletedResponse
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-# Define the raw SQL query for deleting entries
+# Define the raw SQL query for deleting entries with a developer check
 raw_query = """
 DELETE FROM entries
-WHERE session_id = $1
-RETURNING session_id as id;
+USING developers
+WHERE entries.session_id = $1
+AND developers.developer_id = $2
+RETURNING entries.session_id as id;
 """
 
 # Parse and optimize the query
@@ -39,8 +41,8 @@ query = optimize(
 @beartype
 def delete_entries_for_session(
     *, developer_id: UUID, session_id: UUID, mark_session_as_updated: bool = True
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     return (
         query,
-        [session_id],
+        [session_id, developer_id],
     )

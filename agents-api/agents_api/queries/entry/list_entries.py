@@ -11,7 +11,7 @@ from ...autogen.openapi_model import Entry
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-# Define the raw SQL query for listing entries
+# Define the raw SQL query for listing entries with a developer check
 raw_query = """
 SELECT 
     e.entry_id as id,
@@ -24,6 +24,7 @@ SELECT
     e.created_at,
     e.timestamp
 FROM entries e
+JOIN developers d ON d.developer_id = $7
 WHERE e.session_id = $1
 AND e.source = ANY($2)
 ORDER BY e.$3 $4
@@ -68,8 +69,8 @@ def list_entries(
     sort_by: Literal["created_at", "timestamp"] = "timestamp",
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     return (
         query,
-        [session_id, allowed_sources, sort_by, direction, limit, offset],
+        [session_id, allowed_sources, sort_by, direction, limit, offset, developer_id],
     )
