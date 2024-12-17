@@ -5,7 +5,7 @@ from fastapi import Header
 
 from ..common.protocol.developers import Developer
 from ..env import multi_tenant_mode
-from ..queries.developers.get_developer import get_developer, verify_developer
+from ..queries.developers.get_developer import get_developer
 from .exceptions import InvalidHeaderFormat
 
 
@@ -23,8 +23,6 @@ async def get_developer_id(
             x_developer_id = UUID(x_developer_id, version=4)
         except ValueError as e:
             raise InvalidHeaderFormat("X-Developer-Id must be a valid UUID") from e
-
-    verify_developer(developer_id=x_developer_id)
 
     return x_developer_id
 
