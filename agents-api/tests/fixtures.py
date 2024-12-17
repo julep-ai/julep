@@ -1,4 +1,6 @@
 import json
+import random
+import string
 import time
 from uuid import UUID
 
@@ -19,8 +21,9 @@ from agents_api.autogen.openapi_model import (
     CreateTransitionRequest,
     CreateUserRequest,
 )
-from agents_api.clients.pg import get_pg_client
+from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
+from agents_api.queries.developers.create_developer import create_developer
 
 # from agents_api.queries.agents.create_agent import create_agent
 # from agents_api.queries.agents.delete_agent import delete_agent
@@ -89,12 +92,11 @@ def test_developer_id():
 
 @fixture(scope="global")
 async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        developer = await get_developer(
-            developer_id=developer_id,
-            client=client,
-        )
+    pool = await create_db_pool(dsn=dsn)
+    developer = await get_developer(
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
 
     yield developer
     await pool.close()
@@ -125,20 +127,40 @@ def patch_embed_acompletion():
 
 @fixture(scope="global")
 async def test_user(dsn=pg_dsn, developer=test_developer):
-    pool = await asyncpg.create_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
 
-    async with get_pg_client(pool=pool) as client:
-        user = await create_user(
-            developer_id=developer.id,
-            data=CreateUserRequest(
-                name="test user",
-                about="test user about",
-            ),
-            client=client,
-        )
+    user = await create_user(
+        developer_id=developer.id,
+        data=CreateUserRequest(
+            name="test user",
+            about="test user about",
+        ),
+        connection_pool=pool,
+    )
 
     yield user
     await pool.close()
+
+
+@fixture(scope="test")
+async def random_email():
+    return f"{"".join([random.choice(string.ascii_lowercase) for _ in range(10)])}@mail.com"
+
+
+@fixture(scope="test")
+async def test_new_developer(dsn=pg_dsn, email=random_email):
+    pool = await create_db_pool(dsn=dsn)
+    dev_id = uuid7()
+    developer = await create_developer(
+        email=email,
+        active=True,
+        tags=["tag1"],
+        settings={"key1": "val1"},
+        developer_id=dev_id,
+        connection_pool=pool,
+    )
+
+    return developer
 
 
 # @fixture(scope="global")
