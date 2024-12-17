@@ -3,7 +3,7 @@
 from uuid_extensions import uuid7
 from ward import raises, test
 
-from agents_api.clients.pg import get_pg_client, get_pg_pool
+from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.developers import Developer
 from agents_api.queries.developers.get_developer import (
     get_developer,
@@ -14,9 +14,9 @@ from .fixtures import pg_dsn, test_developer_id
 
 @test("query: get developer not exists")
 async def _(dsn=pg_dsn):
-    pool = await get_pg_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     with raises(Exception):
-        async with get_pg_client(pool=pool) as client:
+        async with pool.acquire() as client:
             await get_developer(
                 developer_id=uuid7(),
                 client=client,
