@@ -15,7 +15,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
 from prometheus_fastapi_instrumentator import Instrumentator
-from pycozo.client import QueryException
 from pydantic import ValidationError
 from scalar_fastapi import get_scalar_api_reference
 from temporalio.service import RPCError
@@ -24,16 +23,17 @@ from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
 from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
-from .routers import (
-    agents,
-    docs,
-    files,
-    internal,
-    jobs,
-    sessions,
-    tasks,
-    users,
-)
+
+# from .routers import (
+#     agents,
+#     docs,
+#     files,
+#     internal,
+#     jobs,
+#     sessions,
+#     tasks,
+#     users,
+# )
 
 if not sentry_dsn:
     print("Sentry DSN not found. Sentry will not be enabled.")
@@ -134,10 +134,10 @@ def register_exceptions(app: FastAPI) -> None:
         RequestValidationError,
         make_exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY),
     )
-    app.add_exception_handler(
-        QueryException,
-        make_exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR),
-    )
+    # app.add_exception_handler(
+    #     QueryException,
+    #     make_exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR),
+    # )
 
 
 # TODO: Auth logic should be moved into global middleware _per router_
@@ -180,14 +180,14 @@ async def scalar_html():
 app.include_router(scalar_router)
 
 # Add other routers with the get_api_key dependency
-app.include_router(agents.router, dependencies=[Depends(get_api_key)])
-app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
-app.include_router(users.router, dependencies=[Depends(get_api_key)])
-app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
-app.include_router(files.router, dependencies=[Depends(get_api_key)])
-app.include_router(docs.router, dependencies=[Depends(get_api_key)])
-app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
-app.include_router(internal.router)
+# app.include_router(agents.router, dependencies=[Depends(get_api_key)])
+# app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
+# app.include_router(users.router, dependencies=[Depends(get_api_key)])
+# app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
+# app.include_router(files.router, dependencies=[Depends(get_api_key)])
+# app.include_router(docs.router, dependencies=[Depends(get_api_key)])
+# app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
+# app.include_router(internal.router)
 
 # TODO: CORS should be enabled only for JWT auth
 #

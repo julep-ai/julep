@@ -1,0 +1,23 @@
+-- docs_embeddings schema (docs_embeddings is an extended view of docs)
+-- +----------------------+--------------------------+-----------+----------+-------------+
+-- | Column               | Type                     | Modifiers | Storage  | Description |
+-- |----------------------+--------------------------+-----------+----------+-------------|
+-- | embedding_uuid       | uuid                     |           | plain    | <null>      |
+-- | chunk_seq            | integer                  |           | plain    | <null>      |
+-- | chunk                | text                     |           | extended | <null>      |
+-- | embedding            | vector(1024)             |           | external | <null>      |
+-- | developer_id         | uuid                     |           | plain    | <null>      |
+-- | doc_id               | uuid                     |           | plain    | <null>      |
+-- | title                | text                     |           | extended | <null>      |
+-- | content              | text                     |           | extended | <null>      |
+-- | index                | integer                  |           | plain    | <null>      |
+-- | modality             | text                     |           | extended | <null>      |
+-- | embedding_model      | text                     |           | extended | <null>      |
+-- | embedding_dimensions | integer                  |           | plain    | <null>      |
+-- | language             | text                     |           | extended | <null>      |
+-- | created_at           | timestamp with time zone |           | plain    | <null>      |
+-- | updated_at           | timestamp with time zone |           | plain    | <null>      |
+-- | metadata             | jsonb                    |           | extended | <null>      |
+-- | search_tsv           | tsvector                 |           | extended | <null>      |
+-- +----------------------+--------------------------+-----------+----------+-------------+
+

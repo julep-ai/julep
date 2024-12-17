@@ -31,7 +31,6 @@ def pg_query(
     func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
     debug: bool | None = None,
     only_on_error: bool = False,
-    timeit: bool = False,
 ):
     def pg_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
         """
@@ -74,13 +73,12 @@ def pg_query(
             from ..clients import pg
 
             try:
-                client = client or await pg.get_pg_client()
-
-                start = timeit and time.perf_counter()
-                results: list[Record] = await client.fetch(query, *variables)
-                end = timeit and time.perf_counter()
-
-                timeit and print(f"PostgreSQL query time: {end - start:.2f} seconds")
+                if client is None:
+                    pool = await pg.get_pg_pool()
+                    async with pg.get_pg_client(pool=pool) as client:
+                        results: list[Record] = await client.fetch(query, *variables)
+                else:
+                    results: list[Record] = await client.fetch(query, *variables)
 
             except Exception as e:
                 if only_on_error and debug:
@@ -128,17 +126,13 @@ def wrap_in_class(
     _kind: str | None = None,
 ):
     def _return_data(rec: list[Record]):
-        # Convert df to list of dicts
-        # if _kind:
-        #     rec = rec[rec["_kind"] == _kind]
-
         data = [dict(r.items()) for r in rec]
 
         nonlocal transform
         transform = transform or (lambda x: x)
 
         if one:
-            assert len(data) >= 1, "Expected one result, got none"
+            assert len(data) == 1, "Expected one result, got none"
             obj: ModelT = cls(**transform(data[0]))
             return obj
 

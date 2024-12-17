@@ -39,20 +39,7 @@ RETURNING
 """
 
 # Parse and optimize the query
-query = optimize(
-    parse_one(raw_query),
-    schema={
-        "users": {
-            "developer_id": "UUID",
-            "user_id": "UUID",
-            "name": "STRING",
-            "about": "STRING",
-            "metadata": "JSONB",
-            "created_at": "TIMESTAMP",
-            "updated_at": "TIMESTAMP",
-        }
-    },
-).sql(pretty=True)
+query = parse_one(raw_query).sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -68,9 +55,9 @@ query = optimize(
 @increase_counter("patch_user")
 @pg_query
 @beartype
-def patch_user(
+async def patch_user(
     *, developer_id: UUID, user_id: UUID, data: PatchUserRequest
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs an optimized SQL query for partial user updates.
     Uses primary key for efficient update and jsonb_merge for metadata.
@@ -81,7 +68,7 @@ def patch_user(
         data (PatchUserRequest): Partial update data
 
     Returns:
-        tuple[str, dict]: SQL query and parameters
+        tuple[str, list]: SQL query and parameters
     """
     params = [
         developer_id,

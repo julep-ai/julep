@@ -1,14 +1,18 @@
 import asyncio
+import json
 import logging
+import subprocess
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 from unittest.mock import patch
 
+import asyncpg
 from botocore import exceptions
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
+from testcontainers.postgres import PostgresContainer
 
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
@@ -170,3 +174,15 @@ def patch_s3_client():
     with patch("agents_api.clients.async_s3.get_session") as get_session:
         get_session.return_value = mock_session
         yield mock_session
+
+
+@contextmanager
+def get_pg_dsn():
+    with PostgresContainer("timescale/timescaledb-ha:pg17") as postgres:
+        test_psql_url = postgres.get_connection_url()
+        pg_dsn = f"postgres://{test_psql_url[22:]}?sslmode=disable"
+        command = f"migrate -database '{pg_dsn}' -path ../memory-store/migrations/ up"
+        process = subprocess.Popen(command, shell=True)
+        process.wait()
+
+        yield pg_dsn
