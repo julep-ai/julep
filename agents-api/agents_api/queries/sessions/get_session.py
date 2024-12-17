@@ -54,9 +54,7 @@ query = parse_one(raw_query).sql(pretty=True)
             detail="The specified developer does not exist.",
         ),
         asyncpg.NoDataFoundError: partialclass(
-            HTTPException, 
-            status_code=404,
-            detail="Session not found"
+            HTTPException, status_code=404, detail="Session not found"
         ),
     }
 )

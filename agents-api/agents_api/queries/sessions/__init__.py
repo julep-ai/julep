@@ -28,4 +28,3 @@ __all__ = [
     "patch_session",
     "update_session",
 ]
-

@@ -52,4 +52,4 @@ async def count_sessions(
     return (
         query,
         [developer_id],
-    ) 
+    )
