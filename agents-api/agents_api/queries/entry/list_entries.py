@@ -69,7 +69,6 @@ def list_entries(
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
 ) -> tuple[str, dict]:
-    
     return (
         query,
         [session_id, allowed_sources, sort_by, direction, limit, offset],
