@@ -6,7 +6,6 @@ BEGIN;
  * Constraints are checked at transaction commit rather than immediately, allowing circular references.
  * This enables more flexible data loading patterns while maintaining referential integrity.
  */
-
 -- Create tasks table if it doesn't exist
 CREATE TABLE IF NOT EXISTS tasks (
     developer_id UUID NOT NULL,
@@ -16,7 +15,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     ),
     agent_id UUID NOT NULL,
     task_id UUID NOT NULL,
-    version INTEGER NOT NULL DEFAULT 1,
+    "version" INTEGER NOT NULL DEFAULT 1,
     name TEXT NOT NULL CONSTRAINT ct_tasks_name_length CHECK (
         length(name) >= 1
         AND length(name) <= 255
@@ -25,19 +24,18 @@ CREATE TABLE IF NOT EXISTS tasks (
         description IS NULL
         OR length(description) <= 1000
     ),
-    input_schema JSON NOT NULL,
+    input_schema JSONB NOT NULL,
     inherit_tools BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB DEFAULT '{}'::JSONB,
-    CONSTRAINT pk_tasks PRIMARY KEY (developer_id, task_id),
+    CONSTRAINT pk_tasks PRIMARY KEY (developer_id, task_id, "version"),
     CONSTRAINT uq_tasks_canonical_name_unique UNIQUE (developer_id, canonical_name),
-    CONSTRAINT uq_tasks_version_unique UNIQUE (task_id, version),
     CONSTRAINT fk_tasks_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
     CONSTRAINT ct_tasks_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
     CONSTRAINT chk_tasks_metadata_valid CHECK (jsonb_typeof(metadata) = 'object'),
     CONSTRAINT chk_tasks_input_schema_valid CHECK (jsonb_typeof(input_schema) = 'object'),
-    CONSTRAINT chk_tasks_version_positive CHECK (version > 0)
+    CONSTRAINT chk_tasks_version_positive CHECK ("version" > 0)
 );
 
 -- Create sorted index on task_id if it doesn't exist
@@ -73,7 +71,7 @@ BEGIN
         WHERE constraint_name = 'fk_tools_task_id'
     ) THEN
         ALTER TABLE tools ADD CONSTRAINT fk_tools_task_id 
-        FOREIGN KEY (task_id, task_version) REFERENCES tasks(task_id, version) 
+        FOREIGN KEY (developer_id, task_id, task_version) REFERENCES tasks(developer_id, task_id, version) 
         DEFERRABLE INITIALLY DEFERRED;
     END IF;
 END $$;
@@ -116,11 +114,11 @@ CREATE TABLE IF NOT EXISTS workflows (
         REFERENCES tasks (developer_id, task_id, version) ON DELETE CASCADE
 );
 
--- Create index on 'developer_id' for 'workflows' table if it doesn't exist
+-- Create index for 'workflows' table if it doesn't exist
 DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_workflows_developer') THEN
-        CREATE INDEX idx_workflows_developer ON workflows (developer_id);
+        CREATE INDEX idx_workflows_developer ON workflows (developer_id, task_id, version);
     END IF;
 END $$;
 
