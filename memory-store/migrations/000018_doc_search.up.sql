@@ -72,7 +72,7 @@ begin
         _api_key,
         _api_key_name,
         cached_embedding
-    );
+    ) on conflict (provider, model, input_text) do update set embedding = cached_embedding;
 
     return cached_embedding;
 end;
@@ -133,22 +133,10 @@ BEGIN
     -- Build owner filter SQL if provided
     IF owner_types IS NOT NULL AND owner_ids IS NOT NULL THEN
         owner_filter_sql := '
-            AND EXISTS (
-                SELECT 1 
-                FROM unnest($4::text[], $5::uuid[]) AS owner_data(type, id)
-                WHERE (
-                    (owner_data.type = ''user'' AND EXISTS (
-                        SELECT 1 FROM user_docs ud 
-                        WHERE ud.doc_id = d.doc_id 
-                        AND ud.user_id = owner_data.id
-                    ))
-                    OR 
-                    (owner_data.type = ''agent'' AND EXISTS (
-                        SELECT 1 FROM agent_docs ad 
-                        WHERE ad.doc_id = d.doc_id 
-                        AND ad.agent_id = owner_data.id
-                    ))
-                )
+            AND (
+                (ud.user_id = ANY($5) AND ''user'' = ANY($4))
+                OR 
+                (ad.agent_id = ANY($5) AND ''agent'' = ANY($4))
             )';
     ELSE
         owner_filter_sql := '';
@@ -216,7 +204,7 @@ OR REPLACE FUNCTION embed_and_search_by_vector (
     metadata_filter jsonb DEFAULT NULL,
     embedding_provider text DEFAULT 'voyageai',
     embedding_model text DEFAULT 'voyage-01',
-    input_type text DEFAULT NULL,
+    input_type text DEFAULT 'query',
     api_key text DEFAULT NULL,
     api_key_name text DEFAULT NULL
 ) RETURNS SETOF doc_search_result LANGUAGE plpgsql AS $$
@@ -248,10 +236,11 @@ $$;
 COMMENT ON FUNCTION embed_and_search_by_vector IS 'Convenience function that combines text embedding and vector search in one call';
 
 -- Create the text search function
-CREATE OR REPLACE FUNCTION search_by_text(
+CREATE
+OR REPLACE FUNCTION search_by_text (
     query_text text,
     owner_types TEXT[],
-    owner_ids UUID[],
+    owner_ids UUID [],
     search_language text DEFAULT 'english',
     k integer DEFAULT 3,
     metadata_filter jsonb DEFAULT NULL
@@ -277,22 +266,10 @@ BEGIN
     -- Build owner filter SQL if provided
     IF owner_types IS NOT NULL AND owner_ids IS NOT NULL THEN
         owner_filter_sql := '
-            AND EXISTS (
-                SELECT 1 
-                FROM unnest($4::text[], $5::uuid[]) AS owner_data(type, id)
-                WHERE (
-                    (owner_data.type = ''user'' AND EXISTS (
-                        SELECT 1 FROM user_docs ud 
-                        WHERE ud.doc_id = d.doc_id 
-                        AND ud.user_id = owner_data.id
-                    ))
-                    OR 
-                    (owner_data.type = ''agent'' AND EXISTS (
-                        SELECT 1 FROM agent_docs ad 
-                        WHERE ad.doc_id = d.doc_id 
-                        AND ad.agent_id = owner_data.id
-                    ))
-                )
+            AND (
+                (ud.user_id = ANY($5) AND ''user'' = ANY($4))
+                OR 
+                (ad.agent_id = ANY($5) AND ''agent'' = ANY($4))
             )';
     ELSE
         owner_filter_sql := '';
@@ -349,20 +326,20 @@ $$;
 COMMENT ON FUNCTION search_by_text IS 'Search documents using full-text search with configurable language and filtering options';
 
 -- Function to calculate mean of an array
-CREATE OR REPLACE FUNCTION array_mean(arr float[])
-RETURNS float AS $$
+CREATE
+OR REPLACE FUNCTION array_mean (arr FLOAT[]) RETURNS float AS $$
     SELECT avg(v) FROM unnest(arr) v;
 $$ LANGUAGE SQL;
 
 -- Function to calculate standard deviation of an array
-CREATE OR REPLACE FUNCTION array_stddev(arr float[])
-RETURNS float AS $$
+CREATE
+OR REPLACE FUNCTION array_stddev (arr FLOAT[]) RETURNS float AS $$
     SELECT stddev(v) FROM unnest(arr) v;
 $$ LANGUAGE SQL;
 
 -- DBSF normalization function
-CREATE OR REPLACE FUNCTION dbsf_normalize(scores float[])
-RETURNS float[] AS $$
+CREATE
+OR REPLACE FUNCTION dbsf_normalize (scores FLOAT[]) RETURNS FLOAT[] AS $$
 DECLARE
     m float;
     sd float;
@@ -393,11 +370,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Hybrid search function combining text and vector search
-CREATE OR REPLACE FUNCTION search_hybrid(
+CREATE
+OR REPLACE FUNCTION search_hybrid (
     query_text text,
-    query_embedding vector(1024),
+    query_embedding vector (1024),
     owner_types TEXT[],
-    owner_ids UUID[],
+    owner_ids UUID [],
     k integer DEFAULT 3,
     alpha float DEFAULT 0.7, -- Weight for embedding results
     confidence float DEFAULT 0.5,
@@ -488,10 +466,11 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION search_hybrid IS 'Hybrid search combining text and vector search using Distribution-Based Score Fusion (DBSF)';
 
 -- Convenience function that handles embedding generation
-CREATE OR REPLACE FUNCTION embed_and_search_hybrid(
+CREATE
+OR REPLACE FUNCTION embed_and_search_hybrid (
     query_text text,
     owner_types TEXT[],
-    owner_ids UUID[],
+    owner_ids UUID [],
     k integer DEFAULT 3,
     alpha float DEFAULT 0.7,
     confidence float DEFAULT 0.5,
@@ -499,7 +478,7 @@ CREATE OR REPLACE FUNCTION embed_and_search_hybrid(
     search_language text DEFAULT 'english',
     embedding_provider text DEFAULT 'voyageai',
     embedding_model text DEFAULT 'voyage-01',
-    input_type text DEFAULT NULL,
+    input_type text DEFAULT 'query',
     api_key text DEFAULT NULL,
     api_key_name text DEFAULT NULL
 ) RETURNS SETOF doc_search_result AS $$
