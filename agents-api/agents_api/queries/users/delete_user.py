@@ -7,6 +7,7 @@ from sqlglot import parse_one
 from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import ResourceDeletedResponse
+from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
@@ -22,18 +23,11 @@ deleted_docs AS (
 )
 DELETE FROM users 
 WHERE developer_id = $1 AND user_id = $2
-RETURNING user_id as id, developer_id;
+RETURNING user_id, developer_id;
 """
 
 # Parse and optimize the query
-query = optimize(
-    parse_one(raw_query),
-    schema={
-        "user_files": {"developer_id": "UUID", "user_id": "UUID"},
-        "user_docs": {"developer_id": "UUID", "user_id": "UUID"},
-        "users": {"developer_id": "UUID", "user_id": "UUID"},
-    },
-).sql(pretty=True)
+query = parse_one(raw_query).sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -45,11 +39,15 @@ query = optimize(
         )
     }
 )
-@wrap_in_class(ResourceDeletedResponse, one=True)
+@wrap_in_class(
+    ResourceDeletedResponse,
+    one=True,
+    transform=lambda d: {**d, "id": d["user_id"], "deleted_at": utcnow()},
+)
 @increase_counter("delete_user")
 @pg_query
 @beartype
-def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
+async def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list]:
     """
     Constructs optimized SQL query to delete a user and related data.
     Uses primary key for efficient deletion.
@@ -59,7 +57,7 @@ def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
         user_id (UUID): The user's UUID
 
     Returns:
-        tuple[str, dict]: SQL query and parameters
+        tuple[str, list]: SQL query and parameters
     """
 
     return (

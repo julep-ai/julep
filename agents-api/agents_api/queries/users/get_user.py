@@ -26,20 +26,7 @@ AND user_id = $2;
 """
 
 # Parse and optimize the query
-query = optimize(
-    parse_one(raw_query),
-    schema={
-        "users": {
-            "developer_id": "UUID",
-            "user_id": "UUID",
-            "name": "STRING",
-            "about": "STRING",
-            "metadata": "JSONB",
-            "created_at": "TIMESTAMP",
-            "updated_at": "TIMESTAMP",
-        }
-    },
-).sql(pretty=True)
+query = parse_one(raw_query).sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -55,7 +42,7 @@ query = optimize(
 @increase_counter("get_user")
 @pg_query
 @beartype
-def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
+async def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list]:
     """
     Constructs an optimized SQL query to retrieve a user's details.
     Uses the primary key index (developer_id, user_id) for efficient lookup.
@@ -65,7 +52,7 @@ def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
         user_id (UUID): The UUID of the user to retrieve.
 
     Returns:
-        tuple[str, dict]: SQL query and parameters.
+        tuple[str, list]: SQL query and parameters.
     """
 
     return (

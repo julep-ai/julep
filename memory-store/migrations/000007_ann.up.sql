@@ -1,3 +1,10 @@
+/*
+ * VECTOR SIMILARITY SEARCH WITH DISKANN (Complexity: 8/10)
+ * Uses TimescaleDB's vectorizer to convert text into high-dimensional vectors for semantic search.
+ * Implements DiskANN (Disk-based Approximate Nearest Neighbor) for efficient similarity search at scale.
+ * Includes smart text chunking to handle large documents while preserving context and semantic meaning.
+ */
+
 -- Create vector similarity search index using diskann and timescale vectorizer
 SELECT
     ai.create_vectorizer (

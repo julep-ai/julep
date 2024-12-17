@@ -37,8 +37,6 @@ dependencies = [
     { name = "pandas" },
     { name = "prometheus-client" },
     { name = "prometheus-fastapi-instrumentator" },
-    { name = "pycozo", extra = ["embedded"] },
-    { name = "pycozo-async" },
     { name = "pydantic", extra = ["email"] },
     { name = "pydantic-partial" },
     { name = "python-box" },
@@ -52,6 +50,7 @@ dependencies = [
     { name = "sse-starlette" },
     { name = "temporalio", extra = ["opentelemetry"] },
     { name = "tenacity" },
+    { name = "testcontainers" },
     { name = "thefuzz" },
     { name = "tiktoken" },
     { name = "uuid7" },
@@ -62,7 +61,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "cozo-migrate" },
     { name = "datamodel-code-generator" },
     { name = "ipython" },
     { name = "ipywidgets" },
@@ -74,6 +72,8 @@ dev = [
     { name = "pyright" },
     { name = "pytype" },
     { name = "ruff" },
+    { name = "sqlvalidator" },
+    { name = "testcontainers" },
     { name = "ward" },
 ]
 
@@ -106,8 +106,6 @@ requires-dist = [
     { name = "pandas", specifier = "~=2.2.2" },
     { name = "prometheus-client", specifier = "~=0.21.0" },
     { name = "prometheus-fastapi-instrumentator", specifier = "~=7.0.0" },
-    { name = "pycozo", extras = ["embedded"], specifier = "~=0.7.6" },
-    { name = "pycozo-async", specifier = "~=0.7.7" },
     { name = "pydantic", extras = ["email"], specifier = "~=2.10.2" },
     { name = "pydantic-partial", specifier = "~=0.5.5" },
     { name = "python-box", specifier = "~=7.2.0" },
@@ -121,6 +119,7 @@ requires-dist = [
     { name = "sse-starlette", specifier = "~=2.1.3" },
     { name = "temporalio", extras = ["opentelemetry"], specifier = "~=1.8" },
     { name = "tenacity", specifier = "~=9.0.0" },
+    { name = "testcontainers", specifier = ">=4.9.0" },
     { name = "thefuzz", specifier = "~=0.22.1" },
     { name = "tiktoken", specifier = "~=0.7.0" },
     { name = "uuid7", specifier = ">=0.1.0" },
@@ -131,7 +130,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "cozo-migrate", specifier = ">=0.2.4" },
     { name = "datamodel-code-generator", specifier = ">=0.26.3" },
     { name = "ipython", specifier = ">=8.30.0" },
     { name = "ipywidgets", specifier = ">=8.1.5" },
@@ -143,6 +141,8 @@ dev = [
     { name = "pyright", specifier = ">=1.1.389" },
     { name = "pytype", specifier = ">=2024.10.11" },
     { name = "ruff", specifier = ">=0.8.1" },
+    { name = "sqlvalidator", specifier = ">=0.0.20" },
+    { name = "testcontainers", extras = ["postgres"], specifier = ">=4.9.0" },
     { name = "ward", specifier = ">=0.68.0b0" },
 ]
 
@@ -609,37 +609,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cozo-embedded"
-version = "0.7.6"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/17/e4a139cad601150303095532c51ab981b7b1ee9f6278188bedfe551c46e2/cozo_embedded-0.7.6-cp37-abi3-macosx_10_14_x86_64.whl", hash = "sha256:d146e76736beb5e14e0cf73dc8babefadfbbc358b325c94c64a51b6d5b0031e9", size = 9542067 },
-    { url = "https://files.pythonhosted.org/packages/65/3b/92fe8c7c7b2b83974ae051c92697d92e860625326cfc06cb4c54222c2fc0/cozo_embedded-0.7.6-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:7341fa266369181bbc19ad9e68820b51900b0fe1c947318a3d860b570dca6e09", size = 8325766 },
-    { url = "https://files.pythonhosted.org/packages/15/bf/19020af2645d8ea398e719bce8fcf7a91c341467aed9804c6d5f6ac878c2/cozo_embedded-0.7.6-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:80de79554138628967d4fd2636fc0a0a8dcca1c0c3bb527e638f1ee6cb763d7d", size = 10515504 },
-    { url = "https://files.pythonhosted.org/packages/db/a7/3c96a4077520ee3179b5eaeba350132a854b3aca34d1168f335bfcd0038d/cozo_embedded-0.7.6-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7571f6521041c13b7e9ca8ab8809cf9c8eaad929726ed6190ffc25a5a3ab57a7", size = 11135792 },
-    { url = "https://files.pythonhosted.org/packages/58/f7/5c6ec98d3983968df1d6709f1faa88a44b8c0fa7cd80994bc7f7d6b10293/cozo_embedded-0.7.6-cp37-abi3-win_amd64.whl", hash = "sha256:c945ab7b350d0b79d3e643b68ebc8343fc02d223a02ab929eb0fb8e4e0df3542", size = 9532612 },
-]
-
-[[package]]
-name = "cozo-migrate"
-version = "0.2.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "colorama" },
-    { name = "cozo-embedded" },
-    { name = "pandas" },
-    { name = "pycozo" },
-    { name = "requests" },
-    { name = "rich" },
-    { name = "shellingham" },
-    { name = "typer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b1/3a/f66a88c50c5dd7bb7cb98d84f4d3e45bb2cfe1dba524f775f88b065b563b/cozo_migrate-0.2.4.tar.gz", hash = "sha256:ccb852f00bb25ff7c431dc8fa8a81e8f9f10198ad76aa34d1239d67f1613b899", size = 14317 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/ce/2dc5dc2be88ab79ed24b1412b7745c690e7f684e1665eb4feeb6300056bd/cozo_migrate-0.2.4-py3-none-any.whl", hash = "sha256:518151d65c81968e42402470418f42c8580e972f0b949df6c5c499cc2b098c1b", size = 21466 },
-]
-
-[[package]]
 name = "cucumber-tag-expressions"
 version = "4.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -737,6 +706,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b5/4a/263763cb2ba3816dd94b08ad3a33d5fdae34ecb856678773cc40a3605829/dnspython-2.7.0.tar.gz", hash = "sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1", size = 345197 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/68/1b/e0a87d256e40e8c888847551b20a017a6b98139178505dc7ffb96f04e954/dnspython-2.7.0-py3-none-any.whl", hash = "sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86", size = 313632 },
+]
+
+[[package]]
+name = "docker"
+version = "7.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+    { name = "requests" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/9b/4a2ea29aeba62471211598dac5d96825bb49348fa07e906ea930394a83ce/docker-7.1.0.tar.gz", hash = "sha256:ad8c70e6e3f8926cb8a92619b832b4ea5299e2831c14284663184e200546fa6c", size = 117834 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e3/26/57c6fb270950d476074c087527a558ccb6f4436657314bfb6cdf484114c4/docker-7.1.0-py3-none-any.whl", hash = "sha256:c96b93b7f0a746f9e77d325bcfb87422a3d8bd4f03136ae8a85b37f1898d5fc0", size = 147774 },
 ]
 
 [[package]]
@@ -2220,35 +2203,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pycozo"
-version = "0.7.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/92/18/dc0dd2db0f1661e2cf17a653da59b6812f30ddc976a66b7972fd5d2809bc/pycozo-0.7.6.tar.gz", hash = "sha256:e4be9a091ba71e9d4465179bbf7557d47af84c8114d4889bd5fa13c731d57a95", size = 19091 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/e9/47ccff69e94bc80388c67e12b3c25244198fcfb1d3fad96489ed436a8e3f/pycozo-0.7.6-py3-none-any.whl", hash = "sha256:8930de5f82277d6481998a585c79aa898991cfb0692e168bde8b0a4558d579cf", size = 18977 },
-]
-
-[package.optional-dependencies]
-embedded = [
-    { name = "cozo-embedded" },
-]
-
-[[package]]
-name = "pycozo-async"
-version = "0.7.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cozo-embedded" },
-    { name = "httpx" },
-    { name = "ipython" },
-    { name = "pandas" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/01/17/2fc41dd8311f366625fc6fb70fe2dc27c345da8db0a4de78f39ccf759977/pycozo_async-0.7.7.tar.gz", hash = "sha256:fae95d8e9e11448263a752983b12a5a05b7656fa1dda0eeeb6f213d6fc592e1d", size = 21559 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/22/64/63330e6bd9bc30abfc863bd392c20c81f8ad1d6b5d1b6511d477496a6fbe/pycozo_async-0.7.7-py3-none-any.whl", hash = "sha256:2c23b184f6295d4dc6178350425110467e512638b3f4def937ed0609df321dd1", size = 22714 },
-]
-
-[[package]]
 name = "pycparser"
 version = "2.22"
 source = { registry = "https://pypi.org/simple" }
@@ -2897,6 +2851,15 @@ wheels = [
 ]
 
 [[package]]
+name = "sqlvalidator"
+version = "0.0.20"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/7f/bd1ba351693e60b4dcddd3a84dad89ea75cbc627f9631da17809761a3eb4/sqlvalidator-0.0.20.tar.gz", hash = "sha256:6f399be1bf0ba54a17ad16f6818836c169d17c16306f4cfa6fc883f13b1705fc", size = 24291 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5f/9d/5434c2b90dac2a8ab12d42027398e2012d1ce347a0bcc9500525d05ac1ee/sqlvalidator-0.0.20-py3-none-any.whl", hash = "sha256:8820752d9ec5ccb9cc977099edf991f0090acf4f1e4beb0f2fb35a6e1cc03c89", size = 24182 },
+]
+
+[[package]]
 name = "srsly"
 version = "2.4.8"
 source = { registry = "https://pypi.org/simple" }
@@ -3015,6 +2978,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8a/11/965c6fd8e5cc254f1fe142d547387da17a8ebfd75a3455f637c663fb38a0/terminado-0.18.1.tar.gz", hash = "sha256:de09f2c4b85de4765f7714688fff57d3e75bad1f909b589fde880460c753fd2e", size = 32701 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/9e/2064975477fdc887e47ad42157e214526dcad8f317a948dee17e1659a62f/terminado-0.18.1-py3-none-any.whl", hash = "sha256:a4468e1b37bb318f8a86514f65814e1afc977cf29b3992a4500d9dd305dcceb0", size = 14154 },
+]
+
+[[package]]
+name = "testcontainers"
+version = "4.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docker" },
+    { name = "python-dotenv" },
+    { name = "typing-extensions" },
+    { name = "urllib3" },
+    { name = "wrapt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2e/9a/e1ac5231231192b39302fcad7de2c0dbfc718c0636d7e28917c30ec57c41/testcontainers-4.9.0.tar.gz", hash = "sha256:2cd6af070109ff68c1ab5389dc89c86c2dc3ab30a21ca734b2cb8f0f80ad479e", size = 64612 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/f8/6425ff800894784160290bcb9737878d910b6da6a08633bfe7f2ed8c9ae3/testcontainers-4.9.0-py3-none-any.whl", hash = "sha256:c6fee929990972c40bf6b91b7072c94064ff3649b405a14fde0274c8b2479d32", size = 105324 },
 ]
 
 [[package]]

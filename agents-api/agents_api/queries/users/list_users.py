@@ -4,7 +4,8 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import optimize, parse_one
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import User
 from ...metrics.counters import increase_counter
@@ -23,7 +24,6 @@ WITH filtered_users AS (
         updated_at
     FROM users
     WHERE developer_id = $1
-        AND deleted_at IS NULL
         AND ($4::jsonb IS NULL OR metadata @> $4)
 )
 SELECT *
@@ -38,20 +38,7 @@ OFFSET $3;
 """
 
 # Parse and optimize the query
-query = optimize(
-    parse_one(raw_query),
-    schema={
-        "users": {
-            "developer_id": "UUID",
-            "user_id": "UUID",
-            "name": "STRING",
-            "about": "STRING",
-            "metadata": "JSONB",
-            "created_at": "TIMESTAMP",
-            "updated_at": "TIMESTAMP",
-        }
-    },
-).sql(pretty=True)
+# query = parse_one(raw_query).sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -67,7 +54,7 @@ query = optimize(
 @increase_counter("list_users")
 @pg_query
 @beartype
-def list_users(
+async def list_users(
     *,
     developer_id: UUID,
     limit: int = 100,
@@ -75,7 +62,7 @@ def list_users(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict | None = None,
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs an optimized SQL query for listing users with pagination and filtering.
     Uses indexes on developer_id and metadata for efficient querying.
@@ -89,7 +76,7 @@ def list_users(
         metadata_filter (dict, optional): Metadata-based filters
 
     Returns:
-        tuple[str, dict]: SQL query and parameters
+        tuple[str, list]: SQL query and parameters
     """
     if limit < 1 or limit > 1000:
         raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
@@ -106,6 +93,6 @@ def list_users(
     ]
 
     return (
-        query,
+        raw_query,
         params,
     )

@@ -1,5 +1,12 @@
 BEGIN;
 
+/*
+ * CONTINUOUS AGGREGATES WITH STATE AGGREGATION (Complexity: 9/10)
+ * This is a TimescaleDB feature that automatically maintains a real-time summary of the transitions table.
+ * It uses special aggregation functions like state_agg() to track state changes and last() to get most recent values.
+ * The view updates every 10 minutes and can serve both historical and real-time data (materialized_only = FALSE).
+ */
+
 -- create a function to convert transition_type to text (needed coz ::text is stable not immutable)
 CREATE
 OR REPLACE function to_text (transition_type) RETURNS text AS $$

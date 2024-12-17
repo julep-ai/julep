@@ -17,6 +17,9 @@ BEGIN
     END IF;
 END $$;
 
+-- Drop the workflows table first since it depends on tasks
+DROP TABLE IF EXISTS workflows CASCADE;
+
 -- Drop the tasks table and all its dependent objects (CASCADE will handle indexes, triggers, and constraints)
 DROP TABLE IF EXISTS tasks CASCADE;
 
