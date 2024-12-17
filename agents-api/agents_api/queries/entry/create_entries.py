@@ -96,7 +96,7 @@ def create_entries(
             item.get("token_count"),
             (item.get("created_at") or utcnow()).timestamp(),
             utcnow().timestamp(),
-            developer_id
+            developer_id,
         )
         for item in data_dicts
     ]
