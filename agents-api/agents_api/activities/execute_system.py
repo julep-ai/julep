@@ -13,10 +13,10 @@ from ..autogen.openapi_model import (
     ChatInput,
     CreateDocRequest,
     CreateSessionRequest,
-    UpdateSessionRequest,
     HybridDocSearchRequest,
     SystemDef,
     TextOnlyDocSearchRequest,
+    UpdateSessionRequest,
     VectorDocSearchRequest,
 )
 from ..common.protocol.tasks import ExecutionInput, StepContext

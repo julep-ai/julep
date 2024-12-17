@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import CreateSessionRequest, Session, RecallOptions
+from ...autogen.openapi_model import CreateSessionRequest, RecallOptions, Session
 from ...metrics.counters import query_metrics_update
 from ..utils import (
     cozo_query,
