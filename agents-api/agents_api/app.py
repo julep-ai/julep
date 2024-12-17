@@ -1,15 +1,17 @@
 import json
-import asyncpg
 from contextlib import asynccontextmanager
+
+import asyncpg
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
-from .env import api_prefix, db_dsn
+
 from .clients.pg import create_db_pool
+from .env import api_prefix
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.postgres_pool = await create_db_pool(db_dsn)
+    app.state.postgres_pool = await create_db_pool()
     yield
     await app.state.postgres_pool.close()
 

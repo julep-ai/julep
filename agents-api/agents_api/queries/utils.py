@@ -1,15 +1,16 @@
 import concurrent.futures
 import inspect
 import socket
-import asyncpg
 import time
 from functools import partialmethod, wraps
 from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar, cast
 
+import asyncpg
 import pandas as pd
 from asyncpg import Record
 from fastapi import HTTPException
 from pydantic import BaseModel
+
 from ..app import app
 
 P = ParamSpec("P")
@@ -61,7 +62,9 @@ def pg_query(
         # )
         @wraps(func)
         async def wrapper(
-            *args: P.args, connection_pool: asyncpg.Pool | None =None, **kwargs: P.kwargs
+            *args: P.args,
+            connection_pool: asyncpg.Pool | None = None,
+            **kwargs: P.kwargs,
         ) -> list[Record]:
             query, variables = await func(*args, **kwargs)
 
@@ -75,14 +78,20 @@ def pg_query(
             # Run the query
 
             try:
-                pool = connection_pool if connection_pool is not None else cast(asyncpg.Pool, app.state.postgres_pool)
+                pool = (
+                    connection_pool
+                    if connection_pool is not None
+                    else cast(asyncpg.Pool, app.state.postgres_pool)
+                )
                 async with pool.acquire() as conn:
                     async with conn.transaction():
                         start = timeit and time.perf_counter()
                         results: list[Record] = await conn.fetch(query, *variables)
                         end = timeit and time.perf_counter()
 
-                        timeit and print(f"PostgreSQL query time: {end - start:.2f} seconds")
+                        timeit and print(
+                            f"PostgreSQL query time: {end - start:.2f} seconds"
+                        )
 
             except Exception as e:
                 if only_on_error and debug:

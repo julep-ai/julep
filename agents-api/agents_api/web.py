@@ -14,7 +14,6 @@ from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
-from pycozo.client import QueryException
 from pydantic import ValidationError
 from scalar_fastapi import get_scalar_api_reference
 from temporalio.service import RPCError
