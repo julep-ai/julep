@@ -8,7 +8,6 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
 from pydantic import ValidationError
 from uuid_extensions import uuid7
 
@@ -25,35 +24,35 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-@rewrap_exceptions(
-    {
-        psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        psycopg_errors.UniqueViolation: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="An agent with this canonical name already exists for this developer.",
-        ),
-        psycopg_errors.CheckViolation: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="The provided data violates one or more constraints. Please check the input values.",
-        ),
-        ValidationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Input validation failed. Please check the provided data.",
-        ),
-        TypeError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="A type mismatch occurred. Please review the input.",
-        ),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         psycopg_errors.ForeignKeyViolation: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="The specified developer does not exist.",
+#         ),
+#         psycopg_errors.UniqueViolation: partialclass(
+#             HTTPException,
+#             status_code=409,
+#             detail="An agent with this canonical name already exists for this developer.",
+#         ),
+#         psycopg_errors.CheckViolation: partialclass(
+#             HTTPException,
+#             status_code=400,
+#             detail="The provided data violates one or more constraints. Please check the input values.",
+#         ),
+#         ValidationError: partialclass(
+#             HTTPException,
+#             status_code=400,
+#             detail="Input validation failed. Please check the provided data.",
+#         ),
+#         TypeError: partialclass(
+#             HTTPException,
+#             status_code=400,
+#             detail="A type mismatch occurred. Please review the input.",
+#         ),
+#     }
+# )
 @wrap_in_class(
     Agent,
     one=True,
@@ -63,7 +62,7 @@ T = TypeVar("T")
 @pg_query
 # @increase_counter("create_agent")
 @beartype
-def create_agent(
+async def create_agent(
     *,
     developer_id: UUID,
     agent_id: UUID | None = None,
