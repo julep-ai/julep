@@ -18,7 +18,7 @@ from agents_api.autogen.openapi_model import (
     UpdateUserRequest,
     User,
 )
-from agents_api.clients.pg import get_pg_client
+from agents_api.clients.pg import create_db_pool
 from agents_api.queries.users import (
     create_or_update_user,
     create_user,
@@ -39,50 +39,47 @@ TEST_USER_ID = UUID("987e6543-e21b-12d3-a456-426614174000")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that a user can be successfully created."""
 
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        await create_user(
-            developer_id=developer_id,
-            data=CreateUserRequest(
-                name="test user",
-                about="test user about",
-            ),
-            client=client,
-        )
+    pool = await create_db_pool(dsn=dsn)
+    await create_user(
+        developer_id=developer_id,
+        data=CreateUserRequest(
+            name="test user",
+            about="test user about",
+        ),
+        connection_pool=pool,
+    )
 
 
 @test("query: create or update user sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that a user can be successfully created or updated."""
 
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        await create_or_update_user(
-            developer_id=developer_id,
-            user_id=uuid7(),
-            data=CreateOrUpdateUserRequest(
-                name="test user",
-                about="test user about",
-            ),
-            client=client,
-        )
+    pool = await create_db_pool(dsn=dsn)
+    await create_or_update_user(
+        developer_id=developer_id,
+        user_id=uuid7(),
+        data=CreateOrUpdateUserRequest(
+            name="test user",
+            about="test user about",
+        ),
+        connection_pool=pool,
+    )
 
 
 @test("query: update user sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     """Test that an existing user's information can be successfully updated."""
 
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        update_result = await update_user(
-            user_id=user.id,
-            developer_id=developer_id,
-            data=UpdateUserRequest(
-                name="updated user",
-                about="updated user about",
-            ),
-            client=client,
-        )
+    pool = await create_db_pool(dsn=dsn)
+    update_result = await update_user(
+        user_id=user.id,
+        developer_id=developer_id,
+        data=UpdateUserRequest(
+            name="updated user",
+            about="updated user about",
+        ),
+        connection_pool=pool,
+    )
 
     assert update_result is not None
     assert isinstance(update_result, ResourceUpdatedResponse)
@@ -95,28 +92,26 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     user_id = uuid7()
 
-    pool = await asyncpg.create_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
 
     with raises(Exception):
-        async with get_pg_client(pool=pool) as client:
-            await get_user(
-                user_id=user_id,
-                developer_id=developer_id,
-                client=client,
-            )
+        await get_user(
+            user_id=user_id,
+            developer_id=developer_id,
+            connection_pool=pool,
+        )
 
 
 @test("query: get user exists sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     """Test that retrieving an existing user returns the correct user information."""
 
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        result = await get_user(
-            user_id=user.id,
-            developer_id=developer_id,
-            client=client,
-        )
+    pool = await create_db_pool(dsn=dsn)
+    result = await get_user(
+        user_id=user.id,
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
 
     assert result is not None
     assert isinstance(result, User)
@@ -126,12 +121,11 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that listing users returns a collection of user information."""
 
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        result = await list_users(
-            developer_id=developer_id,
-            client=client,
-        )
+    pool = await create_db_pool(dsn=dsn)
+    result = await list_users(
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
 
     assert isinstance(result, list)
     assert len(result) >= 1
@@ -142,18 +136,17 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     """Test that a user can be successfully patched."""
 
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        patch_result = await patch_user(
-            developer_id=developer_id,
-            user_id=user.id,
-            data=PatchUserRequest(
-                name="patched user",
-                about="patched user about",
-                metadata={"test": "metadata"},
-            ),
-            client=client,
-        )
+    pool = await create_db_pool(dsn=dsn)
+    patch_result = await patch_user(
+        developer_id=developer_id,
+        user_id=user.id,
+        data=PatchUserRequest(
+            name="patched user",
+            about="patched user about",
+            metadata={"test": "metadata"},
+        ),
+        connection_pool=pool,
+    )
 
     assert patch_result is not None
     assert isinstance(patch_result, ResourceUpdatedResponse)
@@ -164,25 +157,23 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     """Test that a user can be successfully deleted."""
 
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        delete_result = await delete_user(
-            developer_id=developer_id,
-            user_id=user.id,
-            client=client,
-        )
+    pool = await create_db_pool(dsn=dsn)
+    delete_result = await delete_user(
+        developer_id=developer_id,
+        user_id=user.id,
+        connection_pool=pool,
+    )
 
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)
 
     # Verify the user no longer exists
     try:
-        async with get_pg_client(pool=pool) as client:
-            await get_user(
-                developer_id=developer_id,
-                user_id=user.id,
-                client=client,
-            )
+        await get_user(
+            developer_id=developer_id,
+            user_id=user.id,
+            connection_pool=pool,
+        )
     except Exception:
         pass
     else:

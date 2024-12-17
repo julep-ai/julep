@@ -16,4 +16,7 @@ This documentation aims to provide clear, concise, and sufficient context for ne
 
 # ruff: noqa: F401, F403, F405
 
-from .get_developer import get_developer, verify_developer
+from .create_developer import create_developer
+from .get_developer import get_developer
+from .patch_developer import patch_developer
+from .update_developer import update_developer
