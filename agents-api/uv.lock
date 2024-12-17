@@ -72,6 +72,7 @@ dev = [
     { name = "pyright" },
     { name = "pytype" },
     { name = "ruff" },
+    { name = "sqlvalidator" },
     { name = "testcontainers" },
     { name = "ward" },
 ]
@@ -140,6 +141,7 @@ dev = [
     { name = "pyright", specifier = ">=1.1.389" },
     { name = "pytype", specifier = ">=2024.10.11" },
     { name = "ruff", specifier = ">=0.8.1" },
+    { name = "sqlvalidator", specifier = ">=0.0.20" },
     { name = "testcontainers", extras = ["postgres"], specifier = ">=4.9.0" },
     { name = "ward", specifier = ">=0.68.0b0" },
 ]
@@ -2846,6 +2848,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/fc/9a/a815124044d598b7f6174be176f379eccd9d583e3130594c381fdfb5736f/sqlglot-26.0.0.tar.gz", hash = "sha256:eb4470e8b3aa2cff1a4ecca4cfe36658e9797ab82416e566abe12672195e1ab8", size = 19775305 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6b/1e/af60a2188773414a9fa65d0e8a32e81342cfcbedf113a19df724d2968c04/sqlglot-26.0.0-py3-none-any.whl", hash = "sha256:1ee9b285e3138c2642a5670c0dbec9afd01860246837788b0f3d228aa6aff619", size = 435457 },
+]
+
+[[package]]
+name = "sqlvalidator"
+version = "0.0.20"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/7f/bd1ba351693e60b4dcddd3a84dad89ea75cbc627f9631da17809761a3eb4/sqlvalidator-0.0.20.tar.gz", hash = "sha256:6f399be1bf0ba54a17ad16f6818836c169d17c16306f4cfa6fc883f13b1705fc", size = 24291 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5f/9d/5434c2b90dac2a8ab12d42027398e2012d1ce347a0bcc9500525d05ac1ee/sqlvalidator-0.0.20-py3-none-any.whl", hash = "sha256:8820752d9ec5ccb9cc977099edf991f0090acf4f1e4beb0f2fb35a6e1cc03c89", size = 24182 },
 ]
 
 [[package]]

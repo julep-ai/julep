@@ -67,6 +67,7 @@ dev = [
     "pyright>=1.1.389",
     "pytype>=2024.10.11",
     "ruff>=0.8.1",
+    "sqlvalidator>=0.0.20",
     "testcontainers[postgres]>=4.9.0",
     "ward>=0.68.0b0",
 ]
