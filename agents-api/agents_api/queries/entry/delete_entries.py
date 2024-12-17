@@ -40,4 +40,7 @@ query = optimize(
 def delete_entries_for_session(
     *, developer_id: UUID, session_id: UUID, mark_session_as_updated: bool = True
 ) -> tuple[str, dict]:
-    return query, [session_id]
+    return (
+        query,
+        [session_id],
+    )

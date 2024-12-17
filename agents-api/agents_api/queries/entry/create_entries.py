@@ -97,4 +97,7 @@ def create_entries(
         for item in data_dicts
     ]
 
-    return query, params
+    return (
+        query,
+        params,
+    )

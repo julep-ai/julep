@@ -20,7 +20,6 @@ SELECT
     e.content,
     e.source,
     e.token_count,
-    e.tokenizer,
     e.created_at,
     e.timestamp,
     e.tool_calls,
@@ -43,7 +42,6 @@ query = optimize(
             "content": "JSONB",
             "source": "STRING",
             "token_count": "INTEGER",
-            "tokenizer": "STRING",
             "created_at": "TIMESTAMP",
             "timestamp": "TIMESTAMP",
             "tool_calls": "JSONB",
@@ -67,5 +65,8 @@ def get_history(
     developer_id: UUID,
     session_id: UUID,
     allowed_sources: list[str] = ["api_request", "api_response"],
-) -> tuple[str, list]:
-    return query, [session_id, allowed_sources]
+) -> tuple[str, dict]:
+    return (
+        query,
+        [session_id, allowed_sources],
+    )

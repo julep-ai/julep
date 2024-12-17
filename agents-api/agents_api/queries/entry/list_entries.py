@@ -21,7 +21,6 @@ SELECT
     e.content,
     e.source,
     e.token_count,
-    e.tokenizer,
     e.created_at,
     e.timestamp
 FROM entries e
@@ -43,7 +42,6 @@ query = optimize(
             "content": "JSONB",
             "source": "STRING",
             "token_count": "INTEGER",
-            "tokenizer": "STRING",
             "created_at": "TIMESTAMP",
             "timestamp": "TIMESTAMP",
         }
@@ -71,4 +69,8 @@ def list_entries(
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
 ) -> tuple[str, dict]:
-    return query, [session_id, allowed_sources, sort_by, direction, limit, offset]
+    
+    return (
+        query,
+        [session_id, allowed_sources, sort_by, direction, limit, offset],
+    )
