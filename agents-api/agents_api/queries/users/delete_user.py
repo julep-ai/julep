@@ -7,10 +7,10 @@ from sqlglot import parse_one
 from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import ResourceDeletedResponse
+from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-from ...common.utils.datetime import utcnow
 # Define the raw SQL query outside the function
 raw_query = """
 WITH deleted_data AS (
@@ -28,6 +28,7 @@ RETURNING user_id, developer_id;
 
 # Parse and optimize the query
 query = parse_one(raw_query).sql(pretty=True)
+
 
 @rewrap_exceptions(
     {

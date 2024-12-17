@@ -41,6 +41,7 @@ RETURNING
 # Parse and optimize the query
 query = parse_one(raw_query).sql(pretty=True)
 
+
 @rewrap_exceptions(
     {
         asyncpg.ForeignKeyViolationError: partialclass(

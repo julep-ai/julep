@@ -36,6 +36,7 @@ RETURNING *;
 # Add index hint for better performance
 query = parse_one(raw_query).sql(pretty=True)
 
+
 @rewrap_exceptions(
     {
         asyncpg.ForeignKeyViolationError: partialclass(
