@@ -5,7 +5,10 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
-from ...autogen.openapi_model import CreateOrUpdateSessionRequest, ResourceUpdatedResponse
+from ...autogen.openapi_model import (
+    CreateOrUpdateSessionRequest,
+    ResourceUpdatedResponse,
+)
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
@@ -118,9 +121,7 @@ async def create_or_update_session(
         )
 
     # Prepare participant arrays for lookup query
-    participant_types = (
-        ["user"] * len(users) + ["agent"] * len(agents)
-    )
+    participant_types = ["user"] * len(users) + ["agent"] * len(agents)
     participant_ids = [str(u) for u in users] + [str(a) for a in agents]
 
     # Prepare session parameters

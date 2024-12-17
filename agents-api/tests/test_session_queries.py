@@ -3,7 +3,6 @@ This module contains tests for SQL query generation functions in the sessions mo
 Tests verify the SQL queries without actually executing them against a database.
 """
 
-
 from uuid import UUID
 
 import asyncpg
@@ -30,13 +29,15 @@ from agents_api.queries.sessions import (
     patch_session,
     update_session,
 )
-from tests.fixtures import pg_dsn, test_developer_id  # , test_session, test_agent, test_user
-
+from tests.fixtures import (
+    pg_dsn,
+    test_developer_id,
+)  # , test_session, test_agent, test_user
 
 # @test("query: create session sql")
 # async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
 #     """Test that a session can be successfully created."""
-    
+
 #     pool = await create_db_pool(dsn=dsn)
 #     await create_session(
 #         developer_id=developer_id,

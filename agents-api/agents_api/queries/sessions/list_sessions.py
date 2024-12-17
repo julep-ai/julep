@@ -63,9 +63,7 @@ query = raw_query
             detail="The specified developer does not exist.",
         ),
         asyncpg.NoDataFoundError: partialclass(
-            HTTPException, 
-            status_code=404,
-            detail="No sessions found"
+            HTTPException, status_code=404, detail="No sessions found"
         ),
     }
 )

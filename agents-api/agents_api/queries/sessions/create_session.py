@@ -105,9 +105,7 @@ async def create_session(
         )
 
     # Prepare participant arrays for lookup query
-    participant_types = (
-        ["user"] * len(users) + ["agent"] * len(agents)
-    )
+    participant_types = ["user"] * len(users) + ["agent"] * len(agents)
     participant_ids = [str(u) for u in users] + [str(a) for a in agents]
 
     # Prepare session parameters
