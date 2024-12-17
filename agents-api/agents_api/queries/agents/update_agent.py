@@ -8,7 +8,6 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...metrics.counters import increase_counter
@@ -23,16 +22,16 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-@rewrap_exceptions(
-    {
-        psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        )
-    }
-    # TODO: Add more exceptions
-)
+# @rewrap_exceptions(
+#     {
+#         psycopg_errors.ForeignKeyViolation: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="The specified developer does not exist.",
+#         )
+#     }
+#     # TODO: Add more exceptions
+# )
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
@@ -42,7 +41,7 @@ T = TypeVar("T")
 @pg_query
 # @increase_counter("update_agent1")
 @beartype
-def update_agent_query(
+async def update_agent(
     *, agent_id: UUID, developer_id: UUID, data: UpdateAgentRequest
 ) -> tuple[str, dict]:
     """

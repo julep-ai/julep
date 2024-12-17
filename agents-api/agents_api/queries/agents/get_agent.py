@@ -8,8 +8,6 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
-
 from ...autogen.openapi_model import Agent
 from ...metrics.counters import increase_counter
 from ..utils import (
@@ -23,21 +21,21 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-@rewrap_exceptions(
-    {
-        psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        )
-    }
-    # TODO: Add more exceptions
-)
+# @rewrap_exceptions(
+    # {
+    #     psycopg_errors.ForeignKeyViolation: partialclass(
+    #         HTTPException,
+    #         status_code=404,
+    #         detail="The specified developer does not exist.",
+    #     )
+    # }
+    # # TODO: Add more exceptions
+# )
 @wrap_in_class(Agent, one=True)
 @pg_query
 # @increase_counter("get_agent1")
 @beartype
-def get_agent_query(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str], dict]:
+async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str], dict]:
     """
     Constructs the SQL query to retrieve an agent's details.
 

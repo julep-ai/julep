@@ -8,7 +8,6 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
@@ -24,16 +23,16 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-@rewrap_exceptions(
-    {
-        psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        )
-    }
-    # TODO: Add more exceptions
-)
+# @rewrap_exceptions(
+#     {
+#         psycopg_errors.ForeignKeyViolation: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="The specified developer does not exist.",
+#         )
+#     }
+#     # TODO: Add more exceptions
+# )
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,
@@ -44,7 +43,7 @@ T = TypeVar("T")
 @pg_query
 # @increase_counter("delete_agent1")
 @beartype
-def delete_agent_query(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str], dict]:
+async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str], dict]:
     """
     Constructs the SQL queries to delete an agent and its related settings.
 
