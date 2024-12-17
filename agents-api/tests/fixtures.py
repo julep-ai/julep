@@ -1,9 +1,8 @@
 import json
-import time
-import string
 import random
+import string
+import time
 from uuid import UUID
-from uuid_extensions import uuid7
 
 import asyncpg
 from fastapi.testclient import TestClient
@@ -24,11 +23,11 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
+from agents_api.queries.developers.create_developer import create_developer
 
 # from agents_api.queries.agents.create_agent import create_agent
 # from agents_api.queries.agents.delete_agent import delete_agent
 from agents_api.queries.developers.get_developer import get_developer
-from agents_api.queries.developers.create_developer import create_developer
 
 # from agents_api.queries.docs.create_doc import create_doc
 # from agents_api.queries.docs.delete_doc import delete_doc

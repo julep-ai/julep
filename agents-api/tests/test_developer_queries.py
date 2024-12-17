@@ -5,14 +5,14 @@ from ward import raises, test
 
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.developers import Developer
+from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import (
     get_developer,
 )
-from agents_api.queries.developers.create_developer import create_developer
-from agents_api.queries.developers.update_developer import update_developer
 from agents_api.queries.developers.patch_developer import patch_developer
+from agents_api.queries.developers.update_developer import update_developer
 
-from .fixtures import pg_dsn, test_new_developer, random_email
+from .fixtures import pg_dsn, random_email, test_new_developer
 
 
 @test("query: get developer not exists")
