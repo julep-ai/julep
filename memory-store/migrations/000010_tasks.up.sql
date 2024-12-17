@@ -1,5 +1,12 @@
 BEGIN;
 
+/*
+ * DEFERRED FOREIGN KEY CONSTRAINTS (Complexity: 6/10)
+ * Uses PostgreSQL's deferred constraints to handle complex relationships between tasks and tools tables.
+ * Constraints are checked at transaction commit rather than immediately, allowing circular references.
+ * This enables more flexible data loading patterns while maintaining referential integrity.
+ */
+
 -- Create tasks table if it doesn't exist
 CREATE TABLE IF NOT EXISTS tasks (
     developer_id UUID NOT NULL,
@@ -9,8 +16,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     ),
     agent_id UUID NOT NULL,
     task_id UUID NOT NULL,
-    VERSION INTEGER NOT NULL DEFAULT 1,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version INTEGER NOT NULL DEFAULT 1,
     name TEXT NOT NULL CONSTRAINT ct_tasks_name_length CHECK (
         length(name) >= 1
         AND length(name) <= 255
@@ -21,14 +27,17 @@ CREATE TABLE IF NOT EXISTS tasks (
     ),
     input_schema JSON NOT NULL,
     inherit_tools BOOLEAN DEFAULT FALSE,
-    workflows JSON[] DEFAULT ARRAY[]::JSON[],
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB DEFAULT '{}'::JSONB,
     CONSTRAINT pk_tasks PRIMARY KEY (developer_id, task_id),
     CONSTRAINT uq_tasks_canonical_name_unique UNIQUE (developer_id, canonical_name),
-    CONSTRAINT uq_tasks_version_unique UNIQUE (task_id, VERSION),
+    CONSTRAINT uq_tasks_version_unique UNIQUE (task_id, version),
     CONSTRAINT fk_tasks_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
-    CONSTRAINT ct_tasks_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$')
+    CONSTRAINT ct_tasks_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
+    CONSTRAINT chk_tasks_metadata_valid CHECK (jsonb_typeof(metadata) = 'object'),
+    CONSTRAINT chk_tasks_input_schema_valid CHECK (jsonb_typeof(input_schema) = 'object'),
+    CONSTRAINT chk_tasks_version_positive CHECK (version > 0)
 );
 
 -- Create sorted index on task_id if it doesn't exist
@@ -86,5 +95,36 @@ END $$;
 
 -- Add comment to table (comments are idempotent by default)
 COMMENT ON TABLE tasks IS 'Stores tasks associated with AI agents for developers';
+
+-- Create 'workflows' table
+CREATE TABLE IF NOT EXISTS workflows (
+    developer_id UUID NOT NULL,
+    task_id UUID NOT NULL,
+    version INTEGER NOT NULL,
+    name TEXT NOT NULL CONSTRAINT chk_workflows_name_length CHECK (
+        length(name) >= 1 AND length(name) <= 255
+    ),
+    step_idx INTEGER NOT NULL CONSTRAINT chk_workflows_step_idx_positive CHECK (step_idx >= 0),
+    step_type TEXT NOT NULL CONSTRAINT chk_workflows_step_type_length CHECK (
+        length(step_type) >= 1 AND length(step_type) <= 255
+    ),
+    step_definition JSONB NOT NULL CONSTRAINT chk_workflows_step_definition_valid CHECK (
+        jsonb_typeof(step_definition) = 'object'
+    ),
+    CONSTRAINT pk_workflows PRIMARY KEY (developer_id, task_id, version, step_idx),
+    CONSTRAINT fk_workflows_tasks FOREIGN KEY (developer_id, task_id, version)
+        REFERENCES tasks (developer_id, task_id, version) ON DELETE CASCADE
+);
+
+-- Create index on 'developer_id' for 'workflows' table if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_workflows_developer') THEN
+        CREATE INDEX idx_workflows_developer ON workflows (developer_id);
+    END IF;
+END $$;
+
+-- Add comment to 'workflows' table
+COMMENT ON TABLE workflows IS 'Stores normalized workflows for tasks';
 
 COMMIT;

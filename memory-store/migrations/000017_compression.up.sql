@@ -1,3 +1,10 @@
+/*
+ * MULTI-DIMENSIONAL HYPERTABLES WITH COMPRESSION (Complexity: 8/10)
+ * TimescaleDB's advanced feature that partitions data by both time (created_at) and space (session_id/execution_id).
+ * Automatically compresses data older than 7 days to save storage while maintaining query performance.
+ * Uses segment_by to group related rows and order_by to optimize decompression speed.
+ */
+
 BEGIN;
 
 ALTER TABLE entries

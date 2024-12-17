@@ -1,5 +1,12 @@
 BEGIN;
 
+/*
+ * CUSTOM TYPES AND ENUMS WITH COMPLEX CONSTRAINTS (Complexity: 7/10)
+ * Creates custom composite type transition_cursor to track workflow state and enum type for transition states.
+ * Uses compound primary key combining timestamps and UUIDs for efficient time-series operations.
+ * Implements complex indexing strategy optimized for various query patterns (current state, next state, labels).
+ */
+
 -- Create transition type enum if it doesn't exist
 DO $$ 
 BEGIN
