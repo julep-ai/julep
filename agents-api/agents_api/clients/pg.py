@@ -1,5 +1,5 @@
-from contextlib import asynccontextmanager
 import json
+from contextlib import asynccontextmanager
 
 import asyncpg
 

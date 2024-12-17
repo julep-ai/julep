@@ -43,12 +43,13 @@ from agents_api.queries.users.create_user import create_user
 
 # from agents_api.queries.users.delete_user import delete_user
 from agents_api.web import app
+
 from .utils import (
     get_pg_dsn,
-    patch_embed_acompletion as patch_embed_acompletion_ctx,
+    patch_s3_client,
 )
 from .utils import (
-    patch_s3_client,
+    patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
 
 EMBEDDING_SIZE: int = 1024
