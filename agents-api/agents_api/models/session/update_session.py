@@ -22,6 +22,7 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 _fields: List[str] = [
+    "recall_options",
     "situation",
     "summary",
     "metadata",
