@@ -13,6 +13,7 @@ from ..autogen.openapi_model import (
     ChatInput,
     CreateDocRequest,
     CreateSessionRequest,
+    UpdateSessionRequest,
     HybridDocSearchRequest,
     SystemDef,
     TextOnlyDocSearchRequest,
@@ -113,7 +114,7 @@ async def execute_system(
         if system.operation == "create" and system.resource == "session":
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id", None)
-            data = CreateSessionRequest(**arguments)
+            create_session_request = CreateSessionRequest(**arguments)
 
             # In case sessions.create becomes asynchronous in the future
             if asyncio.iscoroutinefunction(handler):
@@ -122,7 +123,35 @@ async def execute_system(
             # Run the synchronous function in another process
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(
-                process_pool_executor, partial(handler, developer_id, session_id, data)
+                process_pool_executor,
+                partial(
+                    handler,
+                    developer_id=developer_id,
+                    session_id=session_id,
+                    data=create_session_request,
+                ),
+            )
+
+        # Handle update operations
+        if system.operation == "update" and system.resource == "session":
+            developer_id = arguments.pop("developer_id")
+            session_id = arguments.pop("session_id")
+            update_session_request = UpdateSessionRequest(**arguments)
+
+            # In case sessions.update becomes asynchronous in the future
+            if asyncio.iscoroutinefunction(handler):
+                return await handler()
+
+            # Run the synchronous function in another process
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(
+                process_pool_executor,
+                partial(
+                    handler,
+                    developer_id=developer_id,
+                    session_id=session_id,
+                    data=update_session_request,
+                ),
             )
 
         # Handle regular operations
