@@ -38,11 +38,8 @@ T = TypeVar("T")
     ResourceDeletedResponse,
     one=True,
     transform=lambda d: {
-        "id": UUID(d.pop("agent_id")),
-        "deleted_at": utcnow(),
-        "jobs": [],
+        "id": d["agent_id"],
     },
-    _kind="deleted",
 )
 @pg_query
 # @increase_counter("delete_agent1")

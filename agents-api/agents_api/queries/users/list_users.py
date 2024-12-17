@@ -24,7 +24,6 @@ WITH filtered_users AS (
         updated_at
     FROM users
     WHERE developer_id = $1
-        AND deleted_at IS NULL
         AND ($4::jsonb IS NULL OR metadata @> $4)
 )
 SELECT *
@@ -55,7 +54,7 @@ OFFSET $3;
 @increase_counter("list_users")
 @pg_query
 @beartype
-def list_users(
+async def list_users(
     *,
     developer_id: UUID,
     limit: int = 100,

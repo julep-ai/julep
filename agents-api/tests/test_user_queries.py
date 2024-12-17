@@ -13,6 +13,7 @@ from agents_api.autogen.openapi_model import (
     CreateOrUpdateUserRequest,
     CreateUserRequest,
     PatchUserRequest,
+    ResourceDeletedResponse,
     ResourceUpdatedResponse,
     UpdateUserRequest,
     User,
@@ -172,7 +173,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
         )
 
     assert delete_result is not None
-    assert isinstance(delete_result, ResourceUpdatedResponse)
+    assert isinstance(delete_result, ResourceDeletedResponse)
 
     # Verify the user no longer exists
     try:

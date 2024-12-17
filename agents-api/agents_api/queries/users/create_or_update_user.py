@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlglot import parse_one
 from sqlglot.optimizer import optimize
 
-from ...autogen.openapi_model import CreateUserRequest, User
+from ...autogen.openapi_model import CreateOrUpdateUserRequest, User
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
@@ -24,7 +24,7 @@ VALUES (
     $2,
     $3,
     $4,
-    COALESCE($5, '{}'::jsonb)
+    $5
 )
 ON CONFLICT (developer_id, user_id) DO UPDATE SET
     name = EXCLUDED.name,
@@ -34,19 +34,7 @@ RETURNING *;
 """
 
 # Add index hint for better performance
-query = optimize(
-    parse_one(raw_query),
-    schema={
-        "users": {
-            "developer_id": "UUID",
-            "user_id": "UUID",
-            "name": "STRING",
-            "about": "STRING",
-            "metadata": "JSONB",
-        }
-    },
-).sql(pretty=True)
-
+query = parse_one(raw_query).sql(pretty=True)
 
 @rewrap_exceptions(
     {
@@ -62,12 +50,12 @@ query = optimize(
         ),
     }
 )
-@wrap_in_class(User)
+@wrap_in_class(User, one=True, transform=lambda d: {**d, "id": d["user_id"]})
 @increase_counter("create_or_update_user")
 @pg_query
 @beartype
-def create_or_update_user(
-    *, developer_id: UUID, user_id: UUID, data: CreateUserRequest
+async def create_or_update_user(
+    *, developer_id: UUID, user_id: UUID, data: CreateOrUpdateUserRequest
 ) -> tuple[str, list]:
     """
     Constructs an SQL query to create or update a user.
@@ -75,7 +63,7 @@ def create_or_update_user(
     Args:
         developer_id (UUID): The UUID of the developer.
         user_id (UUID): The UUID of the user.
-        data (CreateUserRequest): The user data to insert or update.
+        data (CreateOrUpdateUserRequest): The user data to insert or update.
 
     Returns:
         tuple[str, list]: SQL query and parameters.
@@ -88,7 +76,7 @@ def create_or_update_user(
         user_id,
         data.name,
         data.about,
-        data.metadata,  # Let COALESCE handle None case in SQL
+        data.metadata or {},
     ]
 
     return (
