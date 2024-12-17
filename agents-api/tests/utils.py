@@ -176,10 +176,8 @@ def patch_s3_client():
         yield mock_session
 
 
-@asynccontextmanager
-async def patch_pg_client():
-    # with patch("agents_api.clients.pg.get_pg_client") as get_pg_client:
-
+@contextmanager
+def get_pg_dsn():
     with PostgresContainer("timescale/timescaledb-ha:pg17") as postgres:
         test_psql_url = postgres.get_connection_url()
         pg_dsn = f"postgres://{test_psql_url[22:]}?sslmode=disable"
@@ -187,13 +185,4 @@ async def patch_pg_client():
         process = subprocess.Popen(command, shell=True)
         process.wait()
 
-        client = await asyncpg.connect(pg_dsn)
-        await client.set_type_codec(
-            "jsonb",
-            encoder=json.dumps,
-            decoder=json.loads,
-            schema="pg_catalog",
-        )
-
-        # get_pg_client.return_value = client
-        yield client
+        yield pg_dsn

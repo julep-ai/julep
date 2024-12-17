@@ -49,7 +49,7 @@ query = optimize(
 @increase_counter("delete_user")
 @pg_query
 @beartype
-def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
+def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list]:
     """
     Constructs optimized SQL query to delete a user and related data.
     Uses primary key for efficient deletion.
@@ -59,7 +59,7 @@ def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
         user_id (UUID): The user's UUID
 
     Returns:
-        tuple[str, dict]: SQL query and parameters
+        tuple[str, list]: SQL query and parameters
     """
 
     return (

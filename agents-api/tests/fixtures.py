@@ -1,6 +1,8 @@
+import json
 import time
 from uuid import UUID
 
+import asyncpg
 from fastapi.testclient import TestClient
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
@@ -17,6 +19,7 @@ from agents_api.autogen.openapi_model import (
     CreateTransitionRequest,
     CreateUserRequest,
 )
+from agents_api.clients.pg import get_pg_client
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
 
 # from agents_api.queries.agents.create_agent import create_agent
@@ -26,9 +29,7 @@ from agents_api.queries.developers.get_developer import get_developer
 # from agents_api.queries.docs.create_doc import create_doc
 # from agents_api.queries.docs.delete_doc import delete_doc
 # from agents_api.queries.execution.create_execution import create_execution
-# from agents_api.queries.execution.create_execution_transition import (
-#     create_execution_transition,
-# )
+# from agents_api.queries.execution.create_execution_transition import create_execution_transition
 # from agents_api.queries.execution.create_temporal_lookup import create_temporal_lookup
 # from agents_api.queries.files.create_file import create_file
 # from agents_api.queries.files.delete_file import delete_file
@@ -39,14 +40,14 @@ from agents_api.queries.developers.get_developer import get_developer
 # from agents_api.queries.tools.create_tools import create_tools
 # from agents_api.queries.tools.delete_tool import delete_tool
 from agents_api.queries.users.create_user import create_user
-from agents_api.queries.users.delete_user import delete_user
 
-# from agents_api.web import app
+# from agents_api.queries.users.delete_user import delete_user
+from agents_api.web import app
 from .utils import (
+    get_pg_dsn,
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
 from .utils import (
-    patch_pg_client,
     patch_s3_client,
 )
 
@@ -54,9 +55,9 @@ EMBEDDING_SIZE: int = 1024
 
 
 @fixture(scope="global")
-async def pg_client():
-    async with patch_pg_client() as pg_client:
-        yield pg_client
+def pg_dsn():
+    with get_pg_dsn() as pg_dsn:
+        yield pg_dsn
 
 
 @fixture(scope="global")
@@ -66,150 +67,157 @@ def test_developer_id():
         return
 
     developer_id = uuid7()
-
     yield developer_id
 
 
 # @fixture(scope="global")
-# def test_file(client=pg_client, developer_id=test_developer_id):
-#     file = create_file(
-#         developer_id=developer_id,
-#         data=CreateFileRequest(
-#             name="Hello",
-#             description="World",
-#             mime_type="text/plain",
-#             content="eyJzYW1wbGUiOiAidGVzdCJ9",
-#         ),
-#         client=client,
-#     )
-
-#     yield file
+# async def test_file(dsn=pg_dsn, developer_id=test_developer_id):
+#     async with get_pg_client(dsn=dsn) as client:
+#         file = await create_file(
+#             developer_id=developer_id,
+#             data=CreateFileRequest(
+#                 name="Hello",
+#                 description="World",
+#                 mime_type="text/plain",
+#                 content="eyJzYW1wbGUiOiAidGVzdCJ9",
+#             ),
+#             client=client,
+#         )
+#         yield file
 
 
 @fixture(scope="global")
-async def test_developer(pg_client=pg_client, developer_id=test_developer_id):
-    return await get_developer(
-        developer_id=developer_id,
-        client=pg_client,
-    )
+async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
+    pool = await asyncpg.create_pool(dsn=dsn)
+    async with get_pg_client(pool=pool) as client:
+        developer = await get_developer(
+            developer_id=developer_id,
+            client=client,
+        )
+
+    yield developer
+    await pool.close()
 
 
 @fixture(scope="test")
 def patch_embed_acompletion():
     output = {"role": "assistant", "content": "Hello, world!"}
-
     with patch_embed_acompletion_ctx(output) as (embed, acompletion):
         yield embed, acompletion
 
 
 # @fixture(scope="global")
-# def test_agent(pg_client=pg_client, developer_id=test_developer_id):
-#     agent = create_agent(
-#         developer_id=developer_id,
-#         data=CreateAgentRequest(
-#             model="gpt-4o-mini",
-#             name="test agent",
-#             about="test agent about",
-#             metadata={"test": "test"},
-#         ),
-#         client=pg_client,
-#     )
-
-#     yield agent
+# async def test_agent(dsn=pg_dsn, developer_id=test_developer_id):
+#     async with get_pg_client(dsn=dsn) as client:
+#         agent = await create_agent(
+#             developer_id=developer_id,
+#             data=CreateAgentRequest(
+#                 model="gpt-4o-mini",
+#                 name="test agent",
+#                 about="test agent about",
+#                 metadata={"test": "test"},
+#             ),
+#             client=client,
+#         )
+#         yield agent
 
 
 @fixture(scope="global")
-def test_user(pg_client=pg_client, developer_id=test_developer_id):
-    user = create_user(
-        developer_id=developer_id,
-        data=CreateUserRequest(
-            name="test user",
-            about="test user about",
-        ),
-        client=pg_client,
-    )
+async def test_user(dsn=pg_dsn, developer=test_developer):
+    pool = await asyncpg.create_pool(dsn=dsn)
+
+    async with get_pg_client(pool=pool) as client:
+        user = await create_user(
+            developer_id=developer.id,
+            data=CreateUserRequest(
+                name="test user",
+                about="test user about",
+            ),
+            client=client,
+        )
 
     yield user
+    await pool.close()
 
 
 # @fixture(scope="global")
-# def test_session(
-#     pg_client=pg_client,
+# async def test_session(
+#     dsn=pg_dsn,
 #     developer_id=test_developer_id,
 #     test_user=test_user,
 #     test_agent=test_agent,
 # ):
-#     session = create_session(
-#         developer_id=developer_id,
-#         data=CreateSessionRequest(
-#             agent=test_agent.id, user=test_user.id, metadata={"test": "test"}
-#         ),
-#         client=pg_client,
-#     )
-
-#     yield session
+#     async with get_pg_client(dsn=dsn) as client:
+#         session = await create_session(
+#             developer_id=developer_id,
+#             data=CreateSessionRequest(
+#                 agent=test_agent.id, user=test_user.id, metadata={"test": "test"}
+#             ),
+#             client=client,
+#         )
+#         yield session
 
 
 # @fixture(scope="global")
-# def test_doc(
-#     client=pg_client,
+# async def test_doc(
+#     dsn=pg_dsn,
 #     developer_id=test_developer_id,
 #     agent=test_agent,
 # ):
-#     doc = create_doc(
-#         developer_id=developer_id,
-#         owner_type="agent",
-#         owner_id=agent.id,
-#         data=CreateDocRequest(title="Hello", content=["World"]),
-#         client=client,
-#     )
-
-#     yield doc
+#     async with get_pg_client(dsn=dsn) as client:
+#         doc = await create_doc(
+#             developer_id=developer_id,
+#             owner_type="agent",
+#             owner_id=agent.id,
+#             data=CreateDocRequest(title="Hello", content=["World"]),
+#             client=client,
+#         )
+#         yield doc
 
 
 # @fixture(scope="global")
-# def test_user_doc(
-#     client=pg_client,
+# async def test_user_doc(
+#     dsn=pg_dsn,
 #     developer_id=test_developer_id,
 #     user=test_user,
 # ):
-#     doc = create_doc(
-#         developer_id=developer_id,
-#         owner_type="user",
-#         owner_id=user.id,
-#         data=CreateDocRequest(title="Hello", content=["World"]),
-#         client=client,
-#     )
-
-#     yield doc
+#     async with get_pg_client(dsn=dsn) as client:
+#         doc = await create_doc(
+#             developer_id=developer_id,
+#             owner_type="user",
+#             owner_id=user.id,
+#             data=CreateDocRequest(title="Hello", content=["World"]),
+#             client=client,
+#         )
+#         yield doc
 
 
 # @fixture(scope="global")
-# def test_task(
-#     client=pg_client,
+# async def test_task(
+#     dsn=pg_dsn,
 #     developer_id=test_developer_id,
 #     agent=test_agent,
 # ):
-#     task = create_task(
-#         developer_id=developer_id,
-#         agent_id=agent.id,
-#         data=CreateTaskRequest(
-#             **{
-#                 "name": "test task",
-#                 "description": "test task about",
-#                 "input_schema": {"type": "object", "additionalProperties": True},
-#                 "main": [{"evaluate": {"hello": '"world"'}}],
-#             }
-#         ),
-#         client=client,
-#     )
-
-#     yield task
+#     async with get_pg_client(dsn=dsn) as client:
+#         task = await create_task(
+#             developer_id=developer_id,
+#             agent_id=agent.id,
+#             data=CreateTaskRequest(
+#                 **{
+#                     "name": "test task",
+#                     "description": "test task about",
+#                     "input_schema": {"type": "object", "additionalProperties": True},
+#                     "main": [{"evaluate": {"hello": '"world"'}}],
+#                 }
+#             ),
+#             client=client,
+#         )
+#         yield task
 
 
 # @fixture(scope="global")
-# def test_execution(
-#     client=pg_client,
+# async def test_execution(
+#     dsn=pg_dsn,
 #     developer_id=test_developer_id,
 #     task=test_task,
 # ):
@@ -218,25 +226,25 @@ def test_user(pg_client=pg_client, developer_id=test_developer_id):
 #         id="blah",
 #     )
 
-#     execution = create_execution(
-#         developer_id=developer_id,
-#         task_id=task.id,
-#         data=CreateExecutionRequest(input={"test": "test"}),
-#         client=client,
-#     )
-#     create_temporal_lookup(
-#         developer_id=developer_id,
-#         execution_id=execution.id,
-#         workflow_handle=workflow_handle,
-#         client=client,
-#     )
-
-#     yield execution
+#     async with get_pg_client(dsn=dsn) as client:
+#         execution = await create_execution(
+#             developer_id=developer_id,
+#             task_id=task.id,
+#             data=CreateExecutionRequest(input={"test": "test"}),
+#             client=client,
+#         )
+#         await create_temporal_lookup(
+#             developer_id=developer_id,
+#             execution_id=execution.id,
+#             workflow_handle=workflow_handle,
+#             client=client,
+#         )
+#         yield execution
 
 
 # @fixture(scope="test")
-# def test_execution_started(
-#     client=pg_client,
+# async def test_execution_started(
+#     dsn=pg_dsn,
 #     developer_id=test_developer_id,
 #     task=test_task,
 # ):
@@ -245,61 +253,61 @@ def test_user(pg_client=pg_client, developer_id=test_developer_id):
 #         id="blah",
 #     )
 
-#     execution = create_execution(
-#         developer_id=developer_id,
-#         task_id=task.id,
-#         data=CreateExecutionRequest(input={"test": "test"}),
-#         client=client,
-#     )
-#     create_temporal_lookup(
-#         developer_id=developer_id,
-#         execution_id=execution.id,
-#         workflow_handle=workflow_handle,
-#         client=client,
-#     )
+#     async with get_pg_client(dsn=dsn) as client:
+#         execution = await create_execution(
+#             developer_id=developer_id,
+#             task_id=task.id,
+#             data=CreateExecutionRequest(input={"test": "test"}),
+#             client=client,
+#         )
+#         await create_temporal_lookup(
+#             developer_id=developer_id,
+#             execution_id=execution.id,
+#             workflow_handle=workflow_handle,
+#             client=client,
+#         )
 
-#     # Start the execution
-#     create_execution_transition(
-#         developer_id=developer_id,
-#         task_id=task.id,
-#         execution_id=execution.id,
-#         data=CreateTransitionRequest(
-#             type="init",
-#             output={},
-#             current={"workflow": "main", "step": 0},
-#             next={"workflow": "main", "step": 0},
-#         ),
-#         update_execution_status=True,
-#         client=client,
-#     )
-
-#     yield execution
+#         # Start the execution
+#         await create_execution_transition(
+#             developer_id=developer_id,
+#             task_id=task.id,
+#             execution_id=execution.id,
+#             data=CreateTransitionRequest(
+#                 type="init",
+#                 output={},
+#                 current={"workflow": "main", "step": 0},
+#                 next={"workflow": "main", "step": 0},
+#             ),
+#             update_execution_status=True,
+#             client=client,
+#         )
+#         yield execution
 
 
 # @fixture(scope="global")
-# def test_transition(
-#     client=pg_client,
+# async def test_transition(
+#     dsn=pg_dsn,
 #     developer_id=test_developer_id,
 #     execution=test_execution,
 # ):
-#     transition = create_execution_transition(
-#         developer_id=developer_id,
-#         execution_id=execution.id,
-#         data=CreateTransitionRequest(
-#             type="step",
-#             output={},
-#             current={"workflow": "main", "step": 0},
-#             next={"workflow": "wf1", "step": 1},
-#         ),
-#         client=client,
-#     )
-
-#     yield transition
+#     async with get_pg_client(dsn=dsn) as client:
+#         transition = await create_execution_transition(
+#             developer_id=developer_id,
+#             execution_id=execution.id,
+#             data=CreateTransitionRequest(
+#                 type="step",
+#                 output={},
+#                 current={"workflow": "main", "step": 0},
+#                 next={"workflow": "wf1", "step": 1},
+#             ),
+#             client=client,
+#         )
+#         yield transition
 
 
 # @fixture(scope="global")
-# def test_tool(
-#     client=pg_client,
+# async def test_tool(
+#     dsn=pg_dsn,
 #     developer_id=test_developer_id,
 #     agent=test_agent,
 # ):
@@ -314,22 +322,22 @@ def test_user(pg_client=pg_client, developer_id=test_developer_id):
 #         "type": "function",
 #     }
 
-#     [tool, *_] = create_tools(
-#         developer_id=developer_id,
-#         agent_id=agent.id,
-#         data=[CreateToolRequest(**tool)],
-#         client=client,
-#     )
-#
-#     yield tool
+#     async with get_pg_client(dsn=dsn) as client:
+#         [tool, *_] = await create_tools(
+#             developer_id=developer_id,
+#             agent_id=agent.id,
+#             data=[CreateToolRequest(**tool)],
+#             client=client,
+#         )
+#         yield tool
 
 
 # @fixture(scope="global")
-# def client(pg_client=pg_client):
+# def client(dsn=pg_dsn):
 #     client = TestClient(app=app)
-#     client.state.pg_client = pg_client
-
+#     client.state.pg_client = get_pg_client(dsn=dsn)
 #     return client
+
 
 # @fixture(scope="global")
 # def make_request(client=client, developer_id=test_developer_id):

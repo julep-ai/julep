@@ -61,7 +61,7 @@ query = optimize(
 @beartype
 def update_user(
     *, developer_id: UUID, user_id: UUID, data: UpdateUserRequest
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs an optimized SQL query to update a user's details.
     Uses primary key for efficient update.
@@ -72,7 +72,7 @@ def update_user(
         data (UpdateUserRequest): Updated user data
 
     Returns:
-        tuple[str, dict]: SQL query and parameters
+        tuple[str, list]: SQL query and parameters
     """
     params = [
         developer_id,

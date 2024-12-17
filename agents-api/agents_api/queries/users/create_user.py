@@ -31,18 +31,7 @@ RETURNING *;
 """
 
 # Parse and optimize the query
-query = optimize(
-    parse_one(raw_query),
-    schema={
-        "users": {
-            "developer_id": "UUID",
-            "user_id": "UUID",
-            "name": "STRING",
-            "about": "STRING",
-            "metadata": "JSONB",
-        }
-    },
-).sql(pretty=True)
+query = parse_one(raw_query).sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -59,16 +48,16 @@ query = optimize(
         ),
     }
 )
-@wrap_in_class(User)
+@wrap_in_class(User, one=True, transform=lambda d: {**d, "id": d["user_id"]})
 @increase_counter("create_user")
 @pg_query
 @beartype
-def create_user(
+async def create_user(
     *,
     developer_id: UUID,
     user_id: UUID | None = None,
     data: CreateUserRequest,
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs the SQL query to create a new user.
 
@@ -78,7 +67,7 @@ def create_user(
         data (CreateUserRequest): The user data to insert.
 
     Returns:
-        tuple[str, dict]: A tuple containing the SQL query and its parameters.
+        tuple[str, list]: A tuple containing the SQL query and its parameters.
     """
     user_id = user_id or uuid7()
 

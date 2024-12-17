@@ -68,7 +68,7 @@ query = optimize(
 @beartype
 def create_or_update_user(
     *, developer_id: UUID, user_id: UUID, data: CreateUserRequest
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs an SQL query to create or update a user.
 
@@ -78,7 +78,7 @@ def create_or_update_user(
         data (CreateUserRequest): The user data to insert or update.
 
     Returns:
-        tuple[str, dict]: SQL query and parameters.
+        tuple[str, list]: SQL query and parameters.
 
     Raises:
         HTTPException: If developer doesn't exist (404) or on unique constraint violation (409)

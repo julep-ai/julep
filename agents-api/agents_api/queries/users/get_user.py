@@ -42,7 +42,7 @@ query = parse_one(raw_query).sql(pretty=True)
 @increase_counter("get_user")
 @pg_query
 @beartype
-def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
+def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list]:
     """
     Constructs an optimized SQL query to retrieve a user's details.
     Uses the primary key index (developer_id, user_id) for efficient lookup.
@@ -52,7 +52,7 @@ def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, dict]:
         user_id (UUID): The UUID of the user to retrieve.
 
     Returns:
-        tuple[str, dict]: SQL query and parameters.
+        tuple[str, list]: SQL query and parameters.
     """
 
     return (

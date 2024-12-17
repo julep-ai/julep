@@ -70,7 +70,7 @@ query = optimize(
 @beartype
 def patch_user(
     *, developer_id: UUID, user_id: UUID, data: PatchUserRequest
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs an optimized SQL query for partial user updates.
     Uses primary key for efficient update and jsonb_merge for metadata.
@@ -81,7 +81,7 @@ def patch_user(
         data (PatchUserRequest): Partial update data
 
     Returns:
-        tuple[str, dict]: SQL query and parameters
+        tuple[str, list]: SQL query and parameters
     """
     params = [
         developer_id,

@@ -63,7 +63,7 @@ def list_users(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict | None = None,
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs an optimized SQL query for listing users with pagination and filtering.
     Uses indexes on developer_id and metadata for efficient querying.
@@ -77,7 +77,7 @@ def list_users(
         metadata_filter (dict, optional): Metadata-based filters
 
     Returns:
-        tuple[str, dict]: SQL query and parameters
+        tuple[str, list]: SQL query and parameters
     """
     if limit < 1 or limit > 1000:
         raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
