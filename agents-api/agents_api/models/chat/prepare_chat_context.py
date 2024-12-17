@@ -37,6 +37,7 @@ T = TypeVar("T")
         "session": make_session(
             agents=[a["id"] for a in d["agents"]],
             users=[u["id"] for u in d["users"]],
+            updated_at=d["session"].pop("updated_at") / (1000000.0),
             **d["session"],
         ),
         "toolsets": [

@@ -46,7 +46,7 @@ _fields: List[str] = [
     one=True,
     transform=lambda d: {
         "id": d["session_id"],
-        "updated_at": d.pop("updated_at")[0],
+        "updated_at": d.pop("updated_at")[0] / (1000000.0),
         "jobs": [],
         **d,
     },
