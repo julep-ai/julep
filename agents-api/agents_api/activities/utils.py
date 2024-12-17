@@ -373,6 +373,7 @@ def get_handler(system: SystemDef) -> Callable:
             return create_session_query
         case ("session", None, "update"):
             return update_session_query
+        # TODO: Add support for create_or_update_session
         case ("session", None, "chat"):
             return chat
         case ("session", None, "history"):
