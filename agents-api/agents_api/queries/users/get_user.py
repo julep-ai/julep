@@ -4,7 +4,6 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import User
 from ...metrics.counters import increase_counter

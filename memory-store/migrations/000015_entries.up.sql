@@ -1,7 +1,7 @@
 BEGIN;
 
 -- Create chat_role enum
-CREATE TYPE chat_role AS ENUM('user', 'assistant', 'tool', 'system');
+CREATE TYPE chat_role AS ENUM('user', 'assistant', 'tool', 'system', 'developer');
 
 -- Create entries table
 CREATE TABLE IF NOT EXISTS entries (

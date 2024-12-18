@@ -32,6 +32,7 @@ from agents_api.queries.sessions import (
 from tests.fixtures import (
     pg_dsn,
     test_developer_id,
+    test_user,
 )  # , test_session, test_agent, test_user
 
 # @test("query: create session sql")
@@ -118,7 +119,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 #     assert isinstance(result, Session)
 
 
-@test("query: list sessions sql")
+@test("query: list sessions when none exist sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that listing sessions returns a collection of session information."""
 
