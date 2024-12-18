@@ -7,7 +7,7 @@ from fastapi import HTTPException
 
 from ...autogen.openapi_model import Entry
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """

@@ -17,7 +17,6 @@ from ..utils import (
     wrap_in_class,
 )
 
-
 # Define the raw SQL query
 agent_query = parse_one("""
 UPDATE agents
