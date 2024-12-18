@@ -27,7 +27,14 @@ T = TypeVar("T")
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(make_session, one=True)
+@wrap_in_class(
+    make_session,
+    one=True,
+    transform=lambda d: {
+        "updated_at": d.pop("updated_at") / (1000000.0),
+        **d,
+    },
+)
 @cozo_query
 @beartype
 def get_session(

@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import CreateSessionRequest, Session
+from ...autogen.openapi_model import CreateSessionRequest, RecallOptions, Session
 from ...metrics.counters import query_metrics_update
 from ..utils import (
     cozo_query,
@@ -60,6 +60,7 @@ def create_session(
     session_id = session_id or uuid4()
 
     data.metadata = data.metadata or {}
+    data.recall_options = data.recall_options or RecallOptions()
     session_data = data.model_dump(exclude={"auto_run_tools", "disable_cache"})
 
     user = session_data.pop("user")

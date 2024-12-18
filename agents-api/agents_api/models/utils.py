@@ -228,6 +228,7 @@ def cozo_query(
             stop=stop_after_attempt(4),
             wait=wait_exponential(multiplier=1, min=4, max=10),
             retry=retry_if_exception(is_resource_busy),
+            reraise=True,
         )
         @wraps(func)
         def wrapper(*args: P.args, client=None, **kwargs: P.kwargs) -> pd.DataFrame:
