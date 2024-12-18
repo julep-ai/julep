@@ -11,7 +11,6 @@ from fastapi import HTTPException
 from psycopg import errors as psycopg_errors
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
-from ...metrics.counters import increase_counter
 from ..utils import (
     # generate_canonical_name,
     partialclass,

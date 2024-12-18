@@ -10,19 +10,16 @@ from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
-raw_query = """
+user_query = parse_one("""
 UPDATE users
 SET 
-    name = $3,
-    about = $4,
-    metadata = $5
-WHERE developer_id = $1 
-AND user_id = $2
+    name = $3, -- name
+    about = $4, -- about
+    metadata = $5 -- metadata
+WHERE developer_id = $1 -- developer_id
+AND user_id = $2 -- user_id
 RETURNING *
-"""
-
-# Parse and optimize the query
-query = parse_one(raw_query).sql(pretty=True)
+""").sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -31,7 +28,12 @@ query = parse_one(raw_query).sql(pretty=True)
             HTTPException,
             status_code=404,
             detail="The specified developer does not exist.",
-        )
+        ),
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified user does not exist.",
+        ),
     }
 )
 @wrap_in_class(
@@ -66,6 +68,6 @@ async def update_user(
     ]
 
     return (
-        query,
+        user_query,
         params,
     )

@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import Agent, CreateAgentRequest
-from ...metrics.counters import increase_counter
 from ..utils import (
     # generate_canonical_name,
     partialclass,

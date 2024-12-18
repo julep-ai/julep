@@ -3,16 +3,27 @@ import inspect
 import socket
 import time
 from functools import partialmethod, wraps
-from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar, cast
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Literal,
+    NotRequired,
+    ParamSpec,
+    Type,
+    TypeVar,
+    cast,
+)
 
 import asyncpg
-import pandas as pd
 from asyncpg import Record
 from beartype import beartype
 from fastapi import HTTPException
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 from ..app import app
+from ..env import query_timeout
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -31,15 +42,61 @@ def partialclass(cls, *args, **kwargs):
     return NewCls
 
 
+class AsyncPGFetchArgs(TypedDict):
+    query: str
+    args: list[Any]
+    timeout: NotRequired[float | None]
+
+
+type SQLQuery = str
+type FetchMethod = Literal["fetch", "fetchmany"]
+type PGQueryArgs = tuple[SQLQuery, list[Any]] | tuple[SQLQuery, list[Any], FetchMethod]
+type PreparedPGQueryArgs = tuple[FetchMethod, AsyncPGFetchArgs]
+type BatchedPreparedPGQueryArgs = list[PreparedPGQueryArgs]
+
+
+@beartype
+def prepare_pg_query_args(
+    query_args: PGQueryArgs | list[PGQueryArgs],
+) -> BatchedPreparedPGQueryArgs:
+    batch = []
+    query_args = [query_args] if isinstance(query_args, tuple) else query_args
+
+    for query_arg in query_args:
+        match query_arg:
+            case (query, variables) | (query, variables, "fetch"):
+                batch.append(
+                    (
+                        "fetch",
+                        AsyncPGFetchArgs(
+                            query=query, args=variables, timeout=query_timeout
+                        ),
+                    )
+                )
+            case (query, variables, "fetchmany"):
+                batch.append(
+                    (
+                        "fetchmany",
+                        AsyncPGFetchArgs(
+                            query=query, args=[variables], timeout=query_timeout
+                        ),
+                    )
+                )
+            case _:
+                raise ValueError("Invalid query arguments")
+
+    return batch
+
+
 @beartype
 def pg_query(
-    func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
+    func: Callable[P, PGQueryArgs | list[PGQueryArgs]] | None = None,
     debug: bool | None = None,
     only_on_error: bool = False,
     timeit: bool = False,
 ) -> Callable[..., Callable[P, list[Record]]] | Callable[P, list[Record]]:
     def pg_query_dec(
-        func: Callable[P, tuple[str, list[Any]] | list[tuple[str, list[Any]]]],
+        func: Callable[P, PGQueryArgs | list[PGQueryArgs]],
     ) -> Callable[..., Callable[P, list[Record]]]:
         """
         Decorator that wraps a function that takes arbitrary arguments, and
@@ -57,14 +114,10 @@ def pg_query(
             connection_pool: asyncpg.Pool | None = None,
             **kwargs: P.kwargs,
         ) -> list[Record]:
-            query, variables = await func(*args, **kwargs)
+            query_args = await func(*args, **kwargs)
+            batch = prepare_pg_query_args(query_args)
 
-            not only_on_error and debug and print(query)
-            not only_on_error and debug and pprint(
-                dict(
-                    variables=variables,
-                )
-            )
+            not only_on_error and debug and pprint(batch)
 
             # Run the query
             pool = (
@@ -73,20 +126,20 @@ def pg_query(
                 else cast(asyncpg.Pool, app.state.postgres_pool)
             )
 
-            assert isinstance(variables, list) and len(variables) > 0
-
-            queries = query if isinstance(query, list) else [query]
-            variables_list = (
-                variables if isinstance(variables[0], list) else [variables]
-            )
-            zipped = zip(queries, variables_list)
-
             try:
                 async with pool.acquire() as conn:
                     async with conn.transaction():
                         start = timeit and time.perf_counter()
-                        for query, variables in zipped:
-                            results: list[Record] = await conn.fetch(query, *variables)
+                        for method_name, payload in batch:
+                            method = getattr(conn, method_name)
+
+                            query = payload["query"]
+                            args = payload["args"]
+                            timeout = payload.get("timeout")
+
+                            results: list[Record] = await method(
+                                query, *args, timeout=timeout
+                            )
 
                         end = timeit and time.perf_counter()
 
@@ -96,8 +149,7 @@ def pg_query(
 
             except Exception as e:
                 if only_on_error and debug:
-                    print(query)
-                    pprint(variables)
+                    pprint(batch)
 
                 debug and print(repr(e))
                 connection_error = isinstance(
@@ -113,11 +165,7 @@ def pg_query(
 
                 raise
 
-            not only_on_error and debug and pprint(
-                dict(
-                    results=[dict(result.items()) for result in results],
-                )
-            )
+            not only_on_error and debug and pprint(results)
 
             return results
 
@@ -210,7 +258,7 @@ def rewrap_exceptions(
                 result: T = await func(*args, **kwargs)
             except BaseException as error:
                 _check_error(error)
-                raise
+                raise error
 
             return result
 
@@ -220,7 +268,7 @@ def rewrap_exceptions(
                 result: T = func(*args, **kwargs)
             except BaseException as error:
                 _check_error(error)
-                raise
+                raise error
 
             return result
 

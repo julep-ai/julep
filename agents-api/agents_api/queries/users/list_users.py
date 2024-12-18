@@ -6,20 +6,19 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import User
-from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
-raw_query = """
+user_query = """
 WITH filtered_users AS (
     SELECT 
-        user_id as id,
-        developer_id,
-        name,
-        about,
-        metadata,
-        created_at,
-        updated_at
+        user_id as id, -- user_id
+        developer_id, -- developer_id
+        name, -- name
+        about, -- about
+        metadata, -- metadata
+        created_at, -- created_at
+        updated_at -- updated_at
     FROM users
     WHERE developer_id = $1
         AND ($4::jsonb IS NULL OR metadata @> $4)
@@ -42,11 +41,15 @@ OFFSET $3;
             HTTPException,
             status_code=404,
             detail="The specified developer does not exist.",
-        )
+        ),
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified user does not exist.",
+        ),
     }
 )
 @wrap_in_class(User)
-@increase_counter("list_users")
 @pg_query
 @beartype
 async def list_users(
@@ -79,15 +82,15 @@ async def list_users(
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
 
     params = [
-        developer_id,
-        limit,
-        offset,
+        developer_id,  # $1
+        limit,  # $2
+        offset,  # $3
         metadata_filter,  # Will be NULL if not provided
-        sort_by,
-        direction,
+        sort_by,  # $4
+        direction,  # $5
     ]
 
     return (
-        raw_query,
+        user_query,
         params,
     )

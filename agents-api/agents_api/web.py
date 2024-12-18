@@ -20,7 +20,6 @@ from temporalio.service import RPCError
 
 from .app import app
 from .common.exceptions import BaseCommonException
-from .dependencies.auth import get_api_key
 from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
 

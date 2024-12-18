@@ -3064,6 +3064,7 @@ components:
         - source
         - tokenizer
         - token_count
+        - model
         - timestamp
       properties:
         role:
@@ -3307,6 +3308,9 @@ components:
         token_count:
           type: integer
           format: uint16
+        model:
+          type: string
+          default: gpt-4o-mini
         tool_calls:
           type: array
           items:

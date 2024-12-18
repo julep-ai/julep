@@ -11,8 +11,6 @@ from fastapi import HTTPException
 from psycopg import errors as psycopg_errors
 
 from ...autogen.openapi_model import ResourceDeletedResponse
-from ...common.utils.datetime import utcnow
-from ...metrics.counters import increase_counter
 from ..utils import (
     partialclass,
     pg_query,

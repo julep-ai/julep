@@ -10,35 +10,32 @@ from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
-raw_query = """
+user_query = parse_one("""
 UPDATE users
 SET 
     name = CASE 
-        WHEN $3::text IS NOT NULL THEN $3 
+        WHEN $3::text IS NOT NULL THEN $3 -- name
         ELSE name 
     END,
     about = CASE 
-        WHEN $4::text IS NOT NULL THEN $4 
+        WHEN $4::text IS NOT NULL THEN $4 -- about
         ELSE about 
     END,
     metadata = CASE 
-        WHEN $5::jsonb IS NOT NULL THEN metadata || $5 
+        WHEN $5::jsonb IS NOT NULL THEN metadata || $5 -- metadata
         ELSE metadata 
     END
 WHERE developer_id = $1 
 AND user_id = $2
 RETURNING 
-    user_id as id,
-    developer_id,
-    name,
-    about,
-    metadata,
-    created_at,
-    updated_at;
-"""
-
-# Parse and optimize the query
-query = parse_one(raw_query).sql(pretty=True)
+    user_id as id, -- user_id
+    developer_id, -- developer_id
+    name, -- name
+    about, -- about
+    metadata, -- metadata
+    created_at, -- created_at
+    updated_at; -- updated_at
+""").sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -47,7 +44,12 @@ query = parse_one(raw_query).sql(pretty=True)
             HTTPException,
             status_code=404,
             detail="The specified developer does not exist.",
-        )
+        ),
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified user does not exist.",
+        ),
     }
 )
 @wrap_in_class(ResourceUpdatedResponse, one=True)
@@ -70,11 +72,14 @@ async def patch_user(
         tuple[str, list]: SQL query and parameters
     """
     params = [
-        developer_id,
-        user_id,
-        data.name,  # Will be NULL if not provided
-        data.about,  # Will be NULL if not provided
-        data.metadata,  # Will be NULL if not provided
+        developer_id,  # $1
+        user_id,  # $2
+        data.name,  # $3. Will be NULL if not provided
+        data.about,  # $4. Will be NULL if not provided
+        data.metadata,  # $5. Will be NULL if not provided
     ]
 
-    return query, params
+    return (
+        user_query,
+        params,
+    )
