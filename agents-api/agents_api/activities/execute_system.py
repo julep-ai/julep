@@ -17,8 +17,8 @@ from ..autogen.openapi_model import (
     SystemDef,
     TextOnlyDocSearchRequest,
     UpdateSessionRequest,
-    VectorDocSearchRequest,
     UpdateUserRequest,
+    VectorDocSearchRequest,
 )
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
