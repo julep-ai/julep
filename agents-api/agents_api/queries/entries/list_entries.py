@@ -109,4 +109,3 @@ async def list_entries(
             entry_params,
         ),
     ]
-
