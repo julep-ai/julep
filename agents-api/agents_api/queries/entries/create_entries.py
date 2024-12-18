@@ -166,7 +166,7 @@ async def add_entry_relations(
                 item.get("is_leaf", False),  # $5
             ]
         )
-        
+
     return [
         (
             session_exists_query,

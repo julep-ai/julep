@@ -10,12 +10,12 @@ from beartype import beartype
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
-from ...metrics.counters import increase_counter
 from ...common.utils.datetime import utcnow
+from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
-    wrap_in_class,
     rewrap_exceptions,
+    wrap_in_class,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)

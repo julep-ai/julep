@@ -108,8 +108,5 @@ async def list_entries(
             [session_id, developer_id],
             "fetchrow",
         ),
-        (
-            query,
-            entry_params
-        ),
+        (query, entry_params),
     ]

@@ -7,32 +7,32 @@ from uuid_extensions import uuid7
 from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
-    Session,
-    CreateSessionRequest,
     CreateOrUpdateSessionRequest,
-    UpdateSessionRequest,
+    CreateSessionRequest,
     PatchSessionRequest,
-    ResourceUpdatedResponse,
     ResourceDeletedResponse,
+    ResourceUpdatedResponse,
+    Session,
+    UpdateSessionRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.sessions import (
     count_sessions,
+    create_or_update_session,
+    create_session,
+    delete_session,
     get_session,
     list_sessions,
-    create_session,
-    create_or_update_session,
-    update_session,
     patch_session,
-    delete_session,
+    update_session,
 )
 from tests.fixtures import (
     pg_dsn,
-    test_developer_id,
-    test_developer,
-    test_user,
     test_agent,
+    test_developer,
+    test_developer_id,
     test_session,
+    test_user,
 )
 
 

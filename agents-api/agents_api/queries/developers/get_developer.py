@@ -12,8 +12,8 @@ from ...common.protocol.developers import Developer
 from ..utils import (
     partialclass,
     pg_query,
-    wrap_in_class,
     rewrap_exceptions,
+    wrap_in_class,
 )
 
 # TODO: Add verify_developer

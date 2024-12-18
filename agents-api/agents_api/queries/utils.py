@@ -106,7 +106,9 @@ def prepare_pg_query_args(
                 batch.append(
                     (
                         "fetchrow",
-                        AsyncPGFetchArgs(query=query, args=variables, timeout=query_timeout),
+                        AsyncPGFetchArgs(
+                            query=query, args=variables, timeout=query_timeout
+                        ),
                     )
                 )
             case _:
@@ -173,7 +175,9 @@ def pg_query(
                             print(*args)
                             print("%" * 100)
 
-                            if method_name == "fetchrow" and (len(results) == 0 or results.get("bool") is None):
+                            if method_name == "fetchrow" and (
+                                len(results) == 0 or results.get("bool") is None
+                            ):
                                 raise asyncpg.NoDataFoundError
 
                         end = timeit and time.perf_counter()

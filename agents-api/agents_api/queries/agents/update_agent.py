@@ -13,8 +13,8 @@ from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
-    wrap_in_class,
     rewrap_exceptions,
+    wrap_in_class,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)

@@ -10,14 +10,13 @@ from beartype import beartype
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
-from ...metrics.counters import increase_counter
-
 from ...autogen.openapi_model import Agent, CreateAgentRequest
+from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
     pg_query,
-    wrap_in_class,
     rewrap_exceptions,
+    wrap_in_class,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)

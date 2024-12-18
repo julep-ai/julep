@@ -1,4 +1,3 @@
-
 # from uuid_extensions import uuid7
 
 # from ward import raises, test
