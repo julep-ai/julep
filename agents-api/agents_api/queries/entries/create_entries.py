@@ -14,14 +14,10 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """
-SELECT CASE
-    WHEN EXISTS (
-        SELECT 1 FROM sessions
-        WHERE session_id = $1 AND developer_id = $2
-    )
-    THEN TRUE
-    ELSE (SELECT NULL::boolean WHERE FALSE)  -- This raises a NO_DATA_FOUND error
-END;
+SELECT EXISTS (
+    SELECT 1 FROM sessions
+    WHERE session_id = $1 AND developer_id = $2
+) AS exists;
 """
 
 # Define the raw SQL query for creating entries
@@ -70,6 +66,10 @@ RETURNING *;
         asyncpg.NotNullViolationError: lambda exc: HTTPException(
             status_code=400,
             detail=str(exc),
+        ),
+        asyncpg.NoDataFoundError: lambda exc: HTTPException(
+            status_code=404,
+            detail="Session not found",
         ),
     }
 )
@@ -166,7 +166,7 @@ async def add_entry_relations(
                 item.get("is_leaf", False),  # $5
             ]
         )
-
+        
     return [
         (
             session_exists_query,

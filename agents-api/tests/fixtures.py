@@ -1,5 +1,6 @@
 import random
 import string
+import time
 from uuid import UUID
 
 from fastapi.testclient import TestClient
@@ -7,6 +8,8 @@ from uuid_extensions import uuid7
 from ward import fixture
 
 from agents_api.autogen.openapi_model import (
+    CreateAgentRequest,
+    CreateSessionRequest,
     CreateUserRequest,
 )
 from agents_api.clients.pg import create_db_pool
@@ -24,8 +27,8 @@ from agents_api.queries.developers.get_developer import get_developer
 # from agents_api.queries.execution.create_temporal_lookup import create_temporal_lookup
 # from agents_api.queries.files.create_file import create_file
 # from agents_api.queries.files.delete_file import delete_file
-# from agents_api.queries.session.create_session import create_session
-# from agents_api.queries.session.delete_session import delete_session
+from agents_api.queries.sessions.create_session import create_session
+
 # from agents_api.queries.task.create_task import create_task
 # from agents_api.queries.task.delete_task import delete_task
 # from agents_api.queries.tools.create_tools import create_tools
@@ -150,22 +153,27 @@ async def test_new_developer(dsn=pg_dsn, email=random_email):
     return developer
 
 
-# @fixture(scope="global")
-# async def test_session(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     test_user=test_user,
-#     test_agent=test_agent,
-# ):
-#     async with get_pg_client(dsn=dsn) as client:
-#         session = await create_session(
-#             developer_id=developer_id,
-#             data=CreateSessionRequest(
-#                 agent=test_agent.id, user=test_user.id, metadata={"test": "test"}
-#             ),
-#             client=client,
-#         )
-#         yield session
+@fixture(scope="global")
+async def test_session(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    test_user=test_user,
+    test_agent=test_agent,
+):
+    pool = await create_db_pool(dsn=dsn)
+
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=test_agent.id,
+            user=test_user.id,
+            metadata={"test": "test"},
+            system_template="test system template",
+        ),
+        connection_pool=pool,
+    )
+
+    return session
 
 
 # @fixture(scope="global")

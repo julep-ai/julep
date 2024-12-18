@@ -69,7 +69,7 @@ class AsyncPGFetchArgs(TypedDict):
 
 
 type SQLQuery = str
-type FetchMethod = Literal["fetch", "fetchmany"]
+type FetchMethod = Literal["fetch", "fetchmany", "fetchrow"]
 type PGQueryArgs = tuple[SQLQuery, list[Any]] | tuple[SQLQuery, list[Any], FetchMethod]
 type PreparedPGQueryArgs = tuple[FetchMethod, AsyncPGFetchArgs]
 type BatchedPreparedPGQueryArgs = list[PreparedPGQueryArgs]
@@ -100,6 +100,13 @@ def prepare_pg_query_args(
                         AsyncPGFetchArgs(
                             query=query, args=[variables], timeout=query_timeout
                         ),
+                    )
+                )
+            case (query, variables, "fetchrow"):
+                batch.append(
+                    (
+                        "fetchrow",
+                        AsyncPGFetchArgs(query=query, args=variables, timeout=query_timeout),
                     )
                 )
             case _:
@@ -160,6 +167,14 @@ def pg_query(
                             results: list[Record] = await method(
                                 query, *args, timeout=timeout
                             )
+
+                            print("%" * 100)
+                            print(results)
+                            print(*args)
+                            print("%" * 100)
+
+                            if method_name == "fetchrow" and (len(results) == 0 or results.get("bool") is None):
+                                raise asyncpg.NoDataFoundError
 
                         end = timeit and time.perf_counter()
 

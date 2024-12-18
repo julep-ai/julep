@@ -7,18 +7,17 @@ from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
-from pydantic import ValidationError
 from sqlglot import parse_one
 from uuid_extensions import uuid7
+
+from ...metrics.counters import increase_counter
 
 from ...autogen.openapi_model import Agent, CreateAgentRequest
 from ..utils import (
     generate_canonical_name,
-    partialclass,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
+    rewrap_exceptions,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)

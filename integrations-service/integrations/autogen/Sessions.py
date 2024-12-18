@@ -31,6 +31,10 @@ class CreateSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
+    system_template: str | None = None
+    """
+    System prompt for this session
+    """
     render_templates: StrictBool = True
     """
     Render system and assistant message content as jinja templates
@@ -50,6 +54,10 @@ class CreateSessionRequest(BaseModel):
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
+    """
+    forward_tool_calls: StrictBool = False
+    """
+    Whether to forward tool calls to the model
     """
     recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None
@@ -67,6 +75,10 @@ class PatchSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
+    system_template: str | None = None
+    """
+    System prompt for this session
+    """
     render_templates: StrictBool = True
     """
     Render system and assistant message content as jinja templates
@@ -86,6 +98,10 @@ class PatchSessionRequest(BaseModel):
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
+    """
+    forward_tool_calls: StrictBool = False
+    """
+    Whether to forward tool calls to the model
     """
     recall_options: RecallOptionsUpdate | None = None
     metadata: dict[str, Any] | None = None
@@ -121,6 +137,10 @@ class Session(BaseModel):
     """
     A specific situation that sets the background for this session
     """
+    system_template: str | None = None
+    """
+    System prompt for this session
+    """
     summary: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
     """
     Summary (null at the beginning) - generated automatically after every interaction
@@ -144,6 +164,10 @@ class Session(BaseModel):
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
+    """
+    forward_tool_calls: StrictBool = False
+    """
+    Whether to forward tool calls to the model
     """
     recall_options: RecallOptions | None = None
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
@@ -197,6 +221,10 @@ class UpdateSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
+    system_template: str | None = None
+    """
+    System prompt for this session
+    """
     render_templates: StrictBool = True
     """
     Render system and assistant message content as jinja templates
@@ -216,6 +244,10 @@ class UpdateSessionRequest(BaseModel):
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
+    """
+    forward_tool_calls: StrictBool = False
+    """
+    Whether to forward tool calls to the model
     """
     recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None
@@ -240,6 +272,10 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     A specific situation that sets the background for this session
     """
+    system_template: str | None = None
+    """
+    System prompt for this session
+    """
     render_templates: StrictBool = True
     """
     Render system and assistant message content as jinja templates
@@ -259,6 +295,10 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
+    """
+    forward_tool_calls: StrictBool = False
+    """
+    Whether to forward tool calls to the model
     """
     recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None

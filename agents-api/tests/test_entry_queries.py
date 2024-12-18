@@ -3,7 +3,7 @@ This module contains tests for entry queries against the CozoDB database.
 It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
 """
 
-from uuid import uuid4
+from uuid_extensions import uuid7
 
 from fastapi import HTTPException
 from ward import raises, test
@@ -11,7 +11,7 @@ from ward import raises, test
 from agents_api.autogen.openapi_model import CreateEntryRequest
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.entries import create_entries, list_entries
-from tests.fixtures import pg_dsn, test_developer  # , test_session
+from tests.fixtures import pg_dsn, test_developer, test_session  # , test_session
 
 MODEL = "gpt-4o-mini"
 
@@ -31,11 +31,10 @@ async def _(dsn=pg_dsn, developer=test_developer):
     with raises(HTTPException) as exc_info:
         await create_entries(
             developer_id=developer.id,
-            session_id=uuid4(),
+            session_id=uuid7(),
             data=[test_entry],
             connection_pool=pool,
         )
-
     assert exc_info.raised.status_code == 404
 
 
@@ -48,10 +47,9 @@ async def _(dsn=pg_dsn, developer=test_developer):
     with raises(HTTPException) as exc_info:
         await list_entries(
             developer_id=developer.id,
-            session_id=uuid4(),
+            session_id=uuid7(),
             connection_pool=pool,
         )
-
     assert exc_info.raised.status_code == 404
 
 

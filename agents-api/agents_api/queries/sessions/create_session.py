@@ -45,11 +45,7 @@ INSERT INTO session_lookup (
     participant_type,
     participant_id
 )
-SELECT 
-    $1 as developer_id,
-    $2 as session_id,
-    unnest($3::participant_type[]) as participant_type,
-    unnest($4::uuid[]) as participant_id;
+VALUES ($1, $2, $3, $4);
 """).sql(pretty=True)
 
 
@@ -67,7 +63,7 @@ SELECT
         ),
     }
 )
-@wrap_in_class(Session, one=True, transform=lambda d: {**d, "id": d["session_id"]})
+@wrap_in_class(Session, transform=lambda d: {**d, "id": d["session_id"]})
 @increase_counter("create_session")
 @pg_query
 @beartype
@@ -76,7 +72,7 @@ async def create_session(
     developer_id: UUID,
     session_id: UUID,
     data: CreateSessionRequest,
-) -> list[tuple[str, list]]:
+) -> list[tuple[str, list] | tuple[str, list, str]]:
     """
     Constructs SQL queries to create a new session and its participant lookups.
 
@@ -86,7 +82,7 @@ async def create_session(
         data (CreateSessionRequest): Session creation data
 
     Returns:
-        list[tuple[str, list]]: SQL queries and their parameters
+        list[tuple[str, list] | tuple[str, list, str]]: SQL queries and their parameters
     """
     # Handle participants
     users = data.users or ([data.user] if data.user else [])
@@ -122,15 +118,15 @@ async def create_session(
         data.recall_options or {},  # $10
     ]
 
-    # Prepare lookup parameters
-    lookup_params = [
-        developer_id,  # $1
-        session_id,  # $2
-        participant_types,  # $3
-        participant_ids,  # $4
-    ]
+    # Prepare lookup parameters as a list of parameter lists
+    lookup_params = []
+    for ptype, pid in zip(participant_types, participant_ids):
+        lookup_params.append([developer_id, session_id, ptype, pid])
 
+    print("*" * 100)
+    print(lookup_params)
+    print("*" * 100)
     return [
         (session_query, session_params),
-        (lookup_query, lookup_params),
+        (lookup_query, lookup_params, "fetchmany"),
     ]

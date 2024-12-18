@@ -62,6 +62,10 @@ OFFSET $4;
             status_code=400,
             detail=str(exc),
         ),
+        asyncpg.NoDataFoundError: lambda exc: HTTPException(
+            status_code=404,
+            detail="Session not found",
+        ),
     }
 )
 @wrap_in_class(Entry)
@@ -78,7 +82,7 @@ async def list_entries(
     sort_by: Literal["created_at", "timestamp"] = "timestamp",
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
-) -> list[tuple[str, list]]:
+) -> list[tuple[str, list] | tuple[str, list, str]]:
     if limit < 1 or limit > 1000:
         raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
     if offset < 0:
@@ -98,14 +102,14 @@ async def list_entries(
         developer_id,  # $5
         exclude_relations,  # $6
     ]
-
     return [
         (
             session_exists_query,
             [session_id, developer_id],
+            "fetchrow",
         ),
         (
             query,
-            entry_params,
+            entry_params
         ),
     ]

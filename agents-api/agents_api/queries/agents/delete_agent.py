@@ -7,16 +7,15 @@ from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import ResourceDeletedResponse
+from ...metrics.counters import increase_counter
+from ...common.utils.datetime import utcnow
 from ..utils import (
-    partialclass,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
+    rewrap_exceptions,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)

@@ -1,7 +1,5 @@
 # Tests for agent queries
-from uuid import UUID
 
-import asyncpg
 from uuid_extensions import uuid7
 from ward import raises, test
 
