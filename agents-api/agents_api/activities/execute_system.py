@@ -18,6 +18,7 @@ from ..autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     UpdateSessionRequest,
     VectorDocSearchRequest,
+    UpdateUserRequest,
 )
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
@@ -151,6 +152,28 @@ async def execute_system(
                     developer_id=developer_id,
                     session_id=session_id,
                     data=update_session_request,
+                ),
+            )
+
+        # Handle update user
+        if system.operation == "update" and system.resource == "user":
+            developer_id = arguments.pop("developer_id")
+            user_id = arguments.pop("user_id")
+            update_user_request = UpdateUserRequest(**arguments)
+
+            # In case users.update becomes asynchronous in the future
+            if asyncio.iscoroutinefunction(handler):
+                return await handler()
+
+            # Run the synchronous function in another process
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(
+                process_pool_executor,
+                partial(
+                    handler,
+                    developer_id=developer_id,
+                    user_id=user_id,
+                    data=update_user_request,
                 ),
             )
 
