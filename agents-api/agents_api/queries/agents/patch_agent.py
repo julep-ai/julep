@@ -10,6 +10,9 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
+from fastapi import HTTPException
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 from ...metrics.counters import increase_counter
 from ..utils import (
     partialclass,
@@ -20,6 +23,35 @@ from ..utils import (
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
+    
+raw_query = """
+UPDATE agents
+SET 
+    name = CASE 
+        WHEN $3::text IS NOT NULL THEN $3 
+        ELSE name 
+    END,
+    about = CASE 
+        WHEN $4::text IS NOT NULL THEN $4 
+        ELSE about 
+    END,
+    metadata = CASE 
+        WHEN $5::jsonb IS NOT NULL THEN metadata || $5 
+        ELSE metadata 
+    END,
+    model = CASE 
+        WHEN $6::text IS NOT NULL THEN $6 
+        ELSE model 
+    END,
+    default_settings = CASE 
+        WHEN $7::jsonb IS NOT NULL THEN $7 
+        ELSE default_settings 
+    END
+WHERE agent_id = $2 AND developer_id = $1
+RETURNING *;
+"""
+
+query = parse_one(raw_query).sql(pretty=True)
 
 
 # @rewrap_exceptions(
@@ -36,14 +68,13 @@ T = TypeVar("T")
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["agent_id"], **d},
-    _kind="inserted",
 )
+# @increase_counter("patch_agent")
 @pg_query
-# @increase_counter("patch_agent1")
 @beartype
 async def patch_agent(
     *, agent_id: UUID, developer_id: UUID, data: PatchAgentRequest
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs the SQL query to partially update an agent's details.
 
@@ -53,27 +84,16 @@ async def patch_agent(
         data (PatchAgentRequest): A dictionary of fields to update.
 
     Returns:
-        tuple[str, dict]: A tuple containing the SQL query and its parameters.
+        tuple[str, list]: A tuple containing the SQL query and its parameters.
     """
-    patch_fields = data.model_dump(exclude_unset=True)
-    set_clauses = []
-    params = {}
-
-    for key, value in patch_fields.items():
-        if value is not None:  # Only update non-null values
-            set_clauses.append(f"{key} = %({key})s")
-            params[key] = value
-
-    set_clause = ", ".join(set_clauses)
-
-    query = f"""
-    UPDATE agents
-    SET {set_clause}
-    WHERE agent_id = %(agent_id)s AND developer_id = %(developer_id)s
-    RETURNING *;
-    """
-
-    params["agent_id"] = agent_id
-    params["developer_id"] = developer_id
-
-    return (query, params)
+    params = [
+        developer_id,
+        agent_id,
+        data.name,
+        data.about,
+        data.metadata,
+        data.model,
+            data.default_settings.model_dump() if data.default_settings else None,
+    ]
+    
+    return query, params

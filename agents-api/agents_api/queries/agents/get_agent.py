@@ -10,12 +10,38 @@ from beartype import beartype
 from fastapi import HTTPException
 from ...autogen.openapi_model import Agent
 from ...metrics.counters import increase_counter
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 from ..utils import (
     partialclass,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
+from beartype import beartype
+
+from ...autogen.openapi_model import Agent
+
+raw_query = """
+SELECT 
+    agent_id,
+    developer_id,
+    name,
+    canonical_name,
+    about,
+    instructions,
+    model,
+    metadata,
+    default_settings,
+    created_at,
+    updated_at
+FROM 
+    agents
+WHERE 
+    agent_id = $2 AND developer_id = $1;
+"""
+
+query = parse_one(raw_query).sql(pretty=True)
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -31,11 +57,11 @@ T = TypeVar("T")
     # }
     # # TODO: Add more exceptions
 # )
-@wrap_in_class(Agent, one=True)
+@wrap_in_class(Agent, one=True, transform=lambda d: {"id": d["agent_id"], **d})
+# @increase_counter("get_agent")
 @pg_query
-# @increase_counter("get_agent1")
 @beartype
-async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str], dict]:
+async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
     """
     Constructs the SQL query to retrieve an agent's details.
 
@@ -46,23 +72,5 @@ async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[list[str], d
     Returns:
         tuple[list[str], dict]: A tuple containing the SQL query and its parameters.
     """
-    query = """
-    SELECT 
-        agent_id,
-        developer_id,
-        name,
-        canonical_name,
-        about,
-        instructions,
-        model,
-        metadata,
-        default_settings,
-        created_at,
-        updated_at
-    FROM 
-        agents
-    WHERE 
-        agent_id = %(agent_id)s AND developer_id = %(developer_id)s;
-    """
 
-    return (query, {"agent_id": agent_id, "developer_id": developer_id})
+    return (query, [developer_id, agent_id])

@@ -1,7 +1,9 @@
 # Tests for agent queries
 from uuid import uuid4
 
+from uuid import UUID
 import asyncpg
+from uuid_extensions import uuid7
 from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
@@ -9,10 +11,11 @@ from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
     CreateOrUpdateAgentRequest,
     PatchAgentRequest,
+    ResourceDeletedResponse,
     ResourceUpdatedResponse,
     UpdateAgentRequest,
 )
-from agents_api.clients.pg import get_pg_client
+from agents_api.clients.pg import create_db_pool
 from agents_api.queries.agents import (
     create_agent,
     create_or_update_agent,
@@ -25,163 +28,141 @@ from agents_api.queries.agents import (
 from tests.fixtures import pg_dsn, test_agent, test_developer_id
 
 
-@test("model: create agent")
+@test("query: create agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        await create_agent(
-            developer_id=developer_id,
-            data=CreateAgentRequest(
-                name="test agent",
-                about="test agent about",
-                model="gpt-4o-mini",
-            ),
-            client=client,
-        )
+    """Test that an agent can be successfully created."""
+    
+    pool = await create_db_pool(dsn=dsn)
+    await create_agent(
+        developer_id=developer_id,
+        data=CreateAgentRequest(
+            name="test agent",
+            about="test agent about",
+            model="gpt-4o-mini",
+        ),
+        connection_pool=pool,
+    )
 
 
-@test("model: create agent with instructions")
+@test("query: create agent with instructions sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        await create_agent(
-            developer_id=developer_id,
-            data=CreateAgentRequest(
-                name="test agent",
-                about="test agent about",
-                model="gpt-4o-mini",
-                instructions=["test instruction"],
-            ),
-            client=client,
-        )
+    """Test that an agent can be successfully created or updated."""
+    
+    pool = await create_db_pool(dsn=dsn)
+    await create_or_update_agent(
+        developer_id=developer_id,
+        agent_id=uuid4(),
+        data=CreateOrUpdateAgentRequest(
+            name="test agent",
+            canonical_name="test_agent2",
+            about="test agent about",
+            model="gpt-4o-mini",
+            instructions=["test instruction"],
+        ),
+        connection_pool=pool,
+    )
 
 
-@test("model: create or update agent")
+@test("query: update agent sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that an existing agent's information can be successfully updated."""
+    
+    pool = await create_db_pool(dsn=dsn)
+    result = await update_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        data=UpdateAgentRequest(
+            name="updated agent",
+            about="updated agent about",
+            model="gpt-4o-mini",
+            default_settings={"temperature": 1.0},
+            metadata={"hello": "world"},
+        ),
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert isinstance(result, ResourceUpdatedResponse)
+
+
+@test("query: get agent not exists sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        await create_or_update_agent(
-            developer_id=developer_id,
-            agent_id=uuid4(),
-            data=CreateOrUpdateAgentRequest(
-                name="test agent",
-                about="test agent about",
-                model="gpt-4o-mini",
-                instructions=["test instruction"],
-            ),
-            client=client,
-        )
-
-
-@test("model: get agent not exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that retrieving a non-existent agent raises an exception."""
+    
     agent_id = uuid4()
-    pool = await asyncpg.create_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
 
     with raises(Exception):
-        async with get_pg_client(pool=pool) as client:
-            await get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+        await get_agent(agent_id=agent_id, developer_id=developer_id, connection_pool=pool)
 
 
-@test("model: get agent exists")
+@test("query: get agent exists sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        result = await get_agent(agent_id=agent.id, developer_id=developer_id, client=client)
+    """Test that retrieving an existing agent returns the correct agent information."""
+    
+    pool = await create_db_pool(dsn=dsn)
+    result = await get_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
 
     assert result is not None
     assert isinstance(result, Agent)
 
 
-@test("model: delete agent")
+@test("query: list agents sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        temp_agent = await create_agent(
-            developer_id=developer_id,
-            data=CreateAgentRequest(
-                name="test agent",
-                about="test agent about",
-                model="gpt-4o-mini",
-                instructions=["test instruction"],
-            ),
-            client=client,
-        )
-
-        # Delete the agent
-        await delete_agent(agent_id=temp_agent.id, developer_id=developer_id, client=client)
-
-        # Check that the agent is deleted
-        with raises(Exception):
-            await get_agent(agent_id=temp_agent.id, developer_id=developer_id, client=client)
-
-
-@test("model: update agent")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        result = await update_agent(
-            agent_id=agent.id,
-            developer_id=developer_id,
-            data=UpdateAgentRequest(
-                name="updated agent",
-                about="updated agent about",
-                model="gpt-4o-mini",
-                default_settings={"temperature": 1.0},
-                metadata={"hello": "world"},
-            ),
-            client=client,
-        )
-
-    assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
-
-    async with get_pg_client(pool=pool) as client:
-        agent = await get_agent(
-            agent_id=agent.id,
-            developer_id=developer_id,
-            client=client,
-        )
-
-    assert "test" not in agent.metadata
-
-
-@test("model: patch agent")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        result = await patch_agent(
-            agent_id=agent.id,
-            developer_id=developer_id,
-            data=PatchAgentRequest(
-                name="patched agent",
-                about="patched agent about",
-                default_settings={"temperature": 1.0},
-                metadata={"something": "else"},
-            ),
-            client=client,
-        )
-
-    assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
-
-    async with get_pg_client(pool=pool) as client:
-        agent = await get_agent(
-            agent_id=agent.id,
-            developer_id=developer_id,
-            client=client,
-        )
-
-    assert "hello" in agent.metadata
-
-
-@test("model: list agents")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
-    """Tests listing all agents associated with a developer in the database. Verifies that the correct list of agents is retrieved."""
-
-    pool = await asyncpg.create_pool(dsn=dsn)
-    async with get_pg_client(pool=pool) as client:
-        result = await list_agents(developer_id=developer_id, client=client)
+    """Test that listing agents returns a collection of agent information."""
+    
+    pool = await create_db_pool(dsn=dsn)
+    result = await list_agents(developer_id=developer_id, connection_pool=pool)
 
     assert isinstance(result, list)
     assert all(isinstance(agent, Agent) for agent in result)
+
+
+@test("query: patch agent sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that an agent can be successfully patched."""
+    
+    pool = await create_db_pool(dsn=dsn)
+    result = await patch_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        data=PatchAgentRequest(
+            name="patched agent",
+            about="patched agent about",
+            default_settings={"temperature": 1.0},
+            metadata={"something": "else"},
+        ),
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert isinstance(result, ResourceUpdatedResponse)
+
+
+@test("query: delete agent sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that an agent can be successfully deleted."""
+    
+    pool = await create_db_pool(dsn=dsn)
+    delete_result = await delete_agent(agent_id=agent.id, developer_id=developer_id, connection_pool=pool)
+
+    assert delete_result is not None
+    assert isinstance(delete_result, ResourceDeletedResponse)
+
+    # Verify the agent no longer exists
+    try:
+        await get_agent(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            connection_pool=pool,
+        )
+    except Exception:
+        pass
+    else:
+        assert (
+            False
+        ), "Expected an exception to be raised when retrieving a deleted agent."

@@ -111,19 +111,19 @@ def patch_embed_acompletion():
 
 @fixture(scope="global")
 async def test_agent(dsn=pg_dsn, developer=test_developer):
-    pool = await asyncpg.create_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
 
-    async with get_pg_client(pool=pool) as client:
-        agent = await create_agent(
-            developer_id=developer.id,
-            data=CreateAgentRequest(
-                model="gpt-4o-mini",
-                name="test agent", 
-                about="test agent about",
-                metadata={"test": "test"},
-            ),
-            client=client,
-        )
+    agent = await create_agent(
+        developer_id=developer.id,
+        data=CreateAgentRequest(
+            model="gpt-4o-mini", 
+            name="test agent",
+            canonical_name=f"test_agent_{str(int(time.time()))}",
+            about="test agent about",
+            metadata={"test": "test"},
+        ),
+        connection_pool=pool,
+    )
 
     yield agent
     await pool.close()
