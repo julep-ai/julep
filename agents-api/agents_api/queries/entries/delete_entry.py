@@ -5,8 +5,8 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
-from ...common.utils.datetime import utcnow
 from ...autogen.openapi_model import ResourceDeletedResponse
+from ...common.utils.datetime import utcnow
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for deleting entries with a developer check

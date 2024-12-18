@@ -13,7 +13,7 @@ from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for creating entries with a developer check
-entry_query = ("""
+entry_query = """
 WITH data AS (
     SELECT
         unnest($1::uuid[]) AS session_id,
@@ -64,10 +64,10 @@ FROM
 JOIN
     developers ON developers.developer_id = $14
 RETURNING *;
-""")
+"""
 
 # Define the raw SQL query for creating entry relations
-entry_relation_query = ("""
+entry_relation_query = """
 WITH data AS (
     SELECT
         unnest($1::uuid[]) AS session_id,
@@ -94,7 +94,7 @@ FROM
 JOIN
     developers ON developers.developer_id = $6
 RETURNING *;
-""")
+"""
 
 
 @rewrap_exceptions(

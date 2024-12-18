@@ -6,8 +6,8 @@ from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
-from ...metrics.counters import increase_counter
 from ...autogen.openapi_model import CreateUserRequest, User
+from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function

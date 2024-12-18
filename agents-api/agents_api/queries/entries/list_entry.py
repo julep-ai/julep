@@ -57,12 +57,11 @@ async def list_entries(
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
 ) -> tuple[str, list]:
-    
     if limit < 1 or limit > 1000:
         raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
-    
+
     # making the parameters for the query
     params = [
         session_id,  # $1

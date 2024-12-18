@@ -5,8 +5,8 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
-from ...metrics.counters import increase_counter
 from ...autogen.openapi_model import CreateOrUpdateUserRequest, User
+from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for creating or updating a user

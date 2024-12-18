@@ -3,10 +3,10 @@
 from typing import Any, TypeVar
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
-import asyncpg
 
 from ...common.protocol.developers import Developer
 from ..utils import (

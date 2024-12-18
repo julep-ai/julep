@@ -1,17 +1,17 @@
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
-import asyncpg
-from fastapi import HTTPException
 
 from ...common.protocol.developers import Developer
 from ..utils import (
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
     partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
 )
 
 # Define the raw SQL query
