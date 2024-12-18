@@ -8,7 +8,8 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from psycopg import errors as psycopg_errors
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...metrics.counters import increase_counter
@@ -22,29 +23,42 @@ from ..utils import (
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+raw_query = """
+UPDATE agents
+SET 
+    metadata = $3,
+    name = $4,
+    about = $5,
+    model = $6,
+    default_settings = $7::jsonb
+WHERE agent_id = $2 AND developer_id = $1
+RETURNING *;
+"""
 
-@rewrap_exceptions(
-    {
-        psycopg_errors.ForeignKeyViolation: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        )
-    }
-    # TODO: Add more exceptions
-)
+query = parse_one(raw_query).sql(pretty=True)
+
+
+# @rewrap_exceptions(
+#     {
+#         psycopg_errors.ForeignKeyViolation: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="The specified developer does not exist.",
+#         )
+#     }
+#     # TODO: Add more exceptions
+# )
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
-    transform=lambda d: {"id": d["agent_id"], "jobs": [], **d},
-    _kind="inserted",
+    transform=lambda d: {"id": d["agent_id"], **d},
 )
+@increase_counter("update_agent")
 @pg_query
-# @increase_counter("update_agent1")
 @beartype
-def update_agent_query(
+async def update_agent(
     *, agent_id: UUID, developer_id: UUID, data: UpdateAgentRequest
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs the SQL query to fully update an agent's details.
 
@@ -54,21 +68,16 @@ def update_agent_query(
         data (UpdateAgentRequest): A dictionary containing all agent fields to update.
 
     Returns:
-        tuple[str, dict]: A tuple containing the SQL query and its parameters.
+        tuple[str, list]: A tuple containing the SQL query and its parameters.
     """
-    fields = ", ".join(
-        [f"{key} = %({key})s" for key in data.model_dump(exclude_unset=True).keys()]
-    )
-    params = {key: value for key, value in data.model_dump(exclude_unset=True).items()}
-
-    query = f"""
-    UPDATE agents
-    SET {fields}
-    WHERE agent_id = %(agent_id)s AND developer_id = %(developer_id)s
-    RETURNING *;
-    """
-
-    params["agent_id"] = agent_id
-    params["developer_id"] = developer_id
+    params = [
+        developer_id,
+        agent_id,
+        data.metadata or {},
+        data.name,
+        data.about,
+        data.model,
+        data.default_settings.model_dump() if data.default_settings else {},
+    ]
 
     return (query, params)

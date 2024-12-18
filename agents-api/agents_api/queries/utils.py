@@ -1,5 +1,7 @@
 import concurrent.futures
 import inspect
+import random
+import re
 import socket
 import time
 from functools import partialmethod, wraps
@@ -16,6 +18,24 @@ from ..app import app
 P = ParamSpec("P")
 T = TypeVar("T")
 ModelT = TypeVar("ModelT", bound=BaseModel)
+
+
+def generate_canonical_name(name: str) -> str:
+    """Convert a display name to a canonical name.
+    Example: "My Cool Agent!" -> "my_cool_agent"
+    """
+    # Remove special characters, replace spaces with underscores
+    canonical = re.sub(r"[^\w\s-]", "", name.lower())
+    canonical = re.sub(r"[-\s]+", "_", canonical)
+
+    # Ensure it starts with a letter (prepend 'a' if not)
+    if not canonical[0].isalpha():
+        canonical = f"a_{canonical}"
+
+    # Add 3 random numbers to the end
+    canonical = f"{canonical}_{random.randint(100, 999)}"
+
+    return canonical
 
 
 def partialclass(cls, *args, **kwargs):

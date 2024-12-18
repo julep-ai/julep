@@ -23,9 +23,9 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
+from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.developers.create_developer import create_developer
 
-# from agents_api.queries.agents.create_agent import create_agent
 # from agents_api.queries.agents.delete_agent import delete_agent
 from agents_api.queries.developers.get_developer import get_developer
 
@@ -109,20 +109,24 @@ def patch_embed_acompletion():
         yield embed, acompletion
 
 
-# @fixture(scope="global")
-# async def test_agent(dsn=pg_dsn, developer_id=test_developer_id):
-#     async with get_pg_client(dsn=dsn) as client:
-#         agent = await create_agent(
-#             developer_id=developer_id,
-#             data=CreateAgentRequest(
-#                 model="gpt-4o-mini",
-#                 name="test agent",
-#                 about="test agent about",
-#                 metadata={"test": "test"},
-#             ),
-#             client=client,
-#         )
-#         yield agent
+@fixture(scope="global")
+async def test_agent(dsn=pg_dsn, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+
+    agent = await create_agent(
+        developer_id=developer.id,
+        data=CreateAgentRequest(
+            model="gpt-4o-mini",
+            name="test agent",
+            canonical_name=f"test_agent_{str(int(time.time()))}",
+            about="test agent about",
+            metadata={"test": "test"},
+        ),
+        connection_pool=pool,
+    )
+
+    yield agent
+    await pool.close()
 
 
 @fixture(scope="global")

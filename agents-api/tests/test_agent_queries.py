@@ -1,163 +1,164 @@
-# # Tests for agent queries
+# Tests for agent queries
+from uuid import UUID
 
-# from uuid_extensions import uuid7
-# from ward import raises, test
+import asyncpg
+from uuid_extensions import uuid7
+from ward import raises, test
 
-# from agents_api.autogen.openapi_model import (
-#     Agent,
-#     CreateAgentRequest,
-#     CreateOrUpdateAgentRequest,
-#     PatchAgentRequest,
-#     ResourceUpdatedResponse,
-#     UpdateAgentRequest,
-# )
-# from agents_api.queries.agent.create_agent import create_agent
-# from agents_api.queries.agent.create_or_update_agent import create_or_update_agent
-# from agents_api.queries.agent.delete_agent import delete_agent
-# from agents_api.queries.agent.get_agent import get_agent
-# from agents_api.queries.agent.list_agents import list_agents
-# from agents_api.queries.agent.patch_agent import patch_agent
-# from agents_api.queries.agent.update_agent import update_agent
-# from tests.fixtures import cozo_client, test_agent, test_developer_id
-
-
-# @test("query: create agent")
-# def _(client=cozo_client, developer_id=test_developer_id):
-#     create_agent(
-#         developer_id=developer_id,
-#         data=CreateAgentRequest(
-#             name="test agent",
-#             about="test agent about",
-#             model="gpt-4o-mini",
-#         ),
-#         client=client,
-#     )
+from agents_api.autogen.openapi_model import (
+    Agent,
+    CreateAgentRequest,
+    CreateOrUpdateAgentRequest,
+    PatchAgentRequest,
+    ResourceDeletedResponse,
+    ResourceUpdatedResponse,
+    UpdateAgentRequest,
+)
+from agents_api.clients.pg import create_db_pool
+from agents_api.queries.agents import (
+    create_agent,
+    create_or_update_agent,
+    delete_agent,
+    get_agent,
+    list_agents,
+    patch_agent,
+    update_agent,
+)
+from tests.fixtures import pg_dsn, test_agent, test_developer_id
 
 
-# @test("query: create agent with instructions")
-# def _(client=cozo_client, developer_id=test_developer_id):
-#     create_agent(
-#         developer_id=developer_id,
-#         data=CreateAgentRequest(
-#             name="test agent",
-#             about="test agent about",
-#             model="gpt-4o-mini",
-#             instructions=["test instruction"],
-#         ),
-#         client=client,
-#     )
+@test("query: create agent sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that an agent can be successfully created."""
+
+    pool = await create_db_pool(dsn=dsn)
+    await create_agent(
+        developer_id=developer_id,
+        data=CreateAgentRequest(
+            name="test agent",
+            about="test agent about",
+            model="gpt-4o-mini",
+        ),
+        connection_pool=pool,
+    )
 
 
-# @test("query: create or update agent")
-# def _(client=cozo_client, developer_id=test_developer_id):
-#     create_or_update_agent(
-#         developer_id=developer_id,
-#         agent_id=uuid7(),
-#         data=CreateOrUpdateAgentRequest(
-#             name="test agent",
-#             about="test agent about",
-#             model="gpt-4o-mini",
-#             instructions=["test instruction"],
-#         ),
-#         client=client,
-#     )
+@test("query: create agent with instructions sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that an agent can be successfully created or updated."""
+
+    pool = await create_db_pool(dsn=dsn)
+    await create_or_update_agent(
+        developer_id=developer_id,
+        agent_id=uuid7(),
+        data=CreateOrUpdateAgentRequest(
+            name="test agent",
+            canonical_name="test_agent2",
+            about="test agent about",
+            model="gpt-4o-mini",
+            instructions=["test instruction"],
+        ),
+        connection_pool=pool,
+    )
 
 
-# @test("query: get agent not exists")
-# def _(client=cozo_client, developer_id=test_developer_id):
-#     agent_id = uuid7()
+@test("query: update agent sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that an existing agent's information can be successfully updated."""
 
-#     with raises(Exception):
-#         get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    pool = await create_db_pool(dsn=dsn)
+    result = await update_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        data=UpdateAgentRequest(
+            name="updated agent",
+            about="updated agent about",
+            model="gpt-4o-mini",
+            default_settings={"temperature": 1.0},
+            metadata={"hello": "world"},
+        ),
+        connection_pool=pool,
+    )
 
-
-# @test("query: get agent exists")
-# def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-#     result = get_agent(agent_id=agent.id, developer_id=developer_id, client=client)
-
-#     assert result is not None
-#     assert isinstance(result, Agent)
-
-
-# @test("query: delete agent")
-# def _(client=cozo_client, developer_id=test_developer_id):
-#     temp_agent = create_agent(
-#         developer_id=developer_id,
-#         data=CreateAgentRequest(
-#             name="test agent",
-#             about="test agent about",
-#             model="gpt-4o-mini",
-#             instructions=["test instruction"],
-#         ),
-#         client=client,
-#     )
-
-#     # Delete the agent
-#     delete_agent(agent_id=temp_agent.id, developer_id=developer_id, client=client)
-
-#     # Check that the agent is deleted
-#     with raises(Exception):
-#         get_agent(agent_id=temp_agent.id, developer_id=developer_id, client=client)
+    assert result is not None
+    assert isinstance(result, ResourceUpdatedResponse)
 
 
-# @test("query: update agent")
-# def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-#     result = update_agent(
-#         agent_id=agent.id,
-#         developer_id=developer_id,
-#         data=UpdateAgentRequest(
-#             name="updated agent",
-#             about="updated agent about",
-#             model="gpt-4o-mini",
-#             default_settings={"temperature": 1.0},
-#             metadata={"hello": "world"},
-#         ),
-#         client=client,
-#     )
+@test("query: get agent not exists sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that retrieving a non-existent agent raises an exception."""
 
-#     assert result is not None
-#     assert isinstance(result, ResourceUpdatedResponse)
+    agent_id = uuid7()
+    pool = await create_db_pool(dsn=dsn)
 
-#     agent = get_agent(
-#         agent_id=agent.id,
-#         developer_id=developer_id,
-#         client=client,
-#     )
-
-#     assert "test" not in agent.metadata
+    with raises(Exception):
+        await get_agent(
+            agent_id=agent_id, developer_id=developer_id, connection_pool=pool
+        )
 
 
-# @test("query: patch agent")
-# def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-#     result = patch_agent(
-#         agent_id=agent.id,
-#         developer_id=developer_id,
-#         data=PatchAgentRequest(
-#             name="patched agent",
-#             about="patched agent about",
-#             default_settings={"temperature": 1.0},
-#             metadata={"something": "else"},
-#         ),
-#         client=client,
-#     )
+@test("query: get agent exists sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that retrieving an existing agent returns the correct agent information."""
 
-#     assert result is not None
-#     assert isinstance(result, ResourceUpdatedResponse)
+    pool = await create_db_pool(dsn=dsn)
+    result = await get_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
 
-#     agent = get_agent(
-#         agent_id=agent.id,
-#         developer_id=developer_id,
-#         client=client,
-#     )
-
-#     assert "hello" in agent.metadata
+    assert result is not None
+    assert isinstance(result, Agent)
 
 
-# @test("query: list agents")
-# def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-#     """Tests listing all agents associated with a developer in the database. Verifies that the correct list of agents is retrieved."""
+@test("query: list agents sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing agents returns a collection of agent information."""
 
-#     result = list_agents(developer_id=developer_id, client=client)
+    pool = await create_db_pool(dsn=dsn)
+    result = await list_agents(developer_id=developer_id, connection_pool=pool)
 
-#     assert isinstance(result, list)
-#     assert all(isinstance(agent, Agent) for agent in result)
+    assert isinstance(result, list)
+    assert all(isinstance(agent, Agent) for agent in result)
+
+
+@test("query: patch agent sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that an agent can be successfully patched."""
+
+    pool = await create_db_pool(dsn=dsn)
+    result = await patch_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        data=PatchAgentRequest(
+            name="patched agent",
+            about="patched agent about",
+            default_settings={"temperature": 1.0},
+            metadata={"something": "else"},
+        ),
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert isinstance(result, ResourceUpdatedResponse)
+
+
+@test("query: delete agent sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that an agent can be successfully deleted."""
+
+    pool = await create_db_pool(dsn=dsn)
+    delete_result = await delete_agent(
+        agent_id=agent.id, developer_id=developer_id, connection_pool=pool
+    )
+
+    assert delete_result is not None
+    assert isinstance(delete_result, ResourceDeletedResponse)
+
+    with raises(Exception):
+        await get_agent(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            connection_pool=pool,
+        )
