@@ -110,7 +110,7 @@ async def execute_system(
             await bg_runner()
             return res
 
-        # Handle create operations
+        # Handle create session
         if system.operation == "create" and system.resource == "session":
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id", None)
@@ -132,7 +132,7 @@ async def execute_system(
                 ),
             )
 
-        # Handle update operations
+        # Handle update session
         if system.operation == "update" and system.resource == "session":
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id")
@@ -159,6 +159,8 @@ async def execute_system(
             return await handler(**arguments)
 
         # Run the synchronous function in another process
+        # FIXME: When the handler throws an exception, the process dies and the error is not captured. Instead it throws:
+        # "concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending."
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
             process_pool_executor, partial(handler, **arguments)
