@@ -3,27 +3,21 @@ This module contains tests for entry queries against the CozoDB database.
 It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
 """
 
-from uuid import UUID
+from uuid import uuid4
 
-from ward import test
+from fastapi import HTTPException
+from ward import raises, test
 
-from agents_api.autogen.openapi_model import CreateEntryRequest, Entry
+from agents_api.autogen.openapi_model import CreateEntryRequest
 from agents_api.clients.pg import create_db_pool
-from agents_api.queries.entries.create_entry import create_entries
-from agents_api.queries.entries.delete_entry import delete_entries
-from agents_api.queries.entries.get_history import get_history
-from agents_api.queries.entries.list_entry import list_entries
-from tests.fixtures import pg_dsn, test_developer_id  # , test_session
+from agents_api.queries.entries import create_entries, list_entries
+from tests.fixtures import pg_dsn, test_developer  # , test_session
 
-# Test UUIDs for consistent testing
 MODEL = "gpt-4o-mini"
-SESSION_ID = UUID("123e4567-e89b-12d3-a456-426614174001")
-TEST_DEVELOPER_ID = UUID("123e4567-e89b-12d3-a456-426614174000")
-TEST_USER_ID = UUID("987e6543-e21b-12d3-a456-426614174000")
 
 
-@test("query: create entry")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):  # , session=test_session
+@test("query: create entry no session")
+async def _(dsn=pg_dsn, developer=test_developer):
     """Test the addition of a new entry to the database."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -34,12 +28,31 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):  # , session=test_sessi
         content="test entry content",
     )
 
-    await create_entries(
-        developer_id=TEST_DEVELOPER_ID,
-        session_id=SESSION_ID,
-        data=[test_entry],
-        connection_pool=pool,
-    )
+    with raises(HTTPException) as exc_info:
+        await create_entries(
+            developer_id=developer.id,
+            session_id=uuid4(),
+            data=[test_entry],
+            connection_pool=pool,
+        )
+
+    assert exc_info.raised.status_code == 404
+
+
+@test("query: list entries no session")
+async def _(dsn=pg_dsn, developer=test_developer):
+    """Test the retrieval of entries from the database."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc_info:
+        await list_entries(
+            developer_id=developer.id,
+            session_id=uuid4(),
+            connection_pool=pool,
+        )
+
+    assert exc_info.raised.status_code == 404
 
 
 # @test("query: get entries")

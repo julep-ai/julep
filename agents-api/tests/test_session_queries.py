@@ -3,36 +3,21 @@ This module contains tests for SQL query generation functions in the sessions mo
 Tests verify the SQL queries without actually executing them against a database.
 """
 
-from uuid import UUID
-
-import asyncpg
 from uuid_extensions import uuid7
 from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
-    CreateOrUpdateSessionRequest,
-    CreateSessionRequest,
-    PatchSessionRequest,
-    ResourceDeletedResponse,
-    ResourceUpdatedResponse,
     Session,
-    UpdateSessionRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.sessions import (
     count_sessions,
-    create_or_update_session,
-    create_session,
-    delete_session,
     get_session,
     list_sessions,
-    patch_session,
-    update_session,
 )
 from tests.fixtures import (
     pg_dsn,
     test_developer_id,
-    test_user,
 )  # , test_session, test_agent, test_user
 
 # @test("query: create session sql")
