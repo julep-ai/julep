@@ -8,9 +8,9 @@ from functools import partialmethod, wraps
 from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar, cast
 
 import asyncpg
-from beartype import beartype
 import pandas as pd
 from asyncpg import Record
+from beartype import beartype
 from fastapi import HTTPException
 from pydantic import BaseModel
 
@@ -59,7 +59,7 @@ def pg_query(
     timeit: bool = False,
 ) -> Callable[..., Callable[P, list[Record]]] | Callable[P, list[Record]]:
     def pg_query_dec(
-        func: Callable[P, tuple[str, list[Any]] | list[tuple[str, list[Any]]]]
+        func: Callable[P, tuple[str, list[Any]] | list[tuple[str, list[Any]]]],
     ) -> Callable[..., Callable[P, list[Record]]]:
         """
         Decorator that wraps a function that takes arbitrary arguments, and
@@ -96,7 +96,9 @@ def pg_query(
             assert isinstance(variables, list) and len(variables) > 0
 
             queries = query if isinstance(query, list) else [query]
-            variables_list = variables if isinstance(variables[0], list) else [variables]
+            variables_list = (
+                variables if isinstance(variables[0], list) else [variables]
+            )
             zipped = zip(queries, variables_list)
 
             try:
@@ -171,7 +173,7 @@ def wrap_in_class(
         return objs
 
     def decorator(
-        func: Callable[P, list[Record] | Awaitable[list[Record]]]
+        func: Callable[P, list[Record] | Awaitable[list[Record]]],
     ) -> Callable[P, ModelT | list[ModelT]]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
@@ -220,7 +222,7 @@ def rewrap_exceptions(
                 raise new_error from error
 
     def decorator(
-        func: Callable[P, T | Awaitable[T]]
+        func: Callable[P, T | Awaitable[T]],
     ) -> Callable[..., Callable[P, T | Awaitable[T]]]:
         @wraps(func)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
