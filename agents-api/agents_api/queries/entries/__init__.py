@@ -8,14 +8,14 @@ in the TimescaleDB database. This includes operations for:
 - Listing entries with filtering and pagination
 """
 
-from .create_entries import create_entries
-from .delete_entries import delete_entries_for_session
+from .create_entry import create_entries
+from .delete_entry import delete_entries
 from .get_history import get_history
-from .list_entries import list_entries
+from .list_entry import list_entries
 
 __all__ = [
     "create_entries",
-    "delete_entries_for_session",
+    "delete_entries",
     "get_history",
     "list_entries",
 ]

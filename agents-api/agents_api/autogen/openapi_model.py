@@ -400,6 +400,7 @@ class CreateEntryRequest(BaseEntry):
             source=source,
             tokenizer=tokenizer["type"],
             token_count=token_count,
+            modelname=model,
             **kwargs,
         )
 

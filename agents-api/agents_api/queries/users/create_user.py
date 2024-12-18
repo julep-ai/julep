@@ -4,15 +4,14 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateUserRequest, User
 from ...metrics.counters import increase_counter
+from ...autogen.openapi_model import CreateUserRequest, User
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
-raw_query = """
+user_query = parse_one("""
 INSERT INTO users (
     developer_id,
     user_id,
@@ -21,17 +20,14 @@ INSERT INTO users (
     metadata
 )
 VALUES (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5
+    $1, -- developer_id
+    $2, -- user_id
+    $3, -- name
+    $4, -- about
+    $5::jsonb -- metadata
 )
 RETURNING *;
-"""
-
-# Parse and optimize the query
-query = parse_one(raw_query).sql(pretty=True)
+""").sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -48,7 +44,14 @@ query = parse_one(raw_query).sql(pretty=True)
         ),
     }
 )
-@wrap_in_class(User, one=True, transform=lambda d: {**d, "id": d["user_id"]})
+@wrap_in_class(
+    User,
+    one=True,
+    transform=lambda d: {
+        **d,
+        "id": d["user_id"],
+    },
+)
 @increase_counter("create_user")
 @pg_query
 @beartype
@@ -72,14 +75,14 @@ async def create_user(
     user_id = user_id or uuid7()
 
     params = [
-        developer_id,
-        user_id,
-        data.name,
-        data.about,
-        data.metadata or {},
+        developer_id,  # $1
+        user_id,  # $2
+        data.name,  # $3
+        data.about,  # $4
+        data.metadata or {},  # $5
     ]
 
     return (
-        query,
+        user_query,
         params,
     )
