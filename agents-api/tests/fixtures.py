@@ -11,9 +11,9 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
+from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.developers.create_developer import create_developer
 
-from agents_api.queries.agents.create_agent import create_agent
 # from agents_api.queries.agents.delete_agent import delete_agent
 from agents_api.queries.developers.get_developer import get_developer
 
@@ -100,7 +100,7 @@ async def test_agent(dsn=pg_dsn, developer=test_developer):
     agent = await create_agent(
         developer_id=developer.id,
         data=CreateAgentRequest(
-            model="gpt-4o-mini", 
+            model="gpt-4o-mini",
             name="test agent",
             canonical_name=f"test_agent_{str(int(time.time()))}",
             about="test agent about",

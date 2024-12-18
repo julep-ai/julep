@@ -30,6 +30,7 @@ P = ParamSpec("P")
 T = TypeVar("T")
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
+
 def generate_canonical_name(name: str) -> str:
     """Convert a display name to a canonical name.
     Example: "My Cool Agent!" -> "my_cool_agent"
@@ -43,6 +44,7 @@ def generate_canonical_name(name: str) -> str:
         canonical = f"a_{canonical}"
 
     return canonical
+
 
 def partialclass(cls, *args, **kwargs):
     cls_signature = inspect.signature(cls)

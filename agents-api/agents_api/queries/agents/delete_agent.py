@@ -8,6 +8,8 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ..utils import (
@@ -16,11 +18,6 @@ from ..utils import (
     rewrap_exceptions,
     wrap_in_class,
 )
-from beartype import beartype
-from sqlglot import parse_one
-from sqlglot.optimizer import optimize
-from ...autogen.openapi_model import ResourceDeletedResponse
-from ...common.utils.datetime import utcnow
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -50,6 +47,7 @@ RETURNING developer_id, agent_id;
 
 # Convert the list of queries into a single query string
 query = parse_one(raw_query).sql(pretty=True)
+
 
 # @rewrap_exceptions(
 #     {
@@ -82,5 +80,5 @@ async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list
     """
     # Note: We swap the parameter order because the queries use $1 for developer_id and $2 for agent_id
     params = [developer_id, agent_id]
-    
+
     return (query, params)

@@ -8,6 +8,8 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import Agent
 from ..utils import (
@@ -16,11 +18,6 @@ from ..utils import (
     rewrap_exceptions,
     wrap_in_class,
 )
-from beartype import beartype
-from sqlglot import parse_one
-from sqlglot.optimizer import optimize
-
-from ...autogen.openapi_model import Agent
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -99,18 +96,14 @@ async def list_agents(
         final_query = query.replace("$7", "AND metadata @> $6::jsonb")
     else:
         final_query = query.replace("$7", "")
-    
-    params = [
-        developer_id,
-        limit,
-        offset
-    ]
-    
+
+    params = [developer_id, limit, offset]
+
     params.append(sort_by)
     params.append(direction)
     if metadata_filter:
         params.append(metadata_filter)
-    
+
     print(final_query)
     print(params)
 

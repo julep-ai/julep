@@ -8,19 +8,17 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from ...autogen.openapi_model import Agent
-from ...metrics.counters import increase_counter
 from sqlglot import parse_one
 from sqlglot.optimizer import optimize
+
+from ...autogen.openapi_model import Agent
+from ...metrics.counters import increase_counter
 from ..utils import (
     partialclass,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
-from beartype import beartype
-
-from ...autogen.openapi_model import Agent
 
 raw_query = """
 SELECT 
@@ -48,14 +46,14 @@ T = TypeVar("T")
 
 
 # @rewrap_exceptions(
-    # {
-    #     psycopg_errors.ForeignKeyViolation: partialclass(
-    #         HTTPException,
-    #         status_code=404,
-    #         detail="The specified developer does not exist.",
-    #     )
-    # }
-    # # TODO: Add more exceptions
+# {
+#     psycopg_errors.ForeignKeyViolation: partialclass(
+#         HTTPException,
+#         status_code=404,
+#         detail="The specified developer does not exist.",
+#     )
+# }
+# # TODO: Add more exceptions
 # )
 @wrap_in_class(Agent, one=True, transform=lambda d: {"id": d["agent_id"], **d})
 # @increase_counter("get_agent")

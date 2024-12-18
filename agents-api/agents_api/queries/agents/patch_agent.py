@@ -8,11 +8,10 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-
-from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
-from fastapi import HTTPException
 from sqlglot import parse_one
 from sqlglot.optimizer import optimize
+
+from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
 from ...metrics.counters import increase_counter
 from ..utils import (
     partialclass,
@@ -23,7 +22,7 @@ from ..utils import (
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
-    
+
 raw_query = """
 UPDATE agents
 SET 
@@ -93,7 +92,7 @@ async def patch_agent(
         data.about,
         data.metadata,
         data.model,
-            data.default_settings.model_dump() if data.default_settings else None,
+        data.default_settings.model_dump() if data.default_settings else None,
     ]
-    
+
     return query, params
