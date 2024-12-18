@@ -52,7 +52,7 @@ class BaseEntry(BaseModel):
     ]
     tokenizer: str
     token_count: int
-    modelname: str = "gpt-40-mini"
+    model: str = "gpt-4o-mini"
     tool_calls: (
         list[
             ChosenFunctionCall

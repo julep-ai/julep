@@ -107,7 +107,7 @@ async def create_entries(
                 content_to_json(item.get("content") or {}),  # $7
                 item.get("tool_call_id"),  # $8
                 content_to_json(item.get("tool_calls") or {}),  # $9
-                item.get("modelname"),  # $10
+                item.get("model"),  # $10
                 item.get("token_count"),  # $11
                 item.get("created_at") or utcnow(),  # $12
                 utcnow(),  # $13
