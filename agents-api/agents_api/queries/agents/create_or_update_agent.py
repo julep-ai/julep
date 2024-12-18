@@ -6,11 +6,10 @@ It constructs and executes SQL queries to insert a new agent or update an existi
 from typing import Any, TypeVar
 from uuid import UUID
 
-from sqlglot import parse_one
-from sqlglot.optimizer import optimize
-
 from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...metrics.counters import increase_counter

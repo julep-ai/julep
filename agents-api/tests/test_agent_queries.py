@@ -1,7 +1,6 @@
 # Tests for agent queries
-from uuid import uuid4
+from uuid import UUID, uuid4
 
-from uuid import UUID
 import asyncpg
 from uuid_extensions import uuid7
 from ward import raises, test
@@ -31,7 +30,7 @@ from tests.fixtures import pg_dsn, test_agent, test_developer_id
 @test("query: create agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully created."""
-    
+
     pool = await create_db_pool(dsn=dsn)
     await create_agent(
         developer_id=developer_id,
@@ -47,7 +46,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 @test("query: create agent with instructions sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully created or updated."""
-    
+
     pool = await create_db_pool(dsn=dsn)
     await create_or_update_agent(
         developer_id=developer_id,
@@ -66,7 +65,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 @test("query: update agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that an existing agent's information can be successfully updated."""
-    
+
     pool = await create_db_pool(dsn=dsn)
     result = await update_agent(
         agent_id=agent.id,
@@ -88,18 +87,20 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 @test("query: get agent not exists sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that retrieving a non-existent agent raises an exception."""
-    
+
     agent_id = uuid4()
     pool = await create_db_pool(dsn=dsn)
 
     with raises(Exception):
-        await get_agent(agent_id=agent_id, developer_id=developer_id, connection_pool=pool)
+        await get_agent(
+            agent_id=agent_id, developer_id=developer_id, connection_pool=pool
+        )
 
 
 @test("query: get agent exists sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that retrieving an existing agent returns the correct agent information."""
-    
+
     pool = await create_db_pool(dsn=dsn)
     result = await get_agent(
         agent_id=agent.id,
@@ -114,7 +115,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 @test("query: list agents sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that listing agents returns a collection of agent information."""
-    
+
     pool = await create_db_pool(dsn=dsn)
     result = await list_agents(developer_id=developer_id, connection_pool=pool)
 
@@ -125,7 +126,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 @test("query: patch agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that an agent can be successfully patched."""
-    
+
     pool = await create_db_pool(dsn=dsn)
     result = await patch_agent(
         agent_id=agent.id,
@@ -146,9 +147,11 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 @test("query: delete agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that an agent can be successfully deleted."""
-    
+
     pool = await create_db_pool(dsn=dsn)
-    delete_result = await delete_agent(agent_id=agent.id, developer_id=developer_id, connection_pool=pool)
+    delete_result = await delete_agent(
+        agent_id=agent.id, developer_id=developer_id, connection_pool=pool
+    )
 
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)

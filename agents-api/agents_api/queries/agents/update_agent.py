@@ -8,12 +8,11 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-
-from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
-from ...metrics.counters import increase_counter
 from sqlglot import parse_one
 from sqlglot.optimizer import optimize
 
+from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
+from ...metrics.counters import increase_counter
 from ..utils import (
     partialclass,
     pg_query,
@@ -57,7 +56,9 @@ query = parse_one(raw_query).sql(pretty=True)
 # @increase_counter("update_agent")
 @pg_query
 @beartype
-async def update_agent(*, agent_id: UUID, developer_id: UUID, data: UpdateAgentRequest) -> tuple[str, list]:
+async def update_agent(
+    *, agent_id: UUID, developer_id: UUID, data: UpdateAgentRequest
+) -> tuple[str, list]:
     """
     Constructs the SQL query to fully update an agent's details.
 

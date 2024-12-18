@@ -6,10 +6,10 @@ It includes functions to construct and execute SQL queries for inserting new age
 from typing import Any, TypeVar
 from uuid import UUID
 
-from sqlglot import parse_one
 from beartype import beartype
 from fastapi import HTTPException
 from pydantic import ValidationError
+from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import Agent, CreateAgentRequest
@@ -52,6 +52,7 @@ RETURNING *;
 """
 
 query = parse_one(raw_query).sql(pretty=True)
+
 
 # @rewrap_exceptions(
 #     {
