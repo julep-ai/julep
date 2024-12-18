@@ -3,7 +3,6 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...common.protocol.sessions import ChatContext, make_session
@@ -22,13 +21,13 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-@rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
-    }
-)
+# TODO: implement this part
+# @rewrap_exceptions(
+#     {
+#         ValidationError: partialclass(HTTPException, status_code=400),
+#         TypeError: partialclass(HTTPException, status_code=400),
+#     }
+# )
 @wrap_in_class(
     ChatContext,
     one=True,
