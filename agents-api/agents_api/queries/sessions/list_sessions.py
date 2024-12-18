@@ -1,12 +1,11 @@
 """This module contains functions for querying session data from the PostgreSQL database."""
 
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal
 from uuid import UUID
 
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Session
 from ...metrics.counters import increase_counter

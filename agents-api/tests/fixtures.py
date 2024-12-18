@@ -43,8 +43,8 @@ from agents_api.queries.developers.get_developer import get_developer
 # from agents_api.queries.tools.create_tools import create_tools
 # from agents_api.queries.tools.delete_tool import delete_tool
 from agents_api.queries.users.create_user import create_user
+from agents_api.queries.users.delete_user import delete_user
 
-# from agents_api.queries.users.delete_user import delete_user
 from agents_api.web import app
 
 from .utils import (
@@ -67,11 +67,10 @@ def pg_dsn():
 @fixture(scope="global")
 def test_developer_id():
     if not multi_tenant_mode:
-        yield UUID(int=0)
-        return
+        return UUID(int=0)
 
     developer_id = uuid7()
-    yield developer_id
+    return developer_id
 
 
 # @fixture(scope="global")
@@ -98,8 +97,7 @@ async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
         connection_pool=pool,
     )
 
-    yield developer
-    await pool.close()
+    return developer
 
 
 @fixture(scope="test")
@@ -138,8 +136,7 @@ async def test_user(dsn=pg_dsn, developer=test_developer):
         connection_pool=pool,
     )
 
-    yield user
-    await pool.close()
+    return user
 
 
 @fixture(scope="test")
@@ -345,38 +342,49 @@ async def test_new_developer(dsn=pg_dsn, email=random_email):
 #         "type": "function",
 #     }
 
-#     async with get_pg_client(dsn=dsn) as client:
-#         [tool, *_] = await create_tools(
+#     [tool, *_] = await create_tools(
+#         developer_id=developer_id,
+#         agent_id=agent.id,
+#         data=[CreateToolRequest(**tool)],
+#         connection_pool=pool,
+#     )
+#     yield tool
+
+#     # Cleanup
+#     try:
+#         await delete_tool(
 #             developer_id=developer_id,
-#             agent_id=agent.id,
-#             data=[CreateToolRequest(**tool)],
-#             client=client,
+#             tool_id=tool.id,
+#             connection_pool=pool,
 #         )
-#         yield tool
+#     finally:
+#         await pool.close()
 
 
-# @fixture(scope="global")
-# def client(dsn=pg_dsn):
-#     client = TestClient(app=app)
-#     client.state.pg_client = get_pg_client(dsn=dsn)
-#     return client
+@fixture(scope="global")
+async def client(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    client = TestClient(app=app)
+    client.state.postgres_pool = pool
+    return client
 
 
-# @fixture(scope="global")
-# def make_request(client=client, developer_id=test_developer_id):
-#     def _make_request(method, url, **kwargs):
-#         headers = kwargs.pop("headers", {})
-#         headers = {
-#             **headers,
-#             api_key_header_name: api_key,
-#         }
+@fixture(scope="global")
+async def make_request(client=client, developer_id=test_developer_id):
+    def _make_request(method, url, **kwargs):
+        headers = kwargs.pop("headers", {})
+        headers = {
+            **headers,
+            api_key_header_name: api_key,
+        }
 
-#         if multi_tenant_mode:
-#             headers["X-Developer-Id"] = str(developer_id)
+        if multi_tenant_mode:
+            headers["X-Developer-Id"] = str(developer_id)
 
-#         return client.request(method, url, headers=headers, **kwargs)
+        return client.request(method, url, headers=headers, **kwargs)
 
-#     return _make_request
+    return _make_request
 
 
 @fixture(scope="global")

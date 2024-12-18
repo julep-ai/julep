@@ -6,6 +6,7 @@ from functools import partialmethod, wraps
 from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar, cast
 
 import asyncpg
+from beartype import beartype
 import pandas as pd
 from asyncpg import Record
 from fastapi import HTTPException
@@ -30,13 +31,16 @@ def partialclass(cls, *args, **kwargs):
     return NewCls
 
 
+@beartype
 def pg_query(
     func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
     debug: bool | None = None,
     only_on_error: bool = False,
     timeit: bool = False,
-):
-    def pg_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
+) -> Callable[..., Callable[P, list[Record]]] | Callable[P, list[Record]]:
+    def pg_query_dec(
+        func: Callable[P, tuple[str, list[Any]] | list[tuple[str, list[Any]]]]
+    ) -> Callable[..., Callable[P, list[Record]]]:
         """
         Decorator that wraps a function that takes arbitrary arguments, and
         returns a (query string, variables) tuple.
@@ -47,19 +51,6 @@ def pg_query(
 
         from pprint import pprint
 
-        # from tenacity import (
-        #     retry,
-        #     retry_if_exception,
-        #     stop_after_attempt,
-        #     wait_exponential,
-        # )
-
-        # TODO: Remove all tenacity decorators
-        # @retry(
-        #     stop=stop_after_attempt(4),
-        #     wait=wait_exponential(multiplier=1, min=4, max=10),
-        #     # retry=retry_if_exception(is_resource_busy),
-        # )
         @wraps(func)
         async def wrapper(
             *args: P.args,
@@ -76,17 +67,25 @@ def pg_query(
             )
 
             # Run the query
+            pool = (
+                connection_pool
+                if connection_pool is not None
+                else cast(asyncpg.Pool, app.state.postgres_pool)
+            )
+
+            assert isinstance(variables, list) and len(variables) > 0
+
+            queries = query if isinstance(query, list) else [query]
+            variables_list = variables if isinstance(variables[0], list) else [variables]
+            zipped = zip(queries, variables_list)
 
             try:
-                pool = (
-                    connection_pool
-                    if connection_pool is not None
-                    else cast(asyncpg.Pool, app.state.postgres_pool)
-                )
                 async with pool.acquire() as conn:
                     async with conn.transaction():
                         start = timeit and time.perf_counter()
-                        results: list[Record] = await conn.fetch(query, *variables)
+                        for query, variables in zipped:
+                            results: list[Record] = await conn.fetch(query, *variables)
+
                         end = timeit and time.perf_counter()
 
                         timeit and print(
@@ -136,8 +135,7 @@ def wrap_in_class(
     cls: Type[ModelT] | Callable[..., ModelT],
     one: bool = False,
     transform: Callable[[dict], dict] | None = None,
-    _kind: str | None = None,
-):
+) -> Callable[..., Callable[..., ModelT | list[ModelT]]]:
     def _return_data(rec: list[Record]):
         data = [dict(r.items()) for r in rec]
 
@@ -152,7 +150,9 @@ def wrap_in_class(
         objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
         return objs
 
-    def decorator(func: Callable[P, pd.DataFrame | Awaitable[pd.DataFrame]]):
+    def decorator(
+        func: Callable[P, list[Record] | Awaitable[list[Record]]]
+    ) -> Callable[P, ModelT | list[ModelT]]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
             return _return_data(func(*args, **kwargs))
@@ -179,7 +179,7 @@ def rewrap_exceptions(
         Type[BaseException] | Callable[[BaseException], BaseException],
     ],
     /,
-):
+) -> Callable[..., Callable[P, T | Awaitable[T]]]:
     def _check_error(error):
         nonlocal mapping
 
@@ -199,7 +199,9 @@ def rewrap_exceptions(
 
                 raise new_error from error
 
-    def decorator(func: Callable[P, T | Awaitable[T]]):
+    def decorator(
+        func: Callable[P, T | Awaitable[T]]
+    ) -> Callable[..., Callable[P, T | Awaitable[T]]]:
         @wraps(func)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             try:
