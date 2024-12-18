@@ -93,7 +93,7 @@ async def list_agents(
     final_query = raw_query.format(
         metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else ""
     )
-    
+
     params = [
         developer_id,
         limit,

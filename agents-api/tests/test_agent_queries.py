@@ -1,5 +1,6 @@
 # Tests for agent queries
 from uuid import UUID
+
 import asyncpg
 from uuid_extensions import uuid7
 from ward import raises, test
@@ -86,7 +87,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 @test("query: get agent not exists sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that retrieving a non-existent agent raises an exception."""
-    
+
     agent_id = uuid7()
     pool = await create_db_pool(dsn=dsn)
 
