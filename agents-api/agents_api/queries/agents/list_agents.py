@@ -37,7 +37,7 @@ SELECT
     created_at,
     updated_at
 FROM agents
-WHERE developer_id = $1 $7
+WHERE developer_id = $1 {metadata_filter_query}
 ORDER BY 
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST,
@@ -45,8 +45,6 @@ ORDER BY
     CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
 """
-
-query = raw_query
 
 
 #  @rewrap_exceptions(
@@ -60,7 +58,7 @@ query = raw_query
 #     # TODO: Add more exceptions
 # )
 @wrap_in_class(Agent, transform=lambda d: {"id": d["agent_id"], **d})
-# @increase_counter("list_agents")
+@increase_counter("list_agents")
 @pg_query
 @beartype
 async def list_agents(
@@ -92,20 +90,19 @@ async def list_agents(
 
     # Build metadata filter clause if needed
 
-    final_query = query
-    if metadata_filter:
-        final_query = query.replace("$7", "AND metadata @> $6::jsonb")
-    else:
-        final_query = query.replace("$7", "")
+    final_query = raw_query.format(
+        metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else ""
+    )
+    
+    params = [
+        developer_id,
+        limit,
+        offset,
+        sort_by,
+        direction,
+    ]
 
-    params = [developer_id, limit, offset]
-
-    params.append(sort_by)
-    params.append(direction)
     if metadata_filter:
         params.append(metadata_filter)
-
-    print(final_query)
-    print(params)
 
     return final_query, params

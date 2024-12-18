@@ -67,7 +67,7 @@ query = parse_one(raw_query).sql(pretty=True)
     one=True,
     transform=lambda d: {"id": d["agent_id"], **d},
 )
-# @increase_counter("create_or_update_agent")
+@increase_counter("create_or_update_agent")
 @pg_query
 @beartype
 async def create_or_update_agent(

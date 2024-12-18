@@ -53,7 +53,7 @@ query = parse_one(raw_query).sql(pretty=True)
     one=True,
     transform=lambda d: {"id": d["agent_id"], **d},
 )
-# @increase_counter("update_agent")
+@increase_counter("update_agent")
 @pg_query
 @beartype
 async def update_agent(
@@ -79,8 +79,5 @@ async def update_agent(
         data.model,
         data.default_settings.model_dump() if data.default_settings else {},
     ]
-    print("*" * 100)
-    print(query)
-    print(params)
-    print("*" * 100)
+
     return (query, params)

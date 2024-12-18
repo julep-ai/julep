@@ -66,7 +66,7 @@ query = parse_one(raw_query).sql(pretty=True)
     one=True,
     transform=lambda d: {**d, "id": d["agent_id"], "deleted_at": utcnow()},
 )
-# @increase_counter("delete_agent")
+@increase_counter("delete_agent")
 @pg_query
 @beartype
 async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:

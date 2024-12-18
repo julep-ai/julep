@@ -56,7 +56,7 @@ T = TypeVar("T")
 # # TODO: Add more exceptions
 # )
 @wrap_in_class(Agent, one=True, transform=lambda d: {"id": d["agent_id"], **d})
-# @increase_counter("get_agent")
+@increase_counter("get_agent")
 @pg_query
 @beartype
 async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
