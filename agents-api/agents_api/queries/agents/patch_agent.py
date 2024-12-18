@@ -68,7 +68,7 @@ query = parse_one(raw_query).sql(pretty=True)
     one=True,
     transform=lambda d: {"id": d["agent_id"], **d},
 )
-# @increase_counter("patch_agent")
+@increase_counter("patch_agent")
 @pg_query
 @beartype
 async def patch_agent(

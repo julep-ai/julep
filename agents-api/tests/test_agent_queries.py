@@ -1,6 +1,5 @@
 # Tests for agent queries
-from uuid import UUID, uuid4
-
+from uuid import UUID
 import asyncpg
 from uuid_extensions import uuid7
 from ward import raises, test
@@ -50,7 +49,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
     await create_or_update_agent(
         developer_id=developer_id,
-        agent_id=uuid4(),
+        agent_id=uuid7(),
         data=CreateOrUpdateAgentRequest(
             name="test agent",
             canonical_name="test_agent2",
@@ -87,8 +86,8 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 @test("query: get agent not exists sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that retrieving a non-existent agent raises an exception."""
-
-    agent_id = uuid4()
+    
+    agent_id = uuid7()
     pool = await create_db_pool(dsn=dsn)
 
     with raises(Exception):
@@ -156,16 +155,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)
 
-    # Verify the agent no longer exists
-    try:
+    with raises(Exception):
         await get_agent(
             developer_id=developer_id,
             agent_id=agent.id,
             connection_pool=pool,
         )
-    except Exception:
-        pass
-    else:
-        assert (
-            False
-        ), "Expected an exception to be raised when retrieving a deleted agent."

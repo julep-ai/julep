@@ -1,5 +1,6 @@
 import concurrent.futures
 import inspect
+import random
 import re
 import socket
 import time
@@ -42,6 +43,9 @@ def generate_canonical_name(name: str) -> str:
     # Ensure it starts with a letter (prepend 'a' if not)
     if not canonical[0].isalpha():
         canonical = f"a_{canonical}"
+
+    # Add 3 random numbers to the end
+    canonical = f"{canonical}_{random.randint(100, 999)}"
 
     return canonical
 
