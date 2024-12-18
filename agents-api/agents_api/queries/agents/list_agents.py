@@ -16,12 +16,42 @@ from ..utils import (
     rewrap_exceptions,
     wrap_in_class,
 )
+from beartype import beartype
+from sqlglot import parse_one
+from sqlglot.optimizer import optimize
+
+from ...autogen.openapi_model import Agent
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+raw_query = """
+SELECT 
+    agent_id,
+    developer_id,
+    name,
+    canonical_name,
+    about,
+    instructions,
+    model,
+    metadata,
+    default_settings,
+    created_at,
+    updated_at
+FROM agents
+WHERE developer_id = $1 $7
+ORDER BY 
+    CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
+    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST,
+    CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at END ASC NULLS LAST,
+    CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at END DESC NULLS LAST
+LIMIT $2 OFFSET $3;
+"""
 
-# @rewrap_exceptions(
+query = raw_query
+
+
+#  @rewrap_exceptions(
 #     {
 #         psycopg_errors.ForeignKeyViolation: partialclass(
 #             HTTPException,
@@ -31,9 +61,9 @@ T = TypeVar("T")
 #     }
 #     # TODO: Add more exceptions
 # )
-@wrap_in_class(Agent)
+@wrap_in_class(Agent, transform=lambda d: {"id": d["agent_id"], **d})
+# @increase_counter("list_agents")
 @pg_query
-# @increase_counter("list_agents1")
 @beartype
 async def list_agents(
     *,
@@ -43,7 +73,7 @@ async def list_agents(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     """
     Constructs query to list agents for a developer with pagination.
 
@@ -63,33 +93,25 @@ async def list_agents(
         raise HTTPException(status_code=400, detail="Invalid sort direction")
 
     # Build metadata filter clause if needed
-    metadata_clause = ""
-    if metadata_filter:
-        metadata_clause = "AND metadata @> %(metadata_filter)s::jsonb"
 
-    query = f"""
-    SELECT 
-        agent_id,
+    final_query = query
+    if metadata_filter:
+        final_query = query.replace("$7", "AND metadata @> $6::jsonb")
+    else:
+        final_query = query.replace("$7", "")
+    
+    params = [
         developer_id,
-        name,
-        canonical_name,
-        about,
-        instructions,
-        model,
-        metadata,
-        default_settings,
-        created_at,
-        updated_at
-    FROM agents
-    WHERE developer_id = %(developer_id)s
-    {metadata_clause}
-    ORDER BY {sort_by} {direction}
-    LIMIT %(limit)s OFFSET %(offset)s;
-    """
-
-    params = {"developer_id": developer_id, "limit": limit, "offset": offset}
-
+        limit,
+        offset
+    ]
+    
+    params.append(sort_by)
+    params.append(direction)
     if metadata_filter:
-        params["metadata_filter"] = metadata_filter
+        params.append(metadata_filter)
+    
+    print(final_query)
+    print(params)
 
-    return query, params
+    return final_query, params
