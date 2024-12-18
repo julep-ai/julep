@@ -10,7 +10,7 @@ from ...autogen.openapi_model import CreateEntryRequest, Entry, Relation
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
 
 # Query for checking if the session exists
 session_exists_query = """
@@ -53,26 +53,30 @@ RETURNING *;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: lambda exc: HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ),
-        asyncpg.UniqueViolationError: lambda exc: HTTPException(
-            status_code=409,
-            detail=str(exc),
-        ),
-        asyncpg.NotNullViolationError: lambda exc: HTTPException(
-            status_code=400,
-            detail=str(exc),
-        ),
-        asyncpg.NoDataFoundError: lambda exc: HTTPException(
-            status_code=404,
-            detail="Session not found",
-        ),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         asyncpg.ForeignKeyViolationError: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="Session not found",
+#         ),
+#         asyncpg.UniqueViolationError: partialclass(
+#             HTTPException,
+#             status_code=409,
+#             detail="Entry already exists",
+#         ),
+#         asyncpg.NotNullViolationError: partialclass(
+#             HTTPException,
+#             status_code=400,
+#             detail="Not null violation",
+#         ),
+#         asyncpg.NoDataFoundError: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="Session not found",
+#         ),
+#     }
+# )
 @wrap_in_class(
     Entry,
     transform=lambda d: {
@@ -128,18 +132,20 @@ async def create_entries(
     ]
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: lambda exc: HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ),
-        asyncpg.UniqueViolationError: lambda exc: HTTPException(
-            status_code=409,
-            detail=str(exc),
-        ),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         asyncpg.ForeignKeyViolationError: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="Session not found",
+#         ),
+#         asyncpg.UniqueViolationError: partialclass(
+#             HTTPException,
+#             status_code=409,
+#             detail="Entry already exists",
+#         ),
+#     }
+# )
 @wrap_in_class(Relation)
 @increase_counter("add_entry_relations")
 @pg_query

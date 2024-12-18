@@ -10,16 +10,13 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Agent
-from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
+# Define the raw SQL query
 raw_query = """
 SELECT 
     agent_id,
@@ -55,7 +52,6 @@ LIMIT $2 OFFSET $3;
 #     # TODO: Add more exceptions
 # )
 @wrap_in_class(Agent, transform=lambda d: {"id": d["agent_id"], **d})
-@increase_counter("list_agents")
 @pg_query
 @beartype
 async def list_agents(
@@ -87,7 +83,7 @@ async def list_agents(
 
     # Build metadata filter clause if needed
 
-    final_query = raw_query.format(
+    agent_query = raw_query.format(
         metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else ""
     )
 
@@ -102,4 +98,7 @@ async def list_agents(
     if metadata_filter:
         params.append(metadata_filter)
 
-    return final_query, params
+    return (
+        agent_query,
+        params,
+    )

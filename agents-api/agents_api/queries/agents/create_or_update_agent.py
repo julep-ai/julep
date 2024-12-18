@@ -18,10 +18,8 @@ from ..utils import (
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-raw_query = """
+# Define the raw SQL query
+agent_query = parse_one("""
 INSERT INTO agents (
     developer_id,
     agent_id,
@@ -45,9 +43,7 @@ VALUES (
     $9
 )
 RETURNING *;
-"""
-
-query = parse_one(raw_query).sql(pretty=True)
+""").sql(pretty=True)
 
 
 # @rewrap_exceptions(
@@ -110,4 +106,7 @@ async def create_or_update_agent(
         default_settings,
     ]
 
-    return (query, params)
+    return (
+        agent_query,
+        params,
+    )

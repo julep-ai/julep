@@ -9,7 +9,7 @@ from sqlglot import parse_one
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
 
 # Define the raw SQL query for deleting entries with a developer check
 delete_entry_query = parse_one("""
@@ -57,18 +57,20 @@ SELECT EXISTS (
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: lambda exc: HTTPException(
-            status_code=404,
-            detail="The specified session or developer does not exist.",
-        ),
-        asyncpg.UniqueViolationError: lambda exc: HTTPException(
-            status_code=409,
-            detail="The specified session has already been deleted.",
-        ),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         asyncpg.ForeignKeyViolationError: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="The specified session or developer does not exist.",
+#         ),
+#         asyncpg.UniqueViolationError: partialclass(
+#             HTTPException,
+#             status_code=409,
+#             detail="The specified session has already been deleted.",
+#         ),
+#     }
+# )
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,
@@ -94,18 +96,20 @@ async def delete_entries_for_session(
     ]
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: lambda exc: HTTPException(
-            status_code=404,
-            detail="The specified entries, session, or developer does not exist.",
-        ),
-        asyncpg.UniqueViolationError: lambda exc: HTTPException(
-            status_code=409,
-            detail="One or more specified entries have already been deleted.",
-        ),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         asyncpg.ForeignKeyViolationError: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="The specified entries, session, or developer does not exist.",
+#         ),
+#         asyncpg.UniqueViolationError: partialclass(
+#             HTTPException,
+#             status_code=409,
+#             detail="One or more specified entries have already been deleted.",
+#         ),
+#     }
+# )
 @wrap_in_class(
     ResourceDeletedResponse,
     transform=lambda d: {

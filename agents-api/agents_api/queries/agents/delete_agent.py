@@ -11,17 +11,14 @@ from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-raw_query = """
+# Define the raw SQL query
+agent_query = parse_one("""
 WITH deleted_docs AS (
     DELETE FROM docs
     WHERE developer_id = $1
@@ -41,13 +38,10 @@ WITH deleted_docs AS (
 DELETE FROM agents 
 WHERE agent_id = $2 AND developer_id = $1
 RETURNING developer_id, agent_id;
-"""
+""").sql(pretty=True)
 
 
-# Convert the list of queries into a single query string
-query = parse_one(raw_query).sql(pretty=True)
-
-
+# @rewrap_exceptions(
 # @rewrap_exceptions(
 #     {
 #         psycopg_errors.ForeignKeyViolation: partialclass(
@@ -63,7 +57,6 @@ query = parse_one(raw_query).sql(pretty=True)
     one=True,
     transform=lambda d: {**d, "id": d["agent_id"], "deleted_at": utcnow()},
 )
-@increase_counter("delete_agent")
 @pg_query
 @beartype
 async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
@@ -80,4 +73,7 @@ async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list
     # Note: We swap the parameter order because the queries use $1 for developer_id and $2 for agent_id
     params = [developer_id, agent_id]
 
-    return (query, params)
+    return (
+        agent_query,
+        params,
+    )

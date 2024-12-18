@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import History
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
 
 # Define the raw SQL query for getting history with a developer check
 history_query = parse_one("""
@@ -30,18 +30,20 @@ ORDER BY e.created_at;
 """).sql(pretty=True)
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: lambda exc: HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ),
-        asyncpg.UniqueViolationError: lambda exc: HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         asyncpg.ForeignKeyViolationError: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="Session not found",
+#         ),
+#         asyncpg.UniqueViolationError: partialclass(
+#             HTTPException,
+#             status_code=404,
+#             detail="Session not found",
+#         ),
+#     }
+# )
 @wrap_in_class(
     History,
     one=True,
