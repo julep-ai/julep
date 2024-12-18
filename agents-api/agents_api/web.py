@@ -9,7 +9,7 @@ from typing import Any, Callable, Union, cast
 import sentry_sdk
 import uvicorn
 import uvloop
-from fastapi import APIRouter, Depends, FastAPI, Request, status
+from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

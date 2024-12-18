@@ -1,7 +1,7 @@
 BEGIN;
 
 -- Create chat_role enum
-CREATE TYPE chat_role AS ENUM('user', 'assistant', 'tool', 'system');
+CREATE TYPE chat_role AS ENUM('user', 'assistant', 'tool', 'system', 'developer');
 
 -- Create entries table
 CREATE TABLE IF NOT EXISTS entries (
@@ -84,5 +84,21 @@ AFTER INSERT
 OR
 UPDATE ON entries FOR EACH ROW
 EXECUTE FUNCTION optimized_update_token_count_after ();
+
+-- Add trigger to update parent session's updated_at
+CREATE OR REPLACE FUNCTION update_session_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE sessions
+    SET updated_at = CURRENT_TIMESTAMP
+    WHERE session_id = NEW.session_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_session_updated_at
+AFTER INSERT OR UPDATE ON entries
+FOR EACH ROW
+EXECUTE FUNCTION update_session_updated_at();
 
 COMMIT;
