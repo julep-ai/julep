@@ -63,31 +63,51 @@ BEGIN
     END IF;
 END $$;
 
--- Create the user_docs table
-CREATE TABLE IF NOT EXISTS user_docs (
+-- Create the doc_owners table
+CREATE TABLE IF NOT EXISTS doc_owners (
     developer_id UUID NOT NULL,
-    user_id UUID NOT NULL,
     doc_id UUID NOT NULL,
-    CONSTRAINT pk_user_docs PRIMARY KEY (developer_id, user_id, doc_id),
-    CONSTRAINT fk_user_docs_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
-    CONSTRAINT fk_user_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id)
+    owner_type TEXT NOT NULL,  -- 'user' or 'agent'
+    owner_id UUID NOT NULL,
+    CONSTRAINT pk_doc_owners PRIMARY KEY (developer_id, doc_id),
+    CONSTRAINT fk_doc_owners_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id),
+    CONSTRAINT ct_doc_owners_owner_type CHECK (owner_type IN ('user', 'agent'))
 );
 
--- Create the agent_docs table
-CREATE TABLE IF NOT EXISTS agent_docs (
-    developer_id UUID NOT NULL,
-    agent_id UUID NOT NULL,
-    doc_id UUID NOT NULL,
-    CONSTRAINT pk_agent_docs PRIMARY KEY (developer_id, agent_id, doc_id),
-    CONSTRAINT fk_agent_docs_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
-    CONSTRAINT fk_agent_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id)
-);
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_doc_owners_owner 
+    ON doc_owners (developer_id, owner_type, owner_id);
+
+-- Create function to validate owner reference
+CREATE OR REPLACE FUNCTION validate_doc_owner()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.owner_type = 'user' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM users 
+            WHERE developer_id = NEW.developer_id AND user_id = NEW.owner_id
+        ) THEN
+            RAISE EXCEPTION 'Invalid user reference';
+        END IF;
+    ELSIF NEW.owner_type = 'agent' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM agents 
+            WHERE developer_id = NEW.developer_id AND agent_id = NEW.owner_id
+        ) THEN
+            RAISE EXCEPTION 'Invalid agent reference';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger for validation
+CREATE TRIGGER trg_validate_doc_owner
+BEFORE INSERT OR UPDATE ON doc_owners
+FOR EACH ROW
+EXECUTE FUNCTION validate_doc_owner();
 
 -- Create indexes if not exists
-CREATE INDEX IF NOT EXISTS idx_user_docs_user ON user_docs (developer_id, user_id);
-
-CREATE INDEX IF NOT EXISTS idx_agent_docs_agent ON agent_docs (developer_id, agent_id);
-
 CREATE INDEX IF NOT EXISTS idx_docs_metadata ON docs USING GIN (metadata);
 
 -- Enable necessary PostgreSQL extensions

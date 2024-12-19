@@ -1,41 +1,27 @@
 BEGIN;
 
+-- Drop doc_owners table and its dependencies
+DROP TRIGGER IF EXISTS trg_validate_doc_owner ON doc_owners;
+DROP FUNCTION IF EXISTS validate_doc_owner();
+DROP TABLE IF EXISTS doc_owners;
+
+-- Drop docs table and its dependencies
+DROP TRIGGER IF EXISTS trg_docs_search_tsv ON docs;
+DROP TRIGGER IF EXISTS trg_docs_updated_at ON docs;
+DROP FUNCTION IF EXISTS docs_update_search_tsv();
+
 -- Drop indexes
 DROP INDEX IF EXISTS idx_docs_content_trgm;
-
 DROP INDEX IF EXISTS idx_docs_title_trgm;
-
 DROP INDEX IF EXISTS idx_docs_search_tsv;
-
 DROP INDEX IF EXISTS idx_docs_metadata;
-
-DROP INDEX IF EXISTS idx_agent_docs_agent;
-
-DROP INDEX IF EXISTS idx_user_docs_user;
-
 DROP INDEX IF EXISTS idx_docs_developer;
-
 DROP INDEX IF EXISTS idx_docs_id_sorted;
 
--- Drop triggers
-DROP TRIGGER IF EXISTS trg_docs_search_tsv ON docs;
-
-DROP TRIGGER IF EXISTS trg_docs_updated_at ON docs;
-
--- Drop the constraint that depends on is_valid_language function
-ALTER TABLE IF EXISTS docs
-DROP CONSTRAINT IF EXISTS ct_docs_valid_language;
-
--- Drop functions
-DROP FUNCTION IF EXISTS docs_update_search_tsv ();
-
-DROP FUNCTION IF EXISTS is_valid_language (text);
-
--- Drop tables (in correct order due to foreign key constraints)
-DROP TABLE IF EXISTS agent_docs;
-
-DROP TABLE IF EXISTS user_docs;
-
+-- Drop docs table
 DROP TABLE IF EXISTS docs;
+
+-- Drop language validation function
+DROP FUNCTION IF EXISTS is_valid_language(text);
 
 COMMIT;

@@ -56,30 +56,48 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- Create the user_files table
-CREATE TABLE IF NOT EXISTS user_files (
+-- Create the file_owners table
+CREATE TABLE IF NOT EXISTS file_owners (
     developer_id UUID NOT NULL,
-    user_id UUID NOT NULL,
     file_id UUID NOT NULL,
-    CONSTRAINT pk_user_files PRIMARY KEY (developer_id, user_id, file_id),
-    CONSTRAINT fk_user_files_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
-    CONSTRAINT fk_user_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id)
+    owner_type TEXT NOT NULL,  -- 'user' or 'agent'
+    owner_id UUID NOT NULL,
+    CONSTRAINT pk_file_owners PRIMARY KEY (developer_id, file_id),
+    CONSTRAINT fk_file_owners_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id),
+    CONSTRAINT ct_file_owners_owner_type CHECK (owner_type IN ('user', 'agent'))
 );
 
--- Create index if it doesn't exist
-CREATE INDEX IF NOT EXISTS idx_user_files_user ON user_files (developer_id, user_id);
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_file_owners_owner 
+    ON file_owners (developer_id, owner_type, owner_id);
 
--- Create the agent_files table
-CREATE TABLE IF NOT EXISTS agent_files (
-    developer_id UUID NOT NULL,
-    agent_id UUID NOT NULL,
-    file_id UUID NOT NULL,
-    CONSTRAINT pk_agent_files PRIMARY KEY (developer_id, agent_id, file_id),
-    CONSTRAINT fk_agent_files_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
-    CONSTRAINT fk_agent_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id)
-);
+-- Create function to validate owner reference
+CREATE OR REPLACE FUNCTION validate_file_owner()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.owner_type = 'user' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM users 
+            WHERE developer_id = NEW.developer_id AND user_id = NEW.owner_id
+        ) THEN
+            RAISE EXCEPTION 'Invalid user reference';
+        END IF;
+    ELSIF NEW.owner_type = 'agent' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM agents 
+            WHERE developer_id = NEW.developer_id AND agent_id = NEW.owner_id
+        ) THEN
+            RAISE EXCEPTION 'Invalid agent reference';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- Create index if it doesn't exist
-CREATE INDEX IF NOT EXISTS idx_agent_files_agent ON agent_files (developer_id, agent_id);
+-- Create trigger for validation
+CREATE TRIGGER trg_validate_file_owner
+BEFORE INSERT OR UPDATE ON file_owners
+FOR EACH ROW
+EXECUTE FUNCTION validate_file_owner();
 
 COMMIT;

@@ -7,50 +7,61 @@ from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from ...metrics.counters import increase_counter
 from ..utils import (
-    partialclass,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-raw_query = """
-WITH deleted_docs AS (
+# Define the raw SQL query
+agent_query = parse_one("""
+WITH deleted_file_owners AS (
+    DELETE FROM file_owners
+    WHERE developer_id = $1 
+    AND owner_type = 'agent'
+    AND owner_id = $2
+),
+deleted_doc_owners AS (
+    DELETE FROM doc_owners
+    WHERE developer_id = $1
+    AND owner_type = 'agent'
+    AND owner_id = $2
+),
+deleted_files AS (
+    DELETE FROM files
+    WHERE developer_id = $1
+    AND file_id IN (
+        SELECT file_id FROM file_owners 
+        WHERE developer_id = $1 
+        AND owner_type = 'agent' 
+        AND owner_id = $2
+    )
+),
+deleted_docs AS (
     DELETE FROM docs
     WHERE developer_id = $1
     AND doc_id IN (
-        SELECT ad.doc_id
-        FROM agent_docs ad
-        WHERE ad.agent_id = $2
-        AND ad.developer_id = $1
+        SELECT doc_id FROM doc_owners
+        WHERE developer_id = $1 
+        AND owner_type = 'agent' 
+        AND owner_id = $2
     )
-), deleted_agent_docs AS (
-    DELETE FROM agent_docs
-    WHERE agent_id = $2 AND developer_id = $1
-), deleted_tools AS (
+),
+deleted_tools AS (
     DELETE FROM tools
     WHERE agent_id = $2 AND developer_id = $1
 )
 DELETE FROM agents 
 WHERE agent_id = $2 AND developer_id = $1
 RETURNING developer_id, agent_id;
-"""
+""").sql(pretty=True)
 
 
-# Convert the list of queries into a single query string
-query = parse_one(raw_query).sql(pretty=True)
-
-
+# @rewrap_exceptions(
 # @rewrap_exceptions(
 #     {
 #         psycopg_errors.ForeignKeyViolation: partialclass(
@@ -66,7 +77,6 @@ query = parse_one(raw_query).sql(pretty=True)
     one=True,
     transform=lambda d: {**d, "id": d["agent_id"], "deleted_at": utcnow()},
 )
-@increase_counter("delete_agent")
 @pg_query
 @beartype
 async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
@@ -83,4 +93,7 @@ async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list
     # Note: We swap the parameter order because the queries use $1 for developer_id and $2 for agent_id
     params = [developer_id, agent_id]
 
-    return (query, params)
+    return (
+        agent_query,
+        params,
+    )
