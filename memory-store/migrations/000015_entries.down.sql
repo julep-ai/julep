@@ -14,6 +14,9 @@ DROP INDEX IF EXISTS idx_entries_by_session;
 -- Drop the hypertable (this will also drop the table)
 DROP TABLE IF EXISTS entries;
 
+-- Drop the function
+DROP FUNCTION IF EXISTS all_jsonb_elements_are_objects;
+
 -- Drop the enum type
 DROP TYPE IF EXISTS chat_role;
 

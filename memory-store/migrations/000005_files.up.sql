@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS user_files (
     file_id UUID NOT NULL,
     CONSTRAINT pk_user_files PRIMARY KEY (developer_id, user_id, file_id),
     CONSTRAINT fk_user_files_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
-    CONSTRAINT fk_user_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id)
+    CONSTRAINT fk_user_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id) ON DELETE CASCADE
 );
 
 -- Create index if it doesn't exist
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS agent_files (
     file_id UUID NOT NULL,
     CONSTRAINT pk_agent_files PRIMARY KEY (developer_id, agent_id, file_id),
     CONSTRAINT fk_agent_files_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
-    CONSTRAINT fk_agent_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id)
+    CONSTRAINT fk_agent_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id) ON DELETE CASCADE
 );
 
 -- Create index if it doesn't exist

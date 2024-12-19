@@ -12,22 +12,27 @@ CREATE TABLE IF NOT EXISTS developers (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_developers PRIMARY KEY (developer_id),
-    CONSTRAINT uq_developers_email UNIQUE (email)
+    CONSTRAINT uq_developers_email UNIQUE (email),
+    CONSTRAINT ct_settings_is_object CHECK (jsonb_typeof(settings) = 'object')
 );
 
 -- Create sorted index on developer_id (optimized for UUID v7)
-CREATE INDEX IF NOT EXISTS idx_developers_id_sorted ON developers (developer_id DESC);
+CREATE INDEX IF NOT EXISTS idx_developers_id_sorted ON developers (developer_id DESC) INCLUDE (
+    email,
+    active,
+    tags,
+    settings,
+    created_at,
+    updated_at
+)
+WHERE
+    active = TRUE;
 
 -- Create index on email
 CREATE INDEX IF NOT EXISTS idx_developers_email ON developers (email);
 
 -- Create GIN index for tags array
 CREATE INDEX IF NOT EXISTS idx_developers_tags ON developers USING GIN (tags);
-
--- Create partial index for active developers
-CREATE INDEX IF NOT EXISTS idx_developers_active ON developers (developer_id)
-WHERE
-    active = TRUE;
 
 -- Create trigger to automatically update updated_at
 DO $$ 

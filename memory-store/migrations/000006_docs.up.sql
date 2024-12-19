@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS docs (
     CONSTRAINT ct_docs_embedding_dimensions_positive CHECK (embedding_dimensions > 0),
     CONSTRAINT ct_docs_valid_modality CHECK (modality IN ('text', 'image', 'mixed')),
     CONSTRAINT ct_docs_index_positive CHECK (index >= 0),
-    CONSTRAINT ct_docs_valid_language CHECK (is_valid_language (language))
+    CONSTRAINT ct_docs_valid_language CHECK (is_valid_language (language)),
+    CONSTRAINT ct_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object')
 );
 
 -- Create sorted index on doc_id if not exists
@@ -70,7 +71,7 @@ CREATE TABLE IF NOT EXISTS user_docs (
     doc_id UUID NOT NULL,
     CONSTRAINT pk_user_docs PRIMARY KEY (developer_id, user_id, doc_id),
     CONSTRAINT fk_user_docs_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
-    CONSTRAINT fk_user_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id)
+    CONSTRAINT fk_user_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id) ON DELETE CASCADE
 );
 
 -- Create the agent_docs table
@@ -80,7 +81,7 @@ CREATE TABLE IF NOT EXISTS agent_docs (
     doc_id UUID NOT NULL,
     CONSTRAINT pk_agent_docs PRIMARY KEY (developer_id, agent_id, doc_id),
     CONSTRAINT fk_agent_docs_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
-    CONSTRAINT fk_agent_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id)
+    CONSTRAINT fk_agent_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id) ON DELETE CASCADE
 );
 
 -- Create indexes if not exists
