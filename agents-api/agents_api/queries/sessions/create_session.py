@@ -8,10 +8,8 @@ from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
     CreateSessionRequest,
-    ResourceCreatedResponse,
     Session,
 )
-from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 

@@ -304,6 +304,7 @@ def get_handler(system: SystemDef) -> Callable:
     from ..models.docs.delete_doc import delete_doc as delete_doc_query
     from ..models.docs.list_docs import list_docs as list_docs_query
     from ..models.session.create_session import create_session as create_session_query
+    from ..models.session.delete_session import delete_session as delete_session_query
     from ..models.session.get_session import get_session as get_session_query
     from ..models.session.list_sessions import list_sessions as list_sessions_query
     from ..models.session.update_session import update_session as update_session_query
