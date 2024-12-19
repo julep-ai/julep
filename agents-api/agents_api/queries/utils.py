@@ -175,9 +175,9 @@ def pg_query(
                             all_results.append(results)
 
                             if method_name == "fetchrow" and (
-                                len(results) == 0 or results.get("bool") is None
+                                len(results) == 0 or results.get("bool", True) is None
                             ):
-                                raise asyncpg.NoDataFoundError
+                                raise asyncpg.NoDataFoundError("No data found")
 
                         end = timeit and time.perf_counter()
 
@@ -231,7 +231,7 @@ def wrap_in_class(
 
         nonlocal transform
         transform = transform or (lambda x: x)
-
+        
         if one:
             assert len(data) == 1, "Expected one result, got none"
             obj: ModelT = cls(**transform(data[0]))
