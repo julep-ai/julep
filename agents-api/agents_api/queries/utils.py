@@ -5,15 +5,27 @@ import re
 import socket
 import time
 from functools import partialmethod, wraps
-from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeVar, cast
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Literal,
+    NotRequired,
+    ParamSpec,
+    Type,
+    TypeVar,
+    cast,
+)
 
 import asyncpg
-import pandas as pd
 from asyncpg import Record
+from beartype import beartype
 from fastapi import HTTPException
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 from ..app import app
+from ..env import query_timeout
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -50,13 +62,72 @@ def partialclass(cls, *args, **kwargs):
     return NewCls
 
 
+class AsyncPGFetchArgs(TypedDict):
+    query: str
+    args: list[Any]
+    timeout: NotRequired[float | None]
+
+
+type SQLQuery = str
+type FetchMethod = Literal["fetch", "fetchmany", "fetchrow"]
+type PGQueryArgs = tuple[SQLQuery, list[Any]] | tuple[SQLQuery, list[Any], FetchMethod]
+type PreparedPGQueryArgs = tuple[FetchMethod, AsyncPGFetchArgs]
+type BatchedPreparedPGQueryArgs = list[PreparedPGQueryArgs]
+
+
+@beartype
+def prepare_pg_query_args(
+    query_args: PGQueryArgs | list[PGQueryArgs],
+) -> BatchedPreparedPGQueryArgs:
+    batch = []
+    query_args = [query_args] if isinstance(query_args, tuple) else query_args
+
+    for query_arg in query_args:
+        match query_arg:
+            case (query, variables) | (query, variables, "fetch"):
+                batch.append(
+                    (
+                        "fetch",
+                        AsyncPGFetchArgs(
+                            query=query, args=variables, timeout=query_timeout
+                        ),
+                    )
+                )
+            case (query, variables, "fetchmany"):
+                batch.append(
+                    (
+                        "fetchmany",
+                        AsyncPGFetchArgs(
+                            query=query, args=[variables], timeout=query_timeout
+                        ),
+                    )
+                )
+            case (query, variables, "fetchrow"):
+                batch.append(
+                    (
+                        "fetchrow",
+                        AsyncPGFetchArgs(
+                            query=query, args=variables, timeout=query_timeout
+                        ),
+                    )
+                )
+            case _:
+                raise ValueError("Invalid query arguments")
+
+    return batch
+
+
+@beartype
 def pg_query(
-    func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
+    func: Callable[P, PGQueryArgs | list[PGQueryArgs]] | None = None,
     debug: bool | None = None,
     only_on_error: bool = False,
     timeit: bool = False,
-):
-    def pg_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
+    return_index: int = -1,
+) -> Callable[..., Callable[P, list[Record]]] | Callable[P, list[Record]]:
+    def pg_query_dec(
+        func: Callable[P, PGQueryArgs | list[PGQueryArgs]],
+    ) -> Callable[..., Callable[P, list[Record]]]:
         """
         Decorator that wraps a function that takes arbitrary arguments, and
         returns a (query string, variables) tuple.
@@ -67,46 +138,47 @@ def pg_query(
 
         from pprint import pprint
 
-        # from tenacity import (
-        #     retry,
-        #     retry_if_exception,
-        #     stop_after_attempt,
-        #     wait_exponential,
-        # )
-
-        # TODO: Remove all tenacity decorators
-        # @retry(
-        #     stop=stop_after_attempt(4),
-        #     wait=wait_exponential(multiplier=1, min=4, max=10),
-        #     # retry=retry_if_exception(is_resource_busy),
-        # )
         @wraps(func)
         async def wrapper(
             *args: P.args,
             connection_pool: asyncpg.Pool | None = None,
             **kwargs: P.kwargs,
         ) -> list[Record]:
-            query, variables = await func(*args, **kwargs)
+            query_args = await func(*args, **kwargs)
+            batch = prepare_pg_query_args(query_args)
 
-            not only_on_error and debug and print(query)
-            not only_on_error and debug and pprint(
-                dict(
-                    variables=variables,
-                )
-            )
+            not only_on_error and debug and pprint(batch)
 
             # Run the query
+            pool = (
+                connection_pool
+                if connection_pool is not None
+                else cast(asyncpg.Pool, app.state.postgres_pool)
+            )
 
             try:
-                pool = (
-                    connection_pool
-                    if connection_pool is not None
-                    else cast(asyncpg.Pool, app.state.postgres_pool)
-                )
                 async with pool.acquire() as conn:
                     async with conn.transaction():
                         start = timeit and time.perf_counter()
-                        results: list[Record] = await conn.fetch(query, *variables)
+                        all_results = []
+
+                        for method_name, payload in batch:
+                            method = getattr(conn, method_name)
+
+                            query = payload["query"]
+                            args = payload["args"]
+                            timeout = payload.get("timeout")
+
+                            results: list[Record] = await method(
+                                query, *args, timeout=timeout
+                            )
+                            all_results.append(results)
+
+                            if method_name == "fetchrow" and (
+                                len(results) == 0 or results.get("bool", True) is None
+                            ):
+                                raise asyncpg.NoDataFoundError("No data found")
+
                         end = timeit and time.perf_counter()
 
                         timeit and print(
@@ -115,8 +187,7 @@ def pg_query(
 
             except Exception as e:
                 if only_on_error and debug:
-                    print(query)
-                    pprint(variables)
+                    pprint(batch)
 
                 debug and print(repr(e))
                 connection_error = isinstance(
@@ -132,13 +203,11 @@ def pg_query(
 
                 raise
 
-            not only_on_error and debug and pprint(
-                dict(
-                    results=[dict(result.items()) for result in results],
-                )
-            )
+            # Return results from specified index
+            results_to_return = all_results[return_index] if all_results else []
+            not only_on_error and debug and pprint(results_to_return)
 
-            return results
+            return results_to_return
 
         # Set the wrapped function as an attribute of the wrapper,
         # forwards the __wrapped__ attribute if it exists.
@@ -156,8 +225,7 @@ def wrap_in_class(
     cls: Type[ModelT] | Callable[..., ModelT],
     one: bool = False,
     transform: Callable[[dict], dict] | None = None,
-    _kind: str | None = None,
-):
+) -> Callable[..., Callable[..., ModelT | list[ModelT]]]:
     def _return_data(rec: list[Record]):
         data = [dict(r.items()) for r in rec]
 
@@ -172,7 +240,9 @@ def wrap_in_class(
         objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
         return objs
 
-    def decorator(func: Callable[P, pd.DataFrame | Awaitable[pd.DataFrame]]):
+    def decorator(
+        func: Callable[P, list[Record] | Awaitable[list[Record]]],
+    ) -> Callable[P, ModelT | list[ModelT]]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
             return _return_data(func(*args, **kwargs))
@@ -199,7 +269,7 @@ def rewrap_exceptions(
         Type[BaseException] | Callable[[BaseException], BaseException],
     ],
     /,
-):
+) -> Callable[..., Callable[P, T | Awaitable[T]]]:
     def _check_error(error):
         nonlocal mapping
 
@@ -219,14 +289,16 @@ def rewrap_exceptions(
 
                 raise new_error from error
 
-    def decorator(func: Callable[P, T | Awaitable[T]]):
+    def decorator(
+        func: Callable[P, T | Awaitable[T]],
+    ) -> Callable[..., Callable[P, T | Awaitable[T]]]:
         @wraps(func)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             try:
                 result: T = await func(*args, **kwargs)
             except BaseException as error:
                 _check_error(error)
-                raise
+                raise error
 
             return result
 
@@ -236,7 +308,7 @@ def rewrap_exceptions(
                 result: T = func(*args, **kwargs)
             except BaseException as error:
                 _check_error(error)
-                raise
+                raise error
 
             return result
 

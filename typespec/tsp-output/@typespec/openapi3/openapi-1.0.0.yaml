@@ -3064,6 +3064,7 @@ components:
         - source
         - tokenizer
         - token_count
+        - model
         - timestamp
       properties:
         role:
@@ -3307,6 +3308,9 @@ components:
         token_count:
           type: integer
           format: uint16
+        model:
+          type: string
+          default: gpt-4o-mini
         tool_calls:
           type: array
           items:
@@ -3757,10 +3761,12 @@ components:
       required:
         - id
         - situation
+        - system_template
         - render_templates
         - token_budget
         - context_overflow
         - auto_run_tools
+        - forward_tool_calls
       properties:
         id:
           $ref: '#/components/schemas/Common.uuid'
@@ -3836,6 +3842,11 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
+        system_template:
+          type: string
+          nullable: true
+          description: System prompt for this session
+          default: null
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -3861,6 +3872,10 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
+          default: false
         recall_options:
           type: object
           allOf:
@@ -3876,10 +3891,12 @@ components:
       type: object
       required:
         - situation
+        - system_template
         - render_templates
         - token_budget
         - context_overflow
         - auto_run_tools
+        - forward_tool_calls
       properties:
         user:
           allOf:
@@ -3953,6 +3970,11 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
+        system_template:
+          type: string
+          nullable: true
+          description: System prompt for this session
+          default: null
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -3977,6 +3999,10 @@ components:
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
+          default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
           default: false
         recall_options:
           type: object
@@ -4092,6 +4118,11 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
+        system_template:
+          type: string
+          nullable: true
+          description: System prompt for this session
+          default: null
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -4116,6 +4147,10 @@ components:
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
+          default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
           default: false
         recall_options:
           type: object
@@ -4185,11 +4220,13 @@ components:
       type: object
       required:
         - situation
+        - system_template
         - summary
         - render_templates
         - token_budget
         - context_overflow
         - auto_run_tools
+        - forward_tool_calls
         - id
         - created_at
         - updated_at
@@ -4250,6 +4287,11 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
+        system_template:
+          type: string
+          nullable: true
+          description: System prompt for this session
+          default: null
         summary:
           type: string
           nullable: true
@@ -4280,6 +4322,10 @@ components:
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
+          default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
           default: false
         recall_options:
           type: object
@@ -4356,10 +4402,12 @@ components:
       type: object
       required:
         - situation
+        - system_template
         - render_templates
         - token_budget
         - context_overflow
         - auto_run_tools
+        - forward_tool_calls
       properties:
         situation:
           type: string
@@ -4417,6 +4465,11 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
+        system_template:
+          type: string
+          nullable: true
+          description: System prompt for this session
+          default: null
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -4441,6 +4494,10 @@ components:
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
+          default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
           default: false
         recall_options:
           type: object

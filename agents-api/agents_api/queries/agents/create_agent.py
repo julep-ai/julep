@@ -3,12 +3,9 @@ This module contains the functionality for creating agents in the PostgreSQL dat
 It includes functions to construct and execute SQL queries for inserting new agent records.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
-from pydantic import ValidationError
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
@@ -16,16 +13,12 @@ from ...autogen.openapi_model import Agent, CreateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
-    partialclass,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-raw_query = """
+# Define the raw SQL query
+agent_query = parse_one("""
 INSERT INTO agents (
     developer_id,
     agent_id,
@@ -49,9 +42,7 @@ VALUES (
     $9
 )
 RETURNING *;
-"""
-
-query = parse_one(raw_query).sql(pretty=True)
+""").sql(pretty=True)
 
 
 # @rewrap_exceptions(
@@ -138,4 +129,7 @@ async def create_agent(
         default_settings,
     ]
 
-    return query, params
+    return (
+        agent_query,
+        params,
+    )

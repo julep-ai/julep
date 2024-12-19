@@ -66,6 +66,8 @@ db_dsn: str = env.str(
     default="postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable",
 )
 
+query_timeout: float = env.float("QUERY_TIMEOUT", default=90.0)
+
 
 # Auth
 # ----

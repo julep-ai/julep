@@ -31,25 +31,29 @@ CREATE INDEX idx_entry_relations_components ON entry_relations (session_id, head
 
 CREATE INDEX idx_entry_relations_leaf ON entry_relations (session_id, relation, is_leaf);
 
-CREATE
-OR REPLACE FUNCTION enforce_leaf_nodes () RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION auto_update_leaf_status() RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.is_leaf THEN
-        -- Ensure no other relations point to this leaf node as a head
-        IF EXISTS (
-            SELECT 1 FROM entry_relations 
-            WHERE tail = NEW.head AND session_id = NEW.session_id
-        ) THEN
-            RAISE EXCEPTION 'Cannot assign relations to a leaf node.';
-        END IF;
-    END IF;
+    -- Set is_leaf = false for any existing rows that will now have this new relation as a child
+    UPDATE entry_relations 
+    SET is_leaf = false
+    WHERE session_id = NEW.session_id 
+    AND tail = NEW.head;
+
+    -- Set is_leaf for the new row based on whether it has any children
+    NEW.is_leaf := NOT EXISTS (
+        SELECT 1 
+        FROM entry_relations 
+        WHERE session_id = NEW.session_id 
+        AND head = NEW.tail
+    );
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_enforce_leaf_nodes BEFORE INSERT
-OR
-UPDATE ON entry_relations FOR EACH ROW
-EXECUTE FUNCTION enforce_leaf_nodes ();
+CREATE TRIGGER trg_auto_update_leaf_status
+BEFORE INSERT OR UPDATE ON entry_relations
+FOR EACH ROW
+EXECUTE FUNCTION auto_update_leaf_status();
 
 COMMIT;

@@ -1,7 +1,7 @@
 BEGIN;
 
 -- Create chat_role enum
-CREATE TYPE chat_role AS ENUM('user', 'assistant', 'tool', 'system');
+CREATE TYPE chat_role AS ENUM('user', 'assistant', 'tool', 'system', 'developer');
 
 -- Create entries table
 CREATE TABLE IF NOT EXISTS entries (
@@ -16,8 +16,9 @@ CREATE TABLE IF NOT EXISTS entries (
     tool_calls JSONB[] NOT NULL DEFAULT '{}',
     model TEXT NOT NULL,
     token_count INTEGER DEFAULT NULL,
+    tokenizer TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp DOUBLE PRECISION NOT NULL,
     CONSTRAINT pk_entries PRIMARY KEY (session_id, entry_id, created_at)
 );
 
@@ -58,10 +59,10 @@ END $$;
 CREATE
 OR REPLACE FUNCTION optimized_update_token_count_after () RETURNS TRIGGER AS $$
 DECLARE
-    token_count INTEGER;
+    calc_token_count INTEGER;
 BEGIN
     -- Compute token_count outside the UPDATE statement for clarity and potential optimization
-    token_count := cardinality(
+    calc_token_count := cardinality(
         ai.openai_tokenize(
             'gpt-4o', -- FIXME: Use `NEW.model`
             array_to_string(NEW.content::TEXT[], ' ')
@@ -69,9 +70,9 @@ BEGIN
     );
 
     -- Perform the update only if token_count differs
-    IF token_count <> NEW.token_count THEN
+    IF calc_token_count <> NEW.token_count THEN
         UPDATE entries
-        SET token_count = token_count
+        SET token_count = calc_token_count
         WHERE entry_id = NEW.entry_id;
     END IF;
 
@@ -84,5 +85,21 @@ AFTER INSERT
 OR
 UPDATE ON entries FOR EACH ROW
 EXECUTE FUNCTION optimized_update_token_count_after ();
+
+-- Add trigger to update parent session's updated_at
+CREATE OR REPLACE FUNCTION update_session_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE sessions
+    SET updated_at = CURRENT_TIMESTAMP
+    WHERE session_id = NEW.session_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_session_updated_at
+AFTER INSERT OR UPDATE ON entries
+FOR EACH ROW
+EXECUTE FUNCTION update_session_updated_at();
 
 COMMIT;

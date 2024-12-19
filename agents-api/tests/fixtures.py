@@ -1,24 +1,15 @@
-import json
 import random
 import string
 import time
 from uuid import UUID
 
-import asyncpg
 from fastapi.testclient import TestClient
-from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
 from ward import fixture
 
 from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
-    CreateDocRequest,
-    CreateExecutionRequest,
-    CreateFileRequest,
     CreateSessionRequest,
-    CreateTaskRequest,
-    CreateToolRequest,
-    CreateTransitionRequest,
     CreateUserRequest,
 )
 from agents_api.clients.pg import create_db_pool
@@ -36,15 +27,13 @@ from agents_api.queries.developers.get_developer import get_developer
 # from agents_api.queries.execution.create_temporal_lookup import create_temporal_lookup
 # from agents_api.queries.files.create_file import create_file
 # from agents_api.queries.files.delete_file import delete_file
-# from agents_api.queries.session.create_session import create_session
-# from agents_api.queries.session.delete_session import delete_session
+from agents_api.queries.sessions.create_session import create_session
+
 # from agents_api.queries.task.create_task import create_task
 # from agents_api.queries.task.delete_task import delete_task
 # from agents_api.queries.tools.create_tools import create_tools
 # from agents_api.queries.tools.delete_tool import delete_tool
 from agents_api.queries.users.create_user import create_user
-
-# from agents_api.queries.users.delete_user import delete_user
 from agents_api.web import app
 
 from .utils import (
@@ -67,11 +56,10 @@ def pg_dsn():
 @fixture(scope="global")
 def test_developer_id():
     if not multi_tenant_mode:
-        yield UUID(int=0)
-        return
+        return UUID(int=0)
 
     developer_id = uuid7()
-    yield developer_id
+    return developer_id
 
 
 # @fixture(scope="global")
@@ -98,8 +86,7 @@ async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
         connection_pool=pool,
     )
 
-    yield developer
-    await pool.close()
+    return developer
 
 
 @fixture(scope="test")
@@ -109,7 +96,7 @@ def patch_embed_acompletion():
         yield embed, acompletion
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 async def test_agent(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
 
@@ -118,18 +105,16 @@ async def test_agent(dsn=pg_dsn, developer=test_developer):
         data=CreateAgentRequest(
             model="gpt-4o-mini",
             name="test agent",
-            canonical_name=f"test_agent_{str(int(time.time()))}",
             about="test agent about",
             metadata={"test": "test"},
         ),
         connection_pool=pool,
     )
 
-    yield agent
-    await pool.close()
+    return agent
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 async def test_user(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
 
@@ -142,8 +127,7 @@ async def test_user(dsn=pg_dsn, developer=test_developer):
         connection_pool=pool,
     )
 
-    yield user
-    await pool.close()
+    return user
 
 
 @fixture(scope="test")
@@ -167,22 +151,27 @@ async def test_new_developer(dsn=pg_dsn, email=random_email):
     return developer
 
 
-# @fixture(scope="global")
-# async def test_session(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     test_user=test_user,
-#     test_agent=test_agent,
-# ):
-#     async with get_pg_client(dsn=dsn) as client:
-#         session = await create_session(
-#             developer_id=developer_id,
-#             data=CreateSessionRequest(
-#                 agent=test_agent.id, user=test_user.id, metadata={"test": "test"}
-#             ),
-#             client=client,
-#         )
-#         yield session
+@fixture(scope="test")
+async def test_session(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    test_user=test_user,
+    test_agent=test_agent,
+):
+    pool = await create_db_pool(dsn=dsn)
+
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=test_agent.id,
+            user=test_user.id,
+            metadata={"test": "test"},
+            system_template="test system template",
+        ),
+        connection_pool=pool,
+    )
+
+    return session
 
 
 # @fixture(scope="global")
@@ -349,38 +338,49 @@ async def test_new_developer(dsn=pg_dsn, email=random_email):
 #         "type": "function",
 #     }
 
-#     async with get_pg_client(dsn=dsn) as client:
-#         [tool, *_] = await create_tools(
+#     [tool, *_] = await create_tools(
+#         developer_id=developer_id,
+#         agent_id=agent.id,
+#         data=[CreateToolRequest(**tool)],
+#         connection_pool=pool,
+#     )
+#     yield tool
+
+#     # Cleanup
+#     try:
+#         await delete_tool(
 #             developer_id=developer_id,
-#             agent_id=agent.id,
-#             data=[CreateToolRequest(**tool)],
-#             client=client,
+#             tool_id=tool.id,
+#             connection_pool=pool,
 #         )
-#         yield tool
+#     finally:
+#         await pool.close()
 
 
-# @fixture(scope="global")
-# def client(dsn=pg_dsn):
-#     client = TestClient(app=app)
-#     client.state.pg_client = get_pg_client(dsn=dsn)
-#     return client
+@fixture(scope="global")
+async def client(dsn=pg_dsn):
+    pool = await create_db_pool(dsn=dsn)
+
+    client = TestClient(app=app)
+    client.state.postgres_pool = pool
+    return client
 
 
-# @fixture(scope="global")
-# def make_request(client=client, developer_id=test_developer_id):
-#     def _make_request(method, url, **kwargs):
-#         headers = kwargs.pop("headers", {})
-#         headers = {
-#             **headers,
-#             api_key_header_name: api_key,
-#         }
+@fixture(scope="global")
+async def make_request(client=client, developer_id=test_developer_id):
+    def _make_request(method, url, **kwargs):
+        headers = kwargs.pop("headers", {})
+        headers = {
+            **headers,
+            api_key_header_name: api_key,
+        }
 
-#         if multi_tenant_mode:
-#             headers["X-Developer-Id"] = str(developer_id)
+        if multi_tenant_mode:
+            headers["X-Developer-Id"] = str(developer_id)
 
-#         return client.request(method, url, headers=headers, **kwargs)
+        return client.request(method, url, headers=headers, **kwargs)
 
-#     return _make_request
+    return _make_request
 
 
 @fixture(scope="global")

@@ -4,14 +4,13 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import CreateOrUpdateUserRequest, User
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-# Optimize the raw query by using COALESCE for metadata to avoid explicit check
-raw_query = """
+# Define the raw SQL query for creating or updating a user
+user_query = parse_one("""
 INSERT INTO users (
     developer_id,
     user_id,
@@ -20,21 +19,18 @@ INSERT INTO users (
     metadata
 )
 VALUES (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5
+    $1, -- developer_id
+    $2, -- user_id
+    $3, -- name
+    $4, -- about
+    $5::jsonb -- metadata
 )
 ON CONFLICT (developer_id, user_id) DO UPDATE SET
     name = EXCLUDED.name,
     about = EXCLUDED.about,
     metadata = EXCLUDED.metadata
 RETURNING *;
-"""
-
-# Add index hint for better performance
-query = parse_one(raw_query).sql(pretty=True)
+""").sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -51,7 +47,14 @@ query = parse_one(raw_query).sql(pretty=True)
         ),
     }
 )
-@wrap_in_class(User, one=True, transform=lambda d: {**d, "id": d["user_id"]})
+@wrap_in_class(
+    User,
+    one=True,
+    transform=lambda d: {
+        **d,
+        "id": d["user_id"],
+    },
+)
 @increase_counter("create_or_update_user")
 @pg_query
 @beartype
@@ -73,14 +76,14 @@ async def create_or_update_user(
         HTTPException: If developer doesn't exist (404) or on unique constraint violation (409)
     """
     params = [
-        developer_id,
-        user_id,
-        data.name,
-        data.about,
-        data.metadata or {},
+        developer_id,  # $1
+        user_id,  # $2
+        data.name,  # $3
+        data.about,  # $4
+        data.metadata or {},  # $5
     ]
 
     return (
-        query,
+        user_query,
         params,
     )
