@@ -3,8 +3,8 @@ This module contains the functionality for retrieving a single file from the Pos
 It constructs and executes SQL queries to fetch file details based on file ID and developer ID.
 """
 
-from uuid import UUID
 from typing import Literal
+from uuid import UUID
 
 import asyncpg
 from beartype import beartype
@@ -44,20 +44,20 @@ LIMIT 1;
 #     }
 # )
 @wrap_in_class(
-    File, 
-    one=True, 
+    File,
+    one=True,
     transform=lambda d: {
         "id": d["file_id"],
         **d,
         "hash": d["hash"].hex(),
         "content": "DUMMY: NEED TO FETCH CONTENT FROM BLOB STORAGE",
-    }
+    },
 )
 @pg_query
 @beartype
 async def get_file(
-    *, 
-    file_id: UUID, 
+    *,
+    file_id: UUID,
     developer_id: UUID,
     owner_type: Literal["user", "agent"] | None = None,
     owner_id: UUID | None = None,

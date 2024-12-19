@@ -11,7 +11,7 @@ from agents_api.queries.files.create_file import create_file
 from agents_api.queries.files.delete_file import delete_file
 from agents_api.queries.files.get_file import get_file
 from agents_api.queries.files.list_files import list_files
-from tests.fixtures import pg_dsn, test_developer, test_file, test_agent, test_user
+from tests.fixtures import pg_dsn, test_agent, test_developer, test_file, test_user
 
 
 @test("query: create file")
@@ -45,7 +45,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         connection_pool=pool,
     )
     assert file.name == "User File"
-    
+
     # Verify file appears in user's files
     files = await list_files(
         developer_id=developer.id,
@@ -59,7 +59,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
 @test("query: create agent file")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
-    
+
     file = await create_file(
         developer_id=developer.id,
         data=CreateFileRequest(
@@ -73,7 +73,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         connection_pool=pool,
     )
     assert file.name == "Agent File"
-    
+
     # Verify file appears in agent's files
     files = await list_files(
         developer_id=developer.id,
@@ -113,7 +113,7 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
 @test("query: list user files")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Create a file owned by the user
     file = await create_file(
         developer_id=developer.id,
@@ -127,7 +127,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         owner_id=user.id,
         connection_pool=pool,
     )
-    
+
     # List user's files
     files = await list_files(
         developer_id=developer.id,
@@ -142,7 +142,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
 @test("query: list agent files")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Create a file owned by the agent
     file = await create_file(
         developer_id=developer.id,
@@ -156,7 +156,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
-    
+
     # List agent's files
     files = await list_files(
         developer_id=developer.id,
@@ -171,7 +171,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 @test("query: delete user file")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Create a file owned by the user
     file = await create_file(
         developer_id=developer.id,
@@ -185,7 +185,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         owner_id=user.id,
         connection_pool=pool,
     )
-    
+
     # Delete the file
     await delete_file(
         developer_id=developer.id,
@@ -194,7 +194,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         owner_id=user.id,
         connection_pool=pool,
     )
-    
+
     # Verify file is no longer in user's files
     files = await list_files(
         developer_id=developer.id,
@@ -208,7 +208,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
 @test("query: delete agent file")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Create a file owned by the agent
     file = await create_file(
         developer_id=developer.id,
@@ -222,7 +222,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
-    
+
     # Delete the file
     await delete_file(
         developer_id=developer.id,
@@ -231,7 +231,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
-    
+
     # Verify file is no longer in agent's files
     files = await list_files(
         developer_id=developer.id,
@@ -251,5 +251,3 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
         file_id=file.id,
         connection_pool=pool,
     )
-
-    

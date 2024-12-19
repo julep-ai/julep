@@ -58,6 +58,7 @@ FROM inserted_owner io
 JOIN files f ON f.file_id = io.file_id;
 """).sql(pretty=True)
 
+
 # Add error handling decorator
 # @rewrap_exceptions(
 #     {
