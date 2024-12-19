@@ -28,12 +28,12 @@ from .routers import (
     agents,
     docs,
     files,
+    healthz,
     internal,
     jobs,
     sessions,
     tasks,
     users,
-    healthz,
 )
 
 if not sentry_dsn:
