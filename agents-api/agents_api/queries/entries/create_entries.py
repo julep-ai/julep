@@ -1,16 +1,14 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateEntryRequest, Entry, Relation
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """
@@ -47,7 +45,6 @@ INSERT INTO entry_relations (
     head,
     relation,
     tail,
-    is_leaf
 ) VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 """
@@ -169,7 +166,6 @@ async def add_entry_relations(
                 item.get("head"),  # $2
                 item.get("relation"),  # $3
                 item.get("tail"),  # $4
-                item.get("is_leaf", False),  # $5
             ]
         )
 

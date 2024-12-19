@@ -29,7 +29,6 @@ from agents_api.queries.sessions import (
 from tests.fixtures import (
     pg_dsn,
     test_agent,
-    test_developer,
     test_developer_id,
     test_session,
     test_user,

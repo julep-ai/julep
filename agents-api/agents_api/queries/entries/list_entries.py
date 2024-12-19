@@ -1,13 +1,12 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Entry
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """

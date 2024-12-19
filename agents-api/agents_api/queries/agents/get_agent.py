@@ -3,7 +3,6 @@ This module contains the functionality for retrieving a single agent from the Po
 It constructs and executes SQL queries to fetch agent details based on agent ID and developer ID.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -12,7 +11,6 @@ from sqlglot import parse_one
 from ...autogen.openapi_model import Agent
 from ..utils import (
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 

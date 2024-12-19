@@ -10,7 +10,7 @@ from ward import raises, test
 from agents_api.autogen.openapi_model import CreateEntryRequest
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.entries import create_entries, list_entries
-from tests.fixtures import pg_dsn, test_developer, test_session  # , test_session
+from tests.fixtures import pg_dsn, test_developer  # , test_session
 
 MODEL = "gpt-4o-mini"
 

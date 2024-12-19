@@ -3,7 +3,6 @@ This module contains the functionality for partially updating an agent in the Po
 It constructs and executes SQL queries to update specific fields of an agent based on agent ID and developer ID.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -13,7 +12,6 @@ from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 

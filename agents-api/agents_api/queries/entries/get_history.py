@@ -1,12 +1,10 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import History
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, wrap_in_class
 
 # Define the raw SQL query for getting history with a developer check
 history_query = parse_one("""
