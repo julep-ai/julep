@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import subprocess
 from contextlib import asynccontextmanager, contextmanager
@@ -7,7 +6,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 from unittest.mock import patch
 
-import asyncpg
 from botocore import exceptions
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse

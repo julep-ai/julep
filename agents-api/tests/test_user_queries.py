@@ -5,7 +5,6 @@ Tests verify the SQL queries without actually executing them against a database.
 
 from uuid import UUID
 
-import asyncpg
 from uuid_extensions import uuid7
 from ward import raises, test
 

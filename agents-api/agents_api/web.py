@@ -9,7 +9,7 @@ from typing import Any, Callable, Union, cast
 import sentry_sdk
 import uvicorn
 import uvloop
-from fastapi import APIRouter, Depends, FastAPI, Request, status
+from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,7 +20,6 @@ from temporalio.service import RPCError
 
 from .app import app
 from .common.exceptions import BaseCommonException
-from .dependencies.auth import get_api_key
 from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
 

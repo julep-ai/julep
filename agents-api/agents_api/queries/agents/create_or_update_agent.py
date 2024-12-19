@@ -3,28 +3,21 @@ This module contains the functionality for creating or updating agents in the Po
 It constructs and executes SQL queries to insert a new agent or update an existing agent's details based on agent ID and developer ID.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
-    partialclass,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-raw_query = """
+# Define the raw SQL query
+agent_query = parse_one("""
 INSERT INTO agents (
     developer_id,
     agent_id,
@@ -48,9 +41,7 @@ VALUES (
     $9
 )
 RETURNING *;
-"""
-
-query = parse_one(raw_query).sql(pretty=True)
+""").sql(pretty=True)
 
 
 # @rewrap_exceptions(
@@ -113,4 +104,7 @@ async def create_or_update_agent(
         default_settings,
     ]
 
-    return (query, params)
+    return (
+        agent_query,
+        params,
+    )
