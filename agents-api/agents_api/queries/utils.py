@@ -170,11 +170,6 @@ def pg_query(
                                 query, *args, timeout=timeout
                             )
 
-                            print("%" * 100)
-                            print(results)
-                            print(*args)
-                            print("%" * 100)
-
                             if method_name == "fetchrow" and (
                                 len(results) == 0 or results.get("bool") is None
                             ):

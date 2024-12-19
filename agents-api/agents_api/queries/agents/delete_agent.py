@@ -19,19 +19,39 @@ from ..utils import (
 
 # Define the raw SQL query
 agent_query = parse_one("""
-WITH deleted_docs AS (
+WITH deleted_file_owners AS (
+    DELETE FROM file_owners
+    WHERE developer_id = $1 
+    AND owner_type = 'agent'
+    AND owner_id = $2
+),
+deleted_doc_owners AS (
+    DELETE FROM doc_owners
+    WHERE developer_id = $1
+    AND owner_type = 'agent'
+    AND owner_id = $2
+),
+deleted_files AS (
+    DELETE FROM files
+    WHERE developer_id = $1
+    AND file_id IN (
+        SELECT file_id FROM file_owners 
+        WHERE developer_id = $1 
+        AND owner_type = 'agent' 
+        AND owner_id = $2
+    )
+),
+deleted_docs AS (
     DELETE FROM docs
     WHERE developer_id = $1
     AND doc_id IN (
-        SELECT ad.doc_id
-        FROM agent_docs ad
-        WHERE ad.agent_id = $2
-        AND ad.developer_id = $1
+        SELECT doc_id FROM doc_owners
+        WHERE developer_id = $1 
+        AND owner_type = 'agent' 
+        AND owner_id = $2
     )
-), deleted_agent_docs AS (
-    DELETE FROM agent_docs
-    WHERE agent_id = $2 AND developer_id = $1
-), deleted_tools AS (
+),
+deleted_tools AS (
     DELETE FROM tools
     WHERE agent_id = $2 AND developer_id = $1
 )
@@ -39,7 +59,6 @@ DELETE FROM agents
 WHERE agent_id = $2 AND developer_id = $1
 RETURNING developer_id, agent_id;
 """).sql(pretty=True)
-
 
 # @rewrap_exceptions(
 # @rewrap_exceptions(

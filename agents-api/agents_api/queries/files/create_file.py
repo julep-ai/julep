@@ -27,7 +27,7 @@ INSERT INTO files (
     description,
     mime_type,
     size,
-    hash,
+    hash
 )
 VALUES (
     $1, -- developer_id
@@ -36,33 +36,27 @@ VALUES (
     $4, -- description
     $5, -- mime_type
     $6, -- size
-    $7, -- hash
+    $7  -- hash
 )
 RETURNING *;
 """).sql(pretty=True)
 
-# Create user file association
-user_file_query = parse_one("""
-INSERT INTO user_files (
-    developer_id,
-    user_id,
-    file_id
+# Replace both user_file and agent_file queries with a single file_owner query
+file_owner_query = parse_one("""
+WITH inserted_owner AS (
+    INSERT INTO file_owners (
+        developer_id,
+        file_id,
+        owner_type,
+        owner_id
+    )
+    VALUES ($1, $2, $3, $4)
+    RETURNING file_id
 )
-VALUES ($1, $2, $3)
-ON CONFLICT (developer_id, user_id, file_id) DO NOTHING;  -- Uses primary key index
+SELECT f.*
+FROM inserted_owner io
+JOIN files f ON f.file_id = io.file_id;
 """).sql(pretty=True)
-
-# Create agent file association
-agent_file_query = parse_one("""
-INSERT INTO agent_files (
-    developer_id,
-    agent_id,
-    file_id
-)
-VALUES ($1, $2, $3)
-ON CONFLICT (developer_id, agent_id, file_id) DO NOTHING;  -- Uses primary key index
-""").sql(pretty=True)
-
 
 # Add error handling decorator
 # @rewrap_exceptions(
@@ -90,6 +84,7 @@ ON CONFLICT (developer_id, agent_id, file_id) DO NOTHING;  -- Uses primary key i
     transform=lambda d: {
         **d,
         "id": d["file_id"],
+        "hash": d["hash"].hex(),
         "content": "DUMMY: NEED TO FETCH CONTENT FROM BLOB STORAGE",
     },
 )
@@ -121,8 +116,8 @@ async def create_file(
 
     # Calculate size and hash
     content_bytes = base64.b64decode(data.content)
-    data.size = len(content_bytes)
-    data.hash = hashlib.sha256(content_bytes).digest()
+    size = len(content_bytes)
+    hash_bytes = hashlib.sha256(content_bytes).digest()
 
     # Base file parameters
     file_params = [
@@ -131,21 +126,18 @@ async def create_file(
         data.name,
         data.description,
         data.mime_type,
-        data.size,
-        data.hash,
+        size,
+        hash_bytes,
     ]
 
     queries = []
 
-    # Create the file
+    # Create the file first
     queries.append((file_query, file_params))
 
-    # Create the association only if both owner_type and owner_id are provided
+    # Then create the association if owner info provided
     if owner_type and owner_id:
-        assoc_params = [developer_id, owner_id, file_id]
-        if owner_type == "user":
-            queries.append((user_file_query, assoc_params))
-        else:  # agent
-            queries.append((agent_file_query, assoc_params))
+        assoc_params = [developer_id, file_id, owner_type, owner_id]
+        queries.append((file_owner_query, assoc_params))
 
     return queries

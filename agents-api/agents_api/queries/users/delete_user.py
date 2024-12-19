@@ -11,14 +11,37 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
 delete_query = parse_one("""
-WITH deleted_data AS (
-    DELETE FROM user_files -- user_files
-    WHERE developer_id = $1 -- developer_id
-    AND user_id = $2 -- user_id
+WITH deleted_file_owners AS (
+    DELETE FROM file_owners
+    WHERE developer_id = $1 
+    AND owner_type = 'user'
+    AND owner_id = $2
+),
+deleted_doc_owners AS (
+    DELETE FROM doc_owners
+    WHERE developer_id = $1
+    AND owner_type = 'user'
+    AND owner_id = $2
+),
+deleted_files AS (
+    DELETE FROM files
+    WHERE developer_id = $1
+    AND file_id IN (
+        SELECT file_id FROM file_owners 
+        WHERE developer_id = $1 
+        AND owner_type = 'user' 
+        AND owner_id = $2
+    )
 ),
 deleted_docs AS (
-    DELETE FROM user_docs 
-    WHERE developer_id = $1 AND user_id = $2
+    DELETE FROM docs
+    WHERE developer_id = $1
+    AND doc_id IN (
+        SELECT doc_id FROM doc_owners
+        WHERE developer_id = $1 
+        AND owner_type = 'user' 
+        AND owner_id = $2
+    )
 )
 DELETE FROM users 
 WHERE developer_id = $1 AND user_id = $2

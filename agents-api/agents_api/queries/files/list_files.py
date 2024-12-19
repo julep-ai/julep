@@ -16,18 +16,10 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list all files for a developer (uses developer_id index)
 developer_files_query = parse_one("""
-SELECT 
-    file_id,
-    developer_id,
-    name,
-    description,
-    mime_type,
-    size,
-    hash,
-    created_at,
-    updated_at
-FROM files
-WHERE developer_id = $1
+SELECT f.*
+FROM files f
+LEFT JOIN file_owners fo ON f.developer_id = fo.developer_id AND f.file_id = fo.file_id
+WHERE f.developer_id = $1
 ORDER BY 
     CASE 
         WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at 
@@ -39,55 +31,20 @@ LIMIT $2
 OFFSET $3;
 """).sql(pretty=True)
 
-# Query to list files for a specific user (uses composite indexes)
-user_files_query = parse_one("""
-SELECT 
-    f.file_id,
-    f.developer_id,
-    f.name,
-    f.description,
-    f.mime_type,
-    f.size,
-    f.hash,
-    f.created_at,
-    f.updated_at
-FROM user_files uf
-JOIN files f USING (developer_id, file_id)
-WHERE uf.developer_id = $1 
-AND uf.user_id = $6
+# Query to list files for a specific owner (uses composite indexes)
+owner_files_query = parse_one("""
+SELECT f.*
+FROM files f
+JOIN file_owners fo ON f.developer_id = fo.developer_id AND f.file_id = fo.file_id
+WHERE fo.developer_id = $1 
+AND fo.owner_id = $6
+AND fo.owner_type = $7
 ORDER BY 
     CASE 
-        WHEN $4 = 'created_at' AND $5 = 'asc' THEN f.created_at 
-        WHEN $4 = 'created_at' AND $5 = 'desc' THEN f.created_at 
-        WHEN $4 = 'updated_at' AND $5 = 'asc' THEN f.updated_at
-        WHEN $4 = 'updated_at' AND $5 = 'desc' THEN f.updated_at
-    END DESC NULLS LAST
-LIMIT $2 
-OFFSET $3;
-""").sql(pretty=True)
-
-# Query to list files for a specific agent (uses composite indexes)
-agent_files_query = parse_one("""
-SELECT 
-    f.file_id,
-    f.developer_id,
-    f.name,
-    f.description,
-    f.mime_type,
-    f.size,
-    f.hash,
-    f.created_at,
-    f.updated_at
-FROM agent_files af
-JOIN files f USING (developer_id, file_id)
-WHERE af.developer_id = $1 
-AND af.agent_id = $6
-ORDER BY 
-    CASE 
-        WHEN $4 = 'created_at' AND $5 = 'asc' THEN f.created_at 
-        WHEN $4 = 'created_at' AND $5 = 'desc' THEN f.created_at 
-        WHEN $4 = 'updated_at' AND $5 = 'asc' THEN f.updated_at
-        WHEN $4 = 'updated_at' AND $5 = 'desc' THEN f.updated_at
+        WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at 
+        WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at 
+        WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at
+        WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at
     END DESC NULLS LAST
 LIMIT $2 
 OFFSET $3;
@@ -96,9 +53,11 @@ OFFSET $3;
 
 @wrap_in_class(
     File,
-    one=True,
+    one=False,
     transform=lambda d: {
         **d,
+        "id": d["file_id"],
+        "hash": d["hash"].hex(),
         "content": "DUMMY: NEED TO FETCH CONTENT FROM BLOB STORAGE",
     },
 )
@@ -155,8 +114,8 @@ async def list_files(
 
     # Choose appropriate query based on owner details
     if owner_id and owner_type:
-        params.append(owner_id)  # Add owner_id as $6
-        query = user_files_query if owner_type == "user" else agent_files_query
+        params.extend([owner_id, owner_type])  # Add owner_id as $6 and owner_type as $7
+        query = owner_files_query  # Use single query with owner_type parameter
     else:
         query = developer_files_query
 
