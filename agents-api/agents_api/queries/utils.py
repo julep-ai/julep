@@ -161,7 +161,7 @@ def pg_query(
                     async with conn.transaction():
                         start = timeit and time.perf_counter()
                         all_results = []
-                        
+
                         for method_name, payload in batch:
                             method = getattr(conn, method_name)
 
@@ -206,7 +206,7 @@ def pg_query(
             # Return results from specified index
             results_to_return = all_results[return_index] if all_results else []
             not only_on_error and debug and pprint(results_to_return)
-            
+
             return results_to_return
 
         # Set the wrapped function as an attribute of the wrapper,

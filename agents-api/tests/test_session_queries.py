@@ -7,15 +7,14 @@ from uuid_extensions import uuid7
 from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
-    Session,
     CreateOrUpdateSessionRequest,
     CreateSessionRequest,
-    UpdateSessionRequest,
     PatchSessionRequest,
+    ResourceCreatedResponse,
     ResourceDeletedResponse,
     ResourceUpdatedResponse,
-    ResourceDeletedResponse,
-    ResourceCreatedResponse,
+    Session,
+    UpdateSessionRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.sessions import (
@@ -170,7 +169,11 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
 
 @test("query: update session sql")
 async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, session=test_session, agent=test_agent, user=test_user
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    session=test_session,
+    agent=test_agent,
+    user=test_user,
 ):
     """Test that an existing session's information can be successfully updated."""
 

@@ -31,6 +31,7 @@ WITH updated_session AS (
 SELECT * FROM updated_session;
 """).sql(pretty=True)
 
+
 @rewrap_exceptions(
     {
         asyncpg.ForeignKeyViolationError: partialclass(
@@ -45,7 +46,11 @@ SELECT * FROM updated_session;
         ),
     }
 )
-@wrap_in_class(ResourceUpdatedResponse, one=True, transform=lambda d: {"id": d["session_id"], "updated_at": d["updated_at"]},)
+@wrap_in_class(
+    ResourceUpdatedResponse,
+    one=True,
+    transform=lambda d: {"id": d["session_id"], "updated_at": d["updated_at"]},
+)
 @increase_counter("patch_session")
 @pg_query
 @beartype

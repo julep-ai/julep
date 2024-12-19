@@ -1,14 +1,18 @@
 from uuid import UUID
-from uuid_extensions import uuid7
 
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
+from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateSessionRequest, Session, ResourceCreatedResponse
-from ...metrics.counters import increase_counter
+from ...autogen.openapi_model import (
+    CreateSessionRequest,
+    ResourceCreatedResponse,
+    Session,
+)
 from ...common.utils.datetime import utcnow
+from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL queries

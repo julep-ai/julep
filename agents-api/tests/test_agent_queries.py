@@ -41,7 +41,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     )
 
 
-
 @test("query: create or update agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully created or updated."""
@@ -59,7 +58,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
         ),
         connection_pool=pool,
     )
-
 
 
 @test("query: update agent sql")
@@ -82,6 +80,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
     assert result is not None
     assert isinstance(result, ResourceUpdatedResponse)
+
 
 @test("query: get agent not exists sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):

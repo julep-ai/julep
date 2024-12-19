@@ -144,7 +144,9 @@ async def create_or_update_session(
     # Prepare lookup parameters
     lookup_params = []
     for participant_type, participant_id in zip(participant_types, participant_ids):
-        lookup_params.append([developer_id, session_id, participant_type, participant_id])
+        lookup_params.append(
+            [developer_id, session_id, participant_type, participant_id]
+        )
 
     return [
         (session_query, session_params, "fetch"),
