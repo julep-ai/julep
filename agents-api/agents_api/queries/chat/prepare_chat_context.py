@@ -2,23 +2,138 @@ from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
-from pydantic import ValidationError
 
 from ...common.protocol.sessions import ChatContext, make_session
-from ..session.prepare_session_data import prepare_session_data
 from ..utils import (
-    cozo_query,
-    fix_uuid_if_present,
-    partialclass,
-    rewrap_exceptions,
-    verify_developer_id_query,
-    verify_developer_owns_resource_query,
+    pg_query,
     wrap_in_class,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
+
+
+query = """
+SELECT * FROM 
+(
+    SELECT jsonb_agg(u) AS users FROM (
+        SELECT 
+            session_lookup.participant_id,
+            users.user_id AS id,
+			users.developer_id,
+			users.name,
+			users.about,
+			users.created_at,
+			users.updated_at,
+			users.metadata
+        FROM session_lookup
+        INNER JOIN users ON session_lookup.participant_id = users.user_id
+        WHERE
+            session_lookup.developer_id = $1 AND
+            session_id = $2 AND
+            session_lookup.participant_type = 'user'
+    ) u
+) AS users,
+(
+    SELECT jsonb_agg(a) AS agents FROM (
+        SELECT 
+            session_lookup.participant_id,
+            agents.agent_id AS id,
+			agents.developer_id,
+			agents.canonical_name,
+			agents.name,
+			agents.about,
+			agents.instructions,
+			agents.model,
+			agents.created_at,
+			agents.updated_at,
+			agents.metadata,
+			agents.default_settings
+        FROM session_lookup
+        INNER JOIN agents ON session_lookup.participant_id = agents.agent_id
+        WHERE
+            session_lookup.developer_id = $1 AND
+            session_id = $2 AND
+            session_lookup.participant_type = 'agent'
+    ) a
+) AS agents,
+(
+	SELECT to_jsonb(s) AS session FROM (
+        SELECT 
+            sessions.session_id AS id,
+			sessions.developer_id,
+			sessions.situation,
+			sessions.system_template,
+			sessions.created_at,
+			sessions.metadata,
+			sessions.render_templates,
+			sessions.token_budget,
+			sessions.context_overflow,
+			sessions.forward_tool_calls,
+			sessions.recall_options
+        FROM sessions
+        WHERE
+            developer_id = $1 AND 
+            session_id = $2
+		LIMIT 1
+    ) s
+) AS session,
+(
+    SELECT jsonb_agg(r) AS toolsets FROM (
+        SELECT 
+            session_lookup.participant_id, 
+            tools.tool_id as id,
+			tools.developer_id,
+			tools.agent_id,
+			tools.task_id,
+			tools.task_version,
+			tools.type,
+			tools.name,
+			tools.description,
+			tools.spec,
+			tools.updated_at,
+			tools.created_at
+        FROM session_lookup
+        INNER JOIN tools ON session_lookup.participant_id = tools.agent_id
+        WHERE
+            session_lookup.developer_id = $1 AND 
+            session_id = $2 AND 
+            session_lookup.participant_type = 'agent'
+    ) r
+) AS toolsets
+"""
+
+
+def _transform(d):
+    toolsets = {}
+    for tool in d["toolsets"]:
+        agent_id = tool["agent_id"]
+        if agent_id in toolsets:
+            toolsets[agent_id].append(tool)
+        else:
+            toolsets[agent_id] = [tool]
+
+    return {
+        **d,
+        "session": make_session(
+            agents=[a["id"] for a in d["agents"]],
+            users=[u["id"] for u in d["users"]],
+            **d["session"],
+        ),
+        "toolsets": [
+            {
+                "agent_id": agent_id,
+                "tools": [
+                    {
+                        tool["type"]: tool.pop("spec"),
+                        **tool,
+                    }
+                    for tool in tools
+                ],
+            }
+            for agent_id, tools in toolsets.items()
+        ],
+    }
 
 
 # TODO: implement this part
@@ -31,112 +146,20 @@ T = TypeVar("T")
 @wrap_in_class(
     ChatContext,
     one=True,
-    transform=lambda d: {
-        **d,
-        "session": make_session(
-            agents=[a["id"] for a in d["agents"]],
-            users=[u["id"] for u in d["users"]],
-            **d["session"],
-        ),
-        "toolsets": [
-            {
-                **ts,
-                "tools": [
-                    {
-                        tool["type"]: tool.pop("spec"),
-                        **tool,
-                    }
-                    for tool in map(fix_uuid_if_present, ts["tools"])
-                ],
-            }
-            for ts in d["toolsets"]
-        ],
-    },
+    transform=_transform,
 )
-@cozo_query
+@pg_query
 @beartype
-def prepare_chat_context(
+async def prepare_chat_context(
     *,
     developer_id: UUID,
     session_id: UUID,
-) -> tuple[list[str], dict]:
+) -> tuple[list[str], list]:
     """
     Executes a complex query to retrieve memory context based on session ID.
     """
 
-    [*_, session_data_query], sd_vars = prepare_session_data.__wrapped__(
-        developer_id=developer_id, session_id=session_id
-    )
-
-    session_data_fields = ("session", "agents", "users")
-
-    session_data_query += """
-        :create _session_data_json {
-            agents: [Json],
-            users: [Json],
-            session: Json,
-        }
-    """
-
-    toolsets_query = """
-    input[session_id] <- [[to_uuid($session_id)]]
-
-    tools_by_agent[agent_id, collect(tool)] :=
-        input[session_id],
-        *session_lookup{
-            session_id,
-            participant_id: agent_id,
-            participant_type: "agent",
-        },
-
-        *tools { agent_id, tool_id, name, type, spec, description, updated_at, created_at },
-        tool = {
-            "id": tool_id,
-            "name": name,
-            "type": type,
-            "spec": spec,
-            "description": description,
-            "updated_at": updated_at,
-            "created_at": created_at,
-        }
-
-    agent_toolsets[collect(toolset)] :=
-        tools_by_agent[agent_id, tools],
-        toolset = {
-            "agent_id": agent_id,
-            "tools": tools,
-        }
-
-    ?[toolsets] :=
-        agent_toolsets[toolsets]
-
-    :create _toolsets_json {
-        toolsets: [Json],
-    }
-    """
-
-    combine_query = f"""
-        ?[{', '.join(session_data_fields)}, toolsets] :=
-            *_session_data_json {{ {', '.join(session_data_fields)} }},
-            *_toolsets_json {{ toolsets }}
-
-        :limit 1
-    """
-
-    queries = [
-        verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(
-            developer_id, "sessions", session_id=session_id
-        ),
-        session_data_query,
-        toolsets_query,
-        combine_query,
-    ]
-
     return (
-        queries,
-        {
-            "session_id": str(session_id),
-            **sd_vars,
-        },
+        [query],
+        [developer_id, session_id],
     )
