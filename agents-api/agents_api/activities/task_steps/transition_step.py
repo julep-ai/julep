@@ -8,7 +8,6 @@ from temporalio import activity
 from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...clients.temporal import get_workflow_handle
 from ...common.protocol.tasks import ExecutionInput, StepContext
-from ...common.storage_handler import load_from_blob_store_if_remote
 from ...env import (
     temporal_activity_after_retry_timeout,
     testing,
@@ -47,11 +46,6 @@ async def transition_step(
         await wf_handle.signal(
             TaskExecutionWorkflow.set_last_error, LastErrorInput(last_error=None)
         )
-
-    # Load output from blob store if it is a remote object
-    transition_info.output = await load_from_blob_store_if_remote(
-        transition_info.output
-    )
 
     if not isinstance(context.execution_input, ExecutionInput):
         raise TypeError("Expected ExecutionInput type for context.execution_input")

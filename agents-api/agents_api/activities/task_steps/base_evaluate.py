@@ -13,7 +13,6 @@ from simpleeval import NameNotDefined, SimpleEval  # noqa: E402
 from temporalio import activity  # noqa: E402
 from thefuzz import fuzz  # noqa: E402
 
-from ...common.storage_handler import auto_blob_store  # noqa: E402
 from ...env import testing  # noqa: E402
 from ..utils import get_evaluator  # noqa: E402
 
@@ -63,7 +62,6 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
         raise ValueError(f"Invalid expression: {expr}")
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def base_evaluate(
     exprs: Any,
