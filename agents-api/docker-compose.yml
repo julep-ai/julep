@@ -21,6 +21,14 @@ x--shared-environment: &shared-environment
   TEMPORAL_TASK_QUEUE: ${TEMPORAL_TASK_QUEUE:-julep-task-queue}
   TEMPORAL_WORKER_URL: ${TEMPORAL_WORKER_URL:-temporal:7233}
   TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT: ${TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT:-3600}
+  TEMPORAL_METRICS_BIND_HOST: ${TEMPORAL_METRICS_BIND_HOST:-0.0.0.0}
+  TEMPORAL_METRICS_BIND_PORT: ${TEMPORAL_METRICS_BIND_PORT:-14000}
+  TEMPORAL_HEARTBEAT_TIMEOUT: ${TEMPORAL_HEARTBEAT_TIMEOUT:-900}
+  TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT: ${TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT:-30}
+  TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS: ${TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS}
+  TEMPORAL_MAX_CONCURRENT_ACTIVITIES: ${TEMPORAL_MAX_CONCURRENT_ACTIVITIES:-100}
+  TEMPORAL_MAX_ACTIVITIES_PER_SECOND: ${TEMPORAL_MAX_ACTIVITIES_PER_SECOND}
+  TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND: ${TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND}
   TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}
   WORKER_URL: ${WORKER_URL:-temporal:7233}
   USE_BLOB_STORE_FOR_TEMPORAL: ${USE_BLOB_STORE_FOR_TEMPORAL:-false}
@@ -32,6 +40,7 @@ x--shared-environment: &shared-environment
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
   MAX_FREE_SESSIONS: ${MAX_FREE_SESSIONS:-50}
   MAX_FREE_EXECUTIONS: ${MAX_FREE_EXECUTIONS:-50}
+  SENTRY_DSN: ${SENTRY_DSN}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}
@@ -62,7 +71,7 @@ x--base-agents-api: &base-agents-api
         ignore:
           - ./gunicorn_conf.pyc
       - action: rebuild
-        path: poetry.lock
+        path: uv.lock
       - action: rebuild
         path: Dockerfile
 
@@ -99,7 +108,7 @@ services:
           ignore:
             - ./**/*.pyc
         - action: rebuild
-          path: poetry.lock
+          path: uv.lock
         - action: rebuild
           path: Dockerfile.worker
 

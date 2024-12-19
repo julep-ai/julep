@@ -5,8 +5,12 @@ from typing import Any
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-MAX_CONCURRENT_WORKFLOW_TASKS = None  # default None
-MAX_CONCURRENT_ACTIVITIES = 100  # default None
+from ..env import (
+    temporal_max_activities_per_second,
+    temporal_max_concurrent_activities,
+    temporal_max_concurrent_workflow_tasks,
+    temporal_max_task_queue_activities_per_second,
+)
 
 
 def create_worker(client: Client) -> Any:
@@ -69,8 +73,10 @@ def create_worker(client: Client) -> Any:
             load_inputs_remote,
         ],
         interceptors=[CustomInterceptor()],
-        max_concurrent_workflow_tasks=MAX_CONCURRENT_WORKFLOW_TASKS,
-        max_concurrent_activities=MAX_CONCURRENT_ACTIVITIES,
+        max_concurrent_workflow_tasks=temporal_max_concurrent_workflow_tasks,
+        max_concurrent_activities=temporal_max_concurrent_activities,
+        max_activities_per_second=temporal_max_activities_per_second,
+        max_task_queue_activities_per_second=temporal_max_task_queue_activities_per_second,
     )
 
     return worker

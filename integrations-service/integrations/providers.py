@@ -3,7 +3,6 @@ from .autogen.Tools import (
     # Arguments imports
     BraveSearchArguments,
     # Setup imports
-    # Setup imports
     BraveSearchSetup,
     BrowserbaseCompleteSessionArguments,
     BrowserbaseCreateSessionArguments,
@@ -48,7 +47,7 @@ from .models import (
     LlamaParseFetchOutput,
     ProviderInfo,
     RemoteBrowserOutput,
-    SpiderFetchOutput,
+    SpiderOutput,
     WeatherGetOutput,
     WikipediaSearchOutput,
 )
@@ -99,7 +98,25 @@ spider = BaseProvider(
             method="crawl",
             description="Crawl a website and extract data",
             arguments=SpiderFetchArguments,
-            output=SpiderFetchOutput,
+            output=SpiderOutput,
+        ),
+        BaseProviderMethod(
+            method="links",
+            description="Extract all links from the webpage",
+            arguments=SpiderFetchArguments,
+            output=SpiderOutput,
+        ),
+        BaseProviderMethod(
+            method="screenshot",
+            description="Take a screenshot of the webpage",
+            arguments=SpiderFetchArguments,
+            output=SpiderOutput,
+        ),
+        BaseProviderMethod(
+            method="search",
+            description="Search content within the webpage",
+            arguments=SpiderFetchArguments,
+            output=SpiderOutput,
         ),
     ],
     info=ProviderInfo(

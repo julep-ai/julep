@@ -13,15 +13,18 @@ from .mocks.llama_parse import MockLlamaParseClient
 @pytest.fixture(autouse=True)
 def mock_external_services():
     """Automatically mock all external service clients"""
-    with patch("langchain_community.tools.BraveSearch", MockBraveSearchClient), patch(
-        "smtplib.SMTP", MockEmailClient
-    ), patch(
-        "langchain_community.document_loaders.SpiderLoader", MockSpiderClient
-    ), patch(
-        "langchain_community.utilities.OpenWeatherMapAPIWrapper", MockWeatherClient
-    ), patch(
-        "langchain_community.document_loaders.WikipediaLoader", MockWikipediaClient
-    ), patch("llama_parse.LlamaParse", MockLlamaParseClient):
+    with (
+        patch("langchain_community.tools.BraveSearch", MockBraveSearchClient),
+        patch("smtplib.SMTP", MockEmailClient),
+        patch("langchain_community.document_loaders.SpiderLoader", MockSpiderClient),
+        patch(
+            "langchain_community.utilities.OpenWeatherMapAPIWrapper", MockWeatherClient
+        ),
+        patch(
+            "langchain_community.document_loaders.WikipediaLoader", MockWikipediaClient
+        ),
+        patch("llama_parse.LlamaParse", MockLlamaParseClient),
+    ):
         yield
 
 

@@ -90,7 +90,7 @@ def search_docs_by_text(
 
         candidate[doc_id] :=
             input[owner_type, owner_id],
-            *docs {{
+            *docs:owner_id_metadata_doc_id_idx {{
                 owner_type,
                 owner_id,
                 doc_id,
@@ -98,22 +98,22 @@ def search_docs_by_text(
             }}
             {', ' + metadata_filter_str if metadata_filter_str.strip() else ''}
 
-        search_result[
-            doc_id,
-            snippet_data,
-            distance,
-        ] :=
-            candidate[doc_id],
-            ~snippets:lsh {{
-                doc_id,
-                index,
-                content
-                |
-                query: $query,
-                k: {k},
-            }},
-            distance = 10000000,  # Very large distance to depict no valid distance
-            snippet_data = [index, content]
+        # search_result[
+        #     doc_id,
+        #     snippet_data,
+        #     distance,
+        # ] :=
+        #     candidate[doc_id],
+        #     ~snippets:lsh {{
+        #         doc_id,
+        #         index,
+        #         content
+        #         |
+        #         query: $query,
+        #         k: {k},
+        #     }},
+        #     distance = 10000000,  # Very large distance to depict no valid distance
+        #     snippet_data = [index, content]
 
         search_result[
             doc_id,
@@ -145,12 +145,15 @@ def search_docs_by_text(
             metadata,
         ] :=
             candidate[doc_id],
-            *docs {{
+            *docs:owner_id_metadata_doc_id_idx {{
                 owner_type,
                 owner_id,
                 doc_id,
-                title,
                 metadata,
+            }},
+            *docs {{
+                doc_id,
+                title,
             }},
             search_result [
                 doc_id,

@@ -7,7 +7,7 @@ from ...autogen.openapi_model import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
-from ...common.protocol.tasks import StepContext, StepOutcome
+from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import debug
@@ -98,6 +98,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             skip_vars=["developer_id"],
         )
 
+    if not isinstance(context.execution_input, ExecutionInput):
+        raise TypeError("Expected ExecutionInput type for context.execution_input")
+
     # Get settings and run llm
     agent_default_settings: dict = (
         context.execution_input.agent.default_settings.model_dump()
@@ -180,6 +183,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             }
             for message in prompt
         ]
+
+    # Remove None values from passed_settings (avoid overwriting agent's settings)
+    passed_settings = {k: v for k, v in passed_settings.items() if v is not None}
 
     # Use litellm for other models
     completion_data: dict = {

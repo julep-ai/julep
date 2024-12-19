@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateUserRequest
 from ...common.utils.cozo import cozo_process_mutate_data
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics_update
 from ..utils import (
     cozo_query,
     partialclass,
@@ -48,7 +48,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @cozo_query
-@increase_counter("update_user")
+@query_metrics_update("update_user")
 @beartype
 def update_user(
     *, developer_id: UUID, user_id: UUID, data: UpdateUserRequest

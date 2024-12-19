@@ -23,6 +23,7 @@ x--temporal-base: &temporal-base
     - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/temporal-postgres.yaml
     - DB=postgres12
     - LOG_LEVEL=${TEMPORAL_LOG_LEVEL:-info}
+    - PROMETHEUS_ENDPOINT=0.0.0.0:15000
   volumes:
     - ./dynamicconfig:/etc/temporal/config/dynamicconfig
     - ./cert:/cert

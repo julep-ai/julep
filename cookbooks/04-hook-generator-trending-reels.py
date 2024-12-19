@@ -230,18 +230,18 @@ print(doc.id)
 for doc in client.agents.docs.list(agent_id=AGENT_UUID):
     print(doc.content)
 
-#  Defining a Task
+# Task Definition
 import yaml
 task_def = yaml.safe_load(f"""
-name: Trending Reels Hook Generator
+name: Agent Crawler
 
 tools:
 - name: api_tool_call
   type: api_call
   api_call:
     method: GET
-    url: "https://instagram-scraper-api3.p.rapidapi.com/reels_by_keyword"
-    headers:
+    url: "https://instagram-scraper-api2.p.rapidapi.com/v1/hashtag"
+    headers: 
       x-rapidapi-key: "{RAPID_API_KEY}"
       x-rapidapi-host: "{RAPID_API_HOST}"
     follow_redirects: true
@@ -258,29 +258,28 @@ main:
 - tool: api_tool_call
   arguments:
     params:
-      query: "inputs[0].topic"
+      hashtag: "inputs[0].topic"
 
 - evaluate:
-    summary: "list({{
-              'caption': ((clip.get('media') or {{}}).get('caption') or {{}}).get('text') or 'No Caption Available',
-              'code': (clip.get('media') or {{}}).get('code') or 'No Code Available',
-              'media_id': ((clip.get('media') or {{}}).get('caption') or {{}}).get('media_id', 0),
-              'video_duration': (clip.get('media') or {{}}).get('video_duration', 0),
-              'thumbnail_url': (clip.get('media') or {{}}).get('image_versions2', {{}}).get('candidates', [{{}}])[0].get('url') or 'No Thumbnail URL Available',
-              'video_url_360': [video.get('url') for video in (clip.get('media') or {{}}).get('video_versions', [{{}}]) if video.get('width') == 360][0] if [video.get('url') for video in (clip.get('media') or {{}}).get('video_versions', [{{}}]) if video.get('width') == 360] else 'No URL Available',
-              'video_url_720': [video.get('url') for video in (clip.get('media') or {{}}).get('video_versions', [{{}}]) if video.get('width') == 720][0] if [video.get('url') for video in (clip.get('media') or {{}}).get('video_versions', [{{}}]) if video.get('width') == 720] else 'No URL Available',
-              'play_count': (clip.get('media') or {{}}).get('play_count', 0),
-              'like_count': (clip.get('media') or {{}}).get('like_count', 0),
-              'comment_count': (clip.get('media') or {{}}).get('comment_count', 0),
-              'reshare_count': (clip.get('media') or {{}}).get('reshare_count', 0),
-              'has_audio': (clip.get('media') or {{}}).get('has_audio', False),
-              'audio_type': (clip.get('media') or {{}}).get('clips_metadata', {{}}).get('audio_type', 'No Audio Type Available'),
-              'username': (clip.get('media') or {{}}).get('user', {{}}).get('username') or 'No Username Available',
-              'full_name': (clip.get('media') or {{}}).get('user', {{}}).get('full_name') or 'No Full Name Available',
-              'profile_pic_url': (clip.get('media') or {{}}).get('user', {{}}).get('profile_pic_url') or 'No Profile Pic URL Available',
-              'virality_score': (clip.get('media') or {{}}).get('reshare_count', 0) / ((clip.get('media') or {{}}).get('play_count', 1) if (clip.get('media') or {{}}).get('play_count', 0) > 0 else 1),
-              'engagement_score': (clip.get('media') or {{}}).get('like_count', 0) / ((clip.get('media') or {{}}).get('play_count', 1) if (clip.get('media') or {{}}).get('play_count', 0) > 0 else 1)
-              }} for clip in _['json']['data']['reels_serp_modules'][0]['clips'])"
+    summary:  "list({{
+                      'caption': ((response.get('caption') or {{}}).get('text') or 'No Caption Available'),
+                      'code': (response.get('code') or 'No Code Available'),
+                      'play_count': (response.get('play_count') or 0),
+                      'like_count': (response.get('like_count') or 0),
+                      'media_id': ((response.get('caption') or {{}}).get('id') or 0),
+                      'hashtags': ((response.get('caption') or {{}}).get('hashtags') or 'No Hashtag Available'),
+                      'video_duration': (response.get('video_duration') or 0),
+                      'comment_count': (response.get('comment_count') or 0),
+                      'reshare_count': (response.get('reshare_count') or 0),
+                      'has_audio': (response.get('has_audio') or False),
+                      'audio_type': (((response.get('clips_metadata') or {{}}).get('audio_type')) or 'No Audio Type Available'),
+                      'username': (((response.get('user') or {{}}).get('username')) or 'No Username Available'),
+                      'full_name': (((response.get('user') or {{}}).get('full_name')) or 'No Full Name Available'),
+                      'profile_pic_url': (((response.get('user') or {{}}).get('profile_pic_url')) or 'No Profile Pic URL Available'),
+                      'virality_score': (((response.get('reshare_count') or 0) / (response.get('play_count') or 1)) if (response.get('play_count') or 0) > 0 else 0),
+                      'engagement_score': (((response.get('like_count') or 0) / (response.get('play_count') or 1)) if (response.get('play_count') or 0) > 0 else 0),
+                      'video_duration': (response.get('video_duration') or 0)
+                      }} for response in _['json']['data']['items'])" 
 
 - over: _['summary']
   parallelism: 4

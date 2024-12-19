@@ -76,11 +76,29 @@ async def _(
     client=cozo_client,
     developer_id=test_developer_id,
     agent=test_agent,
-    session=test_session,
+    # session=test_session,
     tool=test_tool,
     user=test_user,
     mocks=patch_embed_acompletion,
 ):
+    session = create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test session about",
+            recall_options={
+                "mode": "hybrid",
+                "num_search_messages": 6,
+                "max_query_length": 800,
+                "confidence": 0.6,
+                "alpha": 0.7,
+                "limit": 10,
+                "mmr_strength": 0.5,
+            },
+        ),
+        client=client,
+    )
+
     (embed, _) = mocks
 
     chat_context = prepare_chat_context(
@@ -120,6 +138,14 @@ async def _(
         data=CreateSessionRequest(
             agent=agent.id,
             situation="test session about",
+            recall_options={
+                "mode": "text",
+                "num_search_messages": 10,
+                "max_query_length": 1001,
+                "confidence": 0.6,
+                "limit": 5,
+                "mmr_strength": 0.5,
+            },
         ),
         client=client,
     )

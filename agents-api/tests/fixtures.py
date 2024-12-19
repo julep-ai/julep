@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from cozo_migrate.api import apply, init
 from fastapi.testclient import TestClient
 from pycozo import Client as CozoClient
+from pycozo_async import Client as AsyncCozoClient
 from temporalio.client import WorkflowHandle
 from ward import fixture
 
@@ -60,6 +61,31 @@ def cozo_client(migrations_dir: str = "./migrations"):
 
     init(client)
     apply(client, migrations_dir=migrations_dir, all_=True)
+
+    return client
+
+
+@fixture(scope="global")
+def cozo_clients_with_migrations(sync_client=cozo_client):
+    async_client = AsyncCozoClient()
+    async_client.embedded = sync_client.embedded
+    setattr(app.state, "async_cozo_client", async_client)
+
+    return sync_client, async_client
+
+
+@fixture(scope="global")
+def async_cozo_client(migrations_dir: str = "./migrations"):
+    # Create a new client for each test
+    # and initialize the schema.
+    client = AsyncCozoClient()
+    migrations_client = CozoClient()
+    setattr(migrations_client, "embedded", client.embedded)
+
+    setattr(app.state, "async_cozo_client", client)
+
+    init(migrations_client)
+    apply(migrations_client, migrations_dir=migrations_dir, all_=True)
 
     return client
 

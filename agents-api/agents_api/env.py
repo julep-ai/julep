@@ -29,6 +29,9 @@ api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
 # Tasks
 # -----
 task_max_parallelism: int = env.int("AGENTS_API_TASK_MAX_PARALLELISM", default=100)
+transition_requests_per_minute: int = env.int(
+    "AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE", default=500
+)
 
 
 # Blob Store
@@ -102,6 +105,38 @@ temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 temporal_schedule_to_close_timeout: int = env.int(
     "TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT", default=3600
+)
+temporal_heartbeat_timeout: int = env.int("TEMPORAL_HEARTBEAT_TIMEOUT", default=900)
+temporal_metrics_bind_host: str = env.str(
+    "TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0"
+)
+temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=14000)
+temporal_activity_after_retry_timeout: int = env.int(
+    "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
+)
+
+
+def _parse_optional_int(val: str | None) -> int | None:
+    if not val or val.lower() == "none":
+        return None
+    return int(val)
+
+
+# Temporal worker configuration
+temporal_max_concurrent_workflow_tasks: int | None = _parse_optional_int(
+    env.str("TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS", default=None)
+)
+
+temporal_max_concurrent_activities: int | None = _parse_optional_int(
+    env.str("TEMPORAL_MAX_CONCURRENT_ACTIVITIES", default=None)
+)
+
+temporal_max_activities_per_second: int | None = _parse_optional_int(
+    env.str("TEMPORAL_MAX_ACTIVITIES_PER_SECOND", default=None)
+)
+
+temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
+    env.str("TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND", default=None)
 )
 
 # Consolidate environment variables

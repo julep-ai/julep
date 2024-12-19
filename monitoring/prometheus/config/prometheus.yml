@@ -22,3 +22,5 @@ scrape_configs:
   static_configs:
   - targets:
     - agents-api-multi-tenant:8080
+    - worker:14000
+    - temporal:15000
