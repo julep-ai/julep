@@ -36,8 +36,8 @@ transition_requests_per_minute: int = env.int(
 
 # Blob Store
 # ----------
-use_blob_store_for_temporal: bool = (
-    env.bool("USE_BLOB_STORE_FOR_TEMPORAL", default=False) if not testing else False
+use_blob_store_for_temporal: bool = testing or env.bool(
+    "USE_BLOB_STORE_FOR_TEMPORAL", default=False
 )
 
 blob_store_bucket: str = env.str("BLOB_STORE_BUCKET", default="agents-api")
@@ -65,6 +65,8 @@ db_dsn: str = env.str(
     "DB_DSN",
     default="postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable",
 )
+
+query_timeout: float = env.float("QUERY_TIMEOUT", default=90.0)
 
 
 # Auth

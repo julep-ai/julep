@@ -8,7 +8,6 @@ from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
-from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import debug
 from .base_evaluate import base_evaluate
@@ -62,7 +61,6 @@ EVAL_PROMPT_PREFIX = "$_ "
 
 
 @activity.defn
-@auto_blob_store(deep=True)
 @beartype
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data

@@ -11,7 +11,6 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
-from ...common.storage_handler import auto_blob_store
 
 
 # FIXME: This shouldn't be here.
@@ -47,7 +46,6 @@ def construct_tool_call(
 
 
 @activity.defn
-@auto_blob_store(deep=True)
 @beartype
 async def tool_call_step(context: StepContext) -> StepOutcome:
     assert isinstance(context.current_step, ToolCallStep)

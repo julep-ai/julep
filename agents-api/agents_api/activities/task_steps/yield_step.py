@@ -5,12 +5,10 @@ from temporalio import activity
 
 from ...autogen.openapi_model import TransitionTarget, YieldStep
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
-from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from .base_evaluate import base_evaluate
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def yield_step(context: StepContext) -> StepOutcome:
     try:

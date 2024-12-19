@@ -14,7 +14,6 @@ from pydantic import (
     model_validator,
 )
 
-from ..common.storage_handler import RemoteObject
 from ..common.utils.datetime import utcnow
 from .Agents import *
 from .Chat import *
@@ -358,7 +357,7 @@ assert TransitionType == Transition.model_fields["type"].annotation
 
 
 class SystemDef(SystemDef):
-    arguments: dict[str, Any] | None | RemoteObject = None
+    arguments: dict[str, Any] | None = None
 
 
 class CreateTransitionRequest(Transition):
@@ -400,6 +399,7 @@ class CreateEntryRequest(BaseEntry):
             source=source,
             tokenizer=tokenizer["type"],
             token_count=token_count,
+            model=model,
             **kwargs,
         )
 

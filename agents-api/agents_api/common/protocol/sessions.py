@@ -103,7 +103,7 @@ class ChatContext(SessionData):
 
         return active_toolset.tools
 
-    def get_chat_environment(self) -> dict[str, dict | list[dict]]:
+    def get_chat_environment(self) -> dict[str, dict | list[dict] | None]:
         """
         Get the chat environment from the session data.
         """

@@ -6,12 +6,10 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
-from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import testing
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def log_step(context: StepContext) -> StepOutcome:
     # NOTE: This activity is only for logging, so we just evaluate the expression

@@ -19,16 +19,14 @@ from ..autogen.openapi_model import (
     VectorDocSearchRequest,
 )
 from ..common.protocol.tasks import ExecutionInput, StepContext
-from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
 from ..env import testing
-from ..queries.developer import get_developer
+from ..queries.developers import get_developer
 from .utils import get_handler
 
 # For running synchronous code in the background
 process_pool_executor = ProcessPoolExecutor()
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def execute_system(
     context: StepContext,
@@ -36,9 +34,6 @@ async def execute_system(
 ) -> Any:
     """Execute a system call with the appropriate handler and transformed arguments."""
     arguments: dict[str, Any] = system.arguments or {}
-
-    if set(arguments.keys()) == {"bucket", "key"}:
-        arguments = await load_from_blob_store_if_remote(arguments)
 
     if not isinstance(context.execution_input, ExecutionInput):
         raise TypeError("Expected ExecutionInput type for context.execution_input")

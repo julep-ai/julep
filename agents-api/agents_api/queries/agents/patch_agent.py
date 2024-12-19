@@ -3,27 +3,20 @@ This module contains the functionality for partially updating an agent in the Po
 It constructs and executes SQL queries to update specific fields of an agent based on agent ID and developer ID.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
 from ...metrics.counters import increase_counter
 from ..utils import (
-    partialclass,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-raw_query = """
+# Define the raw SQL query
+agent_query = parse_one("""
 UPDATE agents
 SET 
     name = CASE 
@@ -48,9 +41,7 @@ SET
     END
 WHERE agent_id = $2 AND developer_id = $1
 RETURNING *;
-"""
-
-query = parse_one(raw_query).sql(pretty=True)
+""").sql(pretty=True)
 
 
 # @rewrap_exceptions(
@@ -95,4 +86,7 @@ async def patch_agent(
         data.default_settings.model_dump() if data.default_settings else None,
     ]
 
-    return query, params
+    return (
+        agent_query,
+        params,
+    )

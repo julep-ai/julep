@@ -1,9 +1,8 @@
-import asyncio
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from beartype import beartype
-from temporalio import activity, workflow
+from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
 with workflow.unsafe.imports_passed_through():
@@ -33,8 +32,6 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
-    from ...common.storage_handler import load_from_blob_store_if_remote
-    from .remote import BaseRemoteModel, RemoteObject
 
 # TODO: Maybe we should use a library for this
 
@@ -146,16 +143,16 @@ class ExecutionInput(BaseModel):
     task: TaskSpecDef
     agent: Agent
     agent_tools: list[Tool | CreateToolRequest]
-    arguments: dict[str, Any] | RemoteObject
+    arguments: dict[str, Any]
 
     # Not used at the moment
     user: User | None = None
     session: Session | None = None
 
 
-class StepContext(BaseRemoteModel):
-    execution_input: ExecutionInput | RemoteObject
-    inputs: list[Any] | RemoteObject
+class StepContext(BaseModel):
+    execution_input: ExecutionInput
+    inputs: list[Any]
     cursor: TransitionTarget
 
     @computed_field
@@ -242,17 +239,9 @@ class StepContext(BaseRemoteModel):
 
         return dump | execution_input
 
-    async def prepare_for_step(
-        self, *args, include_remote: bool = True, **kwargs
-    ) -> dict[str, Any]:
+    async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
         inputs = self.inputs
-        if activity.in_activity() and include_remote:
-            await self.load_all()
-            inputs = await asyncio.gather(
-                *[load_from_blob_store_if_remote(input) for input in inputs]
-            )
-            current_input = await load_from_blob_store_if_remote(current_input)
 
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)

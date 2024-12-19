@@ -3,24 +3,19 @@ This module contains the functionality for retrieving a single agent from the Po
 It constructs and executes SQL queries to fetch agent details based on agent ID and developer ID.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import Agent
-from ...metrics.counters import increase_counter
 from ..utils import (
-    partialclass,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 
-raw_query = """
+# Define the raw SQL query
+agent_query = parse_one("""
 SELECT 
     agent_id,
     developer_id,
@@ -37,12 +32,7 @@ FROM
     agents
 WHERE 
     agent_id = $2 AND developer_id = $1;
-"""
-
-query = parse_one(raw_query).sql(pretty=True)
-
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
+""").sql(pretty=True)
 
 
 # @rewrap_exceptions(
@@ -56,7 +46,6 @@ T = TypeVar("T")
 # # TODO: Add more exceptions
 # )
 @wrap_in_class(Agent, one=True, transform=lambda d: {"id": d["agent_id"], **d})
-@increase_counter("get_agent")
 @pg_query
 @beartype
 async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
@@ -71,4 +60,7 @@ async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
         tuple[list[str], dict]: A tuple containing the SQL query and its parameters.
     """
 
-    return (query, [developer_id, agent_id])
+    return (
+        agent_query,
+        [developer_id, agent_id],
+    )
