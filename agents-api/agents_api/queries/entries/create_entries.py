@@ -173,7 +173,7 @@ async def add_entry_relations(
         (
             session_exists_query,
             [session_id, developer_id],
-            "fetch",
+            "fetchrow",
         ),
         (
             entry_relation_query,

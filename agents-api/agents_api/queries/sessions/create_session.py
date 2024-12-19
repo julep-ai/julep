@@ -1,12 +1,14 @@
 from uuid import UUID
+from uuid_extensions import uuid7
 
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
-from ...autogen.openapi_model import CreateSessionRequest, Session
+from ...autogen.openapi_model import CreateSessionRequest, Session, ResourceCreatedResponse
 from ...metrics.counters import increase_counter
+from ...common.utils.datetime import utcnow
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL queries
@@ -63,14 +65,21 @@ VALUES ($1, $2, $3, $4);
         ),
     }
 )
-@wrap_in_class(Session, transform=lambda d: {**d, "id": d["session_id"]})
+@wrap_in_class(
+    Session,
+    one=True,
+    transform=lambda d: {
+        **d,
+        "id": d["session_id"],
+    },
+)
 @increase_counter("create_session")
-@pg_query
+@pg_query(return_index=0)
 @beartype
 async def create_session(
     *,
     developer_id: UUID,
-    session_id: UUID,
+    session_id: UUID | None = None,
     data: CreateSessionRequest,
 ) -> list[tuple[str, list] | tuple[str, list, str]]:
     """
@@ -87,6 +96,7 @@ async def create_session(
     # Handle participants
     users = data.users or ([data.user] if data.user else [])
     agents = data.agents or ([data.agent] if data.agent else [])
+    session_id = session_id or uuid7()
 
     if not agents:
         raise HTTPException(
@@ -123,10 +133,7 @@ async def create_session(
     for ptype, pid in zip(participant_types, participant_ids):
         lookup_params.append([developer_id, session_id, ptype, pid])
 
-    print("*" * 100)
-    print(lookup_params)
-    print("*" * 100)
     return [
-        (session_query, session_params),
+        (session_query, session_params, "fetch"),
         (lookup_query, lookup_params, "fetchmany"),
     ]
