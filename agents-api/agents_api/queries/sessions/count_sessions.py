@@ -1,3 +1,5 @@
+"""This module contains functions for querying session data from the PostgreSQL database."""
+
 from uuid import UUID
 
 import asyncpg
@@ -5,23 +7,14 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
-from ...autogen.openapi_model import User
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
 raw_query = """
-SELECT 
-    user_id as id,
-    developer_id,
-    name,
-    about,
-    metadata,
-    created_at,
-    updated_at
-FROM users
-WHERE developer_id = $1 
-AND user_id = $2;
+SELECT COUNT(session_id) as count
+FROM sessions
+WHERE developer_id = $1;
 """
 
 # Parse and optimize the query
@@ -37,18 +30,20 @@ query = parse_one(raw_query).sql(pretty=True)
         )
     }
 )
-@wrap_in_class(User, one=True)
-@increase_counter("get_user")
+@wrap_in_class(dict, one=True)
+@increase_counter("count_sessions")
 @pg_query
 @beartype
-async def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list]:
+async def count_sessions(
+    *,
+    developer_id: UUID,
+) -> tuple[str, list]:
     """
-    Constructs an optimized SQL query to retrieve a user's details.
-    Uses the primary key index (developer_id, user_id) for efficient lookup.
+    Counts sessions from the PostgreSQL database.
+    Uses the index on developer_id for efficient counting.
 
     Args:
-        developer_id (UUID): The UUID of the developer.
-        user_id (UUID): The UUID of the user to retrieve.
+        developer_id (UUID): The developer's ID to filter sessions by.
 
     Returns:
         tuple[str, list]: SQL query and parameters.
@@ -56,5 +51,5 @@ async def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list]:
 
     return (
         query,
-        [developer_id, user_id],
+        [developer_id],
     )

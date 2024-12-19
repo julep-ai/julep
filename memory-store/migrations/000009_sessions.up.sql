@@ -7,8 +7,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     situation TEXT,
     system_template TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    -- NOTE: Derived from entries
-    -- updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
     render_templates BOOLEAN NOT NULL DEFAULT TRUE,
     token_budget INTEGER,

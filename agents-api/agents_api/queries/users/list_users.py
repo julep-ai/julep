@@ -4,8 +4,6 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
-from sqlglot.optimizer import optimize
 
 from ...autogen.openapi_model import User
 from ...metrics.counters import increase_counter
@@ -36,9 +34,6 @@ ORDER BY
 LIMIT $2 
 OFFSET $3;
 """
-
-# Parse and optimize the query
-# query = parse_one(raw_query).sql(pretty=True)
 
 
 @rewrap_exceptions(
