@@ -13,9 +13,4 @@ from .delete_file import delete_file
 from .get_file import get_file
 from .list_files import list_files
 
-__all__ = [
-    "create_file",
-    "delete_file", 
-    "get_file",
-    "list_files"
-] 
+__all__ = ["create_file", "delete_file", "get_file", "list_files"]

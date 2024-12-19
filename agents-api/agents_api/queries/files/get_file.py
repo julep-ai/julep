@@ -5,13 +5,13 @@ It constructs and executes SQL queries to fetch file details based on file ID an
 
 from uuid import UUID
 
-from beartype import beartype
-from sqlglot import parse_one
-from fastapi import HTTPException
 import asyncpg
+from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import File
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
 file_query = parse_one("""
@@ -30,6 +30,7 @@ WHERE developer_id = $1  -- Order matches composite index (developer_id, file_id
   AND file_id = $2      -- Using both parts of the index
 LIMIT 1;                -- Early termination once found
 """).sql(pretty=True)
+
 
 @rewrap_exceptions(
     {
@@ -66,4 +67,4 @@ async def get_file(*, file_id: UUID, developer_id: UUID) -> tuple[str, list]:
     return (
         file_query,
         [developer_id, file_id],  # Order matches index columns
-    ) 
+    )

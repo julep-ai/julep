@@ -5,13 +5,14 @@ It constructs and executes SQL queries to fetch a list of files based on develop
 
 from typing import Any, Literal
 from uuid import UUID
+
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import File
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list all files for a developer (uses developer_id index)
 developer_files_query = parse_one("""
@@ -92,8 +93,9 @@ LIMIT $2
 OFFSET $3;
 """).sql(pretty=True)
 
+
 @wrap_in_class(
-    File, 
+    File,
     one=True,
     transform=lambda d: {
         **d,
@@ -135,10 +137,10 @@ async def list_files(
     # Validate parameters
     if direction.lower() not in ["asc", "desc"]:
         raise HTTPException(status_code=400, detail="Invalid sort direction")
-    
+
     if limit > 100 or limit < 1:
         raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
-    
+
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
 

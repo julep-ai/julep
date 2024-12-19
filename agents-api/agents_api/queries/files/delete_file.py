@@ -6,15 +6,15 @@ It constructs and executes SQL queries to remove file records and associated dat
 from typing import Literal
 from uuid import UUID
 
-from beartype import beartype
-from sqlglot import parse_one
 import asyncpg
+from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Simple query to delete file (when no associations exist)
 delete_file_query = parse_one("""
@@ -67,7 +67,7 @@ RETURNING file_id;
     ResourceDeletedResponse,
     one=True,
     transform=lambda d: {
-        "id": d["file_id"], 
+        "id": d["file_id"],
         "deleted_at": utcnow(),
         "jobs": [],
     },
@@ -76,15 +76,15 @@ RETURNING file_id;
 @pg_query
 @beartype
 async def delete_file(
-    *, 
-    file_id: UUID, 
+    *,
+    file_id: UUID,
     developer_id: UUID,
     owner_id: UUID | None = None,
     owner_type: Literal["user", "agent"] | None = None,
 ) -> list[tuple[str, list] | tuple[str, list, str]]:
     """
     Deletes a file and/or its association using simple, efficient queries.
-    
+
     If owner details provided:
         1. Deletes the owner's association
         2. Checks for remaining associations
@@ -106,9 +106,13 @@ async def delete_file(
     if owner_id and owner_type:
         # Delete specific association
         assoc_params = [developer_id, file_id, owner_id]
-        assoc_query = delete_user_assoc_query if owner_type == "user" else delete_agent_assoc_query
+        assoc_query = (
+            delete_user_assoc_query
+            if owner_type == "user"
+            else delete_agent_assoc_query
+        )
         queries.append((assoc_query, assoc_params))
-        
+
         # If no associations, delete file
         queries.append((delete_file_query, [developer_id, file_id]))
     else:

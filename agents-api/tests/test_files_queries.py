@@ -1,15 +1,16 @@
 # # Tests for entry queries
 
 
+from fastapi import HTTPException
 from uuid_extensions import uuid7
 from ward import raises, test
-from fastapi import HTTPException
+
 from agents_api.autogen.openapi_model import CreateFileRequest
+from agents_api.clients.pg import create_db_pool
 from agents_api.queries.files.create_file import create_file
 from agents_api.queries.files.delete_file import delete_file
 from agents_api.queries.files.get_file import get_file
 from tests.fixtures import pg_dsn, test_agent, test_developer_id
-from agents_api.clients.pg import create_db_pool
 
 
 @test("query: create file")

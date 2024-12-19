@@ -3,20 +3,20 @@ This module contains the functionality for creating files in the PostgreSQL data
 It includes functions to construct and execute SQL queries for inserting new file records.
 """
 
+import base64
+import hashlib
 from typing import Any, Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
-import asyncpg
-from fastapi import HTTPException
-import base64
-import hashlib
 
 from ...autogen.openapi_model import CreateFileRequest, File
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Create file
 file_query = parse_one("""
@@ -62,6 +62,7 @@ INSERT INTO agent_files (
 VALUES ($1, $2, $3)
 ON CONFLICT (developer_id, agent_id, file_id) DO NOTHING;  -- Uses primary key index
 """).sql(pretty=True)
+
 
 # Add error handling decorator
 # @rewrap_exceptions(
@@ -147,4 +148,4 @@ async def create_file(
         else:  # agent
             queries.append((agent_file_query, assoc_params))
 
-    return queries 
+    return queries
