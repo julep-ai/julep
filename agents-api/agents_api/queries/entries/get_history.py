@@ -1,6 +1,6 @@
-from uuid import UUID
 import json
-from typing import Tuple, List, Any
+from typing import Any, List, Tuple
+from uuid import UUID
 
 import asyncpg
 from beartype import beartype
@@ -8,14 +8,13 @@ from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import History
+from ...common.utils.datetime import utcnow
 from ..utils import (
     partialclass,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
-
-from ...common.utils.datetime import utcnow
 
 # Define the raw SQL query for getting history with a developer check and relations
 history_query = parse_one("""

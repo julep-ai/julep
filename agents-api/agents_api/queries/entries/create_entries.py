@@ -1,18 +1,17 @@
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
+from litellm.utils import _select_tokenizer as select_tokenizer
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateEntryRequest, Entry, Relation
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, wrap_in_class, rewrap_exceptions
-import asyncpg
-from litellm.utils import _select_tokenizer as select_tokenizer
-
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """

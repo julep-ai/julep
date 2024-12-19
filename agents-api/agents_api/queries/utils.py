@@ -231,7 +231,7 @@ def wrap_in_class(
 
         nonlocal transform
         transform = transform or (lambda x: x)
-        
+
         if one:
             assert len(data) == 1, "Expected one result, got none"
             obj: ModelT = cls(**transform(data[0]))

@@ -144,7 +144,7 @@ async def delete_entries(
         (delete_entry_relations_by_ids_query, [session_id, entry_ids], "fetch"),
         (
             delete_entry_by_ids_query,
-            [entry_ids, developer_id, session_id], 
+            [entry_ids, developer_id, session_id],
             "fetch",
         ),
     ]

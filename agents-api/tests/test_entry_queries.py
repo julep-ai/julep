@@ -4,6 +4,7 @@ It verifies the functionality of adding, retrieving, and processing entries as d
 """
 
 from uuid import UUID
+
 from fastapi import HTTPException
 from uuid_extensions import uuid7
 from ward import raises, test
@@ -14,7 +15,12 @@ from agents_api.autogen.openapi_model import (
     History,
 )
 from agents_api.clients.pg import create_db_pool
-from agents_api.queries.entries import create_entries, list_entries, get_history, delete_entries
+from agents_api.queries.entries import (
+    create_entries,
+    delete_entries,
+    get_history,
+    list_entries,
+)
 from tests.fixtures import pg_dsn, test_developer, test_developer_id, test_session
 
 MODEL = "gpt-4o-mini"
@@ -88,7 +94,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         session_id=session.id,
         connection_pool=pool,
     )
-
 
     # Assert that only one entry is retrieved, matching the session_id.
     assert len(result) == 1
