@@ -33,6 +33,7 @@ from .routers import (
     sessions,
     tasks,
     users,
+    healthz,
 )
 
 if not sentry_dsn:
@@ -188,6 +189,7 @@ app.include_router(files.router, dependencies=[Depends(get_api_key)])
 app.include_router(docs.router, dependencies=[Depends(get_api_key)])
 app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
 app.include_router(internal.router)
+app.include_router(healthz.router)
 
 # TODO: CORS should be enabled only for JWT auth
 #
