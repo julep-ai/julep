@@ -48,7 +48,7 @@ async def list_docs(
     """
     Lists docs with optional owner filtering, pagination, and sorting.
 
-    Parameters: 
+    Parameters:
         developer_id (UUID): The ID of the developer.
         owner_id (UUID): The ID of the owner of the documents.
         owner_type (Literal["user", "agent"]): The type of the owner of the documents.
