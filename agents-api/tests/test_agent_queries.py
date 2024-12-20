@@ -143,12 +143,21 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
 
 @test("query: delete agent sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully deleted."""
 
     pool = await create_db_pool(dsn=dsn)
+    create_result = await create_agent(
+        developer_id=developer_id,
+        data=CreateAgentRequest(
+            name="test agent",
+            about="test agent about",
+            model="gpt-4o-mini",
+        ),
+        connection_pool=pool,
+    )
     delete_result = await delete_agent(
-        agent_id=agent.id, developer_id=developer_id, connection_pool=pool
+        agent_id=create_result.id, developer_id=developer_id, connection_pool=pool
     )
 
     assert delete_result is not None
@@ -157,6 +166,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     with raises(Exception):
         await get_agent(
             developer_id=developer_id,
-            agent_id=agent.id,
+            agent_id=create_result.id,
             connection_pool=pool,
         )

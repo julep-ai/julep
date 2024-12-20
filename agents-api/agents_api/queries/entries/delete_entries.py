@@ -1,13 +1,15 @@
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, wrap_in_class
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for deleting entries with a developer check
 delete_entry_query = parse_one("""
@@ -55,20 +57,25 @@ SELECT EXISTS (
 """
 
 
-# @rewrap_exceptions(
-#     {
-#         asyncpg.ForeignKeyViolationError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="The specified session or developer does not exist.",
-#         ),
-#         asyncpg.UniqueViolationError: partialclass(
-#             HTTPException,
-#             status_code=409,
-#             detail="The specified session has already been deleted.",
-#         ),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified session or developer does not exist.",
+        ),
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="The specified session has already been deleted.",
+        ),
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="Session not found",
+        ),
+    }
+)
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,
@@ -85,29 +92,34 @@ async def delete_entries_for_session(
     *,
     developer_id: UUID,
     session_id: UUID,
-) -> list[tuple[str, list, Literal["fetch", "fetchmany"]]]:
+) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
     """Delete all entries for a given session."""
     return [
-        (session_exists_query, [session_id, developer_id], "fetch"),
+        (session_exists_query, [session_id, developer_id], "fetchrow"),
         (delete_entry_relations_query, [session_id], "fetchmany"),
         (delete_entry_query, [session_id, developer_id], "fetchmany"),
     ]
 
 
-# @rewrap_exceptions(
-#     {
-#         asyncpg.ForeignKeyViolationError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="The specified entries, session, or developer does not exist.",
-#         ),
-#         asyncpg.UniqueViolationError: partialclass(
-#             HTTPException,
-#             status_code=409,
-#             detail="One or more specified entries have already been deleted.",
-#         ),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified entries, session, or developer does not exist.",
+        ),
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="One or more specified entries have already been deleted.",
+        ),
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="Session not found",
+        ),
+    }
+)
 @wrap_in_class(
     ResourceDeletedResponse,
     transform=lambda d: {
@@ -121,10 +133,18 @@ async def delete_entries_for_session(
 @beartype
 async def delete_entries(
     *, developer_id: UUID, session_id: UUID, entry_ids: list[UUID]
-) -> list[tuple[str, list, Literal["fetch", "fetchmany"]]]:
+) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
     """Delete specific entries by their IDs."""
     return [
-        (session_exists_query, [session_id, developer_id], "fetch"),
-        (delete_entry_relations_by_ids_query, [session_id, entry_ids], "fetchmany"),
-        (delete_entry_by_ids_query, [entry_ids, developer_id, session_id], "fetchmany"),
+        (
+            session_exists_query,
+            [session_id, developer_id],
+            "fetchrow",
+        ),
+        (delete_entry_relations_by_ids_query, [session_id, entry_ids], "fetch"),
+        (
+            delete_entry_by_ids_query,
+            [entry_ids, developer_id, session_id],
+            "fetch",
+        ),
     ]

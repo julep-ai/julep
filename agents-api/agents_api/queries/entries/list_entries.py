@@ -1,12 +1,13 @@
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Entry
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, wrap_in_class
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """
@@ -34,7 +35,8 @@ SELECT
     e.event_type,
     e.tool_call_id,
     e.tool_calls,
-    e.model
+    e.model,
+    e.tokenizer
 FROM entries e
 JOIN developers d ON d.developer_id = $5
 LEFT JOIN entry_relations er ON er.head = e.entry_id AND er.session_id = e.session_id
@@ -47,30 +49,30 @@ OFFSET $4;
 """
 
 
-# @rewrap_exceptions(
-#     {
-#         asyncpg.ForeignKeyViolationError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="Session not found",
-#         ),
-#         asyncpg.UniqueViolationError: partialclass(
-#             HTTPException,
-#             status_code=409,
-#             detail="Entry already exists",
-#         ),
-#         asyncpg.NotNullViolationError: partialclass(
-#             HTTPException,
-#             status_code=400,
-#             detail="Entry is required",
-#         ),
-#         asyncpg.NoDataFoundError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="Session not found",
-#         ),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="Session not found",
+        ),
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="Entry already exists",
+        ),
+        asyncpg.NotNullViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Entry is required",
+        ),
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="Session not found",
+        ),
+    }
+)
 @wrap_in_class(Entry)
 @increase_counter("list_entries")
 @pg_query
@@ -114,5 +116,6 @@ async def list_entries(
         (
             query,
             entry_params,
+            "fetch",
         ),
     ]
