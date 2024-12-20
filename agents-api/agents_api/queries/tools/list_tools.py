@@ -28,7 +28,7 @@ LIMIT $3 OFFSET $4;
 """)
 
 if not sql_query.is_valid():
-    raise InvalidSQLQuery("get_tool")
+    raise InvalidSQLQuery("list_tools")
 
 
 # @rewrap_exceptions(
@@ -59,7 +59,7 @@ def list_tools(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-) -> tuple[list[str], dict]:
+) -> tuple[list[str], list]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
 
