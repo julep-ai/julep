@@ -1,32 +1,39 @@
 from typing import Any, TypeVar
 from uuid import UUID
 
+import sqlvalidator
 from beartype import beartype
-from fastapi import HTTPException
-from pycozo.client import QueryException
-from pydantic import ValidationError
 
 from ...autogen.openapi_model import Tool
+from ...exceptions import InvalidSQLQuery
 from ..utils import (
-    cozo_query,
-    partialclass,
-    rewrap_exceptions,
-    verify_developer_id_query,
-    verify_developer_owns_resource_query,
+    pg_query,
     wrap_in_class,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+sql_query = sqlvalidator.parse("""
+SELECT * FROM tools
+WHERE
+    developer_id = $1 AND
+    agent_id = $2 AND
+    tool_id = $3
+LIMIT 1
+""")
 
-@rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
-    }
-)
+if not sql_query.is_valid():
+    raise InvalidSQLQuery("get_tool")
+
+
+# @rewrap_exceptions(
+#     {
+#         QueryException: partialclass(HTTPException, status_code=400),
+#         ValidationError: partialclass(HTTPException, status_code=400),
+#         TypeError: partialclass(HTTPException, status_code=400),
+#     }
+# )
 @wrap_in_class(
     Tool,
     transform=lambda d: {
@@ -36,7 +43,7 @@ T = TypeVar("T")
     },
     one=True,
 )
-@cozo_query
+@pg_query
 @beartype
 def get_tool(
     *,
@@ -44,38 +51,15 @@ def get_tool(
     agent_id: UUID,
     tool_id: UUID,
 ) -> tuple[list[str], dict]:
+    developer_id = str(developer_id)
     agent_id = str(agent_id)
     tool_id = str(tool_id)
 
-    get_query = """
-        input[agent_id, tool_id] <- [[to_uuid($agent_id), to_uuid($tool_id)]]
-
-        ?[
+    return (
+        sql_query.format(),
+        [
+            developer_id,
             agent_id,
             tool_id,
-            type,
-            name,
-            spec,
-            updated_at,
-            created_at,
-        ] := input[agent_id, tool_id],
-            *tools {
-                agent_id,
-                tool_id,
-                name,
-                type,
-                spec,
-                updated_at,
-                created_at,
-            }
-
-        :limit 1
-    """
-
-    queries = [
-        verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
-        get_query,
-    ]
-
-    return (queries, {"agent_id": agent_id, "tool_id": tool_id})
+        ],
+    )
