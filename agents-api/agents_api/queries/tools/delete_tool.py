@@ -50,7 +50,7 @@ def delete_tool(
     developer_id: UUID,
     agent_id: UUID,
     tool_id: UUID,
-) -> tuple[list[str], dict]:
+) -> tuple[list[str], list]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
     tool_id = str(tool_id)
