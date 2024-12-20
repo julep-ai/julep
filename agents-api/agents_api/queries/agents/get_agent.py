@@ -7,11 +7,15 @@ from uuid import UUID
 
 from beartype import beartype
 from sqlglot import parse_one
+from fastapi import HTTPException
+import asyncpg
 
 from ...autogen.openapi_model import Agent
 from ..utils import (
     pg_query,
     wrap_in_class,
+    rewrap_exceptions,
+    partialclass,
 )
 
 # Define the raw SQL query
@@ -35,16 +39,20 @@ WHERE
 """).sql(pretty=True)
 
 
-# @rewrap_exceptions(
-# {
-#     psycopg_errors.ForeignKeyViolation: partialclass(
-#         HTTPException,
-#         status_code=404,
-#         detail="The specified developer does not exist.",
-#     )
-# }
-# # TODO: Add more exceptions
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        ),
+        asyncpg.exceptions.DataError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid data provided. Please check the input values.",
+        ),
+    }
+)
 @wrap_in_class(Agent, one=True, transform=lambda d: {"id": d["agent_id"], **d})
 @pg_query
 @beartype

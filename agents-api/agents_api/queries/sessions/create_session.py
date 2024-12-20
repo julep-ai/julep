@@ -58,12 +58,17 @@ VALUES ($1, $2, $3, $4);
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
-            detail="The specified developer or participant does not exist.",
+            detail="The specified developer or session does not exist.",
         ),
         asyncpg.UniqueViolationError: partialclass(
             HTTPException,
             status_code=409,
             detail="A session with this ID already exists.",
+        ),
+        asyncpg.CheckViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid session data provided.",
         ),
     }
 )

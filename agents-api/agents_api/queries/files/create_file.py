@@ -60,25 +60,25 @@ JOIN files f ON f.file_id = io.file_id;
 
 
 # Add error handling decorator
-# @rewrap_exceptions(
-#     {
-#         asyncpg.UniqueViolationError: partialclass(
-#             HTTPException,
-#             status_code=409,
-#             detail="A file with this name already exists for this developer",
-#         ),
-#         asyncpg.NoDataFoundError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="The specified owner does not exist",
-#         ),
-#         asyncpg.ForeignKeyViolationError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="The specified developer does not exist",
-#         ),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="A file with this name already exists for this developer",
+        ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer or owner does not exist",
+        ),
+        asyncpg.CheckViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="File size must be positive and name must be between 1 and 255 characters",
+        ),
+    }
+)
 @wrap_in_class(
     File,
     one=True,

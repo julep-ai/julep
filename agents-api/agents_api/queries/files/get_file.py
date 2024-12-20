@@ -8,9 +8,12 @@ from uuid import UUID
 
 from beartype import beartype
 from sqlglot import parse_one
+import asyncpg
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import File
-from ..utils import pg_query, wrap_in_class
+from ..utils import pg_query, wrap_in_class, rewrap_exceptions, partialclass, partialclass
+
 
 # Define the raw SQL query
 file_query = parse_one("""
@@ -27,20 +30,20 @@ LIMIT 1;
 """).sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         asyncpg.NoDataFoundError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="File not found",
-#         ),
-#         asyncpg.ForeignKeyViolationError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="Developer not found",
-#         ),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="File not found",
+        ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer or owner does not exist",
+        ),
+    }
+)
 @wrap_in_class(
     File,
     one=True,
