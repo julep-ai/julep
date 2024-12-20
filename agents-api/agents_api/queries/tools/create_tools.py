@@ -1,9 +1,9 @@
 """This module contains functions for creating tools in the CozoDB database."""
 
-import sqlvalidator
 from typing import Any, TypeVar
 from uuid import UUID
 
+import sqlvalidator
 from beartype import beartype
 from fastapi import HTTPException
 from pydantic import ValidationError
@@ -12,8 +12,8 @@ from uuid_extensions import uuid7
 from ...autogen.openapi_model import CreateToolRequest, Tool
 from ...metrics.counters import increase_counter
 from ..utils import (
-    pg_query,
     partialclass,
+    pg_query,
     rewrap_exceptions,
     verify_developer_id_query,
     verify_developer_owns_resource_query,
