@@ -3,7 +3,6 @@ This module contains the functionality for fully updating an agent in the Postgr
 It constructs and executes SQL queries to replace an agent's details based on agent ID and developer ID.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -13,7 +12,6 @@ from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 

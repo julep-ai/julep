@@ -3,7 +3,6 @@ This module contains the functionality for creating agents in the PostgreSQL dat
 It includes functions to construct and execute SQL queries for inserting new agent records.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -15,7 +14,6 @@ from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 

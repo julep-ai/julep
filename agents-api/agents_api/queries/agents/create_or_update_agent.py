@@ -3,7 +3,6 @@ This module contains the functionality for creating or updating agents in the Po
 It constructs and executes SQL queries to insert a new agent or update an existing agent's details based on agent ID and developer ID.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -14,7 +13,6 @@ from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 

@@ -3,7 +3,7 @@ This module contains the functionality for listing agents from the PostgreSQL da
 It constructs and executes SQL queries to fetch a list of agents based on developer ID with pagination.
 """
 
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -12,7 +12,6 @@ from fastapi import HTTPException
 from ...autogen.openapi_model import Agent
 from ..utils import (
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 

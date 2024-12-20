@@ -61,11 +61,7 @@ INSERT INTO session_lookup (
     participant_type,
     participant_id
 )
-SELECT 
-    $1 as developer_id,
-    $2 as session_id,
-    unnest($3::participant_type[]) as participant_type,
-    unnest($4::uuid[]) as participant_id;
+VALUES ($1, $2, $3, $4);
 """).sql(pretty=True)
 
 
@@ -83,16 +79,23 @@ SELECT
         ),
     }
 )
-@wrap_in_class(ResourceUpdatedResponse, one=True)
+@wrap_in_class(
+    ResourceUpdatedResponse,
+    one=True,
+    transform=lambda d: {
+        "id": d["session_id"],
+        "updated_at": d["updated_at"],
+    },
+)
 @increase_counter("create_or_update_session")
-@pg_query
+@pg_query(return_index=0)
 @beartype
 async def create_or_update_session(
     *,
     developer_id: UUID,
     session_id: UUID,
     data: CreateOrUpdateSessionRequest,
-) -> list[tuple[str, list]]:
+) -> list[tuple[str, list] | tuple[str, list, str]]:
     """
     Constructs SQL queries to create or update a session and its participant lookups.
 
@@ -139,14 +142,13 @@ async def create_or_update_session(
     ]
 
     # Prepare lookup parameters
-    lookup_params = [
-        developer_id,  # $1
-        session_id,  # $2
-        participant_types,  # $3
-        participant_ids,  # $4
-    ]
+    lookup_params = []
+    for participant_type, participant_id in zip(participant_types, participant_ids):
+        lookup_params.append(
+            [developer_id, session_id, participant_type, participant_id]
+        )
 
     return [
-        (session_query, session_params),
-        (lookup_query, lookup_params),
+        (session_query, session_params, "fetch"),
+        (lookup_query, lookup_params, "fetchmany"),
     ]

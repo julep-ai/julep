@@ -3,7 +3,6 @@ This module contains the functionality for deleting agents from the PostgreSQL d
 It constructs and executes SQL queries to remove agent records and associated data.
 """
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -13,7 +12,6 @@ from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ..utils import (
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 

@@ -27,24 +27,6 @@ WHERE
 RETURNING *;
 """).sql(pretty=True)
 
-lookup_query = parse_one("""
-WITH deleted_lookups AS (
-    DELETE FROM session_lookup
-    WHERE developer_id = $1 AND session_id = $2
-)
-INSERT INTO session_lookup (
-    developer_id,
-    session_id,
-    participant_type,
-    participant_id
-)
-SELECT 
-    $1 as developer_id,
-    $2 as session_id,
-    unnest($3::participant_type[]) as participant_type,
-    unnest($4::uuid[]) as participant_id;
-""").sql(pretty=True)
-
 
 @rewrap_exceptions(
     {
@@ -60,7 +42,14 @@ SELECT
         ),
     }
 )
-@wrap_in_class(ResourceUpdatedResponse, one=True)
+@wrap_in_class(
+    ResourceUpdatedResponse,
+    one=True,
+    transform=lambda d: {
+        "id": d["session_id"],
+        "updated_at": d["updated_at"],
+    },
+)
 @increase_counter("update_session")
 @pg_query
 @beartype
@@ -81,26 +70,6 @@ async def update_session(
     Returns:
         list[tuple[str, list]]: List of SQL queries and their parameters
     """
-    # Handle participants
-    users = data.users or ([data.user] if data.user else [])
-    agents = data.agents or ([data.agent] if data.agent else [])
-
-    if not agents:
-        raise HTTPException(
-            status_code=400,
-            detail="At least one agent must be provided",
-        )
-
-    if data.agent and data.agents:
-        raise HTTPException(
-            status_code=400,
-            detail="Only one of 'agent' or 'agents' should be provided",
-        )
-
-    # Prepare participant arrays for lookup query
-    participant_types = ["user"] * len(users) + ["agent"] * len(agents)
-    participant_ids = [str(u) for u in users] + [str(a) for a in agents]
-
     # Prepare session parameters
     session_params = [
         developer_id,  # $1
@@ -115,15 +84,6 @@ async def update_session(
         data.recall_options or {},  # $10
     ]
 
-    # Prepare lookup parameters
-    lookup_params = [
-        developer_id,  # $1
-        session_id,  # $2
-        participant_types,  # $3
-        participant_ids,  # $4
-    ]
-
     return [
         (session_query, session_params),
-        (lookup_query, lookup_params),
     ]

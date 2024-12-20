@@ -98,7 +98,7 @@ def patch_embed_acompletion():
         yield embed, acompletion
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 async def test_agent(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
 
@@ -107,18 +107,16 @@ async def test_agent(dsn=pg_dsn, developer=test_developer):
         data=CreateAgentRequest(
             model="gpt-4o-mini",
             name="test agent",
-            canonical_name=f"test_agent_{str(int(time.time()))}",
             about="test agent about",
             metadata={"test": "test"},
         ),
         connection_pool=pool,
     )
 
-    yield agent
-    await pool.close()
+    return agent
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 async def test_user(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
 
@@ -172,7 +170,7 @@ async def test_new_developer(dsn=pg_dsn, email=random_email):
     return developer
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 async def test_session(
     dsn=pg_dsn,
     developer_id=test_developer_id,

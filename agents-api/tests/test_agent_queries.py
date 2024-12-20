@@ -41,7 +41,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     )
 
 
-@test("query: create agent with instructions sql")
+@test("query: create or update agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully created or updated."""
 

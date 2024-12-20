@@ -123,6 +123,7 @@ def pg_query(
     debug: bool | None = None,
     only_on_error: bool = False,
     timeit: bool = False,
+    return_index: int = -1,
 ) -> Callable[..., Callable[P, list[Record]]] | Callable[P, list[Record]]:
     def pg_query_dec(
         func: Callable[P, PGQueryArgs | list[PGQueryArgs]],
@@ -159,6 +160,8 @@ def pg_query(
                 async with pool.acquire() as conn:
                     async with conn.transaction():
                         start = timeit and time.perf_counter()
+                        all_results = []
+
                         for method_name, payload in batch:
                             method = getattr(conn, method_name)
 
@@ -169,11 +172,12 @@ def pg_query(
                             results: list[Record] = await method(
                                 query, *args, timeout=timeout
                             )
+                            all_results.append(results)
 
                             if method_name == "fetchrow" and (
-                                len(results) == 0 or results.get("bool") is None
+                                len(results) == 0 or results.get("bool", True) is None
                             ):
-                                raise asyncpg.NoDataFoundError
+                                raise asyncpg.NoDataFoundError("No data found")
 
                         end = timeit and time.perf_counter()
 
@@ -199,9 +203,11 @@ def pg_query(
 
                 raise
 
-            not only_on_error and debug and pprint(results)
+            # Return results from specified index
+            results_to_return = all_results[return_index] if all_results else []
+            not only_on_error and debug and pprint(results_to_return)
 
-            return results
+            return results_to_return
 
         # Set the wrapped function as an attribute of the wrapper,
         # forwards the __wrapped__ attribute if it exists.
