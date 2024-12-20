@@ -1,18 +1,18 @@
 """This module contains functions for creating tools in the CozoDB database."""
 
+import sqlvalidator
 from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from pycozo.client import QueryException
 from pydantic import ValidationError
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateToolRequest, Tool
 from ...metrics.counters import increase_counter
 from ..utils import (
-    cozo_query,
+    pg_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
@@ -24,14 +24,13 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-@rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
-        AssertionError: partialclass(HTTPException, status_code=400),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         ValidationError: partialclass(HTTPException, status_code=400),
+#         TypeError: partialclass(HTTPException, status_code=400),
+#         AssertionError: partialclass(HTTPException, status_code=400),
+#     }
+# )
 @wrap_in_class(
     Tool,
     transform=lambda d: {
@@ -41,7 +40,7 @@ T = TypeVar("T")
     },
     _kind="inserted",
 )
-@cozo_query
+@pg_query
 @increase_counter("create_tools")
 @beartype
 def create_tools(
