@@ -5,9 +5,9 @@ It verifies the functionality of adding, retrieving, and processing entries as d
 
 from uuid import UUID
 
-# from fastapi import HTTPException
-# from uuid_extensions import uuid7
-# from ward import raises, test
+from fastapi import HTTPException
+from uuid_extensions import uuid7
+from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
     CreateEntryRequest,
@@ -23,8 +23,7 @@ from agents_api.queries.entries import (
 )
 from tests.fixtures import pg_dsn, test_developer, test_developer_id, test_session
 
-# MODEL = "gpt-4o-mini"
-
+MODEL = "gpt-4o-mini"
 
 @test("query: create entry no session")
 async def _(dsn=pg_dsn, developer=test_developer):
