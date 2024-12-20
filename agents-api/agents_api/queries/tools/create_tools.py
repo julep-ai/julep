@@ -5,23 +5,50 @@ from uuid import UUID
 
 import sqlvalidator
 from beartype import beartype
-from fastapi import HTTPException
-from pydantic import ValidationError
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateToolRequest, Tool
+from ...exceptions import InvalidSQLQuery
 from ...metrics.counters import increase_counter
 from ..utils import (
-    partialclass,
     pg_query,
-    rewrap_exceptions,
-    verify_developer_id_query,
-    verify_developer_owns_resource_query,
+    # rewrap_exceptions,
     wrap_in_class,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
+
+
+sql_query = sqlvalidator.parse(
+    """INSERT INTO tools
+(
+    developer_id, 
+    agent_id, 
+    tool_id, 
+    type, 
+    name, 
+    spec,
+    description
+)
+SELECT
+	$1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7
+WHERE NOT EXISTS (
+	SELECT null FROM tools 
+	WHERE (agent_id, name) = ($2, $5)
+)
+RETURNING *
+"""
+)
+
+if not sql_query.is_valid():
+    raise InvalidSQLQuery("create_tools")
 
 
 # @rewrap_exceptions(
@@ -48,8 +75,8 @@ def create_tools(
     developer_id: UUID,
     agent_id: UUID,
     data: list[CreateToolRequest],
-    ignore_existing: bool = False,
-) -> tuple[list[str], dict]:
+    ignore_existing: bool = False,  # TODO: what to do with this flag?
+) -> tuple[list[str], list]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
@@ -69,6 +96,7 @@ def create_tools(
 
     tools_data = [
         [
+            developer_id,
             str(agent_id),
             str(uuid7()),
             tool.type,
@@ -79,57 +107,8 @@ def create_tools(
         for tool in data
     ]
 
-    ensure_tool_name_unique_query = """
-        input[agent_id, tool_id, type, name, spec, description] <- $records
-        ?[tool_id] :=
-            input[agent_id, _, type, name, _, _],
-            *tools{
-                agent_id: to_uuid(agent_id),
-                tool_id,
-                type,
-                name,
-                spec,
-                description,
-            }
-
-        :limit 1
-        :assert none
-    """
-
-    # Datalog query for inserting new tool records into the 'tools' relation
-    create_query = """
-        input[agent_id, tool_id, type, name, spec, description] <- $records
-        
-        # Do not add duplicate
-        ?[agent_id, tool_id, type, name, spec, description] :=
-            input[agent_id, tool_id, type, name, spec, description],
-            not *tools{
-                agent_id: to_uuid(agent_id),
-                type,
-                name,
-            }
-
-        :insert tools {
-            agent_id,
-            tool_id,
-            type,
-            name,
-            spec,
-            description,
-        }
-        :returning
-    """
-
-    queries = [
-        verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
-        create_query,
-    ]
-
-    if not ignore_existing:
-        queries.insert(
-            -1,
-            ensure_tool_name_unique_query,
-        )
-
-    return (queries, {"records": tools_data})
+    return (
+        sql_query.format(),
+        tools_data,
+        "fetchmany",
+    )
