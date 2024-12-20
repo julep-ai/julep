@@ -1,6 +1,7 @@
 """
 Timescale-based retrieval of a single doc record.
 """
+
 from typing import Literal
 from uuid import UUID
 
@@ -41,7 +42,7 @@ async def get_doc(
     developer_id: UUID,
     doc_id: UUID,
     owner_type: Literal["user", "agent", "org"] | None = None,
-    owner_id: UUID | None = None
+    owner_id: UUID | None = None,
 ) -> tuple[str, list]:
     """
     Fetch a single doc, optionally constrained to a given owner.

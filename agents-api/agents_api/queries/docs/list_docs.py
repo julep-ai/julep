@@ -1,6 +1,7 @@
 """
 Timescale-based listing of docs with optional owner filter and pagination.
 """
+
 from typing import Literal
 from uuid import UUID
 

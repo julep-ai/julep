@@ -3,7 +3,7 @@ Hybrid doc search that merges text search and embedding search results
 via a simple distribution-based score fusion or direct weighting in Python.
 """
 
-from typing import Literal, List
+from typing import List, Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -11,8 +11,9 @@ from fastapi import HTTPException
 
 from ...autogen.openapi_model import Doc
 from ..utils import run_concurrently
-from .search_docs_by_text import search_docs_by_text
 from .search_docs_by_embedding import search_docs_by_embedding
+from .search_docs_by_text import search_docs_by_text
+
 
 def dbsf_normalize(scores: List[float]) -> List[float]:
     """
@@ -20,18 +21,22 @@ def dbsf_normalize(scores: List[float]) -> List[float]:
     from (mean - 3*stddev) to (mean + 3*stddev) and scale to 0..1
     """
     import statistics
+
     if len(scores) < 2:
         return scores
     m = statistics.mean(scores)
     sd = statistics.pstdev(scores)  # population std
     if sd == 0:
         return scores
-    upper = m + 3*sd
-    lower = m - 3*sd
+    upper = m + 3 * sd
+    lower = m - 3 * sd
+
     def clamp_scale(v):
         c = min(upper, max(lower, v))
         return (c - lower) / (upper - lower)
+
     return [clamp_scale(s) for s in scores]
+
 
 @beartype
 def fuse_results(
@@ -151,6 +156,7 @@ async def search_docs_hybrid(
     # text_results, embed_results = await run_concurrently([task1, task2])
     # Otherwise just do them in parallel with e.g. asyncio.gather:
     from asyncio import gather
+
     text_results, embed_results = await gather(*tasks)
 
     # fuse them

@@ -2,10 +2,10 @@
 Timescale-based doc text search using the `search_tsv` column.
 """
 
-import asyncpg
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one

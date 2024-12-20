@@ -1,6 +1,7 @@
 """
 Timescale-based deletion of a doc record.
 """
+
 from typing import Literal
 from uuid import UUID
 

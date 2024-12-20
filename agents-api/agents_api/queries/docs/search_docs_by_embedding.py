@@ -2,10 +2,10 @@
 Timescale-based doc embedding search using the `embedding` column.
 """
 
-import asyncpg
-from typing import Literal, List
+from typing import List, Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
@@ -31,6 +31,7 @@ WHERE d.developer_id = $1
 ORDER BY d.embedding <-> $3
 LIMIT $2;
 """).sql(pretty=True)
+
 
 @wrap_in_class(
     Doc,
