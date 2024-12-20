@@ -1,3 +1,4 @@
+import ast
 from typing import Literal
 from uuid import UUID
 
@@ -6,9 +7,6 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
-
-import ast
-
 
 from ...autogen.openapi_model import CreateDocRequest, Doc
 from ...metrics.counters import increase_counter
@@ -86,7 +84,9 @@ JOIN docs d ON d.doc_id = io.doc_id;
     transform=lambda d: {
         **d,
         "id": d["doc_id"],
-        "content": ast.literal_eval(d["content"])[0] if len(ast.literal_eval(d["content"])) == 1 else ast.literal_eval(d["content"]),
+        "content": ast.literal_eval(d["content"])[0]
+        if len(ast.literal_eval(d["content"])) == 1
+        else ast.literal_eval(d["content"]),
     },
 )
 @increase_counter("create_doc")

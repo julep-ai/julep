@@ -1,9 +1,9 @@
+import ast
 from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
 from sqlglot import parse_one
-import ast
 
 from ...autogen.openapi_model import Doc
 from ..utils import pg_query, wrap_in_class
@@ -28,7 +28,9 @@ LIMIT 1;
     transform=lambda d: {
         **d,
         "id": d["doc_id"],
-        "content": ast.literal_eval(d["content"])[0] if len(ast.literal_eval(d["content"])) == 1 else ast.literal_eval(d["content"]),
+        "content": ast.literal_eval(d["content"])[0]
+        if len(ast.literal_eval(d["content"])) == 1
+        else ast.literal_eval(d["content"]),
         # "embeddings": d["embeddings"],
     },
 )

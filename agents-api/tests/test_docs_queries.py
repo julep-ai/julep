@@ -11,9 +11,8 @@ from agents_api.queries.docs.list_docs import list_docs
 # from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 # from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 # from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
-
 # You can rename or remove these imports to match your actual fixtures
-from tests.fixtures import pg_dsn, test_agent, test_developer, test_user, test_doc
+from tests.fixtures import pg_dsn, test_agent, test_developer, test_doc, test_user
 
 
 @test("query: create doc")
@@ -29,7 +28,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
         ),
         connection_pool=pool,
     )
-    
+
     assert doc.title == "Hello Doc"
     assert doc.content == "This is sample doc content"
     assert doc.modality == "text"
@@ -37,6 +36,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert doc.embedding_dimensions == 1024
     assert doc.language == "english"
     assert doc.index == 0
+
 
 @test("query: create user doc")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
@@ -64,6 +64,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     )
     assert any(d.id == doc.id for d in docs_list)
 
+
 @test("query: create agent doc")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
@@ -90,6 +91,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     )
     assert any(d.id == doc.id for d in docs_list)
 
+
 @test("model: get doc")
 async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     pool = await create_db_pool(dsn=dsn)
@@ -101,6 +103,7 @@ async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     assert doc_test.id == doc.id
     assert doc_test.title == doc.title
 
+
 @test("query: list docs")
 async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     pool = await create_db_pool(dsn=dsn)
@@ -110,6 +113,7 @@ async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     )
     assert len(docs_list) >= 1
     assert any(d.id == doc.id for d in docs_list)
+
 
 @test("query: list user docs")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
@@ -139,6 +143,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert len(docs_list) >= 1
     assert any(d.id == doc_user.id for d in docs_list)
 
+
 @test("query: list agent docs")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
@@ -166,6 +171,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     )
     assert len(docs_list) >= 1
     assert any(d.id == doc_agent.id for d in docs_list)
+
 
 @test("query: delete user doc")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
@@ -203,6 +209,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     )
     assert not any(d.id == doc_user.id for d in docs_list)
 
+
 @test("query: delete agent doc")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
@@ -238,6 +245,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         connection_pool=pool,
     )
     assert not any(d.id == doc_agent.id for d in docs_list)
+
 
 @test("query: delete doc")
 async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):

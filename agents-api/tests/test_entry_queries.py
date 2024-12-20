@@ -3,7 +3,6 @@ This module contains tests for entry queries against the CozoDB database.
 It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
 """
 
-
 from fastapi import HTTPException
 from uuid_extensions import uuid7
 from ward import raises, test

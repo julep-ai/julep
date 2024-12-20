@@ -9,6 +9,7 @@ from uuid import UUID
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
+
 from ...autogen.openapi_model import File
 from ..utils import pg_query, wrap_in_class
 
