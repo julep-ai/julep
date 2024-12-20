@@ -7,10 +7,8 @@ from typing import List, Literal
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
 
 from ...autogen.openapi_model import Doc
-from ..utils import run_concurrently
 from .search_docs_by_embedding import search_docs_by_embedding
 from .search_docs_by_text import search_docs_by_text
 

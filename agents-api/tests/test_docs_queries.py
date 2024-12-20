@@ -1,163 +1,249 @@
-# # Tests for entry queries
+from ward import test
 
-# import asyncio
+from agents_api.autogen.openapi_model import CreateDocRequest
+from agents_api.clients.pg import create_db_pool
+from agents_api.queries.docs.create_doc import create_doc
+from agents_api.queries.docs.delete_doc import delete_doc
+from agents_api.queries.docs.get_doc import get_doc
+from agents_api.queries.docs.list_docs import list_docs
 
-# from ward import test
-
-# from agents_api.autogen.openapi_model import CreateDocRequest
-# from agents_api.queries.docs.create_doc import create_doc
-# from agents_api.queries.docs.delete_doc import delete_doc
-# from agents_api.queries.docs.embed_snippets import embed_snippets
-# from agents_api.queries.docs.get_doc import get_doc
-# from agents_api.queries.docs.list_docs import list_docs
-# from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
+# If you wish to test text/embedding/hybrid search, import them:
 # from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
-# from tests.fixtures import (
-#     EMBEDDING_SIZE,
-#     cozo_client,
-#     test_agent,
-#     test_developer_id,
-#     test_doc,
-#     test_user,
-# )
+# from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
+# from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
+
+# You can rename or remove these imports to match your actual fixtures
+from tests.fixtures import pg_dsn, test_agent, test_developer, test_user, test_doc
 
 
-# @test("query: create docs")
-# def _(
-#     client=cozo_client, developer_id=test_developer_id, agent=test_agent, user=test_user
-# ):
-#     create_doc(
-#         developer_id=developer_id,
-#         owner_type="agent",
-#         owner_id=agent.id,
-#         data=CreateDocRequest(title="Hello", content=["World"]),
-#         client=client,
-#     )
+@test("query: create doc")
+async def _(dsn=pg_dsn, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+    doc = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Hello Doc",
+            content="This is sample doc content",
+            embed_instruction="Embed the document",
+            metadata={"test": "test"},
+        ),
+        connection_pool=pool,
+    )
+    
+    assert doc.title == "Hello Doc"
+    assert doc.content == "This is sample doc content"
+    assert doc.modality == "text"
+    assert doc.embedding_model == "voyage-3"
+    assert doc.embedding_dimensions == 1024
+    assert doc.language == "english"
+    assert doc.index == 0
 
-#     create_doc(
-#         developer_id=developer_id,
-#         owner_type="user",
-#         owner_id=user.id,
-#         data=CreateDocRequest(title="Hello", content=["World"]),
-#         client=client,
-#     )
+@test("query: create user doc")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+    doc = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="User Doc",
+            content="Docs for user testing",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+    assert doc.title == "User Doc"
 
+    # Verify doc appears in user's docs
+    docs_list = await list_docs(
+        developer_id=developer.id,
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+    assert any(d.id == doc.id for d in docs_list)
 
-# @test("query: get docs")
-# def _(client=cozo_client, doc=test_doc, developer_id=test_developer_id):
-#     get_doc(
-#         developer_id=developer_id,
-#         doc_id=doc.id,
-#         client=client,
-#     )
+@test("query: create agent doc")
+async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+    doc = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Agent Doc",
+            content="Docs for agent testing",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+    assert doc.title == "Agent Doc"
 
+    # Verify doc appears in agent's docs
+    docs_list = await list_docs(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+    assert any(d.id == doc.id for d in docs_list)
 
-# @test("query: delete doc")
-# def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-#     doc = create_doc(
-#         developer_id=developer_id,
-#         owner_type="agent",
-#         owner_id=agent.id,
-#         data=CreateDocRequest(title="Hello", content=["World"]),
-#         client=client,
-#     )
+@test("model: get doc")
+async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
+    pool = await create_db_pool(dsn=dsn)
+    doc_test = await get_doc(
+        developer_id=developer.id,
+        doc_id=doc.id,
+        connection_pool=pool,
+    )
+    assert doc_test.id == doc.id
+    assert doc_test.title == doc.title
 
-#     delete_doc(
-#         developer_id=developer_id,
-#         doc_id=doc.id,
-#         owner_type="agent",
-#         owner_id=agent.id,
-#         client=client,
-#     )
+@test("query: list docs")
+async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
+    pool = await create_db_pool(dsn=dsn)
+    docs_list = await list_docs(
+        developer_id=developer.id,
+        connection_pool=pool,
+    )
+    assert len(docs_list) >= 1
+    assert any(d.id == doc.id for d in docs_list)
 
+@test("query: list user docs")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
 
-# @test("query: list docs")
-# def _(
-#     client=cozo_client, developer_id=test_developer_id, doc=test_doc, agent=test_agent
-# ):
-#     result = list_docs(
-#         developer_id=developer_id,
-#         owner_type="agent",
-#         owner_id=agent.id,
-#         client=client,
-#         include_without_embeddings=True,
-#     )
+    # Create a doc owned by the user
+    doc_user = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="User List Test",
+            content="Some user doc content",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
 
-#     assert len(result) >= 1
+    # List user's docs
+    docs_list = await list_docs(
+        developer_id=developer.id,
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+    assert len(docs_list) >= 1
+    assert any(d.id == doc_user.id for d in docs_list)
 
+@test("query: list agent docs")
+async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
 
-# @test("query: search docs by text")
-# async def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
-#     create_doc(
-#         developer_id=developer_id,
-#         owner_type="agent",
-#         owner_id=agent.id,
-#         data=CreateDocRequest(
-#             title="Hello", content=["The world is a funny little thing"]
-#         ),
-#         client=client,
-#     )
+    # Create a doc owned by the agent
+    doc_agent = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Agent List Test",
+            content="Some agent doc content",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
 
-#     await asyncio.sleep(1)
+    # List agent's docs
+    docs_list = await list_docs(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+    assert len(docs_list) >= 1
+    assert any(d.id == doc_agent.id for d in docs_list)
 
-#     result = search_docs_by_text(
-#         developer_id=developer_id,
-#         owners=[("agent", agent.id)],
-#         query="funny",
-#         client=client,
-#     )
+@test("query: delete user doc")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
 
-#     assert len(result) >= 1
-#     assert result[0].metadata is not None
+    # Create a doc owned by the user
+    doc_user = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="User Delete Test",
+            content="Doc for user deletion test",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
 
+    # Delete the doc
+    await delete_doc(
+        developer_id=developer.id,
+        doc_id=doc_user.id,
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
 
-# @test("query: search docs by embedding")
-# async def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
-#     doc = create_doc(
-#         developer_id=developer_id,
-#         owner_type="agent",
-#         owner_id=agent.id,
-#         data=CreateDocRequest(title="Hello", content=["World"]),
-#         client=client,
-#     )
+    # Verify doc is no longer in user's docs
+    docs_list = await list_docs(
+        developer_id=developer.id,
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+    assert not any(d.id == doc_user.id for d in docs_list)
 
-#     ### Add embedding to the snippet
-#     embed_snippets(
-#         developer_id=developer_id,
-#         doc_id=doc.id,
-#         snippet_indices=[0],
-#         embeddings=[[1.0] * EMBEDDING_SIZE],
-#         client=client,
-#     )
+@test("query: delete agent doc")
+async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
 
-#     await asyncio.sleep(1)
+    # Create a doc owned by the agent
+    doc_agent = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Agent Delete Test",
+            content="Doc for agent deletion test",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
 
-#     ### Search
-#     query_embedding = [0.99] * EMBEDDING_SIZE
+    # Delete the doc
+    await delete_doc(
+        developer_id=developer.id,
+        doc_id=doc_agent.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
 
-#     result = search_docs_by_embedding(
-#         developer_id=developer_id,
-#         owners=[("agent", agent.id)],
-#         query_embedding=query_embedding,
-#         client=client,
-#     )
+    # Verify doc is no longer in agent's docs
+    docs_list = await list_docs(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+    assert not any(d.id == doc_agent.id for d in docs_list)
 
-#     assert len(result) >= 1
-#     assert result[0].metadata is not None
-
-
-# @test("query: embed snippets")
-# def _(client=cozo_client, developer_id=test_developer_id, doc=test_doc):
-#     snippet_indices = [0]
-#     embeddings = [[1.0] * EMBEDDING_SIZE]
-
-#     result = embed_snippets(
-#         developer_id=developer_id,
-#         doc_id=doc.id,
-#         snippet_indices=snippet_indices,
-#         embeddings=embeddings,
-#         client=client,
-#     )
-
-#     assert result is not None
-#     assert result.id == doc.id
+@test("query: delete doc")
+async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
+    pool = await create_db_pool(dsn=dsn)
+    await delete_doc(
+        developer_id=developer.id,
+        doc_id=doc.id,
+        connection_pool=pool,
+    )

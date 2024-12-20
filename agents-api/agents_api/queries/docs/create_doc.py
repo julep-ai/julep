@@ -1,12 +1,4 @@
-"""
-Timescale-based creation of docs.
-
-Mirrors the structure of create_file.py, but uses the docs/doc_owners tables.
-"""
-
-import base64
-import hashlib
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
@@ -14,6 +6,9 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
+
+import ast
+
 
 from ...autogen.openapi_model import CreateDocRequest, Doc
 from ...metrics.counters import increase_counter
@@ -91,7 +86,7 @@ JOIN docs d ON d.doc_id = io.doc_id;
     transform=lambda d: {
         **d,
         "id": d["doc_id"],
-        # You could optionally return a computed hash or partial content if desired
+        "content": ast.literal_eval(d["content"])[0] if len(ast.literal_eval(d["content"])) == 1 else ast.literal_eval(d["content"]),
     },
 )
 @increase_counter("create_doc")
@@ -102,26 +97,35 @@ async def create_doc(
     developer_id: UUID,
     doc_id: UUID | None = None,
     data: CreateDocRequest,
-    owner_type: Literal["user", "agent", "org"] | None = None,
+    owner_type: Literal["user", "agent"] | None = None,
     owner_id: UUID | None = None,
-) -> list[tuple[str, list]]:
+    modality: Literal["text", "image", "mixed"] | None = "text",
+    embedding_model: str | None = "voyage-3",
+    embedding_dimensions: int | None = 1024,
+    language: str | None = "english",
+    index: int | None = 0,
+) -> list[tuple[str, list] | tuple[str, list, str]]:
     """
     Insert a new doc record into Timescale and optionally associate it with an owner.
     """
     # Generate a UUID if not provided
     doc_id = doc_id or uuid7()
 
+    # check if content is a string
+    if isinstance(data.content, str):
+        data.content = [data.content]
+
     # Create the doc record
     doc_params = [
         developer_id,
         doc_id,
         data.title,
-        data.content,
-        data.index or 0,  # fallback if no snippet index
-        data.modality or "text",
-        data.embedding_model or "none",
-        data.embedding_dimensions or 0,
-        data.language or "english",
+        str(data.content),
+        index,
+        modality,
+        embedding_model,
+        embedding_dimensions,
+        language,
         data.metadata or {},
     ]
 

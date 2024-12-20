@@ -1,9 +1,7 @@
 # # Tests for entry queries
 
 
-from fastapi import HTTPException
-from uuid_extensions import uuid7
-from ward import raises, test
+from ward import test
 
 from agents_api.autogen.openapi_model import CreateFileRequest
 from agents_api.clients.pg import create_db_pool

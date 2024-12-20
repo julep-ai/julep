@@ -1,6 +1,5 @@
 import random
 import string
-import time
 from uuid import UUID
 
 from fastapi.testclient import TestClient
@@ -12,6 +11,7 @@ from agents_api.autogen.openapi_model import (
     CreateFileRequest,
     CreateSessionRequest,
     CreateUserRequest,
+    CreateDocRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
@@ -21,7 +21,8 @@ from agents_api.queries.developers.create_developer import create_developer
 # from agents_api.queries.agents.delete_agent import delete_agent
 from agents_api.queries.developers.get_developer import get_developer
 
-# from agents_api.queries.docs.create_doc import create_doc
+from agents_api.queries.docs.create_doc import create_doc
+
 # from agents_api.queries.docs.delete_doc import delete_doc
 # from agents_api.queries.execution.create_execution import create_execution
 # from agents_api.queries.execution.create_execution_transition import create_execution_transition
@@ -147,6 +148,22 @@ async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
     )
 
     return file
+
+
+@fixture(scope="test")
+async def test_doc(dsn=pg_dsn, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+    doc = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Hello",
+            content=["World"],
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        connection_pool=pool,
+    )
+    return doc
 
 
 @fixture(scope="test")

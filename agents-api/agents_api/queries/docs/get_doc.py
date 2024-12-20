@@ -1,14 +1,9 @@
-"""
-Timescale-based retrieval of a single doc record.
-"""
-
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
+import ast
 
 from ...autogen.openapi_model import Doc
 from ..utils import pg_query, wrap_in_class
@@ -16,12 +11,12 @@ from ..utils import pg_query, wrap_in_class
 doc_query = parse_one("""
 SELECT d.*
 FROM docs d
-LEFT JOIN doc_owners do ON d.developer_id = do.developer_id AND d.doc_id = do.doc_id
+LEFT JOIN doc_owners doc_own ON d.developer_id = doc_own.developer_id AND d.doc_id = doc_own.doc_id
 WHERE d.developer_id = $1
   AND d.doc_id = $2
   AND (
     ($3::text IS NULL AND $4::uuid IS NULL)
-    OR (do.owner_type = $3 AND do.owner_id = $4)
+    OR (doc_own.owner_type = $3 AND doc_own.owner_id = $4)
   )
 LIMIT 1;
 """).sql(pretty=True)
@@ -33,6 +28,8 @@ LIMIT 1;
     transform=lambda d: {
         **d,
         "id": d["doc_id"],
+        "content": ast.literal_eval(d["content"])[0] if len(ast.literal_eval(d["content"])) == 1 else ast.literal_eval(d["content"]),
+        # "embeddings": d["embeddings"],
     },
 )
 @pg_query
@@ -41,7 +38,7 @@ async def get_doc(
     *,
     developer_id: UUID,
     doc_id: UUID,
-    owner_type: Literal["user", "agent", "org"] | None = None,
+    owner_type: Literal["user", "agent"] | None = None,
     owner_id: UUID | None = None,
 ) -> tuple[str, list]:
     """

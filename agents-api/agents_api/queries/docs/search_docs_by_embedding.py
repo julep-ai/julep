@@ -5,7 +5,6 @@ Timescale-based doc embedding search using the `embedding` column.
 from typing import List, Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one

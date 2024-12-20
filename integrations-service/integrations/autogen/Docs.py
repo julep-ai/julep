@@ -73,6 +73,30 @@ class Doc(BaseModel):
     """
     Embeddings for the document
     """
+    modality: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
+    """
+    Modality of the document
+    """
+    language: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
+    """
+    Language of the document
+    """
+    index: Annotated[int | None, Field(json_schema_extra={"readOnly": True})] = None
+    """
+    Index of the document
+    """
+    embedding_model: Annotated[
+        str | None, Field(json_schema_extra={"readOnly": True})
+    ] = None
+    """
+    Embedding model to use for the document
+    """
+    embedding_dimensions: Annotated[
+        int | None, Field(json_schema_extra={"readOnly": True})
+    ] = None
+    """
+    Dimensions of the embedding model
+    """
 
 
 class DocOwner(BaseModel):

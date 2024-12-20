@@ -5,7 +5,6 @@ Timescale-based doc text search using the `search_tsv` column.
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
@@ -22,7 +21,7 @@ LEFT JOIN doc_owners do
   AND d.doc_id = do.doc_id
 WHERE d.developer_id = $1
   AND (
-    ($4::text IS NULL AND $5::uuid IS NULL)
+    ($4 IS NULL AND $5 IS NULL)
     OR (do.owner_type = $4 AND do.owner_id = $5)
   )
   AND d.search_tsv @@ websearch_to_tsquery($3)

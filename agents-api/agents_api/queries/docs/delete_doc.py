@@ -1,7 +1,3 @@
-"""
-Timescale-based deletion of a doc record.
-"""
-
 from typing import Literal
 from uuid import UUID
 
@@ -65,7 +61,7 @@ async def delete_doc(
     *,
     developer_id: UUID,
     doc_id: UUID,
-    owner_type: Literal["user", "agent", "org"] | None = None,
+    owner_type: Literal["user", "agent"] | None = None,
     owner_id: UUID | None = None,
 ) -> tuple[str, list]:
     """
