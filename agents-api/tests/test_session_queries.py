@@ -1,7 +1,7 @@
-"""
-This module contains tests for SQL query generation functions in the sessions module.
-Tests verify the SQL queries without actually executing them against a database.
-"""
+# """
+# This module contains tests for SQL query generation functions in the sessions module.
+# Tests verify the SQL queries without actually executing them against a database.
+# """
 
 from uuid_extensions import uuid7
 from ward import raises, test

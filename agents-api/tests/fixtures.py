@@ -9,6 +9,7 @@ from ward import fixture
 
 from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
+    CreateFileRequest,
     CreateSessionRequest,
     CreateUserRequest,
 )
@@ -25,7 +26,8 @@ from agents_api.queries.developers.get_developer import get_developer
 # from agents_api.queries.execution.create_execution import create_execution
 # from agents_api.queries.execution.create_execution_transition import create_execution_transition
 # from agents_api.queries.execution.create_temporal_lookup import create_temporal_lookup
-# from agents_api.queries.files.create_file import create_file
+from agents_api.queries.files.create_file import create_file
+
 # from agents_api.queries.files.delete_file import delete_file
 from agents_api.queries.sessions.create_session import create_session
 
@@ -128,6 +130,23 @@ async def test_user(dsn=pg_dsn, developer=test_developer):
     )
 
     return user
+
+
+@fixture(scope="test")
+async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+    file = await create_file(
+        developer_id=developer.id,
+        data=CreateFileRequest(
+            name="Hello",
+            description="World",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+        ),
+        connection_pool=pool,
+    )
+
+    return file
 
 
 @fixture(scope="test")
