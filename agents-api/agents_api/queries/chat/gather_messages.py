@@ -10,10 +10,10 @@ from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 
-# from ..docs.search_docs_by_embedding import search_docs_by_embedding
-# from ..docs.search_docs_by_text import search_docs_by_text
-# from ..docs.search_docs_hybrid import search_docs_hybrid
-# from ..entry.get_history import get_history
+from ..docs.search_docs_by_embedding import search_docs_by_embedding
+from ..docs.search_docs_by_text import search_docs_by_text
+from ..docs.search_docs_hybrid import search_docs_hybrid
+from ..entries.get_history import get_history
 from ..sessions.get_session import get_session
 from ..utils import (
     partialclass,
