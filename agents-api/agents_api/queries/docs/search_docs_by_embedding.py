@@ -9,7 +9,7 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
-from ...autogen.openapi_model import Doc
+from ...autogen.openapi_model import DocReference
 from ..utils import pg_query, wrap_in_class
 
 # If you're doing approximate ANN (DiskANN) or IVF, you might use a special function or hint.
@@ -33,11 +33,14 @@ LIMIT $2;
 
 
 @wrap_in_class(
-    Doc,
-    one=False,
-    transform=lambda rec: {
-        **rec,
-        "id": rec["doc_id"],
+    DocReference,
+    transform=lambda d: {
+        "owner": {
+            "id": d["owner_id"],
+            "role": d["owner_type"],
+        },
+        "metadata": d.get("metadata", {}),
+        **d,
     },
 )
 @pg_query
@@ -52,10 +55,16 @@ async def search_docs_by_embedding(
 ) -> tuple[str, list]:
     """
     Vector-based doc search:
-      - developer_id is required
-      - query_embedding: the vector to query
-      - k: number of results to return
-      - owner_type/owner_id: optional doc ownership filter
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        query_embedding (List[float]): The vector to query.
+        k (int): The number of results to return.
+        owner_type (Literal["user", "agent", "org"]): The type of the owner of the documents.
+        owner_id (UUID): The ID of the owner of the documents.
+
+    Returns:
+        tuple[str, list]: SQL query and parameters for searching the documents.
     """
     if k < 1:
         raise HTTPException(status_code=400, detail="k must be >= 1")

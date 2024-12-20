@@ -8,10 +8,15 @@ from sqlglot import parse_one
 from ...autogen.openapi_model import Doc
 from ..utils import pg_query, wrap_in_class
 
-doc_query = parse_one("""
-SELECT d.*
+# Combined query to fetch document details and embedding
+doc_with_embedding_query = parse_one("""
+SELECT d.*, e.embedding
 FROM docs d
-LEFT JOIN doc_owners doc_own ON d.developer_id = doc_own.developer_id AND d.doc_id = doc_own.doc_id
+LEFT JOIN doc_owners doc_own 
+  ON d.developer_id = doc_own.developer_id 
+  AND d.doc_id = doc_own.doc_id
+LEFT JOIN docs_embeddings e 
+  ON d.doc_id = e.doc_id
 WHERE d.developer_id = $1
   AND d.doc_id = $2
   AND (
@@ -31,7 +36,7 @@ LIMIT 1;
         "content": ast.literal_eval(d["content"])[0]
         if len(ast.literal_eval(d["content"])) == 1
         else ast.literal_eval(d["content"]),
-        # "embeddings": d["embeddings"],
+        "embedding": d["embedding"],  # Add embedding to the transformation
     },
 )
 @pg_query
@@ -44,9 +49,18 @@ async def get_doc(
     owner_id: UUID | None = None,
 ) -> tuple[str, list]:
     """
-    Fetch a single doc, optionally constrained to a given owner.
+    Fetch a single doc with its embedding, optionally constrained to a given owner.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        doc_id (UUID): The ID of the document.
+        owner_type (Literal["user", "agent"]): The type of the owner of the documents.
+        owner_id (UUID): The ID of the owner of the documents.
+
+    Returns:
+        tuple[str, list]: SQL query and parameters for fetching the document.
     """
     return (
-        doc_query,
+        doc_with_embedding_query,
         [developer_id, doc_id, owner_type, owner_id],
     )

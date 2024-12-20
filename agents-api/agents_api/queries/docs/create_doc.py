@@ -107,6 +107,19 @@ async def create_doc(
 ) -> list[tuple[str, list] | tuple[str, list, str]]:
     """
     Insert a new doc record into Timescale and optionally associate it with an owner.
+
+    Parameters:
+        owner_type (Literal["user", "agent"]): The type of the owner of the documents.
+        owner_id (UUID): The ID of the owner of the documents.
+        modality (Literal["text", "image", "mixed"]): The modality of the documents.
+        embedding_model (str): The model used for embedding.
+        embedding_dimensions (int): The dimensions of the embedding.
+        language (str): The language of the documents.
+        index (int): The index of the documents.
+        data (CreateDocRequest): The data for the document.
+
+    Returns:
+        list[tuple[str, list] | tuple[str, list, str]]: SQL query and parameters for creating the document.
     """
     # Generate a UUID if not provided
     doc_id = doc_id or uuid7()

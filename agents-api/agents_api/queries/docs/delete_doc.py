@@ -67,6 +67,15 @@ async def delete_doc(
     """
     Deletes a doc (and associated doc_owners) for the given developer and doc_id.
     If owner_type/owner_id is specified, only remove doc if that matches.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        doc_id (UUID): The ID of the document.
+        owner_type (Literal["user", "agent"]): The type of the owner of the documents.
+        owner_id (UUID): The ID of the owner of the documents.
+
+    Returns:
+        tuple[str, list]: SQL query and parameters for deleting the document.
     """
     return (
         delete_doc_query,
