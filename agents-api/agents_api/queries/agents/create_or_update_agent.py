@@ -5,19 +5,19 @@ It constructs and executes SQL queries to insert a new agent or update an existi
 
 from uuid import UUID
 
-from beartype import beartype
-from sqlglot import parse_one
-from fastapi import HTTPException
 import asyncpg
+from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
     partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
 )
 
 # Define the raw SQL query

@@ -6,15 +6,16 @@ It constructs and executes SQL queries to fetch a list of agents based on develo
 from typing import Any, Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-import asyncpg
+
 from ...autogen.openapi_model import Agent
 from ..utils import (
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
     partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
 )
 
 # Define the raw SQL query
@@ -40,6 +41,7 @@ ORDER BY
     CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
 """
+
 
 @rewrap_exceptions(
     {

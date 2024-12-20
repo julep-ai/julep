@@ -49,6 +49,7 @@ ORDER BY
 LIMIT $2 OFFSET $6;
 """
 
+
 @rewrap_exceptions(
     {
         asyncpg.ForeignKeyViolationError: partialclass(

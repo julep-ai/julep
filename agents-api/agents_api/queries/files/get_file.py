@@ -6,14 +6,18 @@ It constructs and executes SQL queries to fetch file details based on file ID an
 from typing import Literal
 from uuid import UUID
 
-from beartype import beartype
-from sqlglot import parse_one
 import asyncpg
+from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import File
-from ..utils import pg_query, wrap_in_class, rewrap_exceptions, partialclass, partialclass
-
+from ..utils import (
+    partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
+)
 
 # Define the raw SQL query
 file_query = parse_one("""

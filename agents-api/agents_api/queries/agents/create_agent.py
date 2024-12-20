@@ -5,19 +5,20 @@ It includes functions to construct and execute SQL queries for inserting new age
 
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
-import asyncpg
-from fastapi import HTTPException
+
 from ...autogen.openapi_model import Agent, CreateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
     partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
 )
 
 # Define the raw SQL query

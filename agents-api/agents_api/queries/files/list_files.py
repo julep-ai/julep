@@ -6,13 +6,13 @@ It constructs and executes SQL queries to fetch a list of files based on develop
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
-import asyncpg
 
 from ...autogen.openapi_model import File
-from ..utils import pg_query, wrap_in_class, rewrap_exceptions, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Base query for listing files
 base_files_query = parse_one("""
@@ -21,6 +21,7 @@ FROM files f
 LEFT JOIN file_owners fo ON f.developer_id = fo.developer_id AND f.file_id = fo.file_id
 WHERE f.developer_id = $1
 """).sql(pretty=True)
+
 
 @rewrap_exceptions(
     {
