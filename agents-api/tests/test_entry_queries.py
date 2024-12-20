@@ -25,6 +25,7 @@ from tests.fixtures import pg_dsn, test_developer, test_developer_id, test_sessi
 
 MODEL = "gpt-4o-mini"
 
+
 @test("query: create entry no session")
 async def _(dsn=pg_dsn, developer=test_developer):
     """Test the addition of a new entry to the database."""
