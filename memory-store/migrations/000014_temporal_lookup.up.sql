@@ -12,9 +12,6 @@ CREATE TABLE IF NOT EXISTS temporal_executions_lookup (
     CONSTRAINT fk_temporal_executions_lookup_execution FOREIGN KEY (execution_id) REFERENCES executions (execution_id)
 );
 
--- Create sorted index on execution_id (optimized for UUID v7)
-CREATE INDEX IF NOT EXISTS idx_temporal_executions_lookup_execution_id_sorted ON temporal_executions_lookup (execution_id DESC);
-
 -- Add comment to table
 COMMENT ON TABLE temporal_executions_lookup IS 'Stores temporal workflow execution lookup data for AI agent executions';
 

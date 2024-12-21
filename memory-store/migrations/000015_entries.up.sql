@@ -1,7 +1,13 @@
 BEGIN;
 
 -- Create chat_role enum
-CREATE TYPE chat_role AS ENUM('user', 'assistant', 'tool', 'system', 'developer');
+CREATE TYPE chat_role AS ENUM(
+    'user',
+    'assistant',
+    'tool',
+    'system',
+    'developer'
+);
 
 -- Create entries table
 CREATE TABLE IF NOT EXISTS entries (
@@ -38,7 +44,7 @@ SELECT
     );
 
 -- Create indexes for efficient querying
-CREATE INDEX IF NOT EXISTS idx_entries_by_session ON entries (session_id DESC, entry_id DESC);
+CREATE INDEX IF NOT EXISTS idx_entries_by_session ON entries (session_id DESC);
 
 -- Add foreign key constraint to sessions table
 DO $$
@@ -87,8 +93,8 @@ UPDATE ON entries FOR EACH ROW
 EXECUTE FUNCTION optimized_update_token_count_after ();
 
 -- Add trigger to update parent session's updated_at
-CREATE OR REPLACE FUNCTION update_session_updated_at()
-RETURNS TRIGGER AS $$
+CREATE
+OR REPLACE FUNCTION update_session_updated_at () RETURNS TRIGGER AS $$
 BEGIN
     UPDATE sessions
     SET updated_at = CURRENT_TIMESTAMP
@@ -98,8 +104,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_update_session_updated_at
-AFTER INSERT OR UPDATE ON entries
-FOR EACH ROW
-EXECUTE FUNCTION update_session_updated_at();
+AFTER INSERT
+OR
+UPDATE ON entries FOR EACH ROW
+EXECUTE FUNCTION update_session_updated_at ();
 
 COMMIT;

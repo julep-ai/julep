@@ -8,7 +8,7 @@ BEGIN;
  */
 
 -- Create transition type enum if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transition_type') THEN
         CREATE TYPE transition_type AS ENUM (
@@ -26,7 +26,7 @@ BEGIN
 END $$;
 
 -- Create transition cursor type if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transition_cursor') THEN
         CREATE TYPE transition_cursor AS (
@@ -68,28 +68,20 @@ SELECT
     );
 
 -- Create indexes if they don't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transitions_current') THEN
         CREATE UNIQUE INDEX idx_transitions_current ON transitions (execution_id, current_step, created_at DESC);
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transitions_next') THEN
-        CREATE UNIQUE INDEX idx_transitions_next ON transitions (execution_id, next_step, created_at DESC) 
+        CREATE UNIQUE INDEX idx_transitions_next ON transitions (execution_id, next_step, created_at DESC)
         WHERE next_step IS NOT NULL;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transitions_label') THEN
-        CREATE UNIQUE INDEX idx_transitions_label ON transitions (execution_id, step_label, created_at DESC) 
+        CREATE UNIQUE INDEX idx_transitions_label ON transitions (execution_id, step_label, created_at DESC)
         WHERE step_label IS NOT NULL;
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transitions_transition_id_sorted') THEN
-        CREATE INDEX idx_transitions_transition_id_sorted ON transitions (transition_id DESC, created_at DESC);
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transitions_execution_id_sorted') THEN
-        CREATE INDEX idx_transitions_execution_id_sorted ON transitions (execution_id DESC, created_at DESC);
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transitions_metadata') THEN
@@ -98,10 +90,10 @@ BEGIN
 END $$;
 
 -- Add foreign key constraint if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_transitions_execution') THEN
-        ALTER TABLE transitions 
+        ALTER TABLE transitions
             ADD CONSTRAINT fk_transitions_execution
             FOREIGN KEY (execution_id)
             REFERENCES executions(execution_id);

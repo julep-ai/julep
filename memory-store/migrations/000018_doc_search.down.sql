@@ -21,9 +21,6 @@ DROP TYPE IF EXISTS doc_search_result;
 -- Drop the embed_with_cache function
 DROP FUNCTION IF EXISTS embed_with_cache;
 
--- Drop the index on embeddings_cache
-DROP INDEX IF EXISTS idx_embeddings_cache_provider_model_input_text;
-
 -- Drop the embeddings cache table
 DROP TABLE IF EXISTS embeddings_cache CASCADE;
 

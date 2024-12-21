@@ -46,11 +46,11 @@ BEGIN
     END IF;
 END $$;
 
--- Create index on developer_id if it doesn't exist
+-- Create index on canonical_name if it doesn't exist
 DO $$ 
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_tasks_developer') THEN
-        CREATE INDEX idx_tasks_developer ON tasks (developer_id);
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_tasks_canonical_name') THEN
+        CREATE INDEX idx_tasks_canonical_name ON tasks (developer_id DESC, canonical_name);
     END IF;
 END $$;
 
@@ -113,14 +113,6 @@ CREATE TABLE IF NOT EXISTS workflows (
     CONSTRAINT fk_workflows_tasks FOREIGN KEY (developer_id, task_id, version)
         REFERENCES tasks (developer_id, task_id, version) ON DELETE CASCADE
 );
-
--- Create index for 'workflows' table if it doesn't exist
-DO $$ 
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_workflows_developer') THEN
-        CREATE INDEX idx_workflows_developer ON workflows (developer_id, task_id, version);
-    END IF;
-END $$;
 
 -- Add comment to 'workflows' table
 COMMENT ON TABLE workflows IS 'Stores normalized workflows for tasks';

@@ -23,26 +23,13 @@ CREATE TABLE IF NOT EXISTS files (
     CONSTRAINT pk_files PRIMARY KEY (developer_id, file_id)
 );
 
--- Create sorted index on file_id if it doesn't exist
-CREATE INDEX IF NOT EXISTS idx_files_id_sorted ON files (file_id DESC);
-
 -- Create foreign key constraint and index if they don't exist
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_files_developer') THEN
-        ALTER TABLE files 
-            ADD CONSTRAINT fk_files_developer 
-            FOREIGN KEY (developer_id) 
-            REFERENCES developers(developer_id);
-    END IF;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_files_developer ON files (developer_id);
-
--- Add unique constraint if it doesn't exist
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_files_developer_id_file_id') THEN
         ALTER TABLE files
-            ADD CONSTRAINT uq_files_developer_id_file_id UNIQUE (developer_id, file_id);
+            ADD CONSTRAINT fk_files_developer
+            FOREIGN KEY (developer_id)
+            REFERENCES developers(developer_id);
     END IF;
 END $$;
 
@@ -68,7 +55,7 @@ CREATE TABLE IF NOT EXISTS file_owners (
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_file_owners_owner 
+CREATE INDEX IF NOT EXISTS idx_file_owners_owner
     ON file_owners (developer_id, owner_type, owner_id);
 
 -- Create function to validate owner reference
@@ -77,14 +64,14 @@ RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.owner_type = 'user' THEN
         IF NOT EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE developer_id = NEW.developer_id AND user_id = NEW.owner_id
         ) THEN
             RAISE EXCEPTION 'Invalid user reference';
         END IF;
     ELSIF NEW.owner_type = 'agent' THEN
         IF NOT EXISTS (
-            SELECT 1 FROM agents 
+            SELECT 1 FROM agents
             WHERE developer_id = NEW.developer_id AND agent_id = NEW.owner_id
         ) THEN
             RAISE EXCEPTION 'Invalid agent reference';

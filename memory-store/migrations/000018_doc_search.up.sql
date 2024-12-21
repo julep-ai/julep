@@ -2,18 +2,10 @@ BEGIN;
 
 -- Create unlogged table for caching embeddings
 CREATE UNLOGGED TABLE IF NOT EXISTS embeddings_cache (
-    provider TEXT NOT NULL,
-    model TEXT NOT NULL,
-    input_text TEXT NOT NULL,
-    input_type TEXT DEFAULT NULL,
-    api_key TEXT DEFAULT NULL,
-    api_key_name TEXT DEFAULT NULL,
+    model_input_md5 TEXT NOT NULL,
     embedding vector (1024) NOT NULL,
-    CONSTRAINT pk_embeddings_cache PRIMARY KEY (provider, model, input_text)
+    CONSTRAINT pk_embeddings_cache PRIMARY KEY (model_input_md5)
 );
-
--- Add index on provider, model, input_text for faster lookups
-CREATE INDEX IF NOT EXISTS idx_embeddings_cache_provider_model_input_text ON embeddings_cache (provider, model, input_text ASC);
 
 -- Add comment explaining table purpose
 COMMENT ON TABLE embeddings_cache IS 'Unlogged table that caches embedding requests to avoid duplicate API calls';
@@ -31,16 +23,17 @@ OR REPLACE function embed_with_cache (
 -- Try to get cached embedding first
 declare
     cached_embedding vector(1024);
+    model_input_md5 text;
 begin
     if _provider != 'voyageai' then
         raise exception 'Only voyageai provider is supported';
     end if;
 
+    model_input_md5 := md5(_provider || '++' || _model || '++' || _input_text || '++' || _input_type);
+
     select embedding into cached_embedding 
     from embeddings_cache c
-    where c.provider = _provider 
-    and c.model = _model 
-    and c.input_text = _input_text;
+    where c.model_input_md5 = model_input_md5;
 
     if found then
         return cached_embedding;
@@ -57,22 +50,12 @@ begin
 
     -- Cache the result
     insert into embeddings_cache (
-        provider,
-        model, 
-        input_text,
-        input_type,
-        api_key,
-        api_key_name,
+        model_input_md5,
         embedding
     ) values (
-        _provider,
-        _model,
-        _input_text, 
-        _input_type,
-        _api_key,
-        _api_key_name,
+        model_input_md5,
         cached_embedding
-    ) on conflict (provider, model, input_text) do update set embedding = cached_embedding;
+    ) on conflict (model_input_md5) do update set embedding = cached_embedding;
 
     return cached_embedding;
 end;
@@ -195,6 +178,7 @@ COMMENT ON FUNCTION search_by_vector IS 'Search documents by vector similarity w
 -- Create the combined embed and search function
 CREATE
 OR REPLACE FUNCTION embed_and_search_by_vector (
+    developer_id UUID,
     query_text text,
     owner_types TEXT[],
     owner_ids UUID [],
@@ -222,6 +206,7 @@ BEGIN
 
     -- Then perform the search using the generated embedding
     RETURN QUERY SELECT * FROM search_by_vector(
+        developer_id,
         query_embedding,
         owner_types,
         owner_ids,

@@ -15,9 +15,6 @@ CREATE TABLE IF NOT EXISTS developers (
     CONSTRAINT uq_developers_email UNIQUE (email)
 );
 
--- Create sorted index on developer_id (optimized for UUID v7)
-CREATE INDEX IF NOT EXISTS idx_developers_id_sorted ON developers (developer_id DESC);
-
 -- Create index on email
 CREATE INDEX IF NOT EXISTS idx_developers_email ON developers (email);
 
@@ -30,7 +27,7 @@ WHERE
     active = TRUE;
 
 -- Create trigger to automatically update updated_at
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_developers_updated_at') THEN
         CREATE TRIGGER trg_developers_updated_at
