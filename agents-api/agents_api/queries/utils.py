@@ -175,9 +175,9 @@ def pg_query(
                             all_results.append(results)
 
                             if method_name == "fetchrow" and (
-                                len(results) == 0 or results.get("bool") is None
+                                len(results) == 0 or results.get("bool", True) is None
                             ):
-                                raise asyncpg.NoDataFoundError
+                                raise asyncpg.NoDataFoundError("No data found")
 
                         end = timeit and time.perf_counter()
 
