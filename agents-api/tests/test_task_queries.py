@@ -2,24 +2,23 @@
 
 from fastapi import HTTPException
 from uuid_extensions import uuid7
-from ward import test
+from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
     CreateTaskRequest,
-    UpdateTaskRequest,
-    ResourceUpdatedResponse,
     PatchTaskRequest,
+    ResourceUpdatedResponse,
     Task,
+    UpdateTaskRequest,
 )
-from ward import raises
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.tasks.create_or_update_task import create_or_update_task
 from agents_api.queries.tasks.create_task import create_task
-from agents_api.queries.tasks.get_task import get_task
 from agents_api.queries.tasks.delete_task import delete_task
+from agents_api.queries.tasks.get_task import get_task
 from agents_api.queries.tasks.list_tasks import list_tasks
-from agents_api.queries.tasks.update_task import update_task
 from agents_api.queries.tasks.patch_task import patch_task
+from agents_api.queries.tasks.update_task import update_task
 from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_task
 
 
@@ -187,8 +186,11 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert len(result) > 0
     assert all(isinstance(task, Task) for task in result)
 
+
 @test("query: update task sql - exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+async def _(
+    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task
+):
     """Test that a task can be successfully updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -225,7 +227,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     assert updated_task.metadata == {"updated": True}
 
 
-@test("query: update task sql - not exists") 
+@test("query: update task sql - not exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that attempting to update a non-existent task raises an error."""
 
@@ -241,7 +243,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
                 **{
                     "canonical_name": "updated_task",
                     "name": "updated task",
-                    "description": "updated task description", 
+                    "description": "updated task description",
                     "input_schema": {"type": "object", "additionalProperties": True},
                     "main": [{"evaluate": {"hi": "_"}}],
                     "inherit_tools": False,
@@ -252,6 +254,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
     assert exc.raised.status_code == 404
     assert "Task not found" in str(exc.raised.detail)
+
 
 @test("query: patch task sql - exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
@@ -330,4 +333,3 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
     assert exc.raised.status_code == 404
     assert "Task not found" in str(exc.raised.detail)
-

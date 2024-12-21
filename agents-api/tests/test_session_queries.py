@@ -57,7 +57,9 @@ async def _(
     )
 
     assert result is not None
-    assert isinstance(result, ResourceCreatedResponse), f"Result is not a Session, {result}"
+    assert isinstance(
+        result, ResourceCreatedResponse
+    ), f"Result is not a Session, {result}"
     assert result.id == session_id
 
 

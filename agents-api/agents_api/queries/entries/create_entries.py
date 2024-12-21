@@ -7,7 +7,11 @@ from fastapi import HTTPException
 from litellm.utils import _select_tokenizer as select_tokenizer
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateEntryRequest, Relation, ResourceCreatedResponse
+from ...autogen.openapi_model import (
+    CreateEntryRequest,
+    Relation,
+    ResourceCreatedResponse,
+)
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
 from ...metrics.counters import increase_counter

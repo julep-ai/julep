@@ -6,11 +6,11 @@ from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
-from ...autogen.openapi_model import ResourceUpdatedResponse, PatchTaskRequest
+from ...autogen.openapi_model import PatchTaskRequest, ResourceUpdatedResponse
+from ...common.protocol.tasks import task_to_spec
+from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
-from ...common.utils.datetime import utcnow
-from ...common.protocol.tasks import task_to_spec
 
 # # Update task query using UPDATE
 # update_task_query = parse_one("""
@@ -25,8 +25,8 @@ from ...common.protocol.tasks import task_to_spec
 #     inherit_tools = $8,
 #     input_schema = $9::jsonb,
 #     updated_at = NOW()
-# WHERE 
-#     developer_id = $1 
+# WHERE
+#     developer_id = $1
 #     AND task_id = $3
 # RETURNING *;
 # """).sql(pretty=True)
@@ -131,6 +131,7 @@ SELECT
 FROM current_version
 """).sql(pretty=True)
 
+
 @rewrap_exceptions(
     {
         asyncpg.ForeignKeyViolationError: partialclass(
@@ -168,7 +169,7 @@ async def patch_task(
     """
     Updates a task and its associated workflows with version control.
     Only updates the fields that are provided in the request.
-    
+
     Parameters:
         developer_id (UUID): The unique identifier of the developer.
         task_id (UUID): The unique identifier of the task to update.
@@ -180,15 +181,15 @@ async def patch_task(
     # Parameters for patching the task
 
     patch_task_params = [
-        developer_id,             # $1
-        data.canonical_name,      # $2
-        task_id,                  # $3
-        agent_id,                 # $4
-        data.metadata or None,    # $5
-        data.name or None,        # $6
-        data.description or None, # $7
-        data.inherit_tools,       # $8
-        data.input_schema,        # $9
+        developer_id,  # $1
+        data.canonical_name,  # $2
+        task_id,  # $3
+        agent_id,  # $4
+        data.metadata or None,  # $5
+        data.name or None,  # $6
+        data.description or None,  # $7
+        data.inherit_tools,  # $8
+        data.input_schema,  # $9
     ]
 
     if data.main is None:
@@ -202,14 +203,16 @@ async def patch_task(
             workflow_name = workflow.get("name")
             steps = workflow.get("steps", [])
             for step_idx, step in enumerate(steps):
-                workflow_params.append([
-                    developer_id,         # $1
-                    task_id,              # $2
-                    workflow_name,        # $3
-                    step_idx,             # $4
-                    step["kind_"],        # $5
-                    step[step["kind_"]],  # $6
-                ])
+                workflow_params.append(
+                    [
+                        developer_id,  # $1
+                        task_id,  # $2
+                        workflow_name,  # $3
+                        step_idx,  # $4
+                        step["kind_"],  # $5
+                        step[step["kind_"]],  # $6
+                    ]
+                )
 
     return [
         (patch_task_query, patch_task_params, "fetchrow"),

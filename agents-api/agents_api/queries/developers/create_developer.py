@@ -43,7 +43,11 @@ RETURNING *;
         )
     }
 )
-@wrap_in_class(ResourceCreatedResponse, one=True, transform=lambda d: {**d, "id": d["developer_id"], "created_at": d["created_at"]})
+@wrap_in_class(
+    ResourceCreatedResponse,
+    one=True,
+    transform=lambda d: {**d, "id": d["developer_id"], "created_at": d["created_at"]},
+)
 @pg_query
 @beartype
 async def create_developer(

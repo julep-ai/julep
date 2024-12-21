@@ -4,8 +4,8 @@ from uuid_extensions import uuid7
 from ward import raises, test
 
 from agents_api.autogen.openapi_model import ResourceCreatedResponse
-from agents_api.common.protocol.developers import Developer
 from agents_api.clients.pg import create_db_pool
+from agents_api.common.protocol.developers import Developer
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import (
     get_developer,

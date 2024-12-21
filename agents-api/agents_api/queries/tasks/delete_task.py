@@ -5,8 +5,8 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
-from ...common.utils.datetime import utcnow
 from ...autogen.openapi_model import ResourceDeletedResponse
+from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 

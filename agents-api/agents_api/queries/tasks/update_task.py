@@ -7,10 +7,10 @@ from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateTaskRequest
+from ...common.protocol.tasks import task_to_spec
+from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
-from ...common.utils.datetime import utcnow
-from ...common.protocol.tasks import task_to_spec
 
 # # Update task query using UPDATE
 # update_task_query = parse_one("""
@@ -25,8 +25,8 @@ from ...common.protocol.tasks import task_to_spec
 #     inherit_tools = $8,
 #     input_schema = $9::jsonb,
 #     updated_at = NOW()
-# WHERE 
-#     developer_id = $1 
+# WHERE
+#     developer_id = $1
 #     AND task_id = $3
 # RETURNING *;
 # """).sql(pretty=True)
@@ -96,6 +96,7 @@ SELECT
 FROM version
 """).sql(pretty=True)
 
+
 @rewrap_exceptions(
     {
         asyncpg.ForeignKeyViolationError: partialclass(
@@ -132,7 +133,7 @@ async def update_task(
 ) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
     """
     Updates a task and its associated workflows with version control.
-    
+
     Parameters:
         developer_id (UUID): The unique identifier of the developer.
         task_id (UUID): The unique identifier of the task to update.
@@ -144,15 +145,15 @@ async def update_task(
     print("UPDATING TIIIIIME")
     # Parameters for updating the task
     update_task_params = [
-        developer_id,            # $1
-        data.canonical_name,     # $2
-        task_id,                 # $3
-        agent_id,                # $4
-        data.metadata or {},     # $5
-        data.name,               # $6
-        data.description,        # $7
-        data.inherit_tools,      # $8
-        data.input_schema or {}, # $9
+        developer_id,  # $1
+        data.canonical_name,  # $2
+        task_id,  # $3
+        agent_id,  # $4
+        data.metadata or {},  # $5
+        data.name,  # $6
+        data.description,  # $7
+        data.inherit_tools,  # $8
+        data.input_schema or {},  # $9
     ]
 
     # Generate workflows from task data
@@ -164,11 +165,11 @@ async def update_task(
         for step_idx, step in enumerate(steps):
             workflow_params.append(
                 [
-                    developer_id,         # $1
-                    task_id,              # $2
-                    workflow_name,        # $3
-                    step_idx,             # $4
-                    step["kind_"],        # $5
+                    developer_id,  # $1
+                    task_id,  # $2
+                    workflow_name,  # $3
+                    step_idx,  # $4
+                    step["kind_"],  # $5
                     step[step["kind_"]],  # $6
                 ]
             )

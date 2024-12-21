@@ -5,10 +5,9 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
-
+from ...common.protocol.tasks import spec_to_task
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
-from ...common.protocol.tasks import spec_to_task
 
 list_tasks_query = """
 SELECT 
