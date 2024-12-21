@@ -10,11 +10,11 @@ from agents_api.autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
     CreateSessionRequest,
     PatchSessionRequest,
+    ResourceCreatedResponse,
     ResourceDeletedResponse,
     ResourceUpdatedResponse,
-    UpdateSessionRequest,
-    ResourceCreatedResponse,
     Session,
+    UpdateSessionRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.sessions import (

@@ -8,16 +8,15 @@ import hashlib
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
-import asyncpg
-from fastapi import HTTPException
-
 from ...autogen.openapi_model import CreateFileRequest, File
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, wrap_in_class, rewrap_exceptions, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Create file
 file_query = parse_one("""
