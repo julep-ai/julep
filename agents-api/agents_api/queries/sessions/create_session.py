@@ -8,7 +8,7 @@ from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
     CreateSessionRequest,
-    Session,
+    ResourceCreatedResponse,
 )
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
@@ -68,11 +68,12 @@ VALUES ($1, $2, $3, $4);
     }
 )
 @wrap_in_class(
-    Session,
+    ResourceCreatedResponse,
     one=True,
     transform=lambda d: {
         **d,
         "id": d["session_id"],
+        "created_at": d["created_at"],
     },
 )
 @increase_counter("create_session")

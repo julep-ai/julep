@@ -3,16 +3,15 @@ This module contains the functionality for listing files from the PostgreSQL dat
 It constructs and executes SQL queries to fetch a list of files based on developer ID with pagination.
 """
 
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import File
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, wrap_in_class
 
 # Query to list all files for a developer (uses developer_id index)
 developer_files_query = parse_one("""

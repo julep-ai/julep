@@ -70,15 +70,11 @@ CREATE TABLE IF NOT EXISTS user_files (
 CREATE TABLE IF NOT EXISTS file_owners (
     developer_id UUID NOT NULL,
     file_id UUID NOT NULL,
-    user_id UUID NOT NULL,
     owner_type TEXT NOT NULL,  -- 'user' or 'agent'
     owner_id UUID NOT NULL,
     CONSTRAINT pk_file_owners PRIMARY KEY (developer_id, file_id),
     CONSTRAINT fk_file_owners_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id),
     CONSTRAINT ct_file_owners_owner_type CHECK (owner_type IN ('user', 'agent'))
-    CONSTRAINT pk_user_files PRIMARY KEY (developer_id, user_id, file_id),
-    CONSTRAINT fk_user_files_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
-    CONSTRAINT fk_user_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id) ON DELETE CASCADE
 );
 
 -- Create the agent_files table

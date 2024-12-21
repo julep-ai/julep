@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB DEFAULT '{}'::JSONB,
     CONSTRAINT pk_tasks PRIMARY KEY (developer_id, task_id, "version"),
-    CONSTRAINT uq_tasks_canonical_name_unique UNIQUE (developer_id, canonical_name),
+    CONSTRAINT uq_tasks_canonical_name_unique UNIQUE (developer_id, canonical_name, "version"),
     CONSTRAINT fk_tasks_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id) ON DELETE CASCADE,
     CONSTRAINT ct_tasks_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
     CONSTRAINT ct_tasks_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object'),

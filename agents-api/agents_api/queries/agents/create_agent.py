@@ -9,7 +9,7 @@ from beartype import beartype
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import Agent, CreateAgentRequest
+from ...autogen.openapi_model import CreateAgentRequest, ResourceCreatedResponse
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
@@ -75,9 +75,9 @@ RETURNING *;
 #     }
 # )
 @wrap_in_class(
-    Agent,
+    ResourceCreatedResponse,
     one=True,
-    transform=lambda d: {"id": d["agent_id"], **d},
+    transform=lambda d: {"id": d["agent_id"], "created_at": d["created_at"]},
 )
 @increase_counter("create_agent")
 @pg_query

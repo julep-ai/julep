@@ -5,18 +5,16 @@ It includes functions to construct and execute SQL queries for inserting new fil
 
 import base64
 import hashlib
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateFileRequest, File
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, wrap_in_class
 
 # Create file
 file_query = parse_one("""

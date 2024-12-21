@@ -48,22 +48,6 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS idx_tools_developer_agent ON tools (developer_id, agent_id);
 
--- Add foreign key constraint referencing tasks(task_id)
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'fk_tools_task'
-    ) THEN
-        ALTER TABLE tools
-            ADD CONSTRAINT fk_tools_task
-            FOREIGN KEY (developer_id, task_id)
-            REFERENCES tasks(developer_id, task_id) ON DELETE CASCADE;
-    END IF;
-END
-$$;
-
 -- Drop trigger if exists and recreate
 DROP TRIGGER IF EXISTS trg_tools_updated_at ON tools;
 
