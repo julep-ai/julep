@@ -6,12 +6,10 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
-from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from ..utils import get_evaluator
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def switch_step(context: StepContext) -> StepOutcome:
     try:

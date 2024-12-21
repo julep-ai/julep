@@ -1,6 +1,5 @@
 import random
 import string
-import time
 from uuid import UUID
 
 from fastapi.testclient import TestClient

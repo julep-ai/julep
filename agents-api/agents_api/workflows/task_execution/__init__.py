@@ -15,7 +15,7 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
-    from ...activities.sync_items_remote import load_inputs_remote, save_inputs_remote
+    from ...activities.sync_items_remote import save_inputs_remote
     from ...autogen.openapi_model import (
         ApiCallDef,
         BaseIntegrationDef,
@@ -213,16 +213,6 @@ class TaskExecutionWorkflow:
 
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
-
-        [outcome] = await workflow.execute_activity(
-            load_inputs_remote,
-            args=[[outcome]],
-            schedule_to_close_timeout=timedelta(
-                seconds=60 if debug or testing else temporal_schedule_to_close_timeout
-            ),
-            retry_policy=DEFAULT_RETRY_POLICY,
-            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
-        )
 
         # Init state
         state = None

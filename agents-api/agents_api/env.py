@@ -36,8 +36,8 @@ transition_requests_per_minute: int = env.int(
 
 # Blob Store
 # ----------
-use_blob_store_for_temporal: bool = (
-    env.bool("USE_BLOB_STORE_FOR_TEMPORAL", default=False) if not testing else False
+use_blob_store_for_temporal: bool = testing or env.bool(
+    "USE_BLOB_STORE_FOR_TEMPORAL", default=False
 )
 
 blob_store_bucket: str = env.str("BLOB_STORE_BUCKET", default="agents-api")

@@ -6,12 +6,10 @@ from temporalio import activity
 
 from ...autogen.openapi_model import CreateTransitionRequest
 from ...common.protocol.tasks import StepContext
-from ...common.storage_handler import auto_blob_store
 from .transition_step import original_transition_step
 
 
 @activity.defn
-@auto_blob_store(deep=True)
 @beartype
 async def raise_complete_async(context: StepContext, output: Any) -> None:
     activity_info = activity.info()
