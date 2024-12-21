@@ -49,3 +49,12 @@ class FailedEncodingSentinel:
     """Sentinel object returned when failed to encode payload."""
 
     payload_data: bytes
+
+
+class QueriesBaseException(AgentsBaseException):
+    pass
+
+
+class InvalidSQLQuery(QueriesBaseException):
+    def __init__(self, query_name: str):
+        super().__init__(f"invalid query: {query_name}")

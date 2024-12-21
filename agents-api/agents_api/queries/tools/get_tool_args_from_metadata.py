@@ -2,16 +2,9 @@ from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
-from pycozo.client import QueryException
-from pydantic import ValidationError
 
 from ..utils import (
-    cozo_query,
-    partialclass,
-    rewrap_exceptions,
-    verify_developer_id_query,
-    verify_developer_owns_resource_query,
+    pg_query,
     wrap_in_class,
 )
 
@@ -51,10 +44,6 @@ def tool_args_for_task(
     """
 
     queries = [
-        verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(
-            developer_id, "tasks", task_id=task_id, parents=[("agents", "agent_id")]
-        ),
         get_query,
     ]
 
@@ -95,25 +84,21 @@ def tool_args_for_session(
     """
 
     queries = [
-        verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(
-            developer_id, "sessions", session_id=session_id
-        ),
         get_query,
     ]
 
     return (queries, {"agent_id": agent_id, "session_id": session_id})
 
 
-@rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
-    }
-)
+# @rewrap_exceptions(
+#     {
+#         QueryException: partialclass(HTTPException, status_code=400),
+#         ValidationError: partialclass(HTTPException, status_code=400),
+#         TypeError: partialclass(HTTPException, status_code=400),
+#     }
+# )
 @wrap_in_class(dict, transform=lambda x: x["values"], one=True)
-@cozo_query
+@pg_query
 @beartype
 def get_tool_args_from_metadata(
     *,
