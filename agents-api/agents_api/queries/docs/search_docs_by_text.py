@@ -1,17 +1,16 @@
-from typing import Any, Literal, List
+import json
+from typing import Any, List, Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
-import asyncpg
-import json
 
 from ...autogen.openapi_model import DocReference
-from ..utils import pg_query, wrap_in_class, rewrap_exceptions, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-search_docs_text_query = (
-    """
+search_docs_text_query = """
     SELECT * FROM search_by_text(
         $1, -- developer_id
         $2, -- query
@@ -19,7 +18,6 @@ search_docs_text_query = (
         ( SELECT array_agg(*)::UUID[] FROM jsonb_array_elements($4) )
     )
     """
-)
 
 
 @rewrap_exceptions(
@@ -74,10 +72,10 @@ async def search_docs_by_text(
     # Extract owner types and IDs
     owner_types = [owner[0] for owner in owners]
     owner_ids = [owner[1] for owner in owners]
-    
+
     return (
         search_docs_text_query,
-        [   
+        [
             developer_id,
             query,
             owner_types,

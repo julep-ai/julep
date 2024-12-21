@@ -63,6 +63,7 @@ def test_developer_id():
     developer_id = uuid7()
     return developer_id
 
+
 @fixture(scope="global")
 async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)

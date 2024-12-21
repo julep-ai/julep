@@ -9,6 +9,7 @@ from agents_api.queries.docs.list_docs import list_docs
 
 # If you wish to test text/embedding/hybrid search, import them:
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
+
 # from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 # from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
 # You can rename or remove these imports to match your actual fixtures
@@ -80,6 +81,7 @@ async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     assert doc_test.id == doc.id
     assert doc_test.title == doc.title
     assert doc_test.content == doc.content
+
 
 @test("query: list user docs")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
@@ -212,17 +214,18 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     )
     assert not any(d.id == doc_agent.id for d in docs_list)
 
+
 @test("query: search docs by text")
 async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Create a test document
     await create_doc(
         developer_id=developer.id,
         owner_type="agent",
         owner_id=agent.id,
         data=CreateDocRequest(
-            title="Hello", 
+            title="Hello",
             content="The world is a funny little thing",
             metadata={"test": "test"},
             embed_instruction="Embed the document",

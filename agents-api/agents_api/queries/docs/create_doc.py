@@ -153,7 +153,7 @@ async def create_doc(
     if isinstance(data.content, list):
         final_params_doc = []
         final_params_owner = []
-        
+
         for idx, content in enumerate(data.content):
             doc_params = [
                 developer_id,
@@ -185,7 +185,6 @@ async def create_doc(
         queries.append((doc_owner_query, final_params_owner, "fetchmany"))
 
     else:
-
         # Create the doc record
         doc_params = [
             developer_id,

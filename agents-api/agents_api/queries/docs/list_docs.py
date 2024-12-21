@@ -75,7 +75,9 @@ SELECT * FROM doc_data
         "id": d["doc_id"],
         "index": d["indices"][0],
         "content": d["content"][0] if len(d["content"]) == 1 else d["content"],
-        "embedding": d["embeddings"][0] if d.get("embeddings") and len(d["embeddings"]) == 1 else d.get("embeddings"),
+        "embedding": d["embeddings"][0]
+        if d.get("embeddings") and len(d["embeddings"]) == 1
+        else d.get("embeddings"),
         **d,
     },
 )
