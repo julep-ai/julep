@@ -8,34 +8,11 @@ from agents_api.queries.docs.get_doc import get_doc
 from agents_api.queries.docs.list_docs import list_docs
 
 # If you wish to test text/embedding/hybrid search, import them:
-# from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
+from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 # from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 # from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
 # You can rename or remove these imports to match your actual fixtures
 from tests.fixtures import pg_dsn, test_agent, test_developer, test_doc, test_user
-
-
-@test("query: create doc")
-async def _(dsn=pg_dsn, developer=test_developer):
-    pool = await create_db_pool(dsn=dsn)
-    doc = await create_doc(
-        developer_id=developer.id,
-        data=CreateDocRequest(
-            title="Hello Doc",
-            content="This is sample doc content",
-            embed_instruction="Embed the document",
-            metadata={"test": "test"},
-        ),
-        connection_pool=pool,
-    )
-
-    assert doc.title == "Hello Doc"
-    assert doc.content == "This is sample doc content"
-    assert doc.modality == "text"
-    assert doc.embedding_model == "voyage-3"
-    assert doc.embedding_dimensions == 1024
-    assert doc.language == "english"
-    assert doc.index == 0
 
 
 @test("query: create user doc")
@@ -92,7 +69,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert any(d.id == doc.id for d in docs_list)
 
 
-@test("model: get doc")
+@test("query: get doc")
 async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     pool = await create_db_pool(dsn=dsn)
     doc_test = await get_doc(
@@ -102,18 +79,7 @@ async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     )
     assert doc_test.id == doc.id
     assert doc_test.title == doc.title
-
-
-@test("query: list docs")
-async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
-    pool = await create_db_pool(dsn=dsn)
-    docs_list = await list_docs(
-        developer_id=developer.id,
-        connection_pool=pool,
-    )
-    assert len(docs_list) >= 1
-    assert any(d.id == doc.id for d in docs_list)
-
+    assert doc_test.content == doc.content
 
 @test("query: list user docs")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
@@ -246,12 +212,34 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     )
     assert not any(d.id == doc_agent.id for d in docs_list)
 
-
-@test("query: delete doc")
-async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
+@test("query: search docs by text")
+async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
-    await delete_doc(
+    
+    # Create a test document
+    await create_doc(
         developer_id=developer.id,
-        doc_id=doc.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        data=CreateDocRequest(
+            title="Hello", 
+            content="The world is a funny little thing",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
         connection_pool=pool,
     )
+
+    # Search using the correct parameter types
+    result = await search_docs_by_text(
+        developer_id=developer.id,
+        owners=[("agent", agent.id)],
+        query="funny",
+        k=3,  # Add k parameter
+        search_language="english",  # Add language parameter
+        metadata_filter={},  # Add metadata filter
+        connection_pool=pool,
+    )
+
+    assert len(result) >= 1
+    assert result[0].metadata is not None

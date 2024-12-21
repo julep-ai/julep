@@ -1,8 +1,3 @@
-"""
-Hybrid doc search that merges text search and embedding search results
-via a simple distribution-based score fusion or direct weighting in Python.
-"""
-
 from typing import List, Literal
 from uuid import UUID
 

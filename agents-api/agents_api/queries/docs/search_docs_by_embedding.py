@@ -1,7 +1,3 @@
-"""
-Timescale-based doc embedding search using the `embedding` column.
-"""
-
 from typing import List, Literal
 from uuid import UUID
 

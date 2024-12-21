@@ -16,22 +16,18 @@ WITH deleted_owners AS (
     DELETE FROM doc_owners
     WHERE developer_id = $1
       AND doc_id = $2
-      AND (
-        ($3::text IS NULL AND $4::uuid IS NULL)
-        OR (owner_type = $3 AND owner_id = $4)
-      )
+      AND owner_type = $3 
+      AND owner_id = $4
 )
 DELETE FROM docs
 WHERE developer_id = $1
   AND doc_id = $2
-  AND (
-      $3::text IS NULL OR EXISTS (
-        SELECT 1 FROM doc_owners
-        WHERE developer_id = $1
-          AND doc_id = $2
-          AND owner_type = $3
-          AND owner_id = $4
-      )
+  AND EXISTS (
+    SELECT 1 FROM doc_owners
+    WHERE developer_id = $1
+      AND doc_id = $2
+      AND owner_type = $3
+      AND owner_id = $4
   )
 RETURNING doc_id;
 """).sql(pretty=True)
@@ -61,8 +57,8 @@ async def delete_doc(
     *,
     developer_id: UUID,
     doc_id: UUID,
-    owner_type: Literal["user", "agent"] | None = None,
-    owner_id: UUID | None = None,
+    owner_type: Literal["user", "agent"],
+    owner_id: UUID,
 ) -> tuple[str, list]:
     """
     Deletes a doc (and associated doc_owners) for the given developer and doc_id.

@@ -8,6 +8,7 @@ Main functionalities include:
 - Listing documents based on various criteria, including ownership and metadata filters.
 - Deleting documents by their unique identifiers.
 - Embedding document snippets for retrieval purposes.
+- Searching documents by text.
 
 The module interacts with other parts of the application, such as the agents and users modules, to provide a comprehensive document management system. Its role is crucial in enabling document search, retrieval, and management features within the context of agents and users.
 
@@ -22,12 +23,13 @@ from .get_doc import get_doc
 from .list_docs import list_docs
 
 # from .search_docs_by_embedding import search_docs_by_embedding
-# from .search_docs_by_text import search_docs_by_text
+from .search_docs_by_text import search_docs_by_text
 
 __all__ = [
     "create_doc",
     "delete_doc",
     "get_doc",
     "list_docs",
-    # "search_docs_by_embct",
+    # "search_docs_by_embedding",
+    "search_docs_by_text",
 ]

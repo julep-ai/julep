@@ -63,23 +63,6 @@ def test_developer_id():
     developer_id = uuid7()
     return developer_id
 
-
-# @fixture(scope="global")
-# async def test_file(dsn=pg_dsn, developer_id=test_developer_id):
-#     async with get_pg_client(dsn=dsn) as client:
-#         file = await create_file(
-#             developer_id=developer_id,
-#             data=CreateFileRequest(
-#                 name="Hello",
-#                 description="World",
-#                 mime_type="text/plain",
-#                 content="eyJzYW1wbGUiOiAidGVzdCJ9",
-#             ),
-#             client=client,
-#         )
-#         yield file
-
-
 @fixture(scope="global")
 async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
@@ -150,16 +133,18 @@ async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
 
 
 @fixture(scope="test")
-async def test_doc(dsn=pg_dsn, developer=test_developer):
+async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
     doc = await create_doc(
         developer_id=developer.id,
         data=CreateDocRequest(
             title="Hello",
-            content=["World"],
+            content=["World", "World2", "World3"],
             metadata={"test": "test"},
             embed_instruction="Embed the document",
         ),
+        owner_type="agent",
+        owner_id=agent.id,
         connection_pool=pool,
     )
     return doc

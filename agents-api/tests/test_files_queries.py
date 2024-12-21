@@ -82,7 +82,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert any(f.id == file.id for f in files)
 
 
-@test("model: get file")
+@test("query: get file")
 async def _(dsn=pg_dsn, file=test_file, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
     file_test = await get_file(
