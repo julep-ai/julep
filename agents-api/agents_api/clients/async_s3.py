@@ -16,6 +16,7 @@ with workflow.unsafe.imports_passed_through():
     )
 
 
+@alru_cache(maxsize=1024)
 async def list_buckets() -> list[str]:
     session = get_session()
 

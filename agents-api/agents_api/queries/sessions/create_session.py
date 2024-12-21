@@ -7,7 +7,7 @@ from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
-    CreateSessionRequest,
+    Create`Request,
     ResourceCreatedResponse,
 )
 from ...metrics.counters import increase_counter
