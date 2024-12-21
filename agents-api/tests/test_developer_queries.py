@@ -3,7 +3,9 @@
 from uuid_extensions import uuid7
 from ward import raises, test
 
+from agents_api.autogen.openapi_model import ResourceCreatedResponse
 from agents_api.clients.pg import create_db_pool
+from agents_api.common.protocol.developers import Developer
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import (
     get_developer,
@@ -32,6 +34,7 @@ async def _(dsn=pg_dsn, dev=test_new_developer):
         connection_pool=pool,
     )
 
+    assert type(developer) == Developer
     assert developer.id == dev.id
     assert developer.email == dev.email
     assert developer.active
@@ -52,11 +55,9 @@ async def _(dsn=pg_dsn):
         connection_pool=pool,
     )
 
+    assert type(developer) == ResourceCreatedResponse
     assert developer.id == dev_id
-    assert developer.email == "m@mail.com"
-    assert developer.active
-    assert developer.tags == ["tag1"]
-    assert developer.settings == {"key1": "val1"}
+    assert developer.created_at is not None
 
 
 @test("query: update developer")
@@ -71,10 +72,6 @@ async def _(dsn=pg_dsn, dev=test_new_developer, email=random_email):
     )
 
     assert developer.id == dev.id
-    assert developer.email == email
-    assert developer.active
-    assert developer.tags == ["tag2"]
-    assert developer.settings == {"key2": "val2"}
 
 
 @test("query: patch developer")

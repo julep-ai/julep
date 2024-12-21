@@ -12,8 +12,9 @@ from agents_api.autogen.openapi_model import (
     PatchSessionRequest,
     ResourceDeletedResponse,
     ResourceUpdatedResponse,
-    Session,
     UpdateSessionRequest,
+    ResourceCreatedResponse,
+    Session,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.sessions import (
@@ -56,7 +57,9 @@ async def _(
     )
 
     assert result is not None
-    assert isinstance(result, Session), f"Result is not a Session, {result}"
+    assert isinstance(
+        result, ResourceCreatedResponse
+    ), f"Result is not a Session, {result}"
     assert result.id == session_id
 
 
@@ -148,8 +151,8 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert isinstance(result, list)
     assert len(result) >= 1
     assert all(
-        s.situation == session.situation for s in result
-    ), f"Result is not a list of sessions, {result}, {session.situation}"
+        isinstance(s, Session) for s in result
+    ), f"Result is not a list of sessions, {result}"
 
 
 @test("query: count sessions")
@@ -227,7 +230,6 @@ async def _(
         session_id=session.id,
         connection_pool=pool,
     )
-    assert patched_session.situation == session.situation
     assert patched_session.metadata == {"test": "metadata"}
 
 

@@ -19,11 +19,9 @@ with workflow.unsafe.imports_passed_through():
         ExecutionInput,
         StepContext,
     )
-    from ...common.storage_handler import auto_blob_store_workflow
     from ...env import task_max_parallelism, temporal_heartbeat_timeout
 
 
-@auto_blob_store_workflow
 async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
@@ -50,7 +48,6 @@ async def continue_as_child(
     )
 
 
-@auto_blob_store_workflow
 async def execute_switch_branch(
     *,
     context: StepContext,
@@ -84,7 +81,6 @@ async def execute_switch_branch(
     )
 
 
-@auto_blob_store_workflow
 async def execute_if_else_branch(
     *,
     context: StepContext,
@@ -123,7 +119,6 @@ async def execute_if_else_branch(
     )
 
 
-@auto_blob_store_workflow
 async def execute_foreach_step(
     *,
     context: StepContext,
@@ -161,7 +156,6 @@ async def execute_foreach_step(
     return results
 
 
-@auto_blob_store_workflow
 async def execute_map_reduce_step(
     *,
     context: StepContext,
@@ -209,7 +203,6 @@ async def execute_map_reduce_step(
     return result
 
 
-@auto_blob_store_workflow
 async def execute_map_reduce_step_parallel(
     *,
     context: StepContext,

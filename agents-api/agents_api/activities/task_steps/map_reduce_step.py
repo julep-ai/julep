@@ -8,12 +8,10 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
-from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from .base_evaluate import base_evaluate
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def map_reduce_step(context: StepContext) -> StepOutcome:
     try:

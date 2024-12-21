@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS executions (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_executions PRIMARY KEY (execution_id),
     CONSTRAINT fk_executions_developer FOREIGN KEY (developer_id) REFERENCES developers (developer_id),
-    CONSTRAINT fk_executions_task FOREIGN KEY (developer_id, task_id, task_version) REFERENCES tasks (developer_id, task_id, "version")
+    CONSTRAINT fk_executions_task FOREIGN KEY (developer_id, task_id, task_version) REFERENCES tasks (developer_id, task_id, "version"),
+    CONSTRAINT ct_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object')
 );
 
 -- Create index on developer_id

@@ -172,12 +172,19 @@ def pg_query(
                             results: list[Record] = await method(
                                 query, *args, timeout=timeout
                             )
-                            all_results.append(results)
+                            if method_name == "fetchrow":
+                                results = (
+                                    [results]
+                                    if results is not None
+                                    and results.get("bool", False) is not None
+                                    and results.get("exists", True) is not False
+                                    else []
+                                )
 
-                            if method_name == "fetchrow" and (
-                                len(results) == 0 or results.get("bool", True) is None
-                            ):
+                            if method_name == "fetchrow" and len(results) == 0:
                                 raise asyncpg.NoDataFoundError("No data found")
+
+                            all_results.append(results)
 
                         end = timeit and time.perf_counter()
 

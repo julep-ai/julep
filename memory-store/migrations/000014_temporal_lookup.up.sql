@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS temporal_executions_lookup (
     result_run_id TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_temporal_executions_lookup PRIMARY KEY (execution_id, id),
-    CONSTRAINT fk_temporal_executions_lookup_execution FOREIGN KEY (execution_id) REFERENCES executions (execution_id)
+    CONSTRAINT fk_temporal_executions_lookup_execution FOREIGN KEY (execution_id) REFERENCES executions (execution_id) ON DELETE CASCADE
 );
 
 -- Add comment to table

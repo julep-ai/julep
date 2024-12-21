@@ -6,10 +6,11 @@ It constructs and executes SQL queries to fetch file details based on file ID an
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 from sqlglot import parse_one
+
+import asyncpg
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import File
 from ..utils import (

@@ -49,7 +49,9 @@ CREATE TABLE IF NOT EXISTS transitions (
     output JSONB,
     task_token TEXT DEFAULT NULL,
     metadata JSONB DEFAULT '{}'::JSONB,
-    CONSTRAINT pk_transitions PRIMARY KEY (created_at, execution_id, transition_id)
+    CONSTRAINT pk_transitions PRIMARY KEY (created_at, execution_id, transition_id),
+    CONSTRAINT ct_step_definition_is_object CHECK (jsonb_typeof(step_definition) = 'object'),
+    CONSTRAINT ct_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object')
 );
 
 -- Convert to hypertable if not already
@@ -96,7 +98,8 @@ BEGIN
         ALTER TABLE transitions
             ADD CONSTRAINT fk_transitions_execution
             FOREIGN KEY (execution_id)
-            REFERENCES executions(execution_id);
+            REFERENCES executions(execution_id)
+            ON DELETE CASCADE;
     END IF;
 END $$;
 

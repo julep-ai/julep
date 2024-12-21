@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS docs (
     CONSTRAINT ct_docs_embedding_dimensions_positive CHECK (embedding_dimensions > 0),
     CONSTRAINT ct_docs_valid_modality CHECK (modality IN ('text', 'image', 'mixed')),
     CONSTRAINT ct_docs_index_positive CHECK (index >= 0),
-    CONSTRAINT ct_docs_valid_language CHECK (is_valid_language (language))
+    CONSTRAINT ct_docs_valid_language CHECK (is_valid_language (language)),
+    CONSTRAINT ct_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object')
 );
 
 -- Create foreign key constraint if not exists (using DO block for safety)
@@ -71,6 +72,7 @@ CREATE TABLE IF NOT EXISTS doc_owners (
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_doc_owners_owner ON doc_owners (developer_id, owner_type, owner_id);
+
 
 -- Create function to validate owner reference
 CREATE

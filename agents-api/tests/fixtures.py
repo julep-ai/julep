@@ -11,6 +11,7 @@ from agents_api.autogen.openapi_model import (
     CreateDocRequest,
     CreateFileRequest,
     CreateSessionRequest,
+    CreateTaskRequest,
     CreateUserRequest,
 )
 from agents_api.clients.pg import create_db_pool
@@ -30,8 +31,8 @@ from agents_api.queries.files.create_file import create_file
 
 # from agents_api.queries.files.delete_file import delete_file
 from agents_api.queries.sessions.create_session import create_session
+from agents_api.queries.tasks.create_task import create_task
 
-# from agents_api.queries.task.create_task import create_task
 # from agents_api.queries.task.delete_task import delete_task
 # from agents_api.queries.tools.create_tools import create_tools
 # from agents_api.queries.tools.delete_tool import delete_tool
@@ -152,6 +153,24 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 
 
 @fixture(scope="test")
+async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+    task = await create_task(
+        developer_id=developer.id,
+        agent_id=agent.id,
+        task_id=uuid7(),
+        data=CreateTaskRequest(
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"hi": "_"}}],
+        ),
+        connection_pool=pool,
+    )
+    return task
+
+
+@fixture(scope="test")
 async def random_email():
     return f"{"".join([random.choice(string.ascii_lowercase) for _ in range(10)])}@mail.com"
 
@@ -160,11 +179,16 @@ async def random_email():
 async def test_new_developer(dsn=pg_dsn, email=random_email):
     pool = await create_db_pool(dsn=dsn)
     dev_id = uuid7()
-    developer = await create_developer(
+    await create_developer(
         email=email,
         active=True,
         tags=["tag1"],
         settings={"key1": "val1"},
+        developer_id=dev_id,
+        connection_pool=pool,
+    )
+
+    developer = await get_developer(
         developer_id=dev_id,
         connection_pool=pool,
     )

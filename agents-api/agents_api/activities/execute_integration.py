@@ -7,12 +7,10 @@ from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
 from ..common.protocol.tasks import ExecutionInput, StepContext
-from ..common.storage_handler import auto_blob_store
 from ..env import testing
 from ..models.tools import get_tool_args_from_metadata
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def execute_integration(
     context: StepContext,

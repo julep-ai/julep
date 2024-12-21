@@ -22,7 +22,7 @@ BEGIN
         ALTER TABLE entry_relations
         ADD CONSTRAINT fk_entry_relations_session
         FOREIGN KEY (session_id)
-        REFERENCES sessions(session_id);
+        REFERENCES sessions(session_id) ON DELETE CASCADE;
     END IF;
 END $$;
 

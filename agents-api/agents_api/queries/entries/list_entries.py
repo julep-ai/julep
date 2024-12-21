@@ -11,14 +11,10 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """
-SELECT CASE
-    WHEN EXISTS (
-        SELECT 1 FROM sessions
-        WHERE session_id = $1 AND developer_id = $2
-    )
-    THEN TRUE
-    ELSE (SELECT NULL::boolean WHERE FALSE)  -- This raises a NO_DATA_FOUND error
-END;
+SELECT EXISTS (
+    SELECT 1 FROM sessions
+    WHERE session_id = $1 AND developer_id = $2
+) AS exists;
 """
 
 list_entries_query = """

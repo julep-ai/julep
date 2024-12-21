@@ -55,8 +55,7 @@ CREATE TABLE IF NOT EXISTS file_owners (
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_file_owners_owner
-    ON file_owners (developer_id, owner_type, owner_id);
+CREATE INDEX IF NOT EXISTS idx_file_owners_owner ON file_owners (developer_id, owner_type, owner_id);
 
 -- Create function to validate owner reference
 CREATE OR REPLACE FUNCTION validate_file_owner()
