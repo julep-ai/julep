@@ -5,7 +5,7 @@ It includes functions to construct and execute SQL queries for inserting new fil
 
 import base64
 import hashlib
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 import asyncpg

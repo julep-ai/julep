@@ -17,7 +17,7 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 # Base query for listing docs with aggregated content and embeddings
 base_docs_query = parse_one("""
 WITH doc_data AS (
-    SELECT DISTINCT ON (d.doc_id)
+    SELECT 
         d.doc_id,
         d.developer_id,
         d.title,
@@ -54,6 +54,22 @@ SELECT * FROM doc_data
 """).sql(pretty=True)
 
 
+def transform_list_docs(d: dict) -> dict:
+    content = d["content"][0] if len(d["content"]) == 1 else d["content"]
+
+    embeddings = d["embeddings"][0] if len(d["embeddings"]) == 1 else d["embeddings"]
+    if embeddings and all((e is None) for e in embeddings):
+        embeddings = None
+
+    transformed = {
+        **d,
+        "id": d["doc_id"],
+        "content": content,
+        "embeddings": embeddings,
+    }
+    return transformed
+
+
 @rewrap_exceptions(
     {
         asyncpg.NoDataFoundError: partialclass(
@@ -71,15 +87,7 @@ SELECT * FROM doc_data
 @wrap_in_class(
     Doc,
     one=False,
-    transform=lambda d: {
-        "id": d["doc_id"],
-        "index": d["indices"][0],
-        "content": d["content"][0] if len(d["content"]) == 1 else d["content"],
-        "embedding": d["embeddings"][0]
-        if d.get("embeddings") and len(d["embeddings"]) == 1
-        else d.get("embeddings"),
-        **d,
-    },
+    transform=transform_list_docs,
 )
 @pg_query
 @beartype

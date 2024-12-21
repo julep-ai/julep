@@ -26,7 +26,7 @@ model Doc {
 
     /** Embeddings for the document */
     @visibility("read")
-    embeddings?: float32[] | float32[][];
+    embeddings: float32[] | float32[][] | null = null;
 
     @visibility("read")
     /** Modality of the document */
@@ -37,11 +37,7 @@ model Doc {
     language?: string;
 
     @visibility("read")
-    /** Index of the document */
-    index?: uint16;      
-
-    @visibility("read")
-    /** Embedding model to use for the document */
+    /** Embedding model used for the document */
     embedding_model?: string;
 
     @visibility("read")

@@ -81,15 +81,11 @@ class Doc(BaseModel):
     """
     Language of the document
     """
-    index: Annotated[int | None, Field(json_schema_extra={"readOnly": True})] = None
-    """
-    Index of the document
-    """
     embedding_model: Annotated[
         str | None, Field(json_schema_extra={"readOnly": True})
     ] = None
     """
-    Embedding model to use for the document
+    Embedding model used for the document
     """
     embedding_dimensions: Annotated[
         int | None, Field(json_schema_extra={"readOnly": True})

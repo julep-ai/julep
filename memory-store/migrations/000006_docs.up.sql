@@ -24,12 +24,11 @@ CREATE TABLE IF NOT EXISTS docs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
-    CONSTRAINT pk_docs PRIMARY KEY (developer_id, doc_id),
+    CONSTRAINT pk_docs PRIMARY KEY (developer_id, doc_id, index),
     CONSTRAINT ct_docs_embedding_dimensions_positive CHECK (embedding_dimensions > 0),
     CONSTRAINT ct_docs_valid_modality CHECK (modality IN ('text', 'image', 'mixed')),
     CONSTRAINT ct_docs_index_positive CHECK (index >= 0),
-    CONSTRAINT ct_docs_valid_language CHECK (is_valid_language (language)),
-    UNIQUE (developer_id, doc_id, index)
+    CONSTRAINT ct_docs_valid_language CHECK (is_valid_language (language))
 );
 
 -- Create foreign key constraint if not exists (using DO block for safety)
@@ -62,20 +61,20 @@ END $$;
 CREATE TABLE IF NOT EXISTS doc_owners (
     developer_id UUID NOT NULL,
     doc_id UUID NOT NULL,
-    owner_type TEXT NOT NULL,  -- 'user' or 'agent'
+    owner_type TEXT NOT NULL, -- 'user' or 'agent'
     owner_id UUID NOT NULL,
     CONSTRAINT pk_doc_owners PRIMARY KEY (developer_id, doc_id),
-    CONSTRAINT fk_doc_owners_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id),
+    -- TODO: Ensure that doc exists (this constraint is not working)
+    -- CONSTRAINT fk_doc_owners_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id),
     CONSTRAINT ct_doc_owners_owner_type CHECK (owner_type IN ('user', 'agent'))
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_doc_owners_owner 
-    ON doc_owners (developer_id, owner_type, owner_id);
+CREATE INDEX IF NOT EXISTS idx_doc_owners_owner ON doc_owners (developer_id, owner_type, owner_id);
 
 -- Create function to validate owner reference
-CREATE OR REPLACE FUNCTION validate_doc_owner()
-RETURNS TRIGGER AS $$
+CREATE
+OR REPLACE FUNCTION validate_doc_owner () RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.owner_type = 'user' THEN
         IF NOT EXISTS (
@@ -97,10 +96,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger for validation
-CREATE TRIGGER trg_validate_doc_owner
-BEFORE INSERT OR UPDATE ON doc_owners
-FOR EACH ROW
-EXECUTE FUNCTION validate_doc_owner();
+CREATE TRIGGER trg_validate_doc_owner BEFORE INSERT
+OR
+UPDATE ON doc_owners FOR EACH ROW
+EXECUTE FUNCTION validate_doc_owner ();
 
 -- Create indexes if not exists
 CREATE INDEX IF NOT EXISTS idx_docs_metadata ON docs USING GIN (metadata);

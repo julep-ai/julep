@@ -1,19 +1,18 @@
-import ast
 from typing import Literal
 from uuid import UUID
 
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateDocRequest, Doc
+from ...autogen.openapi_model import CreateDocRequest, ResourceCreatedResponse
+from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Base INSERT for docs
-doc_query = parse_one("""
+doc_query = """
 INSERT INTO docs (
     developer_id,
     doc_id,
@@ -38,48 +37,15 @@ VALUES (
     $9, -- language
     $10 -- metadata (JSONB)
 )
-RETURNING *;
-""").sql(pretty=True)
+"""
 
 # Owner association query for doc_owners
-doc_owner_query = parse_one("""
-WITH inserted_owner AS (
-    INSERT INTO doc_owners (
-        developer_id,
-        doc_id,
-        index,
-        owner_type,
-        owner_id
-    )
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING doc_id
-)
-SELECT DISTINCT ON (docs.doc_id)
-    docs.doc_id,
-    docs.developer_id,
-    docs.title,
-    array_agg(docs.content ORDER BY docs.index) as content,
-    array_agg(docs.index ORDER BY docs.index) as indices,
-    docs.modality,
-    docs.embedding_model,
-    docs.embedding_dimensions,
-    docs.language,
-    docs.metadata,
-    docs.created_at
-                        
-FROM inserted_owner io
-JOIN docs ON docs.doc_id = io.doc_id
-GROUP BY 
-    docs.doc_id,
-    docs.developer_id,
-    docs.title,
-    docs.modality,
-    docs.embedding_model,
-    docs.embedding_dimensions,
-    docs.language,
-    docs.metadata,
-    docs.created_at;
-""").sql(pretty=True)
+doc_owner_query = """
+INSERT INTO doc_owners (developer_id, doc_id, owner_type, owner_id)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT DO NOTHING
+RETURNING *;
+"""
 
 
 @rewrap_exceptions(
@@ -102,12 +68,12 @@ GROUP BY
     }
 )
 @wrap_in_class(
-    Doc,
+    ResourceCreatedResponse,
     one=True,
     transform=lambda d: {
         "id": d["doc_id"],
-        "index": d["indices"][0],
-        "content": d["content"][0] if len(d["content"]) == 1 else d["content"],
+        "jobs": [],
+        "created_at": utcnow(),
         **d,
     },
 )
@@ -146,6 +112,7 @@ async def create_doc(
         list[tuple[str, list] | tuple[str, list, str]]: SQL query and parameters for creating the document.
     """
     queries = []
+
     # Generate a UUID if not provided
     current_doc_id = uuid7() if doc_id is None else doc_id
 
@@ -172,7 +139,6 @@ async def create_doc(
             owner_params = [
                 developer_id,
                 current_doc_id,
-                idx,
                 owner_type,
                 owner_id,
             ]
@@ -202,7 +168,6 @@ async def create_doc(
         owner_params = [
             developer_id,
             current_doc_id,
-            index,
             owner_type,
             owner_id,
         ]

@@ -1,6 +1,5 @@
 """Module for retrieving document snippets from the CozoDB based on document IDs."""
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 import asyncpg

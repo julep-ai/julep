@@ -1,5 +1,3 @@
-import ast
-from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -11,7 +9,7 @@ from ..utils import pg_query, wrap_in_class
 # Update the query to use DISTINCT ON to prevent duplicates
 doc_with_embedding_query = parse_one("""
 WITH doc_data AS (
-    SELECT DISTINCT ON (d.doc_id)
+    SELECT
         d.doc_id,
         d.developer_id,
         d.title,
@@ -44,18 +42,26 @@ SELECT * FROM doc_data;
 """).sql(pretty=True)
 
 
+def transform_get_doc(d: dict) -> dict:
+    content = d["content"][0] if len(d["content"]) == 1 else d["content"]
+
+    embeddings = d["embeddings"][0] if len(d["embeddings"]) == 1 else d["embeddings"]
+    if embeddings and all((e is None) for e in embeddings):
+        embeddings = None
+
+    transformed = {
+        **d,
+        "id": d["doc_id"],
+        "content": content,
+        "embeddings": embeddings,
+    }
+    return transformed
+
+
 @wrap_in_class(
     Doc,
-    one=True,  # Changed to True since we're now returning one grouped record
-    transform=lambda d: {
-        "id": d["doc_id"],
-        "index": d["indices"][0],
-        "content": d["content"][0] if len(d["content"]) == 1 else d["content"],
-        "embeddings": d["embeddings"][0]
-        if len(d["embeddings"]) == 1
-        else d["embeddings"],
-        **d,
-    },
+    one=True,
+    transform=transform_get_doc,
 )
 @pg_query
 @beartype

@@ -2838,6 +2838,7 @@ components:
         - created_at
         - title
         - content
+        - embeddings
       properties:
         id:
           allOf:
@@ -2874,7 +2875,9 @@ components:
                 items:
                   type: number
                   format: float
+          nullable: true
           description: Embeddings for the document
+          default: null
           readOnly: true
         modality:
           type: string
@@ -2884,14 +2887,9 @@ components:
           type: string
           description: Language of the document
           readOnly: true
-        index:
-          type: integer
-          format: uint16
-          description: Index of the document
-          readOnly: true
         embedding_model:
           type: string
-          description: Embedding model to use for the document
+          description: Embedding model used for the document
           readOnly: true
         embedding_dimensions:
           type: integer
