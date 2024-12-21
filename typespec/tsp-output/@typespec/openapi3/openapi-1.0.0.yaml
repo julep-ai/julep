@@ -4574,9 +4574,16 @@ components:
         - inherit_tools
       properties:
         name:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: The name of the task.
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: The canonical name of the task.
         description:
           type: string
+          description: The description of the task.
           default: ''
         main:
           type: array
@@ -5190,8 +5197,17 @@ components:
     Tasks.PatchTaskRequest:
       type: object
       properties:
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: The name of the task.
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: The canonical name of the task.
         description:
           type: string
+          description: The description of the task.
           default: ''
         main:
           type: array
@@ -5986,9 +6002,16 @@ components:
         - updated_at
       properties:
         name:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: The name of the task.
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: The canonical name of the task.
         description:
           type: string
+          description: The description of the task.
           default: ''
         main:
           type: array
@@ -6333,14 +6356,24 @@ components:
     Tasks.UpdateTaskRequest:
       type: object
       required:
+        - name
         - description
         - main
         - input_schema
         - tools
         - inherit_tools
       properties:
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: The name of the task.
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: The canonical name of the task.
         description:
           type: string
+          description: The description of the task.
           default: ''
         main:
           type: array

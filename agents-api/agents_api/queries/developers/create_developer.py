@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
-from ...common.protocol.developers import Developer
+from ...autogen.openapi_model import ResourceCreatedResponse
 from ..utils import (
     partialclass,
     pg_query,
@@ -43,7 +43,11 @@ RETURNING *;
         )
     }
 )
-@wrap_in_class(Developer, one=True, transform=lambda d: {**d, "id": d["developer_id"]})
+@wrap_in_class(
+    ResourceCreatedResponse,
+    one=True,
+    transform=lambda d: {**d, "id": d["developer_id"], "created_at": d["created_at"]},
+)
 @pg_query
 @beartype
 async def create_developer(

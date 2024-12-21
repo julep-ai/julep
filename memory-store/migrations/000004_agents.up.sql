@@ -1,16 +1,5 @@
 BEGIN;
 
--- Drop existing objects if they exist
-DROP TRIGGER IF EXISTS trg_agents_updated_at ON agents;
-
-DROP INDEX IF EXISTS idx_agents_metadata;
-
-DROP INDEX IF EXISTS idx_agents_developer;
-
-DROP INDEX IF EXISTS idx_agents_id_sorted;
-
-DROP TABLE IF EXISTS agents;
-
 -- Create agents table
 CREATE TABLE IF NOT EXISTS agents (
     developer_id UUID NOT NULL,
@@ -35,7 +24,9 @@ CREATE TABLE IF NOT EXISTS agents (
     default_settings JSONB NOT NULL DEFAULT '{}'::JSONB,
     CONSTRAINT pk_agents PRIMARY KEY (developer_id, agent_id),
     CONSTRAINT uq_agents_canonical_name_unique UNIQUE (developer_id, canonical_name), -- per developer
-    CONSTRAINT ct_agents_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$')
+    CONSTRAINT ct_agents_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
+    CONSTRAINT ct_agents_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object'),
+    CONSTRAINT ct_agents_default_settings_is_object CHECK (jsonb_typeof(default_settings) = 'object')
 );
 
 -- Create sorted index on agent_id (optimized for UUID v7)

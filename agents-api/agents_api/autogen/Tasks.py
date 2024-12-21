@@ -161,8 +161,21 @@ class CreateTaskRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    name: str
+    name: Annotated[str, Field(max_length=255, min_length=1)]
+    """
+    The name of the task.
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    The canonical name of the task.
+    """
     description: str = ""
+    """
+    The description of the task.
+    """
     main: Annotated[
         list[
             EvaluateStep
@@ -650,7 +663,21 @@ class PatchTaskRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    name: Annotated[str | None, Field(max_length=255, min_length=1)] = None
+    """
+    The name of the task.
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    The canonical name of the task.
+    """
     description: str = ""
+    """
+    The description of the task.
+    """
     main: Annotated[
         list[
             EvaluateStep
@@ -966,8 +993,21 @@ class Task(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    name: str
+    name: Annotated[str, Field(max_length=255, min_length=1)]
+    """
+    The name of the task.
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    The canonical name of the task.
+    """
     description: str = ""
+    """
+    The description of the task.
+    """
     main: Annotated[
         list[
             EvaluateStep
@@ -1124,7 +1164,21 @@ class UpdateTaskRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    name: Annotated[str, Field(max_length=255, min_length=1)]
+    """
+    The name of the task.
+    """
+    canonical_name: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    The canonical name of the task.
+    """
     description: str = ""
+    """
+    The description of the task.
+    """
     main: Annotated[
         list[
             EvaluateStep

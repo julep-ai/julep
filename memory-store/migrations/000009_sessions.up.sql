@@ -16,21 +16,21 @@ CREATE TABLE IF NOT EXISTS sessions (
     recall_options JSONB NOT NULL DEFAULT '{}'::JSONB,
     CONSTRAINT pk_sessions PRIMARY KEY (developer_id, session_id),
     CONSTRAINT uq_sessions_session_id UNIQUE (session_id),
-    CONSTRAINT chk_sessions_token_budget_positive CHECK (
+    CONSTRAINT ct_sessions_token_budget_positive CHECK (
         token_budget IS NULL
         OR token_budget > 0
     ),
-    CONSTRAINT chk_sessions_context_overflow_valid CHECK (
+    CONSTRAINT ct_sessions_context_overflow_valid CHECK (
         context_overflow IS NULL
         OR context_overflow IN ('truncate', 'adaptive')
     ),
-    CONSTRAINT chk_sessions_system_template_not_empty CHECK (length(trim(system_template)) > 0),
-    CONSTRAINT chk_sessions_situation_not_empty CHECK (
+    CONSTRAINT ct_sessions_system_template_not_empty CHECK (length(trim(system_template)) > 0),
+    CONSTRAINT ct_sessions_situation_not_empty CHECK (
         situation IS NULL
         OR length(trim(situation)) > 0
     ),
-    CONSTRAINT chk_sessions_metadata_valid CHECK (jsonb_typeof(metadata) = 'object'),
-    CONSTRAINT chk_sessions_recall_options_valid CHECK (jsonb_typeof(recall_options) = 'object')
+    CONSTRAINT ct_sessions_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object'),
+    CONSTRAINT ct_sessions_recall_options_is_object CHECK (jsonb_typeof(recall_options) = 'object')
 );
 
 -- Create indexes if they don't exist
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS session_lookup (
         participant_type,
         participant_id
     ),
-    FOREIGN KEY (developer_id, session_id) REFERENCES sessions (developer_id, session_id)
+    FOREIGN KEY (developer_id, session_id) REFERENCES sessions (developer_id, session_id) ON DELETE CASCADE
 );
 
 -- Create indexes if they don't exist

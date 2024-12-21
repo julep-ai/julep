@@ -1,9 +1,33 @@
 BEGIN;
 
 -- Create chat_role enum
-CREATE TYPE chat_role AS ENUM('user', 'assistant', 'tool', 'system', 'developer');
+CREATE TYPE chat_role AS ENUM(
+    'user',
+    'assistant',
+    'tool',
+    'system',
+    'developer'
+);
 
--- Create entries table
+-- Create a custom function that checks if `content` is non-empty
+-- and that every JSONB element in the array is an 'object'.
+CREATE
+OR REPLACE FUNCTION all_jsonb_elements_are_objects (content jsonb[]) RETURNS boolean AS $$
+DECLARE
+    elem jsonb;
+BEGIN
+    -- Check each element in the `content` array
+    FOREACH elem IN ARRAY content
+    LOOP
+        IF jsonb_typeof(elem) <> 'object' THEN
+            RETURN false;
+        END IF;
+    END LOOP;
+    
+    RETURN true;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
 CREATE TABLE IF NOT EXISTS entries (
     session_id UUID NOT NULL,
     entry_id UUID NOT NULL,
@@ -13,13 +37,15 @@ CREATE TABLE IF NOT EXISTS entries (
     name TEXT,
     content JSONB[] NOT NULL,
     tool_call_id TEXT DEFAULT NULL,
-    tool_calls JSONB[] NOT NULL DEFAULT '{}',
+    tool_calls JSONB[] NOT NULL DEFAULT '{}'::JSONB[],
     model TEXT NOT NULL,
     token_count INTEGER DEFAULT NULL,
     tokenizer TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp DOUBLE PRECISION NOT NULL,
-    CONSTRAINT pk_entries PRIMARY KEY (session_id, entry_id, created_at)
+    CONSTRAINT pk_entries PRIMARY KEY (session_id, entry_id, created_at),
+    CONSTRAINT ct_content_is_array_of_objects CHECK (all_jsonb_elements_are_objects (content)),
+    CONSTRAINT ct_tool_calls_is_array_of_objects CHECK (all_jsonb_elements_are_objects (tool_calls))
 );
 
 -- Convert to hypertable if not already
@@ -49,7 +75,7 @@ BEGIN
         ALTER TABLE entries
         ADD CONSTRAINT fk_entries_session
         FOREIGN KEY (session_id)
-        REFERENCES sessions(session_id);
+        REFERENCES sessions(session_id) ON DELETE CASCADE;
     END IF;
 END $$;
 
@@ -87,8 +113,8 @@ UPDATE ON entries FOR EACH ROW
 EXECUTE FUNCTION optimized_update_token_count_after ();
 
 -- Add trigger to update parent session's updated_at
-CREATE OR REPLACE FUNCTION update_session_updated_at()
-RETURNS TRIGGER AS $$
+CREATE
+OR REPLACE FUNCTION update_session_updated_at () RETURNS TRIGGER AS $$
 BEGIN
     UPDATE sessions
     SET updated_at = CURRENT_TIMESTAMP
@@ -98,8 +124,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_update_session_updated_at
-AFTER INSERT OR UPDATE ON entries
-FOR EACH ROW
-EXECUTE FUNCTION update_session_updated_at();
+AFTER INSERT
+OR
+UPDATE ON entries FOR EACH ROW
+EXECUTE FUNCTION update_session_updated_at ();
 
 COMMIT;

@@ -18,6 +18,11 @@ from ..utils import (
 
 # Define the raw SQL query
 agent_query = parse_one("""
+WITH existing_agent AS (
+    SELECT canonical_name
+    FROM agents
+    WHERE developer_id = $1 AND agent_id = $2
+)
 INSERT INTO agents (
     developer_id,
     agent_id,
@@ -30,15 +35,18 @@ INSERT INTO agents (
     default_settings
 )
 VALUES (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    $7,
-    $8,
-    $9
+    $1,                                          -- developer_id
+    $2,                                          -- agent_id
+    COALESCE(                                    -- canonical_name
+        (SELECT canonical_name FROM existing_agent),
+        $3
+    ),
+    $4,                                          -- name
+    $5,                                          -- about
+    $6,                                          -- instructions
+    $7,                                          -- model
+    $8,                                          -- metadata
+    $9                                           -- default_settings
 )
 RETURNING *;
 """).sql(pretty=True)

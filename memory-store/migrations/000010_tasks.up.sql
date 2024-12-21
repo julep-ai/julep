@@ -30,12 +30,12 @@ CREATE TABLE IF NOT EXISTS tasks (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB DEFAULT '{}'::JSONB,
     CONSTRAINT pk_tasks PRIMARY KEY (developer_id, task_id, "version"),
-    CONSTRAINT uq_tasks_canonical_name_unique UNIQUE (developer_id, canonical_name),
-    CONSTRAINT fk_tasks_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
+    CONSTRAINT uq_tasks_canonical_name_unique UNIQUE (developer_id, canonical_name, "version"),
+    CONSTRAINT fk_tasks_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id) ON DELETE CASCADE,
     CONSTRAINT ct_tasks_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
-    CONSTRAINT chk_tasks_metadata_valid CHECK (jsonb_typeof(metadata) = 'object'),
-    CONSTRAINT chk_tasks_input_schema_valid CHECK (jsonb_typeof(input_schema) = 'object'),
-    CONSTRAINT chk_tasks_version_positive CHECK ("version" > 0)
+    CONSTRAINT ct_tasks_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object'),
+    CONSTRAINT ct_tasks_input_schema_is_object CHECK (jsonb_typeof(input_schema) = 'object'),
+    CONSTRAINT ct_tasks_version_positive CHECK ("version" > 0)
 );
 
 -- Create sorted index on task_id if it doesn't exist
@@ -98,20 +98,19 @@ COMMENT ON TABLE tasks IS 'Stores tasks associated with AI agents for developers
 CREATE TABLE IF NOT EXISTS workflows (
     developer_id UUID NOT NULL,
     task_id UUID NOT NULL,
-    version INTEGER NOT NULL,
-    name TEXT NOT NULL CONSTRAINT chk_workflows_name_length CHECK (
-        length(name) >= 1 AND length(name) <= 255
+    "version" INTEGER NOT NULL,
+    name TEXT NOT NULL CONSTRAINT ct_workflows_name_length CHECK (
+        length(name) >= 1
+        AND length(name) <= 255
     ),
-    step_idx INTEGER NOT NULL CONSTRAINT chk_workflows_step_idx_positive CHECK (step_idx >= 0),
-    step_type TEXT NOT NULL CONSTRAINT chk_workflows_step_type_length CHECK (
-        length(step_type) >= 1 AND length(step_type) <= 255
+    step_idx INTEGER NOT NULL CONSTRAINT ct_workflows_step_idx_positive CHECK (step_idx >= 0),
+    step_type TEXT NOT NULL CONSTRAINT ct_workflows_step_type_length CHECK (
+        length(step_type) >= 1
+        AND length(step_type) <= 255
     ),
-    step_definition JSONB NOT NULL CONSTRAINT chk_workflows_step_definition_valid CHECK (
-        jsonb_typeof(step_definition) = 'object'
-    ),
-    CONSTRAINT pk_workflows PRIMARY KEY (developer_id, task_id, version, step_idx),
-    CONSTRAINT fk_workflows_tasks FOREIGN KEY (developer_id, task_id, version)
-        REFERENCES tasks (developer_id, task_id, version) ON DELETE CASCADE
+    step_definition JSONB NOT NULL CONSTRAINT ct_workflows_step_definition_valid CHECK (jsonb_typeof(step_definition) = 'object'),
+    CONSTRAINT pk_workflows PRIMARY KEY (developer_id, task_id, "version", name, step_idx),
+    CONSTRAINT fk_workflows_tasks FOREIGN KEY (developer_id, task_id, "version") REFERENCES tasks (developer_id, task_id, "version") ON DELETE CASCADE
 );
 
 -- Create index for 'workflows' table if it doesn't exist

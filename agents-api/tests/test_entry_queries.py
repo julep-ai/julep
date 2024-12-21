@@ -3,8 +3,6 @@ This module contains tests for entry queries against the CozoDB database.
 It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
 """
 
-from uuid import UUID
-
 from fastapi import HTTPException
 from uuid_extensions import uuid7
 from ward import raises, test
@@ -48,7 +46,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert exc_info.raised.status_code == 404
 
 
-@test("query: list entries no session")
+@test("query: list entries sql - no session")
 async def _(dsn=pg_dsn, developer=test_developer):
     """Test the retrieval of entries from the database."""
 
@@ -63,7 +61,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert exc_info.raised.status_code == 404
 
 
-@test("query: get entries")
+@test("query: list entries sql - session exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     """Test the retrieval of entries from the database."""
 
@@ -101,7 +99,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert result is not None
 
 
-@test("query: get history")
+@test("query: get history sql - session exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     """Test the retrieval of entry history from the database."""
 
@@ -140,7 +138,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert result.entries[0].id
 
 
-@test("query: delete entries")
+@test("query: delete entries sql - session exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     """Test the deletion of entries from the database."""
 

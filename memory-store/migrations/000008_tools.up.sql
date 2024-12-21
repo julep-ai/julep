@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS tools (
     spec JSONB NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_tools PRIMARY KEY (developer_id, agent_id, tool_id, type, name)
+    CONSTRAINT pk_tools PRIMARY KEY (developer_id, agent_id, tool_id, type, name),
+    CONSTRAINT ct_spec_is_object CHECK (jsonb_typeof(spec) = 'object')
 );
 
 -- Create sorted index on tool_id if it doesn't exist
@@ -41,7 +42,7 @@ DO $$ BEGIN
         ALTER TABLE tools 
             ADD CONSTRAINT fk_tools_agent
             FOREIGN KEY (developer_id, agent_id) 
-            REFERENCES agents(developer_id, agent_id);
+            REFERENCES agents(developer_id, agent_id) ON DELETE CASCADE;
     END IF;
 END $$;
 
