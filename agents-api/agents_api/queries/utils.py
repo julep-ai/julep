@@ -245,10 +245,6 @@ def wrap_in_class(
             return obj
 
         objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
-        print("data", data)
-        print("-" * 10)
-        print("objs", objs)
-        print("-" * 100)
         return objs
 
     def decorator(

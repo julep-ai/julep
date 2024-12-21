@@ -134,7 +134,16 @@ async def delete_entries_for_session(
 async def delete_entries(
     *, developer_id: UUID, session_id: UUID, entry_ids: list[UUID]
 ) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
-    """Delete specific entries by their IDs."""
+    """Delete specific entries by their IDs.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        session_id (UUID): The ID of the session.
+        entry_ids (list[UUID]): The IDs of the entries to delete.
+
+    Returns:
+        list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]: SQL query and parameters for deleting the entries.
+    """
     return [
         (
             session_exists_query,

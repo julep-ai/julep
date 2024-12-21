@@ -3,7 +3,8 @@ BEGIN;
 -- Drop doc_owners table and its dependencies
 DROP TRIGGER IF EXISTS trg_validate_doc_owner ON doc_owners;
 DROP FUNCTION IF EXISTS validate_doc_owner();
-DROP TABLE IF EXISTS doc_owners;
+DROP INDEX IF EXISTS idx_doc_owners_owner;
+DROP TABLE IF EXISTS doc_owners CASCADE;
 
 -- Drop docs table and its dependencies
 DROP TRIGGER IF EXISTS trg_docs_search_tsv ON docs;
@@ -15,11 +16,9 @@ DROP INDEX IF EXISTS idx_docs_content_trgm;
 DROP INDEX IF EXISTS idx_docs_title_trgm;
 DROP INDEX IF EXISTS idx_docs_search_tsv;
 DROP INDEX IF EXISTS idx_docs_metadata;
-DROP INDEX IF EXISTS idx_docs_developer;
-DROP INDEX IF EXISTS idx_docs_id_sorted;
 
 -- Drop docs table
-DROP TABLE IF EXISTS docs;
+DROP TABLE IF EXISTS docs CASCADE;
 
 -- Drop language validation function
 DROP FUNCTION IF EXISTS is_valid_language(text);

@@ -7,10 +7,6 @@ DROP CONSTRAINT IF EXISTS fk_transitions_execution;
 -- Drop indexes if they exist
 DROP INDEX IF EXISTS idx_transitions_metadata;
 
-DROP INDEX IF EXISTS idx_transitions_execution_id_sorted;
-
-DROP INDEX IF EXISTS idx_transitions_transition_id_sorted;
-
 DROP INDEX IF EXISTS idx_transitions_label;
 
 DROP INDEX IF EXISTS idx_transitions_next;

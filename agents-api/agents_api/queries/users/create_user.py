@@ -37,10 +37,10 @@ RETURNING *;
             status_code=404,
             detail="The specified developer does not exist.",
         ),
-        asyncpg.NullValueNoIndicatorParameterError: partialclass(
+        asyncpg.UniqueViolationError: partialclass(
             HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
+            status_code=409,
+            detail="A user with this ID already exists for the specified developer.",
         ),
     }
 )

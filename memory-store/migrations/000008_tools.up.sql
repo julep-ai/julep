@@ -26,9 +26,6 @@ CREATE TABLE IF NOT EXISTS tools (
     CONSTRAINT ct_spec_is_object CHECK (jsonb_typeof(spec) = 'object')
 );
 
--- Create sorted index on tool_id if it doesn't exist
-CREATE INDEX IF NOT EXISTS idx_tools_id_sorted ON tools (tool_id DESC);
-
 -- Create sorted index on task_id if it doesn't exist
 CREATE INDEX IF NOT EXISTS idx_tools_task_id_sorted ON tools (task_id DESC)
 WHERE
@@ -39,14 +36,12 @@ DO $$ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'fk_tools_agent'
     ) THEN
-        ALTER TABLE tools 
+        ALTER TABLE tools
             ADD CONSTRAINT fk_tools_agent
             FOREIGN KEY (developer_id, agent_id) 
             REFERENCES agents(developer_id, agent_id) ON DELETE CASCADE;
     END IF;
 END $$;
-
-CREATE INDEX IF NOT EXISTS idx_tools_developer_agent ON tools (developer_id, agent_id);
 
 -- Drop trigger if exists and recreate
 DROP TRIGGER IF EXISTS trg_tools_updated_at ON tools;

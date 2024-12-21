@@ -31,8 +31,8 @@ RETURNING *
         ),
         asyncpg.UniqueViolationError: partialclass(
             HTTPException,
-            status_code=404,
-            detail="The specified user does not exist.",
+            status_code=409,
+            detail="A user with this ID already exists for the specified developer.",
         ),
     }
 )

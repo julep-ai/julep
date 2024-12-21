@@ -28,7 +28,12 @@ RETURNING *;
             HTTPException,
             status_code=404,
             detail="The specified developer does not exist.",
-        )
+        ),
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="A developer with this email already exists.",
+        ),
     }
 )
 @wrap_in_class(Developer, one=True, transform=lambda d: {**d, "id": d["developer_id"]})

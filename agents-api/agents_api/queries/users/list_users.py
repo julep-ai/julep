@@ -42,11 +42,6 @@ OFFSET $3;
             status_code=404,
             detail="The specified developer does not exist.",
         ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified user does not exist.",
-        ),
     }
 )
 @wrap_in_class(User)

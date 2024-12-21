@@ -24,8 +24,7 @@ CREATE TABLE IF NOT EXISTS docs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
-    CONSTRAINT pk_docs PRIMARY KEY (developer_id, doc_id),
-    CONSTRAINT uq_docs_doc_id_index UNIQUE (doc_id, index),
+    CONSTRAINT pk_docs PRIMARY KEY (developer_id, doc_id, index),
     CONSTRAINT ct_docs_embedding_dimensions_positive CHECK (embedding_dimensions > 0),
     CONSTRAINT ct_docs_valid_modality CHECK (modality IN ('text', 'image', 'mixed')),
     CONSTRAINT ct_docs_index_positive CHECK (index >= 0),
@@ -33,27 +32,22 @@ CREATE TABLE IF NOT EXISTS docs (
     CONSTRAINT ct_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object')
 );
 
--- Create sorted index on doc_id if not exists
-CREATE INDEX IF NOT EXISTS idx_docs_id_sorted ON docs (doc_id DESC);
-
 -- Create foreign key constraint if not exists (using DO block for safety)
-DO $$ 
-BEGIN 
+DO $$
+BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'fk_docs_developer'
     ) THEN
-        ALTER TABLE docs 
-        ADD CONSTRAINT fk_docs_developer 
-        FOREIGN KEY (developer_id) 
+        ALTER TABLE docs
+        ADD CONSTRAINT fk_docs_developer
+        FOREIGN KEY (developer_id)
         REFERENCES developers(developer_id);
     END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_docs_developer ON docs (developer_id);
-
 -- Create trigger if not exists
-DO $$ 
-BEGIN 
+DO $$
+BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_trigger WHERE tgname = 'trg_docs_updated_at'
     ) THEN
@@ -68,32 +62,32 @@ END $$;
 CREATE TABLE IF NOT EXISTS doc_owners (
     developer_id UUID NOT NULL,
     doc_id UUID NOT NULL,
-    owner_type TEXT NOT NULL,  -- 'user' or 'agent'
+    owner_type TEXT NOT NULL, -- 'user' or 'agent'
     owner_id UUID NOT NULL,
     CONSTRAINT pk_doc_owners PRIMARY KEY (developer_id, doc_id),
-    CONSTRAINT fk_doc_owners_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id),
+    -- TODO: Ensure that doc exists (this constraint is not working)
+    -- CONSTRAINT fk_doc_owners_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id),
     CONSTRAINT ct_doc_owners_owner_type CHECK (owner_type IN ('user', 'agent'))
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_doc_owners_owner 
-    ON doc_owners (developer_id, owner_type, owner_id);
+CREATE INDEX IF NOT EXISTS idx_doc_owners_owner ON doc_owners (developer_id, owner_type, owner_id);
 
 
 -- Create function to validate owner reference
-CREATE OR REPLACE FUNCTION validate_doc_owner()
-RETURNS TRIGGER AS $$
+CREATE
+OR REPLACE FUNCTION validate_doc_owner () RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.owner_type = 'user' THEN
         IF NOT EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE developer_id = NEW.developer_id AND user_id = NEW.owner_id
         ) THEN
             RAISE EXCEPTION 'Invalid user reference';
         END IF;
     ELSIF NEW.owner_type = 'agent' THEN
         IF NOT EXISTS (
-            SELECT 1 FROM agents 
+            SELECT 1 FROM agents
             WHERE developer_id = NEW.developer_id AND agent_id = NEW.owner_id
         ) THEN
             RAISE EXCEPTION 'Invalid agent reference';
@@ -104,34 +98,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger for validation
-CREATE TRIGGER trg_validate_doc_owner
-BEFORE INSERT OR UPDATE ON doc_owners
-FOR EACH ROW
-EXECUTE FUNCTION validate_doc_owner();
-
--- Create the user_docs table
-CREATE TABLE IF NOT EXISTS user_docs (
-    developer_id UUID NOT NULL,
-    user_id UUID NOT NULL,
-    doc_id UUID NOT NULL,
-    CONSTRAINT pk_user_docs PRIMARY KEY (developer_id, user_id, doc_id),
-    CONSTRAINT fk_user_docs_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
-    CONSTRAINT fk_user_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id) ON DELETE CASCADE
-);
-
--- Create the agent_docs table
-CREATE TABLE IF NOT EXISTS agent_docs (
-    developer_id UUID NOT NULL,
-    agent_id UUID NOT NULL,
-    doc_id UUID NOT NULL,
-    CONSTRAINT pk_agent_docs PRIMARY KEY (developer_id, agent_id, doc_id),
-    CONSTRAINT fk_agent_docs_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
-    CONSTRAINT fk_agent_docs_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id) ON DELETE CASCADE
-);
+CREATE TRIGGER trg_validate_doc_owner BEFORE INSERT
+OR
+UPDATE ON doc_owners FOR EACH ROW
+EXECUTE FUNCTION validate_doc_owner ();
 
 -- Create indexes if not exists
-CREATE INDEX IF NOT EXISTS idx_user_docs_user ON user_docs (developer_id, user_id);
-CREATE INDEX IF NOT EXISTS idx_agent_docs_agent ON agent_docs (developer_id, agent_id);
 CREATE INDEX IF NOT EXISTS idx_docs_metadata ON docs USING GIN (metadata);
 
 -- Enable necessary PostgreSQL extensions
@@ -151,29 +123,29 @@ DECLARE
     lang text;
 BEGIN
     FOR lang IN (SELECT cfgname FROM pg_ts_config WHERE cfgname IN (
-        'arabic', 'danish', 'dutch', 'english', 'finnish', 'french', 
+        'arabic', 'danish', 'dutch', 'english', 'finnish', 'french',
         'german', 'greek', 'hungarian', 'indonesian', 'irish', 'italian',
         'lithuanian', 'nepali', 'norwegian', 'portuguese', 'romanian',
         'russian', 'spanish', 'swedish', 'tamil', 'turkish'
     ))
     LOOP
         -- Configure integer dictionary
-        EXECUTE format('ALTER TEXT SEARCH CONFIGURATION %I 
+        EXECUTE format('ALTER TEXT SEARCH CONFIGURATION %I
             ALTER MAPPING FOR int, uint WITH intdict', lang);
-            
+
         -- Configure synonym and stemming
         EXECUTE format('ALTER TEXT SEARCH CONFIGURATION %I
-            ALTER MAPPING FOR asciihword, hword_asciipart, hword, hword_part, word, asciiword 
+            ALTER MAPPING FOR asciihword, hword_asciipart, hword, hword_part, word, asciiword
             WITH xsyn, %I_stem', lang, lang);
     END LOOP;
 END
 $$;
 
 -- Add the search_tsv column if it doesn't exist
-DO $$ 
-BEGIN 
+DO $$
+BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns 
+        SELECT 1 FROM information_schema.columns
         WHERE table_name = 'docs' AND column_name = 'search_tsv'
     ) THEN
         ALTER TABLE docs ADD COLUMN search_tsv tsvector;
@@ -192,8 +164,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger if not exists
-DO $$ 
-BEGIN 
+DO $$
+BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_trigger WHERE tgname = 'trg_docs_search_tsv'
     ) THEN

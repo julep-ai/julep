@@ -29,15 +29,10 @@ CREATE TABLE IF NOT EXISTS agents (
     CONSTRAINT ct_agents_default_settings_is_object CHECK (jsonb_typeof(default_settings) = 'object')
 );
 
--- Create sorted index on agent_id (optimized for UUID v7)
-CREATE INDEX IF NOT EXISTS idx_agents_id_sorted ON agents (agent_id DESC);
-
 -- Create foreign key constraint and index on developer_id
 ALTER TABLE agents
 DROP CONSTRAINT IF EXISTS fk_agents_developer,
 ADD CONSTRAINT fk_agents_developer FOREIGN KEY (developer_id) REFERENCES developers (developer_id);
-
-CREATE INDEX IF NOT EXISTS idx_agents_developer ON agents (developer_id);
 
 -- Create a GIN index on the entire metadata column
 CREATE INDEX IF NOT EXISTS idx_agents_metadata ON agents USING GIN (metadata);

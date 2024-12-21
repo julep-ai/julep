@@ -27,9 +27,7 @@ BEGIN
 END $$;
 
 -- Create indexes for efficient querying
-CREATE INDEX idx_entry_relations_components ON entry_relations (session_id, head, relation, tail);
-
-CREATE INDEX idx_entry_relations_leaf ON entry_relations (session_id, relation, is_leaf);
+CREATE INDEX idx_entry_relations_leaf ON entry_relations (session_id, is_leaf);
 
 CREATE OR REPLACE FUNCTION auto_update_leaf_status() RETURNS TRIGGER AS $$
 BEGIN

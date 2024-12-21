@@ -95,6 +95,16 @@ async def get_history(
     session_id: UUID,
     allowed_sources: list[str] = ["api_request", "api_response"],
 ) -> tuple[str, list] | tuple[str, list, str]:
+    """Get the history of a session.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        session_id (UUID): The ID of the session.
+        allowed_sources (list[str]): The sources to include in the history.
+
+    Returns:
+        tuple[str, list] | tuple[str, list, str]: SQL query and parameters for getting the history.
+    """
     return (
         history_query,
         [session_id, allowed_sources, developer_id],

@@ -1,6 +1,5 @@
 """Module for retrieving document snippets from the CozoDB based on document IDs."""
 
-from typing import Any, TypeVar
 from uuid import UUID
 
 import asyncpg
@@ -24,9 +23,6 @@ developer_query = parse_one("""
 SELECT * FROM developers WHERE developer_id = $1 -- developer_id
 """).sql(pretty=True)
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
 
 @rewrap_exceptions(
     {
@@ -37,7 +33,11 @@ T = TypeVar("T")
         )
     }
 )
-@wrap_in_class(Developer, one=True, transform=lambda d: {**d, "id": d["developer_id"]})
+@wrap_in_class(
+    Developer,
+    one=True,
+    transform=lambda d: {**d, "id": d["developer_id"]},
+)
 @pg_query
 @beartype
 async def get_developer(

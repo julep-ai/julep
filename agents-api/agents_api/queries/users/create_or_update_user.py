@@ -40,10 +40,10 @@ RETURNING *;
             status_code=404,
             detail="The specified developer does not exist.",
         ),
-        asyncpg.UniqueViolationError: partialclass(  # Add handling for potential race conditions
+        asyncpg.UniqueViolationError: partialclass(
             HTTPException,
             status_code=409,
-            detail="A user with this ID already exists.",
+            detail="A user with this ID already exists for the specified developer.",
         ),
     }
 )

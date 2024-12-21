@@ -2,18 +2,10 @@ BEGIN;
 
 -- Create unlogged table for caching embeddings
 CREATE UNLOGGED TABLE IF NOT EXISTS embeddings_cache (
-    provider TEXT NOT NULL,
-    model TEXT NOT NULL,
-    input_text TEXT NOT NULL,
-    input_type TEXT DEFAULT NULL,
-    api_key TEXT DEFAULT NULL,
-    api_key_name TEXT DEFAULT NULL,
+    model_input_md5 TEXT NOT NULL,
     embedding vector (1024) NOT NULL,
-    CONSTRAINT pk_embeddings_cache PRIMARY KEY (provider, model, input_text)
+    CONSTRAINT pk_embeddings_cache PRIMARY KEY (model_input_md5)
 );
-
--- Add index on provider, model, input_text for faster lookups
-CREATE INDEX IF NOT EXISTS idx_embeddings_cache_provider_model_input_text ON embeddings_cache (provider, model, input_text ASC);
 
 -- Add comment explaining table purpose
 COMMENT ON TABLE embeddings_cache IS 'Unlogged table that caches embedding requests to avoid duplicate API calls';
@@ -31,16 +23,17 @@ OR REPLACE function embed_with_cache (
 -- Try to get cached embedding first
 declare
     cached_embedding vector(1024);
+    model_input_md5 text;
 begin
     if _provider != 'voyageai' then
         raise exception 'Only voyageai provider is supported';
     end if;
 
+    model_input_md5 := md5(_provider || '++' || _model || '++' || _input_text || '++' || _input_type);
+
     select embedding into cached_embedding 
     from embeddings_cache c
-    where c.provider = _provider 
-    and c.model = _model 
-    and c.input_text = _input_text;
+    where c.model_input_md5 = model_input_md5;
 
     if found then
         return cached_embedding;
@@ -57,22 +50,12 @@ begin
 
     -- Cache the result
     insert into embeddings_cache (
-        provider,
-        model, 
-        input_text,
-        input_type,
-        api_key,
-        api_key_name,
+        model_input_md5,
         embedding
     ) values (
-        _provider,
-        _model,
-        _input_text, 
-        _input_type,
-        _api_key,
-        _api_key_name,
+        model_input_md5,
         cached_embedding
-    ) on conflict (provider, model, input_text) do update set embedding = cached_embedding;
+    ) on conflict (model_input_md5) do update set embedding = cached_embedding;
 
     return cached_embedding;
 end;
@@ -101,6 +84,7 @@ END $$;
 -- Create the search function
 CREATE
 OR REPLACE FUNCTION search_by_vector (
+    developer_id UUID,
     query_embedding vector (1024),
     owner_types TEXT[],
     owner_ids UUID [],
@@ -134,9 +118,7 @@ BEGIN
     IF owner_types IS NOT NULL AND owner_ids IS NOT NULL THEN
         owner_filter_sql := '
             AND (
-                (ud.user_id = ANY($5) AND ''user'' = ANY($4))
-                OR 
-                (ad.agent_id = ANY($5) AND ''agent'' = ANY($4))
+                doc_owners.owner_id = ANY($5::uuid[]) AND doc_owners.owner_type = ANY($4::text[])
             )';
     ELSE
         owner_filter_sql := '';
@@ -153,6 +135,7 @@ BEGIN
     RETURN QUERY EXECUTE format(
         'WITH ranked_docs AS (
             SELECT 
+                d.developer_id,
                 d.doc_id,
                 d.index,
                 d.title,
@@ -160,15 +143,12 @@ BEGIN
                 (1 - (d.embedding <=> $1)) as distance,
                 d.embedding,
                 d.metadata,
-                CASE 
-                    WHEN ud.user_id IS NOT NULL THEN ''user''
-                    WHEN ad.agent_id IS NOT NULL THEN ''agent''
-                END as owner_type,
-                COALESCE(ud.user_id, ad.agent_id) as owner_id
+                doc_owners.owner_type,
+                doc_owners.owner_id
             FROM docs_embeddings d
-            LEFT JOIN user_docs ud ON d.doc_id = ud.doc_id
-            LEFT JOIN agent_docs ad ON d.doc_id = ad.doc_id
-            WHERE 1 - (d.embedding <=> $1) >= $2
+            LEFT JOIN doc_owners ON d.doc_id = doc_owners.doc_id
+            WHERE d.developer_id = $7
+            AND 1 - (d.embedding <=> $1) >= $2
             %s
             %s
         )
@@ -185,7 +165,9 @@ BEGIN
         k,
         owner_types,
         owner_ids,
-        metadata_filter;
+        metadata_filter,
+        developer_id;
+        
 
 END;
 $$;
@@ -196,6 +178,7 @@ COMMENT ON FUNCTION search_by_vector IS 'Search documents by vector similarity w
 -- Create the combined embed and search function
 CREATE
 OR REPLACE FUNCTION embed_and_search_by_vector (
+    developer_id UUID,
     query_text text,
     owner_types TEXT[],
     owner_ids UUID [],
@@ -223,6 +206,7 @@ BEGIN
 
     -- Then perform the search using the generated embedding
     RETURN QUERY SELECT * FROM search_by_vector(
+        developer_id,
         query_embedding,
         owner_types,
         owner_ids,
@@ -238,6 +222,7 @@ COMMENT ON FUNCTION embed_and_search_by_vector IS 'Convenience function that com
 -- Create the text search function
 CREATE
 OR REPLACE FUNCTION search_by_text (
+    developer_id UUID,
     query_text text,
     owner_types TEXT[],
     owner_ids UUID [],
@@ -267,9 +252,7 @@ BEGIN
     IF owner_types IS NOT NULL AND owner_ids IS NOT NULL THEN
         owner_filter_sql := '
             AND (
-                (ud.user_id = ANY($5) AND ''user'' = ANY($4))
-                OR 
-                (ad.agent_id = ANY($5) AND ''agent'' = ANY($4))
+                doc_owners.owner_id = ANY($5::uuid[]) AND doc_owners.owner_type = ANY($4::text[])
             )';
     ELSE
         owner_filter_sql := '';
@@ -286,6 +269,7 @@ BEGIN
     RETURN QUERY EXECUTE format(
         'WITH ranked_docs AS (
             SELECT 
+                d.developer_id,
                 d.doc_id,
                 d.index,
                 d.title,
@@ -293,15 +277,12 @@ BEGIN
                 ts_rank_cd(d.search_tsv, $1, 32)::double precision as distance,
                 d.embedding,
                 d.metadata,
-                CASE 
-                    WHEN ud.user_id IS NOT NULL THEN ''user''
-                    WHEN ad.agent_id IS NOT NULL THEN ''agent''
-                END as owner_type,
-                COALESCE(ud.user_id, ad.agent_id) as owner_id
+                doc_owners.owner_type,
+                doc_owners.owner_id
             FROM docs_embeddings d
-            LEFT JOIN user_docs ud ON d.doc_id = ud.doc_id
-            LEFT JOIN agent_docs ad ON d.doc_id = ad.doc_id
-            WHERE d.search_tsv @@ $1
+            LEFT JOIN doc_owners ON d.doc_id = doc_owners.doc_id
+            WHERE d.developer_id = $6
+            AND d.search_tsv @@ $1
             %s
             %s
         )
@@ -314,11 +295,11 @@ BEGIN
     )
     USING 
         ts_query,
-        search_language,
         k,
         owner_types,
         owner_ids,
-        metadata_filter;
+        metadata_filter,
+        developer_id;
 
 END;
 $$;
@@ -372,6 +353,7 @@ $$ LANGUAGE plpgsql;
 -- Hybrid search function combining text and vector search
 CREATE
 OR REPLACE FUNCTION search_hybrid (
+    developer_id UUID,
     query_text text,
     query_embedding vector (1024),
     owner_types TEXT[],
@@ -397,6 +379,7 @@ BEGIN
     RETURN QUERY
     WITH text_results AS (
         SELECT * FROM search_by_text(
+            developer_id,
             query_text,
             owner_types,
             owner_ids,
@@ -407,6 +390,7 @@ BEGIN
     ),
     embedding_results AS (
         SELECT * FROM search_by_vector(
+            developer_id,
             query_embedding,
             owner_types,
             owner_ids,
@@ -426,6 +410,7 @@ BEGIN
     ),
     scores AS (
         SELECT 
+            r.developer_id,
             r.doc_id,
             r.title,
             r.content,
@@ -437,8 +422,8 @@ BEGIN
             COALESCE(t.distance, 0.0) as text_score,
             COALESCE(e.distance, 0.0) as embedding_score
         FROM all_results r
-        LEFT JOIN text_results t ON r.doc_id = t.doc_id
-        LEFT JOIN embedding_results e ON r.doc_id = e.doc_id
+        LEFT JOIN text_results t ON r.doc_id = t.doc_id AND r.developer_id = t.developer_id
+        LEFT JOIN embedding_results e ON r.doc_id = e.doc_id AND r.developer_id = e.developer_id
     ),
     normalized_scores AS (
         SELECT 
@@ -448,6 +433,7 @@ BEGIN
         FROM scores
     )
     SELECT 
+        developer_id,
         doc_id,
         index,
         title,
@@ -468,6 +454,7 @@ COMMENT ON FUNCTION search_hybrid IS 'Hybrid search combining text and vector se
 -- Convenience function that handles embedding generation
 CREATE
 OR REPLACE FUNCTION embed_and_search_hybrid (
+    developer_id UUID,
     query_text text,
     owner_types TEXT[],
     owner_ids UUID [],
@@ -497,6 +484,7 @@ BEGIN
 
     -- Perform hybrid search
     RETURN QUERY SELECT * FROM search_hybrid(
+        developer_id,
         query_text,
         query_embedding,
         owner_types,

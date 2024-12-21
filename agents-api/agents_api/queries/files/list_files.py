@@ -6,50 +6,37 @@ It constructs and executes SQL queries to fetch a list of files based on develop
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import File
-from ..utils import pg_query, wrap_in_class
+from ..utils import (
+    partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
+)
 
-# Query to list all files for a developer (uses developer_id index)
-developer_files_query = parse_one("""
+# Base query for listing files
+base_files_query = parse_one("""
 SELECT f.*
 FROM files f
 LEFT JOIN file_owners fo ON f.developer_id = fo.developer_id AND f.file_id = fo.file_id
 WHERE f.developer_id = $1
-ORDER BY 
-    CASE 
-        WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at 
-        WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at 
-        WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at
-        WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at
-    END DESC NULLS LAST
-LIMIT $2 
-OFFSET $3;
-""").sql(pretty=True)
-
-# Query to list files for a specific owner (uses composite indexes)
-owner_files_query = parse_one("""
-SELECT f.*
-FROM files f
-JOIN file_owners fo ON f.developer_id = fo.developer_id AND f.file_id = fo.file_id
-WHERE fo.developer_id = $1 
-AND fo.owner_id = $6
-AND fo.owner_type = $7
-ORDER BY 
-    CASE 
-        WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at 
-        WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at 
-        WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at
-        WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at
-    END DESC NULLS LAST
-LIMIT $2 
-OFFSET $3;
 """).sql(pretty=True)
 
 
+@rewrap_exceptions(
+    {
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer or owner does not exist",
+        ),
+    }
+)
 @wrap_in_class(
     File,
     one=False,
@@ -73,28 +60,14 @@ async def list_files(
     direction: Literal["asc", "desc"] = "desc",
 ) -> tuple[str, list]:
     """
-    Lists files with optimized queries for two cases:
-    1. Owner specified: Returns files associated with that owner
-    2. No owner: Returns all files for the developer
-
-    Args:
-        developer_id: UUID of the developer
-        owner_id: Optional UUID of the owner (user or agent)
-        owner_type: Optional type of owner ("user" or "agent")
-        limit: Maximum number of records to return (1-100)
-        offset: Number of records to skip
-        sort_by: Field to sort by
-        direction: Sort direction ('asc' or 'desc')
-
-    Returns:
-        Tuple of (query, params)
-
-    Raises:
-        HTTPException: If parameters are invalid
+    Lists files with optional owner filtering, pagination, and sorting.
     """
     # Validate parameters
     if direction.lower() not in ["asc", "desc"]:
         raise HTTPException(status_code=400, detail="Invalid sort direction")
+
+    if sort_by not in ["created_at", "updated_at"]:
+        raise HTTPException(status_code=400, detail="Invalid sort field")
 
     if limit > 100 or limit < 1:
         raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
@@ -102,20 +75,17 @@ async def list_files(
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
 
-    # Base parameters used in all queries
-    params = [
-        developer_id,
-        limit,
-        offset,
-        sort_by,
-        direction,
-    ]
+    # Start with the base query
+    query = base_files_query
+    params = [developer_id]
 
-    # Choose appropriate query based on owner details
-    if owner_id and owner_type:
-        params.extend([owner_id, owner_type])  # Add owner_id as $6 and owner_type as $7
-        query = owner_files_query  # Use single query with owner_type parameter
-    else:
-        query = developer_files_query
+    # Add owner filtering
+    if owner_type and owner_id:
+        query += " AND fo.owner_type = $2 AND fo.owner_id = $3"
+        params.extend([owner_type, owner_id])
 
-    return (query, params)
+    # Add sorting and pagination
+    query += f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+    params.extend([limit, offset])
+
+    return query, params

@@ -12,7 +12,7 @@ from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
-raw_query = """
+session_query = """
 WITH session_participants AS (
     SELECT 
         sl.session_id,
@@ -49,10 +49,6 @@ ORDER BY
 LIMIT $2 OFFSET $6;
 """
 
-# Parse and optimize the query
-# query = parse_one(raw_query).sql(pretty=True)
-query = raw_query
-
 
 @rewrap_exceptions(
     {
@@ -62,7 +58,14 @@ query = raw_query
             detail="The specified developer does not exist.",
         ),
         asyncpg.NoDataFoundError: partialclass(
-            HTTPException, status_code=404, detail="No sessions found"
+            HTTPException,
+            status_code=404,
+            detail="No sessions found",
+        ),
+        asyncpg.CheckViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid session data provided.",
         ),
     }
 )
@@ -94,7 +97,7 @@ async def list_sessions(
         tuple[str, list]: SQL query and parameters
     """
     return (
-        query,
+        session_query,
         [
             developer_id,  # $1
             limit,  # $2
