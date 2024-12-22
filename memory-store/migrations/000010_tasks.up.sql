@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 
 -- Create sorted index on task_id if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_tasks_id_sorted') THEN
         CREATE INDEX idx_tasks_id_sorted ON tasks (task_id DESC);
@@ -47,7 +47,7 @@ BEGIN
 END $$;
 
 -- Create index on canonical_name if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_tasks_canonical_name') THEN
         CREATE INDEX idx_tasks_canonical_name ON tasks (developer_id DESC, canonical_name);
@@ -55,33 +55,41 @@ BEGIN
 END $$;
 
 -- Create a GIN index on metadata if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_tasks_metadata') THEN
         CREATE INDEX idx_tasks_metadata ON tasks USING GIN (metadata);
     END IF;
 END $$;
 
--- Add foreign key constraint if it doesn't exist
-DO $$ 
+-- Create function to validate owner reference
+CREATE OR REPLACE FUNCTION validate_tool_task()
+RETURNS TRIGGER AS $$
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 
-        FROM information_schema.table_constraints 
-        WHERE constraint_name = 'fk_tools_task_id'
-    ) THEN
-        ALTER TABLE tools ADD CONSTRAINT fk_tools_task_id 
-        FOREIGN KEY (developer_id, task_id, task_version) REFERENCES tasks(developer_id, task_id, version) 
-        DEFERRABLE INITIALLY DEFERRED;
+    IF NEW.task_id IS NOT NULL THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM tasks
+            WHERE developer_id = NEW.developer_id AND task_id = NEW.task_id
+        ) THEN
+            RAISE EXCEPTION 'Invalid task reference';
+        END IF;
     END IF;
-END $$;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- Create trigger if it doesn't exist
-DO $$ 
+-- Create trigger for validation
+CREATE TRIGGER trg_validate_tool_task
+BEFORE INSERT OR UPDATE ON tools
+FOR EACH ROW
+EXECUTE FUNCTION validate_tool_task();
+
+-- Create updated_at trigger if it doesn't exist
+DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 
-        FROM pg_trigger 
+        SELECT 1
+        FROM pg_trigger
         WHERE tgname = 'trg_tasks_updated_at'
     ) THEN
         CREATE TRIGGER trg_tasks_updated_at

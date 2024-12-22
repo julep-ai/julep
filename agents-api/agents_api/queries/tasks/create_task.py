@@ -21,7 +21,6 @@ from ..utils import (
 # Define the raw SQL query for creating or updating a task
 tools_query = parse_one("""
 INSERT INTO tools (
-    task_version,
     developer_id,
     agent_id,
     task_id,
@@ -32,7 +31,6 @@ INSERT INTO tools (
     spec
 )
 VALUES (
-    1, -- task_version
     $1, -- developer_id
     $2, -- agent_id
     $3, -- task_id

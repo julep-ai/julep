@@ -9,13 +9,16 @@ from ...autogen.openapi_model import DocReference
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 search_docs_text_query = """
-    SELECT * FROM search_by_text(
-        $1, -- developer_id
-        $2, -- query
-        $3, -- owner_types
-        ( SELECT array_agg(*)::UUID[] FROM jsonb_array_elements($4) )
-    )
-    """
+SELECT * FROM search_by_text(
+    $1, -- developer_id
+    $2, -- query
+    $3, -- owner_types
+    $UUID_LIST::uuid[], -- owner_ids
+    $4, -- search_language
+    $5, -- k
+    $6 -- metadata_filter
+)
+"""
 
 
 @rewrap_exceptions(
@@ -38,7 +41,7 @@ search_docs_text_query = """
         **d,
     },
 )
-@pg_query(debug=True)
+@pg_query
 @beartype
 async def search_docs_by_text(
     *,
@@ -68,16 +71,19 @@ async def search_docs_by_text(
         raise HTTPException(status_code=400, detail="k must be >= 1")
 
     # Extract owner types and IDs
-    owner_types = [owner[0] for owner in owners]
-    owner_ids = [owner[1] for owner in owners]
+    owner_types: list[str] = [owner[0] for owner in owners]
+    owner_ids: list[str] = [str(owner[1]) for owner in owners]
+
+    # NOTE: Manually replace uuids list coz asyncpg isnt sending it correctly
+    owner_ids_pg_str = f"ARRAY['{'\', \''.join(owner_ids)}']"
+    query = search_docs_text_query.replace("$UUID_LIST", owner_ids_pg_str)
 
     return (
-        search_docs_text_query,
+        query,
         [
             developer_id,
             query,
             owner_types,
-            owner_ids,
             search_language,
             k,
             metadata_filter,

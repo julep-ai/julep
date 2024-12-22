@@ -31,7 +31,7 @@ begin
 
     model_input_md5 := md5(_provider || '++' || _model || '++' || _input_text || '++' || _input_type);
 
-    select embedding into cached_embedding 
+    select embedding into cached_embedding
     from embeddings_cache c
     where c.model_input_md5 = model_input_md5;
 
@@ -62,12 +62,13 @@ end;
 $$;
 
 -- Create a type for the search results if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_type WHERE typname = 'doc_search_result'
     ) THEN
         CREATE TYPE doc_search_result AS (
+            developer_id uuid,
             doc_id uuid,
             index integer,
             title text,
@@ -106,23 +107,20 @@ BEGIN
         RAISE EXCEPTION 'confidence must be between 0 and 1';
     END IF;
 
-    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND 
-       array_length(owner_types, 1) != array_length(owner_ids, 1) THEN
+    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND
+        array_length(owner_types, 1) != array_length(owner_ids, 1) AND
+        array_length(owner_types, 1) <= 0 THEN
         RAISE EXCEPTION 'owner_types and owner_ids arrays must have the same length';
     END IF;
 
     -- Calculate search threshold from confidence
     search_threshold := 1.0 - confidence;
 
-    -- Build owner filter SQL if provided
-    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL THEN
-        owner_filter_sql := '
-            AND (
-                doc_owners.owner_id = ANY($5::uuid[]) AND doc_owners.owner_type = ANY($4::text[])
-            )';
-    ELSE
-        owner_filter_sql := '';
-    END IF;
+    -- Build owner filter SQL
+    owner_filter_sql := '
+        AND (
+            doc_owners.owner_id = ANY($5::uuid[]) AND doc_owners.owner_type = ANY($4::text[])
+        )';
 
     -- Build metadata filter SQL if provided
     IF metadata_filter IS NOT NULL THEN
@@ -134,7 +132,7 @@ BEGIN
     -- Return search results
     RETURN QUERY EXECUTE format(
         'WITH ranked_docs AS (
-            SELECT 
+            SELECT
                 d.developer_id,
                 d.doc_id,
                 d.index,
@@ -159,7 +157,7 @@ BEGIN
         owner_filter_sql,
         metadata_filter_sql
     )
-    USING 
+    USING
         query_embedding,
         search_threshold,
         k,
@@ -167,7 +165,7 @@ BEGIN
         owner_ids,
         metadata_filter,
         developer_id;
-        
+
 
 END;
 $$;
@@ -186,7 +184,7 @@ OR REPLACE FUNCTION embed_and_search_by_vector (
     confidence float DEFAULT 0.5,
     metadata_filter jsonb DEFAULT NULL,
     embedding_provider text DEFAULT 'voyageai',
-    embedding_model text DEFAULT 'voyage-01',
+    embedding_model text DEFAULT 'voyage-3',
     input_type text DEFAULT 'query',
     api_key text DEFAULT NULL,
     api_key_name text DEFAULT NULL
@@ -225,7 +223,7 @@ OR REPLACE FUNCTION search_by_text (
     developer_id UUID,
     query_text text,
     owner_types TEXT[],
-    owner_ids UUID [],
+    owner_ids UUID[],
     search_language text DEFAULT 'english',
     k integer DEFAULT 3,
     metadata_filter jsonb DEFAULT NULL
@@ -240,27 +238,25 @@ BEGIN
         RAISE EXCEPTION 'k must be greater than 0';
     END IF;
 
-    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND 
-       array_length(owner_types, 1) != array_length(owner_ids, 1) THEN
+    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND
+        array_length(owner_types, 1) != array_length(owner_ids, 1) AND
+        array_length(owner_types, 1) <= 0 THEN
         RAISE EXCEPTION 'owner_types and owner_ids arrays must have the same length';
     END IF;
 
     -- Convert search query to tsquery
     ts_query := websearch_to_tsquery(search_language::regconfig, query_text);
 
-    -- Build owner filter SQL if provided
-    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL THEN
-        owner_filter_sql := '
-            AND (
-                doc_owners.owner_id = ANY($5::uuid[]) AND doc_owners.owner_type = ANY($4::text[])
-            )';
-    ELSE
-        owner_filter_sql := '';
-    END IF;
+    -- Build owner filter SQL
+    owner_filter_sql := '
+        AND (
+            doc_owners.owner_id = ANY($4::uuid[]) AND doc_owners.owner_type = ANY($3::text[])
+        )';
+
 
     -- Build metadata filter SQL if provided
     IF metadata_filter IS NOT NULL THEN
-        metadata_filter_sql := 'AND d.metadata @> $6';
+        metadata_filter_sql := 'AND d.metadata @> $5';
     ELSE
         metadata_filter_sql := '';
     END IF;
@@ -268,7 +264,7 @@ BEGIN
     -- Return search results
     RETURN QUERY EXECUTE format(
         'WITH ranked_docs AS (
-            SELECT 
+            SELECT
                 d.developer_id,
                 d.doc_id,
                 d.index,
@@ -289,11 +285,11 @@ BEGIN
         SELECT DISTINCT ON (doc_id) *
         FROM ranked_docs
         ORDER BY doc_id, distance DESC
-        LIMIT $3',
+        LIMIT $2',
         owner_filter_sql,
         metadata_filter_sql
     )
-    USING 
+    USING
         ts_query,
         k,
         owner_types,
@@ -409,7 +405,7 @@ BEGIN
         ) combined
     ),
     scores AS (
-        SELECT 
+        SELECT
             r.developer_id,
             r.doc_id,
             r.title,
@@ -426,13 +422,13 @@ BEGIN
         LEFT JOIN embedding_results e ON r.doc_id = e.doc_id AND r.developer_id = e.developer_id
     ),
     normalized_scores AS (
-        SELECT 
+        SELECT
             *,
             unnest(dbsf_normalize(array_agg(text_score) OVER ())) as norm_text_score,
             unnest(dbsf_normalize(array_agg(embedding_score) OVER ())) as norm_embedding_score
         FROM scores
     )
-    SELECT 
+    SELECT
         developer_id,
         doc_id,
         index,
@@ -464,7 +460,7 @@ OR REPLACE FUNCTION embed_and_search_hybrid (
     metadata_filter jsonb DEFAULT NULL,
     search_language text DEFAULT 'english',
     embedding_provider text DEFAULT 'voyageai',
-    embedding_model text DEFAULT 'voyage-01',
+    embedding_model text DEFAULT 'voyage-3',
     input_type text DEFAULT 'query',
     api_key text DEFAULT NULL,
     api_key_name text DEFAULT NULL

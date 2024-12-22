@@ -20,14 +20,7 @@ from ..utils import (
 
 # Define the raw SQL query for creating or updating a task
 tools_query = parse_one("""
-WITH version AS (
-    SELECT COALESCE(MAX("version"), 0) as current_version
-    FROM tasks 
-    WHERE developer_id = $1
-      AND task_id = $3
-)
 INSERT INTO tools (
-    task_version,
     developer_id,
     agent_id,
     task_id,
@@ -37,8 +30,7 @@ INSERT INTO tools (
     description,
     spec
 )
-SELECT
-    current_version,    -- task_version
+VALUES (
     $1,                 -- developer_id
     $2,                 -- agent_id
     $3,                 -- task_id
@@ -47,23 +39,23 @@ SELECT
     $6,                 -- name
     $7,                 -- description
     $8                  -- spec
-FROM version
+)
 """).sql(pretty=True)
 
 task_query = parse_one("""
 WITH current_version AS (
     SELECT COALESCE(
         (SELECT MAX("version")
-         FROM tasks 
-         WHERE developer_id = $1 
+         FROM tasks
+         WHERE developer_id = $1
            AND task_id = $4),
         0
     ) + 1 as next_version,
     COALESCE(
-        (SELECT canonical_name 
-         FROM tasks 
-         WHERE developer_id = $1 AND task_id = $4 
-         ORDER BY version DESC 
+        (SELECT canonical_name
+         FROM tasks
+         WHERE developer_id = $1 AND task_id = $4
+         ORDER BY version DESC
          LIMIT 1),
         $2
     ) as effective_canonical_name
@@ -100,7 +92,7 @@ RETURNING *, (SELECT next_version FROM current_version) as next_version;
 workflows_query = parse_one("""
 WITH version AS (
     SELECT COALESCE(MAX("version"), 0) as current_version
-    FROM tasks 
+    FROM tasks
     WHERE developer_id = $1
       AND task_id = $2
 )

@@ -215,34 +215,34 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert not any(d.id == doc_agent.id for d in docs_list)
 
 
-# @test("query: search docs by text")
-# async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
-#     pool = await create_db_pool(dsn=dsn)
+@test("query: search docs by text")
+async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
 
-#     # Create a test document
-#     await create_doc(
-#         developer_id=developer.id,
-#         owner_type="agent",
-#         owner_id=agent.id,
-#         data=CreateDocRequest(
-#             title="Hello",
-#             content="The world is a funny little thing",
-#             metadata={"test": "test"},
-#             embed_instruction="Embed the document",
-#         ),
-#         connection_pool=pool,
-#     )
+    # Create a test document
+    await create_doc(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        data=CreateDocRequest(
+            title="Hello",
+            content="The world is a funny little thing",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        connection_pool=pool,
+    )
 
-#     # Search using the correct parameter types
-#     result = await search_docs_by_text(
-#         developer_id=developer.id,
-#         owners=[("agent", agent.id)],
-#         query="funny",
-#         k=3,  # Add k parameter
-#         search_language="english",  # Add language parameter
-#         metadata_filter={},  # Add metadata filter
-#         connection_pool=pool,
-#     )
+    # Search using the correct parameter types
+    result = await search_docs_by_text(
+        developer_id=developer.id,
+        owners=[("agent", agent.id)],
+        query="funny thing",
+        k=3,  # Add k parameter
+        search_language="english",  # Add language parameter
+        metadata_filter={"test": "test"},  # Add metadata filter
+        connection_pool=pool,
+    )
 
-#     assert len(result) >= 1
-#     assert result[0].metadata is not None
+    assert len(result) >= 1
+    assert result[0].metadata is not None

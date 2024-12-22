@@ -10,7 +10,7 @@ SELECT
     ai.create_vectorizer (
         source => 'docs',
         destination => 'docs_embeddings',
-        embedding => ai.embedding_voyageai ('voyage-3', 1024), -- need to parameterize this
+        embedding => ai.embedding_voyageai ('voyage-3', 1024, 'document'), -- need to parameterize this
         -- actual chunking is managed by the docs table
         -- this is to prevent running out of context window
         chunking => ai.chunking_recursive_character_text_splitter (
