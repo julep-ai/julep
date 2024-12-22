@@ -1,31 +1,23 @@
-from typing import List, Literal
+from typing import Any, List, Literal
 from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import DocReference
 from ..utils import pg_query, wrap_in_class
 
-# If you're doing approximate ANN (DiskANN) or IVF, you might use a special function or hint.
-# For a basic vector distance search, you can do something like:
-search_docs_by_embedding_query = parse_one("""
-SELECT d.*,
-       (d.embedding <-> $3) AS distance
-FROM docs d
-LEFT JOIN doc_owners do
-  ON d.developer_id = do.developer_id
-  AND d.doc_id = do.doc_id
-WHERE d.developer_id = $1
-  AND (
-    ($4::text IS NULL AND $5::uuid IS NULL)
-    OR (do.owner_type = $4 AND do.owner_id = $5)
-  )
-  AND d.embedding IS NOT NULL
-ORDER BY d.embedding <-> $3
-LIMIT $2;
-""").sql(pretty=True)
+search_docs_by_embedding_query = """
+SELECT * FROM search_by_vector(
+    $1, -- developer_id
+    $2::vector(1024), -- query_embedding
+    $3::text[], -- owner_types
+    $UUID_LIST::uuid[], -- owner_ids
+    $4, -- k
+    $5, -- confidence
+    $6 -- metadata_filter
+)
+"""
 
 
 @wrap_in_class(
@@ -46,8 +38,9 @@ async def search_docs_by_embedding(
     developer_id: UUID,
     query_embedding: List[float],
     k: int = 10,
-    owner_type: Literal["user", "agent", "org"] | None = None,
-    owner_id: UUID | None = None,
+    owners: list[tuple[Literal["user", "agent"], UUID]],
+    confidence: float = 0.5,
+    metadata_filter: dict[str, Any] = {},
 ) -> tuple[str, list]:
     """
     Vector-based doc search:
@@ -56,8 +49,9 @@ async def search_docs_by_embedding(
         developer_id (UUID): The ID of the developer.
         query_embedding (List[float]): The vector to query.
         k (int): The number of results to return.
-        owner_type (Literal["user", "agent", "org"]): The type of the owner of the documents.
-        owner_id (UUID): The ID of the owner of the documents.
+        owners (list[tuple[Literal["user", "agent"], UUID]]): List of (owner_type, owner_id) tuples.
+        confidence (float): The confidence threshold for the search.
+        metadata_filter (dict): Metadata filter criteria.
 
     Returns:
         tuple[str, list]: SQL query and parameters for searching the documents.
@@ -65,11 +59,28 @@ async def search_docs_by_embedding(
     if k < 1:
         raise HTTPException(status_code=400, detail="k must be >= 1")
 
-    # Validate embedding length if needed; e.g. 1024 floats
     if not query_embedding:
         raise HTTPException(status_code=400, detail="Empty embedding provided")
 
+    # Convert query_embedding to a string
+    query_embedding_str = f"[{', '.join(map(str, query_embedding))}]"
+
+    # Extract owner types and IDs
+    owner_types: list[str] = [owner[0] for owner in owners]
+    owner_ids: list[str] = [str(owner[1]) for owner in owners]
+
+    # NOTE: Manually replace uuids list coz asyncpg isnt sending it correctly
+    owner_ids_pg_str = f"ARRAY['{'\', \''.join(owner_ids)}']"
+    query = search_docs_by_embedding_query.replace("$UUID_LIST", owner_ids_pg_str)
+
     return (
-        search_docs_by_embedding_query,
-        [developer_id, k, query_embedding, owner_type, owner_id],
+        query,
+        [
+            developer_id,
+            query_embedding_str,
+            owner_types,
+            k,
+            confidence,
+            metadata_filter,
+        ],
     )
