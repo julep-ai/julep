@@ -53,6 +53,7 @@ dependencies = [
     { name = "testcontainers" },
     { name = "thefuzz" },
     { name = "tiktoken" },
+    { name = "unique-namer" },
     { name = "uuid7" },
     { name = "uvicorn" },
     { name = "uvloop" },
@@ -122,6 +123,7 @@ requires-dist = [
     { name = "testcontainers", specifier = ">=4.9.0" },
     { name = "thefuzz", specifier = "~=0.22.1" },
     { name = "tiktoken", specifier = "~=0.7.0" },
+    { name = "unique-namer", specifier = ">=1.6.1" },
     { name = "uuid7", specifier = ">=0.1.0" },
     { name = "uvicorn", specifier = "~=0.30.6" },
     { name = "uvloop", specifier = "~=0.21.0" },
@@ -3207,6 +3209,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e1/34/943888654477a574a86a98e9896bae89c7aa15078ec29f490fef2f1e5384/tzdata-2024.2.tar.gz", hash = "sha256:7d85cc416e9382e69095b7bdf4afd9e3880418a2413feec7069d533d6b4e31cc", size = 193282 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a6/ab/7e5f53c3b9d14972843a647d8d7a853969a58aecc7559cb3267302c94774/tzdata-2024.2-py2.py3-none-any.whl", hash = "sha256:a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd", size = 346586 },
+]
+
+[[package]]
+name = "unique-namer"
+version = "1.6.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/47/26e9f45b64ad2d7c77eefb48a0e84ae0c0070fa812bf6ab95584559ce53c/unique_namer-1.6.1.tar.gz", hash = "sha256:7f4e3143f923c24baaed56bb93726e10669333271caa71ffd5d8f1a928a5befe", size = 73334 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fb/72/e06078006bbc3635490b872e8647294cf5921f378634de43520012b7c09e/unique_namer-1.6.1-py3-none-any.whl", hash = "sha256:6e76751c0886244625b43a8e5e7c18168a9205f5a944c0dbbbd9eb219c4812f2", size = 71111 },
 ]
 
 [[package]]

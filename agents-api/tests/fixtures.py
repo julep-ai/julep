@@ -47,8 +47,6 @@ from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
 
-EMBEDDING_SIZE: int = 1024
-
 
 @fixture(scope="global")
 def pg_dsn():
@@ -218,22 +216,6 @@ async def test_session(
 
     return session
 
-
-# @fixture(scope="global")
-# async def test_doc(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     agent=test_agent,
-# ):
-#     async with get_pg_client(dsn=dsn) as client:
-#         doc = await create_doc(
-#             developer_id=developer_id,
-#             owner_type="agent",
-#             owner_id=agent.id,
-#             data=CreateDocRequest(title="Hello", content=["World"]),
-#             client=client,
-#         )
-#         yield doc
 
 
 # @fixture(scope="global")

@@ -150,7 +150,7 @@ async def create_task(
         agent_id,  # $2
         task_id,  # $3
         data.name,  # $4
-        data.canonical_name or generate_canonical_name(data.name),  # $5
+        data.canonical_name or generate_canonical_name(),  # $5
         data.description,  # $6
         data.inherit_tools,  # $7
         data.input_schema or {},  # $8

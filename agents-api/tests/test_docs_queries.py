@@ -6,13 +6,10 @@ from agents_api.queries.docs.create_doc import create_doc
 from agents_api.queries.docs.delete_doc import delete_doc
 from agents_api.queries.docs.get_doc import get_doc
 from agents_api.queries.docs.list_docs import list_docs
-
-# If you wish to test text/embedding/hybrid search, import them:
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 
 # from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 # from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
-# You can rename or remove these imports to match your actual fixtures
 from tests.fixtures import pg_dsn, test_agent, test_developer, test_doc, test_user
 
 

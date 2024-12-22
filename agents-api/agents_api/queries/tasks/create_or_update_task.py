@@ -167,7 +167,7 @@ async def create_or_update_task(
     """
 
     # Generate canonical name from task name if not provided
-    canonical_name = data.canonical_name or generate_canonical_name(data.name)
+    canonical_name = data.canonical_name or generate_canonical_name()
 
     # Version will be determined by the CTE
     task_params = [

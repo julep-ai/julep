@@ -34,7 +34,7 @@ async def _(dsn=pg_dsn, dev=test_new_developer):
         connection_pool=pool,
     )
 
-    assert type(developer) == Developer
+    assert type(developer) is Developer
     assert developer.id == dev.id
     assert developer.email == dev.email
     assert developer.active
@@ -55,7 +55,7 @@ async def _(dsn=pg_dsn):
         connection_pool=pool,
     )
 
-    assert type(developer) == ResourceCreatedResponse
+    assert type(developer) is ResourceCreatedResponse
     assert developer.id == dev_id
     assert developer.created_at is not None
 

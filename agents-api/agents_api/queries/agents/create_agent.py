@@ -114,7 +114,7 @@ async def create_agent(
 
     # Set default values
     data.metadata = data.metadata or {}
-    data.canonical_name = data.canonical_name or generate_canonical_name(data.name)
+    data.canonical_name = data.canonical_name or generate_canonical_name()
 
     params = [
         developer_id,
