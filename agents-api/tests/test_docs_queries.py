@@ -267,7 +267,7 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     result = await search_docs_by_embedding(
         developer_id=developer.id,
         owners=[("agent", agent.id)],
-        query_embedding=[1.0]*1024,
+        query_embedding=[1.0] * 1024,
         k=3,  # Add k parameter
         metadata_filter={"test": "test"},  # Add metadata filter
         connection_pool=pool,
