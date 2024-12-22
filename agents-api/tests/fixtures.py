@@ -217,7 +217,6 @@ async def test_session(
     return session
 
 
-
 # @fixture(scope="global")
 # async def test_user_doc(
 #     dsn=pg_dsn,
