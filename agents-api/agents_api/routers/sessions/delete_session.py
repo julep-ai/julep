@@ -6,7 +6,7 @@ from starlette.status import HTTP_202_ACCEPTED
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.delete_session import delete_session as delete_session_query
+from ...queries.sessions.delete_session import delete_session as delete_session_query
 from .router import router
 
 

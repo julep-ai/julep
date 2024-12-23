@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     UpdateSessionRequest,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.update_session import update_session as update_session_query
+from ...queries.sessions.update_session import update_session as update_session_query
 from .router import router
 
 

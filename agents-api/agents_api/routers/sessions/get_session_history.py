@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from ...autogen.openapi_model import History
 from ...dependencies.developer_id import get_developer_id
-from ...models.entry.get_history import get_history as get_history_query
+from ...queries.entries.get_history import get_history as get_history_query
 from .router import router
 
 

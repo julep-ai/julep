@@ -19,10 +19,10 @@ from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
 from ...env import max_free_sessions
-from ...models.chat.gather_messages import gather_messages
-from ...models.chat.prepare_chat_context import prepare_chat_context
-from ...models.entry.create_entries import create_entries
-from ...models.session.count_sessions import count_sessions as count_sessions_query
+from ...queries.chat.gather_messages import gather_messages
+from ...queries.chat.prepare_chat_context import prepare_chat_context
+from ...queries.entries.create_entries import create_entries
+from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from .metrics import total_tokens_per_user
 from .router import router
 

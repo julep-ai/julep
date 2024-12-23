@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from ...autogen.openapi_model import Session
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.get_session import get_session as get_session_query
+from ...queries.sessions.get_session import get_session as get_session_query
 from .router import router
 
 
