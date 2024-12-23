@@ -42,7 +42,9 @@ AND user_id = $2;
 @wrap_in_class(User, one=True)
 @pg_query
 @beartype
-async def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list, Literal["fetchrow", "fetchmany", "fetch"]]:
+async def get_user(
+    *, developer_id: UUID, user_id: UUID
+) -> tuple[str, list, Literal["fetchrow", "fetchmany", "fetch"]]:
     """
     Constructs an optimized SQL query to retrieve a user's details.
     Uses the primary key index (developer_id, user_id) for efficient lookup.

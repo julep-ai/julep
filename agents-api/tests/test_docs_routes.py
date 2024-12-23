@@ -12,7 +12,6 @@ from tests.fixtures import (
 )
 from tests.utils import patch_testing_temporal
 
-
 # @test("route: create user doc")
 # async def _(make_request=make_request, user=test_user):
 #     async with patch_testing_temporal():

@@ -87,6 +87,7 @@ async def _(make_request=make_request, s3_client=s3_client):
     # Decode base64 content and compute its SHA-256 hash
     assert result["hash"] == expected_hash
 
+
 @test("route: list files")
 async def _(make_request=make_request, s3_client=s3_client):
     response = make_request(

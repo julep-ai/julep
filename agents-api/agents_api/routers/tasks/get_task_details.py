@@ -16,10 +16,8 @@ async def get_task_details(
     task_id: UUID,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> Task:
-
     task = await get_task_query(developer_id=x_developer_id, task_id=task_id)
     task_data = task.model_dump()
-
 
     for workflow in task_data.get("workflows", []):
         if workflow["name"] == "main":

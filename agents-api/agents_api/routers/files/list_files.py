@@ -21,7 +21,7 @@ async def fetch_file_content(file_id: UUID) -> str:
 
 @router.get("/files", tags=["files"])
 async def list_files(
-    x_developer_id: Annotated[UUID, Depends(get_developer_id)]
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> list[File]:
     files = await list_files_query(developer_id=x_developer_id)
 
