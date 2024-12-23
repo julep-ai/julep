@@ -50,7 +50,7 @@ async def start_execution(
 ) -> tuple[Execution, WorkflowHandle]:
     execution_id = uuid7()
 
-    execution = create_execution_query(
+    execution = await create_execution_query(
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
@@ -58,7 +58,7 @@ async def start_execution(
         client=client,
     )
 
-    execution_input = prepare_execution_input(
+    execution_input = await prepare_execution_input(
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
@@ -76,7 +76,7 @@ async def start_execution(
     except Exception as e:
         logger.exception(e)
 
-        update_execution_query(
+        await update_execution_query(
             developer_id=developer_id,
             task_id=task_id,
             execution_id=execution_id,
@@ -104,7 +104,7 @@ async def create_task_execution(
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
     try:
-        task = get_task_query(task_id=task_id, developer_id=x_developer_id)
+        task = await get_task_query(task_id=task_id, developer_id=x_developer_id)
         validate(data.input, task.input_schema)
 
     except ValidationError:
@@ -121,11 +121,11 @@ async def create_task_execution(
         raise
 
     # get developer data
-    developer: Developer = get_developer(developer_id=x_developer_id)
+    developer: Developer = await get_developer(developer_id=x_developer_id)
 
     # # check if the developer is paid
     if "paid" not in developer.tags:
-        executions = count_executions_query(
+        executions = await count_executions_query(
             developer_id=x_developer_id, task_id=task_id
         )
 

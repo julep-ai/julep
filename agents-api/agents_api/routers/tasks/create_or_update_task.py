@@ -40,7 +40,7 @@ async def create_or_update_task(
     except ValidationError:
         pass
 
-    return create_or_update_task_query(
+    return await create_or_update_task_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         task_id=task_id,

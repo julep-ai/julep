@@ -15,7 +15,7 @@ async def patch_user(
     data: PatchUserRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
-    return patch_user_query(
+    return await patch_user_query(
         developer_id=x_developer_id,
         user_id=user_id,
         data=data,

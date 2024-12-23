@@ -87,7 +87,7 @@ async def stream_transitions_events(
     next_page_token: Annotated[str | None, Query()] = None,
 ):
     # Get temporal id
-    temporal_data = lookup_temporal_data(
+    temporal_data = await lookup_temporal_data(
         developer_id=x_developer_id,
         execution_id=execution_id,
     )

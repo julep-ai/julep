@@ -21,7 +21,7 @@ async def patch_execution(
     execution_id: UUID,
     data: UpdateExecutionRequest,
 ) -> ResourceUpdatedResponse:
-    return update_execution_query(
+    return await update_execution_query(
         developer_id=x_developer_id,
         task_id=task_id,
         execution_id=execution_id,

@@ -13,4 +13,4 @@ from .router import router
 async def get_session_history(
     session_id: UUID, x_developer_id: Annotated[UUID, Depends(get_developer_id)]
 ) -> History:
-    return get_history_query(developer_id=x_developer_id, session_id=session_id)
+    return await get_history_query(developer_id=x_developer_id, session_id=session_id)

@@ -18,7 +18,7 @@ async def patch_session(
     session_id: UUID,
     data: PatchSessionRequest,
 ) -> ResourceUpdatedResponse:
-    return patch_session_query(
+    return await patch_session_query(
         developer_id=x_developer_id,
         session_id=session_id,
         data=data,

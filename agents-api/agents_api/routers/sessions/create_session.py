@@ -18,7 +18,7 @@ async def create_session(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     data: CreateSessionRequest,
 ) -> ResourceCreatedResponse:
-    session = create_session_query(
+    session = await create_session_query(
         developer_id=x_developer_id,
         data=data,
     )

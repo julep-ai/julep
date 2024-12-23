@@ -21,7 +21,7 @@ async def list_users(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[User]:
-    users = list_users_query(
+    users = await list_users_query(
         developer_id=x_developer_id,
         limit=limit,
         offset=offset,

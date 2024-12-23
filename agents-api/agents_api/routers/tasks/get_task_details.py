@@ -22,7 +22,7 @@ async def get_task_details(
     )
 
     try:
-        task = get_task_query(developer_id=x_developer_id, task_id=task_id)
+        task = await get_task_query(developer_id=x_developer_id, task_id=task_id)
         task_data = task.model_dump()
     except AssertionError:
         raise not_found

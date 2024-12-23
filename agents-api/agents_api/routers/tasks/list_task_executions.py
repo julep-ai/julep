@@ -23,7 +23,7 @@ async def list_task_executions(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Execution]:
-    executions = list_task_executions_query(
+    executions = await list_task_executions_query(
         task_id=task_id,
         developer_id=x_developer_id,
         limit=limit,

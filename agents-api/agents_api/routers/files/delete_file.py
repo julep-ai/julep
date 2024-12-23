@@ -22,7 +22,9 @@ async def delete_file_content(file_id: UUID) -> None:
 async def delete_file(
     file_id: UUID, x_developer_id: Annotated[UUID, Depends(get_developer_id)]
 ) -> ResourceDeletedResponse:
-    resource_deleted = delete_file_query(developer_id=x_developer_id, file_id=file_id)
+    resource_deleted = await delete_file_query(
+        developer_id=x_developer_id, file_id=file_id
+    )
 
     # Delete the file content from blob storage
     await delete_file_content(file_id)

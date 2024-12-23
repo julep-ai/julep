@@ -18,7 +18,7 @@ async def create_or_update_user(
     user_id: UUID,
     data: CreateOrUpdateUserRequest,
 ) -> ResourceCreatedResponse:
-    user = create_or_update_user_query(
+    user = await create_or_update_user_query(
         developer_id=x_developer_id,
         user_id=user_id,
         data=data,

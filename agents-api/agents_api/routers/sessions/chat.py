@@ -57,7 +57,7 @@ async def chat(
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
-        sessions = count_sessions_query(developer_id=developer.id)
+        sessions = await count_sessions_query(developer_id=developer.id)
         session_length = sessions["count"]
         if session_length > max_free_sessions:
             raise HTTPException(
@@ -69,7 +69,7 @@ async def chat(
         raise NotImplementedError("Streaming is not yet implemented")
 
     # First get the chat context
-    chat_context: ChatContext = prepare_chat_context(
+    chat_context: ChatContext = await prepare_chat_context(
         developer_id=developer.id,
         session_id=session_id,
     )

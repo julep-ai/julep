@@ -16,4 +16,6 @@ from .router import router
 async def delete_session(
     session_id: UUID, x_developer_id: Annotated[UUID, Depends(get_developer_id)]
 ) -> ResourceDeletedResponse:
-    return delete_session_query(developer_id=x_developer_id, session_id=session_id)
+    return await delete_session_query(
+        developer_id=x_developer_id, session_id=session_id
+    )

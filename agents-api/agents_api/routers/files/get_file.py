@@ -23,7 +23,7 @@ async def fetch_file_content(file_id: UUID) -> str:
 async def get_file(
     file_id: UUID, x_developer_id: Annotated[UUID, Depends(get_developer_id)]
 ) -> File:
-    file = get_file_query(developer_id=x_developer_id, file_id=file_id)
+    file = await get_file_query(developer_id=x_developer_id, file_id=file_id)
 
     # Fetch the file content from blob storage
     file.content = await fetch_file_content(file.id)

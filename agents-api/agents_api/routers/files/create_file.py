@@ -29,7 +29,7 @@ async def create_file(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     data: CreateFileRequest,
 ) -> ResourceCreatedResponse:
-    file: File = create_file_query(
+    file: File = await create_file_query(
         developer_id=x_developer_id,
         data=data,
     )

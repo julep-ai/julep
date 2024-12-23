@@ -21,7 +21,7 @@ async def list_sessions(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Session]:
-    sessions = list_sessions_query(
+    sessions = await list_sessions_query(
         developer_id=x_developer_id,
         limit=limit,
         offset=offset,

@@ -14,4 +14,4 @@ async def get_user_details(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     user_id: UUID,
 ) -> User:
-    return get_user_query(developer_id=x_developer_id, user_id=user_id)
+    return await get_user_query(developer_id=x_developer_id, user_id=user_id)

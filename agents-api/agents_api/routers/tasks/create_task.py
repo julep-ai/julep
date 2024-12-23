@@ -35,7 +35,7 @@ async def create_task(
     except ValidationError:
         pass
 
-    return create_task_query(
+    return await create_task_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=data,

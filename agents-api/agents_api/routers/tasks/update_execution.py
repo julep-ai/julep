@@ -31,14 +31,14 @@ async def update_execution(
         case StopExecutionRequest():
             try:
                 wf_handle = temporal_client.get_workflow_handle_for(
-                    *get_temporal_workflow_data(execution_id=execution_id)
+                    *await get_temporal_workflow_data(execution_id=execution_id)
                 )
                 await wf_handle.cancel()
             except Exception:
                 raise HTTPException(status_code=500, detail="Failed to stop execution")
 
         case ResumeExecutionRequest():
-            token_data = get_paused_execution_token(
+            token_data = await get_paused_execution_token(
                 developer_id=x_developer_id, execution_id=execution_id
             )
             activity_id = token_data["metadata"].get("x-activity-id", None)

@@ -9,7 +9,7 @@ from .router import router
 async def check_health() -> dict:
     try:
         # Check if the database is reachable
-        list_agents_query(
+        await list_agents_query(
             developer_id=UUID("00000000-0000-0000-0000-000000000000"),
         )
     except Exception as e:
