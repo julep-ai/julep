@@ -11,7 +11,7 @@ from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.task.create_or_update_task import (
+from ...queries.tasks.create_or_update_task import (
     create_or_update_task as create_or_update_task_query,
 )
 from .router import router

@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     Task,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.task.get_task import get_task as get_task_query
+from ...queries.tasks.get_task import get_task as get_task_query
 from .router import router
 
 
