@@ -8,14 +8,14 @@ from agents_api.autogen.openapi_model import (
     Tool,
     UpdateToolRequest,
 )
+from agents_api.clients.pg import create_db_pool
 from agents_api.queries.tools.create_tools import create_tools
 from agents_api.queries.tools.delete_tool import delete_tool
 from agents_api.queries.tools.get_tool import get_tool
 from agents_api.queries.tools.list_tools import list_tools
 from agents_api.queries.tools.patch_tool import patch_tool
 from agents_api.queries.tools.update_tool import update_tool
-from tests.fixtures import test_agent, test_developer_id, pg_dsn, test_tool
-from agents_api.clients.pg import create_db_pool
+from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_tool
 
 
 @test("query: create tool")
