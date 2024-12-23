@@ -99,6 +99,17 @@ async def create_entries(
     session_id: UUID,
     data: list[CreateEntryRequest],
 ) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
+    """
+    Create entries in a session.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        session_id (UUID): The ID of the session.
+        data (list[CreateEntryRequest]): The list of entries to create.
+
+    Returns:
+        list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]: SQL query and parameters for creating the entries.
+    """
     # Convert the data to a list of dictionaries
     data_dicts = [item.model_dump(mode="json") for item in data]
 
@@ -168,6 +179,17 @@ async def add_entry_relations(
     session_id: UUID,
     data: list[Relation],
 ) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
+    """
+    Add relations between entries in a session.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        session_id (UUID): The ID of the session.
+        data (list[Relation]): The list of relations to add.
+
+    Returns:
+        list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]: SQL query and parameters for adding the relations.
+    """
     # Convert the data to a list of dictionaries
     data_dicts = [item.model_dump(mode="json") for item in data]
 

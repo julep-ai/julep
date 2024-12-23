@@ -48,6 +48,11 @@ RETURNING file_id;
             status_code=404,
             detail="File not found",
         ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer or owner does not exist",
+        ),
     }
 )
 @wrap_in_class(

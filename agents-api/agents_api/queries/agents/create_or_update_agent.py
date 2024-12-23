@@ -5,14 +5,18 @@ It constructs and executes SQL queries to insert a new agent or update an existi
 
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from sqlglot import parse_one
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
+    partialclass,
     pg_query,
+    rewrap_exceptions,
     wrap_in_class,
 )
 
@@ -52,15 +56,30 @@ RETURNING *;
 """).sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         psycopg_errors.ForeignKeyViolation: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="The specified developer does not exist.",
-#         )
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        ),
+        asyncpg.exceptions.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="An agent with this canonical name already exists for this developer.",
+        ),
+        asyncpg.exceptions.CheckViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="The provided data violates one or more constraints. Please check the input values.",
+        ),
+        asyncpg.exceptions.DataError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid data provided. Please check the input values.",
+        ),
+    }
+)
 @wrap_in_class(
     Agent,
     one=True,
@@ -98,7 +117,7 @@ async def create_or_update_agent(
 
     # Set default values
     data.metadata = data.metadata or {}
-    data.canonical_name = data.canonical_name or generate_canonical_name(data.name)
+    data.canonical_name = data.canonical_name or generate_canonical_name()
 
     params = [
         developer_id,

@@ -2,18 +2,10 @@ BEGIN;
 
 -- Create unlogged table for caching embeddings
 CREATE UNLOGGED TABLE IF NOT EXISTS embeddings_cache (
-    provider TEXT NOT NULL,
-    model TEXT NOT NULL,
-    input_text TEXT NOT NULL,
-    input_type TEXT DEFAULT NULL,
-    api_key TEXT DEFAULT NULL,
-    api_key_name TEXT DEFAULT NULL,
+    model_input_md5 TEXT NOT NULL,
     embedding vector (1024) NOT NULL,
-    CONSTRAINT pk_embeddings_cache PRIMARY KEY (provider, model, input_text)
+    CONSTRAINT pk_embeddings_cache PRIMARY KEY (model_input_md5)
 );
-
--- Add index on provider, model, input_text for faster lookups
-CREATE INDEX IF NOT EXISTS idx_embeddings_cache_provider_model_input_text ON embeddings_cache (provider, model, input_text ASC);
 
 -- Add comment explaining table purpose
 COMMENT ON TABLE embeddings_cache IS 'Unlogged table that caches embedding requests to avoid duplicate API calls';
@@ -31,16 +23,17 @@ OR REPLACE function embed_with_cache (
 -- Try to get cached embedding first
 declare
     cached_embedding vector(1024);
+    model_input_md5 text;
 begin
     if _provider != 'voyageai' then
         raise exception 'Only voyageai provider is supported';
     end if;
 
-    select embedding into cached_embedding 
+    model_input_md5 := md5(_provider || '++' || _model || '++' || _input_text || '++' || _input_type);
+
+    select embedding into cached_embedding
     from embeddings_cache c
-    where c.provider = _provider 
-    and c.model = _model 
-    and c.input_text = _input_text;
+    where c.model_input_md5 = model_input_md5;
 
     if found then
         return cached_embedding;
@@ -57,34 +50,25 @@ begin
 
     -- Cache the result
     insert into embeddings_cache (
-        provider,
-        model, 
-        input_text,
-        input_type,
-        api_key,
-        api_key_name,
+        model_input_md5,
         embedding
     ) values (
-        _provider,
-        _model,
-        _input_text, 
-        _input_type,
-        _api_key,
-        _api_key_name,
+        model_input_md5,
         cached_embedding
-    ) on conflict (provider, model, input_text) do update set embedding = cached_embedding;
+    ) on conflict (model_input_md5) do update set embedding = cached_embedding;
 
     return cached_embedding;
 end;
 $$;
 
 -- Create a type for the search results if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_type WHERE typname = 'doc_search_result'
     ) THEN
         CREATE TYPE doc_search_result AS (
+            developer_id uuid,
             doc_id uuid,
             index integer,
             title text,
@@ -101,6 +85,7 @@ END $$;
 -- Create the search function
 CREATE
 OR REPLACE FUNCTION search_by_vector (
+    developer_id UUID,
     query_embedding vector (1024),
     owner_types TEXT[],
     owner_ids UUID [],
@@ -122,25 +107,20 @@ BEGIN
         RAISE EXCEPTION 'confidence must be between 0 and 1';
     END IF;
 
-    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND 
-       array_length(owner_types, 1) != array_length(owner_ids, 1) THEN
+    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND
+        array_length(owner_types, 1) != array_length(owner_ids, 1) AND
+        array_length(owner_types, 1) <= 0 THEN
         RAISE EXCEPTION 'owner_types and owner_ids arrays must have the same length';
     END IF;
 
     -- Calculate search threshold from confidence
     search_threshold := 1.0 - confidence;
 
-    -- Build owner filter SQL if provided
-    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL THEN
-        owner_filter_sql := '
-            AND (
-                (ud.user_id = ANY($5) AND ''user'' = ANY($4))
-                OR 
-                (ad.agent_id = ANY($5) AND ''agent'' = ANY($4))
-            )';
-    ELSE
-        owner_filter_sql := '';
-    END IF;
+    -- Build owner filter SQL
+    owner_filter_sql := '
+        AND (
+            doc_owners.owner_id = ANY($5::uuid[]) AND doc_owners.owner_type = ANY($4::text[])
+        )';
 
     -- Build metadata filter SQL if provided
     IF metadata_filter IS NOT NULL THEN
@@ -152,7 +132,8 @@ BEGIN
     -- Return search results
     RETURN QUERY EXECUTE format(
         'WITH ranked_docs AS (
-            SELECT 
+            SELECT
+                d.developer_id,
                 d.doc_id,
                 d.index,
                 d.title,
@@ -160,15 +141,12 @@ BEGIN
                 (1 - (d.embedding <=> $1)) as distance,
                 d.embedding,
                 d.metadata,
-                CASE 
-                    WHEN ud.user_id IS NOT NULL THEN ''user''
-                    WHEN ad.agent_id IS NOT NULL THEN ''agent''
-                END as owner_type,
-                COALESCE(ud.user_id, ad.agent_id) as owner_id
+                doc_owners.owner_type,
+                doc_owners.owner_id
             FROM docs_embeddings d
-            LEFT JOIN user_docs ud ON d.doc_id = ud.doc_id
-            LEFT JOIN agent_docs ad ON d.doc_id = ad.doc_id
-            WHERE 1 - (d.embedding <=> $1) >= $2
+            LEFT JOIN doc_owners ON d.doc_id = doc_owners.doc_id
+            WHERE d.developer_id = $7
+            AND 1 - (d.embedding <=> $1) >= $2
             %s
             %s
         )
@@ -179,13 +157,15 @@ BEGIN
         owner_filter_sql,
         metadata_filter_sql
     )
-    USING 
+    USING
         query_embedding,
         search_threshold,
         k,
         owner_types,
         owner_ids,
-        metadata_filter;
+        metadata_filter,
+        developer_id;
+
 
 END;
 $$;
@@ -196,6 +176,7 @@ COMMENT ON FUNCTION search_by_vector IS 'Search documents by vector similarity w
 -- Create the combined embed and search function
 CREATE
 OR REPLACE FUNCTION embed_and_search_by_vector (
+    developer_id UUID,
     query_text text,
     owner_types TEXT[],
     owner_ids UUID [],
@@ -203,7 +184,7 @@ OR REPLACE FUNCTION embed_and_search_by_vector (
     confidence float DEFAULT 0.5,
     metadata_filter jsonb DEFAULT NULL,
     embedding_provider text DEFAULT 'voyageai',
-    embedding_model text DEFAULT 'voyage-01',
+    embedding_model text DEFAULT 'voyage-3',
     input_type text DEFAULT 'query',
     api_key text DEFAULT NULL,
     api_key_name text DEFAULT NULL
@@ -223,6 +204,7 @@ BEGIN
 
     -- Then perform the search using the generated embedding
     RETURN QUERY SELECT * FROM search_by_vector(
+        developer_id,
         query_embedding,
         owner_types,
         owner_ids,
@@ -238,9 +220,10 @@ COMMENT ON FUNCTION embed_and_search_by_vector IS 'Convenience function that com
 -- Create the text search function
 CREATE
 OR REPLACE FUNCTION search_by_text (
+    developer_id UUID,
     query_text text,
     owner_types TEXT[],
-    owner_ids UUID [],
+    owner_ids UUID[],
     search_language text DEFAULT 'english',
     k integer DEFAULT 3,
     metadata_filter jsonb DEFAULT NULL
@@ -255,29 +238,25 @@ BEGIN
         RAISE EXCEPTION 'k must be greater than 0';
     END IF;
 
-    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND 
-       array_length(owner_types, 1) != array_length(owner_ids, 1) THEN
+    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND
+        array_length(owner_types, 1) != array_length(owner_ids, 1) AND
+        array_length(owner_types, 1) <= 0 THEN
         RAISE EXCEPTION 'owner_types and owner_ids arrays must have the same length';
     END IF;
 
     -- Convert search query to tsquery
     ts_query := websearch_to_tsquery(search_language::regconfig, query_text);
 
-    -- Build owner filter SQL if provided
-    IF owner_types IS NOT NULL AND owner_ids IS NOT NULL THEN
-        owner_filter_sql := '
-            AND (
-                (ud.user_id = ANY($5) AND ''user'' = ANY($4))
-                OR 
-                (ad.agent_id = ANY($5) AND ''agent'' = ANY($4))
-            )';
-    ELSE
-        owner_filter_sql := '';
-    END IF;
+    -- Build owner filter SQL
+    owner_filter_sql := '
+        AND (
+            doc_owners.owner_id = ANY($4::uuid[]) AND doc_owners.owner_type = ANY($3::text[])
+        )';
+
 
     -- Build metadata filter SQL if provided
     IF metadata_filter IS NOT NULL THEN
-        metadata_filter_sql := 'AND d.metadata @> $6';
+        metadata_filter_sql := 'AND d.metadata @> $5';
     ELSE
         metadata_filter_sql := '';
     END IF;
@@ -285,7 +264,8 @@ BEGIN
     -- Return search results
     RETURN QUERY EXECUTE format(
         'WITH ranked_docs AS (
-            SELECT 
+            SELECT
+                d.developer_id,
                 d.doc_id,
                 d.index,
                 d.title,
@@ -293,32 +273,29 @@ BEGIN
                 ts_rank_cd(d.search_tsv, $1, 32)::double precision as distance,
                 d.embedding,
                 d.metadata,
-                CASE 
-                    WHEN ud.user_id IS NOT NULL THEN ''user''
-                    WHEN ad.agent_id IS NOT NULL THEN ''agent''
-                END as owner_type,
-                COALESCE(ud.user_id, ad.agent_id) as owner_id
+                doc_owners.owner_type,
+                doc_owners.owner_id
             FROM docs_embeddings d
-            LEFT JOIN user_docs ud ON d.doc_id = ud.doc_id
-            LEFT JOIN agent_docs ad ON d.doc_id = ad.doc_id
-            WHERE d.search_tsv @@ $1
+            LEFT JOIN doc_owners ON d.doc_id = doc_owners.doc_id
+            WHERE d.developer_id = $6
+            AND d.search_tsv @@ $1
             %s
             %s
         )
         SELECT DISTINCT ON (doc_id) *
         FROM ranked_docs
         ORDER BY doc_id, distance DESC
-        LIMIT $3',
+        LIMIT $2',
         owner_filter_sql,
         metadata_filter_sql
     )
-    USING 
+    USING
         ts_query,
-        search_language,
         k,
         owner_types,
         owner_ids,
-        metadata_filter;
+        metadata_filter,
+        developer_id;
 
 END;
 $$;
@@ -372,6 +349,7 @@ $$ LANGUAGE plpgsql;
 -- Hybrid search function combining text and vector search
 CREATE
 OR REPLACE FUNCTION search_hybrid (
+    developer_id UUID,
     query_text text,
     query_embedding vector (1024),
     owner_types TEXT[],
@@ -397,6 +375,7 @@ BEGIN
     RETURN QUERY
     WITH text_results AS (
         SELECT * FROM search_by_text(
+            developer_id,
             query_text,
             owner_types,
             owner_ids,
@@ -407,6 +386,7 @@ BEGIN
     ),
     embedding_results AS (
         SELECT * FROM search_by_vector(
+            developer_id,
             query_embedding,
             owner_types,
             owner_ids,
@@ -425,7 +405,8 @@ BEGIN
         ) combined
     ),
     scores AS (
-        SELECT 
+        SELECT
+            r.developer_id,
             r.doc_id,
             r.title,
             r.content,
@@ -437,17 +418,18 @@ BEGIN
             COALESCE(t.distance, 0.0) as text_score,
             COALESCE(e.distance, 0.0) as embedding_score
         FROM all_results r
-        LEFT JOIN text_results t ON r.doc_id = t.doc_id
-        LEFT JOIN embedding_results e ON r.doc_id = e.doc_id
+        LEFT JOIN text_results t ON r.doc_id = t.doc_id AND r.developer_id = t.developer_id
+        LEFT JOIN embedding_results e ON r.doc_id = e.doc_id AND r.developer_id = e.developer_id
     ),
     normalized_scores AS (
-        SELECT 
+        SELECT
             *,
             unnest(dbsf_normalize(array_agg(text_score) OVER ())) as norm_text_score,
             unnest(dbsf_normalize(array_agg(embedding_score) OVER ())) as norm_embedding_score
         FROM scores
     )
-    SELECT 
+    SELECT
+        developer_id,
         doc_id,
         index,
         title,
@@ -468,6 +450,7 @@ COMMENT ON FUNCTION search_hybrid IS 'Hybrid search combining text and vector se
 -- Convenience function that handles embedding generation
 CREATE
 OR REPLACE FUNCTION embed_and_search_hybrid (
+    developer_id UUID,
     query_text text,
     owner_types TEXT[],
     owner_ids UUID [],
@@ -477,7 +460,7 @@ OR REPLACE FUNCTION embed_and_search_hybrid (
     metadata_filter jsonb DEFAULT NULL,
     search_language text DEFAULT 'english',
     embedding_provider text DEFAULT 'voyageai',
-    embedding_model text DEFAULT 'voyage-01',
+    embedding_model text DEFAULT 'voyage-3',
     input_type text DEFAULT 'query',
     api_key text DEFAULT NULL,
     api_key_name text DEFAULT NULL
@@ -497,6 +480,7 @@ BEGIN
 
     -- Perform hybrid search
     RETURN QUERY SELECT * FROM search_hybrid(
+        developer_id,
         query_text,
         query_embedding,
         owner_types,

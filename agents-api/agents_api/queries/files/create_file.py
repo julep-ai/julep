@@ -8,13 +8,15 @@ import hashlib
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateFileRequest, File
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, wrap_in_class
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Create file
 file_query = parse_one("""
@@ -58,25 +60,25 @@ JOIN files f ON f.file_id = io.file_id;
 
 
 # Add error handling decorator
-# @rewrap_exceptions(
-#     {
-#         asyncpg.UniqueViolationError: partialclass(
-#             HTTPException,
-#             status_code=409,
-#             detail="A file with this name already exists for this developer",
-#         ),
-#         asyncpg.NoDataFoundError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="The specified owner does not exist",
-#         ),
-#         asyncpg.ForeignKeyViolationError: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="The specified developer does not exist",
-#         ),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="A file with this name already exists for this developer",
+        ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer or owner does not exist",
+        ),
+        asyncpg.CheckViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="File size must be positive and name must be between 1 and 255 characters",
+        ),
+    }
+)
 @wrap_in_class(
     File,
     one=True,

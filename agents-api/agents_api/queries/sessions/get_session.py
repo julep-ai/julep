@@ -51,7 +51,7 @@ query = parse_one(raw_query).sql(pretty=True)
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
-            detail="The specified developer does not exist.",
+            detail="The specified developer or session does not exist.",
         ),
         asyncpg.NoDataFoundError: partialclass(
             HTTPException, status_code=404, detail="Session not found"

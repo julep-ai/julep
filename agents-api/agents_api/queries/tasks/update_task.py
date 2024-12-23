@@ -12,25 +12,6 @@ from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-# # Update task query using UPDATE
-# update_task_query = parse_one("""
-# UPDATE tasks
-# SET
-#     version = version + 1,
-#     canonical_name = $2,
-#     agent_id = $4,
-#     metadata = $5,
-#     name = $6,
-#     description = $7,
-#     inherit_tools = $8,
-#     input_schema = $9::jsonb,
-#     updated_at = NOW()
-# WHERE
-#     developer_id = $1
-#     AND task_id = $3
-# RETURNING *;
-# """).sql(pretty=True)
-
 # Update task query using INSERT with version increment
 update_task_query = parse_one("""
 WITH current_version AS (
@@ -142,7 +123,6 @@ async def update_task(
     Returns:
         list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]: List of queries to execute.
     """
-    print("UPDATING TIIIIIME")
     # Parameters for updating the task
     update_task_params = [
         developer_id,  # $1

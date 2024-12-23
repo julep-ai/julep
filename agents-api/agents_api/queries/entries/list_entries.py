@@ -84,6 +84,21 @@ async def list_entries(
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
 ) -> list[tuple[str, list] | tuple[str, list, str]]:
+    """List entries in a session.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        session_id (UUID): The ID of the session.
+        allowed_sources (list[str]): The sources to include in the history.
+        limit (int): The number of entries to return.
+        offset (int): The number of entries to skip.
+        sort_by (Literal["created_at", "timestamp"]): The field to sort by.
+        direction (Literal["asc", "desc"]): The direction to sort by.
+        exclude_relations (list[str]): The relations to exclude.
+
+    Returns:
+        tuple[str, list] | tuple[str, list, str]: SQL query and parameters for listing the entries.
+    """
     if limit < 1 or limit > 1000:
         raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
     if offset < 0:

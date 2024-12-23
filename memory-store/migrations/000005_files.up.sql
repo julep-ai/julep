@@ -23,26 +23,13 @@ CREATE TABLE IF NOT EXISTS files (
     CONSTRAINT pk_files PRIMARY KEY (developer_id, file_id)
 );
 
--- Create sorted index on file_id if it doesn't exist
-CREATE INDEX IF NOT EXISTS idx_files_id_sorted ON files (file_id DESC);
-
 -- Create foreign key constraint and index if they don't exist
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_files_developer') THEN
-        ALTER TABLE files 
-            ADD CONSTRAINT fk_files_developer 
-            FOREIGN KEY (developer_id) 
-            REFERENCES developers(developer_id);
-    END IF;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_files_developer ON files (developer_id);
-
--- Add unique constraint if it doesn't exist
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_files_developer_id_file_id') THEN
         ALTER TABLE files
-            ADD CONSTRAINT uq_files_developer_id_file_id UNIQUE (developer_id, file_id);
+            ADD CONSTRAINT fk_files_developer
+            FOREIGN KEY (developer_id)
+            REFERENCES developers(developer_id);
     END IF;
 END $$;
 
@@ -56,16 +43,6 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- Create the user_files table
-CREATE TABLE IF NOT EXISTS user_files (
-    developer_id UUID NOT NULL,
-    user_id UUID NOT NULL,
-    file_id UUID NOT NULL,
-    CONSTRAINT pk_user_files PRIMARY KEY (developer_id, user_id, file_id),
-    CONSTRAINT fk_user_files_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id),
-    CONSTRAINT fk_user_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id) ON DELETE CASCADE
-);
-
 -- Create the file_owners table
 CREATE TABLE IF NOT EXISTS file_owners (
     developer_id UUID NOT NULL,
@@ -77,21 +54,8 @@ CREATE TABLE IF NOT EXISTS file_owners (
     CONSTRAINT ct_file_owners_owner_type CHECK (owner_type IN ('user', 'agent'))
 );
 
--- Create the agent_files table
-CREATE TABLE IF NOT EXISTS agent_files (
-    developer_id UUID NOT NULL,
-    agent_id UUID NOT NULL,
-    file_id UUID NOT NULL,
-    CONSTRAINT pk_agent_files PRIMARY KEY (developer_id, agent_id, file_id),
-    CONSTRAINT fk_agent_files_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id),
-    CONSTRAINT fk_agent_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id) ON DELETE CASCADE
-);
-
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_file_owners_owner 
-    ON file_owners (developer_id, owner_type, owner_id);
-CREATE INDEX IF NOT EXISTS idx_agent_files_agent ON agent_files (developer_id, agent_id);
-CREATE INDEX IF NOT EXISTS idx_user_files_user ON user_files (developer_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_file_owners_owner ON file_owners (developer_id, owner_type, owner_id);
 
 -- Create function to validate owner reference
 CREATE OR REPLACE FUNCTION validate_file_owner()
@@ -99,14 +63,14 @@ RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.owner_type = 'user' THEN
         IF NOT EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE developer_id = NEW.developer_id AND user_id = NEW.owner_id
         ) THEN
             RAISE EXCEPTION 'Invalid user reference';
         END IF;
     ELSIF NEW.owner_type = 'agent' THEN
         IF NOT EXISTS (
-            SELECT 1 FROM agents 
+            SELECT 1 FROM agents
             WHERE developer_id = NEW.developer_id AND agent_id = NEW.owner_id
         ) THEN
             RAISE EXCEPTION 'Invalid agent reference';

@@ -37,12 +37,17 @@ SELECT * FROM updated_session;
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
-            detail="The specified developer or participant does not exist.",
+            detail="The specified developer or session does not exist.",
         ),
         asyncpg.NoDataFoundError: partialclass(
             HTTPException,
             status_code=404,
             detail="Session not found",
+        ),
+        asyncpg.CheckViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid session data provided.",
         ),
     }
 )

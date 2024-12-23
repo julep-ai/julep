@@ -5,7 +5,9 @@ It includes functions to construct and execute SQL queries for inserting new age
 
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from sqlglot import parse_one
 from uuid_extensions import uuid7
 
@@ -13,7 +15,9 @@ from ...autogen.openapi_model import CreateAgentRequest, ResourceCreatedResponse
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
+    partialclass,
     pg_query,
+    rewrap_exceptions,
     wrap_in_class,
 )
 
@@ -45,35 +49,30 @@ RETURNING *;
 """).sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         psycopg_errors.ForeignKeyViolation: partialclass(
-#             HTTPException,
-#             status_code=404,
-#             detail="The specified developer does not exist.",
-#         ),
-#         psycopg_errors.UniqueViolation: partialclass(
-#             HTTPException,
-#             status_code=409,
-#             detail="An agent with this canonical name already exists for this developer.",
-#         ),
-#         psycopg_errors.CheckViolation: partialclass(
-#             HTTPException,
-#             status_code=400,
-#             detail="The provided data violates one or more constraints. Please check the input values.",
-#         ),
-#         ValidationError: partialclass(
-#             HTTPException,
-#             status_code=400,
-#             detail="Input validation failed. Please check the provided data.",
-#         ),
-#         TypeError: partialclass(
-#             HTTPException,
-#             status_code=400,
-#             detail="A type mismatch occurred. Please review the input.",
-#         ),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        ),
+        asyncpg.exceptions.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="An agent with this canonical name already exists for this developer.",
+        ),
+        asyncpg.exceptions.CheckViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="The provided data violates one or more constraints. Please check the input values.",
+        ),
+        asyncpg.exceptions.DataError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid data provided. Please check the input values.",
+        ),
+    }
+)
 @wrap_in_class(
     ResourceCreatedResponse,
     one=True,
@@ -115,7 +114,7 @@ async def create_agent(
 
     # Set default values
     data.metadata = data.metadata or {}
-    data.canonical_name = data.canonical_name or generate_canonical_name(data.name)
+    data.canonical_name = data.canonical_name or generate_canonical_name()
 
     params = [
         developer_id,

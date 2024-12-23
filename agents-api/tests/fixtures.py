@@ -8,6 +8,7 @@ from ward import fixture
 
 from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
+    CreateDocRequest,
     CreateFileRequest,
     CreateSessionRequest,
     CreateTaskRequest,
@@ -20,8 +21,8 @@ from agents_api.queries.developers.create_developer import create_developer
 
 # from agents_api.queries.agents.delete_agent import delete_agent
 from agents_api.queries.developers.get_developer import get_developer
+from agents_api.queries.docs.create_doc import create_doc
 
-# from agents_api.queries.docs.create_doc import create_doc
 # from agents_api.queries.docs.delete_doc import delete_doc
 # from agents_api.queries.execution.create_execution import create_execution
 # from agents_api.queries.execution.create_execution_transition import create_execution_transition
@@ -46,8 +47,6 @@ from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
 
-EMBEDDING_SIZE: int = 1024
-
 
 @fixture(scope="global")
 def pg_dsn():
@@ -62,22 +61,6 @@ def test_developer_id():
 
     developer_id = uuid7()
     return developer_id
-
-
-# @fixture(scope="global")
-# async def test_file(dsn=pg_dsn, developer_id=test_developer_id):
-#     async with get_pg_client(dsn=dsn) as client:
-#         file = await create_file(
-#             developer_id=developer_id,
-#             data=CreateFileRequest(
-#                 name="Hello",
-#                 description="World",
-#                 mime_type="text/plain",
-#                 content="eyJzYW1wbGUiOiAidGVzdCJ9",
-#             ),
-#             client=client,
-#         )
-#         yield file
 
 
 @fixture(scope="global")
@@ -150,6 +133,24 @@ async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
 
 
 @fixture(scope="test")
+async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+    doc = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Hello",
+            content=["World", "World2", "World3"],
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+    return doc
+
+
+@fixture(scope="test")
 async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
     task = await create_task(
@@ -214,23 +215,6 @@ async def test_session(
     )
 
     return session
-
-
-# @fixture(scope="global")
-# async def test_doc(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     agent=test_agent,
-# ):
-#     async with get_pg_client(dsn=dsn) as client:
-#         doc = await create_doc(
-#             developer_id=developer_id,
-#             owner_type="agent",
-#             owner_id=agent.id,
-#             data=CreateDocRequest(title="Hello", content=["World"]),
-#             client=client,
-#         )
-#         yield doc
 
 
 # @fixture(scope="global")

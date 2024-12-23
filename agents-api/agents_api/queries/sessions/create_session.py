@@ -7,11 +7,16 @@ from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
-    Create`Request,
+    CreateSessionRequest,
     ResourceCreatedResponse,
 )
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import (
+    partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
+)
 
 # Define the raw SQL queries
 session_query = parse_one("""
@@ -58,12 +63,17 @@ VALUES ($1, $2, $3, $4);
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
-            detail="The specified developer or participant does not exist.",
+            detail="The specified developer or session does not exist.",
         ),
         asyncpg.UniqueViolationError: partialclass(
             HTTPException,
             status_code=409,
             detail="A session with this ID already exists.",
+        ),
+        asyncpg.CheckViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid session data provided.",
         ),
     }
 )

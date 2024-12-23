@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS idx_developers_email ON developers (email);
 CREATE INDEX IF NOT EXISTS idx_developers_tags ON developers USING GIN (tags);
 
 -- Create trigger to automatically update updated_at
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_developers_updated_at') THEN
         CREATE TRIGGER trg_developers_updated_at

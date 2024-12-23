@@ -64,7 +64,7 @@ SELECT
     );
 
 -- Create indexes for efficient querying
-CREATE INDEX IF NOT EXISTS idx_entries_by_session ON entries (session_id DESC, entry_id DESC);
+CREATE INDEX IF NOT EXISTS idx_entries_by_session ON entries (session_id DESC);
 
 -- Add foreign key constraint to sessions table
 DO $$

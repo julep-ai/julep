@@ -10,6 +10,7 @@ from agents_api.autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
     CreateSessionRequest,
     PatchSessionRequest,
+    ResourceCreatedResponse,
     ResourceDeletedResponse,
     ResourceUpdatedResponse,
     Session,

@@ -33,9 +33,6 @@ CREATE TABLE IF NOT EXISTS sessions (
     CONSTRAINT ct_sessions_recall_options_is_object CHECK (jsonb_typeof(recall_options) = 'object')
 );
 
--- Create indexes if they don't exist
-CREATE INDEX IF NOT EXISTS idx_sessions_id_sorted ON sessions (session_id DESC);
-
 CREATE INDEX IF NOT EXISTS idx_sessions_metadata ON sessions USING GIN (metadata);
 
 -- Create foreign key if it doesn't exist
@@ -44,9 +41,9 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'fk_sessions_developer'
     ) THEN
-        ALTER TABLE sessions 
+        ALTER TABLE sessions
         ADD CONSTRAINT fk_sessions_developer
-        FOREIGN KEY (developer_id) 
+        FOREIGN KEY (developer_id)
         REFERENCES developers(developer_id);
     END IF;
 END $$;
@@ -87,10 +84,7 @@ CREATE TABLE IF NOT EXISTS session_lookup (
     FOREIGN KEY (developer_id, session_id) REFERENCES sessions (developer_id, session_id) ON DELETE CASCADE
 );
 
--- Create indexes if they don't exist
-CREATE INDEX IF NOT EXISTS idx_session_lookup_by_session ON session_lookup (developer_id, session_id);
-
-CREATE INDEX IF NOT EXISTS idx_session_lookup_by_participant ON session_lookup (developer_id, participant_id);
+CREATE INDEX IF NOT EXISTS idx_session_lookup_by_participant ON session_lookup (developer_id, participant_type, participant_id);
 
 -- Create or replace the validation function
 CREATE

@@ -169,7 +169,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert result is not None
     assert isinstance(result, list)
     assert all(isinstance(task, Task) for task in result)
-    assert all(task.metadata.get("test") == True for task in result)
+    assert all(task.metadata.get("test") is True for task in result)
 
 
 @test("query: list tasks sql - no filters")
