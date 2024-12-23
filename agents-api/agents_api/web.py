@@ -23,16 +23,15 @@ from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
 from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
-
 from .routers import (
     agents,
-#     docs,
-#     files,
-#     internal,
-#     jobs,
-#     sessions,
-#     tasks,
-#     users,
+    #     docs,
+    #     files,
+    #     internal,
+    #     jobs,
+    #     sessions,
+    #     tasks,
+    #     users,
 )
 
 if not sentry_dsn:
