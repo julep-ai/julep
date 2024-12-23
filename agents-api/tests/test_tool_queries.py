@@ -66,7 +66,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
         connection_pool=pool,
     )
 
-    result = delete_tool(
+    result = await delete_tool(
         developer_id=developer_id,
         agent_id=agent.id,
         tool_id=tool.id,
