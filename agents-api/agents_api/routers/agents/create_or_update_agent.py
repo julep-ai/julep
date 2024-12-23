@@ -4,13 +4,14 @@ from uuid import UUID
 from fastapi import Depends
 from starlette.status import HTTP_201_CREATED
 
-from ...queries.agents.create_or_update_agent import create_or_update_agent as create_or_update_agent_query
-
 from ...autogen.openapi_model import (
     CreateOrUpdateAgentRequest,
     ResourceCreatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
+from ...queries.agents.create_or_update_agent import (
+    create_or_update_agent as create_or_update_agent_query,
+)
 from .router import router
 
 
