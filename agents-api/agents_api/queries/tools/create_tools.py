@@ -74,7 +74,7 @@ async def create_tools(
     agent_id: UUID,
     data: list[CreateToolRequest],
     ignore_existing: bool = False,  # TODO: what to do with this flag?
-) -> tuple[str, list] | tuple[str, list, str]:
+) -> tuple[str, list, str]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 

@@ -60,7 +60,7 @@ async def list_tools(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-) -> tuple[str, list] | tuple[str, list, str]:
+) -> tuple[str, list]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
 

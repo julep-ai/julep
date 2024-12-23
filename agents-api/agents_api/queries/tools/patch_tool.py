@@ -54,7 +54,7 @@ SELECT * FROM updated_tools;
 @beartype
 async def patch_tool(
     *, developer_id: UUID, agent_id: UUID, tool_id: UUID, data: PatchToolRequest
-) -> tuple[str, list] | tuple[str, list, str]:
+) -> tuple[str, list]:
     """
     Execute the datalog query and return the results as a DataFrame
     Updates the tool information for a given agent and tool ID in the 'cozodb' database.

@@ -75,7 +75,7 @@ async def get_tool_args_from_metadata(
     task_id: UUID | None = None,
     tool_type: Literal["integration", "api_call"] = "integration",
     arg_type: Literal["args", "setup", "headers"] = "args",
-) -> tuple[str, list] | tuple[str, list, str]:
+) -> tuple[str, list]:
     match session_id, task_id:
         case (None, task_id) if task_id is not None:
             return (

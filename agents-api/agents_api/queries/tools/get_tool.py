@@ -50,7 +50,7 @@ async def get_tool(
     developer_id: UUID,
     agent_id: UUID,
     tool_id: UUID,
-) -> tuple[str, list] | tuple[str, list, str]:
+) -> tuple[str, list]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
     tool_id = str(tool_id)
