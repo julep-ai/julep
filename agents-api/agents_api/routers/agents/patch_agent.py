@@ -6,7 +6,7 @@ from starlette.status import HTTP_200_OK
 
 from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
 from ...dependencies.developer_id import get_developer_id
-from ...models.agent.patch_agent import patch_agent as patch_agent_query
+from ...queries.agents.patch_agent import patch_agent as patch_agent_query
 from .router import router
 
 
