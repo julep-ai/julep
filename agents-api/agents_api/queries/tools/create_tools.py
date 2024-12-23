@@ -20,8 +20,7 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-sql_query = sqlvalidator.parse(
-    """INSERT INTO tools
+sql_query = """INSERT INTO tools
 (
     developer_id, 
     agent_id, 
@@ -45,10 +44,10 @@ WHERE NOT EXISTS (
 )
 RETURNING *
 """
-)
 
-if not sql_query.is_valid():
-    raise InvalidSQLQuery("create_tools")
+
+# if not sql_query.is_valid():
+#     raise InvalidSQLQuery("create_tools")
 
 
 # @rewrap_exceptions(
@@ -61,22 +60,21 @@ if not sql_query.is_valid():
 @wrap_in_class(
     Tool,
     transform=lambda d: {
-        "id": UUID(d.pop("tool_id")),
+        "id": d.pop("tool_id"),
         d["type"]: d.pop("spec"),
         **d,
     },
-    _kind="inserted",
 )
 @pg_query
 @increase_counter("create_tools")
 @beartype
-def create_tools(
+async def create_tools(
     *,
     developer_id: UUID,
     agent_id: UUID,
     data: list[CreateToolRequest],
     ignore_existing: bool = False,  # TODO: what to do with this flag?
-) -> tuple[list[str], list]:
+) -> tuple[str, list] | tuple[str, list, str]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
@@ -108,7 +106,7 @@ def create_tools(
     ]
 
     return (
-        sql_query.format(),
+        sql_query,
         tools_data,
         "fetchmany",
     )

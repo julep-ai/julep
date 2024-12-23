@@ -14,17 +14,17 @@ from ..utils import (
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
-sql_query = sqlvalidator.parse("""
+sql_query = """
 SELECT * FROM tools
 WHERE
     developer_id = $1 AND
     agent_id = $2 AND
     tool_id = $3
 LIMIT 1
-""")
+"""
 
-if not sql_query.is_valid():
-    raise InvalidSQLQuery("get_tool")
+# if not sql_query.is_valid():
+#     raise InvalidSQLQuery("get_tool")
 
 
 # @rewrap_exceptions(
@@ -37,7 +37,7 @@ if not sql_query.is_valid():
 @wrap_in_class(
     Tool,
     transform=lambda d: {
-        "id": UUID(d.pop("tool_id")),
+        "id": d.pop("tool_id"),
         d["type"]: d.pop("spec"),
         **d,
     },
@@ -45,18 +45,18 @@ if not sql_query.is_valid():
 )
 @pg_query
 @beartype
-def get_tool(
+async def get_tool(
     *,
     developer_id: UUID,
     agent_id: UUID,
     tool_id: UUID,
-) -> tuple[list[str], list]:
+) -> tuple[str, list] | tuple[str, list, str]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
     tool_id = str(tool_id)
 
     return (
-        sql_query.format(),
+        sql_query,
         [
             developer_id,
             agent_id,

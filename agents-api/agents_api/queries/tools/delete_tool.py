@@ -16,7 +16,7 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-sql_query = sqlvalidator.parse("""
+sql_query = """
 DELETE FROM 
     tools 
 WHERE
@@ -24,10 +24,10 @@ WHERE
     agent_id = $2 AND
     tool_id = $3
 RETURNING *
-""")
+"""
 
-if not sql_query.is_valid():
-    raise InvalidSQLQuery("delete_tool")
+# if not sql_query.is_valid():
+#     raise InvalidSQLQuery("delete_tool")
 
 
 # @rewrap_exceptions(
@@ -41,11 +41,10 @@ if not sql_query.is_valid():
     ResourceDeletedResponse,
     one=True,
     transform=lambda d: {"id": d["tool_id"], "deleted_at": utcnow(), "jobs": [], **d},
-    _kind="deleted",
 )
 @pg_query
 @beartype
-def delete_tool(
+async def delete_tool(
     *,
     developer_id: UUID,
     agent_id: UUID,
@@ -56,7 +55,7 @@ def delete_tool(
     tool_id = str(tool_id)
 
     return (
-        sql_query.format(),
+        sql_query,
         [
             developer_id,
             agent_id,

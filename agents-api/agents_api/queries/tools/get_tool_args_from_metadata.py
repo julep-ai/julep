@@ -10,8 +10,7 @@ from ..utils import (
     wrap_in_class,
 )
 
-tools_args_for_task_query = sqlvalidator.parse(
-    """SELECT COALESCE(agents_md || tasks_md, agents_md, tasks_md, '{}') as values FROM (
+tools_args_for_task_query = """SELECT COALESCE(agents_md || tasks_md, agents_md, tasks_md, '{}') as values FROM (
     SELECT
         CASE WHEN $3 = 'x-integrations-args' then metadata->'x-integrations-args'
         WHEN $3 = 'x-api_call-args' then metadata->'x-api_call-args'
@@ -29,13 +28,12 @@ tools_args_for_task_query = sqlvalidator.parse(
     FROM tasks
     WHERE task_id = $2 AND developer_id = $4 LIMIT 1
 ) AS tasks_md"""
-)
 
-if not tools_args_for_task_query.is_valid():
-    raise InvalidSQLQuery("tools_args_for_task_query")
 
-tool_args_for_session_query = sqlvalidator.parse(
-    """SELECT COALESCE(agents_md || sessions_md, agents_md, sessions_md, '{}') as values FROM (
+# if not tools_args_for_task_query.is_valid():
+#     raise InvalidSQLQuery("tools_args_for_task_query")
+
+tool_args_for_session_query = """SELECT COALESCE(agents_md || sessions_md, agents_md, sessions_md, '{}') as values FROM (
     SELECT
         CASE WHEN $3 = 'x-integrations-args' then metadata->'x-integrations-args'
         WHEN $3 = 'x-api_call-args' then metadata->'x-api_call-args'
@@ -53,10 +51,10 @@ tool_args_for_session_query = sqlvalidator.parse(
     FROM sessions
     WHERE session_id = $2 AND developer_id = $4 LIMIT 1
 ) AS sessions_md"""
-)
 
-if not tool_args_for_session_query.is_valid():
-    raise InvalidSQLQuery("tool_args_for_session")
+
+# if not tool_args_for_session_query.is_valid():
+#     raise InvalidSQLQuery("tool_args_for_session")
 
 
 # @rewrap_exceptions(
@@ -69,7 +67,7 @@ if not tool_args_for_session_query.is_valid():
 @wrap_in_class(dict, transform=lambda x: x["values"], one=True)
 @pg_query
 @beartype
-def get_tool_args_from_metadata(
+async def get_tool_args_from_metadata(
     *,
     developer_id: UUID,
     agent_id: UUID,
@@ -77,11 +75,11 @@ def get_tool_args_from_metadata(
     task_id: UUID | None = None,
     tool_type: Literal["integration", "api_call"] = "integration",
     arg_type: Literal["args", "setup", "headers"] = "args",
-) -> tuple[list[str], list]:
+) -> tuple[str, list] | tuple[str, list, str]:
     match session_id, task_id:
         case (None, task_id) if task_id is not None:
             return (
-                tools_args_for_task_query.format(),
+                tools_args_for_task_query,
                 [
                     agent_id,
                     task_id,
@@ -92,7 +90,7 @@ def get_tool_args_from_metadata(
 
         case (session_id, None) if session_id is not None:
             return (
-                tool_args_for_session_query.format(),
+                tool_args_for_session_query,
                 [agent_id, session_id, f"x-{tool_type}-{arg_type}", developer_id],
             )
 

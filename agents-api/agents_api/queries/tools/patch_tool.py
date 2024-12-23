@@ -16,7 +16,7 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-sql_query = sqlvalidator.parse("""
+sql_query = """
 WITH updated_tools AS (
     UPDATE tools 
     SET
@@ -31,10 +31,10 @@ WITH updated_tools AS (
     RETURNING *
 )
 SELECT * FROM updated_tools;
-""")
+"""
 
-if not sql_query.is_valid():
-    raise InvalidSQLQuery("patch_tool")
+# if not sql_query.is_valid():
+#     raise InvalidSQLQuery("patch_tool")
 
 
 # @rewrap_exceptions(
@@ -48,14 +48,13 @@ if not sql_query.is_valid():
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["tool_id"], "jobs": [], **d},
-    _kind="inserted",
 )
 @pg_query
 @increase_counter("patch_tool")
 @beartype
-def patch_tool(
+async def patch_tool(
     *, developer_id: UUID, agent_id: UUID, tool_id: UUID, data: PatchToolRequest
-) -> tuple[list[str], list]:
+) -> tuple[str, list] | tuple[str, list, str]:
     """
     Execute the datalog query and return the results as a DataFrame
     Updates the tool information for a given agent and tool ID in the 'cozodb' database.
@@ -95,7 +94,7 @@ def patch_tool(
         del patch_data[tool_type]
 
     return (
-        sql_query.format(),
+        sql_query,
         [
             developer_id,
             agent_id,
