@@ -19,7 +19,7 @@ async def create_agent(
     data: CreateAgentRequest,
 ) -> ResourceCreatedResponse:
     # TODO: Validate model name
-    agent = create_agent_query(
+    agent = await create_agent_query(
         developer_id=x_developer_id,
         data=data,
     )

@@ -24,7 +24,7 @@ async def list_agents(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Agent]:
-    agents = list_agents_query(
+    agents = await list_agents_query(
         developer_id=x_developer_id,
         limit=limit,
         offset=offset,

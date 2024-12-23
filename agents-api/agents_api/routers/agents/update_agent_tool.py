@@ -19,7 +19,7 @@ async def update_agent_tool(
     tool_id: UUID,
     data: UpdateToolRequest,
 ) -> ResourceUpdatedResponse:
-    return update_tool_query(
+    return await update_tool_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         tool_id=tool_id,

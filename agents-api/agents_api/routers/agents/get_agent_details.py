@@ -14,4 +14,4 @@ async def get_agent_details(
     agent_id: UUID,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> Agent:
-    return get_agent_query(developer_id=x_developer_id, agent_id=agent_id)
+    return await get_agent_query(developer_id=x_developer_id, agent_id=agent_id)

@@ -21,7 +21,7 @@ async def update_agent(
     agent_id: UUID,
     data: UpdateAgentRequest,
 ) -> ResourceUpdatedResponse:
-    return update_agent_query(
+    return await update_agent_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=data,

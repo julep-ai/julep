@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import Depends
 from starlette.status import HTTP_201_CREATED
 
-import agents_api.models as models
+from ...queries.tools.create_tools import create_tools as create_tools_query
 
 from ...autogen.openapi_model import (
     CreateToolRequest,

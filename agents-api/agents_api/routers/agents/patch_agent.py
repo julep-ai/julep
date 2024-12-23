@@ -21,7 +21,7 @@ async def patch_agent(
     agent_id: UUID,
     data: PatchAgentRequest,
 ) -> ResourceUpdatedResponse:
-    return patch_agent_query(
+    return await patch_agent_query(
         agent_id=agent_id,
         developer_id=x_developer_id,
         data=data,

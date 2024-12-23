@@ -15,7 +15,7 @@ async def delete_agent_tool(
     tool_id: UUID,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceDeletedResponse:
-    return delete_tool_query(
+    return await delete_tool_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         tool_id=tool_id,

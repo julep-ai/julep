@@ -14,4 +14,4 @@ async def get_doc(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     doc_id: UUID,
 ) -> Doc:
-    return get_doc_query(developer_id=x_developer_id, doc_id=doc_id)
+    return await get_doc_query(developer_id=x_developer_id, doc_id=doc_id)

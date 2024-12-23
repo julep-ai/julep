@@ -20,7 +20,7 @@ async def list_agent_tools(
 ) -> ListResponse[Tool]:
     # FIXME: list agent tools is returning an empty list
     # SCRUM-22
-    tools = list_tools_query(
+    tools = await list_tools_query(
         agent_id=agent_id,
         developer_id=x_developer_id,
         limit=limit,
