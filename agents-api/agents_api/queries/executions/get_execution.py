@@ -1,9 +1,9 @@
 from typing import Any, TypeVar
 from uuid import UUID
 
+import sqlvalidator
 from beartype import beartype
 
-import sqlvalidator
 from ...autogen.openapi_model import Execution
 from ..utils import (
     pg_query,
