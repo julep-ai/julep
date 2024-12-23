@@ -21,7 +21,7 @@ from ...clients.temporal import run_task_execution_workflow
 from ...common.protocol.developers import Developer
 from ...dependencies.developer_id import get_developer_id
 from ...env import max_free_executions
-from ...queries.developers.get_developer import get_developer
+
 # TODO: Change these once we have pg queries for executions
 from ...models.execution.count_executions import (
     count_executions as count_executions_query,
@@ -34,6 +34,7 @@ from ...models.execution.prepare_execution_input import prepare_execution_input
 from ...models.execution.update_execution import (
     update_execution as update_execution_query,
 )
+from ...queries.developers.get_developer import get_developer
 from ...queries.tasks.get_task import get_task as get_task_query
 from .router import router
 
