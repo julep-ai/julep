@@ -11,11 +11,10 @@ from ...autogen.openapi_model import (
 from ...clients.temporal import get_client
 from ...dependencies.developer_id import get_developer_id
 
-# TODO: Change this once we have pg queries for executions
-from ...models.execution.get_paused_execution_token import (
+from ...queries.executions.get_paused_execution_token import (
     get_paused_execution_token,
 )
-from ...models.execution.get_temporal_workflow_data import (
+from ...queries.executions.get_temporal_workflow_data import (
     get_temporal_workflow_data,
 )
 from .router import router

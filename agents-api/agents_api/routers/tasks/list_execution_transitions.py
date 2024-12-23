@@ -6,8 +6,7 @@ from ...autogen.openapi_model import (
     Transition,
 )
 
-# TODO: Change this once we have pg queries for executions
-from ...models.execution.list_execution_transitions import (
+from ...queries.executions.list_execution_transitions import (
     list_execution_transitions as list_execution_transitions_query,
 )
 from .router import router

@@ -9,8 +9,7 @@ from ...autogen.openapi_model import (
 )
 from ...dependencies.developer_id import get_developer_id
 
-# TODO: Change this once we have pg queries for executions
-from ...models.execution.list_executions import (
+from ...queries.executions.list_executions import (
     list_executions as list_task_executions_query,
 )
 from .router import router

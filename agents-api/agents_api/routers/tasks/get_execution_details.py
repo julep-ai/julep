@@ -4,8 +4,7 @@ from ...autogen.openapi_model import (
     Execution,
 )
 
-# TODO: Change this once we have pg queries for executions
-from ...models.execution.get_execution import (
+from ...queries.executions.get_execution import (
     get_execution as get_execution_query,
 )
 from .router import router
