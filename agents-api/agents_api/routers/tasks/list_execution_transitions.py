@@ -5,7 +5,6 @@ from ...autogen.openapi_model import (
     ListResponse,
     Transition,
 )
-
 from ...queries.executions.list_execution_transitions import (
     list_execution_transitions as list_execution_transitions_query,
 )

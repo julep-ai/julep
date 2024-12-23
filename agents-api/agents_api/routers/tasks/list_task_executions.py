@@ -8,7 +8,6 @@ from ...autogen.openapi_model import (
     ListResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-
 from ...queries.executions.list_executions import (
     list_executions as list_task_executions_query,
 )

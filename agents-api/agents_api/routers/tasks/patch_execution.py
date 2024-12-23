@@ -8,7 +8,6 @@ from ...autogen.openapi_model import (
     UpdateExecutionRequest,
 )
 from ...dependencies.developer_id import get_developer_id
-
 from ...queries.executions.update_execution import (
     update_execution as update_execution_query,
 )

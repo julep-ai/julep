@@ -3,7 +3,6 @@ from uuid import UUID
 from ...autogen.openapi_model import (
     Execution,
 )
-
 from ...queries.executions.get_execution import (
     get_execution as get_execution_query,
 )
