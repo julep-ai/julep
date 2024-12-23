@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import Depends
 from starlette.status import HTTP_201_CREATED
 
-import agents_api.models as models
+from ...queries.agents.create_or_update_agent import create_or_update_agent as create_or_update_agent_query
 
 from ...autogen.openapi_model import (
     CreateOrUpdateAgentRequest,
@@ -21,7 +21,7 @@ async def create_or_update_agent(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     # TODO: Validate model name
-    agent = models.agent.create_or_update_agent(
+    agent = create_or_update_agent_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=data,

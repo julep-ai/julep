@@ -9,7 +9,7 @@ from ...autogen.openapi_model import (
     ResourceCreatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.agent.create_agent import create_agent as create_agent_query
+from ...queries.agents.create_agent import create_agent as create_agent_query
 from .router import router
 
 

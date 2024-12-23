@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from ...autogen.openapi_model import Agent
 from ...dependencies.developer_id import get_developer_id
-from ...models.agent.get_agent import get_agent as get_agent_query
+from ...queries.agents.get_agent import get_agent as get_agent_query
 from .router import router
 
 
