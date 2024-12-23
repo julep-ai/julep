@@ -12,30 +12,28 @@ from agents_api.autogen.openapi_model import (
     CreateFileRequest,
     CreateSessionRequest,
     CreateTaskRequest,
+    CreateToolRequest,
     CreateUserRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
 from agents_api.queries.agents.create_agent import create_agent
+from agents_api.queries.agents.delete_agent import delete_agent
 from agents_api.queries.developers.create_developer import create_developer
-
-# from agents_api.queries.agents.delete_agent import delete_agent
 from agents_api.queries.developers.get_developer import get_developer
 from agents_api.queries.docs.create_doc import create_doc
+from agents_api.queries.docs.delete_doc import delete_doc
 
-# from agents_api.queries.docs.delete_doc import delete_doc
-# from agents_api.queries.execution.create_execution import create_execution
-# from agents_api.queries.execution.create_execution_transition import create_execution_transition
-# from agents_api.queries.execution.create_temporal_lookup import create_temporal_lookup
+# from agents_api.queries.executions.create_execution import create_execution
+# from agents_api.queries.executions.create_execution_transition import create_execution_transition
+# from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
 from agents_api.queries.files.create_file import create_file
-
-# from agents_api.queries.files.delete_file import delete_file
+from agents_api.queries.files.delete_file import delete_file
 from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
-
-# from agents_api.queries.task.delete_task import delete_task
-# from agents_api.queries.tools.create_tools import create_tools
-# from agents_api.queries.tools.delete_tool import delete_tool
+from agents_api.queries.tasks.delete_task import delete_task
+from agents_api.queries.tools.create_tools import create_tools
+from agents_api.queries.tools.delete_tool import delete_tool
 from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
 
@@ -347,40 +345,41 @@ async def test_session(
 #         yield transition
 
 
-# @fixture(scope="global")
-# async def test_tool(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     agent=test_agent,
-# ):
-#     function = {
-#         "description": "A function that prints hello world",
-#         "parameters": {"type": "object", "properties": {}},
-#     }
+@fixture(scope="global")
+async def test_tool(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    pool = await create_db_pool(dsn=dsn)
+    function = {
+        "description": "A function that prints hello world",
+        "parameters": {"type": "object", "properties": {}},
+    }
 
-#     tool = {
-#         "function": function,
-#         "name": "hello_world1",
-#         "type": "function",
-#     }
+    tool = {
+        "function": function,
+        "name": "hello_world1",
+        "type": "function",
+    }
 
-#     [tool, *_] = await create_tools(
-#         developer_id=developer_id,
-#         agent_id=agent.id,
-#         data=[CreateToolRequest(**tool)],
-#         connection_pool=pool,
-#     )
-#     yield tool
+    [tool, *_] = await create_tools(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=[CreateToolRequest(**tool)],
+        connection_pool=pool,
+    )
+    yield tool
 
-#     # Cleanup
-#     try:
-#         await delete_tool(
-#             developer_id=developer_id,
-#             tool_id=tool.id,
-#             connection_pool=pool,
-#         )
-#     finally:
-#         await pool.close()
+    # Cleanup
+    try:
+        await delete_tool(
+            developer_id=developer_id,
+            tool_id=tool.id,
+            connection_pool=pool,
+        )
+    finally:
+        await pool.close()
 
 
 @fixture(scope="global")
