@@ -1,7 +1,7 @@
 import logging
 from uuid import UUID
 
-from ...models.agent.list_agents import list_agents as list_agents_query
+from ...queries.agents.list_agents import list_agents as list_agents_query
 from .router import router
 
 
