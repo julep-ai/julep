@@ -7,7 +7,7 @@ from fastapi import Depends
 from ...autogen.openapi_model import File
 from ...clients import async_s3
 from ...dependencies.developer_id import get_developer_id
-from ...models.files.get_file import get_file as get_file_query
+from ...queries.files.get_file import get_file as get_file_query
 from .router import router
 
 

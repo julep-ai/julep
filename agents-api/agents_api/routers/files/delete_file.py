@@ -7,7 +7,7 @@ from starlette.status import HTTP_202_ACCEPTED
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...clients import async_s3
 from ...dependencies.developer_id import get_developer_id
-from ...models.files.delete_file import delete_file as delete_file_query
+from ...queries.files.delete_file import delete_file as delete_file_query
 from .router import router
 
 

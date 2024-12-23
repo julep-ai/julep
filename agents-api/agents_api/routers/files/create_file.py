@@ -12,7 +12,7 @@ from ...autogen.openapi_model import (
 )
 from ...clients import async_s3
 from ...dependencies.developer_id import get_developer_id
-from ...models.files.create_file import create_file as create_file_query
+from ...queries.files.create_file import create_file as create_file_query
 from .router import router
 
 
