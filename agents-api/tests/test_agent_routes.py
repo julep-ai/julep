@@ -1,43 +1,43 @@
 # # Tests for agent queries
 
-# from uuid_extensions import uuid7
-# from ward import test
+from uuid_extensions import uuid7
+from ward import test
 
-# from tests.fixtures import client, make_request, test_agent
-
-
-# @test("route: unauthorized should fail")
-# def _(client=client):
-#     data = dict(
-#         name="test agent",
-#         about="test agent about",
-#         model="gpt-4o-mini",
-#     )
-
-#     response = client.request(
-#         method="POST",
-#         url="/agents",
-#         json=data,
-#     )
-
-#     assert response.status_code == 403
+from tests.fixtures import client, make_request, test_agent
 
 
-# @test("route: create agent")
-# def _(make_request=make_request):
-#     data = dict(
-#         name="test agent",
-#         about="test agent about",
-#         model="gpt-4o-mini",
-#     )
+@test("route: unauthorized should fail")
+def _(client=client):
+    data = dict(
+        name="test agent",
+        about="test agent about",
+        model="gpt-4o-mini",
+    )
 
-#     response = make_request(
-#         method="POST",
-#         url="/agents",
-#         json=data,
-#     )
+    response = client.request(
+        method="POST",
+        url="/agents",
+        json=data,
+    )
 
-#     assert response.status_code == 201
+    assert response.status_code == 403
+
+
+@test("route: create agent")
+def _(make_request=make_request):
+    data = dict(
+        name="test agent",
+        about="test agent about",
+        model="gpt-4o-mini",
+    )
+
+    response = make_request(
+        method="POST",
+        url="/agents",
+        json=data,
+    )
+
+    assert response.status_code == 201
 
 
 # @test("route: create agent with instructions")

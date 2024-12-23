@@ -1,3 +1,4 @@
+import os
 import random
 import string
 from uuid import UUID
@@ -384,12 +385,11 @@ async def test_session(
 
 
 @fixture(scope="global")
-async def client(dsn=pg_dsn):
-    pool = await create_db_pool(dsn=dsn)
+def client(dsn=pg_dsn):
+    os.environ["DB_DSN"] = dsn
 
-    client = TestClient(app=app)
-    client.state.postgres_pool = pool
-    return client
+    with TestClient(app=app) as client:
+        yield client
 
 
 @fixture(scope="global")

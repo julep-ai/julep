@@ -9,7 +9,7 @@ from typing import Any, Callable, Union, cast
 import sentry_sdk
 import uvicorn
 import uvloop
-from fastapi import APIRouter, FastAPI, Request, status
+from fastapi import APIRouter, Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,11 +20,12 @@ from temporalio.service import RPCError
 
 from .app import app
 from .common.exceptions import BaseCommonException
+from .dependencies.auth import get_api_key
 from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
 
-# from .routers import (
-#     agents,
+from .routers import (
+    agents,
 #     docs,
 #     files,
 #     internal,
@@ -32,7 +33,7 @@ from .exceptions import PromptTooBigError
 #     sessions,
 #     tasks,
 #     users,
-# )
+)
 
 if not sentry_dsn:
     print("Sentry DSN not found. Sentry will not be enabled.")
@@ -144,7 +145,6 @@ def register_exceptions(app: FastAPI) -> None:
 # See: https://fastapi.tiangolo.com/tutorial/bigger-applications/
 #
 
-
 # Create a new router for the docs
 scalar_router = APIRouter()
 
@@ -162,7 +162,7 @@ async def scalar_html():
 app.include_router(scalar_router)
 
 # Add other routers with the get_api_key dependency
-# app.include_router(agents.router, dependencies=[Depends(get_api_key)])
+app.include_router(agents.router.router, dependencies=[Depends(get_api_key)])
 # app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
 # app.include_router(users.router, dependencies=[Depends(get_api_key)])
 # app.include_router(jobs.router, dependencies=[Depends(get_api_key)])

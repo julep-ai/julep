@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -9,13 +10,16 @@ from .env import api_prefix
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if not app.state.postgres_pool:
-        app.state.postgres_pool = await create_db_pool()
+    db_dsn = os.environ.get("DB_DSN")
+
+    if not getattr(app.state, "postgres_pool", None):
+        app.state.postgres_pool = await create_db_pool(db_dsn)
 
     yield
 
-    if app.state.postgres_pool:
+    if getattr(app.state, "postgres_pool", None):
         await app.state.postgres_pool.close()
+        app.state.postgres_pool = None
 
 
 app: FastAPI = FastAPI(
