@@ -25,7 +25,6 @@ from ..utils import (
 )
 from .update_execution import update_execution
 
-
 @beartype
 def _create_execution_transition(
     *,

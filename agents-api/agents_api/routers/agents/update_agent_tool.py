@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     UpdateToolRequest,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.tools.update_tool import update_tool as update_tool_query
+from ...queries.tools.update_tool import update_tool as update_tool_query
 from .router import router
 
 

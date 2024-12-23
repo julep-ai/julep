@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.tools.patch_tool import patch_tool as patch_tool_query
+from ...queries.tools.patch_tool import patch_tool as patch_tool_query
 from .router import router
 
 

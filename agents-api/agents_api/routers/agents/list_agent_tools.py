@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from ...autogen.openapi_model import ListResponse, Tool
 from ...dependencies.developer_id import get_developer_id
-from ...models.tools.list_tools import list_tools as list_tools_query
+from ...queries.tools.list_tools import list_tools as list_tools_query
 from .router import router
 
 

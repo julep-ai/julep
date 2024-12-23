@@ -6,7 +6,7 @@ from starlette.status import HTTP_202_ACCEPTED
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...dependencies.developer_id import get_developer_id
-from ...models.docs.delete_doc import delete_doc as delete_doc_query
+from ...queries.docs.delete_doc import delete_doc as delete_doc_query
 from .router import router
 
 

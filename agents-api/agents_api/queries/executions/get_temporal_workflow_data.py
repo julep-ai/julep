@@ -27,7 +27,7 @@ T = TypeVar("T")
 @wrap_in_class(dict, one=True)
 @cozo_query
 @beartype
-def get_temporal_workflow_data(
+async def get_temporal_workflow_data(
     *,
     execution_id: UUID,
 ) -> tuple[str, dict]:

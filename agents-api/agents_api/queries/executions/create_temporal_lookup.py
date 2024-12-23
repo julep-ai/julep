@@ -31,7 +31,7 @@ T = TypeVar("T")
 @cozo_query
 @increase_counter("create_temporal_lookup")
 @beartype
-def create_temporal_lookup(
+async def create_temporal_lookup(
     *,
     developer_id: UUID,
     execution_id: UUID,

@@ -41,7 +41,7 @@ T = TypeVar("T")
 @cozo_query
 @increase_counter("create_execution")
 @beartype
-def create_execution(
+async def create_execution(
     *,
     developer_id: UUID,
     task_id: UUID,

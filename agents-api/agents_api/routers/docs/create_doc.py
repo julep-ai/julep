@@ -12,7 +12,7 @@ from ...clients import temporal
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from ...dependencies.developer_id import get_developer_id
 from ...env import temporal_task_queue, testing
-from ...models.docs.create_doc import create_doc as create_doc_query
+from ...queries.docs.create_doc import create_doc as create_doc_query
 from .router import router
 
 
@@ -76,7 +76,7 @@ async def create_user_doc(
         ResourceCreatedResponse: The created document.
     """
 
-    doc: Doc = create_doc_query(
+    doc: Doc = await create_doc_query(
         developer_id=x_developer_id,
         owner_type="user",
         owner_id=user_id,
@@ -107,7 +107,7 @@ async def create_agent_doc(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
-    doc: Doc = create_doc_query(
+    doc: Doc = await create_doc_query(
         developer_id=x_developer_id,
         owner_type="agent",
         owner_id=agent_id,

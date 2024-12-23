@@ -42,7 +42,7 @@ LIMIT 1
 )
 @pg_query
 @beartype
-def get_execution(
+async def get_execution(
     *,
     execution_id: UUID,
 ) -> tuple[str, dict]:

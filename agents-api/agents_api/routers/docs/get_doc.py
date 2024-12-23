@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from ...autogen.openapi_model import Doc
 from ...dependencies.developer_id import get_developer_id
-from ...models.docs.get_doc import get_doc as get_doc_query
+from ...queries.docs.get_doc import get_doc as get_doc_query
 from .router import router
 
 

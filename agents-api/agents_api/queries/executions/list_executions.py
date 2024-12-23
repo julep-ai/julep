@@ -39,7 +39,7 @@ T = TypeVar("T")
 )
 @cozo_query
 @beartype
-def list_executions(
+async def list_executions(
     *,
     developer_id: UUID,
     task_id: UUID,

@@ -53,7 +53,7 @@ if not sql_query.is_valid():
 @pg_query
 @increase_counter("patch_tool")
 @beartype
-def patch_tool(
+async def patch_tool(
     *, developer_id: UUID, agent_id: UUID, tool_id: UUID, data: PatchToolRequest
 ) -> tuple[list[str], list]:
     """

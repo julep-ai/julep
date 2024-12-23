@@ -32,7 +32,7 @@ WHERE
 @wrap_in_class(dict, one=True)
 @pg_query
 @beartype
-def count_executions(
+async def count_executions(
     *,
     developer_id: UUID,
     task_id: UUID,

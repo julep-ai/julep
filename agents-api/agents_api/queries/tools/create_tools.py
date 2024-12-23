@@ -70,7 +70,7 @@ if not sql_query.is_valid():
 @pg_query
 @increase_counter("create_tools")
 @beartype
-def create_tools(
+async def create_tools(
     *,
     developer_id: UUID,
     agent_id: UUID,

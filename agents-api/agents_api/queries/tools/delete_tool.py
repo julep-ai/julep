@@ -45,7 +45,7 @@ if not sql_query.is_valid():
 )
 @pg_query
 @beartype
-def delete_tool(
+async def delete_tool(
     *,
     developer_id: UUID,
     agent_id: UUID,

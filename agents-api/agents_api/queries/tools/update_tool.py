@@ -52,7 +52,7 @@ if not sql_query.is_valid():
 @pg_query
 @increase_counter("update_tool")
 @beartype
-def update_tool(
+async def update_tool(
     *,
     developer_id: UUID,
     agent_id: UUID,

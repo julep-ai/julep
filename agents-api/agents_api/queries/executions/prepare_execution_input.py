@@ -55,7 +55,7 @@ T = TypeVar("T")
 )
 @cozo_query
 @beartype
-def prepare_execution_input(
+async def prepare_execution_input(
     *,
     developer_id: UUID,
     task_id: UUID,

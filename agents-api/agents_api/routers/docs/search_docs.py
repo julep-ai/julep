@@ -13,10 +13,10 @@ from ...autogen.openapi_model import (
     VectorDocSearchRequest,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.docs.mmr import maximal_marginal_relevance
-from ...models.docs.search_docs_by_embedding import search_docs_by_embedding
-from ...models.docs.search_docs_by_text import search_docs_by_text
-from ...models.docs.search_docs_hybrid import search_docs_hybrid
+from ...queries.docs.mmr import maximal_marginal_relevance
+from ...queries.docs.search_docs_by_embedding import search_docs_by_embedding
+from ...queries.docs.search_docs_by_text import search_docs_by_text
+from ...queries.docs.search_docs_hybrid import search_docs_hybrid
 from .router import router
 
 

@@ -29,7 +29,7 @@ T = TypeVar("T")
 @wrap_in_class(dict, one=True)
 @cozo_query
 @beartype
-def get_paused_execution_token(
+async def get_paused_execution_token(
     *,
     developer_id: UUID,
     execution_id: UUID,

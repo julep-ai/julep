@@ -29,7 +29,7 @@ T = TypeVar("T")
 @wrap_in_class(dict, one=True)
 @cozo_query
 @beartype
-def lookup_temporal_data(
+async def lookup_temporal_data(
     *,
     developer_id: UUID,
     execution_id: UUID,

@@ -45,7 +45,7 @@ if not sql_query.is_valid():
 )
 @pg_query
 @beartype
-def get_tool(
+async def get_tool(
     *,
     developer_id: UUID,
     agent_id: UUID,

@@ -9,7 +9,7 @@ from ..utils import (
 )
 
 
-def tool_args_for_task(
+async def tool_args_for_task(
     *,
     developer_id: UUID,
     agent_id: UUID,
@@ -50,7 +50,7 @@ def tool_args_for_task(
     return (queries, {"agent_id": agent_id, "task_id": task_id})
 
 
-def tool_args_for_session(
+async def tool_args_for_session(
     *,
     developer_id: UUID,
     session_id: UUID,
@@ -100,7 +100,7 @@ def tool_args_for_session(
 @wrap_in_class(dict, transform=lambda x: x["values"], one=True)
 @pg_query
 @beartype
-def get_tool_args_from_metadata(
+async def get_tool_args_from_metadata(
     *,
     developer_id: UUID,
     agent_id: UUID,
@@ -118,13 +118,13 @@ def get_tool_args_from_metadata(
 
     match session_id, task_id:
         case (None, task_id) if task_id is not None:
-            return tool_args_for_task(
+            return await tool_args_for_task(
                 **common,
                 task_id=task_id,
             )
 
         case (session_id, None) if session_id is not None:
-            return tool_args_for_session(
+            return await tool_args_for_session(
                 **common,
                 session_id=session_id,
             )

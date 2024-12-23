@@ -23,7 +23,7 @@ T = TypeVar("T")
 @wrap_in_class(Transition)
 @cozo_query
 @beartype
-def list_execution_transitions(
+async def list_execution_transitions(
     *,
     execution_id: UUID,
     limit: int = 100,
