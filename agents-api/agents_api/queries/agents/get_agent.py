@@ -3,6 +3,7 @@ This module contains the functionality for retrieving a single agent from the Po
 It constructs and executes SQL queries to fetch agent details based on agent ID and developer ID.
 """
 
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
@@ -51,12 +52,17 @@ WHERE
             status_code=400,
             detail="Invalid data provided. Please check the input values.",
         ),
+        asyncpg.exceptions.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified agent does not exist.",
+        ),
     }
 )
 @wrap_in_class(Agent, one=True, transform=lambda d: {"id": d["agent_id"], **d})
 @pg_query
 @beartype
-async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
+async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     """
     Constructs the SQL query to retrieve an agent's details.
 
@@ -71,4 +77,5 @@ async def get_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
     return (
         agent_query,
         [developer_id, agent_id],
+        "fetchrow",
     )

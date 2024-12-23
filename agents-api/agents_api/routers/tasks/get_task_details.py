@@ -2,7 +2,6 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
-from pycozo.client import QueryException
 
 from ...autogen.openapi_model import (
     Task,
@@ -17,20 +16,10 @@ async def get_task_details(
     task_id: UUID,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> Task:
-    not_found = HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-    )
 
-    try:
-        task = await get_task_query(developer_id=x_developer_id, task_id=task_id)
-        task_data = task.model_dump()
-    except AssertionError:
-        raise not_found
-    except QueryException as e:
-        if e.code == "transact::assertion_failure":
-            raise not_found
+    task = await get_task_query(developer_id=x_developer_id, task_id=task_id)
+    task_data = task.model_dump()
 
-        raise
 
     for workflow in task_data.get("workflows", []):
         if workflow["name"] == "main":

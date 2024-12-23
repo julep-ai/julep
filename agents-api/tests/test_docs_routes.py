@@ -1,16 +1,16 @@
-# import time
+import time
 
-# from ward import skip, test
+from ward import skip, test
 
-# from tests.fixtures import (
-#     make_request,
-#     patch_embed_acompletion,
-#     test_agent,
-#     test_doc,
-#     test_user,
-#     test_user_doc,
-# )
-# from tests.utils import patch_testing_temporal
+from tests.fixtures import (
+    make_request,
+    patch_embed_acompletion,
+    test_agent,
+    test_doc,
+    test_user,
+    # test_user_doc,
+)
+from tests.utils import patch_testing_temporal
 
 
 # @test("route: create user doc")
@@ -106,66 +106,66 @@
 #         assert response.status_code == 200
 
 
-# @test("route: list user docs")
-# def _(make_request=make_request, user=test_user):
-#     response = make_request(
-#         method="GET",
-#         url=f"/users/{user.id}/docs",
-#     )
+@test("route: list user docs")
+def _(make_request=make_request, user=test_user):
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+    )
 
-#     assert response.status_code == 200
-#     response = response.json()
-#     docs = response["items"]
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["items"]
 
-#     assert isinstance(docs, list)
-
-
-# @test("route: list agent docs")
-# def _(make_request=make_request, agent=test_agent):
-#     response = make_request(
-#         method="GET",
-#         url=f"/agents/{agent.id}/docs",
-#     )
-
-#     assert response.status_code == 200
-#     response = response.json()
-#     docs = response["items"]
-
-#     assert isinstance(docs, list)
+    assert isinstance(docs, list)
 
 
-# @test("route: list user docs with metadata filter")
-# def _(make_request=make_request, user=test_user):
-#     response = make_request(
-#         method="GET",
-#         url=f"/users/{user.id}/docs",
-#         params={
-#             "metadata_filter": {"test": "test"},
-#         },
-#     )
+@test("route: list agent docs")
+def _(make_request=make_request, agent=test_agent):
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+    )
 
-#     assert response.status_code == 200
-#     response = response.json()
-#     docs = response["items"]
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["items"]
 
-#     assert isinstance(docs, list)
+    assert isinstance(docs, list)
 
 
-# @test("route: list agent docs with metadata filter")
-# def _(make_request=make_request, agent=test_agent):
-#     response = make_request(
-#         method="GET",
-#         url=f"/agents/{agent.id}/docs",
-#         params={
-#             "metadata_filter": {"test": "test"},
-#         },
-#     )
+@test("route: list user docs with metadata filter")
+def _(make_request=make_request, user=test_user):
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+        params={
+            "metadata_filter": {"test": "test"},
+        },
+    )
 
-#     assert response.status_code == 200
-#     response = response.json()
-#     docs = response["items"]
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["items"]
 
-#     assert isinstance(docs, list)
+    assert isinstance(docs, list)
+
+
+@test("route: list agent docs with metadata filter")
+def _(make_request=make_request, agent=test_agent):
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+        params={
+            "metadata_filter": {"test": "test"},
+        },
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["items"]
+
+    assert isinstance(docs, list)
 
 
 # # TODO: Fix this test. It fails sometimes and sometimes not.
@@ -242,20 +242,20 @@
 #     assert len(docs) >= 1
 
 
-# @test("routes: embed route")
-# async def _(
-#     make_request=make_request,
-#     mocks=patch_embed_acompletion,
-# ):
-#     (embed, _) = mocks
+@test("routes: embed route")
+async def _(
+    make_request=make_request,
+    mocks=patch_embed_acompletion,
+):
+    (embed, _) = mocks
 
-#     response = make_request(
-#         method="POST",
-#         url="/embed",
-#         json={"text": "blah blah"},
-#     )
+    response = make_request(
+        method="POST",
+        url="/embed",
+        json={"text": "blah blah"},
+    )
 
-#     result = response.json()
-#     assert "vectors" in result
+    result = response.json()
+    assert "vectors" in result
 
-#     embed.assert_called()
+    embed.assert_called()

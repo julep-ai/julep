@@ -34,14 +34,15 @@ LEFT JOIN
     workflows w ON t.developer_id = w.developer_id AND t.task_id = w.task_id AND t.version = w.version
 WHERE 
     t.developer_id = $1
+    AND t.agent_id = $2
     {metadata_filter_query}
 GROUP BY t.developer_id, t.task_id, t.canonical_name, t.agent_id, t.version
 ORDER BY 
-    CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN t.created_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN t.created_at END DESC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN t.updated_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN t.updated_at END DESC NULLS LAST
-LIMIT $2 OFFSET $3;
+    CASE WHEN $5 = 'created_at' AND $6 = 'asc' THEN t.created_at END ASC NULLS LAST,
+    CASE WHEN $5 = 'created_at' AND $6 = 'desc' THEN t.created_at END DESC NULLS LAST,
+    CASE WHEN $5 = 'updated_at' AND $6 = 'asc' THEN t.updated_at END ASC NULLS LAST,
+    CASE WHEN $5 = 'updated_at' AND $6 = 'desc' THEN t.updated_at END DESC NULLS LAST
+LIMIT $3 OFFSET $4;
 """
 
 
@@ -71,6 +72,7 @@ LIMIT $2 OFFSET $3;
 async def list_tasks(
     *,
     developer_id: UUID,
+    agent_id: UUID,
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
@@ -82,6 +84,7 @@ async def list_tasks(
 
     Parameters:
         developer_id (UUID): The unique identifier of the developer.
+        agent_id (UUID): The unique identifier of the agent.
         limit (int): Maximum number of records to return (default: 100)
         offset (int): Number of records to skip (default: 0)
         sort_by (str): Field to sort by ("created_at" or "updated_at")
@@ -111,6 +114,7 @@ async def list_tasks(
     # Build parameters list
     params = [
         developer_id,
+        agent_id,
         limit,
         offset,
         sort_by,

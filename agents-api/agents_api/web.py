@@ -25,13 +25,13 @@ from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
 from .routers import (
     agents,
-    #     docs,
-    #     files,
-    #     internal,
-    #     jobs,
-    #     sessions,
-    #     tasks,
-    #     users,
+    docs,
+    files,
+    internal,
+    jobs,
+    sessions,
+    tasks,
+    users,
 )
 
 if not sentry_dsn:
@@ -161,14 +161,14 @@ async def scalar_html():
 app.include_router(scalar_router)
 
 # Add other routers with the get_api_key dependency
-app.include_router(agents.router.router, dependencies=[Depends(get_api_key)])
-# app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
-# app.include_router(users.router, dependencies=[Depends(get_api_key)])
-# app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
-# app.include_router(files.router, dependencies=[Depends(get_api_key)])
-# app.include_router(docs.router, dependencies=[Depends(get_api_key)])
-# app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
-# app.include_router(internal.router)
+app.include_router(agents.router, dependencies=[Depends(get_api_key)])
+app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
+app.include_router(users.router, dependencies=[Depends(get_api_key)])
+app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
+app.include_router(files.router, dependencies=[Depends(get_api_key)])
+app.include_router(docs.router, dependencies=[Depends(get_api_key)])
+app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
+app.include_router(internal.router)
 
 # TODO: CORS should be enabled only for JWT auth
 #
