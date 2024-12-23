@@ -6,7 +6,7 @@ from fastapi import Depends
 from ...autogen.openapi_model import ListResponse, User
 from ...dependencies.developer_id import get_developer_id
 from ...dependencies.query_filter import MetadataFilter, create_filter_extractor
-from ...models.user.list_users import list_users as list_users_query
+from ...queries.users.list_users import list_users as list_users_query
 from .router import router
 
 

@@ -6,7 +6,7 @@ from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import CreateOrUpdateUserRequest, ResourceCreatedResponse
 from ...dependencies.developer_id import get_developer_id
-from ...models.user.create_or_update_user import (
+from ...queries.users.create_or_update_user import (
     create_or_update_user as create_or_update_user_query,
 )
 from .router import router

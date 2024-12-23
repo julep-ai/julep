@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateUserRequest
 from ...dependencies.developer_id import get_developer_id
-from ...models.user.update_user import update_user as update_user_query
+from ...queries.users.update_user import update_user as update_user_query
 from .router import router
 
 
