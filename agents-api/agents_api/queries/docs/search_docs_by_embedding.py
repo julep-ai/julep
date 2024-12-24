@@ -1,25 +1,36 @@
 from typing import Any, List, Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import DocReference
-from ..utils import pg_query, wrap_in_class
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# Raw query for vector search
 search_docs_by_embedding_query = """
 SELECT * FROM search_by_vector(
     $1, -- developer_id
     $2::vector(1024), -- query_embedding
     $3::text[], -- owner_types
-    $UUID_LIST::uuid[], -- owner_ids
-    $4, -- k
-    $5, -- confidence
-    $6 -- metadata_filter
+    $4::uuid[], -- owner_ids
+    $5, -- k
+    $6, -- confidence
+    $7 -- metadata_filter
 )
 """
 
 
+@rewrap_exceptions(
+    {
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        )
+    }
+)
 @wrap_in_class(
     DocReference,
     transform=lambda d: {
@@ -69,16 +80,13 @@ async def search_docs_by_embedding(
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
 
-    # NOTE: Manually replace uuids list coz asyncpg isnt sending it correctly
-    owner_ids_pg_str = f"ARRAY['{'\', \''.join(owner_ids)}']"
-    query = search_docs_by_embedding_query.replace("$UUID_LIST", owner_ids_pg_str)
-
     return (
-        query,
+        search_docs_by_embedding_query,
         [
             developer_id,
             query_embedding_str,
             owner_types,
+            owner_ids,
             k,
             confidence,
             metadata_filter,

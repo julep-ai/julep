@@ -8,15 +8,16 @@ from fastapi import HTTPException
 from ...autogen.openapi_model import DocReference
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# Raw query for text search
 search_docs_text_query = """
 SELECT * FROM search_by_text(
     $1, -- developer_id
     $2, -- query
     $3, -- owner_types
-    $UUID_LIST::uuid[], -- owner_ids
-    $4, -- search_language
-    $5, -- k
-    $6 -- metadata_filter
+    $4, -- owner_ids
+    $5, -- search_language
+    $6, -- k
+    $7 -- metadata_filter
 )
 """
 
@@ -74,16 +75,13 @@ async def search_docs_by_text(
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
 
-    # NOTE: Manually replace uuids list coz asyncpg isnt sending it correctly
-    owner_ids_pg_str = f"ARRAY['{'\', \''.join(owner_ids)}']"
-    query = search_docs_text_query.replace("$UUID_LIST", owner_ids_pg_str)
-
     return (
-        query,
+        search_docs_text_query,
         [
             developer_id,
             query,
             owner_types,
+            owner_ids,
             search_language,
             k,
             metadata_filter,

@@ -1,27 +1,25 @@
 """This module contains functions for creating tools in the CozoDB database."""
 
-from typing import Any, TypeVar
+from typing import Any
 from uuid import UUID
 
-import sqlvalidator
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateToolRequest, Tool
-from ...exceptions import InvalidSQLQuery
 from ...metrics.counters import increase_counter
 from ..utils import (
+    partialclass,
     pg_query,
-    # rewrap_exceptions,
+    rewrap_exceptions,
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-
-sql_query = sqlvalidator.parse(
-    """INSERT INTO tools
+# Define the raw SQL query for creating tools
+tools_query = parse_one("""INSERT INTO tools
 (
     developer_id, 
     agent_id, 
@@ -44,28 +42,30 @@ WHERE NOT EXISTS (
 	WHERE (agent_id, name) = ($2, $5)
 )
 RETURNING *
-"""
+""").sql(pretty=True)
+
+
+@rewrap_exceptions(
+    {
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="A tool with this name already exists for this agent",
+        ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="Agent not found",
+        ),
+    }
 )
-
-if not sql_query.is_valid():
-    raise InvalidSQLQuery("create_tools")
-
-
-# @rewrap_exceptions(
-#     {
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#         AssertionError: partialclass(HTTPException, status_code=400),
-#     }
-# )
 @wrap_in_class(
     Tool,
     transform=lambda d: {
-        "id": UUID(d.pop("tool_id")),
+        "id": d.pop("tool_id"),
         d["type"]: d.pop("spec"),
         **d,
     },
-    _kind="inserted",
 )
 @pg_query
 @increase_counter("create_tools")
@@ -76,7 +76,7 @@ async def create_tools(
     agent_id: UUID,
     data: list[CreateToolRequest],
     ignore_existing: bool = False,  # TODO: what to do with this flag?
-) -> tuple[list[str], list]:
+) -> tuple[str, list, str]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
@@ -108,7 +108,7 @@ async def create_tools(
     ]
 
     return (
-        sql_query.format(),
+        tools_query,
         tools_data,
         "fetchmany",
     )

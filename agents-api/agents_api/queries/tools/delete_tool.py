@@ -1,22 +1,17 @@
-from typing import Any, TypeVar
+from typing import Any
 from uuid import UUID
 
-import sqlvalidator
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from ...exceptions import InvalidSQLQuery
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-)
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-
-sql_query = sqlvalidator.parse("""
+# Define the raw SQL query for deleting a tool
+tools_query = parse_one("""
 DELETE FROM 
     tools 
 WHERE
@@ -24,24 +19,23 @@ WHERE
     agent_id = $2 AND
     tool_id = $3
 RETURNING *
-""")
-
-if not sql_query.is_valid():
-    raise InvalidSQLQuery("delete_tool")
+""").sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        # Handle foreign key constraint
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="Developer or agent not found",
+        ),
+    }
+)
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,
     transform=lambda d: {"id": d["tool_id"], "deleted_at": utcnow(), "jobs": [], **d},
-    _kind="deleted",
 )
 @pg_query
 @beartype
@@ -50,13 +44,13 @@ async def delete_tool(
     developer_id: UUID,
     agent_id: UUID,
     tool_id: UUID,
-) -> tuple[list[str], list]:
+) -> tuple[str, list]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
     tool_id = str(tool_id)
 
     return (
-        sql_query.format(),
+        tools_query,
         [
             developer_id,
             agent_id,

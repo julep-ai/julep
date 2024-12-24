@@ -1,43 +1,38 @@
-from typing import Any, Literal, TypeVar
+from typing import Literal
 from uuid import UUID
 
-import sqlvalidator
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import Tool
-from ...exceptions import InvalidSQLQuery
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-)
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-sql_query = sqlvalidator.parse("""
+# Define the raw SQL query for listing tools
+tools_query = parse_one("""
 SELECT * FROM tools
 WHERE
     developer_id = $1 AND
     agent_id = $2
 ORDER BY 
-    CASE WHEN $5 = 'created_at' AND $6 = 'desc' THEN s.created_at END DESC,
-    CASE WHEN $5 = 'created_at' AND $6 = 'asc' THEN s.created_at END ASC,
-    CASE WHEN $5 = 'updated_at' AND $6 = 'desc' THEN s.updated_at END DESC,
-    CASE WHEN $5 = 'updated_at' AND $6 = 'asc' THEN s.updated_at END ASC
+    CASE WHEN $5 = 'created_at' AND $6 = 'desc' THEN tools.created_at END DESC NULLS LAST,
+    CASE WHEN $5 = 'created_at' AND $6 = 'asc' THEN tools.created_at END ASC NULLS LAST,
+    CASE WHEN $5 = 'updated_at' AND $6 = 'desc' THEN tools.updated_at END DESC NULLS LAST,
+    CASE WHEN $5 = 'updated_at' AND $6 = 'asc' THEN tools.updated_at END ASC NULLS LAST
 LIMIT $3 OFFSET $4;
-""")
-
-if not sql_query.is_valid():
-    raise InvalidSQLQuery("list_tools")
+""").sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Developer or agent not found",
+        ),
+    }
+)
 @wrap_in_class(
     Tool,
     transform=lambda d: {
@@ -46,6 +41,7 @@ if not sql_query.is_valid():
             "name": d["name"],
             "description": d["description"],
         },
+        "id": d.pop("tool_id"),
         **d,
     },
 )
@@ -59,12 +55,12 @@ async def list_tools(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-) -> tuple[list[str], list]:
+) -> tuple[str, list]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
 
     return (
-        sql_query.format(),
+        tools_query,
         [
             developer_id,
             agent_id,
