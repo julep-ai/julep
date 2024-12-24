@@ -21,7 +21,6 @@ def create_worker(client: Client) -> Any:
 
     from ..activities import task_steps
     from ..activities.demo import demo_activity
-    from ..activities.embed_docs import embed_docs
     from ..activities.excecute_api_call import execute_api_call
     from ..activities.execute_integration import execute_integration
     from ..activities.execute_system import execute_system
@@ -35,7 +34,6 @@ def create_worker(client: Client) -> Any:
         temporal_task_queue,
     )
     from ..workflows.demo import DemoWorkflow
-    from ..workflows.embed_docs import EmbedDocsWorkflow
     from ..workflows.mem_mgmt import MemMgmtWorkflow
     from ..workflows.mem_rating import MemRatingWorkflow
     from ..workflows.summarization import SummarizationWorkflow
@@ -54,14 +52,12 @@ def create_worker(client: Client) -> Any:
             SummarizationWorkflow,
             MemMgmtWorkflow,
             MemRatingWorkflow,
-            EmbedDocsWorkflow,
             TaskExecutionWorkflow,
             TruncationWorkflow,
         ],
         activities=[
             *task_activities,
             demo_activity,
-            embed_docs,
             execute_integration,
             execute_system,
             execute_api_call,

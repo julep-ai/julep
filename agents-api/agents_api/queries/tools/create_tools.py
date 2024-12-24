@@ -1,4 +1,4 @@
-"""This module contains functions for creating tools in the CozoDB database."""
+"""This module contains functions for creating tools in the PostgreSQL database."""
 
 from typing import Any
 from uuid import UUID
@@ -78,9 +78,10 @@ async def create_tools(
     ignore_existing: bool = False,  # TODO: what to do with this flag?
 ) -> tuple[str, list, str]:
     """
-    Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
+    Constructs an SQL query for inserting tool records into the 'tools' relation in the PostgreSQL database.
 
     Parameters:
+        developer_id (UUID): The unique identifier for the developer.
         agent_id (UUID): The unique identifier for the agent.
         data (list[CreateToolRequest]): A list of function definitions to be inserted.
 
