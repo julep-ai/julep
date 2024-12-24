@@ -1,5 +1,6 @@
-from ward import skip, test
 import asyncio
+
+from ward import skip, test
 
 from agents_api.autogen.openapi_model import CreateDocRequest
 from agents_api.clients.pg import create_db_pool
@@ -10,13 +11,7 @@ from agents_api.queries.docs.list_docs import list_docs
 from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
-from tests.fixtures import (
-  pg_dsn, 
-  test_agent, 
-  test_developer, 
-  test_doc, 
-  test_user
-)
+from tests.fixtures import pg_dsn, test_agent, test_developer, test_doc, test_user
 
 EMBEDDING_SIZE: int = 1024
 
@@ -219,6 +214,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     )
     assert not any(d.id == doc_agent.id for d in docs_list)
 
+
 @skip("text search: test container not vectorizing")
 @test("query: search docs by text")
 async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
@@ -253,11 +249,12 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     )
 
     print("\nSearch results:", result)
-    
+
     # More specific assertions
     assert len(result) >= 1, "Should find at least one document"
     assert any(d.id == doc.id for d in result), f"Should find document {doc.id}"
     assert result[0].metadata == {"test": "test"}, "Metadata should match"
+
 
 @skip("embedding search: test container not vectorizing")
 @test("query: search docs by embedding")
@@ -290,6 +287,7 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
 
     assert len(result) >= 1
     assert result[0].metadata is not None
+
 
 @skip("hybrid search: test container not vectorizing")
 @test("query: search docs by hybrid")

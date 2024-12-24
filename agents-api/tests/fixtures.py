@@ -21,7 +21,6 @@ from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import get_developer
 from agents_api.queries.docs.create_doc import create_doc
-from agents_api.queries.tools.delete_tool import delete_tool
 
 # from agents_api.queries.executions.create_execution import create_execution
 # from agents_api.queries.executions.create_execution_transition import create_execution_transition
@@ -30,6 +29,7 @@ from agents_api.queries.files.create_file import create_file
 from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
 from agents_api.queries.tools.create_tools import create_tools
+from agents_api.queries.tools.delete_tool import delete_tool
 from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
 
