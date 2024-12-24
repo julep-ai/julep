@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
@@ -31,12 +32,19 @@ AND user_id = $2;
             status_code=404,
             detail="The specified developer does not exist.",
         ),
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified user does not exist.",
+        ),
     }
 )
 @wrap_in_class(User, one=True)
 @pg_query
 @beartype
-async def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list]:
+async def get_user(
+    *, developer_id: UUID, user_id: UUID
+) -> tuple[str, list, Literal["fetchrow", "fetchmany", "fetch"]]:
     """
     Constructs an optimized SQL query to retrieve a user's details.
     Uses the primary key index (developer_id, user_id) for efficient lookup.
@@ -46,10 +54,11 @@ async def get_user(*, developer_id: UUID, user_id: UUID) -> tuple[str, list]:
         user_id (UUID): The UUID of the user to retrieve.
 
     Returns:
-        tuple[str, list]: SQL query and parameters.
+        tuple[str, list, str]: SQL query, parameters, and fetch mode.
     """
 
     return (
         user_query,
         [developer_id, user_id],
+        "fetchrow",
     )

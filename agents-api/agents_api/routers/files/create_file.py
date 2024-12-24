@@ -12,7 +12,7 @@ from ...autogen.openapi_model import (
 )
 from ...clients import async_s3
 from ...dependencies.developer_id import get_developer_id
-from ...models.files.create_file import create_file as create_file_query
+from ...queries.files.create_file import create_file as create_file_query
 from .router import router
 
 
@@ -24,12 +24,13 @@ async def upload_file_content(file_id: UUID, content: str) -> None:
     await async_s3.add_object(key, content_bytes)
 
 
+# TODO: Use streaming for large payloads
 @router.post("/files", status_code=HTTP_201_CREATED, tags=["files"])
 async def create_file(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     data: CreateFileRequest,
 ) -> ResourceCreatedResponse:
-    file: File = create_file_query(
+    file: File = await create_file_query(
         developer_id=x_developer_id,
         data=data,
     )

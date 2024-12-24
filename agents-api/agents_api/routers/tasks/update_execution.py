@@ -10,10 +10,10 @@ from ...autogen.openapi_model import (
 )
 from ...clients.temporal import get_client
 from ...dependencies.developer_id import get_developer_id
-from ...models.execution.get_paused_execution_token import (
+from ...queries.executions.get_paused_execution_token import (
     get_paused_execution_token,
 )
-from ...models.execution.get_temporal_workflow_data import (
+from ...queries.executions.get_temporal_workflow_data import (
     get_temporal_workflow_data,
 )
 from .router import router
@@ -31,14 +31,14 @@ async def update_execution(
         case StopExecutionRequest():
             try:
                 wf_handle = temporal_client.get_workflow_handle_for(
-                    *get_temporal_workflow_data(execution_id=execution_id)
+                    *await get_temporal_workflow_data(execution_id=execution_id)
                 )
                 await wf_handle.cancel()
             except Exception:
                 raise HTTPException(status_code=500, detail="Failed to stop execution")
 
         case ResumeExecutionRequest():
-            token_data = get_paused_execution_token(
+            token_data = await get_paused_execution_token(
                 developer_id=x_developer_id, execution_id=execution_id
             )
             activity_id = token_data["metadata"].get("x-activity-id", None)

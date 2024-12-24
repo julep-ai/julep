@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     UpdateToolRequest,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.tools.update_tool import update_tool as update_tool_query
+from ...queries.tools.update_tool import update_tool as update_tool_query
 from .router import router
 
 
@@ -19,7 +19,7 @@ async def update_agent_tool(
     tool_id: UUID,
     data: UpdateToolRequest,
 ) -> ResourceUpdatedResponse:
-    return update_tool_query(
+    return await update_tool_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         tool_id=tool_id,

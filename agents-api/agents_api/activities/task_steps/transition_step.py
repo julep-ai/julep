@@ -14,7 +14,7 @@ from ...env import (
     transition_requests_per_minute,
 )
 from ...exceptions import LastErrorInput, TooManyRequestsError
-from ...models.execution.create_execution_transition import (
+from ...queries.executions.create_execution_transition import (
     create_execution_transition_async,
 )
 from ..utils import RateLimiter

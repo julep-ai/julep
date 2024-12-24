@@ -18,7 +18,7 @@ from temporalio.client import (
 from ...autogen.openapi_model import TransitionEvent
 from ...clients.temporal import get_workflow_handle
 from ...dependencies.developer_id import get_developer_id
-from ...models.execution.lookup_temporal_data import lookup_temporal_data
+from ...queries.executions.lookup_temporal_data import lookup_temporal_data
 from ...worker.codec import from_payload_data
 from .router import router
 
@@ -87,7 +87,7 @@ async def stream_transitions_events(
     next_page_token: Annotated[str | None, Query()] = None,
 ):
     # Get temporal id
-    temporal_data = lookup_temporal_data(
+    temporal_data = await lookup_temporal_data(
         developer_id=x_developer_id,
         execution_id=execution_id,
     )

@@ -106,11 +106,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_optimized_update_token_count_after
-AFTER INSERT
-OR
-UPDATE ON entries FOR EACH ROW
-EXECUTE FUNCTION optimized_update_token_count_after ();
+-- FIXME: This trigger is causing the slow performance of the create_entries query
+--
+-- We should consider using a timescale background job to update the token count
+-- instead of a trigger.
+-- https://docs.timescale.com/use-timescale/latest/user-defined-actions/create-and-register/
+--
+-- CREATE TRIGGER trg_optimized_update_token_count_after
+-- AFTER INSERT
+-- OR
+-- UPDATE ON entries FOR EACH ROW
+-- EXECUTE FUNCTION optimized_update_token_count_after ();
 
 -- Add trigger to update parent session's updated_at
 CREATE

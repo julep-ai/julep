@@ -6,7 +6,6 @@ from beartype import beartype
 from fastapi import BackgroundTasks, Depends, HTTPException, status
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-from pycozo.client import QueryException
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
@@ -21,19 +20,19 @@ from ...clients.temporal import run_task_execution_workflow
 from ...common.protocol.developers import Developer
 from ...dependencies.developer_id import get_developer_id
 from ...env import max_free_executions
-from ...models.developer.get_developer import get_developer
-from ...models.execution.count_executions import (
+from ...queries.developers.get_developer import get_developer
+from ...queries.executions.count_executions import (
     count_executions as count_executions_query,
 )
-from ...models.execution.create_execution import (
+from ...queries.executions.create_execution import (
     create_execution as create_execution_query,
 )
-from ...models.execution.create_temporal_lookup import create_temporal_lookup
-from ...models.execution.prepare_execution_input import prepare_execution_input
-from ...models.execution.update_execution import (
+from ...queries.executions.create_temporal_lookup import create_temporal_lookup
+from ...queries.executions.prepare_execution_input import prepare_execution_input
+from ...queries.executions.update_execution import (
     update_execution as update_execution_query,
 )
-from ...models.task.get_task import get_task as get_task_query
+from ...queries.tasks.get_task import get_task as get_task_query
 from .router import router
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -50,7 +49,7 @@ async def start_execution(
 ) -> tuple[Execution, WorkflowHandle]:
     execution_id = uuid7()
 
-    execution = create_execution_query(
+    execution = await create_execution_query(
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
@@ -58,7 +57,7 @@ async def start_execution(
         client=client,
     )
 
-    execution_input = prepare_execution_input(
+    execution_input = await prepare_execution_input(
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
@@ -76,7 +75,7 @@ async def start_execution(
     except Exception as e:
         logger.exception(e)
 
-        update_execution_query(
+        await update_execution_query(
             developer_id=developer_id,
             task_id=task_id,
             execution_id=execution_id,
@@ -104,7 +103,7 @@ async def create_task_execution(
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
     try:
-        task = get_task_query(task_id=task_id, developer_id=x_developer_id)
+        task = await get_task_query(task_id=task_id, developer_id=x_developer_id)
         validate(data.input, task.input_schema)
 
     except ValidationError:
@@ -112,20 +111,21 @@ async def create_task_execution(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid request arguments schema",
         )
-    except QueryException as e:
-        if e.code == "transact::assertion_failure":
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
 
-        raise
+    # except QueryException as e:
+    #     if e.code == "transact::assertion_failure":
+    #         raise HTTPException(
+    #             status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+    #         )
+
+    #     raise
 
     # get developer data
-    developer: Developer = get_developer(developer_id=x_developer_id)
+    developer: Developer = await get_developer(developer_id=x_developer_id)
 
     # # check if the developer is paid
     if "paid" not in developer.tags:
-        executions = count_executions_query(
+        executions = await count_executions_query(
             developer_id=x_developer_id, task_id=task_id
         )
 

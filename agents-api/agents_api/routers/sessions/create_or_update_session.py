@@ -9,8 +9,8 @@ from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.create_or_update_session import (
-    create_or_update_session as create_session_query,
+from ...queries.sessions.create_or_update_session import (
+    create_or_update_session as create_or_update_session_query,
 )
 from .router import router
 
@@ -21,7 +21,7 @@ async def create_or_update_session(
     session_id: UUID,
     data: CreateOrUpdateSessionRequest,
 ) -> ResourceUpdatedResponse:
-    session_updated = create_session_query(
+    session_updated = await create_or_update_session_query(
         developer_id=x_developer_id,
         session_id=session_id,
         data=data,

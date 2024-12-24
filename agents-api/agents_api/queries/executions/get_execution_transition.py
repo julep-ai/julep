@@ -30,7 +30,7 @@ T = TypeVar("T")
 @wrap_in_class(Transition, one=True)
 @cozo_query
 @beartype
-def get_execution_transition(
+async def get_execution_transition(
     *,
     developer_id: UUID,
     transition_id: UUID | None = None,

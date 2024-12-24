@@ -1,5 +1,7 @@
+import os
 import random
 import string
+import sys
 from uuid import UUID
 
 from fastapi.testclient import TestClient
@@ -379,12 +381,11 @@ async def test_tool(
 
 
 @fixture(scope="global")
-async def client(dsn=pg_dsn):
-    pool = await create_db_pool(dsn=dsn)
+def client(dsn=pg_dsn):
+    os.environ["DB_DSN"] = dsn
 
-    client = TestClient(app=app)
-    client.state.postgres_pool = pool
-    return client
+    with TestClient(app=app) as client:
+        yield client
 
 
 @fixture(scope="global")
@@ -398,6 +399,8 @@ async def make_request(client=client, developer_id=test_developer_id):
 
         if multi_tenant_mode:
             headers["X-Developer-Id"] = str(developer_id)
+
+        headers["Content-Length"] = str(sys.getsizeof(kwargs.get("json", {})))
 
         return client.request(method, url, headers=headers, **kwargs)
 

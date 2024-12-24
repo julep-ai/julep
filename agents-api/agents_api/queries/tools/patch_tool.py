@@ -1,4 +1,3 @@
-from typing import Any
 from uuid import UUID
 
 import asyncpg
@@ -52,12 +51,10 @@ async def patch_tool(
     """
     Execute the datalog query and return the results as a DataFrame
     Updates the tool information for a given agent and tool ID in the 'cozodb' database.
-
     Parameters:
         agent_id (UUID): The unique identifier of the agent.
         tool_id (UUID): The unique identifier of the tool to be updated.
         data (PatchToolRequest): The request payload containing the updated tool information.
-
     Returns:
         ResourceUpdatedResponse: The updated tool data.
     """

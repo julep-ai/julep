@@ -6,7 +6,7 @@ from fastapi import Depends
 from ...autogen.openapi_model import Doc, ListResponse
 from ...dependencies.developer_id import get_developer_id
 from ...dependencies.query_filter import MetadataFilter, create_filter_extractor
-from ...models.docs.list_docs import list_docs as list_docs_query
+from ...queries.docs.list_docs import list_docs as list_docs_query
 from .router import router
 
 
@@ -23,7 +23,7 @@ async def list_user_docs(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Doc]:
-    docs = list_docs_query(
+    docs = await list_docs_query(
         developer_id=x_developer_id,
         owner_type="user",
         owner_id=user_id,
@@ -49,7 +49,7 @@ async def list_agent_docs(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Doc]:
-    docs = list_docs_query(
+    docs = await list_docs_query(
         developer_id=x_developer_id,
         owner_type="agent",
         owner_id=agent_id,
