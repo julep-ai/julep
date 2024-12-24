@@ -2,9 +2,6 @@ from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
-from pycozo.client import QueryException
-from pydantic import ValidationError
 
 from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
@@ -16,11 +13,7 @@ from ...common.protocol.tasks import (
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...metrics.counters import increase_counter
 from ..utils import (
-    cozo_query,
-    partialclass,
-    rewrap_exceptions,
-    verify_developer_id_query,
-    verify_developer_owns_resource_query,
+    pg_query,
     wrap_in_class,
 )
 from .constants import OUTPUT_UNNEST_KEY
@@ -28,21 +21,29 @@ from .constants import OUTPUT_UNNEST_KEY
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+sql_query = """
+UPDATE executions
+SET 
+WHERE
+    developer_id = $1,
+    task_id = $2,
+    execution_id = $3
+"""
 
-@rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
-    }
-)
+
+# @rewrap_exceptions(
+#     {
+#         QueryException: partialclass(HTTPException, status_code=400),
+#         ValidationError: partialclass(HTTPException, status_code=400),
+#         TypeError: partialclass(HTTPException, status_code=400),
+#     }
+# )
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["execution_id"], **d},
-    _kind="inserted",
 )
-@cozo_query
+@pg_query
 @increase_counter("update_execution")
 @beartype
 async def update_execution(
@@ -77,54 +78,28 @@ async def update_execution(
         }
     )
 
-    validate_status_query = """
-    valid_status[count(status)] :=
-        *executions {
-            status,
-            execution_id: to_uuid($execution_id),
-            task_id: to_uuid($task_id),
-        }, 
-        status in $valid_previous_statuses
+    # TODO: implement this query
+    # validate_status_query = """
+    # valid_status[count(status)] :=
+    #     *executions {
+    #         status,
+    #         execution_id: to_uuid($execution_id),
+    #         task_id: to_uuid($task_id),
+    #     },
+    #     status in $valid_previous_statuses
 
-    ?[num] :=
-        valid_status[num],
-        assert(num > 0, 'Invalid status')
+    # ?[num] :=
+    #     valid_status[num],
+    #     assert(num > 0, 'Invalid status')
 
-    :limit 1
-    """
-
-    update_query = f"""
-    input[{columns}] <- $values
-    ?[{columns}, updated_at] :=
-        input[{columns}],
-        updated_at = now()
-
-    :update executions {{
-        updated_at,
-        {columns}
-    }}
-
-    :returning
-    """
-
-    queries = [
-        verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(
-            developer_id,
-            "executions",
-            execution_id=execution_id,
-            parents=[("agents", "agent_id"), ("tasks", "task_id")],
-        ),
-        validate_status_query if valid_previous_statuses is not None else "",
-        update_query,
-    ]
+    # :limit 1
+    # """
 
     return (
-        queries,
-        {
-            "values": values,
-            "valid_previous_statuses": valid_previous_statuses,
-            "execution_id": str(execution_id),
-            "task_id": task_id,
-        },
+        sql_query,
+        [
+            developer_id,
+            task_id,
+            execution_id,
+        ],
     )

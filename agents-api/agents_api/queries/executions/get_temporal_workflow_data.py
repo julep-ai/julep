@@ -2,56 +2,43 @@ from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
-from pycozo.client import QueryException
-from pydantic import ValidationError
 
 from ..utils import (
-    cozo_query,
-    partialclass,
-    rewrap_exceptions,
+    pg_query,
     wrap_in_class,
 )
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
+sql_query = """
+SELECT id, run_id, result_run_id, first_execution_run_id FROM temporal_executions_lookup
+WHERE
+    execution_id = $1
+LIMIT 1;
+"""
 
-@rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
-    }
-)
+
+# @rewrap_exceptions(
+#     {
+#         QueryException: partialclass(HTTPException, status_code=400),
+#         ValidationError: partialclass(HTTPException, status_code=400),
+#         TypeError: partialclass(HTTPException, status_code=400),
+#     }
+# )
 @wrap_in_class(dict, one=True)
-@cozo_query
+@pg_query
 @beartype
 async def get_temporal_workflow_data(
     *,
     execution_id: UUID,
 ) -> tuple[str, dict]:
     # Executions are allowed direct GET access if they have execution_id
-
-    query = """
-      input[execution_id] <- [[to_uuid($execution_id)]]
-
-      ?[id, run_id, result_run_id, first_execution_run_id] := 
-          input[execution_id],
-          *temporal_executions_lookup {
-              execution_id,
-              id,
-              run_id,
-              result_run_id,
-              first_execution_run_id,
-          }
-
-    :limit 1
-    """
+    execution_id = str(execution_id)
 
     return (
-        query,
-        {
-            "execution_id": str(execution_id),
-        },
+        sql_query,
+        [
+            execution_id,
+        ],
     )

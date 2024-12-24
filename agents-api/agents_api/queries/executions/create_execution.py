@@ -1,13 +1,40 @@
 from typing import Annotated, Any, TypeVar
 from uuid import UUID
 
+from beartype import beartype
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateExecutionRequest
+from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.types import dict_like
+from ...metrics.counters import increase_counter
+from ..utils import (
+    pg_query,
+    wrap_in_class,
+)
+from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
+
+sql_query = """
+INSERT INTO executions
+(
+    developer_id,
+    task_id,
+    execution_id,
+    input,
+    metadata,
+)
+VALUES
+(
+    $1,
+    $2,
+    $3,
+    $4,
+    $5
+)
+RETURNING *;
+"""
 
 
 # @rewrap_exceptions(
@@ -17,15 +44,14 @@ T = TypeVar("T")
 #         TypeError: partialclass(HTTPException, status_code=400),
 #     }
 # )
-# @wrap_in_class(
-#     Execution,
-#     one=True,
-#     transform=lambda d: {"id": d["execution_id"], **d},
-#     _kind="inserted",
-# )
-# @cozo_query
-# @increase_counter("create_execution")
-# @beartype
+@wrap_in_class(
+    Execution,
+    one=True,
+    transform=lambda d: {"id": d["execution_id"], **d},
+)
+@pg_query
+@increase_counter("create_execution")
+@beartype
 async def create_execution(
     *,
     developer_id: UUID,
@@ -51,33 +77,13 @@ async def create_execution(
     # ):
     #     execution_data["output"] = {OUTPUT_UNNEST_KEY: execution_data["output"]}
 
-    # columns, values = cozo_process_mutate_data(
-    #     {
-    #         **execution_data,
-    #         "task_id": task_id,
-    #         "execution_id": execution_id,
-    #     }
-    # )
-
-    # insert_query = f"""
-    # ?[{columns}] <- $values
-
-    # :insert executions {{
-    #     {columns}
-    # }}
-
-    # :returning
-    # """
-
-    # queries = [
-    #     verify_developer_id_query(developer_id),
-    #     verify_developer_owns_resource_query(
-    #         developer_id,
-    #         "tasks",
-    #         task_id=task_id,
-    #         parents=[("agents", "agent_id")],
-    #     ),
-    #     insert_query,
-    # ]
-
-    # return (queries, {"values": values})
+    return (
+        sql_query,
+        [
+            developer_id,
+            task_id,
+            execution_id,
+            data["input"],
+            data["metadata"],
+        ],
+    )

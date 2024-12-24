@@ -1,9 +1,6 @@
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
-from pycozo.client import QueryException
-from pydantic import ValidationError
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
@@ -15,19 +12,103 @@ from ...common.protocol.tasks import transition_to_execution_status, valid_trans
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...metrics.counters import increase_counter
 from ..utils import (
-    cozo_query,
-    cozo_query_async,
-    partialclass,
-    rewrap_exceptions,
-    verify_developer_id_query,
-    verify_developer_owns_resource_query,
+    pg_query,
     wrap_in_class,
 )
 from .update_execution import update_execution
 
+"""
+valid_transition[start, end] <- [
+        {", ".join(f'["{start}", "{end}"]' for start, ends in valid_transitions.items() for end in ends)}
+    ]
 
+    last_transition_type[min_cost(type_created_at)] :=
+        *transitions:execution_id_type_created_at_idx {{
+            execution_id: to_uuid("{str(execution_id)}"),
+            type,
+            created_at,
+        }},
+        type_created_at = [type, -created_at]
+
+    matched[collect(last_type)] :=
+        last_transition_type[data],
+        last_type_data = first(data),
+        last_type = if(is_null(last_type_data), "init", last_type_data),
+        valid_transition[last_type, $next_type]
+
+    ?[valid] :=
+        matched[prev_transitions],
+        found = length(prev_transitions),
+        valid = if($next_type == "init", found == 0, found > 0),
+        assert(valid, "Invalid transition"),
+
+    :limit 1
+"""
+
+
+check_last_transition_query = """
+
+"""
+
+
+def validate_transition_targets(data: CreateTransitionRequest) -> None:
+    # Make sure the current/next targets are valid
+    match data.type:
+        case "finish_branch":
+            pass  # TODO: Implement
+        case "finish" | "error" | "cancelled":
+            pass
+
+            ### FIXME: HACK: Fix this and uncomment
+
+            ### assert (
+            ###     data.next is None
+            ### ), "Next target must be None for finish/finish_branch/error/cancelled"
+
+        case "init_branch" | "init":
+            assert (
+                data.next and data.current.step == data.next.step == 0
+            ), "Next target must be same as current for init_branch/init and step 0"
+
+        case "wait":
+            assert data.next is None, "Next target must be None for wait"
+
+        case "resume" | "step":
+            assert data.next is not None, "Next target must be provided for resume/step"
+
+            if data.next.workflow == data.current.workflow:
+                assert (
+                    data.next.step > data.current.step
+                ), "Next step must be greater than current"
+
+        case _:
+            raise ValueError(f"Invalid transition type: {data.type}")
+
+
+# rewrap_exceptions(
+#     {
+#         QueryException: partialclass(HTTPException, status_code=400),
+#         ValidationError: partialclass(HTTPException, status_code=400),
+#         TypeError: partialclass(HTTPException, status_code=400),
+#     }
+# )
+wrap_in_class(
+    Transition,
+    transform=lambda d: {
+        **d,
+        "id": d["transition_id"],
+        "current": {"workflow": d["current"][0], "step": d["current"][1]},
+        "next": d["next"] and {"workflow": d["next"][0], "step": d["next"][1]},
+    },
+    one=True,
+    _kind="inserted",
+)
+
+
+@pg_query
+@increase_counter("create_execution_transition")
 @beartype
-def _create_execution_transition(
+async def create_execution_transition(
     *,
     developer_id: UUID,
     execution_id: UUID,
@@ -148,112 +229,11 @@ def _create_execution_transition(
         )
 
     queries = [
-        verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(
-            developer_id,
-            "executions",
-            execution_id=execution_id,
-            parents=[("agents", "agent_id"), ("tasks", "task_id")],
-        ),
-        validate_status_query if not is_parallel else None,
-        update_execution_query if not is_parallel else None,
-        check_last_transition_query if not is_parallel else None,
-        insert_query,
+        (insert_query, []),
     ]
+    if not is_parallel:
+        queries.insert(0, (check_last_transition_query, []))
+        queries.insert(0, (update_execution_query, []))
+        queries.insert(0, (validate_status_query, []))
 
-    return (
-        queries,
-        {
-            "transition_values": transition_values,
-            "next_type": data.type,
-            "valid_transitions": valid_transitions,
-            **update_execution_params,
-        },
-    )
-
-
-def validate_transition_targets(data: CreateTransitionRequest) -> None:
-    # Make sure the current/next targets are valid
-    match data.type:
-        case "finish_branch":
-            pass  # TODO: Implement
-        case "finish" | "error" | "cancelled":
-            pass
-
-            ### FIXME: HACK: Fix this and uncomment
-
-            ### assert (
-            ###     data.next is None
-            ### ), "Next target must be None for finish/finish_branch/error/cancelled"
-
-        case "init_branch" | "init":
-            assert (
-                data.next and data.current.step == data.next.step == 0
-            ), "Next target must be same as current for init_branch/init and step 0"
-
-        case "wait":
-            assert data.next is None, "Next target must be None for wait"
-
-        case "resume" | "step":
-            assert data.next is not None, "Next target must be provided for resume/step"
-
-            if data.next.workflow == data.current.workflow:
-                assert (
-                    data.next.step > data.current.step
-                ), "Next step must be greater than current"
-
-        case _:
-            raise ValueError(f"Invalid transition type: {data.type}")
-
-
-create_execution_transition = rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
-    }
-)(
-    wrap_in_class(
-        Transition,
-        transform=lambda d: {
-            **d,
-            "id": d["transition_id"],
-            "current": {"workflow": d["current"][0], "step": d["current"][1]},
-            "next": d["next"] and {"workflow": d["next"][0], "step": d["next"][1]},
-        },
-        one=True,
-        _kind="inserted",
-    )(
-        cozo_query(
-            increase_counter("create_execution_transition")(
-                _create_execution_transition
-            )
-        )
-    )
-)
-
-create_execution_transition_async = rewrap_exceptions(
-    {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
-    }
-)(
-    wrap_in_class(
-        Transition,
-        transform=lambda d: {
-            **d,
-            "id": d["transition_id"],
-            "current": {"workflow": d["current"][0], "step": d["current"][1]},
-            "next": d["next"] and {"workflow": d["next"][0], "step": d["next"][1]},
-        },
-        one=True,
-        _kind="inserted",
-    )(
-        cozo_query_async(
-            increase_counter("create_execution_transition_async")(
-                _create_execution_transition
-            )
-        )
-    )
-)
+    return queries
