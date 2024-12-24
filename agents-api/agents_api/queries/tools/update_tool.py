@@ -1,24 +1,21 @@
+import json
 from typing import Any, TypeVar
 from uuid import UUID
 
-import sqlvalidator
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
     UpdateToolRequest,
 )
-from ...exceptions import InvalidSQLQuery
 from ...metrics.counters import increase_counter
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-)
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-sql_query = """
+# Define the raw SQL query for updating a tool
+tools_query = parse_one("""
 UPDATE tools 
 SET
     type = $4,
@@ -30,19 +27,23 @@ WHERE
     agent_id = $2 AND 
     tool_id = $3
 RETURNING *;
-"""
-
-# if not sql_query.is_valid():
-#     raise InvalidSQLQuery("update_tool")
+""").sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="A tool with this name already exists for this agent",
+        ),
+        json.JSONDecodeError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid tool specification format",
+        ),
+    }
+)
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
@@ -84,7 +85,7 @@ async def update_tool(
     del update_data[tool_type]
 
     return (
-        sql_query,
+        tools_query,
         [
             developer_id,
             agent_id,

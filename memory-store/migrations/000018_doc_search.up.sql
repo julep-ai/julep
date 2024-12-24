@@ -406,7 +406,7 @@ BEGIN
     ),
     scores AS (
         SELECT
-            r.developer_id,
+            -- r.developer_id,
             r.doc_id,
             r.title,
             r.content,
@@ -418,8 +418,8 @@ BEGIN
             COALESCE(t.distance, 0.0) as text_score,
             COALESCE(e.distance, 0.0) as embedding_score
         FROM all_results r
-        LEFT JOIN text_results t ON r.doc_id = t.doc_id AND r.developer_id = t.developer_id
-        LEFT JOIN embedding_results e ON r.doc_id = e.doc_id AND r.developer_id = e.developer_id
+        LEFT JOIN text_results t ON r.doc_id = t.doc_id
+        LEFT JOIN embedding_results e ON r.doc_id = e.doc_id
     ),
     normalized_scores AS (
         SELECT
