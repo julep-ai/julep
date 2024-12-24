@@ -1,0 +1,413 @@
+---
+title: 'Control Flow'
+description: 'Managing task flow with conditions, loops, and parallel execution in Julep'
+---
+
+## Overview
+
+Control flow in Julep allows you to create sophisticated task workflows by managing the sequence of execution, handling conditions, implementing loops, and running steps in parallel. This guide covers all aspects of control flow management in Julep tasks.
+
+## Conditional Execution
+
+### If-Else Statements
+
+Control execution based on conditions:
+
+```yaml
+# Basic if statement
+- if: _.score > 0.8
+  then:
+    - log: "High score achieved"
+
+# If-else statement
+- if: _.temperature > 30
+  then:
+    - log: "It's hot today"
+  else:
+    - log: "Temperature is normal"
+
+# Nested conditions
+- if: _.user_type == "premium"
+  then:
+    - if: _.usage > 1000
+      then:
+        - log: "High usage premium user"
+      else:
+        - log: "Normal usage premium user"
+  else:
+    - log: "Regular user"
+```
+
+### Switch Statements
+
+Handle multiple conditions:
+
+```yaml
+# Basic switch
+- switch:
+    - case: _.status == "pending"
+      then:
+        - log: "Task is pending"
+    - case: _.status == "running"
+      then:
+        - log: "Task is running"
+    - case: _  # Default case
+      then:
+        - log: "Unknown status"
+
+# Switch with complex logic
+- switch:
+    - case: _.score > 90
+      then:
+        - evaluate:
+            grade: "'A'"
+    - case: _.score > 80
+      then:
+        - evaluate:
+            grade: "'B'"
+    - case: _.score > 70
+      then:
+        - evaluate:
+            grade: "'C'"
+    - case: _
+      then:
+        - evaluate:
+            grade: "'F'"
+```
+
+## Loops and Iteration
+
+### Foreach Loop
+
+Iterate over collections:
+
+```yaml
+# Simple foreach
+- foreach:
+    in: _.items
+    do:
+      - log: "Processing {{_}}"
+
+# Foreach with complex processing
+- foreach:
+    in: _.documents
+    do:
+      - tool: analyze
+        arguments:
+          text: _.content
+      - if: _.analysis.score > 0.8
+        then:
+          - tool: save_result
+            arguments:
+              data: _.analysis
+```
+
+### Map-Reduce
+
+Process collections in parallel:
+
+```yaml
+# Basic map-reduce
+- map_reduce:
+    over: _.urls
+    map:
+      - tool: fetch_content
+        arguments:
+          url: _
+    reduce: results + [_]
+
+# Map-reduce with custom reduction
+- map_reduce:
+    over: _.numbers
+    map:
+      - evaluate:
+          squared: "_ ** 2"
+    reduce: "max(results + [_])"
+    initial: 0
+```
+
+## Parallel Execution
+
+### Parallel Steps
+
+Execute multiple steps concurrently:
+
+```yaml
+# Basic parallel execution
+- parallel:
+    - tool: task1
+      arguments:
+        param: "value1"
+    - tool: task2
+      arguments:
+        param: "value2"
+
+# Parallel with result handling
+- parallel:
+    - tool: web_search
+      arguments:
+        query: "AI news"
+    - tool: arxiv_search
+      arguments:
+        query: "AI research"
+- evaluate:
+    web_results: _[0]
+    academic_results: _[1]
+```
+
+### Parallel Map-Reduce
+
+Process collections with controlled parallelism:
+
+```yaml
+# Parallel processing with limit
+- map_reduce:
+    over: _.queries
+    map:
+      - tool: web_search
+        arguments:
+          query: _
+    parallelism: 5
+
+# Complex parallel processing
+- map_reduce:
+    over: _.documents
+    map:
+      - parallel:
+          - tool: analyze_sentiment
+            arguments:
+              text: _.content
+          - tool: extract_keywords
+            arguments:
+              text: _.content
+    parallelism: 3
+```
+
+## Flow Control
+
+### Sleep and Delays
+
+Introduce delays in workflow:
+
+```yaml
+# Simple delay
+- sleep:
+    seconds: 30
+
+# Conditional delay
+- if: _.retry_count > 0
+  then:
+    - sleep:
+        seconds: "_.retry_count * 10"
+```
+
+### Early Returns
+
+Exit workflow early:
+
+```yaml
+# Early return on condition
+- if: _.error_count > 3
+  then:
+    - return:
+        status: "error"
+        message: "Too many errors"
+
+# Return with processed data
+- if: _.data_valid
+  then:
+    - return:
+        result: _.processed_data
+        metadata:
+          processing_time: _.duration
+```
+
+### Error Handling
+
+Handle errors in workflow:
+
+```yaml
+# Try-catch pattern
+- if: "try_function(_)"
+  then:
+    - log: "Operation successful"
+  else:
+    - log: "Operation failed"
+    - return:
+        error: _.error_message
+
+# Retry pattern
+- evaluate:
+    retry_count: 0
+- while: _.retry_count < 3
+  do:
+    - if: "try_operation(_)"
+      then:
+        - return: _.result
+      else:
+        - evaluate:
+            retry_count: "_.retry_count + 1"
+        - sleep:
+            seconds: "2 ** _.retry_count"
+```
+
+## Advanced Patterns
+
+### State Machines
+
+Implement state machine patterns:
+
+```yaml
+main:
+  - evaluate:
+      state: "initial"
+  
+  - while: _.state != "completed"
+    do:
+      - switch:
+          - case: _.state == "initial"
+            then:
+              - tool: initialize
+                arguments:
+                  data: _.input
+              - evaluate:
+                  state: "processing"
+          
+          - case: _.state == "processing"
+            then:
+              - tool: process
+                arguments:
+                  data: _.result
+              - if: _.processing_complete
+                then:
+                  - evaluate:
+                      state: "completed"
+                else:
+                  - evaluate:
+                      state: "processing"
+```
+
+### Pipeline Pattern
+
+Create data processing pipelines:
+
+```yaml
+main:
+  # Data ingestion
+  - parallel:
+      - tool: load_source1
+        arguments:
+          params: _.source1_params
+      - tool: load_source2
+        arguments:
+          params: _.source2_params
+  
+  # Data processing
+  - map_reduce:
+      over: _
+      map:
+        - tool: clean_data
+          arguments:
+            data: _
+        - tool: transform_data
+          arguments:
+            data: _
+      parallelism: 3
+  
+  # Data aggregation
+  - tool: aggregate_results
+    arguments:
+      data: _
+  
+  # Result validation
+  - if: _.validation_score > 0.9
+    then:
+      - tool: save_results
+        arguments:
+          data: _.aggregated_data
+    else:
+      - return:
+          error: "Validation failed"
+```
+
+## Best Practices
+
+1. **Flow Design**
+   - Keep workflows linear when possible
+   - Use parallel execution judiciously
+   - Handle errors at appropriate levels
+
+2. **Performance**
+   - Balance parallelism with resource constraints
+   - Use appropriate timeouts
+   - Cache results when beneficial
+
+3. **Maintainability**
+   - Document complex flow logic
+   - Break down complex workflows
+   - Use consistent patterns
+
+## Example: Complex Control Flow
+
+Here's an example combining various control flow patterns:
+
+```yaml
+main:
+  # Initialize
+  - evaluate:
+      start_time: "datetime.now().isoformat()"
+      retry_count: 0
+      batch_size: 10
+  
+  # Batch processing with retries
+  - foreach:
+      in: "range(0, len(_.items), _.batch_size)"
+      do:
+        # Process batch in parallel
+        - map_reduce:
+            over: "_.items[_:_ + _.batch_size]"
+            map:
+              - parallel:
+                  - tool: process_item
+                    arguments:
+                      item: _
+                  - tool: validate_item
+                    arguments:
+                      item: _
+            parallelism: 5
+        
+        # Handle batch results
+        - foreach:
+            in: _
+            do:
+              - if: "_.processing_result[0].success and _.processing_result[1].valid"
+                then:
+                  - tool: save_result
+                    arguments:
+                      result: _.processing_result
+                else:
+                  # Retry failed items
+                  - while: _.retry_count < 3
+                    do:
+                      - evaluate:
+                          retry_count: "_.retry_count + 1"
+                      - sleep:
+                          seconds: "2 ** _.retry_count"
+                      - tool: retry_processing
+                        arguments:
+                          item: _
+  
+  # Finalize
+  - return:
+      results: _.processed_items
+      metadata:
+        start_time: _.start_time
+        end_time: "datetime.now().isoformat()"
+        retry_count: _.retry_count
+```
+
+## Next Steps
+
+1. [Explore workflow steps](/building-blocks/tasks/workflow-steps)
+2. [Learn about task basics](/building-blocks/tasks/task-basics)
+3. [Understand session management](/building-blocks/sessions/session-management) 

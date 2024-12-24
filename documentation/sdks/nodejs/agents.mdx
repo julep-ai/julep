@@ -1,0 +1,182 @@
+---
+title: 'Agents'
+description: 'Create and manage AI agents with the Node.js SDK'
+---
+
+Agents are the core building blocks in Julep. They are AI-powered entities that can execute tasks and interact with users through sessions.
+
+## Creating an Agent
+
+```javascript
+const agent = await client.agents.create({
+  name: 'Customer Support Agent',
+  model: 'claude-3.5-sonnet',
+  about: 'A helpful customer support agent that assists users with their queries',
+  metadata: {
+    department: 'support',
+    language: 'english'
+  }
+});
+```
+
+## Retrieving Agents
+
+```javascript
+// Get a specific agent
+const agent = await client.agents.get(agentId);
+
+// List all agents
+const agents = await client.agents.list({
+  limit: 10,
+  offset: 0
+});
+
+// Search agents
+const searchResults = await client.agents.search({
+  query: 'support',
+  metadata: {
+    department: 'support'
+  }
+});
+```
+
+## Updating Agents
+
+```javascript
+const updatedAgent = await client.agents.update(agentId, {
+  name: 'Senior Support Agent',
+  metadata: {
+    department: 'support',
+    seniority: 'senior'
+  }
+});
+```
+
+## Deleting Agents
+
+```javascript
+await client.agents.delete(agentId);
+```
+
+## Managing Agent Documents
+
+Agents can be associated with documents that provide context for their tasks:
+
+```javascript
+// Add a document
+const document = await client.agents.docs.create(agentId, {
+  title: 'Support Guidelines',
+  content: 'Here are the guidelines for customer support...',
+  metadata: {
+    category: 'guidelines',
+    version: '1.0'
+  }
+});
+
+// Search documents
+const docs = await client.agents.docs.search(agentId, {
+  query: 'refund policy',
+  metadata: {
+    category: 'policy'
+  }
+});
+
+// Delete a document
+await client.agents.docs.delete(agentId, documentId);
+```
+
+## Adding Tools to Agents
+
+Extend your agent's capabilities by adding tools:
+
+```javascript
+// Add a web search tool
+const tool = await client.agents.tools.create(agentId, {
+  name: 'web_search',
+  description: 'Search the web for information',
+  integration: {
+    provider: 'brave',
+    method: 'search',
+    setup: {
+      api_key: process.env.BRAVE_API_KEY
+    }
+  }
+});
+
+// Add a custom function tool
+const customTool = await client.agents.tools.create(agentId, {
+  name: 'calculate_price',
+  description: 'Calculate the final price including tax',
+  type: 'function',
+  function: {
+    parameters: {
+      type: 'object',
+      properties: {
+        base_price: {
+          type: 'number',
+          description: 'Base price before tax'
+        },
+        tax_rate: {
+          type: 'number',
+          description: 'Tax rate as a decimal'
+        }
+      },
+      required: ['base_price', 'tax_rate']
+    }
+  }
+});
+```
+
+## Error Handling
+
+The SDK uses custom error classes for better error handling:
+
+```javascript
+try {
+  const agent = await client.agents.create({
+    name: 'Test Agent',
+    model: 'invalid-model'
+  });
+} catch (error) {
+  if (error.name === 'ValidationError') {
+    console.error('Invalid model specified:', error.message);
+  } else if (error.name === 'ApiError') {
+    console.error('API error:', error.message, error.status);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Tasks"
+    icon="list-check"
+    href="/sdks/nodejs/tasks"
+  >
+    Learn how to create and execute tasks
+  </Card>
+  <Card
+    title="Sessions"
+    icon="message-bot"
+    href="/sdks/nodejs/sessions"
+  >
+    Manage agent sessions
+  </Card>
+  <Card
+    title="Tools Integration"
+    icon="screwdriver-wrench"
+    href="/sdks/nodejs/tools-integration"
+  >
+    Add more capabilities to your agents
+  </Card>
+  <Card
+    title="Advanced Usage"
+    icon="graduation-cap"
+    href="/sdks/nodejs/advanced-usage"
+  >
+    Explore advanced patterns
+  </Card>
+</CardGroup> 

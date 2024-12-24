@@ -1,0 +1,404 @@
+---
+title: 'Context & State'
+description: 'Managing conversation context and state in Julep sessions'
+---
+
+## Overview
+
+Context and state management in Julep sessions allows agents to maintain coherent conversations and remember important information across interactions. This guide covers how to effectively manage context and state in your sessions.
+
+## Understanding Context
+
+### Context Types
+
+Julep manages several types of context:
+
+1. **Conversation Context**
+   - Recent message history
+   - System prompts and instructions
+   - User preferences and settings
+
+2. **Session State**
+   - Session metadata
+   - User information
+   - Conversation flow state
+
+3. **Agent Context**
+   - Agent configuration
+   - Available tools
+   - Long-term memory
+
+## Context Management Strategies
+
+### Fixed Context Window
+
+Maintain a fixed number of messages:
+
+```python Python
+# Create session with fixed context
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="fixed",
+    max_messages=20,
+    metadata={
+        "context_strategy": "fixed",
+        "context_size": 20
+    }
+)
+```
+
+### Adaptive Context
+
+Dynamically adjust context based on token usage:
+
+```python Python
+# Create session with adaptive context
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="adaptive",
+    max_tokens=4000,
+    metadata={
+        "context_strategy": "adaptive",
+        "max_tokens": 4000,
+        "min_messages": 5
+    }
+)
+```
+
+### Summary-based Context
+
+Periodically summarize older messages:
+
+```python Python
+# Create session with summary-based context
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="summary",
+    summary_interval=10,
+    metadata={
+        "context_strategy": "summary",
+        "summary_interval": 10,
+        "summary_method": "recursive"
+    }
+)
+```
+
+## State Management
+
+### Session State
+
+Manage session-specific state:
+
+```python Python
+# Initialize session state
+session = client.sessions.create(
+    agent_id=agent.id,
+    metadata={
+        "state": {
+            "current_step": "initial",
+            "user_preferences": {},
+            "conversation_flow": "greeting"
+        }
+    }
+)
+
+# Update session state
+session = client.sessions.update(
+    session_id=session.id,
+    metadata={
+        "state": {
+            "current_step": "information_gathering",
+            "user_preferences": {
+                "language": "en",
+                "style": "formal"
+            },
+            "conversation_flow": "questions"
+        }
+    }
+)
+```
+
+### State Transitions
+
+Handle state transitions in tasks:
+
+```yaml
+main:
+  # Check current state
+  - evaluate:
+      current_state: session.metadata.state.current_step
+  
+  # State transition logic
+  - switch:
+      - case: _.current_state == "initial"
+        then:
+          - prompt: "Welcome! How can I help?"
+          - tool: update_session
+            arguments:
+              metadata:
+                state:
+                  current_step: "greeting"
+      
+      - case: _.current_state == "greeting"
+        then:
+          - prompt: "What specific information do you need?"
+          - tool: update_session
+            arguments:
+              metadata:
+                state:
+                  current_step: "information_gathering"
+```
+
+## Context Access
+
+### In Tasks
+
+Access context in task workflows:
+
+```yaml
+main:
+  # Access conversation context
+  - prompt:
+      - role: system
+        content: "Previous context: {{session.context}}"
+  
+  # Access session state
+  - evaluate:
+      current_step: session.metadata.state.current_step
+      user_prefs: session.metadata.state.user_preferences
+  
+  # Access agent context
+  - prompt:
+      - role: system
+        content: "Agent configuration: {{agent.metadata}}"
+```
+
+### In Tool Calls
+
+Use context in tool calls:
+
+```yaml
+tools:
+  - name: personalized_search
+    integration:
+      provider: search
+      method: query
+
+main:
+  - tool: personalized_search
+    arguments:
+      query: inputs.query
+      language: session.metadata.state.user_preferences.language
+      style: session.metadata.state.user_preferences.style
+```
+
+## State Persistence
+
+### Long-term State
+
+Store important information for future sessions:
+
+```python Python
+# Store user preferences in agent's document store
+client.agents.docs.create(
+    agent_id=agent.id,
+    title=f"User Preferences - {user.id}",
+    content=json.dumps(user_preferences),
+    metadata={
+        "type": "preferences",
+        "user_id": user.id
+    }
+)
+
+# Retrieve stored preferences
+preferences = client.agents.docs.search(
+    agent_id=agent.id,
+    metadata_filter={
+        "type": "preferences",
+        "user_id": user.id
+    }
+)
+```
+
+### State Recovery
+
+Recover state from previous sessions:
+
+```python Python
+# Find previous sessions
+previous_sessions = client.sessions.list(
+    user_id=user.id,
+    agent_id=agent.id,
+    status="completed"
+)
+
+# Create new session with recovered state
+if previous_sessions:
+    last_session = previous_sessions[0]
+    session = client.sessions.create(
+        agent_id=agent.id,
+        user_id=user.id,
+        metadata={
+            "state": last_session.metadata.state,
+            "recovered_from": last_session.id
+        }
+    )
+```
+
+## Best Practices
+
+1. **Context Management**
+   - Choose appropriate context strategy
+   - Monitor token usage
+   - Use summaries for long conversations
+
+2. **State Management**
+   - Keep state structure consistent
+   - Update state atomically
+   - Handle state transitions explicitly
+
+3. **Performance**
+   - Cache frequently accessed state
+   - Use appropriate context window sizes
+   - Clean up old state data
+
+## Example: Complex Context and State Management
+
+Here's an example combining various context and state management features:
+
+```python Python
+# Create a session with comprehensive context and state management
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id,
+    context_overflow="adaptive",
+    max_tokens=8000,
+    metadata={
+        "state": {
+            "conversation_flow": "initial",
+            "user_preferences": {},
+            "interaction_history": [],
+            "current_task": None
+        },
+        "context_management": {
+            "strategy": "adaptive",
+            "max_tokens": 8000,
+            "summary_threshold": 50
+        }
+    }
+)
+
+# Create a task that manages context and state
+task = client.tasks.create(
+    agent_id=agent.id,
+    yaml="""
+    name: Context-Aware Assistant
+    description: Handle user interactions with context awareness
+
+    tools:
+      - name: update_session
+        system:
+          resource: session
+          operation: update
+      
+      - name: search_history
+        integration:
+          provider: document_store
+          method: search
+
+    main:
+      # Load context and state
+      - evaluate:
+          current_flow: session.metadata.state.conversation_flow
+          preferences: session.metadata.state.user_preferences
+      
+      # Search user history
+      - tool: search_history
+        arguments:
+          user_id: session.user_id
+          type: "interaction_history"
+      
+      # Update context with historical information
+      - evaluate:
+          context_update:
+            history: _.search_results
+            last_interaction: "datetime.now().isoformat()"
+      
+      # Generate contextual response
+      - prompt:
+          - role: system
+            content: >
+              Current flow: {{_.current_flow}}
+              User preferences: {{_.preferences}}
+              Historical context: {{_.context_update.history}}
+          - role: user
+            content: "{{inputs.message}}"
+      
+      # Update state based on response
+      - tool: update_session
+        arguments:
+          metadata:
+            state:
+              conversation_flow: "in_progress"
+              last_response: _
+              interaction_history: "session.metadata.state.interaction_history + [{'timestamp': datetime.now().isoformat(), 'message': inputs.message, 'response': _}]"
+      
+      # Summarize if needed
+      - if: "len(session.metadata.state.interaction_history) > session.metadata.context_management.summary_threshold"
+        then:
+          - prompt:
+              - role: system
+                content: "Summarize this conversation history: {{session.metadata.state.interaction_history}}"
+          - tool: update_session
+            arguments:
+              metadata:
+                state:
+                  interaction_history: [{"summary": _}]
+    """
+)
+
+# Execute the task
+execution = client.executions.create(
+    task_id=task.id,
+    session_id=session.id,
+    input={
+        "message": "Tell me about my previous interactions"
+    }
+)
+
+# Monitor and handle state changes
+while True:
+    result = client.executions.get(execution.id)
+    if result.status == "succeeded":
+        # Update long-term state
+        client.agents.docs.create(
+            agent_id=agent.id,
+            title=f"Interaction Summary - {session.id}",
+            content=json.dumps(result.output),
+            metadata={
+                "type": "interaction_summary",
+                "session_id": session.id,
+                "user_id": session.user_id
+            }
+        )
+        break
+    elif result.status == "failed":
+        # Handle failure and restore state
+        client.sessions.update(
+            session_id=session.id,
+            metadata={
+                "state": {
+                    "conversation_flow": "error_recovery",
+                    "last_error": result.error
+                }
+            }
+        )
+        break
+    time.sleep(1)
+```
+
+## Next Steps
+
+1. [Learn about session management](/building-blocks/sessions/session-management)
+2. [Understand agent memory](/building-blocks/agents/agent-memory)
+3. [Explore task basics](/building-blocks/tasks/task-basics) 

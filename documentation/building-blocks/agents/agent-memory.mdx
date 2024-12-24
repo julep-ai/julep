@@ -1,0 +1,195 @@
+---
+title: 'Agent Memory'
+description: 'Understanding how agents maintain state and context across interactions'
+---
+
+## Overview
+
+Agent memory in Julep allows AI agents to maintain state and context across multiple interactions. This enables more coherent and contextually aware conversations and task executions.
+
+## Types of Memory
+
+Julep provides several types of memory for agents:
+
+### 1. Session Memory
+
+Session memory persists throughout a single conversation session:
+
+```python Python
+# Create a session with memory
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id,
+    context_overflow="adaptive"  # Memory management strategy
+)
+```
+
+### 2. Long-term Memory
+
+Long-term memory persists across sessions and is stored in the agent's document store:
+
+```python Python
+# Store information in long-term memory
+document = client.agents.docs.create(
+    agent_id=agent.id,
+    title="User Preferences",
+    content="User prefers dark mode and concise responses",
+    metadata={"type": "preferences"}
+)
+```
+
+### 3. Working Memory
+
+Working memory is available during task execution:
+
+```yaml
+main:
+  - evaluate:
+      remembered_value: "some_value"
+  
+  - prompt:
+      - role: user
+        content: "Use the remembered value: {{_.remembered_value}}"
+```
+
+## Memory Management
+
+### Context Window Management
+
+Julep offers different strategies for managing context windows:
+
+1. **Fixed**: Maintains a fixed number of messages
+2. **Adaptive**: Dynamically adjusts based on token usage
+3. **Summary**: Periodically summarizes older context
+
+```python Python
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="adaptive",
+    max_messages=50  # Optional: limit number of messages
+)
+```
+
+### Document Store
+
+The document store serves as long-term memory:
+
+```python Python
+# Store a document
+doc = client.agents.docs.create(
+    agent_id=agent.id,
+    title="Meeting Notes",
+    content="Important points from the meeting...",
+    metadata={"date": "2024-03-24"}
+)
+
+# Search stored documents
+results = client.agents.docs.search(
+    agent_id=agent.id,
+    text="meeting points",
+    metadata_filter={"date": "2024-03-24"}
+)
+```
+
+## Memory Access in Tasks
+
+Tasks can access different types of memory:
+
+```yaml
+main:
+  # Access session context
+  - prompt:
+      - role: system
+        content: "Previous context: {{session.context}}"
+  
+  # Search long-term memory
+  - tool: search_documents
+    arguments:
+      query: "user preferences"
+  
+  # Use working memory
+  - evaluate:
+      stored_value: "important_data"
+  - prompt:
+      - role: user
+        content: "Use the stored value: {{_.stored_value}}"
+```
+
+## Best Practices
+
+1. **Memory Organization**
+   - Use clear document titles and metadata
+   - Organize documents by type and purpose
+   - Regularly clean up outdated information
+
+2. **Context Management**
+   - Choose appropriate context overflow strategies
+   - Monitor token usage in sessions
+   - Use summaries for long conversations
+
+3. **Memory Usage**
+   - Store important information in long-term memory
+   - Use working memory for temporary data
+   - Leverage session memory for conversation context
+
+## Example: Complex Memory Usage
+
+Here's an example combining different types of memory:
+
+```python Python
+# Create a session with memory management
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id,
+    context_overflow="adaptive",
+    metadata={
+        "preferences": {
+            "language": "en",
+            "style": "formal"
+        }
+    }
+)
+
+# Store long-term information
+client.agents.docs.create(
+    agent_id=agent.id,
+    title="User Profile",
+    content="Detailed user preferences and history...",
+    metadata={
+        "type": "profile",
+        "last_updated": "2024-03-24"
+    }
+)
+
+# Create a task that uses multiple memory types
+task = client.tasks.create(
+    agent_id=agent.id,
+    yaml="""
+    main:
+      # Access session context
+      - prompt:
+          - role: system
+            content: "Session context: {{session.context}}"
+      
+      # Search long-term memory
+      - tool: search_documents
+        arguments:
+          query: "user profile"
+      
+      # Store in working memory
+      - evaluate:
+          profile_data: _.documents[0].content
+      
+      # Use the combined information
+      - prompt:
+          - role: user
+            content: "Use profile data: {{_.profile_data}}"
+    """
+)
+```
+
+## Next Steps
+
+1. [Learn about agent tools](/building-blocks/agents/agent-tools)
+2. [Understand task basics](/building-blocks/tasks/task-basics)
+3. [Explore session management](/building-blocks/sessions/session-management) 

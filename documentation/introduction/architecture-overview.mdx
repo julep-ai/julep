@@ -1,0 +1,117 @@
+---
+title: 'Architecture Overview'
+description: 'Technical overview of how Julep components work together'
+---
+
+## System Components
+
+<Frame>
+  <img
+    src="/images/julep-architecture.png"
+    alt="Julep Architecture"
+    style={{ height: "40vh" }}
+  />
+</Frame>
+
+## Core Components
+
+### Agents
+- AI-powered entities backed by large language models (LLMs)
+- Execute tasks and interact with users
+- Maintain persistent state and memory
+- Can be extended with tools and integrations
+
+### Sessions
+- Stateful interactions between agents and users
+- Maintain context across multiple exchanges
+- Support long-running conversations
+- Handle context management automatically
+
+### Tasks
+- Multi-step, programmatic workflows
+- Support various step types:
+  - Prompts and LLM interactions
+  - Tool calls and integrations
+  - Conditional logic and loops
+  - Parallel execution
+
+### Tools
+Four types of tool integrations:
+1. **User-defined Functions**
+   - Custom function signatures
+   - Client-side execution
+   - Flexible implementation
+
+2. **System Tools**
+   - Built-in platform capabilities
+   - Direct access to Julep APIs
+   - Automatic execution
+
+3. **Built-in Integrations**
+   - Pre-configured third-party tools
+   - Server-side execution
+   - Managed authentication
+
+4. **Direct API Calls**
+   - HTTP/REST endpoints
+   - Custom API integration
+   - Runtime parameter support
+
+## Infrastructure Components
+
+### Document Store
+- Vector database for semantic search
+- Document management system
+- Support for various file types
+- Automatic indexing and retrieval
+
+### Task Execution Engine
+- Distributed task processing
+- State management
+- Error handling and retries
+- Parallel execution support
+
+### API Layer
+- RESTful API endpoints
+- SDK support
+- Authentication and authorization
+- Rate limiting and quotas
+
+## Data Flow
+
+1. **Client Interaction**
+   - SDK or API calls initiate requests
+   - Authentication and validation
+   - Request routing
+
+2. **Task Processing**
+   - Task decomposition
+   - Step execution
+   - State management
+   - Tool integration
+
+3. **Response Handling**
+   - Result aggregation
+   - Error handling
+   - Client notification
+   - State persistence
+
+## Security Architecture
+
+### Authentication
+- API key-based access
+- Role-based permissions
+- Session management
+- Token validation
+
+### Data Protection
+- Encryption at rest
+- Secure communication
+- Data isolation
+- Access controls
+
+### Monitoring
+- Audit logging
+- Performance metrics
+- Error tracking
+- Usage analytics 

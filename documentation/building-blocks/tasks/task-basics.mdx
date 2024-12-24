@@ -1,0 +1,318 @@
+---
+title: 'Task Basics'
+description: 'Understanding task structure and components in Julep'
+---
+
+## Overview
+
+Tasks in Julep are the building blocks for creating complex AI workflows. They define a sequence of steps that an agent can execute, including prompts, tool calls, and control flow logic.
+
+## Task Structure
+
+A basic task consists of:
+
+```yaml
+name: Task Name
+description: Task description
+input_schema:  # Optional: Define expected input format
+  type: object
+  properties:
+    param1:
+      type: string
+      description: First parameter
+    param2:
+      type: integer
+      description: Second parameter
+
+tools:  # Optional: Define tools needed for the task
+  - name: tool1
+    integration:
+      provider: provider_name
+      method: method_name
+
+main:  # Required: Define the main workflow steps
+  - prompt: "First step"
+  - tool: tool1
+    arguments:
+      param: "value"
+```
+
+## Creating Tasks
+
+You can create tasks using either the Python or Node.js SDK:
+
+```python Python
+# Create a task using YAML
+task = client.tasks.create(
+    agent_id=agent.id,
+    yaml="""
+    name: Simple Task
+    description: A basic example task
+    
+    main:
+      - prompt: "Hello, how can I help?"
+    """
+)
+
+# Create a task using dictionary
+task = client.tasks.create(
+    agent_id=agent.id,
+    name="Simple Task",
+    description="A basic example task",
+    main=[
+        {"prompt": "Hello, how can I help?"}
+    ]
+)
+```
+
+```javascript JavaScript
+// Create a task using YAML
+const task = await client.tasks.create(
+    agentId,
+    `
+    name: Simple Task
+    description: A basic example task
+    
+    main:
+      - prompt: "Hello, how can I help?"
+    `
+);
+
+// Create a task using object
+const task = await client.tasks.create(
+    agentId,
+    {
+        name: "Simple Task",
+        description: "A basic example task",
+        main: [
+            {prompt: "Hello, how can I help?"}
+        ]
+    }
+);
+```
+
+## Task Components
+
+### 1. Input Schema
+
+Define expected input parameters:
+
+```yaml
+input_schema:
+  type: object
+  required: ["query"]
+  properties:
+    query:
+      type: string
+      description: Search query
+    limit:
+      type: integer
+      description: Maximum number of results
+      default: 10
+```
+
+### 2. Tools
+
+Declare tools needed for the task:
+
+```yaml
+tools:
+  - name: web_search
+    integration:
+      provider: brave
+      method: search
+  
+  - name: summarize
+    function:
+      parameters:
+        type: object
+        properties:
+          text:
+            type: string
+```
+
+### 3. Main Workflow
+
+Define the sequence of steps:
+
+```yaml
+main:
+  # Simple prompt
+  - prompt: "What can I help you with?"
+  
+  # Prompt with system and user messages
+  - prompt:
+      - role: system
+        content: "You are a helpful assistant"
+      - role: user
+        content: "Hello!"
+  
+  # Tool usage
+  - tool: web_search
+    arguments:
+      query: "{{inputs.query}}"
+  
+  # Evaluate expressions
+  - evaluate:
+      result_count: "len(_.search_results)"
+  
+  # Conditional logic
+  - if: "_.result_count > 0"
+    then:
+      - prompt: "Found {{_.result_count}} results"
+    else:
+      - prompt: "No results found"
+```
+
+## Executing Tasks
+
+Execute tasks with input parameters:
+
+```python Python
+# Execute a task
+execution = client.executions.create(
+    task_id=task.id,
+    input={
+        "query": "AI developments",
+        "limit": 5
+    }
+)
+
+# Monitor execution progress
+while True:
+    result = client.executions.get(execution.id)
+    if result.status in ["succeeded", "failed"]:
+        break
+    time.sleep(1)
+
+# Get the final result
+if result.status == "succeeded":
+    print(result.output)
+else:
+    print(f"Error: {result.error}")
+```
+
+## Context Variables
+
+Tasks have access to various context variables:
+
+1. **Input Variables**
+   ```yaml
+   main:
+     - prompt: "Searching for: {{inputs.query}}"
+   ```
+
+2. **Step Results**
+   ```yaml
+   main:
+     - evaluate:
+         value: 42
+     - prompt: "The value is {{_.value}}"
+   ```
+
+3. **Agent Context**
+   ```yaml
+   main:
+     - prompt: "Agent name: {{agent.name}}"
+   ```
+
+4. **Session Context**
+   ```yaml
+   main:
+     - prompt: "Session ID: {{session.id}}"
+   ```
+
+## Best Practices
+
+1. **Task Design**
+   - Keep tasks focused on a single purpose
+   - Use clear, descriptive names
+   - Document expected inputs and outputs
+
+2. **Error Handling**
+   - Validate inputs using input_schema
+   - Handle tool failures gracefully
+   - Provide meaningful error messages
+
+3. **Performance**
+   - Use parallel execution when possible
+   - Cache intermediate results
+   - Break large tasks into smaller subtasks
+
+## Example: Complex Task
+
+Here's an example of a more complex task:
+
+```yaml
+name: Research Assistant
+description: Research a topic and provide a summary
+
+input_schema:
+  type: object
+  required: ["topic"]
+  properties:
+    topic:
+      type: string
+      description: Research topic
+    depth:
+      type: string
+      enum: ["basic", "detailed", "comprehensive"]
+      default: "basic"
+
+tools:
+  - name: web_search
+    integration:
+      provider: brave
+      method: search
+  
+  - name: arxiv_search
+    integration:
+      provider: arxiv
+      method: search
+
+main:
+  # Initial research plan
+  - prompt:
+      - role: system
+        content: "You are a research assistant. Plan a research strategy for: {{inputs.topic}}"
+  
+  # Parallel research
+  - parallel:
+      - tool: web_search
+        arguments:
+          query: "{{inputs.topic}} latest developments"
+      
+      - tool: arxiv_search
+        arguments:
+          query: "{{inputs.topic}}"
+          max_results: 5
+  
+  # Process results
+  - evaluate:
+      web_results: _[0]
+      academic_results: _[1]
+  
+  # Generate summary based on depth
+  - if: inputs.depth == "basic"
+    then:
+      - prompt: "Create a brief summary of {{inputs.topic}}"
+    else:
+      - if: inputs.depth == "detailed"
+        then:
+          - prompt: "Create a detailed analysis of {{inputs.topic}}"
+        else:
+          - prompt: "Create a comprehensive report on {{inputs.topic}}"
+  
+  # Return formatted results
+  - return:
+      summary: _
+      sources:
+        web: _.web_results
+        academic: _.academic_results
+```
+
+## Next Steps
+
+1. [Learn about workflow steps](/building-blocks/tasks/workflow-steps)
+2. [Understand control flow](/building-blocks/tasks/control-flow)
+3. [Explore agent tools](/building-blocks/agents/agent-tools) 

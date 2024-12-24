@@ -1,33 +1,51 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: Introduction
+description: 'Introduction to the Julep REST API'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
-
-## Welcome
-
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+<CardGroup cols={2}>
+  <Card
+    title="Agent Endpoints"
+    icon="robot"
+    href="/api-reference/agents/create"
+  >
+    Create, update, and manage AI agents
+  </Card>
+  <Card
+    title="Task Endpoints"
+    icon="list-check"
+    href="/api-reference/tasks/create"
+  >
+    Create and execute AI tasks and workflows
+  </Card>
+  <Card
+    title="Session Endpoints"
+    icon="comments"
+    href="/api-reference/sessions/create"
+  >
+    Manage conversation sessions and state
+  </Card>
+  <Card
+    title="Tool Endpoints"
+    icon="plug"
+    href="/api-reference/tools/register"
+  >
+    Register and manage agent tools
+  </Card>
+</CardGroup>
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+<Note>
+  Authentication is done via API keys.
+</Note>
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+API keys are used to authenticate requests to the Julep API. They can be created in the [Julep dashboard](https://dashboard.julep.ai).
+
+To create an API key, go to the Julep dashboard and navigate to the "API Keys" section.
+
+To use an API key, include it in the `Authorization` header of your request.
+
+```
+Authorization: Bearer YOUR_API_KEY
 ```
