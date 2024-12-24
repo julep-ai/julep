@@ -3,13 +3,13 @@ from uuid import UUID
 
 import sqlvalidator
 from beartype import beartype
-
 from sqlglot import parse_one
+
 from ..utils import (
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
     partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
 )
 
 # Define the raw SQL query for getting tool args from metadata
@@ -52,7 +52,6 @@ tool_args_for_session_query = parse_one("""SELECT COALESCE(agents_md || sessions
     FROM sessions
     WHERE session_id = $2 AND developer_id = $4 LIMIT 1
 ) AS sessions_md""").sql(pretty=True)
-
 
 
 # @rewrap_exceptions(

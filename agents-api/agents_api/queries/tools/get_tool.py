@@ -1,19 +1,13 @@
 from typing import Any
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import Tool
-from sqlglot import parse_one
-from fastapi import HTTPException
-import asyncpg
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
-    partialclass
-)
-
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for getting a tool
 tools_query = parse_one("""
@@ -24,6 +18,7 @@ WHERE
     tool_id = $3
 LIMIT 1
 """).sql(pretty=True)
+
 
 @rewrap_exceptions(
     {

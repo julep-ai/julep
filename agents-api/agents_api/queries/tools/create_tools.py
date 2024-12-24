@@ -3,20 +3,19 @@
 from typing import Any
 from uuid import UUID
 
-from beartype import beartype
-from uuid_extensions import uuid7
-from fastapi import HTTPException
 import asyncpg
-from sqlglot import parse_one 
+from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateToolRequest, Tool
 from ...metrics.counters import increase_counter
-
 from ..utils import (
+    partialclass,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
-    partialclass,
 )
 
 # Define the raw SQL query for creating tools
@@ -50,15 +49,15 @@ RETURNING *
     {
         asyncpg.UniqueViolationError: partialclass(
             HTTPException,
-        status_code=409, 
-        detail="A tool with this name already exists for this agent"
-    ),
+            status_code=409,
+            detail="A tool with this name already exists for this agent",
+        ),
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
             detail="Agent not found",
         ),
-}
+    }
 )
 @wrap_in_class(
     Tool,
@@ -113,4 +112,3 @@ async def create_tools(
         tools_data,
         "fetchmany",
     )
-

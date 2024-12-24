@@ -13,6 +13,7 @@ from tests.fixtures import pg_dsn, test_agent, test_developer, test_doc, test_us
 
 EMBEDDING_SIZE: int = 1024
 
+
 @test("query: create user doc")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     pool = await create_db_pool(dsn=dsn)
@@ -275,6 +276,7 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
 
     assert len(result) >= 1
     assert result[0].metadata is not None
+
 
 @test("query: search docs by hybrid")
 async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):

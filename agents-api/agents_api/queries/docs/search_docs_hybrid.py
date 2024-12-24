@@ -1,12 +1,11 @@
-from typing import List, Any, Literal
+from typing import Any, List, Literal
 from uuid import UUID
 
-from beartype import beartype
-
-from ...autogen.openapi_model import DocReference
 import asyncpg
+from beartype import beartype
 from fastapi import HTTPException
 
+from ...autogen.openapi_model import DocReference
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Raw query for hybrid search
@@ -46,7 +45,6 @@ SELECT * FROM search_hybrid(
         **d,
     },
 )
-
 @pg_query
 @beartype
 async def search_docs_hybrid(

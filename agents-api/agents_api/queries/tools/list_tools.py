@@ -1,18 +1,13 @@
 from typing import Literal
 from uuid import UUID
 
-from beartype import beartype
 import asyncpg
+from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import Tool
-from sqlglot import parse_one
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
-    partialclass
-)
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for listing tools
 tools_query = parse_one("""
@@ -30,13 +25,13 @@ LIMIT $3 OFFSET $4;
 
 
 @rewrap_exceptions(
-{
-    asyncpg.ForeignKeyViolationError: partialclass(
-        HTTPException,
-        status_code=400,
-        detail="Developer or agent not found",
-    ),
-}
+    {
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Developer or agent not found",
+        ),
+    }
 )
 @wrap_in_class(
     Tool,

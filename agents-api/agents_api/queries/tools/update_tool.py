@@ -1,24 +1,18 @@
+import json
 from typing import Any, TypeVar
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
     UpdateToolRequest,
 )
-import asyncpg
-import json
-from fastapi import HTTPException
-
-from sqlglot import parse_one
 from ...metrics.counters import increase_counter
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
-    partialclass
-)
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for updating a tool
 tools_query = parse_one("""
@@ -37,18 +31,18 @@ RETURNING *;
 
 
 @rewrap_exceptions(
-{
-    asyncpg.UniqueViolationError: partialclass(
-        HTTPException,
-        status_code=409,
-        detail="A tool with this name already exists for this agent",
-    ),
-    json.JSONDecodeError: partialclass(
-        HTTPException,
-        status_code=400,
-        detail="Invalid tool specification format",
-    ),
-}
+    {
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=409,
+            detail="A tool with this name already exists for this agent",
+        ),
+        json.JSONDecodeError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid tool specification format",
+        ),
+    }
 )
 @wrap_in_class(
     ResourceUpdatedResponse,

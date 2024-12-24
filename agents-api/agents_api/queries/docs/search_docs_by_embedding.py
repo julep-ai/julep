@@ -1,12 +1,12 @@
 from typing import Any, List, Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-import asyncpg
 
 from ...autogen.openapi_model import DocReference
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Raw query for vector search
 search_docs_by_embedding_query = """
@@ -20,6 +20,7 @@ SELECT * FROM search_by_vector(
     $6 -- metadata_filter
 )
 """
+
 
 @rewrap_exceptions(
     {

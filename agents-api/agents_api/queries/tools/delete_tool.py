@@ -1,20 +1,14 @@
 from typing import Any
 from uuid import UUID
 
-from fastapi import HTTPException
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from sqlglot import parse_one
-import  asyncpg
-
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
-    partialclass
-)
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for deleting a tool
 tools_query = parse_one("""
@@ -29,14 +23,14 @@ RETURNING *
 
 
 @rewrap_exceptions(
-{
+    {
         # Handle foreign key constraint
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
             status_code=404,
             detail="Developer or agent not found",
         ),
-}
+    }
 )
 @wrap_in_class(
     ResourceDeletedResponse,
