@@ -14,7 +14,6 @@ from ..utils import (
     rewrap_exceptions,
     wrap_in_class,
 )
-from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -33,7 +32,6 @@ T = TypeVar("T")
 #     transform=lambda d: {"id": d["execution_id"], **d},
 #     _kind="inserted",
 # )
-# @cozo_query
 # @increase_counter("create_execution")
 # @beartype
 async def create_execution(

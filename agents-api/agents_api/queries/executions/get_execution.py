@@ -9,7 +9,6 @@ from ..utils import (
     pg_query,
     wrap_in_class,
 )
-from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -27,6 +26,7 @@ LIMIT 1
 #         AssertionError: partialclass(HTTPException, status_code=404),
 #         QueryException: partialclass(HTTPException, status_code=400),
 #         ValidationError: partialclass(HTTPException, status_code=400),
+
 #         TypeError: partialclass(HTTPException, status_code=400),
 #     }
 # )

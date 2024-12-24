@@ -53,7 +53,6 @@ T = TypeVar("T")
         ],
     },
 )
-@cozo_query
 @beartype
 async def prepare_execution_input(
     *,

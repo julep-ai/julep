@@ -7,6 +7,7 @@ from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import Transition
+
 from ..utils import cozo_query, partialclass, rewrap_exceptions, wrap_in_class
 
 ModelT = TypeVar("ModelT", bound=Any)
@@ -21,7 +22,6 @@ T = TypeVar("T")
     }
 )
 @wrap_in_class(Transition)
-@cozo_query
 @beartype
 async def list_execution_transitions(
     *,

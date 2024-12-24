@@ -49,8 +49,6 @@ s3_secret_key: str | None = env.str("S3_SECRET_KEY", default=None)
 
 # Cozo
 # ----
-cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
-cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
 summarization_model_name: str = env.str(
     "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
 )

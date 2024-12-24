@@ -23,7 +23,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -42,7 +41,6 @@ T = TypeVar("T")
     transform=lambda d: {"id": d["execution_id"], **d},
     _kind="inserted",
 )
-@cozo_query
 @increase_counter("update_execution")
 @beartype
 async def update_execution(
