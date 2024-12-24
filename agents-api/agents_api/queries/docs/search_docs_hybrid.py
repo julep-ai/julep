@@ -4,6 +4,7 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import DocReference
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
@@ -15,12 +16,12 @@ SELECT * FROM search_hybrid(
     $2, -- text_query
     $3::vector(1024), -- embedding
     $4::text[], -- owner_types
-    $UUID_LIST::uuid[], -- owner_ids 
-    $5, -- k
-    $6, -- alpha
-    $7, -- confidence
-    $8, -- metadata_filter
-    $9 -- search_language
+    $5::uuid[], -- owner_ids 
+    $6, -- k
+    $7, -- alpha
+    $8, -- confidence
+    $9, -- metadata_filter
+    $10 -- search_language
 )
 """
 
@@ -91,17 +92,14 @@ async def search_docs_hybrid(
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
 
-    # NOTE: Manually replace uuids list coz asyncpg isnt sending it correctly
-    owner_ids_pg_str = f"ARRAY['{'\', \''.join(owner_ids)}']"
-    query = search_docs_hybrid_query.replace("$UUID_LIST", owner_ids_pg_str)
-
     return (
-        query,
+        search_docs_hybrid_query,
         [
             developer_id,
             text_query,
             embedding_str,
             owner_types,
+            owner_ids,
             k,
             alpha,
             confidence,
