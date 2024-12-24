@@ -5,13 +5,14 @@ from beartype import beartype
 from temporalio import activity
 
 from ... import queries
-from ...env import testing, db_dsn 
-
 from ...clients.pg import create_db_pool
+from ...env import db_dsn, testing
+
 
 @alru_cache(maxsize=1)
 async def get_db_pool(dsn: str):
     return await create_db_pool(dsn=dsn)
+
 
 @beartype
 async def pg_query_step(
