@@ -48,7 +48,7 @@ async def create_temporal_lookup(
     developer_id: UUID,  # TODO: what to do with this parameter?
     execution_id: UUID,
     workflow_handle: WorkflowHandle,
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     developer_id = str(developer_id)
     execution_id = str(execution_id)
 

@@ -32,7 +32,7 @@ LIMIT 1;
 async def get_temporal_workflow_data(
     *,
     execution_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     # Executions are allowed direct GET access if they have execution_id
     execution_id = str(execution_id)
 

@@ -33,7 +33,7 @@ async def lookup_temporal_data(
     *,
     developer_id: UUID,  # TODO: what to do with this parameter?
     execution_id: UUID,
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     developer_id = str(developer_id)
     execution_id = str(execution_id)
 

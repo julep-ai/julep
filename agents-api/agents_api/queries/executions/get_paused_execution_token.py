@@ -36,7 +36,7 @@ async def get_paused_execution_token(
     *,
     developer_id: UUID,
     execution_id: UUID,
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     execution_id = str(execution_id)
 
     # TODO: what to do with this query?

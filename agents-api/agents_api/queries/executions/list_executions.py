@@ -53,7 +53,7 @@ async def list_executions(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     return (
         sql_query,
         [

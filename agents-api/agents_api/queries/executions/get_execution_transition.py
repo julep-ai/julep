@@ -53,7 +53,7 @@ async def get_execution_transition(
     developer_id: UUID,  # TODO: what to do with this parameter?
     transition_id: UUID | None = None,
     task_token: str | None = None,
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     # At least one of `transition_id` or `task_token` must be provided
     assert (
         transition_id or task_token

@@ -45,7 +45,7 @@ LIMIT 1;
 async def get_execution(
     *,
     execution_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     return (
         sql_query,
         [execution_id],

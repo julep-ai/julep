@@ -33,5 +33,5 @@ async def count_executions(
     *,
     developer_id: UUID,
     task_id: UUID,
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     return (sql_query, [developer_id, task_id])

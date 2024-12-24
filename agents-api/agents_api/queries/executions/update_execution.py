@@ -10,7 +10,7 @@ from ...autogen.openapi_model import (
 from ...common.protocol.tasks import (
     valid_previous_statuses as valid_previous_statuses_map,
 )
-from ...common.utils.cozo import cozo_process_mutate_data
+# from ...common.utils.cozo import cozo_process_mutate_data
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
@@ -54,7 +54,7 @@ async def update_execution(
     data: UpdateExecutionRequest,
     output: dict | Any | None = None,
     error: str | None = None,
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     developer_id = str(developer_id)
     task_id = str(task_id)
     execution_id = str(execution_id)

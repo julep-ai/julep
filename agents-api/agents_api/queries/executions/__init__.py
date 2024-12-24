@@ -2,10 +2,7 @@
 
 from .count_executions import count_executions
 from .create_execution import create_execution
-from .create_execution_transition import (
-    create_execution_transition,
-    create_execution_transition_async,
-)
+from .create_execution_transition import create_execution_transition
 from .get_execution import get_execution
 from .get_execution_transition import get_execution_transition
 from .list_execution_transitions import list_execution_transitions

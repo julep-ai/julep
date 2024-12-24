@@ -24,6 +24,7 @@ INSERT INTO executions
     execution_id,
     input,
     metadata,
+    task_version
 )
 VALUES
 (
@@ -31,7 +32,8 @@ VALUES
     $2,
     $3,
     $4,
-    $5
+    $5,
+    1
 )
 RETURNING *;
 """
@@ -58,7 +60,7 @@ async def create_execution(
     task_id: UUID,
     execution_id: UUID | None = None,
     data: Annotated[CreateExecutionRequest | dict, dict_like(CreateExecutionRequest)],
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     execution_id = execution_id or uuid7()
 
     # developer_id = str(developer_id)

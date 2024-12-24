@@ -85,7 +85,7 @@ async def prepare_execution_input(
     developer_id: UUID,
     task_id: UUID,
     execution_id: UUID,
-) -> tuple[list[str], dict]:
+) -> tuple[str, list]:
     dummy_agent_id = UUID(int=0)
 
     return (

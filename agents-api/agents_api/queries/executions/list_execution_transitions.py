@@ -58,7 +58,7 @@ async def list_execution_transitions(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-) -> tuple[str, dict]:
+) -> tuple[str, list]:
     return (
         sql_query,
         [

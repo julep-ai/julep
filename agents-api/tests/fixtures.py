@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from uuid_extensions import uuid7
 from ward import fixture
 
+from temporalio.client import WorkflowHandle
 from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
     CreateDocRequest,
@@ -17,6 +18,8 @@ from agents_api.autogen.openapi_model import (
     CreateTaskRequest,
     CreateToolRequest,
     CreateUserRequest,
+    CreateExecutionRequest,
+    CreateTransitionRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
@@ -25,9 +28,9 @@ from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import get_developer
 from agents_api.queries.docs.create_doc import create_doc
 
-# from agents_api.queries.executions.create_execution import create_execution
-# from agents_api.queries.executions.create_execution_transition import create_execution_transition
-# from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
+from agents_api.queries.executions.create_execution import create_execution
+from agents_api.queries.executions.create_execution_transition import create_execution_transition
+from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
 from agents_api.queries.files.create_file import create_file
 from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
@@ -254,73 +257,73 @@ async def test_session(
 #         yield task
 
 
-# @fixture(scope="global")
-# async def test_execution(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     task=test_task,
-# ):
-#     workflow_handle = WorkflowHandle(
-#         client=None,
-#         id="blah",
-#     )
+@fixture(scope="global")
+async def test_execution(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="blah",
+    )
 
-#     async with get_pg_client(dsn=dsn) as client:
-#         execution = await create_execution(
-#             developer_id=developer_id,
-#             task_id=task.id,
-#             data=CreateExecutionRequest(input={"test": "test"}),
-#             client=client,
-#         )
-#         await create_temporal_lookup(
-#             developer_id=developer_id,
-#             execution_id=execution.id,
-#             workflow_handle=workflow_handle,
-#             client=client,
-#         )
-#         yield execution
+    execution = await create_execution(
+        developer_id=developer_id,
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "test"}),
+        connection_pool=pool,
+    )
+    await create_temporal_lookup(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        workflow_handle=workflow_handle,
+        connection_pool=pool,
+    )
+    yield execution
 
 
-# @fixture(scope="test")
-# async def test_execution_started(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     task=test_task,
-# ):
-#     workflow_handle = WorkflowHandle(
-#         client=None,
-#         id="blah",
-#     )
+@fixture(scope="test")
+async def test_execution_started(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="blah",
+    )
 
-#     async with get_pg_client(dsn=dsn) as client:
-#         execution = await create_execution(
-#             developer_id=developer_id,
-#             task_id=task.id,
-#             data=CreateExecutionRequest(input={"test": "test"}),
-#             client=client,
-#         )
-#         await create_temporal_lookup(
-#             developer_id=developer_id,
-#             execution_id=execution.id,
-#             workflow_handle=workflow_handle,
-#             client=client,
-#         )
+    execution = await create_execution(
+        developer_id=developer_id,
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "test"}),
+        connection_pool=pool,
+    )
+    await create_temporal_lookup(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        workflow_handle=workflow_handle,
+        connection_pool=pool,
+    )
 
-#         # Start the execution
-#         await create_execution_transition(
-#             developer_id=developer_id,
-#             task_id=task.id,
-#             execution_id=execution.id,
-#             data=CreateTransitionRequest(
-#                 type="init",
-#                 output={},
-#                 current={"workflow": "main", "step": 0},
-#                 next={"workflow": "main", "step": 0},
-#             ),
-#             update_execution_status=True,
-#             client=client,
-#         )
-#         yield execution
+    # Start the execution
+    await create_execution_transition(
+        developer_id=developer_id,
+        task_id=task.id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="init",
+            output={},
+            current={"workflow": "main", "step": 0},
+            next={"workflow": "main", "step": 0},
+        ),
+        update_execution_status=True,
+        connection_pool=pool,
+    )
+    yield execution
 
 
 # @fixture(scope="global")

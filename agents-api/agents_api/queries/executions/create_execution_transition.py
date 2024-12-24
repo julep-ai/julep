@@ -9,7 +9,7 @@ from ...autogen.openapi_model import (
     UpdateExecutionRequest,
 )
 from ...common.protocol.tasks import transition_to_execution_status, valid_transitions
-from ...common.utils.cozo import cozo_process_mutate_data
+# from ...common.utils.cozo import cozo_process_mutate_data
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
@@ -101,7 +101,6 @@ wrap_in_class(
         "next": d["next"] and {"workflow": d["next"][0], "step": d["next"][1]},
     },
     one=True,
-    _kind="inserted",
 )
 
 
