@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import sys
 from uuid import UUID
 
 from fastapi.testclient import TestClient
@@ -398,6 +399,8 @@ async def make_request(client=client, developer_id=test_developer_id):
 
         if multi_tenant_mode:
             headers["X-Developer-Id"] = str(developer_id)
+
+        headers["Content-Length"] = str(sys.getsizeof(kwargs.get("json", {})))
 
         return client.request(method, url, headers=headers, **kwargs)
 

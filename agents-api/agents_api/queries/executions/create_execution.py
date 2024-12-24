@@ -1,20 +1,10 @@
 from typing import Annotated, Any, TypeVar
 from uuid import UUID
 
-from beartype import beartype
-from fastapi import HTTPException
-from pydantic import ValidationError
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateExecutionRequest, Execution
+from ...autogen.openapi_model import CreateExecutionRequest
 from ...common.utils.types import dict_like
-from ...metrics.counters import increase_counter
-from ..utils import (
-    partialclass,
-    rewrap_exceptions,
-    wrap_in_class,
-)
-from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")

@@ -111,13 +111,14 @@ async def create_task_execution(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid request arguments schema",
         )
-    except QueryException as e:
-        if e.code == "transact::assertion_failure":
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
 
-        raise
+    # except QueryException as e:
+    #     if e.code == "transact::assertion_failure":
+    #         raise HTTPException(
+    #             status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+    #         )
+
+    #     raise
 
     # get developer data
     developer: Developer = await get_developer(developer_id=x_developer_id)

@@ -24,6 +24,7 @@ async def upload_file_content(file_id: UUID, content: str) -> None:
     await async_s3.add_object(key, content_bytes)
 
 
+# TODO: Use streaming for large payloads
 @router.post("/files", status_code=HTTP_201_CREATED, tags=["files"])
 async def create_file(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],

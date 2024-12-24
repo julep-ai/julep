@@ -159,6 +159,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
     result = await list_tasks(
         developer_id=developer_id,
+        agent_id=agent.id,
         limit=10,
         offset=0,
         sort_by="updated_at",
@@ -179,6 +180,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
     result = await list_tasks(
         developer_id=developer_id,
+        agent_id=agent.id,
         connection_pool=pool,
     )
     assert result is not None

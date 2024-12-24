@@ -19,6 +19,7 @@ async def fetch_file_content(file_id: UUID) -> str:
     return base64.b64encode(content).decode("utf-8")
 
 
+# TODO: Use streaming for large payloads
 @router.get("/files", tags=["files"])
 async def list_files(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],

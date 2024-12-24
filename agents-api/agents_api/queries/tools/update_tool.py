@@ -1,5 +1,4 @@
 import json
-from typing import Any, TypeVar
 from uuid import UUID
 
 import asyncpg

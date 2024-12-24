@@ -10,7 +10,6 @@ from tests.fixtures import (
     # test_execution,
     test_task,
 )
-from tests.utils import patch_testing_temporal
 
 
 @test("route: unauthorized should fail")
