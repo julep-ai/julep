@@ -4,13 +4,17 @@ from uuid import UUID
 import sqlvalidator
 from beartype import beartype
 
-from ...exceptions import InvalidSQLQuery
+from sqlglot import parse_one
 from ..utils import (
     pg_query,
     wrap_in_class,
+    rewrap_exceptions,
+    partialclass,
 )
 
-tools_args_for_task_query = """SELECT COALESCE(agents_md || tasks_md, agents_md, tasks_md, '{}') as values FROM (
+# Define the raw SQL query for getting tool args from metadata
+tools_args_for_task_query = parse_one("""
+SELECT COALESCE(agents_md || tasks_md, agents_md, tasks_md, '{}') as values FROM (
     SELECT
         CASE WHEN $3 = 'x-integrations-args' then metadata->'x-integrations-args'
         WHEN $3 = 'x-api_call-args' then metadata->'x-api_call-args'
@@ -27,13 +31,10 @@ tools_args_for_task_query = """SELECT COALESCE(agents_md || tasks_md, agents_md,
         WHEN $3 = 'x-api_call-setup' then metadata->'x-api_call-setup' END AS tasks_md
     FROM tasks
     WHERE task_id = $2 AND developer_id = $4 LIMIT 1
-) AS tasks_md"""
+) AS tasks_md""").sql(pretty=True)
 
-
-# if not tools_args_for_task_query.is_valid():
-#     raise InvalidSQLQuery("tools_args_for_task_query")
-
-tool_args_for_session_query = """SELECT COALESCE(agents_md || sessions_md, agents_md, sessions_md, '{}') as values FROM (
+# Define the raw SQL query for getting tool args from metadata for a session
+tool_args_for_session_query = parse_one("""SELECT COALESCE(agents_md || sessions_md, agents_md, sessions_md, '{}') as values FROM (
     SELECT
         CASE WHEN $3 = 'x-integrations-args' then metadata->'x-integrations-args'
         WHEN $3 = 'x-api_call-args' then metadata->'x-api_call-args'
@@ -50,11 +51,8 @@ tool_args_for_session_query = """SELECT COALESCE(agents_md || sessions_md, agent
         WHEN $3 = 'x-api_call-setup' then metadata->'x-api_call-setup' END AS tasks_md
     FROM sessions
     WHERE session_id = $2 AND developer_id = $4 LIMIT 1
-) AS sessions_md"""
+) AS sessions_md""").sql(pretty=True)
 
-
-# if not tool_args_for_session_query.is_valid():
-#     raise InvalidSQLQuery("tool_args_for_session")
 
 
 # @rewrap_exceptions(

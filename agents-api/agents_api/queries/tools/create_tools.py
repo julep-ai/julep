@@ -1,26 +1,26 @@
 """This module contains functions for creating tools in the CozoDB database."""
 
-from typing import Any, TypeVar
+from typing import Any
 from uuid import UUID
 
-import sqlvalidator
 from beartype import beartype
 from uuid_extensions import uuid7
+from fastapi import HTTPException
+import asyncpg
+from sqlglot import parse_one 
 
 from ...autogen.openapi_model import CreateToolRequest, Tool
-from ...exceptions import InvalidSQLQuery
 from ...metrics.counters import increase_counter
+
 from ..utils import (
     pg_query,
-    # rewrap_exceptions,
+    rewrap_exceptions,
     wrap_in_class,
+    partialclass,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-
-sql_query = """INSERT INTO tools
+# Define the raw SQL query for creating tools
+tools_query = parse_one("""INSERT INTO tools
 (
     developer_id, 
     agent_id, 
@@ -43,20 +43,23 @@ WHERE NOT EXISTS (
 	WHERE (agent_id, name) = ($2, $5)
 )
 RETURNING *
-"""
+""").sql(pretty=True)
 
 
-# if not sql_query.is_valid():
-#     raise InvalidSQLQuery("create_tools")
-
-
-# @rewrap_exceptions(
-#     {
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#         AssertionError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+        status_code=409, 
+        detail="A tool with this name already exists for this agent"
+    ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="Agent not found",
+        ),
+}
+)
 @wrap_in_class(
     Tool,
     transform=lambda d: {
@@ -106,7 +109,8 @@ async def create_tools(
     ]
 
     return (
-        sql_query,
+        tools_query,
         tools_data,
         "fetchmany",
     )
+

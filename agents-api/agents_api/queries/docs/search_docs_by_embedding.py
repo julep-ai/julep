@@ -3,10 +3,12 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
+import asyncpg
 
 from ...autogen.openapi_model import DocReference
-from ..utils import pg_query, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class, partialclass
 
+# Raw query for vector search
 search_docs_by_embedding_query = """
 SELECT * FROM search_by_vector(
     $1, -- developer_id
@@ -19,7 +21,15 @@ SELECT * FROM search_by_vector(
 )
 """
 
-
+@rewrap_exceptions(
+    {
+        asyncpg.UniqueViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer does not exist.",
+        )
+    }
+)
 @wrap_in_class(
     DocReference,
     transform=lambda d: {

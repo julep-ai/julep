@@ -1,20 +1,21 @@
-from typing import Any, Literal, TypeVar
+from typing import Literal
 from uuid import UUID
 
-import sqlvalidator
 from beartype import beartype
+import asyncpg
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Tool
-from ...exceptions import InvalidSQLQuery
+from sqlglot import parse_one
 from ..utils import (
     pg_query,
     wrap_in_class,
+    rewrap_exceptions,
+    partialclass
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-sql_query = """
+# Define the raw SQL query for listing tools
+tools_query = parse_one("""
 SELECT * FROM tools
 WHERE
     developer_id = $1 AND
@@ -25,19 +26,18 @@ ORDER BY
     CASE WHEN $5 = 'updated_at' AND $6 = 'desc' THEN tools.updated_at END DESC NULLS LAST,
     CASE WHEN $5 = 'updated_at' AND $6 = 'asc' THEN tools.updated_at END ASC NULLS LAST
 LIMIT $3 OFFSET $4;
-"""
-
-# if not sql_query.is_valid():
-#     raise InvalidSQLQuery("list_tools")
+""").sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+{
+    asyncpg.ForeignKeyViolationError: partialclass(
+        HTTPException,
+        status_code=400,
+        detail="Developer or agent not found",
+    ),
+}
+)
 @wrap_in_class(
     Tool,
     transform=lambda d: {
@@ -65,7 +65,7 @@ async def list_tools(
     agent_id = str(agent_id)
 
     return (
-        sql_query,
+        tools_query,
         [
             developer_id,
             agent_id,

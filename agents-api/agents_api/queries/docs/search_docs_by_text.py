@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from ...autogen.openapi_model import DocReference
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# Raw query for text search
 search_docs_text_query = """
 SELECT * FROM search_by_text(
     $1, -- developer_id

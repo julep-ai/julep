@@ -8,10 +8,10 @@ from agents_api.queries.docs.get_doc import get_doc
 from agents_api.queries.docs.list_docs import list_docs
 from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
-
-# from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
+from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
 from tests.fixtures import pg_dsn, test_agent, test_developer, test_doc, test_user
 
+EMBEDDING_SIZE: int = 1024
 
 @test("query: create user doc")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
@@ -268,6 +268,38 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
         developer_id=developer.id,
         owners=[("agent", agent.id)],
         query_embedding=[1.0] * 1024,
+        k=3,  # Add k parameter
+        metadata_filter={"test": "test"},  # Add metadata filter
+        connection_pool=pool,
+    )
+
+    assert len(result) >= 1
+    assert result[0].metadata is not None
+
+@test("query: search docs by hybrid")
+async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a test document
+    await create_doc(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        data=CreateDocRequest(
+            title="Hello",
+            content="The world is a funny little thing",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        connection_pool=pool,
+    )
+
+    # Search using the correct parameter types
+    result = await search_docs_hybrid(
+        developer_id=developer.id,
+        owners=[("agent", agent.id)],
+        text_query="funny thing",
+        embedding=[1.0] * 1024,
         k=3,  # Add k parameter
         metadata_filter={"test": "test"},  # Add metadata filter
         connection_pool=pool,

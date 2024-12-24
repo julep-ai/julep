@@ -1,39 +1,39 @@
-from typing import Any, TypeVar
+from typing import Any
 from uuid import UUID
 
-import sqlvalidator
 from beartype import beartype
 
 from ...autogen.openapi_model import Tool
-from ...exceptions import InvalidSQLQuery
+from sqlglot import parse_one
+from fastapi import HTTPException
+import asyncpg
 from ..utils import (
     pg_query,
     wrap_in_class,
+    rewrap_exceptions,
+    partialclass
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
 
-sql_query = """
+# Define the raw SQL query for getting a tool
+tools_query = parse_one("""
 SELECT * FROM tools
 WHERE
     developer_id = $1 AND
     agent_id = $2 AND
     tool_id = $3
 LIMIT 1
-"""
+""").sql(pretty=True)
 
-# if not sql_query.is_valid():
-#     raise InvalidSQLQuery("get_tool")
-
-
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="Developer or agent not found",
+        ),
+    }
+)
 @wrap_in_class(
     Tool,
     transform=lambda d: {
@@ -56,7 +56,7 @@ async def get_tool(
     tool_id = str(tool_id)
 
     return (
-        sql_query,
+        tools_query,
         [
             developer_id,
             agent_id,
