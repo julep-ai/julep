@@ -16,46 +16,6 @@ from ...queries.docs.create_doc import create_doc as create_doc_query
 from .router import router
 
 
-async def run_embed_docs_task(
-    *,
-    developer_id: UUID,
-    doc_id: UUID,
-    title: str,
-    content: list[str],
-    embed_instruction: str | None = None,
-    job_id: UUID,
-    background_tasks: BackgroundTasks,
-    client: TemporalClient | None = None,
-):
-    from ...workflows.embed_docs import EmbedDocsWorkflow
-
-    client = client or (await temporal.get_client())
-
-    embed_payload = EmbedDocsPayload(
-        developer_id=developer_id,
-        doc_id=doc_id,
-        content=content,
-        title=title,
-        # Default embed instruction for docs. See https://docs.voyageai.com/docs/embeddings
-        embed_instruction=embed_instruction or "Represent the document for retrieval: ",
-    )
-
-    handle = await client.start_workflow(
-        EmbedDocsWorkflow.run,
-        embed_payload,
-        task_queue=temporal_task_queue,
-        id=str(job_id),
-        retry_policy=DEFAULT_RETRY_POLICY,
-    )
-
-    # TODO: Remove this conditional once we have a way to run workflows in
-    #       a test environment.
-    if not testing:
-        background_tasks.add_task(handle.result)
-
-    return handle
-
-
 @router.post("/users/{user_id}/docs", status_code=HTTP_201_CREATED, tags=["docs"])
 async def create_user_doc(
     user_id: UUID,
@@ -83,21 +43,7 @@ async def create_user_doc(
         data=data,
     )
 
-    embed_job_id = uuid7()
-
-    await run_embed_docs_task(
-        developer_id=x_developer_id,
-        doc_id=doc.id,
-        title=doc.title,
-        content=doc.content,
-        embed_instruction=data.embed_instruction,
-        job_id=embed_job_id,
-        background_tasks=background_tasks,
-    )
-
-    return ResourceCreatedResponse(
-        id=doc.id, created_at=doc.created_at, jobs=[embed_job_id]
-    )
+    return ResourceCreatedResponse(id=doc.id, created_at=doc.created_at, jobs=[])
 
 
 @router.post("/agents/{agent_id}/docs", status_code=HTTP_201_CREATED, tags=["docs"])
@@ -114,18 +60,4 @@ async def create_agent_doc(
         data=data,
     )
 
-    embed_job_id = uuid7()
-
-    await run_embed_docs_task(
-        developer_id=x_developer_id,
-        doc_id=doc.id,
-        title=doc.title,
-        content=doc.content,
-        embed_instruction=data.embed_instruction,
-        job_id=embed_job_id,
-        background_tasks=background_tasks,
-    )
-
-    return ResourceCreatedResponse(
-        id=doc.id, created_at=doc.created_at, jobs=[embed_job_id]
-    )
+    return ResourceCreatedResponse(id=doc.id, created_at=doc.created_at, jobs=[])

@@ -228,7 +228,7 @@ def wrap_in_class(
         transform = transform or (lambda x: x)
 
         if one:
-            assert len(data) == 1, "Expected one result, got none"
+            assert len(data) == 1, f"Expected one result, got {len(data)}"
             obj: ModelT = cls(**transform(data[0]))
             return obj
 

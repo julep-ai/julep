@@ -192,13 +192,14 @@ async def create_or_update_task(
             tool.type,
             tool.name,
             tool.description,
-            getattr(tool, tool.type),  # spec
+            getattr(tool, tool.type)
+            and getattr(tool, tool.type).model_dump(mode="json"),  # spec
         ]
         for tool in data.tools or []
     ]
 
     # Generate workflows from task data using task_to_spec
-    workflows_spec = task_to_spec(data).model_dump(exclude_none=True, mode="json")
+    workflows_spec = task_to_spec(data).model_dump(mode="json")
     workflow_params = []
     for workflow in workflows_spec.get("workflows", []):
         workflow_name = workflow.get("name")
@@ -211,7 +212,7 @@ async def create_or_update_task(
                     workflow_name,  # $3
                     step_idx,  # $4
                     step["kind_"],  # $5
-                    step[step["kind_"]],  # $6
+                    step,  # $6
                 ]
             )
 

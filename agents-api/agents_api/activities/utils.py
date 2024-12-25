@@ -296,28 +296,28 @@ def get_handler(system: SystemDef) -> Callable:
         The base handler function.
     """
 
-    from ..models.agent.create_agent import create_agent as create_agent_query
-    from ..models.agent.delete_agent import delete_agent as delete_agent_query
-    from ..models.agent.get_agent import get_agent as get_agent_query
-    from ..models.agent.list_agents import list_agents as list_agents_query
-    from ..models.agent.update_agent import update_agent as update_agent_query
-    from ..models.docs.delete_doc import delete_doc as delete_doc_query
-    from ..models.docs.list_docs import list_docs as list_docs_query
-    from ..models.session.create_session import create_session as create_session_query
-    from ..models.session.delete_session import delete_session as delete_session_query
-    from ..models.session.get_session import get_session as get_session_query
-    from ..models.session.list_sessions import list_sessions as list_sessions_query
-    from ..models.session.update_session import update_session as update_session_query
-    from ..models.task.create_task import create_task as create_task_query
-    from ..models.task.delete_task import delete_task as delete_task_query
-    from ..models.task.get_task import get_task as get_task_query
-    from ..models.task.list_tasks import list_tasks as list_tasks_query
-    from ..models.task.update_task import update_task as update_task_query
-    from ..models.user.create_user import create_user as create_user_query
-    from ..models.user.delete_user import delete_user as delete_user_query
-    from ..models.user.get_user import get_user as get_user_query
-    from ..models.user.list_users import list_users as list_users_query
-    from ..models.user.update_user import update_user as update_user_query
+    from ..queries.agents.create_agent import create_agent as create_agent_query
+    from ..queries.agents.delete_agent import delete_agent as delete_agent_query
+    from ..queries.agents.get_agent import get_agent as get_agent_query
+    from ..queries.agents.list_agents import list_agents as list_agents_query
+    from ..queries.agents.update_agent import update_agent as update_agent_query
+    from ..queries.docs.delete_doc import delete_doc as delete_doc_query
+    from ..queries.docs.list_docs import list_docs as list_docs_query
+    from ..queries.sessions.create_session import create_session as create_session_query
+    from ..queries.sessions.delete_session import delete_session as delete_session_query
+    from ..queries.sessions.get_session import get_session as get_session_query
+    from ..queries.sessions.list_sessions import list_sessions as list_sessions_query
+    from ..queries.sessions.update_session import update_session as update_session_query
+    from ..queries.tasks.create_task import create_task as create_task_query
+    from ..queries.tasks.delete_task import delete_task as delete_task_query
+    from ..queries.tasks.get_task import get_task as get_task_query
+    from ..queries.tasks.list_tasks import list_tasks as list_tasks_query
+    from ..queries.tasks.update_task import update_task as update_task_query
+    from ..queries.users.create_user import create_user as create_user_query
+    from ..queries.users.delete_user import delete_user as delete_user_query
+    from ..queries.users.get_user import get_user as get_user_query
+    from ..queries.users.list_users import list_users as list_users_query
+    from ..queries.users.update_user import update_user as update_user_query
     from ..routers.docs.create_doc import create_agent_doc, create_user_doc
     from ..routers.docs.search_docs import search_agent_docs, search_user_docs
     from ..routers.sessions.chat import chat

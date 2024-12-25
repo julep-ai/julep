@@ -8,7 +8,7 @@ from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
-from ..models.tools import get_tool_args_from_metadata
+from ..queries.tools import get_tool_args_from_metadata
 
 
 @beartype

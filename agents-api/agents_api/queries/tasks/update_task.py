@@ -137,7 +137,7 @@ async def update_task(
     ]
 
     # Generate workflows from task data
-    workflows_spec = task_to_spec(data).model_dump(exclude_none=True, mode="json")
+    workflows_spec = task_to_spec(data).model_dump(mode="json")
     workflow_params = []
     for workflow in workflows_spec.get("workflows", []):
         workflow_name = workflow.get("name")

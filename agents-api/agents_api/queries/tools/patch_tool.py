@@ -49,8 +49,8 @@ async def patch_tool(
     *, developer_id: UUID, agent_id: UUID, tool_id: UUID, data: PatchToolRequest
 ) -> tuple[str, list]:
     """
-    Execute the datalog query and return the results as a DataFrame
-    Updates the tool information for a given agent and tool ID in the 'cozodb' database.
+    Updates the tool information for a given agent and tool ID in the 'PostgreSQL' database.
+
     Parameters:
         agent_id (UUID): The unique identifier of the agent.
         tool_id (UUID): The unique identifier of the tool to be updated.

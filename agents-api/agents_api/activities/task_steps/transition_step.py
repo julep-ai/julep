@@ -15,7 +15,7 @@ from ...env import (
 )
 from ...exceptions import LastErrorInput, TooManyRequestsError
 from ...queries.executions.create_execution_transition import (
-    create_execution_transition_async,
+    create_execution_transition,
 )
 from ..utils import RateLimiter
 
@@ -52,7 +52,7 @@ async def transition_step(
 
     # Create transition
     try:
-        transition = await create_execution_transition_async(
+        transition = await create_execution_transition(
             developer_id=context.execution_input.developer_id,
             execution_id=context.execution_input.execution.id,
             task_id=context.execution_input.task.id,

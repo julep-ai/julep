@@ -1,4 +1,6 @@
-"""Module for retrieving document snippets from the CozoDB based on document IDs."""
+"""
+Module for retrieving developer information from the PostgreSQL database.
+"""
 
 from uuid import UUID
 

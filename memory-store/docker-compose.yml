@@ -1,6 +1,6 @@
 name: pgai
 services:
-  db:
+  memory-store:
     image: timescale/timescaledb-ha:pg17
 
     # For timescaledb specific options,
@@ -22,9 +22,23 @@ services:
   vectorizer-worker:
     image: timescale/pgai-vectorizer-worker:v0.3.0
     environment:
-      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@db:5432/postgres
+      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres
       - VOYAGE_API_KEY=${VOYAGE_API_KEY}
     command: [ "--poll-interval", "5s" ]
+
+  migration:
+    image: migrate/migrate:latest
+    volumes:
+      - ./migrations:/migrations
+    command: [ "-path", "/migrations", "-database", "postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres?sslmode=disable" , "up"]
+    restart: "no"
+    develop:
+      watch:
+        - path: ./migrations
+          target: ./migrations
+          action: sync+restart
+    depends_on:
+      - memory-store
 
 volumes:
   memory_store_data:

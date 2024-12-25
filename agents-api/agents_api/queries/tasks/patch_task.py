@@ -198,7 +198,7 @@ async def patch_task(
     else:
         workflow_query = new_workflows_query
         workflow_params = []
-        workflows_spec = task_to_spec(data).model_dump(exclude_none=True, mode="json")
+        workflows_spec = task_to_spec(data).model_dump(mode="json")
         for workflow in workflows_spec.get("workflows", []):
             workflow_name = workflow.get("name")
             steps = workflow.get("steps", [])
