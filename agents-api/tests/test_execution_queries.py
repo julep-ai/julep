@@ -122,16 +122,16 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
         developer_id=developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
-            type="step",
+            type="init_branch",
             output={"result": "test"},
             current={"workflow": "main", "step": 0},
-            next={"workflow": "main", "step": 1},
+            next={"workflow": "main", "step": 0},
         ),
         connection_pool=pool,
     )
 
     assert result is not None
-    assert result.type == "step"
+    assert result.type == "init_branch"
     assert result.output == {"result": "test"}
 
 
@@ -139,7 +139,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
 async def _(
     dsn=pg_dsn,
     developer_id=test_developer_id,
-    task=test_task,
     execution=test_execution_started,
 ):
     pool = await create_db_pool(dsn=dsn)
