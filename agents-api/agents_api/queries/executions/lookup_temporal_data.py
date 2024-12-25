@@ -34,4 +34,4 @@ async def lookup_temporal_data(
     developer_id = str(developer_id)
     execution_id = str(execution_id)
 
-    return (sql_query, execution_id, "fetchrow")
+    return (sql_query, [execution_id], "fetchrow")
