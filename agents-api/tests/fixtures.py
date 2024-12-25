@@ -1,18 +1,24 @@
+import os
 import random
 import string
+import sys
 from uuid import UUID
 
+from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
+from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
 from ward import fixture
 
 from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
     CreateDocRequest,
+    CreateExecutionRequest,
     CreateFileRequest,
     CreateSessionRequest,
     CreateTaskRequest,
     CreateToolRequest,
+    CreateTransitionRequest,
     CreateUserRequest,
 )
 from agents_api.clients.pg import create_db_pool
@@ -21,10 +27,11 @@ from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import get_developer
 from agents_api.queries.docs.create_doc import create_doc
-
-# from agents_api.queries.executions.create_execution import create_execution
-# from agents_api.queries.executions.create_execution_transition import create_execution_transition
-# from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
+from agents_api.queries.executions.create_execution import create_execution
+from agents_api.queries.executions.create_execution_transition import (
+    create_execution_transition,
+)
+from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
 from agents_api.queries.files.create_file import create_file
 from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
@@ -34,8 +41,8 @@ from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
 
 from .utils import (
+    get_localstack,
     get_pg_dsn,
-    patch_s3_client,
 )
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
@@ -156,6 +163,7 @@ async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
             description="test task about",
             input_schema={"type": "object", "additionalProperties": True},
             main=[{"evaluate": {"hi": "_"}}],
+            metadata={"test": True},
         ),
         connection_pool=pool,
     )
@@ -251,73 +259,73 @@ async def test_session(
 #         yield task
 
 
-# @fixture(scope="global")
-# async def test_execution(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     task=test_task,
-# ):
-#     workflow_handle = WorkflowHandle(
-#         client=None,
-#         id="blah",
-#     )
+@fixture(scope="global")
+async def test_execution(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="blah",
+    )
 
-#     async with get_pg_client(dsn=dsn) as client:
-#         execution = await create_execution(
-#             developer_id=developer_id,
-#             task_id=task.id,
-#             data=CreateExecutionRequest(input={"test": "test"}),
-#             client=client,
-#         )
-#         await create_temporal_lookup(
-#             developer_id=developer_id,
-#             execution_id=execution.id,
-#             workflow_handle=workflow_handle,
-#             client=client,
-#         )
-#         yield execution
+    execution = await create_execution(
+        developer_id=developer_id,
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "test"}),
+        connection_pool=pool,
+    )
+    await create_temporal_lookup(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        workflow_handle=workflow_handle,
+        connection_pool=pool,
+    )
+    yield execution
 
 
-# @fixture(scope="test")
-# async def test_execution_started(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     task=test_task,
-# ):
-#     workflow_handle = WorkflowHandle(
-#         client=None,
-#         id="blah",
-#     )
+@fixture(scope="test")
+async def test_execution_started(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="blah",
+    )
 
-#     async with get_pg_client(dsn=dsn) as client:
-#         execution = await create_execution(
-#             developer_id=developer_id,
-#             task_id=task.id,
-#             data=CreateExecutionRequest(input={"test": "test"}),
-#             client=client,
-#         )
-#         await create_temporal_lookup(
-#             developer_id=developer_id,
-#             execution_id=execution.id,
-#             workflow_handle=workflow_handle,
-#             client=client,
-#         )
+    execution = await create_execution(
+        developer_id=developer_id,
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "test"}),
+        connection_pool=pool,
+    )
+    await create_temporal_lookup(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        workflow_handle=workflow_handle,
+        connection_pool=pool,
+    )
 
-#         # Start the execution
-#         await create_execution_transition(
-#             developer_id=developer_id,
-#             task_id=task.id,
-#             execution_id=execution.id,
-#             data=CreateTransitionRequest(
-#                 type="init",
-#                 output={},
-#                 current={"workflow": "main", "step": 0},
-#                 next={"workflow": "main", "step": 0},
-#             ),
-#             update_execution_status=True,
-#             client=client,
-#         )
-#         yield execution
+    # Start the execution
+    await create_execution_transition(
+        developer_id=developer_id,
+        # task_id=task.id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="init",
+            output={},
+            current={"workflow": "main", "step": 0},
+            next={"workflow": "main", "step": 0},
+        ),
+        # update_execution_status=True,
+        connection_pool=pool,
+    )
+    yield execution
 
 
 # @fixture(scope="global")
@@ -341,7 +349,7 @@ async def test_session(
 #         yield transition
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 async def test_tool(
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -353,7 +361,7 @@ async def test_tool(
         "parameters": {"type": "object", "properties": {}},
     }
 
-    tool = {
+    tool_spec = {
         "function": function,
         "name": "hello_world1",
         "type": "function",
@@ -362,29 +370,18 @@ async def test_tool(
     [tool, *_] = await create_tools(
         developer_id=developer_id,
         agent_id=agent.id,
-        data=[CreateToolRequest(**tool)],
+        data=[CreateToolRequest(**tool_spec)],
         connection_pool=pool,
     )
-    yield tool
-
-    # Cleanup
-    try:
-        await delete_tool(
-            developer_id=developer_id,
-            tool_id=tool.id,
-            connection_pool=pool,
-        )
-    finally:
-        await pool.close()
+    return tool
 
 
 @fixture(scope="global")
-async def client(dsn=pg_dsn):
-    pool = await create_db_pool(dsn=dsn)
+def client(dsn=pg_dsn):
+    os.environ["DB_DSN"] = dsn
 
-    client = TestClient(app=app)
-    client.state.postgres_pool = pool
-    return client
+    with TestClient(app=app) as client:
+        yield client
 
 
 @fixture(scope="global")
@@ -399,12 +396,30 @@ async def make_request(client=client, developer_id=test_developer_id):
         if multi_tenant_mode:
             headers["X-Developer-Id"] = str(developer_id)
 
+        headers["Content-Length"] = str(sys.getsizeof(kwargs.get("json", {})))
+
         return client.request(method, url, headers=headers, **kwargs)
 
     return _make_request
 
 
 @fixture(scope="global")
-def s3_client():
-    with patch_s3_client() as s3_client:
-        yield s3_client
+async def s3_client():
+    with get_localstack() as localstack:
+        s3_endpoint = localstack.get_url()
+
+        session = get_session()
+        s3_client = await session.create_client(
+            "s3",
+            endpoint_url=s3_endpoint,
+            aws_access_key_id=localstack.env["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=localstack.env["AWS_SECRET_ACCESS_KEY"],
+        ).__aenter__()
+
+        app.state.s3_client = s3_client
+
+        try:
+            yield s3_client
+        finally:
+            await s3_client.close()
+            app.state.s3_client = None

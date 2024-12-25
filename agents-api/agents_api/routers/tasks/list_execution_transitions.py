@@ -5,7 +5,7 @@ from ...autogen.openapi_model import (
     ListResponse,
     Transition,
 )
-from ...models.execution.list_execution_transitions import (
+from ...queries.executions.list_execution_transitions import (
     list_execution_transitions as list_execution_transitions_query,
 )
 from .router import router
@@ -19,7 +19,7 @@ async def list_execution_transitions(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Transition]:
-    transitions = list_execution_transitions_query(
+    transitions = await list_execution_transitions_query(
         execution_id=execution_id,
         limit=limit,
         offset=offset,

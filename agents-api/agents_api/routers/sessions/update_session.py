@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     UpdateSessionRequest,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.update_session import update_session as update_session_query
+from ...queries.sessions.update_session import update_session as update_session_query
 from .router import router
 
 
@@ -18,7 +18,7 @@ async def update_session(
     session_id: UUID,
     data: UpdateSessionRequest,
 ) -> ResourceUpdatedResponse:
-    return update_session_query(
+    return await update_session_query(
         developer_id=x_developer_id,
         session_id=session_id,
         data=data,

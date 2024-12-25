@@ -19,10 +19,10 @@ from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
 from ...env import max_free_sessions
-from ...models.chat.gather_messages import gather_messages
-from ...models.chat.prepare_chat_context import prepare_chat_context
-from ...models.entry.create_entries import create_entries
-from ...models.session.count_sessions import count_sessions as count_sessions_query
+from ...queries.chat.gather_messages import gather_messages
+from ...queries.chat.prepare_chat_context import prepare_chat_context
+from ...queries.entries.create_entries import create_entries
+from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from .metrics import total_tokens_per_user
 from .router import router
 
@@ -57,7 +57,7 @@ async def chat(
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
-        sessions = count_sessions_query(developer_id=developer.id)
+        sessions = await count_sessions_query(developer_id=developer.id)
         session_length = sessions["count"]
         if session_length > max_free_sessions:
             raise HTTPException(
@@ -69,7 +69,7 @@ async def chat(
         raise NotImplementedError("Streaming is not yet implemented")
 
     # First get the chat context
-    chat_context: ChatContext = prepare_chat_context(
+    chat_context: ChatContext = await prepare_chat_context(
         developer_id=developer.id,
         session_id=session_id,
     )

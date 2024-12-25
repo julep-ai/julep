@@ -66,7 +66,7 @@ async def get_file(
     developer_id: UUID,
     owner_type: Literal["user", "agent"] | None = None,
     owner_id: UUID | None = None,
-) -> tuple[str, list]:
+) -> tuple[str, list, Literal["fetchrow", "fetchmany", "fetch"]]:
     """
     Constructs the SQL query to retrieve a file's details.
     Uses composite index on (developer_id, file_id) for efficient lookup.
@@ -83,4 +83,5 @@ async def get_file(
     return (
         file_query,
         [developer_id, file_id, owner_type, owner_id],
+        "fetchrow",
     )

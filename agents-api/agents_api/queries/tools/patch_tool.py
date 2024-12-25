@@ -1,4 +1,3 @@
-from typing import Any
 from uuid import UUID
 
 import asyncpg
@@ -56,7 +55,6 @@ async def patch_tool(
         agent_id (UUID): The unique identifier of the agent.
         tool_id (UUID): The unique identifier of the tool to be updated.
         data (PatchToolRequest): The request payload containing the updated tool information.
-
     Returns:
         ResourceUpdatedResponse: The updated tool data.
     """

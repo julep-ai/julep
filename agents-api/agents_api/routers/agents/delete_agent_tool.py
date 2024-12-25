@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...dependencies.developer_id import get_developer_id
-from ...models.tools.delete_tool import delete_tool
+from ...queries.tools.delete_tool import delete_tool as delete_tool_query
 from .router import router
 
 
@@ -15,7 +15,7 @@ async def delete_agent_tool(
     tool_id: UUID,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceDeletedResponse:
-    return delete_tool(
+    return await delete_tool_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         tool_id=tool_id,

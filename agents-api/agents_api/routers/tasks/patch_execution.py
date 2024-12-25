@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     UpdateExecutionRequest,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.execution.update_execution import (
+from ...queries.executions.update_execution import (
     update_execution as update_execution_query,
 )
 from .router import router
@@ -21,7 +21,7 @@ async def patch_execution(
     execution_id: UUID,
     data: UpdateExecutionRequest,
 ) -> ResourceUpdatedResponse:
-    return update_execution_query(
+    return await update_execution_query(
         developer_id=x_developer_id,
         task_id=task_id,
         execution_id=execution_id,

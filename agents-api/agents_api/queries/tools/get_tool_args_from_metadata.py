@@ -1,14 +1,11 @@
 from typing import Literal
 from uuid import UUID
 
-import sqlvalidator
 from beartype import beartype
 from sqlglot import parse_one
 
 from ..utils import (
-    partialclass,
     pg_query,
-    rewrap_exceptions,
     wrap_in_class,
 )
 

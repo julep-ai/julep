@@ -159,6 +159,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
     result = await list_tasks(
         developer_id=developer_id,
+        agent_id=agent.id,
         limit=10,
         offset=0,
         sort_by="updated_at",
@@ -173,18 +174,23 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
 
 @test("query: list tasks sql - no filters")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+async def _(
+    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task
+):
     """Test that a list of tasks can be successfully retrieved."""
 
     pool = await create_db_pool(dsn=dsn)
     result = await list_tasks(
         developer_id=developer_id,
+        agent_id=agent.id,
         connection_pool=pool,
     )
-    assert result is not None
-    assert isinstance(result, list)
-    assert len(result) > 0
-    assert all(isinstance(task, Task) for task in result)
+    assert result is not None, "Result is None"
+    assert isinstance(result, list), f"Result is not a list, got {type(result)}"
+    assert len(result) > 0, "Result is empty"
+    assert all(
+        isinstance(task, Task) for task in result
+    ), "Not all listed tasks are of type Task"
 
 
 @test("query: update task sql - exists")

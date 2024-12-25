@@ -1,6 +1,5 @@
 """This module contains functions for creating tools in the PostgreSQL database."""
 
-from typing import Any
 from uuid import UUID
 
 import asyncpg
