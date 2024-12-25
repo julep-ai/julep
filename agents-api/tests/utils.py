@@ -6,18 +6,15 @@ from turtle import setup
 from typing import Any, Dict
 from unittest.mock import patch
 
-from agents_api.env import blob_store_bucket
-
 import botocore
+from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
-from testcontainers.postgres import PostgresContainer
-from aiobotocore.session import get_session
-
 from testcontainers.localstack import LocalStackContainer
+from testcontainers.postgres import PostgresContainer
 
-
+from agents_api.env import blob_store_bucket
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
 
@@ -115,6 +112,7 @@ def patch_integration_service(output: dict = {"result": "ok"}):
 
         yield run_integration_service
 
+
 @asynccontextmanager
 # @alru_cache(maxsize=1)
 async def setup(s3_endpoint: str):
@@ -129,9 +127,10 @@ async def setup(s3_endpoint: str):
         try:
             await client.head_bucket(Bucket=blob_store_bucket)
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == '404':
+            if e.response["Error"]["Code"] == "404":
                 await client.create_bucket(Bucket=blob_store_bucket)
         yield client
+
 
 @contextmanager
 def patch_s3_client(s3_endpoint):
@@ -151,8 +150,11 @@ def get_pg_dsn():
 
         yield pg_dsn
 
+
 @contextmanager
 def create_localstack():
-    with LocalStackContainer(image='localstack/localstack:s3-latest').with_services("s3") as localstack:
+    with LocalStackContainer(image="localstack/localstack:s3-latest").with_services(
+        "s3"
+    ) as localstack:
         localstack_endpoint = localstack.get_url()
         yield localstack_endpoint

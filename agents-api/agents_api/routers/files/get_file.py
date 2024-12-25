@@ -10,6 +10,7 @@ from ...dependencies.developer_id import get_developer_id
 from ...queries.files.get_file import get_file as get_file_query
 from .router import router
 
+
 # TODO: Use streaming for large payloads and file ID formatting
 async def fetch_file_content(file_id: UUID) -> str:
     """Fetch file content from blob storage using the file ID as the key"""

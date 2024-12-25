@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+
 from beartype import beartype
 from temporalio import workflow
 
@@ -40,11 +41,13 @@ async def list_buckets() -> list[str]:
 @asynccontextmanager
 # @alru_cache(maxsize=1)
 async def setup(s3_endpoint: str = s3_endpoint):
-    session = get_session(env_vars={
-        "AWS_ENDPOINT_URL": s3_endpoint, 
-        "AWS_ACCESS_KEY_ID": s3_access_key, 
-        "AWS_SECRET_ACCESS_KEY": s3_secret_key
-    })
+    session = get_session(
+        env_vars={
+            "AWS_ENDPOINT_URL": s3_endpoint,
+            "AWS_ACCESS_KEY_ID": s3_access_key,
+            "AWS_SECRET_ACCESS_KEY": s3_secret_key,
+        }
+    )
     async with session.create_client(
         "s3",
         # aws_access_key_id=s3_access_key,
@@ -55,7 +58,7 @@ async def setup(s3_endpoint: str = s3_endpoint):
         try:
             await client.head_bucket(Bucket=blob_store_bucket)
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == '404':
+            if e.response["Error"]["Code"] == "404":
                 await client.create_bucket(Bucket=blob_store_bucket)
         yield client
 

@@ -21,7 +21,9 @@ async def upload_file_content(file_id: UUID, content: str) -> None:
     key = str(file_id)
     content_bytes = base64.b64decode(content)
     async with async_s3.setup() as client:
-        await client.put_object(Bucket=async_s3.blob_store_bucket, Key=key, Body=content_bytes)
+        await client.put_object(
+            Bucket=async_s3.blob_store_bucket, Key=key, Body=content_bytes
+        )
 
 
 # TODO: Use streaming for large payloads
