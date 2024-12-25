@@ -2,15 +2,21 @@ import asyncio
 import logging
 import subprocess
 from contextlib import asynccontextmanager, contextmanager
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from turtle import setup
+from typing import Any, Dict
 from unittest.mock import patch
 
-from botocore import exceptions
+from agents_api.env import blob_store_bucket
+
+import botocore
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
 from testcontainers.postgres import PostgresContainer
+from aiobotocore.session import get_session
+
+from testcontainers.localstack import LocalStackContainer
+
 
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
@@ -109,69 +115,29 @@ def patch_integration_service(output: dict = {"result": "ok"}):
 
         yield run_integration_service
 
+@asynccontextmanager
+# @alru_cache(maxsize=1)
+async def setup(s3_endpoint: str):
+    session = get_session()
+    async with session.create_client(
+        "s3",
+        aws_access_key_id="test",
+        aws_secret_access_key="test",
+        endpoint_url=s3_endpoint,
+    ) as client:
+        # Ensure the bucket exists
+        try:
+            await client.head_bucket(Bucket=blob_store_bucket)
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                await client.create_bucket(Bucket=blob_store_bucket)
+        yield client
 
 @contextmanager
-def patch_s3_client():
-    @dataclass
-    class AsyncBytesIO:
-        content: bytes
-
-        async def read(self) -> bytes:
-            return self.content
-
-    @dataclass
-    class InMemoryS3Client:
-        store: Optional[Dict[str, Dict[str, Any]]] = None
-
-        def __post_init__(self):
-            self.store = {}
-
-        def _get_object_or_raise(self, bucket: str, key: str, operation: str):
-            obj = self.store.get(bucket, {}).get(key)
-            if obj is None:
-                raise exceptions.ClientError(
-                    {"Error": {"Code": "404", "Message": "Not Found"}}, operation
-                )
-            return obj
-
-        async def list_buckets(self):
-            return {"Buckets": [{"Name": bucket} for bucket in self.store]}
-
-        async def create_bucket(self, Bucket):
-            self.store.setdefault(Bucket, {})
-
-        async def head_object(self, Bucket, Key):
-            return self._get_object_or_raise(Bucket, Key, "HeadObject")
-
-        async def put_object(self, Bucket, Key, Body):
-            self.store.setdefault(Bucket, {})[Key] = Body
-
-        async def get_object(self, Bucket, Key):
-            obj = self._get_object_or_raise(Bucket, Key, "GetObject")
-            return {"Body": AsyncBytesIO(obj)}
-
-        async def delete_object(self, Bucket, Key):
-            if Bucket in self.store:
-                self.store[Bucket].pop(Key, None)
-
-    class MockSession:
-        s3_client = InMemoryS3Client()
-
-        async def __aenter__(self):
-            return self.s3_client
-
-        async def __aexit__(self, *_):
-            pass
-
-    mock_session = type(
-        "MockSessionFactory",
-        (),
-        {"create_client": lambda self, service_name, **kwargs: MockSession()},
-    )()
-
-    with patch("agents_api.clients.async_s3.get_session") as get_session:
-        get_session.return_value = mock_session
-        yield mock_session
+def patch_s3_client(s3_endpoint):
+    mock_setup = patch("agents_api.clients.async_s3.setup")
+    mock_setup.return_value = setup(s3_endpoint)
+    yield mock_setup
 
 
 @contextmanager
@@ -184,3 +150,9 @@ def get_pg_dsn():
         process.wait()
 
         yield pg_dsn
+
+@contextmanager
+def create_localstack():
+    with LocalStackContainer(image='localstack/localstack:s3-latest').with_services("s3") as localstack:
+        localstack_endpoint = localstack.get_url()
+        yield localstack_endpoint

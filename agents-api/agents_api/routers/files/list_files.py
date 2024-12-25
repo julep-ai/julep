@@ -13,10 +13,10 @@ from .router import router
 
 async def fetch_file_content(file_id: UUID) -> str:
     """Fetch file content from blob storage using the file ID as the key"""
-    await async_s3.setup()
-    key = str(file_id)
-    content = await async_s3.get_object(key)
-    return base64.b64encode(content).decode("utf-8")
+    async with async_s3.setup() as client:
+        key = str(file_id)
+        content = await client.get_object(Bucket=async_s3.blob_store_bucket, Key=key)
+        return base64.b64encode(content).decode("utf-8")
 
 
 # TODO: Use streaming for large payloads

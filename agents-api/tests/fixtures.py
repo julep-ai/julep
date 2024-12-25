@@ -37,6 +37,7 @@ from agents_api.web import app
 
 from .utils import (
     get_pg_dsn,
+    create_localstack,
     patch_s3_client,
 )
 from .utils import (
@@ -48,6 +49,11 @@ from .utils import (
 def pg_dsn():
     with get_pg_dsn() as pg_dsn:
         yield pg_dsn
+
+# @fixture(scope="global")
+# def localstack_endpoint():
+#     with create_localstack() as localstack_endpoint:
+#         yield localstack_endpoint
 
 
 @fixture(scope="global")
@@ -409,5 +415,7 @@ async def make_request(client=client, developer_id=test_developer_id):
 
 @fixture(scope="global")
 def s3_client():
-    with patch_s3_client() as s3_client:
-        yield s3_client
+    with create_localstack() as localstack_endpoint:
+        with patch_s3_client(localstack_endpoint) as s3_client:
+            yield s3_client
+   
