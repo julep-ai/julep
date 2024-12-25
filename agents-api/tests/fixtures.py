@@ -158,6 +158,7 @@ async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
             description="test task about",
             input_schema={"type": "object", "additionalProperties": True},
             main=[{"evaluate": {"hi": "_"}}],
+            metadata={"test": True},
         ),
         connection_pool=pool,
     )
@@ -343,7 +344,7 @@ async def test_session(
 #         yield transition
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 async def test_tool(
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -355,7 +356,7 @@ async def test_tool(
         "parameters": {"type": "object", "properties": {}},
     }
 
-    tool = {
+    tool_spec = {
         "function": function,
         "name": "hello_world1",
         "type": "function",
@@ -364,20 +365,10 @@ async def test_tool(
     [tool, *_] = await create_tools(
         developer_id=developer_id,
         agent_id=agent.id,
-        data=[CreateToolRequest(**tool)],
+        data=[CreateToolRequest(**tool_spec)],
         connection_pool=pool,
     )
-    yield tool
-
-    # Cleanup
-    try:
-        await delete_tool(
-            developer_id=developer_id,
-            tool_id=tool.id,
-            connection_pool=pool,
-        )
-    finally:
-        await pool.close()
+    return tool
 
 
 @fixture(scope="global")
