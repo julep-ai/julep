@@ -6,49 +6,40 @@ from uuid_extensions import uuid7
 from ...autogen.openapi_model import (
     CreateTransitionRequest,
     Transition,
-    UpdateExecutionRequest,
 )
-from ...common.protocol.tasks import transition_to_execution_status, valid_transitions
-
-# from ...common.utils.cozo import cozo_process_mutate_data
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
     wrap_in_class,
 )
-from .update_execution import update_execution
 
-"""
-valid_transition[start, end] <- [
-        {", ".join(f'["{start}", "{end}"]' for start, ends in valid_transitions.items() for end in ends)}
-    ]
-
-    last_transition_type[min_cost(type_created_at)] :=
-        *transitions:execution_id_type_created_at_idx {{
-            execution_id: to_uuid("{str(execution_id)}"),
-            type,
-            created_at,
-        }},
-        type_created_at = [type, -created_at]
-
-    matched[collect(last_type)] :=
-        last_transition_type[data],
-        last_type_data = first(data),
-        last_type = if(is_null(last_type_data), "init", last_type_data),
-        valid_transition[last_type, $next_type]
-
-    ?[valid] :=
-        matched[prev_transitions],
-        found = length(prev_transitions),
-        valid = if($next_type == "init", found == 0, found > 0),
-        assert(valid, "Invalid transition"),
-
-    :limit 1
-"""
-
-
-check_last_transition_query = """
-
+sql_query = """
+INSERT INTO transitions
+(
+    execution_id,
+    transition_id,
+    type,
+    step_definition,
+    step_label,
+    current_step,
+    next_step,
+    output,
+    task_token,
+    metadata
+)
+VALUES
+(
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10
+)
 """
 
 
@@ -116,9 +107,6 @@ async def create_execution_transition(
     # Only one of these needed
     transition_id: UUID | None = None,
     task_token: str | None = None,
-    # Only required for updating the execution status as well
-    update_execution_status: bool = False,
-    task_id: UUID | None = None,
 ) -> tuple[list[str | None], dict]:
     transition_id = transition_id or uuid7()
     data.metadata = data.metadata or {}
@@ -134,10 +122,6 @@ async def create_execution_transition(
     elif hasattr(data.output, "model_dump"):
         data.output = data.output.model_dump(mode="json")
 
-    # TODO: This is a hack to make sure the transition is valid
-    #       (parallel transitions are whack, we should do something better)
-    is_parallel = data.current.workflow.startswith("PAR:")
-
     # Prepare the transition data
     transition_data = data.model_dump(exclude_unset=True, exclude={"id"})
 
@@ -152,88 +136,18 @@ async def create_execution_transition(
         next_target["step"],
     )
 
-    columns, transition_values = cozo_process_mutate_data(
-        {
-            **transition_data,
-            "task_token": str(task_token),  # Converting to str for JSON serialisation
-            "transition_id": str(transition_id),
-            "execution_id": str(execution_id),
-        }
+    return (
+        sql_query,
+        [
+            execution_id,
+            transition_id,
+            data.type,
+            {},
+            None,
+            transition_data["current"],
+            transition_data["next"],
+            data.output,
+            task_token,
+            data.metadata,
+        ],
     )
-
-    # Make sure the transition is valid
-    check_last_transition_query = f"""
-    valid_transition[start, end] <- [
-        {", ".join(f'["{start}", "{end}"]' for start, ends in valid_transitions.items() for end in ends)}
-    ]
-
-    last_transition_type[min_cost(type_created_at)] :=
-        *transitions:execution_id_type_created_at_idx {{
-            execution_id: to_uuid("{str(execution_id)}"),
-            type,
-            created_at,
-        }},
-        type_created_at = [type, -created_at]
-
-    matched[collect(last_type)] :=
-        last_transition_type[data],
-        last_type_data = first(data),
-        last_type = if(is_null(last_type_data), "init", last_type_data),
-        valid_transition[last_type, $next_type]
-
-    ?[valid] :=
-        matched[prev_transitions],
-        found = length(prev_transitions),
-        valid = if($next_type == "init", found == 0, found > 0),
-        assert(valid, "Invalid transition"),
-
-    :limit 1
-    """
-
-    # Prepare the insert query
-    insert_query = f"""
-    ?[{columns}] <- $transition_values
-
-    :insert transitions {{
-        {columns}
-    }}
-    
-    :returning
-    """
-
-    validate_status_query, update_execution_query, update_execution_params = (
-        "",
-        "",
-        {},
-    )
-
-    if update_execution_status:
-        assert (
-            task_id is not None
-        ), "task_id is required for updating the execution status"
-
-        # Prepare the execution update query
-        [*_, validate_status_query, update_execution_query], update_execution_params = (
-            update_execution.__wrapped__(
-                developer_id=developer_id,
-                task_id=task_id,
-                execution_id=execution_id,
-                data=UpdateExecutionRequest(
-                    status=transition_to_execution_status[data.type]
-                ),
-                output=data.output if data.type != "error" else None,
-                error=str(data.output)
-                if data.type == "error" and data.output
-                else None,
-            )
-        )
-
-    queries = [
-        (insert_query, []),
-    ]
-    if not is_parallel:
-        queries.insert(0, (check_last_transition_query, []))
-        queries.insert(0, (update_execution_query, []))
-        queries.insert(0, (validate_status_query, []))
-
-    return queries
