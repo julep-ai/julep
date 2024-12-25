@@ -20,11 +20,6 @@ async def fetch_file_content(file_id: UUID) -> str:
     result = await client.get_object(Bucket=async_s3.blob_store_bucket, Key=key)
     content = await result["Body"].read()
 
-    print("-" * 100)
-    print("CONTENT")
-    print(content)
-    print("-" * 100)
-
     return base64.b64encode(content).decode("utf-8")
 
 
