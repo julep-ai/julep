@@ -1,4 +1,4 @@
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -32,5 +32,5 @@ async def count_executions(
     *,
     developer_id: UUID,
     task_id: UUID,
-) -> tuple[str, list]:
-    return (sql_query, [developer_id, task_id])
+) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
+    return (sql_query, [developer_id, task_id], "fetchrow")

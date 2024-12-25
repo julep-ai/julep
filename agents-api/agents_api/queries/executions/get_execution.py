@@ -34,6 +34,7 @@ LIMIT 1;
     Execution,
     one=True,
     transform=lambda d: {
+        "id": d.pop("execution_id"),
         **d,
         "output": d["output"][OUTPUT_UNNEST_KEY]
         if isinstance(d["output"], dict) and OUTPUT_UNNEST_KEY in d["output"]

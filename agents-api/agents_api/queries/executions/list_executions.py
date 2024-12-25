@@ -45,6 +45,7 @@ LIMIT $5 OFFSET $6;
 @wrap_in_class(
     Execution,
     transform=lambda d: {
+        "id": d.pop("execution_id"),
         **d,
         "output": d["output"][OUTPUT_UNNEST_KEY]
         if isinstance(d.get("output"), dict) and OUTPUT_UNNEST_KEY in d["output"]
