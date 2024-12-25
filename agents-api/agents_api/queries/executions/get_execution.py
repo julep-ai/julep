@@ -1,12 +1,15 @@
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
-import sqlvalidator
+from asyncpg.exceptions import NoDataFoundError
 from beartype import beartype
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Execution
 from ..utils import (
+    partialclass,
     pg_query,
+    rewrap_exceptions,
     wrap_in_class,
 )
 from .constants import OUTPUT_UNNEST_KEY
@@ -22,14 +25,11 @@ LIMIT 1;
 """
 
 
-# @rewrap_exceptions(
-#     {
-#         AssertionError: partialclass(HTTPException, status_code=404),
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        NoDataFoundError: partialclass(HTTPException, status_code=404),
+    }
+)
 @wrap_in_class(
     Execution,
     one=True,
@@ -45,8 +45,5 @@ LIMIT 1;
 async def get_execution(
     *,
     execution_id: UUID,
-) -> tuple[str, list]:
-    return (
-        sql_query,
-        [execution_id],
-    )
+) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
+    return (sql_query, [execution_id], "fetchrow")

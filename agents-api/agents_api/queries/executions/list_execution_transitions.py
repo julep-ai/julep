@@ -1,10 +1,15 @@
 from typing import Any, Literal, TypeVar
 from uuid import UUID
 
+from asyncpg.exceptions import (
+    InvalidRowCountInLimitClauseError,
+    InvalidRowCountInResultOffsetClauseError,
+)
 from beartype import beartype
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Transition
-from ..utils import pg_query, wrap_in_class
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -38,13 +43,14 @@ def _transform(d):
     }
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        InvalidRowCountInLimitClauseError: partialclass(HTTPException, status_code=400),
+        InvalidRowCountInResultOffsetClauseError: partialclass(
+            HTTPException, status_code=400
+        ),
+    }
+)
 @wrap_in_class(
     Transition,
     transform=_transform,

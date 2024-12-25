@@ -40,6 +40,7 @@ VALUES
     $9,
     $10
 )
+RETURNING *;
 """
 
 

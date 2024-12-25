@@ -1,10 +1,14 @@
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
+from asyncpg.exceptions import NoDataFoundError
 from beartype import beartype
+from fastapi import HTTPException
 
 from ..utils import (
+    partialclass,
     pg_query,
+    rewrap_exceptions,
     wrap_in_class,
 )
 
@@ -21,14 +25,11 @@ LIMIT 1;
 """
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#         AssertionError: partialclass(HTTPException, status_code=500),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        NoDataFoundError: partialclass(HTTPException, status_code=404),
+    }
+)
 @wrap_in_class(dict, one=True)
 @pg_query
 @beartype
@@ -36,7 +37,7 @@ async def get_paused_execution_token(
     *,
     developer_id: UUID,
     execution_id: UUID,
-) -> tuple[str, list]:
+) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     execution_id = str(execution_id)
 
     # TODO: what to do with this query?
@@ -56,4 +57,5 @@ async def get_paused_execution_token(
     return (
         sql_query,
         [execution_id],
+        "fetchrow",
     )

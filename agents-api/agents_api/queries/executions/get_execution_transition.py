@@ -1,11 +1,15 @@
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
+from asyncpg.exceptions import NoDataFoundError
 from beartype import beartype
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Transition
 from ..utils import (
+    partialclass,
     pg_query,
+    rewrap_exceptions,
     wrap_in_class,
 )
 
@@ -37,14 +41,11 @@ def _transform(d):
     }
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#         AssertionError: partialclass(HTTPException, status_code=500),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        NoDataFoundError: partialclass(HTTPException, status_code=404),
+    }
+)
 @wrap_in_class(Transition, one=True, transform=_transform)
 @pg_query
 @beartype
@@ -53,7 +54,7 @@ async def get_execution_transition(
     developer_id: UUID,  # TODO: what to do with this parameter?
     transition_id: UUID | None = None,
     task_token: str | None = None,
-) -> tuple[str, list]:
+) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     # At least one of `transition_id` or `task_token` must be provided
     assert (
         transition_id or task_token
@@ -65,4 +66,5 @@ async def get_execution_transition(
             transition_id,
             task_token,
         ],
+        "fetchrow",
     )
