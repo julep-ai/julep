@@ -26,7 +26,7 @@ from tests.fixtures import (
     test_task,
 )
 
-MODEL = "gpt-4o-mini-mini"
+MODEL = "gpt-4o-mini"
 
 
 @test("query: create execution")
@@ -50,6 +50,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
         workflow_handle=workflow_handle,
         connection_pool=pool,
     )
+
+    assert execution.status == "queued"
+    assert execution.input == {"test": "test"}
 
 
 @test("query: get execution")

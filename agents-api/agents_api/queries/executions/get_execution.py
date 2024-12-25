@@ -1,9 +1,10 @@
-from typing import Any, Literal, TypeVar
+from typing import Literal
 from uuid import UUID
 
-from asyncpg.exceptions import NoDataFoundError
-from beartype import beartype
+import asyncpg
 from fastapi import HTTPException
+from sqlglot import parse_one
+from beartype import beartype
 
 from ...autogen.openapi_model import Execution
 from ..utils import (
@@ -14,20 +15,22 @@ from ..utils import (
 )
 from .constants import OUTPUT_UNNEST_KEY
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-sql_query = """
+# Query to get an execution
+get_execution_query = parse_one("""
 SELECT * FROM latest_executions
 WHERE
     execution_id = $1
 LIMIT 1;
-"""
+""").sql(pretty=True)
 
 
 @rewrap_exceptions(
     {
-        NoDataFoundError: partialclass(HTTPException, status_code=404),
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException, 
+            status_code=404,
+            detail="No executions found for the specified task"
+        ),
     }
 )
 @wrap_in_class(
@@ -47,4 +50,17 @@ async def get_execution(
     *,
     execution_id: UUID,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
-    return (sql_query, [execution_id], "fetchrow")
+    """
+    Get an execution by its ID.
+
+    Parameters:
+        execution_id (UUID): The ID of the execution.
+
+    Returns:
+        tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]: SQL query and parameters for getting the execution.
+    """
+    return (
+        get_execution_query,
+        [execution_id],
+        "fetchrow",
+    )

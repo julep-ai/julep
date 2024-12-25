@@ -1,17 +1,20 @@
-from typing import TypeVar
-from uuid import UUID
 
 from beartype import beartype
 from temporalio.client import WorkflowHandle
+from sqlglot import parse_one
+import asyncpg
+from fastapi import HTTPException
+from uuid import UUID
 
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
+    rewrap_exceptions,
+    partialclass,
 )
 
-T = TypeVar("T")
-
-sql_query = """
+# Query to create a temporal lookup
+create_temporal_lookup_query = parse_one("""
 INSERT INTO temporal_executions_lookup
 (
     execution_id,
@@ -29,17 +32,23 @@ VALUES
     $5
 )
 RETURNING *;
-"""
+""").sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         AssertionError: partialclass(HTTPException, status_code=404),
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+{
+    asyncpg.NoDataFoundError: partialclass(
+        HTTPException, 
+        status_code=404,
+        detail="No executions found for the specified task"
+    ),
+    asyncpg.ForeignKeyViolationError: partialclass(
+        HTTPException,
+        status_code=404,
+        detail="The specified developer or task does not exist"
+    ),
+}
+)
 @pg_query
 @increase_counter("create_temporal_lookup")
 @beartype
@@ -49,11 +58,22 @@ async def create_temporal_lookup(
     execution_id: UUID,
     workflow_handle: WorkflowHandle,
 ) -> tuple[str, list]:
+    """
+    Create a temporal lookup for a given execution.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        execution_id (UUID): The ID of the execution.
+        workflow_handle (WorkflowHandle): The workflow handle.
+
+    Returns:
+        tuple[str, list]: SQL query and parameters for creating the temporal lookup.
+    """
     developer_id = str(developer_id)
     execution_id = str(execution_id)
 
     return (
-        sql_query,
+        create_temporal_lookup_query,
         [
             execution_id,
             workflow_handle.id,

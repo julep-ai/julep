@@ -6,10 +6,11 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...common.protocol.tasks import spec_to_task
-from ...metrics.counters import increase_counter
+from sqlglot import parse_one
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-get_task_query = """
+# Define the raw SQL query for getting a task
+get_task_query = parse_one("""
 SELECT 
     t.*, 
     COALESCE(
@@ -35,7 +36,7 @@ WHERE
         WHERE developer_id = $1 AND task_id = $2
     )
 GROUP BY t.developer_id, t.task_id, t.canonical_name, t.agent_id, t.version;
-"""
+""").sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -58,7 +59,6 @@ GROUP BY t.developer_id, t.task_id, t.canonical_name, t.agent_id, t.version;
     }
 )
 @wrap_in_class(spec_to_task, one=True)
-@increase_counter("get_task")
 @pg_query
 @beartype
 async def get_task(

@@ -8,16 +8,19 @@ from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.datetime import utcnow
 from ...common.utils.types import dict_like
 from ...metrics.counters import increase_counter
+from sqlglot import parse_one
+import asyncpg
+from fastapi import HTTPException
 from ..utils import (
     pg_query,
     wrap_in_class,
+    rewrap_exceptions,
+    partialclass,
 )
 from .constants import OUTPUT_UNNEST_KEY
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
 
-sql_query = """
+create_execution_query = parse_one("""
 INSERT INTO executions
 (
     developer_id,
@@ -37,16 +40,23 @@ VALUES
     1
 )
 RETURNING *;
-"""
+""").sql(pretty=True)
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+{
+    asyncpg.NoDataFoundError: partialclass(
+        HTTPException, 
+        status_code=404,
+        detail="No executions found for the specified task"
+    ),
+    asyncpg.ForeignKeyViolationError: partialclass(
+        HTTPException,
+        status_code=404,
+        detail="The specified developer or task does not exist"
+    ),
+}
+)
 @wrap_in_class(
     Execution,
     one=True,
@@ -67,6 +77,18 @@ async def create_execution(
     execution_id: UUID | None = None,
     data: Annotated[CreateExecutionRequest | dict, dict_like(CreateExecutionRequest)],
 ) -> tuple[str, list]:
+    """
+    Create a new execution.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        task_id (UUID): The ID of the task.
+        execution_id (UUID | None): The ID of the execution.
+        data (CreateExecutionRequest | dict): The data for the execution.
+
+    Returns:
+        tuple[str, list]: SQL query and parameters for creating the execution.
+    """
     execution_id = execution_id or uuid7()
 
     developer_id = str(developer_id)
@@ -86,7 +108,7 @@ async def create_execution(
         execution_data["output"] = {OUTPUT_UNNEST_KEY: execution_data["output"]}
 
     return (
-        sql_query,
+        create_execution_query,
         [
             developer_id,
             task_id,

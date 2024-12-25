@@ -7,19 +7,21 @@ from fastapi import HTTPException
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from ...metrics.counters import increase_counter
+from sqlglot import parse_one
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
-workflow_query = """
+# Define the raw SQL query for deleting workflows
+workflow_query = parse_one("""
 DELETE FROM workflows
 WHERE developer_id = $1 AND task_id = $2;
-"""
+""").sql(pretty=True)
 
-task_query = """
+# Define the raw SQL query for deleting tasks
+task_query = parse_one("""
 DELETE FROM tasks
 WHERE developer_id = $1 AND task_id = $2
 RETURNING task_id;
-"""
+""").sql(pretty=True)
 
 
 @rewrap_exceptions(
@@ -49,7 +51,6 @@ RETURNING task_id;
         "deleted_at": utcnow(),
     },
 )
-@increase_counter("delete_task")
 @pg_query
 @beartype
 async def delete_task(

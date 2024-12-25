@@ -1,9 +1,10 @@
-from typing import Any, Literal, TypeVar
+from typing import Literal
 from uuid import UUID
 
-from asyncpg.exceptions import NoDataFoundError
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ..utils import (
     partialclass,
@@ -12,20 +13,22 @@ from ..utils import (
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-sql_query = """
+# Query to get temporal workflow data
+get_temporal_workflow_data_query = parse_one("""
 SELECT id, run_id, result_run_id, first_execution_run_id FROM temporal_executions_lookup
 WHERE
     execution_id = $1
 LIMIT 1;
-"""
+""").sql(pretty=True)
 
 
 @rewrap_exceptions(
     {
-        NoDataFoundError: partialclass(HTTPException, status_code=404),
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException, 
+            status_code=404,
+            detail="No temporal workflow data found for the specified execution"
+        ),
     }
 )
 @wrap_in_class(dict, one=True)
@@ -35,11 +38,20 @@ async def get_temporal_workflow_data(
     *,
     execution_id: UUID,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
+    """
+    Get temporal workflow data for a given execution.
+
+    Parameters:
+        execution_id (UUID): The ID of the execution.
+
+    Returns:
+        tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]: SQL query and parameters for getting temporal workflow data.
+    """
     # Executions are allowed direct GET access if they have execution_id
     execution_id = str(execution_id)
 
     return (
-        sql_query,
+        get_temporal_workflow_data_query,
         [
             execution_id,
         ],

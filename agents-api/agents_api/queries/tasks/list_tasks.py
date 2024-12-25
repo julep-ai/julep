@@ -6,9 +6,9 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...common.protocol.tasks import spec_to_task
-from ...metrics.counters import increase_counter
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# Define the raw SQL query for listing tasks
 list_tasks_query = """
 SELECT 
     t.*, 
@@ -17,12 +17,7 @@ SELECT
             CASE WHEN w.name IS NOT NULL THEN
                 jsonb_build_object(
                     'name', w.name,
-                    'steps', jsonb_build_array(
-                        jsonb_build_object(
-                            w.step_type, w.step_definition,
-                            'step_idx', w.step_idx           -- Not sure if this is needed
-                        )
-                    )
+                    'steps', jsonb_build_array(w.step_definition)
                 )
             END
         ) FILTER (WHERE w.name IS NOT NULL),
@@ -66,7 +61,6 @@ LIMIT $3 OFFSET $4;
     }
 )
 @wrap_in_class(spec_to_task)
-@increase_counter("list_tasks")
 @pg_query
 @beartype
 async def list_tasks(

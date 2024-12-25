@@ -1,18 +1,17 @@
-from typing import Any, TypeVar
+from typing import Any
 from uuid import UUID
 
 from beartype import beartype
-
+from sqlglot import parse_one
 from ...common.protocol.tasks import ExecutionInput
 from ..utils import (
     pg_query,
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-sql_query = """SELECT * FROM 
+# Query to prepare execution input
+prepare_execution_input_query = parse_one("""
+SELECT * FROM 
 (
     SELECT to_jsonb(a) AS agent FROM (
         SELECT * FROM agents
@@ -42,7 +41,7 @@ sql_query = """SELECT * FROM
         LIMIT 1
     ) t
 ) AS task;
-"""
+""").sql(pretty=True)
 # (
 #     SELECT to_jsonb(e) AS execution FROM (
 #         SELECT * FROM latest_executions
@@ -89,8 +88,19 @@ async def prepare_execution_input(
     task_id: UUID,
     execution_id: UUID,
 ) -> tuple[str, list]:
+    """
+    Prepare the execution input for a given task.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        task_id (UUID): The ID of the task.
+        execution_id (UUID): The ID of the execution.
+
+    Returns:
+        tuple[str, list]: SQL query and parameters for preparing the execution input.
+    """
     return (
-        sql_query,
+        prepare_execution_input_query,
         [
             str(developer_id),
             str(task_id),

@@ -8,14 +8,20 @@ from ...autogen.openapi_model import (
     CreateTransitionRequest,
     Transition,
 )
+import asyncpg
+from fastapi import HTTPException
+from sqlglot import parse_one
 from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
     wrap_in_class,
+    rewrap_exceptions,
+    partialclass,
 )
 
-sql_query = """
+# Query to create a transition
+create_execution_transition_query = parse_one("""
 INSERT INTO transitions
 (
     execution_id,
@@ -43,7 +49,7 @@ VALUES
     $10
 )
 RETURNING *;
-"""
+""").sql(pretty=True)
 
 
 def validate_transition_targets(data: CreateTransitionRequest) -> None:
@@ -80,13 +86,20 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
             raise ValueError(f"Invalid transition type: {data.type}")
 
 
-# rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+{
+    asyncpg.NoDataFoundError: partialclass(
+        HTTPException, 
+        status_code=404,
+        detail="No executions found for the specified task"
+    ),
+    asyncpg.ForeignKeyViolationError: partialclass(
+        HTTPException,
+        status_code=404,
+        detail="The specified developer or task does not exist"
+    ),
+}
+)
 @wrap_in_class(
     Transition,
     transform=lambda d: {
@@ -111,6 +124,19 @@ async def create_execution_transition(
     transition_id: UUID | None = None,
     task_token: str | None = None,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
+    """
+    Create a new execution transition.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        execution_id (UUID): The ID of the execution.
+        data (CreateTransitionRequest): The data for the transition.
+        transition_id (UUID | None): The ID of the transition.
+        task_token (str | None): The task token.
+
+    Returns:
+        tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]: SQL query and parameters for creating the transition.
+    """
     transition_id = transition_id or uuid7()
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
@@ -140,7 +166,7 @@ async def create_execution_transition(
     )
 
     return (
-        sql_query,
+        create_execution_transition_query,
         [
             execution_id,
             transition_id,

@@ -100,7 +100,12 @@ FROM version
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
-    transform=lambda d: {"id": d["task_id"], "updated_at": utcnow()},
+    transform=lambda d: 
+    {
+        "id": d["task_id"], 
+        "updated_at": utcnow(),
+        "jobs": [],
+    },
 )
 @increase_counter("update_task")
 @pg_query(return_index=0)

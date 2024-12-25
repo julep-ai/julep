@@ -73,7 +73,7 @@ async def create_user(
         tuple[str, list]: A tuple containing the SQL query and its parameters.
     """
     user_id = user_id or uuid7()
-    metadata = data.metadata.model_dump(mode="json") or {}
+    metadata = data.metadata or {}
 
     params = [
         developer_id,  # $1

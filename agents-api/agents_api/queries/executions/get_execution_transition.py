@@ -1,10 +1,10 @@
 from typing import Any, Literal, TypeVar
 from uuid import UUID
 
-from asyncpg.exceptions import NoDataFoundError
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-
+from sqlglot import parse_one
 from ...autogen.openapi_model import Transition
 from ..utils import (
     partialclass,
@@ -13,16 +13,14 @@ from ..utils import (
     wrap_in_class,
 )
 
-ModelT = TypeVar("ModelT", bound=Any)
-T = TypeVar("T")
-
-sql_query = """
+# Query to get an execution transition
+get_execution_transition_query = parse_one("""
 SELECT * FROM transitions
 WHERE
     transition_id = $1
     OR task_token = $2
 LIMIT 1;
-"""
+""").sql(pretty=True)
 
 
 def _transform(d):
@@ -42,9 +40,18 @@ def _transform(d):
 
 
 @rewrap_exceptions(
-    {
-        NoDataFoundError: partialclass(HTTPException, status_code=404),
-    }
+{
+    asyncpg.NoDataFoundError: partialclass(
+        HTTPException, 
+        status_code=404,
+        detail="No executions found for the specified task"
+    ),
+    asyncpg.ForeignKeyViolationError: partialclass(
+        HTTPException,
+        status_code=404,
+        detail="The specified developer or task does not exist"
+    ),
+}
 )
 @wrap_in_class(Transition, one=True, transform=_transform)
 @pg_query
@@ -55,13 +62,24 @@ async def get_execution_transition(
     transition_id: UUID | None = None,
     task_token: str | None = None,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
+    """
+    Get an execution transition by its ID or task token.
+
+    Parameters:
+        developer_id (UUID): The ID of the developer.
+        transition_id (UUID | None): The ID of the transition.
+        task_token (str | None): The task token.
+
+    Returns:
+        tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]: SQL query and parameters for getting the execution transition.
+    """
     # At least one of `transition_id` or `task_token` must be provided
     assert (
         transition_id or task_token
     ), "At least one of `transition_id` or `task_token` must be provided."
 
     return (
-        sql_query,
+        get_execution_transition_query,
         [
             transition_id,
             task_token,

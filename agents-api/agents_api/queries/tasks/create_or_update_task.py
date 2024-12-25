@@ -42,6 +42,7 @@ VALUES (
 )
 """).sql(pretty=True)
 
+# Define the raw SQL query for creating or updating a task
 task_query = parse_one("""
 WITH current_version AS (
     SELECT COALESCE(
