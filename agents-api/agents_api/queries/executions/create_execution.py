@@ -63,21 +63,21 @@ async def create_execution(
 ) -> tuple[str, list]:
     execution_id = execution_id or uuid7()
 
-    # developer_id = str(developer_id)
-    # task_id = str(task_id)
-    # execution_id = str(execution_id)
+    developer_id = str(developer_id)
+    task_id = str(task_id)
+    execution_id = str(execution_id)
 
-    # if isinstance(data, CreateExecutionRequest):
-    #     data.metadata = data.metadata or {}
-    #     execution_data = data.model_dump()
-    # else:
-    #     data["metadata"] = data.get("metadata", {})
-    #     execution_data = data
+    if isinstance(data, CreateExecutionRequest):
+        data.metadata = data.metadata or {}
+        execution_data = data.model_dump()
+    else:
+        data["metadata"] = data.get("metadata", {})
+        execution_data = data
 
-    # if execution_data["output"] is not None and not isinstance(
-    #     execution_data["output"], dict
-    # ):
-    #     execution_data["output"] = {OUTPUT_UNNEST_KEY: execution_data["output"]}
+    if execution_data["output"] is not None and not isinstance(
+        execution_data["output"], dict
+    ):
+        execution_data["output"] = {OUTPUT_UNNEST_KEY: execution_data["output"]}
 
     return (
         sql_query,
@@ -85,7 +85,7 @@ async def create_execution(
             developer_id,
             task_id,
             execution_id,
-            data["input"],
-            data["metadata"],
+            execution_data["input"],
+            execution_data["metadata"],
         ],
     )
