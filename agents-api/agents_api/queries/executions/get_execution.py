@@ -1,12 +1,15 @@
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
-import sqlvalidator
+from asyncpg.exceptions import NoDataFoundError
 from beartype import beartype
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Execution
 from ..utils import (
+    partialclass,
     pg_query,
+    rewrap_exceptions,
     wrap_in_class,
 )
 from .constants import OUTPUT_UNNEST_KEY
@@ -14,26 +17,24 @@ from .constants import OUTPUT_UNNEST_KEY
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
-sql_query = sqlvalidator.parse("""
-SELECT * FROM executions
+sql_query = """
+SELECT * FROM latest_executions
 WHERE
     execution_id = $1
-LIMIT 1
-""")
+LIMIT 1;
+"""
 
 
-# @rewrap_exceptions(
-#     {
-#         AssertionError: partialclass(HTTPException, status_code=404),
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        NoDataFoundError: partialclass(HTTPException, status_code=404),
+    }
+)
 @wrap_in_class(
     Execution,
     one=True,
     transform=lambda d: {
+        "id": d.pop("execution_id"),
         **d,
         "output": d["output"][OUTPUT_UNNEST_KEY]
         if isinstance(d["output"], dict) and OUTPUT_UNNEST_KEY in d["output"]
@@ -45,8 +46,5 @@ LIMIT 1
 async def get_execution(
     *,
     execution_id: UUID,
-) -> tuple[str, dict]:
-    return (
-        sql_query.format(),
-        [execution_id],
-    )
+) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
+    return (sql_query, [execution_id], "fetchrow")

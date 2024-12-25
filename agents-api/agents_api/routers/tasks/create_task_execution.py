@@ -12,6 +12,7 @@ from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
     CreateExecutionRequest,
+    CreateTransitionRequest,
     Execution,
     ResourceCreatedResponse,
     UpdateExecutionRequest,
@@ -27,11 +28,11 @@ from ...queries.executions.count_executions import (
 from ...queries.executions.create_execution import (
     create_execution as create_execution_query,
 )
+from ...queries.executions.create_execution_transition import (
+    create_execution_transition,
+)
 from ...queries.executions.create_temporal_lookup import create_temporal_lookup
 from ...queries.executions.prepare_execution_input import prepare_execution_input
-from ...queries.executions.update_execution import (
-    update_execution as update_execution_query,
-)
 from ...queries.tasks.get_task import get_task as get_task_query
 from .router import router
 
@@ -45,7 +46,7 @@ async def start_execution(
     developer_id: UUID,
     task_id: UUID,
     data: CreateExecutionRequest,
-    client=None,
+    connection_pool=None,
 ) -> tuple[Execution, WorkflowHandle]:
     execution_id = uuid7()
 
@@ -54,14 +55,14 @@ async def start_execution(
         task_id=task_id,
         execution_id=execution_id,
         data=data,
-        client=client,
+        connection_pool=connection_pool,
     )
 
     execution_input = await prepare_execution_input(
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
-        client=client,
+        connection_pool=connection_pool,
     )
 
     job_id = uuid7()
@@ -75,12 +76,13 @@ async def start_execution(
     except Exception as e:
         logger.exception(e)
 
-        await update_execution_query(
+        await create_execution_transition(
             developer_id=developer_id,
-            task_id=task_id,
             execution_id=execution_id,
-            data=UpdateExecutionRequest(status="failed"),
-            client=client,
+            data=CreateTransitionRequest(
+                type="error",
+            ),
+            connection_pool=connection_pool,
         )
 
         raise HTTPException(
