@@ -11,7 +11,7 @@ from ..utils import (
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
-sql_query = """SELECT COUNT(*) FROM executions
+sql_query = """SELECT COUNT(*) FROM latest_executions
 WHERE
     developer_id = $1
     AND task_id = $2;

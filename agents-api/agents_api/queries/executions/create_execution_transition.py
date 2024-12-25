@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -7,6 +8,7 @@ from ...autogen.openapi_model import (
     CreateTransitionRequest,
     Transition,
 )
+from ...common.utils.datetime import utcnow
 from ...metrics.counters import increase_counter
 from ..utils import (
     pg_query,
@@ -85,18 +87,18 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
 #         TypeError: partialclass(HTTPException, status_code=400),
 #     }
 # )
-wrap_in_class(
+@wrap_in_class(
     Transition,
     transform=lambda d: {
         **d,
         "id": d["transition_id"],
-        "current": {"workflow": d["current"][0], "step": d["current"][1]},
-        "next": d["next"] and {"workflow": d["next"][0], "step": d["next"][1]},
+        "current": {"workflow": d["current_step"][0], "step": d["current_step"][1]},
+        "next": d["next_step"]
+        and {"workflow": d["next_step"][0], "step": d["next_step"][1]},
+        "updated_at": utcnow(),
     },
     one=True,
 )
-
-
 @pg_query
 @increase_counter("create_execution_transition")
 @beartype
@@ -108,7 +110,7 @@ async def create_execution_transition(
     # Only one of these needed
     transition_id: UUID | None = None,
     task_token: str | None = None,
-) -> tuple[list[str | None], dict]:
+) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     transition_id = transition_id or uuid7()
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
@@ -151,4 +153,5 @@ async def create_execution_transition(
             task_token,
             data.metadata,
         ],
+        "fetchrow",
     )

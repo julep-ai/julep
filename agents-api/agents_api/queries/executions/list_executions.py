@@ -21,7 +21,7 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 sql_query = """
-SELECT * FROM executions
+SELECT * FROM latest_executions
 WHERE
     developer_id = $1
     task_id = $2

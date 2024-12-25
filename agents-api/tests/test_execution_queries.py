@@ -152,8 +152,8 @@ async def _(
             current={"workflow": "main", "step": 0},
             next=None,
         ),
-        task_id=task.id,
-        update_execution_status=True,
+        # task_id=task.id,
+        # update_execution_status=True,
         connection_pool=pool,
     )
 

@@ -313,7 +313,7 @@ async def test_execution_started(
     # Start the execution
     await create_execution_transition(
         developer_id=developer_id,
-        task_id=task.id,
+        # task_id=task.id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
             type="init",
@@ -321,7 +321,7 @@ async def test_execution_started(
             current={"workflow": "main", "step": 0},
             next={"workflow": "main", "step": 0},
         ),
-        update_execution_status=True,
+        # update_execution_status=True,
         connection_pool=pool,
     )
     yield execution

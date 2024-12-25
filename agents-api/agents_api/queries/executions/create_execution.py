@@ -5,6 +5,7 @@ from beartype import beartype
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateExecutionRequest, Execution
+from ...common.utils.datetime import utcnow
 from ...common.utils.types import dict_like
 from ...metrics.counters import increase_counter
 from ..utils import (
@@ -49,7 +50,12 @@ RETURNING *;
 @wrap_in_class(
     Execution,
     one=True,
-    transform=lambda d: {"id": d["execution_id"], **d},
+    transform=lambda d: {
+        "id": d["execution_id"],
+        "status": "queued",
+        "updated_at": utcnow(),
+        **d,
+    },
 )
 @pg_query
 @increase_counter("create_execution")
