@@ -51,7 +51,6 @@ dependencies = [
   "uuid7>=0.1.0",
   "asyncpg>=0.30.0",
   "sqlglot>=26.0.0",
-  "testcontainers>=4.9.0",
   "unique-namer>=1.6.1",
 ]
 
@@ -69,7 +68,7 @@ dev = [
     "pytype>=2024.10.11",
     "ruff>=0.8.1",
     "sqlvalidator>=0.0.20",
-    "testcontainers[postgres]>=4.9.0",
+    "testcontainers[postgres,localstack]>=4.9.0",
     "ward>=0.68.0b0",
 ]
 

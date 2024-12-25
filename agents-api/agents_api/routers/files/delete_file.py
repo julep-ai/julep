@@ -13,9 +13,10 @@ from .router import router
 
 async def delete_file_content(file_id: UUID) -> None:
     """Delete file content from blob storage using the file ID as the key"""
-    await async_s3.setup()
+    client = await async_s3.setup()
     key = str(file_id)
-    await async_s3.delete_object(key)
+
+    await client.delete_object(Bucket=async_s3.blob_store_bucket, Key=key)
 
 
 @router.delete("/files/{file_id}", status_code=HTTP_202_ACCEPTED, tags=["files"])

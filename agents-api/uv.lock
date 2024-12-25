@@ -50,7 +50,6 @@ dependencies = [
     { name = "sse-starlette" },
     { name = "temporalio", extra = ["opentelemetry"] },
     { name = "tenacity" },
-    { name = "testcontainers" },
     { name = "thefuzz" },
     { name = "tiktoken" },
     { name = "unique-namer" },
@@ -74,7 +73,7 @@ dev = [
     { name = "pytype" },
     { name = "ruff" },
     { name = "sqlvalidator" },
-    { name = "testcontainers" },
+    { name = "testcontainers", extra = ["localstack"] },
     { name = "ward" },
 ]
 
@@ -120,7 +119,6 @@ requires-dist = [
     { name = "sse-starlette", specifier = "~=2.1.3" },
     { name = "temporalio", extras = ["opentelemetry"], specifier = "~=1.8" },
     { name = "tenacity", specifier = "~=9.0.0" },
-    { name = "testcontainers", specifier = ">=4.9.0" },
     { name = "thefuzz", specifier = "~=0.22.1" },
     { name = "tiktoken", specifier = "~=0.7.0" },
     { name = "unique-namer", specifier = ">=1.6.1" },
@@ -144,7 +142,7 @@ dev = [
     { name = "pytype", specifier = ">=2024.10.11" },
     { name = "ruff", specifier = ">=0.8.1" },
     { name = "sqlvalidator", specifier = ">=0.0.20" },
-    { name = "testcontainers", extras = ["postgres"], specifier = ">=4.9.0" },
+    { name = "testcontainers", extras = ["postgres", "localstack"], specifier = ">=4.9.0" },
     { name = "ward", specifier = ">=0.68.0b0" },
 ]
 
@@ -451,6 +449,20 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/95/68/9d05b09291f15f9a5c04eebe45172fbc4de3a6f7a6108df2557eddd5b390/blis-1.0.1-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:e6ad60d9cd81523429f46109b31e3c4bbdd0dc28a328d6dbdcdff8447a53a61e", size = 3181680 },
     { url = "https://files.pythonhosted.org/packages/15/29/313887b89e9509438310a0807f8396c6f8f63fd095b699368e76890e8e4a/blis-1.0.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:eb553b233fc815957c5bbb5d2fc2f6d2b199c123ec15c5000db935662849e543", size = 11716266 },
     { url = "https://files.pythonhosted.org/packages/5a/5d/81aa3ddf94626806eb898b6d481a90a5e82bf55b10087556464ac05c120b/blis-1.0.1-cp312-cp312-win_amd64.whl", hash = "sha256:376188493f590c4310ca534b687ef96c21c8224eb1ef4a0420703eebe175d6fa", size = 6370847 },
+]
+
+[[package]]
+name = "boto3"
+version = "1.35.36"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore" },
+    { name = "jmespath" },
+    { name = "s3transfer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/33/9f/17536f9a1ab4c6ee454c782f27c9f0160558f70502fc55da62e456c47229/boto3-1.35.36.tar.gz", hash = "sha256:586524b623e4fbbebe28b604c6205eb12f263cc4746bccb011562d07e217a4cb", size = 110987 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/6b/8b126c2e1c07fae33185544ea974de67027afc905bd072feef9fbbd38d3d/boto3-1.35.36-py3-none-any.whl", hash = "sha256:33735b9449cd2ef176531ba2cb2265c904a91244440b0e161a17da9d24a1e6d1", size = 139143 },
 ]
 
 [[package]]
@@ -2653,6 +2665,18 @@ wheels = [
 ]
 
 [[package]]
+name = "s3transfer"
+version = "0.10.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c0/0a/1cdbabf9edd0ea7747efdf6c9ab4e7061b085aa7f9bfc36bb1601563b069/s3transfer-0.10.4.tar.gz", hash = "sha256:29edc09801743c21eb5ecbc617a152df41d3c287f67b615f73e5f750583666a7", size = 145287 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/66/05/7957af15543b8c9799209506df4660cba7afc4cf94bfb60513827e96bed6/s3transfer-0.10.4-py3-none-any.whl", hash = "sha256:244a76a24355363a68164241438de1b72f8781664920260c48465896b712a41e", size = 83175 },
+]
+
+[[package]]
 name = "scalar-fastapi"
 version = "1.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2996,6 +3020,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2e/9a/e1ac5231231192b39302fcad7de2c0dbfc718c0636d7e28917c30ec57c41/testcontainers-4.9.0.tar.gz", hash = "sha256:2cd6af070109ff68c1ab5389dc89c86c2dc3ab30a21ca734b2cb8f0f80ad479e", size = 64612 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3e/f8/6425ff800894784160290bcb9737878d910b6da6a08633bfe7f2ed8c9ae3/testcontainers-4.9.0-py3-none-any.whl", hash = "sha256:c6fee929990972c40bf6b91b7072c94064ff3649b405a14fde0274c8b2479d32", size = 105324 },
+]
+
+[package.optional-dependencies]
+localstack = [
+    { name = "boto3" },
 ]
 
 [[package]]
