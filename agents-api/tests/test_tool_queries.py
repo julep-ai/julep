@@ -81,14 +81,14 @@ async def _(
     dsn=pg_dsn, developer_id=test_developer_id, tool=test_tool, agent=test_agent
 ):
     pool = await create_db_pool(dsn=dsn)
-    result = get_tool(
+    result = await get_tool(
         developer_id=developer_id,
         agent_id=agent.id,
         tool_id=tool.id,
         connection_pool=pool,
     )
 
-    assert result is not None
+    assert result is not None, "Result is None"
 
 
 @test("query: list tools")
@@ -102,8 +102,11 @@ async def _(
         connection_pool=pool,
     )
 
-    assert result is not None
-    assert all(isinstance(tool, Tool) for tool in result)
+    assert result is not None, "Result is None"
+    assert len(result) > 0, "Result is empty"
+    assert all(
+        isinstance(tool, Tool) for tool in result
+    ), "Not all listed tools are of type Tool"
 
 
 @test("query: patch tool")
