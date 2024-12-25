@@ -4,6 +4,7 @@ import string
 import sys
 from uuid import UUID
 
+from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
 from uuid_extensions import uuid7
 from ward import fixture
@@ -36,9 +37,8 @@ from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
 
 from .utils import (
-    create_localstack,
+    get_localstack,
     get_pg_dsn,
-    patch_s3_client,
 )
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
@@ -49,12 +49,6 @@ from .utils import (
 def pg_dsn():
     with get_pg_dsn() as pg_dsn:
         yield pg_dsn
-
-
-# @fixture(scope="global")
-# def localstack_endpoint():
-#     with create_localstack() as localstack_endpoint:
-#         yield localstack_endpoint
 
 
 @fixture(scope="global")
@@ -415,7 +409,22 @@ async def make_request(client=client, developer_id=test_developer_id):
 
 
 @fixture(scope="global")
-def s3_client():
-    with create_localstack() as localstack_endpoint:
-        with patch_s3_client(localstack_endpoint) as s3_client:
+async def s3_client():
+    with get_localstack() as localstack:
+        s3_endpoint = localstack.get_url()
+
+        session = get_session()
+        s3_client = await session.create_client(
+            "s3",
+            endpoint_url=s3_endpoint,
+            aws_access_key_id=localstack.env["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=localstack.env["AWS_SECRET_ACCESS_KEY"],
+        ).__aenter__()
+
+        app.state.s3_client = s3_client
+
+        try:
             yield s3_client
+        finally:
+            await s3_client.close()
+            app.state.s3_client = None

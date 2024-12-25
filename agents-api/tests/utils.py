@@ -2,19 +2,14 @@ import asyncio
 import logging
 import subprocess
 from contextlib import asynccontextmanager, contextmanager
-from turtle import setup
-from typing import Any, Dict
 from unittest.mock import patch
 
-import botocore
-from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
 from testcontainers.localstack import LocalStackContainer
 from testcontainers.postgres import PostgresContainer
 
-from agents_api.env import blob_store_bucket
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
 
@@ -113,32 +108,6 @@ def patch_integration_service(output: dict = {"result": "ok"}):
         yield run_integration_service
 
 
-@asynccontextmanager
-# @alru_cache(maxsize=1)
-async def setup(s3_endpoint: str):
-    session = get_session()
-    async with session.create_client(
-        "s3",
-        aws_access_key_id="test",
-        aws_secret_access_key="test",
-        endpoint_url=s3_endpoint,
-    ) as client:
-        # Ensure the bucket exists
-        try:
-            await client.head_bucket(Bucket=blob_store_bucket)
-        except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "404":
-                await client.create_bucket(Bucket=blob_store_bucket)
-        yield client
-
-
-@contextmanager
-def patch_s3_client(s3_endpoint):
-    mock_setup = patch("agents_api.clients.async_s3.setup")
-    mock_setup.return_value = setup(s3_endpoint)
-    yield mock_setup
-
-
 @contextmanager
 def get_pg_dsn():
     with PostgresContainer("timescale/timescaledb-ha:pg17") as postgres:
@@ -152,9 +121,8 @@ def get_pg_dsn():
 
 
 @contextmanager
-def create_localstack():
+def get_localstack():
     with LocalStackContainer(image="localstack/localstack:s3-latest").with_services(
         "s3"
     ) as localstack:
-        localstack_endpoint = localstack.get_url()
-        yield localstack_endpoint
+        yield localstack

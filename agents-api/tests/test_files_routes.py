@@ -1,12 +1,11 @@
 import base64
 import hashlib
 
-from ward import skip, test
+from ward import test
 
 from tests.fixtures import make_request, s3_client
 
 
-@skip("skip")
 @test("route: create file")
 async def _(make_request=make_request, s3_client=s3_client):
     data = dict(
@@ -25,7 +24,6 @@ async def _(make_request=make_request, s3_client=s3_client):
     assert response.status_code == 201
 
 
-# @skip("skip")
 @test("route: delete file")
 async def _(make_request=make_request, s3_client=s3_client):
     data = dict(
@@ -58,7 +56,6 @@ async def _(make_request=make_request, s3_client=s3_client):
     # assert response.status_code == 404
 
 
-@skip("skip")
 @test("route: get file")
 async def _(make_request=make_request, s3_client=s3_client):
     data = dict(
@@ -91,7 +88,6 @@ async def _(make_request=make_request, s3_client=s3_client):
     assert result["hash"] == expected_hash
 
 
-@skip("skip")
 @test("route: list files")
 async def _(make_request=make_request, s3_client=s3_client):
     response = make_request(
