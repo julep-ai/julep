@@ -23,7 +23,7 @@ T = TypeVar("T")
 sql_query = """
 SELECT * FROM latest_executions
 WHERE
-    developer_id = $1
+    developer_id = $1 AND
     task_id = $2
 ORDER BY 
     CASE WHEN $3 = 'created_at' AND $4 = 'asc' THEN created_at END ASC NULLS LAST,
