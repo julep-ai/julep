@@ -47,7 +47,7 @@ sql_query = """SELECT * FROM
 #     SELECT to_jsonb(e) AS execution FROM (
 #         SELECT * FROM latest_executions
 #         WHERE
-#             developer_id = $1 AND 
+#             developer_id = $1 AND
 #             task_id = $2 AND
 #             execution_id = $3
 #         LIMIT 1

@@ -167,7 +167,8 @@ async def create_task(
             tool.type,
             tool.name,
             tool.description,
-            getattr(tool, tool.type) and getattr(tool, tool.type).model_dump(mode="json"),  # spec
+            getattr(tool, tool.type)
+            and getattr(tool, tool.type).model_dump(mode="json"),  # spec
         ]
         for tool in data.tools or []
     ]

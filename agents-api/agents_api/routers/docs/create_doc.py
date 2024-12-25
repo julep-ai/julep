@@ -43,9 +43,7 @@ async def create_user_doc(
         data=data,
     )
 
-    return ResourceCreatedResponse(
-        id=doc.id, created_at=doc.created_at, jobs=[]
-    )
+    return ResourceCreatedResponse(id=doc.id, created_at=doc.created_at, jobs=[])
 
 
 @router.post("/agents/{agent_id}/docs", status_code=HTTP_201_CREATED, tags=["docs"])
@@ -62,6 +60,4 @@ async def create_agent_doc(
         data=data,
     )
 
-    return ResourceCreatedResponse(
-        id=doc.id, created_at=doc.created_at, jobs=[]
-    )
+    return ResourceCreatedResponse(id=doc.id, created_at=doc.created_at, jobs=[])

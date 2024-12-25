@@ -13,7 +13,7 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-sql_query ="""
+sql_query = """
 SELECT * FROM 
 (
     SELECT jsonb_agg(u) AS users FROM (
