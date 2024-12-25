@@ -17,10 +17,10 @@ from .env import api_prefix, hostname, max_payload_size, protocol, public_port
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # INIT POSTGRES #
-    db_dsn = os.environ.get("DB_DSN")
+    pg_dsn = os.environ.get("PG_DSN")
 
     if not getattr(app.state, "postgres_pool", None):
-        app.state.postgres_pool = await create_db_pool(db_dsn)
+        app.state.postgres_pool = await create_db_pool(pg_dsn)
 
     # INIT S3 #
     s3_access_key = os.environ.get("S3_ACCESS_KEY")
@@ -67,7 +67,8 @@ app: FastAPI = FastAPI(
     lifespan=lifespan,
     #
     # Global dependencies
-    dependencies=[Depends(valid_content_length)],
+    # FIXME: This is blocking access to scalar
+    # dependencies=[Depends(valid_content_length)],
 )
 
 # Enable metrics
@@ -92,19 +93,20 @@ app.include_router(scalar_router)
 
 
 # content-length validation
+# FIXME: This is blocking access to scalar
 # NOTE: This relies on client reporting the correct content-length header
 # TODO: We should use streaming for large payloads
-@app.middleware("http")
-async def validate_content_length(
-    request: Request,
-    call_next: Callable[[Request], Coroutine[Any, Any, Response]],
-):
-    content_length = request.headers.get("content-length")
+# @app.middleware("http")
+# async def validate_content_length(
+#     request: Request,
+#     call_next: Callable[[Request], Coroutine[Any, Any, Response]],
+# ):
+#     content_length = request.headers.get("content-length")
 
-    if not content_length:
-        return Response(status_code=411, content="Content-Length header is required")
+#     if not content_length:
+#         return Response(status_code=411, content="Content-Length header is required")
 
-    if int(content_length) > max_payload_size:
-        return Response(status_code=413, content="Payload too large")
+#     if int(content_length) > max_payload_size:
+#         return Response(status_code=413, content="Payload too large")
 
-    return await call_next(request)
+#     return await call_next(request)

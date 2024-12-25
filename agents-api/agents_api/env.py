@@ -51,23 +51,14 @@ s3_access_key: str | None = env.str("S3_ACCESS_KEY", default=None)
 s3_secret_key: str | None = env.str("S3_SECRET_KEY", default=None)
 
 
-# Cozo
-# ----
-cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
-cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
-summarization_model_name: str = env.str(
-    "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
-)
-do_verify_developer: bool = env.bool("DO_VERIFY_DEVELOPER", default=True)
-do_verify_developer_owns_resource: bool = env.bool(
-    "DO_VERIFY_DEVELOPER_OWNS_RESOURCE", default=True
-)
-
 # PostgreSQL
 # ----
-db_dsn: str = env.str(
-    "DB_DSN",
+pg_dsn: str = env.str(
+    "PG_DSN",
     default="postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable",
+)
+summarization_model_name: str = env.str(
+    "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
 )
 
 query_timeout: float = env.float("QUERY_TIMEOUT", default=90.0)
@@ -156,8 +147,6 @@ temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
 environment: Dict[str, Any] = dict(
     debug=debug,
     multi_tenant_mode=multi_tenant_mode,
-    cozo_host=cozo_host,
-    cozo_auth=cozo_auth,
     sentry_dsn=sentry_dsn,
     temporal_endpoint=temporal_endpoint,
     temporal_task_queue=temporal_task_queue,

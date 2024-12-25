@@ -6,7 +6,7 @@ from temporalio import activity
 
 from ... import queries
 from ...clients.pg import create_db_pool
-from ...env import db_dsn, testing
+from ...env import pg_dsn, testing
 
 
 @alru_cache(maxsize=1)
@@ -18,7 +18,7 @@ async def get_db_pool(dsn: str):
 async def pg_query_step(
     query_name: str,
     values: dict[str, Any],
-    dsn: str = db_dsn,
+    dsn: str = pg_dsn,
 ) -> Any:
     pool = await get_db_pool(dsn=dsn)
 

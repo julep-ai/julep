@@ -13,8 +13,6 @@ services:
       AGENTS_API_PROTOCOL: http
       AGENTS_API_PUBLIC_PORT: "80"
       AGENTS_API_URL: http://agents-api:8080
-      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
-      COZO_HOST: http://memory-store:9070
       EMBEDDING_MODEL_ID: voyage/voyage-3
       INTEGRATION_SERVICE_URL: http://integrations:8000
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
@@ -34,32 +32,6 @@ services:
         target: 8080
         published: "8080"
         protocol: tcp
-
-  cozo-migrate:
-    environment:
-      AGENTS_API_HOSTNAME: localhost
-      AGENTS_API_KEY: ${AGENTS_API_KEY}
-      AGENTS_API_KEY_HEADER_NAME: Authorization
-      AGENTS_API_PROTOCOL: http
-      AGENTS_API_PUBLIC_PORT: "80"
-      AGENTS_API_URL: http://agents-api:8080
-      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
-      COZO_HOST: http://memory-store:9070
-      EMBEDDING_MODEL_ID: voyage/voyage-3
-      INTEGRATION_SERVICE_URL: http://integrations:8000
-      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
-      LITELLM_URL: http://litellm:4000
-      SUMMARIZATION_MODEL_NAME: gpt-4o-mini
-      TEMPORAL_ENDPOINT: temporal:7233
-      TEMPORAL_NAMESPACE: default
-      TEMPORAL_TASK_QUEUE: julep-task-queue
-      TEMPORAL_WORKER_URL: temporal:7233
-      TRUNCATE_EMBED_TEXT: "True"
-      WORKER_URL: temporal:7233
-    image: julepai/cozo-migrate:${TAG:-dev}
-    networks:
-      default: null
-    restart: "no"
 
   integrations:
     image: julepai/integrations:${TAG:-dev}
@@ -156,56 +128,11 @@ services:
         target: /data
         volume: {}
 
-  memory-store:
-    environment:
-      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
-      COZO_BACKUP_DIR: /backup
-      COZO_MNT_DIR: /data
-      COZO_PORT: "9070"
-    image: julepai/memory-store:${TAG:-dev}
-    labels:
-      ofelia.enabled: "true"
-      ofelia.job-exec.backupcron.command: bash /app/backup.sh
-      ofelia.job-exec.backupcron.environment: '["COZO_PORT=9070", "COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}", "COZO_BACKUP_DIR=/backup"]'
-      ofelia.job-exec.backupcron.schedule: '@every 3h'
-    networks:
-      default: null
-    ports:
-      - mode: ingress
-        target: 9070
-        published: "9070"
-        protocol: tcp
-    volumes:
-      - type: volume
-        source: cozo_data
-        target: /data
-        volume: {}
-      - type: volume
-        source: cozo_backup
-        target: /backup
-        volume: {}
+  # TODO: Add memory-store with postgres
+  # memory-store:
 
-  memory-store-backup-cron:
-    command:
-      - daemon
-      - --docker
-      - -f
-      - label=com.docker.compose.project=julep
-    depends_on:
-      memory-store:
-        condition: service_started
-        required: true
-    image: mcuadros/ofelia:latest
-    networks:
-      default: null
-    restart: unless-stopped
-    volumes:
-      - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-        read_only: true
-        bind:
-          create_host_path: true
+  # TODO: Add memory-store-backup-cron  
+  # memory-store-backup-cron:
 
   temporal:
     depends_on:
@@ -295,8 +222,7 @@ services:
       AGENTS_API_PROTOCOL: http
       AGENTS_API_PUBLIC_PORT: "80"
       AGENTS_API_URL: http://agents-api:8080
-      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
-      COZO_HOST: http://memory-store:9070
+      PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
       EMBEDDING_MODEL_ID: voyage/voyage-3
       INTEGRATION_SERVICE_URL: http://integrations:8000
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
@@ -317,10 +243,6 @@ networks:
     name: julep_default
 
 volumes:
-  cozo_backup:
-    name: cozo_backup
-  cozo_data:
-    name: cozo_data
   litellm-db-data:
     name: julep_litellm-db-data
   litellm-redis-data:

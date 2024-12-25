@@ -30,4 +30,4 @@ COPY . ./
 ENV PYTHONUNBUFFERED=1
 ENV GUNICORN_CMD_ARGS="--capture-output --enable-stdio-inheritance"
 
-ENTRYPOINT ["uv", "run", "python", "-m", "agents_api.worker"]
+ENTRYPOINT ["uv", "run", "--offline", "--no-sync", "python", "-m", "agents_api.worker"]

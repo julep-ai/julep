@@ -2,7 +2,7 @@
 
 from .base_evaluate import base_evaluate
 
-# from .cozo_query_step import cozo_query_step
+from .pg_query_step import pg_query_step
 from .evaluate_step import evaluate_step
 from .for_each_step import for_each_step
 from .get_value_step import get_value_step

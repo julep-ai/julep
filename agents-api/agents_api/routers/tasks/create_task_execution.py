@@ -50,6 +50,7 @@ async def start_execution(
 ) -> tuple[Execution, WorkflowHandle]:
     execution_id = uuid7()
 
+
     execution = await create_execution_query(
         developer_id=developer_id,
         task_id=task_id,
@@ -57,6 +58,7 @@ async def start_execution(
         data=data,
         connection_pool=connection_pool,
     )
+
 
     execution_input = await prepare_execution_input(
         developer_id=developer_id,
@@ -138,11 +140,13 @@ async def create_task_execution(
                 detail="Execution count exceeded the free tier limit",
             )
 
+
     execution, handle = await start_execution(
         developer_id=x_developer_id,
         task_id=task_id,
         data=data,
     )
+
 
     background_tasks.add_task(
         create_temporal_lookup,
@@ -151,6 +155,7 @@ async def create_task_execution(
         execution_id=execution.id,
         workflow_handle=handle,
     )
+
 
     return ResourceCreatedResponse(
         id=execution.id,

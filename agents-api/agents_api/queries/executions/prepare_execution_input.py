@@ -14,14 +14,17 @@ T = TypeVar("T")
 
 sql_query = """SELECT * FROM 
 (
-    SELECT to_jsonb(a) AS agents FROM (
+    SELECT to_jsonb(a) AS agent FROM (
         SELECT * FROM agents
         WHERE
             developer_id = $1  AND
-            agent_id = $4
+            agent_id = (
+                SELECT agent_id FROM tasks 
+                WHERE developer_id = $1 AND task_id = $2
+            )
         LIMIT 1
     ) a
-) AS agents,
+) AS agent,
 (
     SELECT jsonb_agg(r) AS tools FROM (
         SELECT * FROM tools
@@ -31,25 +34,25 @@ sql_query = """SELECT * FROM
     ) r
 ) AS tools,
 (
-    SELECT to_jsonb(t) AS tasks FROM (
+    SELECT to_jsonb(t) AS task FROM (
         SELECT * FROM tasks
         WHERE
             developer_id = $1 AND 
             task_id = $2
         LIMIT 1
     ) t
-) AS tasks,
-(
-    SELECT to_jsonb(e) AS executions FROM (
-        SELECT * FROM executions
-        WHERE
-            developer_id = $1 AND 
-            task_id = $2 AND
-            execution_id = $3
-        LIMIT 1
-    ) e
-) AS executions;
+) AS task;
 """
+# (
+#     SELECT to_jsonb(e) AS execution FROM (
+#         SELECT * FROM latest_executions
+#         WHERE
+#             developer_id = $1 AND 
+#             task_id = $2 AND
+#             execution_id = $3
+#         LIMIT 1
+#     ) e
+# ) AS execution;
 
 
 # @rewrap_exceptions(
@@ -70,7 +73,7 @@ sql_query = """SELECT * FROM
     transform=lambda d: {
         **d,
         "task": {
-            "tools": [*d["task"].pop("tools")],
+            "tools": d["tools"],
             **d["task"],
         },
         "agent_tools": [
@@ -86,14 +89,11 @@ async def prepare_execution_input(
     task_id: UUID,
     execution_id: UUID,
 ) -> tuple[str, list]:
-    dummy_agent_id = UUID(int=0)
-
     return (
         sql_query,
         [
             str(developer_id),
             str(task_id),
-            str(execution_id),
-            str(dummy_agent_id),
+            # str(execution_id),
         ],
     )

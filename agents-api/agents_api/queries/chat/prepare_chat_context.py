@@ -1,11 +1,9 @@
 from typing import Any, TypeVar
 from uuid import UUID
 
-import sqlvalidator
 from beartype import beartype
 
 from ...common.protocol.sessions import ChatContext, make_session
-from ...exceptions import InvalidSQLQuery
 from ..utils import (
     pg_query,
     wrap_in_class,
@@ -15,8 +13,8 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-sql_query = sqlvalidator.parse(
-    """SELECT * FROM 
+sql_query ="""
+SELECT * FROM 
 (
     SELECT jsonb_agg(u) AS users FROM (
         SELECT 
@@ -103,9 +101,6 @@ sql_query = sqlvalidator.parse(
             session_lookup.participant_type = 'agent'
     ) r
 ) AS toolsets"""
-)
-if not sql_query.is_valid():
-    raise InvalidSQLQuery("prepare_chat_context")
 
 
 def _transform(d):

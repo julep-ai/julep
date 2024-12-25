@@ -2,7 +2,7 @@ import json
 
 import asyncpg
 
-from ..env import db_dsn
+from ..env import pg_dsn
 
 
 async def _init_conn(conn):
@@ -16,5 +16,5 @@ async def _init_conn(conn):
 
 async def create_db_pool(dsn: str | None = None):
     return await asyncpg.create_pool(
-        dsn if dsn is not None else db_dsn, init=_init_conn
+        dsn if dsn is not None else pg_dsn, init=_init_conn
     )

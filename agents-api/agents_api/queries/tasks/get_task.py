@@ -17,12 +17,7 @@ SELECT
             CASE WHEN w.name IS NOT NULL THEN
                 jsonb_build_object(
                     'name', w.name,
-                    'steps', jsonb_build_array(
-                        jsonb_build_object(
-                            w.step_type, w.step_definition,
-                            'step_idx', w.step_idx           -- Not sure if this is needed
-                        )
-                    )
+                    'steps', jsonb_build_array(w.step_definition)
                 )
             END
         ) FILTER (WHERE w.name IS NOT NULL),

@@ -378,7 +378,7 @@ async def test_tool(
 
 @fixture(scope="global")
 def client(dsn=pg_dsn):
-    os.environ["DB_DSN"] = dsn
+    os.environ["PG_DSN"] = dsn
 
     with TestClient(app=app) as client:
         yield client
