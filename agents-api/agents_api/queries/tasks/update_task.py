@@ -100,9 +100,8 @@ FROM version
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
-    transform=lambda d: 
-    {
-        "id": d["task_id"], 
+    transform=lambda d: {
+        "id": d["task_id"],
         "updated_at": utcnow(),
         "jobs": [],
     },

@@ -25,9 +25,9 @@ LIMIT 1;
 @rewrap_exceptions(
     {
         asyncpg.NoDataFoundError: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="No temporal workflow data found for the specified execution"
+            detail="No temporal workflow data found for the specified execution",
         ),
     }
 )

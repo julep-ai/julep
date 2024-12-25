@@ -5,6 +5,7 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
+
 from ...autogen.openapi_model import Transition
 from ..utils import (
     partialclass,
@@ -40,18 +41,18 @@ def _transform(d):
 
 
 @rewrap_exceptions(
-{
-    asyncpg.NoDataFoundError: partialclass(
-        HTTPException, 
-        status_code=404,
-        detail="No executions found for the specified task"
-    ),
-    asyncpg.ForeignKeyViolationError: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer or task does not exist"
-    ),
-}
+    {
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="No executions found for the specified task",
+        ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer or task does not exist",
+        ),
+    }
 )
 @wrap_in_class(Transition, one=True, transform=_transform)
 @pg_query

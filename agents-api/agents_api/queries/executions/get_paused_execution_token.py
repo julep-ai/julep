@@ -27,9 +27,9 @@ WHERE
 @rewrap_exceptions(
     {
         asyncpg.NoDataFoundError: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="No paused executions found for the specified task"
+            detail="No paused executions found for the specified task",
         ),
     }
 )
@@ -72,4 +72,3 @@ async def get_paused_execution_token(
         [execution_id],
         "fetchrow",
     )
-

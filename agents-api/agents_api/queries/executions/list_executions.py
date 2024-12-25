@@ -5,6 +5,7 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
+
 from ...autogen.openapi_model import Execution
 from ..utils import (
     partialclass,
@@ -32,14 +33,10 @@ LIMIT $5 OFFSET $6;
 @rewrap_exceptions(
     {
         asyncpg.InvalidRowCountInLimitClauseError: partialclass(
-            HTTPException, 
-            status_code=400, 
-            detail="Invalid limit clause"
+            HTTPException, status_code=400, detail="Invalid limit clause"
         ),
         asyncpg.InvalidRowCountInResultOffsetClauseError: partialclass(
-            HTTPException, 
-            status_code=400, 
-            detail="Invalid offset clause"
+            HTTPException, status_code=400, detail="Invalid offset clause"
         ),
     }
 )

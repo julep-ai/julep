@@ -4,9 +4,9 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...common.protocol.tasks import spec_to_task
-from sqlglot import parse_one
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for getting a task

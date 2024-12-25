@@ -5,6 +5,7 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
+
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to lookup temporal data
@@ -19,9 +20,9 @@ LIMIT 1;
 @rewrap_exceptions(
     {
         asyncpg.NoDataFoundError: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="No temporal data found for the specified execution"
+            detail="No temporal data found for the specified execution",
         ),
     }
 )

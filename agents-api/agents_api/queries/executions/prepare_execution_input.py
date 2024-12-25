@@ -3,6 +3,7 @@ from uuid import UUID
 
 from beartype import beartype
 from sqlglot import parse_one
+
 from ...common.protocol.tasks import ExecutionInput
 from ..utils import (
     pg_query,

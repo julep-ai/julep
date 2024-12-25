@@ -1,24 +1,23 @@
 from typing import Annotated, Any, TypeVar
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.datetime import utcnow
 from ...common.utils.types import dict_like
 from ...metrics.counters import increase_counter
-from sqlglot import parse_one
-import asyncpg
-from fastapi import HTTPException
 from ..utils import (
-    pg_query,
-    wrap_in_class,
-    rewrap_exceptions,
     partialclass,
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
 )
 from .constants import OUTPUT_UNNEST_KEY
-
 
 create_execution_query = parse_one("""
 INSERT INTO executions
@@ -44,18 +43,18 @@ RETURNING *;
 
 
 @rewrap_exceptions(
-{
-    asyncpg.NoDataFoundError: partialclass(
-        HTTPException, 
-        status_code=404,
-        detail="No executions found for the specified task"
-    ),
-    asyncpg.ForeignKeyViolationError: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer or task does not exist"
-    ),
-}
+    {
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="No executions found for the specified task",
+        ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer or task does not exist",
+        ),
+    }
 )
 @wrap_in_class(
     Execution,

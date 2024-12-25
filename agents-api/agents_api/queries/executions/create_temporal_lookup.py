@@ -1,16 +1,16 @@
-
-from beartype import beartype
-from temporalio.client import WorkflowHandle
-from sqlglot import parse_one
-import asyncpg
-from fastapi import HTTPException
 from uuid import UUID
+
+import asyncpg
+from beartype import beartype
+from fastapi import HTTPException
+from sqlglot import parse_one
+from temporalio.client import WorkflowHandle
 
 from ...metrics.counters import increase_counter
 from ..utils import (
+    partialclass,
     pg_query,
     rewrap_exceptions,
-    partialclass,
 )
 
 # Query to create a temporal lookup
@@ -36,18 +36,18 @@ RETURNING *;
 
 
 @rewrap_exceptions(
-{
-    asyncpg.NoDataFoundError: partialclass(
-        HTTPException, 
-        status_code=404,
-        detail="No executions found for the specified task"
-    ),
-    asyncpg.ForeignKeyViolationError: partialclass(
-        HTTPException,
-        status_code=404,
-        detail="The specified developer or task does not exist"
-    ),
-}
+    {
+        asyncpg.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="No executions found for the specified task",
+        ),
+        asyncpg.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified developer or task does not exist",
+        ),
+    }
 )
 @pg_query
 @increase_counter("create_temporal_lookup")

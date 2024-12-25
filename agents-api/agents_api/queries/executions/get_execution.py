@@ -2,9 +2,9 @@ from typing import Literal
 from uuid import UUID
 
 import asyncpg
+from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
-from beartype import beartype
 
 from ...autogen.openapi_model import Execution
 from ..utils import (
@@ -27,9 +27,9 @@ LIMIT 1;
 @rewrap_exceptions(
     {
         asyncpg.NoDataFoundError: partialclass(
-            HTTPException, 
+            HTTPException,
             status_code=404,
-            detail="No executions found for the specified task"
+            detail="No executions found for the specified task",
         ),
     }
 )

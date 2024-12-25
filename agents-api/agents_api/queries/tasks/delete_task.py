@@ -4,10 +4,10 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
+from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from sqlglot import parse_one
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for deleting workflows
