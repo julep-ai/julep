@@ -104,7 +104,9 @@ async def _(
 
     assert result is not None, "Result is None"
     assert len(result) > 0, "Result is empty"
-    assert all(isinstance(tool, Tool) for tool in result), "Not all listed tools are of type Tool"
+    assert all(
+        isinstance(tool, Tool) for tool in result
+    ), "Not all listed tools are of type Tool"
 
 
 @test("query: patch tool")
