@@ -34,15 +34,6 @@ Instructions:{{NEWLINE}}
   {{NEWLINE}}
 {%- endif -%}
 
-{%- if tools -%}
-Tools:{{NEWLINE}}
-  {%- for tool in tools -%}
-    - {{tool.name + NEWLINE}}
-    {%- if tool.description -%}: {{tool.description + NEWLINE}}{%- endif -%}
-  {%- endfor -%}
-{{NEWLINE+NEWLINE}}
-{%- endif -%}
-
 {%- if docs -%}
 Relevant documents:{{NEWLINE}}
   {%- for doc in docs -%}
