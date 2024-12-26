@@ -13,17 +13,25 @@ get_task_query = """
 SELECT 
     t.*, 
     COALESCE(
-        jsonb_agg(
-            CASE WHEN w.name IS NOT NULL THEN
-                jsonb_build_object(
-                    'name', w.name,
-                    'steps', jsonb_build_array(w.step_definition)
+        jsonb_agg(   
+            DISTINCT jsonb_build_object(
+                'name', w.name,
+                'steps', (
+                    SELECT jsonb_agg(step_definition ORDER BY step_idx)
+                    FROM workflows w2 
+                    WHERE w2.developer_id = w.developer_id 
+                    AND w2.task_id = w.task_id 
+                    AND w2.version = w.version 
+                    AND w2.name = w.name
                 )
-            END
-        ) FILTER (WHERE w.name IS NOT NULL),
+            )
+        ) FILTER (WHERE w.name IS NOT NULL), 
         '[]'::jsonb
     ) as workflows,
-    COALESCE(jsonb_agg(tl), '[]'::jsonb) as tools
+    COALESCE(
+        jsonb_agg(tl) FILTER (WHERE tl IS NOT NULL), 
+        '[]'::jsonb
+    ) as tools
 FROM 
     tasks t
 LEFT JOIN 
