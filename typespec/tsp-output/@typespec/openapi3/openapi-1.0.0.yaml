@@ -3808,7 +3808,12 @@ components:
             $ref: '#/components/schemas/Common.uuid'
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -3823,6 +3828,12 @@ components:
               {%- if user.name -%}{{" "}} and their name is {{user.name}}
                 {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
               {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
             {%- endif -%}
 
             {{NEWLINE+NEWLINE}}
@@ -3853,11 +3864,6 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
-        system_template:
-          type: string
-          nullable: true
-          description: System prompt for this session
-          default: null
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -3927,7 +3933,12 @@ components:
             $ref: '#/components/schemas/Common.uuid'
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -3942,6 +3953,12 @@ components:
               {%- if user.name -%}{{" "}} and their name is {{user.name}}
                 {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
               {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
             {%- endif -%}
 
             {{NEWLINE+NEWLINE}}
@@ -3972,11 +3989,6 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
-        system_template:
-          type: string
-          nullable: true
-          description: System prompt for this session
-          default: null
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -4066,7 +4078,12 @@ components:
       properties:
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -4081,6 +4098,12 @@ components:
               {%- if user.name -%}{{" "}} and their name is {{user.name}}
                 {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
               {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
             {%- endif -%}
 
             {{NEWLINE+NEWLINE}}
@@ -4111,11 +4134,6 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
-        system_template:
-          type: string
-          nullable: true
-          description: System prompt for this session
-          default: null
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -4226,7 +4244,12 @@ components:
       properties:
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -4241,6 +4264,12 @@ components:
               {%- if user.name -%}{{" "}} and their name is {{user.name}}
                 {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
               {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
             {%- endif -%}
 
             {{NEWLINE+NEWLINE}}
@@ -4271,11 +4300,6 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
-        system_template:
-          type: string
-          nullable: true
-          description: System prompt for this session
-          default: null
         summary:
           type: string
           nullable: true
@@ -4395,7 +4419,12 @@ components:
       properties:
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -4410,6 +4439,12 @@ components:
               {%- if user.name -%}{{" "}} and their name is {{user.name}}
                 {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
               {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
             {%- endif -%}
 
             {{NEWLINE+NEWLINE}}
@@ -4440,11 +4475,6 @@ components:
                 {{"---"}}
               {%- endfor -%}
             {%- endif -%}
-        system_template:
-          type: string
-          nullable: true
-          description: System prompt for this session
-          default: null
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates

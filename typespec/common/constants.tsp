@@ -20,6 +20,12 @@ You are talking to a user
   {%- endif -%}
 {%- endif -%}
 
+{{NEWLINE}}
+
+{%- if session.situation -%}
+Situation: {{session.situation}}
+{%- endif -%}
+
 {{NEWLINE+NEWLINE}}
 
 {%- if agent.instructions -%}

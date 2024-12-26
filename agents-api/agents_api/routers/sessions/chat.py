@@ -96,10 +96,10 @@ async def chat(
         for ref in doc_references
     ]
     # Render the system message
-    if situation := chat_context.session.situation:
+    if system_template := chat_context.session.system_template:
         system_message = dict(
             role="system",
-            content=situation,
+            content=system_template,
         )
 
         system_messages: list[dict] = await render_template(

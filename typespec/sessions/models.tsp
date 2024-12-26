@@ -60,11 +60,11 @@ model Session {
     @visibility("create")
     agents?: uuid[];
 
-    /** A specific situation that sets the background for this session */
-    situation: string = defaultSessionSystemMessage;
+    /** Session situation */
+    situation: string | null = null;
 
-    /** System prompt for this session */
-    system_template: string | null = null;
+    /** A specific system prompt template that sets the background for this session */
+    system_template: string = defaultSessionSystemMessage;
 
     /** Summary (null at the beginning) - generated automatically after every interaction */
     @visibility("read")
