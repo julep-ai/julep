@@ -16,7 +16,7 @@ from ..utils import (
 # FIXME: Use latest_transitions instead of transitions
 # Query to get an execution transition
 get_execution_transition_query = """
-SELECT * FROM latest_transitions
+SELECT * FROM transitions
 WHERE
     transition_id = $1
     OR task_token = $2
