@@ -6,7 +6,6 @@ BEGIN;
  * It uses special aggregation functions like state_agg() to track state changes and last() to get most recent values.
  * The view updates every 10 minutes and can serve both historical and real-time data (materialized_only = FALSE).
  */
-
 -- create a function to convert transition_type to text (needed coz ::text is stable not immutable)
 CREATE
 OR REPLACE function to_text (transition_type) RETURNS text AS $$
@@ -60,27 +59,25 @@ SELECT
     e.input,
     e.metadata,
     e.created_at,
-    lt.created_at AS updated_at,
-    -- Map transition types to status using CASE statement
-    CASE lt.type::text
-        WHEN 'init' THEN 'starting'
-        WHEN 'init_branch' THEN 'running'
-        WHEN 'wait' THEN 'awaiting_input'
-        WHEN 'resume' THEN 'running'
-        WHEN 'step' THEN 'running'
-        WHEN 'finish' THEN 'succeeded'
-        WHEN 'finish_branch' THEN 'running'
-        WHEN 'error' THEN 'failed'
-        WHEN 'cancelled' THEN 'cancelled'
+    coalesce(lt.created_at, e.created_at) AS updated_at,
+    CASE
+        WHEN lt.type::text IS NULL THEN 'pending'
+        WHEN lt.type::text = 'init' THEN 'starting'
+        WHEN lt.type::text = 'init_branch' THEN 'running'
+        WHEN lt.type::text = 'wait' THEN 'awaiting_input'
+        WHEN lt.type::text = 'resume' THEN 'running'
+        WHEN lt.type::text = 'step' THEN 'running'
+        WHEN lt.type::text = 'finish' THEN 'succeeded'
+        WHEN lt.type::text = 'finish_branch' THEN 'running'
+        WHEN lt.type::text = 'error' THEN 'failed'
+        WHEN lt.type::text = 'cancelled' THEN 'cancelled'
         ELSE 'queued'
     END AS status,
-    lt.output,
-    -- Extract error from output if type is 'error'
     CASE
         WHEN lt.type::text = 'error' THEN lt.output ->> 'error'
         ELSE NULL
     END AS error,
-    lt.total_transitions,
+    coalesce(lt.total_transitions, 0) AS total_transitions,
     lt.current_step,
     lt.next_step,
     lt.step_definition,
@@ -88,9 +85,7 @@ SELECT
     lt.task_token,
     lt.metadata AS transition_metadata
 FROM
-    executions e,
-    latest_transitions lt
-WHERE
-    e.execution_id = lt.execution_id;
+    executions e
+    LEFT JOIN latest_transitions lt ON e.execution_id = lt.execution_id;
 
 COMMIT;
