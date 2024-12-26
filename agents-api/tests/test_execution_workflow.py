@@ -12,11 +12,11 @@ from agents_api.queries.tasks.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 
 from .fixtures import (
+    client,
+    pg_dsn,
+    s3_client,
     test_agent,
     test_developer_id,
-    pg_dsn,
-    client,
-    s3_client,
 )
 from .utils import patch_testing_temporal
 
