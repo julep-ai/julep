@@ -6,8 +6,8 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Transition
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 from ...common.utils.datetime import utcnow
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list execution transitions
 list_execution_transitions_query = """
