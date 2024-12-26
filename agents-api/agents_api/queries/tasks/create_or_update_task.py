@@ -40,6 +40,10 @@ VALUES (
     $7,                 -- description
     $8                  -- spec
 )
+ON CONFLICT (agent_id, task_id, name) DO UPDATE SET
+    type = EXCLUDED.type,
+    description = EXCLUDED.description,
+    spec = EXCLUDED.spec
 """).sql(pretty=True)
 
 # Define the raw SQL query for creating or updating a task
@@ -86,6 +90,13 @@ SELECT
     $8::jsonb,                   -- input_schema
     $9::jsonb                    -- metadata
 FROM current_version
+ON CONFLICT (developer_id, task_id, "version") DO UPDATE SET
+    version = tasks.version + 1,
+    name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    inherit_tools = EXCLUDED.inherit_tools,
+    input_schema = EXCLUDED.input_schema,
+    metadata = EXCLUDED.metadata
 RETURNING *, (SELECT next_version FROM current_version) as next_version;
 """).sql(pretty=True)
 

@@ -140,7 +140,7 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
 class ExecutionInput(BaseModel):
     developer_id: UUID
     execution: Execution | None = None
-    task: TaskSpecDef
+    task: TaskSpecDef | None = None
     agent: Agent
     agent_tools: list[Tool | CreateToolRequest]
     arguments: dict[str, Any]
@@ -239,7 +239,11 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
+    async def prepare_for_step(
+        self, *args, include_remote=False, **kwargs
+    ) -> dict[str, Any]:
+        # FIXME: include_remote is deprecated
+
         current_input = self.current_input
         inputs = self.inputs
 
@@ -266,7 +270,9 @@ class StepOutcome(BaseModel):
 def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest, **model_opts
 ) -> TaskSpecDef | PartialTaskSpecDef:
-    task_data = task.model_dump(**model_opts, exclude={"task_id", "id", "agent_id"})
+    task_data = task.model_dump(
+        **model_opts, exclude={"version", "developer_id", "task_id", "id", "agent_id"}
+    )
 
     if "tools" in task_data:
         del task_data["tools"]
@@ -305,7 +311,9 @@ def spec_to_task_data(spec: dict) -> dict:
     workflows_dict = {workflow["name"]: workflow["steps"] for workflow in workflows}
 
     tools = spec.pop("tools", [])
-    tools = [{tool["type"]: tool.pop("spec"), **tool} for tool in tools]
+    tools = [
+        {tool["type"]: tool.pop("spec"), **tool} for tool in tools if tool is not None
+    ]
 
     return {
         "id": task_id,

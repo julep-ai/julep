@@ -19,12 +19,13 @@ SELECT * FROM
             agent_id = (
                 SELECT agent_id FROM tasks 
                 WHERE developer_id = $1 AND task_id = $2
+                LIMIT 1
             )
         LIMIT 1
     ) a
 ) AS agent,
 (
-    SELECT jsonb_agg(r) AS tools FROM (
+    SELECT COALESCE(jsonb_agg(r), '[]'::jsonb) AS tools FROM (
         SELECT * FROM tools
         WHERE
             developer_id = $1 AND 
@@ -32,25 +33,16 @@ SELECT * FROM
     ) r
 ) AS tools,
 (
-    SELECT to_jsonb(t) AS task FROM (
-        SELECT * FROM tasks
+    SELECT to_jsonb(e) AS execution FROM (
+        SELECT * FROM latest_executions
         WHERE
-            developer_id = $1 AND 
-            task_id = $2
+            developer_id = $1 AND
+            task_id = $2 AND
+            execution_id = $3
         LIMIT 1
-    ) t
-) AS task;
+    ) e
+) AS execution;                                       
 """
-# (
-#     SELECT to_jsonb(e) AS execution FROM (
-#         SELECT * FROM latest_executions
-#         WHERE
-#             developer_id = $1 AND
-#             task_id = $2 AND
-#             execution_id = $3
-#         LIMIT 1
-#     ) e
-# ) AS execution;
 
 
 # @rewrap_exceptions(
@@ -70,13 +62,25 @@ SELECT * FROM
     one=True,
     transform=lambda d: {
         **d,
-        "task": {
-            "tools": d["tools"],
-            **d["task"],
+        # "task": {
+        #     "tools": d["tools"],
+        #     **d["task"],
+        # },
+        "developer_id": d["agent"]["developer_id"],
+        "agent": {
+            "id": d["agent"]["agent_id"],
+            **d["agent"],
         },
         "agent_tools": [
-            {tool["type"]: tool.pop("spec"), **tool} for tool in d["tools"]
+            {tool["type"]: tool.pop("spec"), **tool}
+            for tool in d["tools"]
+            if tool is not None
         ],
+        "arguments": d["execution"]["input"],
+        "execution": {
+            "id": d["execution"]["execution_id"],
+            **d["execution"],
+        },
     },
 )
 @pg_query
@@ -103,6 +107,6 @@ async def prepare_execution_input(
         [
             str(developer_id),
             str(task_id),
-            # str(execution_id),
+            str(execution_id),
         ],
     )

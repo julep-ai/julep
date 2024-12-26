@@ -10,6 +10,7 @@ import logging
 
 from tenacity import after_log, retry, retry_if_exception_type, wait_fixed
 
+from ..app import app, lifespan
 from ..clients import temporal
 from .worker import create_worker
 
@@ -36,7 +37,8 @@ async def main():
     worker = create_worker(client)
 
     # Start the worker to listen for and process tasks
-    await worker.run()
+    async with lifespan(app):
+        await worker.run()
 
 
 if __name__ == "__main__":

@@ -15,9 +15,11 @@ from ...autogen.openapi_model import (
     CreateTransitionRequest,
     Execution,
     ResourceCreatedResponse,
+    TransitionTarget,
 )
 from ...clients.temporal import run_task_execution_workflow
 from ...common.protocol.developers import Developer
+from ...common.protocol.tasks import task_to_spec
 from ...dependencies.developer_id import get_developer_id
 from ...env import max_free_executions
 from ...queries.developers.get_developer import get_developer
@@ -64,6 +66,14 @@ async def start_execution(
         connection_pool=connection_pool,
     )
 
+    task = await get_task_query(
+        developer_id=developer_id,
+        task_id=task_id,
+        connection_pool=connection_pool,
+    )
+
+    execution_input.task = task_to_spec(task)
+
     job_id = uuid7()
 
     try:
@@ -80,6 +90,12 @@ async def start_execution(
             execution_id=execution_id,
             data=CreateTransitionRequest(
                 type="error",
+                output={"error": str(e)},
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=None,
             ),
             connection_pool=connection_pool,
         )

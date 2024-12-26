@@ -1,69 +1,72 @@
-# # Tests for task queries
-
-# import asyncio
-# import json
-# from unittest.mock import patch
-
-# import yaml
-# from google.protobuf.json_format import MessageToDict
-# from litellm.types.utils import Choices, ModelResponse
-# from ward import raises, skip, test
-
-# from agents_api.autogen.openapi_model import (
-#     CreateExecutionRequest,
-#     CreateTaskRequest,
-# )
-# from agents_api.queries.task.create_task import create_task
-# from agents_api.routers.tasks.create_task_execution import start_execution
-# from tests.fixtures import (
-#     cozo_client,
-#     cozo_clients_with_migrations,
-#     test_agent,
-#     test_developer_id,
-# )
-# from tests.utils import patch_integration_service, patch_testing_temporal
-
-# EMBEDDING_SIZE: int = 1024
+# Tests for task queries
 
 
-# @test("workflow: evaluate step single")
-# async def _(
-#     clients=cozo_clients_with_migrations,
-#     developer_id=test_developer_id,
-#     agent=test_agent,
-# ):
-#     client, _ = clients
-#     data = CreateExecutionRequest(input={"test": "input"})
+from ward import test
 
-#     task = create_task(
-#         developer_id=developer_id,
-#         agent_id=agent.id,
-#         data=CreateTaskRequest(
-#             **{
-#                 "name": "test task",
-#                 "description": "test task about",
-#                 "input_schema": {"type": "object", "additionalProperties": True},
-#                 "main": [{"evaluate": {"hello": '"world"'}}],
-#             }
-#         ),
-#         client=client,
-#     )
+from agents_api.autogen.openapi_model import (
+    CreateExecutionRequest,
+    CreateTaskRequest,
+)
+from agents_api.clients.pg import create_db_pool
+from agents_api.queries.tasks.create_task import create_task
+from agents_api.routers.tasks.create_task_execution import start_execution
 
-#     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
-#         execution, handle = await start_execution(
-#             developer_id=developer_id,
-#             task_id=task.id,
-#             data=data,
-#             client=client,
-#         )
+from .fixtures import (
+    client,
+    pg_dsn,
+    s3_client,
+    test_agent,
+    test_developer_id,
+)
+from .utils import patch_testing_temporal
 
-#         assert handle is not None
-#         assert execution.task_id == task.id
-#         assert execution.input == data.input
-#         mock_run_task_execution_workflow.assert_called_once()
+EMBEDDING_SIZE: int = 1024
 
-#         result = await handle.result()
-#         assert result["hello"] == "world"
+
+@test("workflow: evaluate step single")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    agent=test_agent,
+    _s3_client=s3_client,  # Adding coz blob store might be used
+    _app_client=client,
+):
+    pool = await create_db_pool(dsn=dsn)
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = await create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [{"evaluate": {"hello": '"world"'}}],
+            }
+        ),
+        connection_pool=pool,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            connection_pool=pool,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+        mock_run_task_execution_workflow.assert_called_once()
+
+        try:
+            result = await handle.result()
+            assert result["hello"] == "world"
+        except Exception as ex:
+            breakpoint()
+            raise ex
 
 
 # @test("workflow: evaluate step multiple")

@@ -4,30 +4,40 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...common.protocol.tasks import spec_to_task
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for getting a task
-get_task_query = parse_one("""
+get_task_query = """
 SELECT 
     t.*, 
     COALESCE(
-        jsonb_agg(
-            CASE WHEN w.name IS NOT NULL THEN
-                jsonb_build_object(
-                    'name', w.name,
-                    'steps', jsonb_build_array(w.step_definition)
+        jsonb_agg(   
+            DISTINCT jsonb_build_object(
+                'name', w.name,
+                'steps', (
+                    SELECT jsonb_agg(step_definition ORDER BY step_idx)
+                    FROM workflows w2 
+                    WHERE w2.developer_id = w.developer_id 
+                    AND w2.task_id = w.task_id 
+                    AND w2.version = w.version 
+                    AND w2.name = w.name
                 )
-            END
-        ) FILTER (WHERE w.name IS NOT NULL),
+            )
+        ) FILTER (WHERE w.name IS NOT NULL), 
         '[]'::jsonb
-    ) as workflows
+    ) as workflows,
+    COALESCE(
+        jsonb_agg(tl) FILTER (WHERE tl IS NOT NULL), 
+        '[]'::jsonb
+    ) as tools
 FROM 
     tasks t
 LEFT JOIN 
     workflows w ON t.developer_id = w.developer_id AND t.task_id = w.task_id AND t.version = w.version
+LEFT JOIN
+    tools tl ON t.developer_id = tl.developer_id AND t.task_id = tl.task_id
 WHERE 
     t.developer_id = $1 AND t.task_id = $2
     AND t.version = (
@@ -36,7 +46,7 @@ WHERE
         WHERE developer_id = $1 AND task_id = $2
     )
 GROUP BY t.developer_id, t.task_id, t.canonical_name, t.agent_id, t.version;
-""").sql(pretty=True)
+"""
 
 
 @rewrap_exceptions(
