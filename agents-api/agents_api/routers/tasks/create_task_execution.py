@@ -72,7 +72,6 @@ async def start_execution(
 
     execution_input.task.workflows = execution_input.task.main
 
-
     job_id = uuid7()
 
     try:
