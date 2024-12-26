@@ -8,10 +8,9 @@ from .fixtures import (
     make_request,
     test_agent,
     test_execution,
-    test_transition,
     test_task,
+    test_transition,
 )
-
 from .utils import patch_testing_temporal
 
 
