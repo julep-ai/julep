@@ -10,6 +10,7 @@ from tests.fixtures import (
     # test_execution,
     test_task,
 )
+from .fixtures import test_execution, test_transition
 
 
 @test("route: unauthorized should fail")
@@ -119,20 +120,19 @@ def _(make_request=make_request, task=test_task):
     assert response.status_code == 200
 
 
-# FIXME: This test is failing
-# @test("route: list execution transitions")
-# def _(make_request=make_request, execution=test_execution, transition=test_transition):
-#     response = make_request(
-#         method="GET",
-#         url=f"/executions/{str(execution.id)}/transitions",
-#     )
+@test("route: list execution transitions")
+def _(make_request=make_request, execution=test_execution, transition=test_transition):
+    response = make_request(
+        method="GET",
+        url=f"/executions/{str(execution.id)}/transitions",
+    )
 
-#     assert response.status_code == 200
-#     response = response.json()
-#     transitions = response["items"]
+    assert response.status_code == 200
+    response = response.json()
+    transitions = response["items"]
 
-#     assert isinstance(transitions, list)
-#     assert len(transitions) > 0
+    assert isinstance(transitions, list)
+    assert len(transitions) > 0
 
 
 # @test("route: list task executions")

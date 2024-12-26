@@ -7,10 +7,11 @@ from fastapi import HTTPException
 
 from ...autogen.openapi_model import Transition
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.datetime import utcnow
 
 # Query to list execution transitions
 list_execution_transitions_query = """
-SELECT * FROM latest_transitions
+SELECT * FROM transitions
 WHERE
     execution_id = $1
 ORDER BY 
@@ -25,6 +26,8 @@ def _transform(d):
     next_step = d.pop("next_step", None)
 
     return {
+        "id": d["transition_id"],
+        "updated_at": utcnow(),
         "current": {
             "workflow": current_step[0],
             "step": current_step[1],

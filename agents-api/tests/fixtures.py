@@ -325,25 +325,25 @@ async def test_execution_started(
     yield execution
 
 
-# @fixture(scope="global")
-# async def test_transition(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     execution=test_execution,
-# ):
-#     async with get_pg_client(dsn=dsn) as client:
-#         transition = await create_execution_transition(
-#             developer_id=developer_id,
-#             execution_id=execution.id,
-#             data=CreateTransitionRequest(
-#                 type="step",
-#                 output={},
-#                 current={"workflow": "main", "step": 0},
-#                 next={"workflow": "wf1", "step": 1},
-#             ),
-#             client=client,
-#         )
-#         yield transition
+@fixture(scope="global")
+async def test_transition(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    execution=test_execution,
+):
+    pool = await create_db_pool(dsn=dsn)
+    transition = await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="step",
+            output={},
+            current={"workflow": "main", "step": 0},
+            next={"workflow": "wf1", "step": 1},
+        ),
+        connection_pool=pool,
+    )
+    yield transition
 
 
 @fixture(scope="test")
