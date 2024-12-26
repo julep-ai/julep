@@ -310,10 +310,8 @@ def spec_to_task_data(spec: dict) -> dict:
     workflows = spec.pop("workflows")
     workflows_dict = {workflow["name"]: workflow["steps"] for workflow in workflows}
 
-    tools = spec.pop("tools", [])
-    tools = [
-        {tool["type"]: tool.pop("spec"), **tool} for tool in tools if tool is not None
-    ]
+    tools = spec.pop("tools", []) or []
+    tools = [{tool["type"]: tool.pop("spec"), **tool} for tool in tools if tool]
 
     return {
         "id": task_id,

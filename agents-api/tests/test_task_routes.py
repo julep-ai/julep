@@ -11,6 +11,8 @@ from .fixtures import (
     test_task,
     test_transition,
 )
+
+from .fixtures import test_execution, test_transition
 from .utils import patch_testing_temporal
 
 
@@ -136,19 +138,19 @@ def _(make_request=make_request, execution=test_execution, transition=test_trans
     assert len(transitions) > 0
 
 
-# @test("route: list task executions")
-# def _(make_request=make_request, execution=test_execution):
-#     response = make_request(
-#         method="GET",
-#         url=f"/tasks/{str(execution.task_id)}/executions",
-#     )
+@test("route: list task executions")
+def _(make_request=make_request, execution=test_execution):
+    response = make_request(
+        method="GET",
+        url=f"/tasks/{str(execution.task_id)}/executions",
+    )
 
-#     assert response.status_code == 200
-#     response = response.json()
-#     executions = response["items"]
+    assert response.status_code == 200
+    response = response.json()
+    executions = response["items"]
 
-#     assert isinstance(executions, list)
-#     assert len(executions) > 0
+    assert isinstance(executions, list)
+    assert len(executions) > 0
 
 
 @test("route: list tasks")
@@ -193,42 +195,42 @@ def _(make_request=make_request, agent=test_agent):
 
 # FIXME: This test is failing
 
-# @test("route: patch execution")
-# async def _(make_request=make_request, task=test_task):
-#     data = dict(
-#         input={},
-#         metadata={},
-#     )
+@test("route: patch execution")
+async def _(make_request=make_request, task=test_task):
+    data = dict(
+        input={},
+        metadata={},
+    )
 
-#     async with patch_testing_temporal():
-#         response = make_request(
-#             method="POST",
-#             url=f"/tasks/{str(task.id)}/executions",
-#             json=data,
-#         )
+    async with patch_testing_temporal():
+        response = make_request(
+            method="POST",
+            url=f"/tasks/{str(task.id)}/executions",
+            json=data,
+        )
 
-#         execution = response.json()
+        execution = response.json()
 
-#     data = dict(
-#         status="running",
-#     )
+    data = dict(
+        status="running",
+    )
 
-#     response = make_request(
-#         method="PATCH",
-#         url=f"/tasks/{str(task.id)}/executions/{str(execution['id'])}",
-#         json=data,
-#     )
+    response = make_request(
+        method="PATCH",
+        url=f"/tasks/{str(task.id)}/executions/{str(execution['id'])}",
+        json=data,
+    )
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
-#     execution_id = response.json()["id"]
+    execution_id = response.json()["id"]
 
-#     response = make_request(
-#         method="GET",
-#         url=f"/executions/{execution_id}",
-#     )
+    response = make_request(
+        method="GET",
+        url=f"/executions/{execution_id}",
+    )
 
-#     assert response.status_code == 200
-#     execution = response.json()
+    assert response.status_code == 200
+    execution = response.json()
 
-#     assert execution["status"] == "running"
+    assert execution["status"] == "running"
