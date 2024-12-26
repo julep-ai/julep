@@ -191,7 +191,7 @@ async def patch_task(
                         workflow_name,  # $3
                         step_idx,  # $4
                         step["kind_"],  # $5
-                        step[step["kind_"]],  # $6
+                        step,  # $6
                     ]
                 )
 
