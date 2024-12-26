@@ -44,6 +44,7 @@ SELECT * FROM
 ) AS execution;                                       
 """
 
+
 # @rewrap_exceptions(
 #     {
 #         QueryException: partialclass(HTTPException, status_code=400),

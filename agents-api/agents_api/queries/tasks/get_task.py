@@ -9,7 +9,7 @@ from ...common.protocol.tasks import spec_to_task
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for getting a task
-get_task_query ="""
+get_task_query = """
 SELECT 
     t.*, 
     COALESCE(

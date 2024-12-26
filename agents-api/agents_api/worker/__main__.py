@@ -10,9 +10,9 @@ import logging
 
 from tenacity import after_log, retry, retry_if_exception_type, wait_fixed
 
+from ..app import app, lifespan
 from ..clients import temporal
 from .worker import create_worker
-from ..app import lifespan, app
 
 logger = logging.getLogger(__name__)
 h = logging.StreamHandler()
