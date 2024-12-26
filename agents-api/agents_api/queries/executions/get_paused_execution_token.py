@@ -37,14 +37,12 @@ WHERE
 @beartype
 async def get_paused_execution_token(
     *,
-    developer_id: UUID,
     execution_id: UUID,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     """
     Get a paused execution token for a given execution.
 
     Parameters:
-        developer_id (UUID): The ID of the developer.
         execution_id (UUID): The ID of the execution.
 
     Returns:

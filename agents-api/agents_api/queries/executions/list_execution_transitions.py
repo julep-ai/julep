@@ -4,23 +4,21 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Transition
+from ...common.utils.datetime import utcnow
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list execution transitions
-list_execution_transitions_query = parse_one("""
+list_execution_transitions_query = """
 SELECT * FROM transitions
 WHERE
     execution_id = $1
 ORDER BY 
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at END DESC NULLS LAST
+    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
-""").sql(pretty=True)
+"""
 
 
 def _transform(d):
@@ -28,6 +26,8 @@ def _transform(d):
     next_step = d.pop("next_step", None)
 
     return {
+        "id": d["transition_id"],
+        "updated_at": utcnow(),
         "current": {
             "workflow": current_step[0],
             "step": current_step[1],
@@ -60,7 +60,7 @@ async def list_execution_transitions(
     execution_id: UUID,
     limit: int = 100,
     offset: int = 0,
-    sort_by: Literal["created_at", "updated_at"] = "created_at",
+    sort_by: Literal["created_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> tuple[str, list]:
     """

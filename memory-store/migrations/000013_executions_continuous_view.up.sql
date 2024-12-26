@@ -22,6 +22,7 @@ WITH
 SELECT
     time_bucket ('1 day', created_at) AS bucket,
     execution_id,
+    transition_id,
     count(*) AS total_transitions,
     state_agg (created_at, to_text (type)) AS state,
     max(created_at) AS created_at,
@@ -37,7 +38,8 @@ FROM
     transitions
 GROUP BY
     bucket,
-    execution_id
+    execution_id,
+    transition_id
 WITH
     no data;
 
@@ -61,7 +63,7 @@ SELECT
     e.created_at,
     coalesce(lt.created_at, e.created_at) AS updated_at,
     CASE
-        WHEN lt.type::text IS NULL THEN 'pending'
+        WHEN lt.type::text IS NULL THEN 'queued'
         WHEN lt.type::text = 'init' THEN 'starting'
         WHEN lt.type::text = 'init_branch' THEN 'running'
         WHEN lt.type::text = 'wait' THEN 'awaiting_input'

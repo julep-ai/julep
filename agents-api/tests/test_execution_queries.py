@@ -45,7 +45,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
     )
 
     await create_temporal_lookup(
-        developer_id=developer_id,
         execution_id=execution.id,
         workflow_handle=workflow_handle,
         connection_pool=pool,

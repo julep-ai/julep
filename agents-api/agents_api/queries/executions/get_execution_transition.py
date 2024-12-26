@@ -4,7 +4,6 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Transition
 from ..utils import (
@@ -16,13 +15,13 @@ from ..utils import (
 
 # FIXME: Use latest_transitions instead of transitions
 # Query to get an execution transition
-get_execution_transition_query = parse_one("""
+get_execution_transition_query = """
 SELECT * FROM transitions
 WHERE
     transition_id = $1
     OR task_token = $2
 LIMIT 1;
-""").sql(pretty=True)
+"""
 
 
 def _transform(d):
@@ -60,7 +59,6 @@ def _transform(d):
 @beartype
 async def get_execution_transition(
     *,
-    developer_id: UUID,  # FIXME: Remove this parameter
     transition_id: UUID | None = None,
     task_token: str | None = None,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
@@ -68,7 +66,6 @@ async def get_execution_transition(
     Get an execution transition by its ID or task token.
 
     Parameters:
-        developer_id (UUID): The ID of the developer.
         transition_id (UUID | None): The ID of the transition.
         task_token (str | None): The task token.
 
