@@ -239,7 +239,9 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
+    async def prepare_for_step(self, *args, include_remote=False, **kwargs) -> dict[str, Any]:
+        # FIXME: include_remote is deprecated
+
         current_input = self.current_input
         inputs = self.inputs
 

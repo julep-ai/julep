@@ -140,18 +140,15 @@ class TaskExecutionWorkflow:
     async def run(
         self,
         execution_input: ExecutionInput,
-        start: TransitionTarget = TransitionTarget(workflow="main", step=0),
-        previous_inputs: list | None = None,
+        start: TransitionTarget,
+        previous_inputs: list,
     ) -> Any:
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
             f" [LOC {start.workflow}.{start.step}]"
         )
 
-        # FIXME: Look into saving arguments to the blob store if necessary
         # 0. Prepare context
-        previous_inputs = previous_inputs or [execution_input.arguments]
-
         context = StepContext(
             execution_input=execution_input,
             inputs=previous_inputs,

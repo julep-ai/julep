@@ -19,18 +19,28 @@ services:
     #   sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'pgaudit,\2'/;s/,'/'/" /home/postgres/pgdata/data/postgresql.conf
     #   && exec /docker-entrypoint.sh
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   vectorizer-worker:
     image: timescale/pgai-vectorizer-worker:v0.3.0
     environment:
       - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres
       - VOYAGE_API_KEY=${VOYAGE_API_KEY}
     command: [ "--poll-interval", "5s" ]
+    depends_on:
+      memory-store:
+        condition: service_healthy
 
   migration:
     image: migrate/migrate:latest
     volumes:
       - ./migrations:/migrations
     command: [ "-path", "/migrations", "-database", "postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres?sslmode=disable" , "up"]
+    
     restart: "no"
     develop:
       watch:
@@ -38,7 +48,8 @@ services:
           target: ./migrations
           action: sync+restart
     depends_on:
-      - memory-store
+      memory-store:
+        condition: service_healthy
 
 volumes:
   memory_store_data:

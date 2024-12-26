@@ -122,8 +122,8 @@ BEGIN
 
     IF previous_type IS NULL THEN
         -- If there is no previous transition, allow only 'init' or 'init_branch'
-        IF NEW.type NOT IN ('init', 'init_branch') THEN
-            RAISE EXCEPTION 'First transition must be init or init_branch, got %', NEW.type;
+        IF NEW.type NOT IN ('init', 'init_branch', 'error', 'cancelled') THEN
+            RAISE EXCEPTION 'First transition must be init / init_branch / error / cancelled, got %', NEW.type;
         END IF;
     ELSE
         -- Define the valid_next_types array based on previous_type

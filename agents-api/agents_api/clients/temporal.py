@@ -1,4 +1,3 @@
-import asyncio
 from datetime import timedelta
 from uuid import UUID
 
@@ -92,7 +91,6 @@ async def run_task_execution_workflow(
     from ..workflows.task_execution import TaskExecutionWorkflow
 
     start: TransitionTarget = start or TransitionTarget(workflow="main", step=0)
-    previous_inputs: list[dict] = previous_inputs or []
 
     client = client or (await get_client())
     execution_id = execution_input.execution.id
@@ -100,9 +98,9 @@ async def run_task_execution_workflow(
 
     # FIXME: This is wrong logic
     old_args = execution_input.arguments
-    execution_input.arguments = await asyncio.gather(
-        *[offload_if_large(arg) for arg in old_args]
-    )
+    execution_input.arguments = await offload_if_large(old_args)
+
+    previous_inputs: list[dict] = previous_inputs or [execution_input.arguments]
 
     return await client.start_workflow(
         TaskExecutionWorkflow.run,

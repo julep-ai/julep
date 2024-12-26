@@ -15,6 +15,7 @@ from ...autogen.openapi_model import (
     CreateTransitionRequest,
     Execution,
     ResourceCreatedResponse,
+    TransitionTarget,
 )
 from ...clients.temporal import run_task_execution_workflow
 from ...common.protocol.developers import Developer
@@ -89,6 +90,12 @@ async def start_execution(
             execution_id=execution_id,
             data=CreateTransitionRequest(
                 type="error",
+                output={"error": str(e)},
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=None,
             ),
             connection_pool=connection_pool,
         )

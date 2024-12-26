@@ -22,24 +22,23 @@ WITH
 SELECT
     time_bucket ('1 day', created_at) AS bucket,
     execution_id,
-    transition_id,
+    last(transition_id, created_at) AS transition_id,
     count(*) AS total_transitions,
-    state_agg (created_at, to_text (type)) AS state,
+    state_agg(created_at, to_text(type)) AS state,
     max(created_at) AS created_at,
-    last (type, created_at) AS type,
-    last (step_definition, created_at) AS step_definition,
-    last (step_label, created_at) AS step_label,
-    last (current_step, created_at) AS current_step,
-    last (next_step, created_at) AS next_step,
-    last (output, created_at) AS output,
-    last (task_token, created_at) AS task_token,
-    last (metadata, created_at) AS metadata
+    last(type, created_at) AS type,
+    last(step_definition, created_at) AS step_definition,
+    last(step_label, created_at) AS step_label,
+    last(current_step, created_at) AS current_step,
+    last(next_step, created_at) AS next_step,
+    last(output, created_at) AS output,
+    last(task_token, created_at) AS task_token,
+    last(metadata, created_at) AS metadata
 FROM
     transitions
 GROUP BY
     bucket,
-    execution_id,
-    transition_id
+    execution_id
 WITH
     no data;
 
