@@ -10,6 +10,8 @@ from starlette.status import HTTP_201_CREATED
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
 
+from ...common.protocol.tasks import task_to_spec
+
 from ...autogen.openapi_model import (
     CreateExecutionRequest,
     CreateTransitionRequest,
@@ -64,13 +66,13 @@ async def start_execution(
         connection_pool=connection_pool,
     )
 
-    execution_input.task = await get_task_query(
+    task = await get_task_query(
         developer_id=developer_id,
         task_id=task_id,
         connection_pool=connection_pool,
     )
 
-    execution_input.task.workflows = execution_input.task.main
+    execution_input.task = task_to_spec(task)
 
     job_id = uuid7()
 

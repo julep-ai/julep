@@ -19,6 +19,7 @@ SELECT * FROM
             agent_id = (
                 SELECT agent_id FROM tasks 
                 WHERE developer_id = $1 AND task_id = $2
+                LIMIT 1
             )
         LIMIT 1
     ) a
@@ -42,27 +43,6 @@ SELECT * FROM
     ) e
 ) AS execution;                                       
 """
-# (
-#     SELECT to_jsonb(e) AS execution FROM (
-#         SELECT * FROM latest_executions
-#         WHERE
-#             developer_id = $1 AND
-#             task_id = $2 AND
-#             execution_id = $3
-#         LIMIT 1
-#     ) e
-# ) AS execution;
-
-# (
-#     SELECT to_jsonb(t) AS task FROM (
-#         SELECT * FROM tasks
-#         WHERE
-#             developer_id = $1 AND
-#             task_id = $2
-#         LIMIT 1
-#     ) t
-# ) AS task;
-
 
 # @rewrap_exceptions(
 #     {

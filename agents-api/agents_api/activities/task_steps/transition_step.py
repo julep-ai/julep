@@ -55,10 +55,8 @@ async def transition_step(
         transition = await create_execution_transition(
             developer_id=context.execution_input.developer_id,
             execution_id=context.execution_input.execution.id,
-            task_id=context.execution_input.task.id,
             data=transition_info,
             task_token=transition_info.task_token,
-            update_execution_status=True,
         )
 
     except Exception as e:

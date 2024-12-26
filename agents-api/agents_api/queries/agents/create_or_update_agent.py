@@ -52,6 +52,14 @@ VALUES (
     $8,                                          -- metadata
     $9                                           -- default_settings
 )
+ON CONFLICT (developer_id, agent_id) DO UPDATE SET
+    canonical_name = EXCLUDED.canonical_name,
+    name = EXCLUDED.name,
+    about = EXCLUDED.about,
+    instructions = EXCLUDED.instructions,
+    model = EXCLUDED.model,
+    metadata = EXCLUDED.metadata,
+    default_settings = EXCLUDED.default_settings
 RETURNING *;
 """).sql(pretty=True)
 

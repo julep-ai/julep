@@ -266,7 +266,7 @@ class StepOutcome(BaseModel):
 def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest, **model_opts
 ) -> TaskSpecDef | PartialTaskSpecDef:
-    task_data = task.model_dump(**model_opts, exclude={"task_id", "id", "agent_id"})
+    task_data = task.model_dump(**model_opts, exclude={"version","developer_id", "task_id", "id", "agent_id"})
 
     if "tools" in task_data:
         del task_data["tools"]
