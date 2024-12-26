@@ -64,6 +64,15 @@ async def start_execution(
         connection_pool=connection_pool,
     )
 
+    execution_input.task = await get_task_query(
+        developer_id=developer_id,
+        task_id=task_id,
+        connection_pool=connection_pool,
+    )
+
+    execution_input.task.workflows = execution_input.task.main
+
+
     job_id = uuid7()
 
     try:

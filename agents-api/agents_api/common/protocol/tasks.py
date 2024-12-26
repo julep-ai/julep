@@ -140,7 +140,7 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
 class ExecutionInput(BaseModel):
     developer_id: UUID
     execution: Execution | None = None
-    task: TaskSpecDef
+    task: TaskSpecDef | None = None
     agent: Agent
     agent_tools: list[Tool | CreateToolRequest]
     arguments: dict[str, Any]

@@ -80,6 +80,7 @@ SELECT
         ELSE NULL
     END AS error,
     coalesce(lt.total_transitions, 0) AS total_transitions,
+    coalesce(lt.output, '{}'::jsonb) AS output,
     lt.current_step,
     lt.next_step,
     lt.step_definition,
