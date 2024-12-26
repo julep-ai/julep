@@ -50,13 +50,13 @@ async def patch_testing_temporal():
 
 
 @asynccontextmanager
-async def patch_http_client_with_temporal(*, cozo_client, developer_id):
+async def patch_http_client_with_temporal(*, postgres_pool, developer_id):
     async with patch_testing_temporal() as (worker, mock_get_client):
         from agents_api.env import api_key, api_key_header_name
         from agents_api.web import app
 
         client = TestClient(app=app)
-        app.state.cozo_client = cozo_client
+        app.state.postgres_pool = postgres_pool
 
         def make_request(method, url, **kwargs):
             headers = kwargs.pop("headers", {})

@@ -218,21 +218,21 @@ async def test_session(
     return session
 
 
-# @fixture(scope="global")
-# async def test_user_doc(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     user=test_user,
-# ):
-#     async with get_pg_client(dsn=dsn) as client:
-#         doc = await create_doc(
-#             developer_id=developer_id,
-#             owner_type="user",
-#             owner_id=user.id,
-#             data=CreateDocRequest(title="Hello", content=["World"]),
-#             client=client,
-#         )
-#         yield doc
+@fixture(scope="global")
+async def test_user_doc(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    user=test_user,
+):
+    pool = create_db_pool(dsn=dsn)
+    doc = await create_doc(
+        developer_id=developer_id,
+        owner_type="user",
+        owner_id=user.id,
+        data=CreateDocRequest(title="Hello", content=["World"]),
+        connection_pool=pool,
+    )
+    yield doc
 
 
 # @fixture(scope="global")

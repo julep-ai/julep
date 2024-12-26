@@ -34,7 +34,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})

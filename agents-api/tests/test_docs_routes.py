@@ -1,104 +1,107 @@
-from ward import test
+import time
+from ward import test, skip
 
 from tests.fixtures import (
     make_request,
     patch_embed_acompletion,
     test_agent,
     test_user,
-    # test_user_doc,
+    test_doc,
+    test_user_doc,
 )
+from .utils import patch_testing_temporal
 
-# @test("route: create user doc")
-# async def _(make_request=make_request, user=test_user):
-#     async with patch_testing_temporal():
-#         data = dict(
-#             title="Test User Doc",
-#             content=["This is a test user document."],
-#         )
+@test("route: create user doc")
+async def _(make_request=make_request, user=test_user):
+    async with patch_testing_temporal():
+        data = dict(
+            title="Test User Doc",
+            content=["This is a test user document."],
+        )
 
-#         response = make_request(
-#             method="POST",
-#             url=f"/users/{user.id}/docs",
-#             json=data,
-#         )
+        response = make_request(
+            method="POST",
+            url=f"/users/{user.id}/docs",
+            json=data,
+        )
 
-#         assert response.status_code == 201
+        assert response.status_code == 201
 
-#         result = response.json()
-#         assert len(result["jobs"]) > 0
-
-
-# @test("route: create agent doc")
-# async def _(make_request=make_request, agent=test_agent):
-#     async with patch_testing_temporal():
-#         data = dict(
-#             title="Test Agent Doc",
-#             content=["This is a test agent document."],
-#         )
-
-#         response = make_request(
-#             method="POST",
-#             url=f"/agents/{agent.id}/docs",
-#             json=data,
-#         )
-
-#         assert response.status_code == 201
-
-#         result = response.json()
-#         assert len(result["jobs"]) > 0
+        result = response.json()
+        assert len(result["jobs"]) > 0
 
 
-# @test("route: delete doc")
-# async def _(make_request=make_request, agent=test_agent):
-#     async with patch_testing_temporal():
-#         data = dict(
-#             title="Test Agent Doc",
-#             content=["This is a test agent document."],
-#         )
+@test("route: create agent doc")
+async def _(make_request=make_request, agent=test_agent):
+    async with patch_testing_temporal():
+        data = dict(
+            title="Test Agent Doc",
+            content=["This is a test agent document."],
+        )
 
-#         response = make_request(
-#             method="POST",
-#             url=f"/agents/{agent.id}/docs",
-#             json=data,
-#         )
-#         doc_id = response.json()["id"]
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
 
-#         response = make_request(
-#             method="DELETE",
-#             url=f"/agents/{agent.id}/docs/{doc_id}",
-#         )
+        assert response.status_code == 201
 
-#         assert response.status_code == 202
-
-#         response = make_request(
-#             method="GET",
-#             url=f"/docs/{doc_id}",
-#         )
-
-#         assert response.status_code == 404
+        result = response.json()
+        assert len(result["jobs"]) > 0
 
 
-# @test("route: get doc")
-# async def _(make_request=make_request, agent=test_agent):
-#     async with patch_testing_temporal():
-#         data = dict(
-#             title="Test Agent Doc",
-#             content=["This is a test agent document."],
-#         )
+@test("route: delete doc")
+async def _(make_request=make_request, agent=test_agent):
+    async with patch_testing_temporal():
+        data = dict(
+            title="Test Agent Doc",
+            content=["This is a test agent document."],
+        )
 
-#         response = make_request(
-#             method="POST",
-#             url=f"/agents/{agent.id}/docs",
-#             json=data,
-#         )
-#         doc_id = response.json()["id"]
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+        doc_id = response.json()["id"]
 
-#         response = make_request(
-#             method="GET",
-#             url=f"/docs/{doc_id}",
-#         )
+        response = make_request(
+            method="DELETE",
+            url=f"/agents/{agent.id}/docs/{doc_id}",
+        )
 
-#         assert response.status_code == 200
+        assert response.status_code == 202
+
+        response = make_request(
+            method="GET",
+            url=f"/docs/{doc_id}",
+        )
+
+        assert response.status_code == 404
+
+
+@test("route: get doc")
+async def _(make_request=make_request, agent=test_agent):
+    async with patch_testing_temporal():
+        data = dict(
+            title="Test Agent Doc",
+            content=["This is a test agent document."],
+        )
+
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+        doc_id = response.json()["id"]
+
+        response = make_request(
+            method="GET",
+            url=f"/docs/{doc_id}",
+        )
+
+        assert response.status_code == 200
 
 
 @test("route: list user docs")
@@ -163,78 +166,78 @@ def _(make_request=make_request, agent=test_agent):
     assert isinstance(docs, list)
 
 
-# # TODO: Fix this test. It fails sometimes and sometimes not.
-# @test("route: search agent docs")
-# async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-#     time.sleep(0.5)
-#     search_params = dict(
-#         text=doc.content[0],
-#         limit=1,
-#     )
+# TODO: Fix this test. It fails sometimes and sometimes not.
+@test("route: search agent docs")
+async def _(make_request=make_request, agent=test_agent, doc=test_doc):
+    time.sleep(0.5)
+    search_params = dict(
+        text=doc.content[0],
+        limit=1,
+    )
 
-#     response = make_request(
-#         method="POST",
-#         url=f"/agents/{agent.id}/search",
-#         json=search_params,
-#     )
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/search",
+        json=search_params,
+    )
 
-#     assert response.status_code == 200
-#     response = response.json()
-#     docs = response["docs"]
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["docs"]
 
-#     assert isinstance(docs, list)
-#     assert len(docs) >= 1
-
-
-# # FIXME: This test is failing because the search is not returning the expected results
-# @skip("Fails randomly on CI")
-# @test("route: search user docs")
-# async def _(make_request=make_request, user=test_user, doc=test_user_doc):
-#     time.sleep(0.5)
-#     search_params = dict(
-#         text=doc.content[0],
-#         limit=1,
-#     )
-
-#     response = make_request(
-#         method="POST",
-#         url=f"/users/{user.id}/search",
-#         json=search_params,
-#     )
-
-#     assert response.status_code == 200
-#     response = response.json()
-#     docs = response["docs"]
-
-#     assert isinstance(docs, list)
-
-#     assert len(docs) >= 1
+    assert isinstance(docs, list)
+    assert len(docs) >= 1
 
 
-# @test("route: search agent docs hybrid with mmr")
-# async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-#     time.sleep(0.5)
+# FIXME: This test is failing because the search is not returning the expected results
+@skip("Fails randomly on CI")
+@test("route: search user docs")
+async def _(make_request=make_request, user=test_user, doc=test_user_doc):
+    time.sleep(0.5)
+    search_params = dict(
+        text=doc.content[0],
+        limit=1,
+    )
 
-#     EMBEDDING_SIZE = 1024
-#     search_params = dict(
-#         text=doc.content[0],
-#         vector=[1.0] * EMBEDDING_SIZE,
-#         mmr_strength=0.5,
-#         limit=1,
-#     )
+    response = make_request(
+        method="POST",
+        url=f"/users/{user.id}/search",
+        json=search_params,
+    )
 
-#     response = make_request(
-#         method="POST",
-#         url=f"/agents/{agent.id}/search",
-#         json=search_params,
-#     )
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["docs"]
 
-#     assert response.status_code == 200
-#     response = response.json()
-#     docs = response["docs"]
+    assert isinstance(docs, list)
 
-#     assert isinstance(docs, list)
-#     assert len(docs) >= 1
+    assert len(docs) >= 1
+
+
+@test("route: search agent docs hybrid with mmr")
+async def _(make_request=make_request, agent=test_agent, doc=test_doc):
+    time.sleep(0.5)
+
+    EMBEDDING_SIZE = 1024
+    search_params = dict(
+        text=doc.content[0],
+        vector=[1.0] * EMBEDDING_SIZE,
+        mmr_strength=0.5,
+        limit=1,
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/search",
+        json=search_params,
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["docs"]
+
+    assert isinstance(docs, list)
+    assert len(docs) >= 1
 
 
 @test("routes: embed route")
