@@ -9,5 +9,3 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     import msgpack as msgpack
-
-import os

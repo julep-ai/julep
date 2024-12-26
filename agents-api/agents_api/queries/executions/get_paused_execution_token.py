@@ -1,10 +1,9 @@
-from typing import Any, Literal, TypeVar
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ..utils import (
     partialclass,
@@ -14,14 +13,14 @@ from ..utils import (
 )
 
 # Query to get a paused execution token
-get_paused_execution_token_query = parse_one("""
-SELECT * FROM transitions
+get_paused_execution_token_query = """
+SELECT * FROM latest_transitions
 WHERE
     execution_id = $1
         AND type = 'wait'
     ORDER BY created_at DESC
     LIMIT 1;
-""").sql(pretty=True)
+"""
 
 
 @rewrap_exceptions(
@@ -52,20 +51,6 @@ async def get_paused_execution_token(
         tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]: SQL query and parameters for getting a paused execution token.
     """
     execution_id = str(execution_id)
-
-    # TODO: what to do with this query?
-    # check_status_query = """
-    # ?[execution_id, status] :=
-    #     *executions:execution_id_status_idx {
-    #         execution_id,
-    #         status,
-    #     },
-    #     execution_id = to_uuid($execution_id),
-    #     status = "awaiting_input"
-
-    # :limit 1
-    # :assert some
-    # """
 
     return (
         get_paused_execution_token_query,

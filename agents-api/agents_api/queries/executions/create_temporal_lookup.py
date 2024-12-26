@@ -54,7 +54,7 @@ RETURNING *;
 @beartype
 async def create_temporal_lookup(
     *,
-    developer_id: UUID,  # TODO: what to do with this parameter?
+    developer_id: UUID,  # FIXME: Remove this parameter
     execution_id: UUID,
     workflow_handle: WorkflowHandle,
 ) -> tuple[str, list]:

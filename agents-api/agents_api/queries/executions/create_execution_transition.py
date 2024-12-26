@@ -52,6 +52,7 @@ RETURNING *;
 """).sql(pretty=True)
 
 
+# FIXME: Remove this function
 def validate_transition_targets(data: CreateTransitionRequest) -> None:
     # Make sure the current/next targets are valid
     match data.type:

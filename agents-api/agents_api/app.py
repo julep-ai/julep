@@ -1,16 +1,13 @@
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Callable, Coroutine
 
 from aiobotocore.session import get_session
-from fastapi import APIRouter, FastAPI, Request, Response
-from fastapi.params import Depends
+from fastapi import APIRouter, FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 from scalar_fastapi import get_scalar_api_reference
 
 from .clients.pg import create_db_pool
-from .dependencies.content_length import valid_content_length
-from .env import api_prefix, hostname, max_payload_size, protocol, public_port
+from .env import api_prefix, hostname, protocol, public_port
 
 
 # TODO: This currently doesn't use .env variables, but we should move to using them

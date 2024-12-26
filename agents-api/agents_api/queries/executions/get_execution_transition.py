@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypeVar
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
@@ -14,6 +14,7 @@ from ..utils import (
     wrap_in_class,
 )
 
+# FIXME: Use latest_transitions instead of transitions
 # Query to get an execution transition
 get_execution_transition_query = parse_one("""
 SELECT * FROM transitions
@@ -59,7 +60,7 @@ def _transform(d):
 @beartype
 async def get_execution_transition(
     *,
-    developer_id: UUID,  # TODO: what to do with this parameter?
+    developer_id: UUID,  # FIXME: Remove this parameter
     transition_id: UUID | None = None,
     task_token: str | None = None,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:

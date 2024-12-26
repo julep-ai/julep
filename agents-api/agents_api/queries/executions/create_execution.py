@@ -1,4 +1,4 @@
-from typing import Annotated, Any, TypeVar
+from typing import Annotated
 from uuid import UUID
 
 import asyncpg

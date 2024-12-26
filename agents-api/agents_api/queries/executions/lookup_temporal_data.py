@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypeVar
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
@@ -8,11 +8,20 @@ from sqlglot import parse_one
 
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
+# FIXME: Check if this query is correct
+
+
 # Query to lookup temporal data
 lookup_temporal_data_query = parse_one("""
-SELECT * FROM temporal_executions_lookup
+SELECT t.*
+FROM
+    temporal_executions_lookup t,
+    executions e
 WHERE
-    execution_id = $1
+    t.execution_id = e.execution_id
+    AND t.developer_id = e.developer_id
+    AND e.execution_id = $1
+    AND e.developer_id = $2
 LIMIT 1;
 """).sql(pretty=True)
 
@@ -31,7 +40,7 @@ LIMIT 1;
 @beartype
 async def lookup_temporal_data(
     *,
-    developer_id: UUID,  # TODO: what to do with this parameter?
+    developer_id: UUID,
     execution_id: UUID,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     """
@@ -49,6 +58,6 @@ async def lookup_temporal_data(
 
     return (
         lookup_temporal_data_query,
-        [execution_id],
+        [execution_id, developer_id],
         "fetchrow",
     )

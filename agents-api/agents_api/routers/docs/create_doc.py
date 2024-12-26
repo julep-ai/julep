@@ -3,15 +3,9 @@ from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends
 from starlette.status import HTTP_201_CREATED
-from temporalio.client import Client as TemporalClient
-from uuid_extensions import uuid7
 
-from ...activities.types import EmbedDocsPayload
 from ...autogen.openapi_model import CreateDocRequest, Doc, ResourceCreatedResponse
-from ...clients import temporal
-from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from ...dependencies.developer_id import get_developer_id
-from ...env import temporal_task_queue, testing
 from ...queries.docs.create_doc import create_doc as create_doc_query
 from .router import router
 

@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypeVar
+from typing import Literal
 from uuid import UUID
 
 import asyncpg

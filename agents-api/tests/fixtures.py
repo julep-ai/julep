@@ -36,7 +36,6 @@ from agents_api.queries.files.create_file import create_file
 from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
 from agents_api.queries.tools.create_tools import create_tools
-from agents_api.queries.tools.delete_tool import delete_tool
 from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
 

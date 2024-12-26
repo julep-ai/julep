@@ -15,7 +15,6 @@ from ...autogen.openapi_model import (
     CreateTransitionRequest,
     Execution,
     ResourceCreatedResponse,
-    UpdateExecutionRequest,
 )
 from ...clients.temporal import run_task_execution_workflow
 from ...common.protocol.developers import Developer
