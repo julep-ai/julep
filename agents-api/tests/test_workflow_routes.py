@@ -4,7 +4,7 @@ from uuid_extensions import uuid7
 from ward import test
 
 from agents_api.clients.pg import create_db_pool
-from tests.fixtures import test_agent, test_developer_id, pg_dsn
+from tests.fixtures import pg_dsn, test_agent, test_developer_id
 from tests.utils import patch_http_client_with_temporal
 
 

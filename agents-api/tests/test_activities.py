@@ -15,7 +15,6 @@ from agents_api.workflows.task_execution.helpers import DEFAULT_RETRY_POLICY
 # )
 from .utils import patch_testing_temporal
 
-
 # @test("activity: call direct embed_docs")
 # async def _(
 #     cozo_client=cozo_client,

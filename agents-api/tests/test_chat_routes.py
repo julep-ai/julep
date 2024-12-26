@@ -4,15 +4,15 @@ from ward import test
 
 from agents_api.autogen.openapi_model import ChatInput, CreateSessionRequest
 from agents_api.clients import litellm
+from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.sessions import ChatContext
 from agents_api.queries.chat.gather_messages import gather_messages
 from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
 from agents_api.queries.sessions.create_session import create_session
-from agents_api.clients.pg import create_db_pool
 from tests.fixtures import (
-    pg_dsn,
     make_request,
     patch_embed_acompletion,
+    pg_dsn,
     test_agent,
     test_developer,
     test_developer_id,
