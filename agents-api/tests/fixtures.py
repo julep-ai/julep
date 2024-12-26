@@ -329,7 +329,7 @@ async def test_execution_started(
 async def test_transition(
     dsn=pg_dsn,
     developer_id=test_developer_id,
-    execution=test_execution,
+    execution=test_execution_started,
 ):
     pool = await create_db_pool(dsn=dsn)
     transition = await create_execution_transition(

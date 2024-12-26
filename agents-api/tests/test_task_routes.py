@@ -3,15 +3,16 @@
 from uuid_extensions import uuid7
 from ward import test
 
-from tests.fixtures import (
+from .fixtures import (
     client,
     make_request,
     test_agent,
-    # test_execution,
+    test_execution,
+    test_transition,
     test_task,
 )
 
-from .fixtures import test_execution, test_transition
+from .utils import patch_testing_temporal
 
 
 @test("route: unauthorized should fail")
@@ -60,43 +61,43 @@ def _(make_request=make_request, agent=test_agent):
     assert response.status_code == 201
 
 
-# @test("route: create task execution")
-# async def _(make_request=make_request, task=test_task):
-#     data = dict(
-#         input={},
-#         metadata={},
-#     )
+@test("route: create task execution")
+async def _(make_request=make_request, task=test_task):
+    data = dict(
+        input={},
+        metadata={},
+    )
 
-#     async with patch_testing_temporal():
-#         response = make_request(
-#             method="POST",
-#             url=f"/tasks/{str(task.id)}/executions",
-#             json=data,
-#         )
+    async with patch_testing_temporal():
+        response = make_request(
+            method="POST",
+            url=f"/tasks/{str(task.id)}/executions",
+            json=data,
+        )
 
-#     assert response.status_code == 201
-
-
-# @test("route: get execution not exists")
-# def _(make_request=make_request):
-#     execution_id = str(uuid7())
-
-#     response = make_request(
-#         method="GET",
-#         url=f"/executions/{execution_id}",
-#     )
-
-#     assert response.status_code == 404
+    assert response.status_code == 201
 
 
-# @test("route: get execution exists")
-# def _(make_request=make_request, execution=test_execution):
-#     response = make_request(
-#         method="GET",
-#         url=f"/executions/{str(execution.id)}",
-#     )
+@test("route: get execution not exists")
+def _(make_request=make_request):
+    execution_id = str(uuid7())
 
-#     assert response.status_code == 200
+    response = make_request(
+        method="GET",
+        url=f"/executions/{execution_id}",
+    )
+
+    assert response.status_code == 404
+
+
+@test("route: get execution exists")
+def _(make_request=make_request, execution=test_execution):
+    response = make_request(
+        method="GET",
+        url=f"/executions/{str(execution.id)}",
+    )
+
+    assert response.status_code == 200
 
 
 @test("route: get task not exists")

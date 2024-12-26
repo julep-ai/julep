@@ -25,7 +25,7 @@ SELECT * FROM
     ) a
 ) AS agent,
 (
-    SELECT jsonb_agg(r) AS tools FROM (
+    SELECT COALESCE(jsonb_agg(r), '[]'::jsonb) AS tools FROM (
         SELECT * FROM tools
         WHERE
             developer_id = $1 AND 
@@ -72,7 +72,9 @@ SELECT * FROM
             **d["agent"],
         },
         "agent_tools": [
-            {tool["type"]: tool.pop("spec"), **tool} for tool in d["tools"]
+            {tool["type"]: tool.pop("spec"), **tool}
+            for tool in d["tools"]
+            if tool is not None
         ],
         "arguments": d["execution"]["input"],
         "execution": {

@@ -2,7 +2,6 @@ from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
-from sqlglot import parse_one
 
 from ..utils import (
     pg_query,
@@ -10,7 +9,7 @@ from ..utils import (
 )
 
 # Define the raw SQL query for getting tool args from metadata
-tools_args_for_task_query = parse_one("""
+tools_args_for_task_query = """
 SELECT COALESCE(agents_md || tasks_md, agents_md, tasks_md, '{}') as values FROM (
     SELECT
         CASE WHEN $3 = 'x-integrations-args' then metadata->'x-integrations-args'
@@ -28,10 +27,11 @@ SELECT COALESCE(agents_md || tasks_md, agents_md, tasks_md, '{}') as values FROM
         WHEN $3 = 'x-api_call-setup' then metadata->'x-api_call-setup' END AS tasks_md
     FROM tasks
     WHERE task_id = $2 AND developer_id = $4 LIMIT 1
-) AS tasks_md""").sql(pretty=True)
+) AS tasks_md"""
 
 # Define the raw SQL query for getting tool args from metadata for a session
-tool_args_for_session_query = parse_one("""SELECT COALESCE(agents_md || sessions_md, agents_md, sessions_md, '{}') as values FROM (
+tool_args_for_session_query = """
+SELECT COALESCE(agents_md || sessions_md, agents_md, sessions_md, '{}') as values FROM (
     SELECT
         CASE WHEN $3 = 'x-integrations-args' then metadata->'x-integrations-args'
         WHEN $3 = 'x-api_call-args' then metadata->'x-api_call-args'
@@ -48,7 +48,7 @@ tool_args_for_session_query = parse_one("""SELECT COALESCE(agents_md || sessions
         WHEN $3 = 'x-api_call-setup' then metadata->'x-api_call-setup' END AS tasks_md
     FROM sessions
     WHERE session_id = $2 AND developer_id = $4 LIMIT 1
-) AS sessions_md""").sql(pretty=True)
+) AS sessions_md"""
 
 
 # @rewrap_exceptions(

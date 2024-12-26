@@ -23,12 +23,12 @@ SELECT
         ) FILTER (WHERE w.name IS NOT NULL),
         '[]'::jsonb
     ) as workflows,
-    jsonb_agg(tl) as tools
+    COALESCE(jsonb_agg(tl), '[]'::jsonb) as tools
 FROM 
     tasks t
-INNER JOIN 
+LEFT JOIN 
     workflows w ON t.developer_id = w.developer_id AND t.task_id = w.task_id AND t.version = w.version
-INNER JOIN
+LEFT JOIN
     tools tl ON t.developer_id = tl.developer_id AND t.task_id = tl.task_id
 WHERE 
     t.developer_id = $1 AND t.task_id = $2
