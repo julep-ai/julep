@@ -10,14 +10,12 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list execution transitions
 list_execution_transitions_query = """
-SELECT * FROM transitions
+SELECT * FROM latest_transitions
 WHERE
     execution_id = $1
 ORDER BY 
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at END DESC NULLS LAST
+    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
 """
 
@@ -59,7 +57,7 @@ async def list_execution_transitions(
     execution_id: UUID,
     limit: int = 100,
     offset: int = 0,
-    sort_by: Literal["created_at", "updated_at"] = "created_at",
+    sort_by: Literal["created_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> tuple[str, list]:
     """
