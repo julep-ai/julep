@@ -11,8 +11,6 @@ from .fixtures import (
     test_task,
     test_transition,
 )
-
-from .fixtures import test_execution, test_transition
 from .utils import patch_testing_temporal
 
 
@@ -194,6 +192,7 @@ def _(make_request=make_request, agent=test_agent):
 
 
 # FIXME: This test is failing
+
 
 @test("route: patch execution")
 async def _(make_request=make_request, task=test_task):
