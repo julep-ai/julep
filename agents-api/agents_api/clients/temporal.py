@@ -98,6 +98,7 @@ async def run_task_execution_workflow(
     execution_id = execution_input.execution.id
     execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
 
+    # FIXME: This is wrong logic
     old_args = execution_input.arguments
     execution_input.arguments = await asyncio.gather(
         *[offload_if_large(arg) for arg in old_args]
