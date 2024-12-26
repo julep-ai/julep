@@ -4,13 +4,12 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Transition
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list execution transitions
-list_execution_transitions_query = parse_one("""
+list_execution_transitions_query = """
 SELECT * FROM transitions
 WHERE
     execution_id = $1
@@ -20,7 +19,7 @@ ORDER BY
     CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at END ASC NULLS LAST,
     CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
-""").sql(pretty=True)
+"""
 
 
 def _transform(d):

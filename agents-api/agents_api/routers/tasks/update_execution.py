@@ -39,7 +39,7 @@ async def update_execution(
 
         case ResumeExecutionRequest():
             token_data = await get_paused_execution_token(
-                developer_id=x_developer_id, execution_id=execution_id
+                execution_id=execution_id
             )
             activity_id = token_data["metadata"].get("x-activity-id", None)
             run_id = token_data["metadata"].get("x-run-id", None)

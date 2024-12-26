@@ -4,7 +4,6 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Execution
 from ..utils import (
@@ -16,7 +15,7 @@ from ..utils import (
 from .constants import OUTPUT_UNNEST_KEY
 
 # Query to list executions
-list_executions_query = parse_one("""
+list_executions_query = """
 SELECT * FROM latest_executions
 WHERE
     developer_id = $1 AND
@@ -27,7 +26,7 @@ ORDER BY
     CASE WHEN $3 = 'updated_at' AND $4 = 'asc' THEN updated_at END ASC NULLS LAST,
     CASE WHEN $3 = 'updated_at' AND $4 = 'desc' THEN updated_at END DESC NULLS LAST
 LIMIT $5 OFFSET $6;
-""").sql(pretty=True)
+"""
 
 
 @rewrap_exceptions(

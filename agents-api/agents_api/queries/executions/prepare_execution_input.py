@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from beartype import beartype
-from sqlglot import parse_one
 
 from ...common.protocol.tasks import ExecutionInput
 from ..utils import (
@@ -10,7 +9,7 @@ from ..utils import (
 )
 
 # Query to prepare execution input
-prepare_execution_input_query = parse_one("""
+prepare_execution_input_query = """
 SELECT * FROM 
 (
     SELECT to_jsonb(a) AS agent FROM (
@@ -41,7 +40,7 @@ SELECT * FROM
         LIMIT 1
     ) t
 ) AS task;
-""").sql(pretty=True)
+"""
 # (
 #     SELECT to_jsonb(e) AS execution FROM (
 #         SELECT * FROM latest_executions

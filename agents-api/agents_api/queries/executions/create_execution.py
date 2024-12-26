@@ -4,7 +4,6 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateExecutionRequest, Execution
@@ -19,7 +18,7 @@ from ..utils import (
 )
 from .constants import OUTPUT_UNNEST_KEY
 
-create_execution_query = parse_one("""
+create_execution_query = """
 INSERT INTO executions
 (
     developer_id,
@@ -39,7 +38,7 @@ VALUES
     1
 )
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
 @rewrap_exceptions(

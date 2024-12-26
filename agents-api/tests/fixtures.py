@@ -277,7 +277,6 @@ async def test_execution(
         connection_pool=pool,
     )
     await create_temporal_lookup(
-        developer_id=developer_id,
         execution_id=execution.id,
         workflow_handle=workflow_handle,
         connection_pool=pool,
@@ -304,7 +303,6 @@ async def test_execution_started(
         connection_pool=pool,
     )
     await create_temporal_lookup(
-        developer_id=developer_id,
         execution_id=execution.id,
         workflow_handle=workflow_handle,
         connection_pool=pool,

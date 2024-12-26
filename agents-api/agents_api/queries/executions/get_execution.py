@@ -4,7 +4,6 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Execution
 from ..utils import (
@@ -16,12 +15,12 @@ from ..utils import (
 from .constants import OUTPUT_UNNEST_KEY
 
 # Query to get an execution
-get_execution_query = parse_one("""
+get_execution_query = """
 SELECT * FROM latest_executions
 WHERE
     execution_id = $1
 LIMIT 1;
-""").sql(pretty=True)
+"""
 
 
 @rewrap_exceptions(

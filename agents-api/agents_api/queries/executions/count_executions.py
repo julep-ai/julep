@@ -4,7 +4,6 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ..utils import (
     partialclass,
@@ -14,12 +13,12 @@ from ..utils import (
 )
 
 # Query to count executions for a given task
-execution_count_query = parse_one("""
+execution_count_query = """
 SELECT COUNT(*) FROM latest_executions
 WHERE
     developer_id = $1
     AND task_id = $2;
-""").sql(pretty=True)
+"""
 
 
 @rewrap_exceptions(

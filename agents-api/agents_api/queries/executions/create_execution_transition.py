@@ -4,7 +4,6 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
@@ -21,7 +20,7 @@ from ..utils import (
 )
 
 # Query to create a transition
-create_execution_transition_query = parse_one("""
+create_execution_transition_query = """
 INSERT INTO transitions
 (
     execution_id,
@@ -49,7 +48,7 @@ VALUES
     $10
 )
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
 # FIXME: Remove this function

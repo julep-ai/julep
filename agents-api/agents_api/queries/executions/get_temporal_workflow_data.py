@@ -14,12 +14,12 @@ from ..utils import (
 )
 
 # Query to get temporal workflow data
-get_temporal_workflow_data_query = parse_one("""
+get_temporal_workflow_data_query = """
 SELECT id, run_id, result_run_id, first_execution_run_id FROM temporal_executions_lookup
 WHERE
     execution_id = $1
 LIMIT 1;
-""").sql(pretty=True)
+"""
 
 
 @rewrap_exceptions(

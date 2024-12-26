@@ -4,7 +4,6 @@ from uuid import UUID
 import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
@@ -12,18 +11,17 @@ from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 
 # Query to lookup temporal data
-lookup_temporal_data_query = parse_one("""
+lookup_temporal_data_query = """
 SELECT t.*
 FROM
     temporal_executions_lookup t,
     executions e
 WHERE
     t.execution_id = e.execution_id
-    AND t.developer_id = e.developer_id
     AND e.execution_id = $1
     AND e.developer_id = $2
 LIMIT 1;
-""").sql(pretty=True)
+"""
 
 
 @rewrap_exceptions(
