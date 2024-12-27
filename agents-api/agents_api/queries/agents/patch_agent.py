@@ -24,11 +24,11 @@ agent_query = parse_one("""
 UPDATE agents
 SET 
     name = CASE 
-        WHEN $3::text IS NOT NULL THEN $3 
+        WHEN NULLIF($3, '')::text IS NOT NULL THEN NULLIF($3, '')
         ELSE name 
     END,
     about = CASE 
-        WHEN $4::text IS NOT NULL THEN $4 
+        WHEN NULLIF($4, '')::text IS NOT NULL THEN NULLIF($4, '')
         ELSE about 
     END,
     metadata = CASE 
@@ -36,7 +36,7 @@ SET
         ELSE metadata 
     END,
     model = CASE 
-        WHEN $6::text IS NOT NULL THEN $6 
+        WHEN NULLIF($6, '')::text IS NOT NULL THEN NULLIF($6, '')
         ELSE model 
     END,
     default_settings = CASE 

@@ -11,7 +11,7 @@ from uuid_extensions import uuid7
 from ward import fixture
 
 from agents_api.autogen.openapi_model import (
-    CreateAgentRequest,
+    CreateOrUpdateAgentRequest,
     CreateDocRequest,
     CreateExecutionRequest,
     CreateFileRequest,
@@ -23,7 +23,7 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
-from agents_api.queries.agents.create_agent import create_agent
+from agents_api.queries.agents.create_or_update_agent import create_or_update_agent
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import get_developer
 from agents_api.queries.docs.create_doc import create_doc
@@ -85,9 +85,10 @@ def patch_embed_acompletion():
 async def test_agent(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
 
-    agent = await create_agent(
+    agent = await create_or_update_agent(
         developer_id=developer.id,
-        data=CreateAgentRequest(
+        agent_id=uuid7(),
+        data=CreateOrUpdateAgentRequest(
             model="gpt-4o-mini",
             name="test agent",
             about="test agent about",
@@ -258,7 +259,7 @@ async def test_session(
 #         yield task
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 async def test_execution(
     dsn=pg_dsn,
     developer_id=test_developer_id,

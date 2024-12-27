@@ -65,7 +65,7 @@ async def _(
             result = await handle.result()
             assert result["hello"] == "world"
         except Exception as ex:
-            breakpoint()
+            # breakpoint()
             raise ex
 
 
