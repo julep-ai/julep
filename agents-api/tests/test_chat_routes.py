@@ -46,7 +46,7 @@ async def _(
     (embed, _) = mocks
 
     pool = await create_db_pool(dsn=dsn)
-    chat_context = prepare_chat_context(
+    chat_context = await prepare_chat_context(
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
@@ -61,6 +61,7 @@ async def _(
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=False),
+        connection_pool=pool,
     )
 
     assert isinstance(past_messages, list)
@@ -84,7 +85,7 @@ async def _(
     mocks=patch_embed_acompletion,
 ):
     pool = await create_db_pool(dsn=dsn)
-    session = create_session(
+    session = await create_session(
         developer_id=developer_id,
         data=CreateSessionRequest(
             agent=agent.id,
@@ -100,7 +101,7 @@ async def _(
 
     (embed, _) = mocks
 
-    chat_context = prepare_chat_context(
+    chat_context = await prepare_chat_context(
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
@@ -115,6 +116,7 @@ async def _(
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=True),
+        connection_pool=pool,
     )
 
     assert isinstance(past_messages, list)
@@ -133,7 +135,7 @@ async def _(
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
-    session = create_session(
+    session = await create_session(
         developer_id=developer_id,
         data=CreateSessionRequest(
             agent=agent.id,
@@ -172,11 +174,12 @@ async def _(
     user=test_user,
 ):
     pool = await create_db_pool(dsn=dsn)
-    context = prepare_chat_context(
+    context = await prepare_chat_context(
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
     )
 
+    print("-->", type(context), context)
     assert isinstance(context, ChatContext)
     assert len(context.toolsets) > 0

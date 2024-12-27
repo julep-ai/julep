@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     developer_id UUID NOT NULL,
     session_id UUID NOT NULL,
     situation TEXT,
-    system_template TEXT NOT NULL,
+    system_template TEXT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB NOT NULL DEFAULT '{}'::JSONB,

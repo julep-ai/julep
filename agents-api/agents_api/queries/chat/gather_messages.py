@@ -35,6 +35,7 @@ async def gather_messages(
     session_id: UUID,
     chat_context: ChatContext,
     chat_input: ChatInput,
+    connection_pool=None,
 ) -> tuple[list[dict], list[DocReference]]:
     new_raw_messages = [msg.model_dump(mode="json") for msg in chat_input.messages]
     recall = chat_input.recall
@@ -46,6 +47,7 @@ async def gather_messages(
         developer_id=developer.id,
         session_id=session_id,
         allowed_sources=["api_request", "api_response", "tool_response", "summarizer"],
+        connection_pool=connection_pool,
     )
 
     # Keep leaf nodes only
@@ -72,6 +74,7 @@ async def gather_messages(
     session: Session = await get_session(
         developer_id=developer.id,
         session_id=session_id,
+        connection_pool=connection_pool,
     )
     recall_options = session.recall_options
 
@@ -121,6 +124,7 @@ async def gather_messages(
                 developer_id=developer.id,
                 owners=owners,
                 query_embedding=query_embedding,
+                connection_pool=connection_pool,
             )
         case "hybrid":
             doc_references: list[DocReference] = await search_docs_hybrid(
@@ -128,12 +132,14 @@ async def gather_messages(
                 owners=owners,
                 query=query_text,
                 query_embedding=query_embedding,
+                connection_pool=connection_pool,
             )
         case "text":
             doc_references: list[DocReference] = await search_docs_by_text(
                 developer_id=developer.id,
                 owners=owners,
                 query=query_text,
+                connection_pool=connection_pool,
             )
 
     return past_messages, doc_references
