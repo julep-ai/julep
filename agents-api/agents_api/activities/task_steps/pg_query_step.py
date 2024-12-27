@@ -1,32 +1,26 @@
 from typing import Any
 
-from async_lru import alru_cache
 from beartype import beartype
 from temporalio import activity
 
 from ... import queries
-from ...clients.pg import create_db_pool
+from ...app import lifespan
 from ...env import pg_dsn, testing
+from ..container import container
 
 
-@alru_cache(maxsize=1)
-async def get_db_pool(dsn: str):
-    return await create_db_pool(dsn=dsn)
-
-
+@lifespan(container)
 @beartype
 async def pg_query_step(
     query_name: str,
     values: dict[str, Any],
     dsn: str = pg_dsn,
 ) -> Any:
-    pool = await get_db_pool(dsn=dsn)
-
     (module_name, name) = query_name.split(".")
 
     module = getattr(queries, module_name)
     query = getattr(module, name)
-    return await query(**values, connection_pool=pool)
+    return await query(**values, connection_pool=container.state.postgres_pool)
 
 
 # Note: This is here just for clarity. We could have just imported pg_query_step directly

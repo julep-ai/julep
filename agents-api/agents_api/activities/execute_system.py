@@ -9,6 +9,7 @@ from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
+from ..app import lifespan
 from ..autogen.openapi_model import (
     ChatInput,
     CreateDocRequest,
@@ -21,12 +22,14 @@ from ..autogen.openapi_model import (
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
 from ..queries.developers import get_developer
+from .container import container
 from .utils import get_handler
 
 # For running synchronous code in the background
 process_pool_executor = ProcessPoolExecutor()
 
 
+@lifespan(container)
 @beartype
 async def execute_system(
     context: StepContext,
@@ -89,7 +92,10 @@ async def execute_system(
 
         # Handle chat operations
         if system.operation == "chat" and system.resource == "session":
-            developer = await get_developer(developer_id=arguments.get("developer_id"))
+            developer = await get_developer(
+                developer_id=arguments["developer_id"],
+                connection_pool=container.state.postgres_pool,
+            )
             session_id = arguments.get("session_id")
             x_custom_api_key = arguments.get("x_custom_api_key", None)
             chat_input = ChatInput(**arguments)

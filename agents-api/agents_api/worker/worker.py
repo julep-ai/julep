@@ -40,7 +40,7 @@ def create_worker(client: Client) -> Any:
     from ..workflows.task_execution import TaskExecutionWorkflow
     from ..workflows.truncation import TruncationWorkflow
 
-    task_activity_names, task_activities = zip(*getmembers(task_steps, isfunction))
+    _task_activity_names, task_activities = zip(*getmembers(task_steps, isfunction))
 
     # Initialize the worker with the specified task queue, workflows, and activities
     worker = Worker(

@@ -1,5 +1,6 @@
 import os
 from contextlib import asynccontextmanager
+from typing import Any, Protocol
 
 from aiobotocore.session import get_session
 from fastapi import APIRouter, FastAPI
@@ -10,9 +11,17 @@ from .clients.pg import create_db_pool
 from .env import api_prefix, hostname, protocol, public_port
 
 
+class Assignable(Protocol):
+    def __setattr__(self, name: str, value: Any) -> None: ...
+
+
+class ObjectWithState(Protocol):
+    state: Assignable
+
+
 # TODO: This currently doesn't use .env variables, but we should move to using them
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI | ObjectWithState):
     # INIT POSTGRES #
     pg_dsn = os.environ.get("PG_DSN")
 
