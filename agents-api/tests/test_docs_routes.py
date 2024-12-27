@@ -14,7 +14,6 @@ from tests.fixtures import (
 from .utils import patch_testing_temporal
 
 
-@skip
 @test("route: create user doc")
 async def _(make_request=make_request, user=test_user):
     async with patch_testing_temporal():
@@ -35,7 +34,6 @@ async def _(make_request=make_request, user=test_user):
         assert len(result["jobs"]) > 0
 
 
-@skip
 @test("route: create agent doc")
 async def _(make_request=make_request, agent=test_agent):
     async with patch_testing_temporal():
@@ -56,7 +54,6 @@ async def _(make_request=make_request, agent=test_agent):
         assert len(result["jobs"]) > 0
 
 
-@skip
 @test("route: delete doc")
 async def _(make_request=make_request, agent=test_agent):
     async with patch_testing_temporal():
@@ -87,7 +84,6 @@ async def _(make_request=make_request, agent=test_agent):
         assert response.status_code == 404
 
 
-@skip
 @test("route: get doc")
 async def _(make_request=make_request, agent=test_agent):
     async with patch_testing_temporal():
@@ -111,7 +107,6 @@ async def _(make_request=make_request, agent=test_agent):
         assert response.status_code == 200
 
 
-@skip
 @test("route: list user docs")
 def _(make_request=make_request, user=test_user):
     response = make_request(
@@ -126,7 +121,6 @@ def _(make_request=make_request, user=test_user):
     assert isinstance(docs, list)
 
 
-@skip
 @test("route: list agent docs")
 def _(make_request=make_request, agent=test_agent):
     response = make_request(
@@ -141,7 +135,6 @@ def _(make_request=make_request, agent=test_agent):
     assert isinstance(docs, list)
 
 
-@skip
 @test("route: list user docs with metadata filter")
 def _(make_request=make_request, user=test_user):
     response = make_request(
@@ -159,7 +152,6 @@ def _(make_request=make_request, user=test_user):
     assert isinstance(docs, list)
 
 
-@skip
 @test("route: list agent docs with metadata filter")
 def _(make_request=make_request, agent=test_agent):
     response = make_request(
@@ -178,7 +170,8 @@ def _(make_request=make_request, agent=test_agent):
 
 
 # TODO: Fix this test. It fails sometimes and sometimes not.
-@skip
+
+
 @test("route: search agent docs")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
     time.sleep(0.5)
@@ -226,7 +219,6 @@ async def _(make_request=make_request, user=test_user, doc=test_user_doc):
     assert len(docs) >= 1
 
 
-@skip
 @test("route: search agent docs hybrid with mmr")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
     time.sleep(0.5)
@@ -253,7 +245,6 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
     assert len(docs) >= 1
 
 
-@skip
 @test("routes: embed route")
 async def _(
     make_request=make_request,
