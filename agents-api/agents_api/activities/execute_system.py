@@ -9,7 +9,7 @@ from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
-from ..app import lifespan
+from ..app import app, lifespan
 from ..autogen.openapi_model import (
     ChatInput,
     CreateDocRequest,
@@ -29,7 +29,7 @@ from .utils import get_handler
 process_pool_executor = ProcessPoolExecutor()
 
 
-@lifespan(container)
+@lifespan(app, container)  # Both are needed because we are using the routes
 @beartype
 async def execute_system(
     context: StepContext,

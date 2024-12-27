@@ -7,9 +7,9 @@ from ...common.protocol.tasks import (
     StepOutcome,
 )
 from ...common.utils.template import render_template
-from ...env import testing
 
 
+@activity.defn
 @beartype
 async def log_step(context: StepContext) -> StepOutcome:
     # NOTE: This activity is only for logging, so we just evaluate the expression
@@ -30,10 +30,3 @@ async def log_step(context: StepContext) -> StepOutcome:
     except BaseException as e:
         activity.logger.error(f"Error in log_step: {e}")
         return StepOutcome(error=str(e))
-
-
-# Note: This is here just for clarity. We could have just imported log_step directly
-# They do the same thing, so we dont need to mock the log_step function
-mock_log_step = log_step
-
-log_step = activity.defn(name="log_step")(log_step if not testing else mock_log_step)

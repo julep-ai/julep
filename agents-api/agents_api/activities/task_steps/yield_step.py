@@ -1,14 +1,12 @@
-from typing import Callable
-
 from beartype import beartype
 from temporalio import activity
 
 from ...autogen.openapi_model import TransitionTarget, YieldStep
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
-from ...env import testing
 from .base_evaluate import base_evaluate
 
 
+@activity.defn
 @beartype
 async def yield_step(context: StepContext) -> StepOutcome:
     try:
@@ -39,12 +37,3 @@ async def yield_step(context: StepContext) -> StepOutcome:
     except BaseException as e:
         activity.logger.error(f"Error in yield_step: {e}")
         return StepOutcome(error=str(e))
-
-
-# Note: This is here just for clarity. We could have just imported yield_step directly
-# They do the same thing, so we dont need to mock the yield_step function
-mock_yield_step: Callable[[StepContext], StepOutcome] = yield_step
-
-yield_step: Callable[[StepContext], StepOutcome] = activity.defn(name="yield_step")(
-    yield_step if not testing else mock_yield_step
-)

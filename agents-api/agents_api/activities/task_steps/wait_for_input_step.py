@@ -3,10 +3,10 @@ from temporalio import activity
 
 from ...autogen.openapi_model import WaitForInputStep
 from ...common.protocol.tasks import StepContext, StepOutcome
-from ...env import testing
 from .base_evaluate import base_evaluate
 
 
+@activity.defn
 @beartype
 async def wait_for_input_step(context: StepContext) -> StepOutcome:
     try:
@@ -21,10 +21,3 @@ async def wait_for_input_step(context: StepContext) -> StepOutcome:
     except BaseException as e:
         activity.logger.error(f"Error in wait_for_input_step: {e}")
         return StepOutcome(error=str(e))
-
-
-mock_wait_for_input_step = wait_for_input_step
-
-wait_for_input_step = activity.defn(name="wait_for_input_step")(
-    wait_for_input_step if not testing else mock_wait_for_input_step
-)

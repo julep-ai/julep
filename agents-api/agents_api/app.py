@@ -21,39 +21,43 @@ class ObjectWithState(Protocol):
 
 # TODO: This currently doesn't use .env variables, but we should move to using them
 @asynccontextmanager
-async def lifespan(app: FastAPI | ObjectWithState):
+async def lifespan(*containers: list[FastAPI | ObjectWithState]):
     # INIT POSTGRES #
     pg_dsn = os.environ.get("PG_DSN")
 
-    if not getattr(app.state, "postgres_pool", None):
-        app.state.postgres_pool = await create_db_pool(pg_dsn)
+    for container in containers:
+        if not getattr(container.state, "postgres_pool", None):
+            container.state.postgres_pool = await create_db_pool(pg_dsn)
 
     # INIT S3 #
     s3_access_key = os.environ.get("S3_ACCESS_KEY")
     s3_secret_key = os.environ.get("S3_SECRET_KEY")
     s3_endpoint = os.environ.get("S3_ENDPOINT")
 
-    if not getattr(app.state, "s3_client", None):
-        session = get_session()
-        app.state.s3_client = await session.create_client(
-            "s3",
-            aws_access_key_id=s3_access_key,
-            aws_secret_access_key=s3_secret_key,
-            endpoint_url=s3_endpoint,
-        ).__aenter__()
+    for container in containers:
+        if not getattr(container.state, "s3_client", None):
+            session = get_session()
+            container.state.s3_client = await session.create_client(
+                "s3",
+                aws_access_key_id=s3_access_key,
+                aws_secret_access_key=s3_secret_key,
+                endpoint_url=s3_endpoint,
+            ).__aenter__()
 
     try:
         yield
     finally:
         # CLOSE POSTGRES #
-        if getattr(app.state, "postgres_pool", None):
-            await app.state.postgres_pool.close()
-            app.state.postgres_pool = None
+        for container in containers:
+            if getattr(container.state, "postgres_pool", None):
+                await container.state.postgres_pool.close()
+                container.state.postgres_pool = None
 
         # CLOSE S3 #
-        if getattr(app.state, "s3_client", None):
-            await app.state.s3_client.close()
-            app.state.s3_client = None
+        for container in containers:
+            if getattr(container.state, "s3_client", None):
+                await container.state.s3_client.close()
+                container.state.s3_client = None
 
 
 app: FastAPI = FastAPI(

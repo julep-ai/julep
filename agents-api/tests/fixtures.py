@@ -52,7 +52,12 @@ from .utils import (
 @fixture(scope="global")
 def pg_dsn():
     with get_pg_dsn() as pg_dsn:
-        yield pg_dsn
+        os.environ["PG_DSN"] = pg_dsn
+
+        try:
+            yield pg_dsn
+        finally:
+            del os.environ["PG_DSN"]
 
 
 @fixture(scope="global")
@@ -376,9 +381,7 @@ async def test_tool(
 
 
 @fixture(scope="global")
-def client(dsn=pg_dsn):
-    os.environ["PG_DSN"] = dsn
-
+def client(_dsn=pg_dsn):
     with TestClient(app=app) as client:
         yield client
 

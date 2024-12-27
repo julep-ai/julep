@@ -5,9 +5,9 @@ from temporalio import activity
 
 from ...activities.utils import simple_eval_dict
 from ...common.protocol.tasks import StepContext, StepOutcome
-from ...env import testing
 
 
+@activity.defn
 @beartype
 async def evaluate_step(
     context: StepContext,
@@ -31,12 +31,3 @@ async def evaluate_step(
     except BaseException as e:
         activity.logger.error(f"Error in evaluate_step: {e}")
         return StepOutcome(error=str(e) or repr(e))
-
-
-# Note: This is here just for clarity. We could have just imported evaluate_step directly
-# They do the same thing, so we dont need to mock the evaluate_step function
-mock_evaluate_step = evaluate_step
-
-evaluate_step = activity.defn(name="evaluate_step")(
-    evaluate_step if not testing else mock_evaluate_step
-)

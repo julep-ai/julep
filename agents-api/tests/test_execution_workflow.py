@@ -19,7 +19,6 @@ from agents_api.queries.tasks.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 
 from .fixtures import (
-    client,
     pg_dsn,
     s3_client,
     test_agent,
@@ -75,7 +74,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -120,7 +118,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -165,7 +162,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -217,7 +213,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -270,7 +265,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -317,7 +311,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -371,7 +364,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -424,7 +416,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -480,7 +471,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={})
@@ -543,7 +533,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -605,7 +594,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -681,7 +669,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -738,7 +725,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -800,7 +786,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -867,7 +852,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -939,7 +923,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -990,7 +973,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -1050,7 +1032,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -1100,7 +1081,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     data = CreateExecutionRequest(input={"test": "input"})
@@ -1152,7 +1132,6 @@ for p in [1, 3, 5]:
         developer_id=test_developer_id,
         agent=test_agent,
         _s3_client=s3_client,  # Adding coz blob store might be used
-        _app_client=client,
     ):
         pool = await create_db_pool(dsn=dsn)
         data = CreateExecutionRequest(input={"test": "input"})
@@ -1208,7 +1187,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     mock_model_response = ModelResponse(
@@ -1267,7 +1245,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     mock_model_response = ModelResponse(
@@ -1331,7 +1308,6 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     _s3_client=s3_client,  # Adding coz blob store might be used
-    _app_client=client,
 ):
     pool = await create_db_pool(dsn=dsn)
     mock_model_response = ModelResponse(

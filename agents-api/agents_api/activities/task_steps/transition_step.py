@@ -9,11 +9,7 @@ from ...app import lifespan
 from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...clients.temporal import get_workflow_handle
 from ...common.protocol.tasks import ExecutionInput, StepContext
-from ...env import (
-    temporal_activity_after_retry_timeout,
-    testing,
-    transition_requests_per_minute,
-)
+from ...env import temporal_activity_after_retry_timeout, transition_requests_per_minute
 from ...exceptions import LastErrorInput, TooManyRequestsError
 from ...queries.executions.create_execution_transition import (
     create_execution_transition,
@@ -74,9 +70,7 @@ async def transition_step(
     return transition
 
 
+# NOTE: Here because needed by a different step
 original_transition_step = transition_step
-mock_transition_step = transition_step
 
-transition_step = activity.defn(name="transition_step")(
-    transition_step if not testing else mock_transition_step
-)
+transition_step = activity.defn(transition_step)

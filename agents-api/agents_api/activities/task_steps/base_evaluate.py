@@ -13,7 +13,6 @@ from simpleeval import NameNotDefined, SimpleEval  # noqa: E402
 from temporalio import activity  # noqa: E402
 from thefuzz import fuzz  # noqa: E402
 
-from ...env import testing  # noqa: E402
 from ..utils import get_evaluator  # noqa: E402
 
 
@@ -62,6 +61,7 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
         raise ValueError(f"Invalid expression: {expr}")
 
 
+@activity.defn
 @beartype
 async def base_evaluate(
     exprs: Any,
@@ -100,12 +100,3 @@ async def base_evaluate(
     # Recursively evaluate the expression
     result = _recursive_evaluate(exprs, evaluator)
     return result
-
-
-# Note: This is here just for clarity. We could have just imported base_evaluate directly
-# They do the same thing, so we dont need to mock the base_evaluate function
-mock_base_evaluate = base_evaluate
-
-base_evaluate = activity.defn(name="base_evaluate")(
-    base_evaluate if not testing else mock_base_evaluate
-)
