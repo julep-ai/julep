@@ -111,7 +111,7 @@ def _transform(d):
     d["users"] = d.get("users") or []
     d["agents"] = d.get("agents") or []
 
-    for tool in d.get("toolsets", []) or []:
+    for tool in d.get("toolsets") or []:
         if not tool:
             continue
 
@@ -122,13 +122,13 @@ def _transform(d):
             toolsets[agent_id] = [tool]
 
     d["session"]["updated_at"] = utcnow()
-    d["users"] = d.get("users", []) or []
+    d["users"] = d.get("users") or []
 
     transformed_data = {
         **d,
         "session": make_session(
-            agents=[a["id"] for a in d.get("agents", []) or []],
-            users=[u["id"] for u in d.get("users", []) or []],
+            agents=[a["id"] for a in d.get("agents") or []],
+            users=[u["id"] for u in d.get("users") or []],
             **d["session"],
         ),
         "toolsets": [
