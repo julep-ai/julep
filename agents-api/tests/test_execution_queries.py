@@ -84,7 +84,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
 async def _(
     dsn=pg_dsn,
     developer_id=test_developer_id,
-    execution=test_execution,
+    execution=test_execution_started,
     task=test_task,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -96,14 +96,14 @@ async def _(
 
     assert isinstance(result, list)
     assert len(result) >= 1
-    assert result[0].status == "queued"
+    assert result[0].status == "starting"
 
 
 @test("query: count executions")
 async def _(
     dsn=pg_dsn,
     developer_id=test_developer_id,
-    execution=test_execution,
+    execution=test_execution_started,
     task=test_task,
 ):
     pool = await create_db_pool(dsn=dsn)
