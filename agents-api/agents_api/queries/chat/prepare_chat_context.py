@@ -4,11 +4,11 @@ from uuid import UUID
 from beartype import beartype
 
 from ...common.protocol.sessions import ChatContext, make_session
+from ...common.utils.datetime import utcnow
 from ..utils import (
     pg_query,
     wrap_in_class,
 )
-from ...common.utils.datetime import utcnow
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -120,7 +120,7 @@ def _transform(d):
             toolsets[agent_id].append(tool)
         else:
             toolsets[agent_id] = [tool]
-    
+
     d["session"]["updated_at"] = utcnow()
     d["users"] = d.get("users", []) or []
 
