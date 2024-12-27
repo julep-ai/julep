@@ -1161,6 +1161,7 @@ async def _(
 
 
 for p in [1, 3, 5]:
+
     @skip
     @test(f"workflow: map reduce step parallel (parallelism={p})")
     async def _(
