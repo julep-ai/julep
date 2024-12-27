@@ -2,7 +2,6 @@ from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
-from sqlglot import parse_one
 
 from ...common.protocol.sessions import ChatContext, make_session
 from ..utils import (
@@ -14,7 +13,7 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-sql_query = parse_one("""
+sql_query = """
 SELECT * FROM 
 (
     SELECT jsonb_agg(u) AS users FROM (
@@ -101,7 +100,7 @@ SELECT * FROM
             session_id = $2 AND 
             session_lookup.participant_type = 'agent'
     ) r
-) AS toolsets""").sql(pretty=True)
+) AS toolsets"""
 
 
 def _transform(d):
