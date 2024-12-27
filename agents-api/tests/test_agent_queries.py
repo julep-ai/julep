@@ -65,6 +65,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert created_agent.model == "gpt-4o-mini"
     assert created_agent.instructions == ["test instruction"]
 
+
 @test("query: create or update agent sql - update")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that an agent can be successfully created or updated."""
@@ -90,6 +91,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert updated_agent.instructions == ["test instruction"]
     assert updated_agent.metadata == {}
 
+
 @test("query: update agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that an existing agent's information can be successfully updated."""
@@ -108,13 +110,18 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     )
 
     # get agent and assert that the fields have been updated
-    agent = await get_agent(agent_id=agent.id, developer_id=developer_id, connection_pool=pool)
+    agent = await get_agent(
+        agent_id=agent.id, developer_id=developer_id, connection_pool=pool
+    )
 
     assert agent.name == "updated agent"
     assert agent.about == "updated agent about"
     assert agent.model == "gpt-4o-mini"
-    assert agent.default_settings.model_dump(mode="json", exclude_none=True) == {"temperature": 1.0}
+    assert agent.default_settings.model_dump(mode="json", exclude_none=True) == {
+        "temperature": 1.0
+    }
     assert agent.metadata == {}
+
 
 @test("query: patch agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
@@ -133,13 +140,18 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     )
 
     # get agent and assert that the fields have been patched
-    agent = await get_agent(agent_id=agent.id, developer_id=developer_id, connection_pool=pool)
+    agent = await get_agent(
+        agent_id=agent.id, developer_id=developer_id, connection_pool=pool
+    )
 
     assert agent.name == "patched agent"
     assert agent.about == "patched agent about"
     assert agent.model == "gpt-4o-mini"
-    assert agent.default_settings.model_dump(mode="json", exclude_none=True) == {"temperature": 1.0}
+    assert agent.default_settings.model_dump(mode="json", exclude_none=True) == {
+        "temperature": 1.0
+    }
     assert agent.metadata == {"test": "test"}
+
 
 @test("query: get agent sql - not exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
@@ -180,7 +192,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert all(isinstance(agent, Agent) for agent in result)
 
 
-
 @test("query: delete agent sql - exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully deleted."""
@@ -209,10 +220,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             connection_pool=pool,
         )
 
+
 @test("query: delete agent sql - not exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that deleting a non-existent agent raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
     with raises(Exception):
-        await delete_agent(agent_id=uuid7(), developer_id=developer_id, connection_pool=pool)
+        await delete_agent(
+            agent_id=uuid7(), developer_id=developer_id, connection_pool=pool
+        )

@@ -11,10 +11,10 @@ from uuid_extensions import uuid7
 from ward import fixture
 
 from agents_api.autogen.openapi_model import (
-    CreateOrUpdateAgentRequest,
     CreateDocRequest,
     CreateExecutionRequest,
     CreateFileRequest,
+    CreateOrUpdateAgentRequest,
     CreateSessionRequest,
     CreateTaskRequest,
     CreateToolRequest,
