@@ -1,13 +1,14 @@
 from uuid import UUID
 
+import asyncpg
+from fastapi import HTTPException
 from beartype import beartype
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Doc
-from ..utils import pg_query, wrap_in_class
+from ..utils import pg_query, wrap_in_class, rewrap_exceptions, partialclass
 
 # Update the query to use DISTINCT ON to prevent duplicates
-doc_with_embedding_query = parse_one("""
+doc_with_embedding_query = """
 WITH doc_data AS (
     SELECT
         d.doc_id,
@@ -39,7 +40,7 @@ WITH doc_data AS (
         d.created_at
 )
 SELECT * FROM doc_data;
-""").sql(pretty=True)
+"""
 
 
 def transform_get_doc(d: dict) -> dict:
@@ -57,7 +58,15 @@ def transform_get_doc(d: dict) -> dict:
     }
     return transformed
 
-
+@rewrap_exceptions(
+    {
+        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified doc does not exist.",
+        ),
+    }
+)
 @wrap_in_class(
     Doc,
     one=True,
