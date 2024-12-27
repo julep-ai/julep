@@ -8,14 +8,11 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
-from ...common.utils.cozo import cozo_process_mutate_data
 from ...metrics.counters import increase_counter
 from ..utils import (
-    cozo_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,

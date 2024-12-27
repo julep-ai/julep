@@ -53,8 +53,6 @@ s3_secret_key: str | None = env.str("S3_SECRET_KEY", default=None)
 
 # Cozo
 # ----
-cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
-cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
 summarization_model_name: str = env.str(
     "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
 )
@@ -156,8 +154,6 @@ temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
 environment: Dict[str, Any] = dict(
     debug=debug,
     multi_tenant_mode=multi_tenant_mode,
-    cozo_host=cozo_host,
-    cozo_auth=cozo_auth,
     sentry_dsn=sentry_dsn,
     temporal_endpoint=temporal_endpoint,
     temporal_task_queue=temporal_task_queue,

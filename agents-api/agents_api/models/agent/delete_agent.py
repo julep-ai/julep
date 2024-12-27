@@ -7,13 +7,11 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException
-from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ..utils import (
-    cozo_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
