@@ -3,6 +3,7 @@ This module contains the functionality for fully updating an agent in the Postgr
 It constructs and executes SQL queries to replace an agent's details based on agent ID and developer ID.
 """
 
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
@@ -55,6 +56,11 @@ RETURNING *;
             status_code=400,
             detail="Invalid data provided. Please check the input values.",
         ),
+        asyncpg.exceptions.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified agent does not exist.",
+        ),
     }
 )
 @wrap_in_class(
@@ -67,7 +73,7 @@ RETURNING *;
 @beartype
 async def update_agent(
     *, agent_id: UUID, developer_id: UUID, data: UpdateAgentRequest
-) -> tuple[str, list]:
+) -> tuple[str, list, Literal["fetch", "fetchrow", "fetchmany"]]:
     """
     Constructs the SQL query to fully update an agent's details.
 
@@ -92,4 +98,5 @@ async def update_agent(
     return (
         agent_query,
         params,
+        "fetchrow",
     )

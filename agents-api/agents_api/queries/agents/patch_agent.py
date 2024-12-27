@@ -3,6 +3,7 @@ This module contains the functionality for partially updating an agent in the Po
 It constructs and executes SQL queries to update specific fields of an agent based on agent ID and developer ID.
 """
 
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
@@ -70,6 +71,11 @@ RETURNING *;
             status_code=400,
             detail="Invalid data provided. Please check the input values.",
         ),
+        asyncpg.exceptions.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified agent does not exist.",
+        ),
     }
 )
 @wrap_in_class(
@@ -82,7 +88,7 @@ RETURNING *;
 @beartype
 async def patch_agent(
     *, agent_id: UUID, developer_id: UUID, data: PatchAgentRequest
-) -> tuple[str, list]:
+) -> tuple[str, list, Literal["fetch", "fetchrow", "fetchmany"]]:
     """
     Constructs the SQL query to partially update an agent's details.
 
@@ -107,4 +113,5 @@ async def patch_agent(
     return (
         agent_query,
         params,
+        "fetchrow",
     )

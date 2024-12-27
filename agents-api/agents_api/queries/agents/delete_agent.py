@@ -3,6 +3,7 @@ This module contains the functionality for deleting agents from the PostgreSQL d
 It constructs and executes SQL queries to remove agent records and associated data.
 """
 
+from typing import Literal
 from uuid import UUID
 
 import asyncpg
@@ -85,6 +86,11 @@ RETURNING developer_id, agent_id;
             status_code=400,
             detail="Invalid data provided. Please check the input values.",
         ),
+        asyncpg.exceptions.NoDataFoundError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail="The specified agent does not exist.",
+        ),
     }
 )
 @wrap_in_class(
@@ -94,7 +100,7 @@ RETURNING developer_id, agent_id;
 )
 @pg_query
 @beartype
-async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list]:
+async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list, Literal["fetch", "fetchrow", "fetchmany"]]:
     """
     Constructs the SQL query to delete an agent and its related settings.
 
@@ -111,4 +117,5 @@ async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list
     return (
         agent_query,
         params,
+        "fetchrow",
     )

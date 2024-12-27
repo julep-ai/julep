@@ -102,7 +102,7 @@ def _(make_request=make_request, agent=test_agent):
     assert response.status_code != 404
 
 
-@test("route: delete agent")
+@test("route: delete agent - exists")
 def _(make_request=make_request):
     data = dict(
         name="test agent",
@@ -132,8 +132,18 @@ def _(make_request=make_request):
 
     assert response.status_code == 404
 
+@test("route: delete agent - not exists")
+def _(make_request=make_request):
+    agent_id = str(uuid7())
 
-@test("route: update agent")
+    response = make_request(
+        method="DELETE",
+        url=f"/agents/{agent_id}",
+    )
+
+    assert response.status_code == 404
+
+@test("route: update agent - exists")
 def _(make_request=make_request, agent=test_agent):
     data = dict(
         name="updated agent",
@@ -164,8 +174,25 @@ def _(make_request=make_request, agent=test_agent):
 
     assert "test" not in agent["metadata"]
 
+@test("route: update agent - not exists")
+def _(make_request=make_request):
+    agent_id = str(uuid7())
 
-@test("route: patch agent")
+    data = dict(
+        name="updated agent",
+        about="updated agent about",
+        default_settings={"temperature": 1.0},
+    )
+
+    response = make_request(
+        method="PUT",
+        url=f"/agents/{agent_id}",
+        json=data,
+    )
+
+    assert response.status_code == 404
+
+@test("route: patch agent - exists")
 def _(make_request=make_request, agent=test_agent):
     agent_id = str(agent.id)
 
@@ -196,6 +223,23 @@ def _(make_request=make_request, agent=test_agent):
 
     assert "hello" in agent["metadata"]
 
+@test("route: patch agent - not exists")
+def _(make_request=make_request):
+    agent_id = str(uuid7())
+
+    data = dict(
+        name="patched agent",
+        about="patched agent about",
+        default_settings={"temperature": 1.0},
+    )
+
+    response = make_request(
+        method="PATCH",
+        url=f"/agents/{agent_id}",
+        json=data,
+    )
+
+    assert response.status_code == 404
 
 @test("route: list agents")
 def _(make_request=make_request):
