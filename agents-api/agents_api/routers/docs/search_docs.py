@@ -31,7 +31,7 @@ async def get_search_fn_and_params(
         case TextOnlyDocSearchRequest(
             text=query, limit=k, metadata_filter=metadata_filter
         ):
-            search_fn = await search_docs_by_text
+            search_fn = search_docs_by_text
             params = dict(
                 query=query,
                 k=k,
@@ -44,7 +44,7 @@ async def get_search_fn_and_params(
             confidence=confidence,
             metadata_filter=metadata_filter,
         ):
-            search_fn = await search_docs_by_embedding
+            search_fn = search_docs_by_embedding
             params = dict(
                 query_embedding=query_embedding,
                 k=k * 3 if search_params.mmr_strength > 0 else k,
@@ -60,12 +60,12 @@ async def get_search_fn_and_params(
             alpha=alpha,
             metadata_filter=metadata_filter,
         ):
-            search_fn = await search_docs_hybrid
+            search_fn = search_docs_hybrid
             params = dict(
-                query=query,
-                query_embedding=query_embedding,
+                text_query=query,
+                embedding=query_embedding,
                 k=k * 3 if search_params.mmr_strength > 0 else k,
-                embed_search_options=dict(confidence=confidence),
+                confidence=confidence,
                 alpha=alpha,
                 metadata_filter=metadata_filter,
             )
@@ -97,7 +97,7 @@ async def search_user_docs(
     search_fn, params = await get_search_fn_and_params(search_params)
 
     start = time.time()
-    docs: list[DocReference] = search_fn(
+    docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("user", user_id)],
         **params,
@@ -148,7 +148,7 @@ async def search_agent_docs(
     search_fn, params = await get_search_fn_and_params(search_params)
 
     start = time.time()
-    docs: list[DocReference] = search_fn(
+    docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("agent", agent_id)],
         **params,

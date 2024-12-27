@@ -180,6 +180,5 @@ async def _(
         connection_pool=pool,
     )
 
-    print("-->", type(context), context)
     assert isinstance(context, ChatContext)
     assert len(context.toolsets) > 0

@@ -27,6 +27,7 @@ from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import get_developer
 from agents_api.queries.docs.create_doc import create_doc
+from agents_api.queries.docs.get_doc import get_doc
 from agents_api.queries.executions.create_execution import create_execution
 from agents_api.queries.executions.create_execution_transition import (
     create_execution_transition,
@@ -135,7 +136,7 @@ async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
 @fixture(scope="test")
 async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
-    doc = await create_doc(
+    resp = await create_doc(
         developer_id=developer.id,
         data=CreateDocRequest(
             title="Hello",
@@ -147,6 +148,7 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
+    doc = await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
     return doc
 
 
