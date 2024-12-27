@@ -132,6 +132,7 @@ def _(make_request=make_request):
 
     assert response.status_code == 404
 
+
 @test("route: delete agent - not exists")
 def _(make_request=make_request):
     agent_id = str(uuid7())
@@ -142,6 +143,7 @@ def _(make_request=make_request):
     )
 
     assert response.status_code == 404
+
 
 @test("route: update agent - exists")
 def _(make_request=make_request, agent=test_agent):
@@ -174,6 +176,7 @@ def _(make_request=make_request, agent=test_agent):
 
     assert "test" not in agent["metadata"]
 
+
 @test("route: update agent - not exists")
 def _(make_request=make_request):
     agent_id = str(uuid7())
@@ -191,6 +194,7 @@ def _(make_request=make_request):
     )
 
     assert response.status_code == 404
+
 
 @test("route: patch agent - exists")
 def _(make_request=make_request, agent=test_agent):
@@ -223,6 +227,7 @@ def _(make_request=make_request, agent=test_agent):
 
     assert "hello" in agent["metadata"]
 
+
 @test("route: patch agent - not exists")
 def _(make_request=make_request):
     agent_id = str(uuid7())
@@ -240,6 +245,7 @@ def _(make_request=make_request):
     )
 
     assert response.status_code == 404
+
 
 @test("route: list agents")
 def _(make_request=make_request):

@@ -100,7 +100,9 @@ RETURNING developer_id, agent_id;
 )
 @pg_query
 @beartype
-async def delete_agent(*, agent_id: UUID, developer_id: UUID) -> tuple[str, list, Literal["fetch", "fetchrow", "fetchmany"]]:
+async def delete_agent(
+    *, agent_id: UUID, developer_id: UUID
+) -> tuple[str, list, Literal["fetch", "fetchrow", "fetchmany"]]:
     """
     Constructs the SQL query to delete an agent and its related settings.
 
