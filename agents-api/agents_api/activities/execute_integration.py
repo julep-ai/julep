@@ -3,14 +3,17 @@ from typing import Any
 from beartype import beartype
 from temporalio import activity
 
+from ..app import lifespan
 from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
 from ..queries.tools import get_tool_args_from_metadata
+from .container import container
 
 
+@lifespan(container)
 @beartype
 async def execute_integration(
     context: StepContext,
@@ -26,12 +29,20 @@ async def execute_integration(
     agent_id = context.execution_input.agent.id
     task_id = context.execution_input.task.id
 
-    merged_tool_args = get_tool_args_from_metadata(
-        developer_id=developer_id, agent_id=agent_id, task_id=task_id, arg_type="args"
+    merged_tool_args = await get_tool_args_from_metadata(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        arg_type="args",
+        connection_pool=container.state.postgres_pool,
     )
 
-    merged_tool_setup = get_tool_args_from_metadata(
-        developer_id=developer_id, agent_id=agent_id, task_id=task_id, arg_type="setup"
+    merged_tool_setup = await get_tool_args_from_metadata(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        arg_type="setup",
+        connection_pool=container.state.postgres_pool,
     )
 
     arguments = (
