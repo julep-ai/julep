@@ -1,11 +1,11 @@
 from uuid import UUID
 
 import asyncpg
-from fastapi import HTTPException
 from beartype import beartype
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Doc
-from ..utils import pg_query, wrap_in_class, rewrap_exceptions, partialclass
+from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
 
 # Update the query to use DISTINCT ON to prevent duplicates
 doc_with_embedding_query = """
@@ -57,6 +57,7 @@ def transform_get_doc(d: dict) -> dict:
         "embeddings": embeddings,
     }
     return transformed
+
 
 @rewrap_exceptions(
     {
