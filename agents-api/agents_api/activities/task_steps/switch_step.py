@@ -6,10 +6,10 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
-from ...env import testing
 from ..utils import get_evaluator
 
 
+@activity.defn
 @beartype
 async def switch_step(context: StepContext) -> StepOutcome:
     try:
@@ -28,16 +28,8 @@ async def switch_step(context: StepContext) -> StepOutcome:
                 output = i
                 break
 
-        result = StepOutcome(output=output)
-        return result
+        return StepOutcome(output=output)
 
     except BaseException as e:
         activity.logger.error(f"Error in switch_step: {e}")
         return StepOutcome(error=str(e))
-
-
-mock_switch_step = switch_step
-
-switch_step = activity.defn(name="switch_step")(
-    switch_step if not testing else mock_switch_step
-)

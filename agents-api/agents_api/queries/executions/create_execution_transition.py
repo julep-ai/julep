@@ -1,9 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
@@ -11,13 +9,9 @@ from ...autogen.openapi_model import (
     Transition,
 )
 from ...common.utils.datetime import utcnow
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to create a transition
 create_execution_transition_query = """
@@ -60,16 +54,16 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
         case "finish" | "error" | "cancelled":
             pass
 
-            ### FIXME: HACK: Fix this and uncomment
+            # FIXME: HACK: Fix this and uncomment
 
-            ### assert (
-            ###     data.next is None
-            ### ), "Next target must be None for finish/finish_branch/error/cancelled"
+            # assert (
+            # data.next is None
+            # ), "Next target must be None for finish/finish_branch/error/cancelled"
 
         case "init_branch" | "init":
-            assert (
-                data.next and data.current.step == data.next.step == 0
-            ), "Next target must be same as current for init_branch/init and step 0"
+            assert data.next and data.current.step == data.next.step == 0, (
+                "Next target must be same as current for init_branch/init and step 0"
+            )
 
         case "wait":
             assert data.next is None, "Next target must be None for wait"
@@ -78,42 +72,29 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
             assert data.next is not None, "Next target must be provided for resume/step"
 
             if data.next.workflow == data.current.workflow:
-                assert (
-                    data.next.step > data.current.step
-                ), "Next step must be greater than current"
+                assert data.next.step > data.current.step, (
+                    "Next step must be greater than current"
+                )
 
         case _:
-            raise ValueError(f"Invalid transition type: {data.type}")
+            msg = f"Invalid transition type: {data.type}"
+            raise ValueError(msg)
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="No executions found for the specified task",
-        ),
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or task does not exist",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("transition", ["create"]))
 @wrap_in_class(
     Transition,
     transform=lambda d: {
         **d,
         "id": d["transition_id"],
         "current": {"workflow": d["current_step"][0], "step": d["current_step"][1]},
-        "next": d["next_step"]
-        and {"workflow": d["next_step"][0], "step": d["next_step"][1]},
+        "next": d["next_step"] and {"workflow": d["next_step"][0], "step": d["next_step"][1]},
         "updated_at": utcnow(),
     },
     one=True,
 )
-@pg_query
 @increase_counter("create_execution_transition")
+@pg_query
 @beartype
 async def create_execution_transition(
     *,

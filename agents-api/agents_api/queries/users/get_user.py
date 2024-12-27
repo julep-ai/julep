@@ -1,17 +1,15 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import User
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
-user_query = parse_one("""
-SELECT 
+user_query = """
+SELECT
     user_id as id, -- user_id
     developer_id, -- developer_id
     name, -- name
@@ -20,25 +18,12 @@ SELECT
     created_at, -- created_at
     updated_at -- updated_at
 FROM users
-WHERE developer_id = $1 
+WHERE developer_id = $1
 AND user_id = $2;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified user does not exist.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("user", ["get"]))
 @wrap_in_class(User, one=True)
 @pg_query
 @beartype

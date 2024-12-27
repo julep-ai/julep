@@ -1,17 +1,17 @@
 from typing import Any, Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...common.protocol.tasks import spec_to_task
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for listing tasks
 list_tasks_query = """
-SELECT 
-    t.*, 
+SELECT
+    t.*,
     COALESCE(
         jsonb_agg(
             CASE WHEN w.name IS NOT NULL THEN
@@ -23,16 +23,16 @@ SELECT
         ) FILTER (WHERE w.name IS NOT NULL),
         '[]'::jsonb
     ) as workflows
-FROM 
+FROM
     tasks t
-LEFT JOIN 
+LEFT JOIN
     workflows w ON t.developer_id = w.developer_id AND t.task_id = w.task_id AND t.version = w.version
-WHERE 
+WHERE
     t.developer_id = $1
     AND t.agent_id = $2
     {metadata_filter_query}
 GROUP BY t.developer_id, t.task_id, t.canonical_name, t.agent_id, t.version
-ORDER BY 
+ORDER BY
     CASE WHEN $5 = 'created_at' AND $6 = 'asc' THEN t.created_at END ASC NULLS LAST,
     CASE WHEN $5 = 'created_at' AND $6 = 'desc' THEN t.created_at END DESC NULLS LAST,
     CASE WHEN $5 = 'updated_at' AND $6 = 'asc' THEN t.updated_at END ASC NULLS LAST,
@@ -41,25 +41,7 @@ LIMIT $3 OFFSET $4;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or agent does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A task with this ID already exists for this agent.",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Task not found",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("task", ["list"]))
 @wrap_in_class(spec_to_task)
 @pg_query
 @beartype

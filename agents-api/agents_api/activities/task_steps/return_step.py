@@ -6,10 +6,10 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
-from ...env import testing
 from .base_evaluate import base_evaluate
 
 
+@activity.defn
 @beartype
 async def return_step(context: StepContext) -> StepOutcome:
     try:
@@ -18,18 +18,8 @@ async def return_step(context: StepContext) -> StepOutcome:
         exprs: dict[str, str] = context.current_step.return_
         output = await base_evaluate(exprs, await context.prepare_for_step())
 
-        result = StepOutcome(output=output)
-        return result
+        return StepOutcome(output=output)
 
     except BaseException as e:
         activity.logger.error(f"Error in log_step: {e}")
         return StepOutcome(error=str(e))
-
-
-# Note: This is here just for clarity. We could have just imported return_step directly
-# They do the same thing, so we dont need to mock the return_step function
-mock_return_step = return_step
-
-return_step = activity.defn(name="return_step")(
-    return_step if not testing else mock_return_step
-)

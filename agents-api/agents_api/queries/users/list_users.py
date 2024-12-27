@@ -1,17 +1,17 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import User
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
 user_query = """
 WITH filtered_users AS (
-    SELECT 
+    SELECT
         user_id as id, -- user_id
         developer_id, -- developer_id
         name, -- name
@@ -25,25 +25,17 @@ WITH filtered_users AS (
 )
 SELECT *
 FROM filtered_users
-ORDER BY 
+ORDER BY
     CASE WHEN $5 = 'created_at' AND $6 = 'asc' THEN created_at END ASC NULLS LAST,
     CASE WHEN $5 = 'created_at' AND $6 = 'desc' THEN created_at END DESC NULLS LAST,
     CASE WHEN $5 = 'updated_at' AND $6 = 'asc' THEN updated_at END ASC NULLS LAST,
     CASE WHEN $5 = 'updated_at' AND $6 = 'desc' THEN updated_at END DESC NULLS LAST
-LIMIT $2 
+LIMIT $2
 OFFSET $3;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("user", ["list"]))
 @wrap_in_class(User)
 @pg_query
 @beartype

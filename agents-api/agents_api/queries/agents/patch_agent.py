@@ -5,73 +5,43 @@ It constructs and executes SQL queries to update specific fields of an agent bas
 
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
-agent_query = parse_one("""
+agent_query = """
 UPDATE agents
-SET 
-    name = CASE 
-        WHEN $3::text IS NOT NULL THEN $3 
-        ELSE name 
+SET
+    name = CASE
+        WHEN $3::text IS NOT NULL THEN $3
+        ELSE name
     END,
-    about = CASE 
-        WHEN $4::text IS NOT NULL THEN $4 
-        ELSE about 
+    about = CASE
+        WHEN $4::text IS NOT NULL THEN $4
+        ELSE about
     END,
-    metadata = CASE 
-        WHEN $5::jsonb IS NOT NULL THEN metadata || $5 
-        ELSE metadata 
+    metadata = CASE
+        WHEN $5::jsonb IS NOT NULL THEN metadata || $5
+        ELSE metadata
     END,
-    model = CASE 
-        WHEN $6::text IS NOT NULL THEN $6 
-        ELSE model 
+    model = CASE
+        WHEN $6::text IS NOT NULL THEN $6
+        ELSE model
     END,
-    default_settings = CASE 
-        WHEN $7::jsonb IS NOT NULL THEN $7 
-        ELSE default_settings 
+    default_settings = CASE
+        WHEN $7::jsonb IS NOT NULL THEN $7
+        ELSE default_settings
     END
 WHERE agent_id = $2 AND developer_id = $1
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.exceptions.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="An agent with this canonical name already exists for this developer.",
-        ),
-        asyncpg.exceptions.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="The provided data violates one or more constraints. Please check the input values.",
-        ),
-        asyncpg.exceptions.DataError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid data provided. Please check the input values.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("agent", ["patch"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,

@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 from pydantic_core import Url
@@ -10,9 +10,9 @@ class BaseOutput(BaseModel): ...
 
 
 class ProviderInfo(BaseModel):
-    url: Optional[Url] = None
-    docs: Optional[Url] = None
-    icon: Optional[Url] = None
+    url: Url | None = None
+    docs: Url | None = None
+    icon: Url | None = None
     friendly_name: str
 
 

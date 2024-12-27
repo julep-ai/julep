@@ -1,8 +1,5 @@
 # Tests for agent queries
 
-from uuid_extensions import uuid7
-from ward import raises, test
-
 from agents_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
@@ -22,6 +19,9 @@ from agents_api.queries.agents import (
     patch_agent,
     update_agent,
 )
+from uuid_extensions import uuid7
+from ward import raises, test
+
 from tests.fixtures import pg_dsn, test_agent, test_developer_id
 
 
@@ -90,9 +90,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     with raises(Exception):
-        await get_agent(
-            agent_id=agent_id, developer_id=developer_id, connection_pool=pool
-        )
+        await get_agent(agent_id=agent_id, developer_id=developer_id, connection_pool=pool)
 
 
 @test("query: get agent exists sql")

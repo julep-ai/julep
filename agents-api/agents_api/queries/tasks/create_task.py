@@ -1,25 +1,22 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateTaskRequest, ResourceCreatedResponse
 from ...common.protocol.tasks import task_to_spec
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import (
     generate_canonical_name,
-    partialclass,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
 
 # Define the raw SQL query for creating or updating a task
-tools_query = parse_one("""
+tools_query = """
 INSERT INTO tools (
     developer_id,
     agent_id,
@@ -40,9 +37,9 @@ VALUES (
     $7, -- description
     $8 -- spec
 )
-""").sql(pretty=True)
+"""
 
-task_query = parse_one("""
+task_query = """
 INSERT INTO tasks (
     "version",
     developer_id,
@@ -68,10 +65,10 @@ VALUES (
     $9::jsonb -- metadata
 )
 RETURNING *
-""").sql(pretty=True)
+"""
 
 # Define the raw SQL query for inserting workflows
-workflows_query = parse_one("""
+workflows_query = """
 INSERT INTO workflows (
     developer_id,
     task_id,
@@ -90,23 +87,10 @@ VALUES (
     $6, -- step_type
     $7  -- step_definition
 )
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or agent does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A task with this ID already exists for this agent.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("task", ["create"]))
 @wrap_in_class(
     ResourceCreatedResponse,
     one=True,
@@ -180,17 +164,15 @@ async def create_task(
         workflow_name = workflow.get("name")
         steps = workflow.get("steps", [])
         for step_idx, step in enumerate(steps):
-            workflow_params.append(
-                [
-                    developer_id,  # $1
-                    task_id,  # $2
-                    1,  # $3 (version)
-                    workflow_name,  # $4
-                    step_idx,  # $5
-                    step["kind_"],  # $6
-                    step,  # $7
-                ]
-            )
+            workflow_params.append([
+                developer_id,  # $1
+                task_id,  # $2
+                1,  # $3 (version)
+                workflow_name,  # $4
+                step_idx,  # $5
+                step["kind_"],  # $6
+                step,  # $7
+            ])
 
     return [
         (

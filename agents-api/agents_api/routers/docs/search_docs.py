@@ -1,5 +1,5 @@
 import time
-from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
+from typing import Annotated, Any
 from uuid import UUID
 
 import numpy as np
@@ -22,21 +22,17 @@ from .router import router
 
 async def get_search_fn_and_params(
     search_params,
-) -> Tuple[
-    Any, Optional[Dict[str, Union[float, int, str, Dict[str, float], List[float]]]]
-]:
+) -> tuple[Any, dict[str, float | int | str | dict[str, float] | list[float]] | None]:
     search_fn, params = None, None
 
     match search_params:
-        case TextOnlyDocSearchRequest(
-            text=query, limit=k, metadata_filter=metadata_filter
-        ):
-            search_fn = await search_docs_by_text
-            params = dict(
-                query=query,
-                k=k,
-                metadata_filter=metadata_filter,
-            )
+        case TextOnlyDocSearchRequest(text=query, limit=k, metadata_filter=metadata_filter):
+            search_fn = search_docs_by_text
+            params = {
+                "query": query,
+                "k": k,
+                "metadata_filter": metadata_filter,
+            }
 
         case VectorDocSearchRequest(
             vector=query_embedding,
@@ -44,13 +40,13 @@ async def get_search_fn_and_params(
             confidence=confidence,
             metadata_filter=metadata_filter,
         ):
-            search_fn = await search_docs_by_embedding
-            params = dict(
-                query_embedding=query_embedding,
-                k=k * 3 if search_params.mmr_strength > 0 else k,
-                confidence=confidence,
-                metadata_filter=metadata_filter,
-            )
+            search_fn = search_docs_by_embedding
+            params = {
+                "query_embedding": query_embedding,
+                "k": k * 3 if search_params.mmr_strength > 0 else k,
+                "confidence": confidence,
+                "metadata_filter": metadata_filter,
+            }
 
         case HybridDocSearchRequest(
             text=query,
@@ -60,15 +56,15 @@ async def get_search_fn_and_params(
             alpha=alpha,
             metadata_filter=metadata_filter,
         ):
-            search_fn = await search_docs_hybrid
-            params = dict(
-                query=query,
-                query_embedding=query_embedding,
-                k=k * 3 if search_params.mmr_strength > 0 else k,
-                embed_search_options=dict(confidence=confidence),
-                alpha=alpha,
-                metadata_filter=metadata_filter,
-            )
+            search_fn = search_docs_hybrid
+            params = {
+                "text_query": query,
+                "embedding": query_embedding,
+                "k": k * 3 if search_params.mmr_strength > 0 else k,
+                "confidence": confidence,
+                "alpha": alpha,
+                "metadata_filter": metadata_filter,
+            }
 
     return search_fn, params
 
@@ -76,9 +72,7 @@ async def get_search_fn_and_params(
 @router.post("/users/{user_id}/search", tags=["docs"])
 async def search_user_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
-    search_params: (
-        TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest
-    ),
+    search_params: (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest),
     user_id: UUID,
 ) -> DocSearchResponse:
     """
@@ -97,7 +91,7 @@ async def search_user_docs(
     search_fn, params = await get_search_fn_and_params(search_params)
 
     start = time.time()
-    docs: list[DocReference] = search_fn(
+    docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("user", user_id)],
         **params,
@@ -128,9 +122,7 @@ async def search_user_docs(
 @router.post("/agents/{agent_id}/search", tags=["docs"])
 async def search_agent_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
-    search_params: (
-        TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest
-    ),
+    search_params: (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest),
     agent_id: UUID,
 ) -> DocSearchResponse:
     """
@@ -148,7 +140,7 @@ async def search_agent_docs(
     search_fn, params = await get_search_fn_and_params(search_params)
 
     start = time.time()
-    docs: list[DocReference] = search_fn(
+    docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("agent", agent_id)],
         **params,

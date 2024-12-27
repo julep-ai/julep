@@ -1,16 +1,10 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to get a paused execution token
 get_paused_execution_token_query = """
@@ -23,15 +17,7 @@ WHERE
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="No paused executions found for the specified task",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("execution", ["get_paused_execution_token"]))
 @wrap_in_class(dict, one=True)
 @pg_query
 @beartype

@@ -17,9 +17,7 @@ from ...queries.tasks.create_or_update_task import (
 from .router import router
 
 
-@router.post(
-    "/agents/{agent_id}/tasks/{task_id}", status_code=HTTP_201_CREATED, tags=["tasks"]
-)
+@router.post("/agents/{agent_id}/tasks/{task_id}", status_code=HTTP_201_CREATED, tags=["tasks"])
 async def create_or_update_task(
     data: CreateOrUpdateTaskRequest,
     agent_id: UUID,

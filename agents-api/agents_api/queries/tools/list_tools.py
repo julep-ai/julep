@@ -1,38 +1,28 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Tool
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for listing tools
-tools_query = parse_one("""
+tools_query = """
 SELECT * FROM tools
 WHERE
     developer_id = $1 AND
     agent_id = $2
-ORDER BY 
+ORDER BY
     CASE WHEN $5 = 'created_at' AND $6 = 'desc' THEN tools.created_at END DESC NULLS LAST,
     CASE WHEN $5 = 'created_at' AND $6 = 'asc' THEN tools.created_at END ASC NULLS LAST,
     CASE WHEN $5 = 'updated_at' AND $6 = 'desc' THEN tools.updated_at END DESC NULLS LAST,
     CASE WHEN $5 = 'updated_at' AND $6 = 'asc' THEN tools.updated_at END ASC NULLS LAST
 LIMIT $3 OFFSET $4;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Developer or agent not found",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("tool", ["list"]))
 @wrap_in_class(
     Tool,
     transform=lambda d: {

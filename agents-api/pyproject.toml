@@ -50,7 +50,6 @@ dependencies = [
   "spacy-chunks>=0.0.2",
   "uuid7>=0.1.0",
   "asyncpg>=0.30.0",
-  "sqlglot>=26.0.0",
   "unique-namer>=1.6.1",
 ]
 
@@ -64,9 +63,9 @@ dev = [
     "pip>=24.3.1",
     "poethepoet>=0.31.1",
     "pyjwt>=2.10.1",
-    "pyright>=1.1.389",
+    "pyright>=1.1.391",
     "pytype>=2024.10.11",
-    "ruff>=0.8.1",
+    "ruff>=0.8.4",
     "sqlvalidator>=0.0.20",
     "testcontainers[postgres,localstack]>=4.9.0",
     "ward>=0.68.0b0",

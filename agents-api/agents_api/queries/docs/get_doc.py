@@ -1,13 +1,13 @@
 from uuid import UUID
 
 from beartype import beartype
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Doc
-from ..utils import pg_query, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Update the query to use DISTINCT ON to prevent duplicates
-doc_with_embedding_query = parse_one("""
+doc_with_embedding_query = """
 WITH doc_data AS (
     SELECT
         d.doc_id,
@@ -23,11 +23,11 @@ WITH doc_data AS (
         d.metadata,
         d.created_at
     FROM docs d
-    LEFT JOIN docs_embeddings e 
+    LEFT JOIN docs_embeddings e
         ON d.doc_id = e.doc_id
     WHERE d.developer_id = $1
         AND d.doc_id = $2
-    GROUP BY 
+    GROUP BY
         d.doc_id,
         d.developer_id,
         d.title,
@@ -39,7 +39,7 @@ WITH doc_data AS (
         d.created_at
 )
 SELECT * FROM doc_data;
-""").sql(pretty=True)
+"""
 
 
 def transform_get_doc(d: dict) -> dict:
@@ -49,15 +49,15 @@ def transform_get_doc(d: dict) -> dict:
     if embeddings and all((e is None) for e in embeddings):
         embeddings = None
 
-    transformed = {
+    return {
         **d,
         "id": d["doc_id"],
         "content": content,
         "embeddings": embeddings,
     }
-    return transformed
 
 
+@rewrap_exceptions(common_db_exceptions("doc", ["get"]))
 @wrap_in_class(
     Doc,
     one=True,

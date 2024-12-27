@@ -1,7 +1,5 @@
 # # Tests for tool queries
 
-from ward import test
-
 from agents_api.autogen.openapi_model import (
     CreateToolRequest,
     PatchToolRequest,
@@ -15,6 +13,8 @@ from agents_api.queries.tools.get_tool import get_tool
 from agents_api.queries.tools.list_tools import list_tools
 from agents_api.queries.tools.patch_tool import patch_tool
 from agents_api.queries.tools.update_tool import update_tool
+from ward import test
+
 from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_tool
 
 
@@ -77,9 +77,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
 
 @test("query: get tool")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, tool=test_tool, agent=test_agent
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, tool=test_tool, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
     result = await get_tool(
         developer_id=developer_id,
@@ -92,9 +90,7 @@ async def _(
 
 
 @test("query: list tools")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
     pool = await create_db_pool(dsn=dsn)
     result = await list_tools(
         developer_id=developer_id,
@@ -104,24 +100,20 @@ async def _(
 
     assert result is not None, "Result is None"
     assert len(result) > 0, "Result is empty"
-    assert all(
-        isinstance(tool, Tool) for tool in result
-    ), "Not all listed tools are of type Tool"
+    assert all(isinstance(tool, Tool) for tool in result), (
+        "Not all listed tools are of type Tool"
+    )
 
 
 @test("query: patch tool")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
     pool = await create_db_pool(dsn=dsn)
     patch_data = PatchToolRequest(
-        **{
-            "name": "patched_tool",
-            "function": {
-                "description": "A patched function that prints hello world",
-                "parameters": {"param1": "value1"},
-            },
-        }
+        name="patched_tool",
+        function={
+            "description": "A patched function that prints hello world",
+            "parameters": {"param1": "value1"},
+        },
     )
 
     result = await patch_tool(
@@ -147,9 +139,7 @@ async def _(
 
 
 @test("query: update tool")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
     pool = await create_db_pool(dsn=dsn)
     update_data = UpdateToolRequest(
         name="updated_tool",

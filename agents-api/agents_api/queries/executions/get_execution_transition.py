@@ -1,19 +1,12 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 
 from ...autogen.openapi_model import Transition
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# FIXME: Use latest_transitions instead of transitions
 # Query to get an execution transition
 get_execution_transition_query = """
 SELECT * FROM transitions
@@ -40,20 +33,7 @@ def _transform(d):
     }
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="No executions found for the specified task",
-        ),
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or task does not exist",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("transition", ["get"]))
 @wrap_in_class(Transition, one=True, transform=_transform)
 @pg_query
 @beartype
@@ -73,9 +53,9 @@ async def get_execution_transition(
         tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]: SQL query and parameters for getting the execution transition.
     """
     # At least one of `transition_id` or `task_token` must be provided
-    assert (
-        transition_id or task_token
-    ), "At least one of `transition_id` or `task_token` must be provided."
+    assert transition_id or task_token, (
+        "At least one of `transition_id` or `task_token` must be provided."
+    )
 
     return (
         get_execution_transition_query,

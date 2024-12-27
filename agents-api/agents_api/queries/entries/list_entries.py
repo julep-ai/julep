@@ -1,13 +1,13 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Entry
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """
@@ -18,7 +18,7 @@ SELECT EXISTS (
 """
 
 list_entries_query = """
-SELECT 
+SELECT
     e.entry_id as id,
     e.session_id,
     e.role,
@@ -40,35 +40,12 @@ WHERE e.session_id = $1
 AND e.source = ANY($2)
 AND (er.relation IS NULL OR er.relation != ALL($6))
 ORDER BY e.{sort_by} {direction} -- safe to interpolate
-LIMIT $3 
+LIMIT $3
 OFFSET $4;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Session not found",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="Entry already exists",
-        ),
-        asyncpg.NotNullViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Entry is required",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Session not found",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("entry", ["list"]))
 @wrap_in_class(Entry)
 @increase_counter("list_entries")
 @pg_query

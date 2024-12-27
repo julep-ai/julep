@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import APIRouter, Request, Response
 from fastapi.routing import APIRoute

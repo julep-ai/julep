@@ -132,9 +132,7 @@ async def execute_foreach_step(
     results = []
 
     for i, item in enumerate(items):
-        foreach_wf_name = (
-            f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
-        )
+        foreach_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
         foreach_task = execution_input.task.model_copy()
         foreach_task.workflows = [
             Workflow(name=foreach_wf_name, steps=[do_step]),
@@ -148,7 +146,7 @@ async def execute_foreach_step(
         result = await continue_as_child(
             foreach_execution_input,
             foreach_next_target,
-            previous_inputs + [item],
+            [*previous_inputs, item],
             user_state=user_state,
         )
         results.append(result)
@@ -172,9 +170,7 @@ async def execute_map_reduce_step(
     reduce = "results + [_]" if reduce is None else reduce
 
     for i, item in enumerate(items):
-        workflow_name = (
-            f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
-        )
+        workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
         map_reduce_task = execution_input.task.model_copy()
         map_reduce_task.workflows = [
             Workflow(name=workflow_name, steps=[map_defn]),
@@ -188,7 +184,7 @@ async def execute_map_reduce_step(
         output = await continue_as_child(
             map_reduce_execution_input,
             map_reduce_next_target,
-            previous_inputs + [item],
+            [*previous_inputs, item],
             user_state=user_state,
         )
 
@@ -228,7 +224,7 @@ async def execute_map_reduce_step_parallel(
     # Explanation:
     # - reduce is the reduce expression
     # - reducer_lambda is the lambda function that will be used to reduce the results
-    extra_lambda_strs = dict(reducer_lambda=f"lambda _result, _item: ({reduce})")
+    extra_lambda_strs = {"reducer_lambda": f"lambda _result, _item: ({reduce})"}
 
     reduce = "reduce(reducer_lambda, _, results)"
 
@@ -241,7 +237,9 @@ async def execute_map_reduce_step_parallel(
         for j, item in enumerate(batch):
             # Parallel batch workflow name
             # Note: Added PAR: prefix to easily identify parallel batches in logs
-            workflow_name = f"PAR:`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}][{j}]"
+            workflow_name = (
+                f"PAR:`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}][{j}]"
+            )
             map_reduce_task = execution_input.task.model_copy()
             map_reduce_task.workflows = [
                 Workflow(name=workflow_name, steps=[map_defn]),
@@ -257,7 +255,7 @@ async def execute_map_reduce_step_parallel(
                     continue_as_child(
                         map_reduce_execution_input,
                         map_reduce_next_target,
-                        previous_inputs + [item],
+                        [*previous_inputs, item],
                         user_state=user_state,
                     )
                 )
@@ -282,6 +280,7 @@ async def execute_map_reduce_step_parallel(
 
         except BaseException as e:
             workflow.logger.error(f"Error in batch {i}: {e}")
-            raise ApplicationError(f"Error in batch {i}: {e}") from e
+            msg = f"Error in batch {i}: {e}"
+            raise ApplicationError(msg) from e
 
     return results

@@ -1,6 +1,7 @@
 import inspect
+from collections.abc import Awaitable, Callable
 from functools import wraps
-from typing import Awaitable, Callable, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
 
 from prometheus_client import Counter
 

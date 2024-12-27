@@ -9,20 +9,12 @@ from ...app import lifespan
 from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...clients.temporal import get_workflow_handle
 from ...common.protocol.tasks import ExecutionInput, StepContext
-from ...env import (
-    temporal_activity_after_retry_timeout,
-    testing,
-    transition_requests_per_minute,
-)
+from ...env import temporal_activity_after_retry_timeout
 from ...exceptions import LastErrorInput, TooManyRequestsError
 from ...queries.executions.create_execution_transition import (
     create_execution_transition,
 )
 from ..container import container
-from ..utils import RateLimiter
-
-# Global rate limiter instance
-rate_limiter = RateLimiter(max_requests=transition_requests_per_minute)
 
 
 @lifespan(container)
@@ -32,18 +24,11 @@ async def transition_step(
     transition_info: CreateTransitionRequest,
     last_error: BaseException | None = None,
 ) -> Transition:
-    # Check rate limit first
-    if not await rate_limiter.acquire():
-        raise TooManyRequestsError(
-            f"Rate limit exceeded. Maximum {transition_requests_per_minute} requests per minute allowed."
-        )
-
     from ...workflows.task_execution import TaskExecutionWorkflow
 
     activity_info = activity.info()
     wf_handle = await get_workflow_handle(handle_id=activity_info.workflow_id)
 
-    # TODO: Filter by last_error type
     if last_error is not None:
         await asyncio.sleep(temporal_activity_after_retry_timeout)
         await wf_handle.signal(
@@ -51,7 +36,8 @@ async def transition_step(
         )
 
     if not isinstance(context.execution_input, ExecutionInput):
-        raise TypeError("Expected ExecutionInput type for context.execution_input")
+        msg = "Expected ExecutionInput type for context.execution_input"
+        raise TypeError(msg)
 
     # Create transition
     try:
@@ -74,9 +60,7 @@ async def transition_step(
     return transition
 
 
+# NOTE: Here because needed by a different step
 original_transition_step = transition_step
-mock_transition_step = transition_step
 
-transition_step = activity.defn(name="transition_step")(
-    transition_step if not testing else mock_transition_step
-)
+transition_step = activity.defn(transition_step)

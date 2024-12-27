@@ -1,7 +1,5 @@
 import asyncio
 
-from ward import skip, test
-
 from agents_api.autogen.openapi_model import CreateDocRequest
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.docs.create_doc import create_doc
@@ -11,6 +9,8 @@ from agents_api.queries.docs.list_docs import list_docs
 from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
+from ward import skip, test
+
 from tests.fixtures import pg_dsn, test_agent, test_developer, test_doc, test_user
 
 EMBEDDING_SIZE: int = 1024

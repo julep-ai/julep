@@ -23,6 +23,11 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+      
+      - name: Install Go migrate
+        uses: jaxxstorm/action-install-gh-release@v1.10.0
+        with: # Grab the latest version
+          repo: golang-migrate/migrate
 
       - name: Set up python and install dependencies
         run: |

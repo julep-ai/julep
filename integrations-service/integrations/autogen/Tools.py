@@ -561,9 +561,7 @@ class BrowserbaseGetSessionConnectUrlArguments(BrowserbaseGetSessionArguments):
     pass
 
 
-class BrowserbaseGetSessionConnectUrlArgumentsUpdate(
-    BrowserbaseGetSessionArgumentsUpdate
-):
+class BrowserbaseGetSessionConnectUrlArgumentsUpdate(BrowserbaseGetSessionArgumentsUpdate):
     pass
 
 
@@ -571,9 +569,7 @@ class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
     pass
 
 
-class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(
-    BrowserbaseGetSessionArgumentsUpdate
-):
+class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(BrowserbaseGetSessionArgumentsUpdate):
     pass
 
 
@@ -1806,9 +1802,9 @@ class SystemDefUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    resource: (
-        Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None
-    ) = None
+    resource: Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None = (
+        None
+    )
     """
     Resource is the name of the resource to use
     """
@@ -2366,9 +2362,7 @@ class BrowserbaseCompleteSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
     arguments: BrowserbaseCompleteSessionArguments | None = None
 
 
-class BrowserbaseCompleteSessionIntegrationDefUpdate(
-    BaseBrowserbaseIntegrationDefUpdate
-):
+class BrowserbaseCompleteSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
     """
     browserbase complete session integration definition
     """
@@ -2494,9 +2488,7 @@ class BrowserbaseGetSessionConnectUrlIntegrationDef(BaseBrowserbaseIntegrationDe
     arguments: BrowserbaseGetSessionConnectUrlArguments | None = None
 
 
-class BrowserbaseGetSessionConnectUrlIntegrationDefUpdate(
-    BaseBrowserbaseIntegrationDefUpdate
-):
+class BrowserbaseGetSessionConnectUrlIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
     """
     browserbase get session connect url integration definition
     """
@@ -2544,9 +2536,7 @@ class BrowserbaseGetSessionLiveUrlsIntegrationDef(BaseBrowserbaseIntegrationDef)
     arguments: BrowserbaseGetSessionLiveUrlsArguments | None = None
 
 
-class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(
-    BaseBrowserbaseIntegrationDefUpdate
-):
+class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
     """
     browserbase get session live urls integration definition
     """

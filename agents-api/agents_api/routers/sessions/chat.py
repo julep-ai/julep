@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
@@ -39,7 +39,7 @@ async def chat(
     session_id: UUID,
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
-    x_custom_api_key: Optional[str] = Header(None, alias="X-Custom-Api-Key"),
+    x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
 ) -> ChatResponse:
     """
     Initiates a chat session.
@@ -66,7 +66,8 @@ async def chat(
             )
 
     if chat_input.stream:
-        raise NotImplementedError("Streaming is not yet implemented")
+        msg = "Streaming is not yet implemented"
+        raise NotImplementedError(msg)
 
     # First get the chat context
     chat_context: ChatContext = await prepare_chat_context(
@@ -89,22 +90,20 @@ async def chat(
     # Prepare the environment
     env: dict = chat_context.get_chat_environment()
     env["docs"] = [
-        dict(
-            title=ref.title,
-            content=[ref.snippet.content],
-        )
+        {
+            "title": ref.title,
+            "content": [ref.snippet.content],
+        }
         for ref in doc_references
     ]
     # Render the system message
     if system_template := chat_context.session.system_template:
-        system_message = dict(
-            role="system",
-            content=system_template,
-        )
+        system_message = {
+            "role": "system",
+            "content": system_template,
+        }
 
-        system_messages: list[dict] = await render_template(
-            [system_message], variables=env
-        )
+        system_messages: list[dict] = await render_template([system_message], variables=env)
         past_messages = system_messages + past_messages
 
     # Render the incoming messages
@@ -133,7 +132,8 @@ async def chat(
     # SCRUM-7
     if chat_context.session.context_overflow == "truncate":
         # messages = messages[-settings["max_tokens"] :]
-        raise NotImplementedError("Truncation is not yet implemented")
+        msg = "Truncation is not yet implemented"
+        raise NotImplementedError(msg)
 
     # FIXME: Hotfix for datetime not serializable. Needs investigation
     messages = [
@@ -219,7 +219,6 @@ async def chat(
             developer_id=developer.id,
             session_id=session_id,
             data=new_entries,
-            mark_session_as_updated=True,
         )
 
     # Adaptive context handling
@@ -229,13 +228,12 @@ async def chat(
         # SCRUM-8
 
         # jobs = [await start_adaptive_context_workflow]
-        raise NotImplementedError("Adaptive context is not yet implemented")
+        msg = "Adaptive context is not yet implemented"
+        raise NotImplementedError(msg)
 
     # Return the response
     # FIXME: Implement streaming for chat
-    chat_response_class = (
-        ChunkChatResponse if chat_input.stream else MessageChatResponse
-    )
+    chat_response_class = ChunkChatResponse if chat_input.stream else MessageChatResponse
     chat_response: ChatResponse = chat_response_class(
         id=uuid7(),
         created_at=utcnow(),
@@ -246,9 +244,7 @@ async def chat(
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(
-        amount=chat_response.usage.total_tokens
-        if chat_response.usage is not None
-        else 0
+        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0
     )
 
     return chat_response

@@ -1,16 +1,10 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to count executions for a given task
 execution_count_query = """
@@ -21,20 +15,7 @@ WHERE
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="No executions found for the specified task",
-        ),
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or task does not exist",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("execution", ["count"]))
 @wrap_in_class(dict, one=True)
 @pg_query
 @beartype
