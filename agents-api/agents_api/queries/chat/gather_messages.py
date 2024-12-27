@@ -5,7 +5,7 @@ from beartype import beartype
 from fastapi import HTTPException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import ChatInput, DocReference, History
+from ...autogen.openapi_model import ChatInput, DocReference, History, Session
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
@@ -42,7 +42,7 @@ async def gather_messages(
     assert len(new_raw_messages) > 0
 
     # Get the session history
-    history: History = get_history(
+    history: History = await get_history(
         developer_id=developer.id,
         session_id=session_id,
         allowed_sources=["api_request", "api_response", "tool_response", "summarizer"],
@@ -69,7 +69,7 @@ async def gather_messages(
         return past_messages, []
 
     # Get recall options
-    session = get_session(
+    session: Session = await get_session(
         developer_id=developer.id,
         session_id=session_id,
     )
@@ -117,20 +117,20 @@ async def gather_messages(
     doc_references: list[DocReference] = []
     match recall_options.mode:
         case "vector":
-            doc_references: list[DocReference] = search_docs_by_embedding(
+            doc_references: list[DocReference] = await search_docs_by_embedding(
                 developer_id=developer.id,
                 owners=owners,
                 query_embedding=query_embedding,
             )
         case "hybrid":
-            doc_references: list[DocReference] = search_docs_hybrid(
+            doc_references: list[DocReference] = await search_docs_hybrid(
                 developer_id=developer.id,
                 owners=owners,
                 query=query_text,
                 query_embedding=query_embedding,
             )
         case "text":
-            doc_references: list[DocReference] = search_docs_by_text(
+            doc_references: list[DocReference] = await search_docs_by_text(
                 developer_id=developer.id,
                 owners=owners,
                 query=query_text,
