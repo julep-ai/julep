@@ -224,7 +224,7 @@ async def test_user_doc(
     developer_id=test_developer_id,
     user=test_user,
 ):
-    pool = create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     doc = await create_doc(
         developer_id=developer_id,
         owner_type="user",
