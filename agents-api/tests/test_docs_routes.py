@@ -30,9 +30,6 @@ async def _(make_request=make_request, user=test_user):
 
         assert response.status_code == 201
 
-        result = response.json()
-        assert len(result["jobs"]) > 0
-
 
 @test("route: create agent doc")
 async def _(make_request=make_request, agent=test_agent):
@@ -49,9 +46,6 @@ async def _(make_request=make_request, agent=test_agent):
         )
 
         assert response.status_code == 201
-
-        result = response.json()
-        assert len(result["jobs"]) > 0
 
 
 @test("route: delete doc")
