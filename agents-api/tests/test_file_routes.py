@@ -8,12 +8,12 @@ from tests.fixtures import make_request, s3_client
 
 @test("route: create file")
 async def _(make_request=make_request, s3_client=s3_client):
-    data = dict(
-        name="Test File",
-        description="This is a test file.",
-        mime_type="text/plain",
-        content="eyJzYW1wbGUiOiAidGVzdCJ9",
-    )
+    data = {
+        "name": "Test File",
+        "description": "This is a test file.",
+        "mime_type": "text/plain",
+        "content": "eyJzYW1wbGUiOiAidGVzdCJ9",
+    }
 
     response = make_request(
         method="POST",
@@ -26,12 +26,12 @@ async def _(make_request=make_request, s3_client=s3_client):
 
 @test("route: delete file")
 async def _(make_request=make_request, s3_client=s3_client):
-    data = dict(
-        name="Test File",
-        description="This is a test file.",
-        mime_type="text/plain",
-        content="eyJzYW1wbGUiOiAidGVzdCJ9",
-    )
+    data = {
+        "name": "Test File",
+        "description": "This is a test file.",
+        "mime_type": "text/plain",
+        "content": "eyJzYW1wbGUiOiAidGVzdCJ9",
+    }
 
     response = make_request(
         method="POST",
@@ -58,12 +58,12 @@ async def _(make_request=make_request, s3_client=s3_client):
 
 @test("route: get file")
 async def _(make_request=make_request, s3_client=s3_client):
-    data = dict(
-        name="Test File",
-        description="This is a test file.",
-        mime_type="text/plain",
-        content="eyJzYW1wbGUiOiAidGVzdCJ9",
-    )
+    data = {
+        "name": "Test File",
+        "description": "This is a test file.",
+        "mime_type": "text/plain",
+        "content": "eyJzYW1wbGUiOiAidGVzdCJ9",
+    }
 
     response = make_request(
         method="POST",

@@ -1,8 +1,5 @@
 # Tests for agent queries
 
-from uuid_extensions import uuid7
-from ward import raises, test
-
 from agents_api.autogen.openapi_model import ResourceCreatedResponse
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.developers import Developer
@@ -12,6 +9,8 @@ from agents_api.queries.developers.get_developer import (
 )
 from agents_api.queries.developers.patch_developer import patch_developer
 from agents_api.queries.developers.update_developer import update_developer
+from uuid_extensions import uuid7
+from ward import raises, test
 
 from .fixtures import pg_dsn, random_email, test_new_developer
 
@@ -89,5 +88,5 @@ async def _(dsn=pg_dsn, dev=test_new_developer, email=random_email):
     assert developer.id == dev.id
     assert developer.email == email
     assert developer.active
-    assert developer.tags == dev.tags + ["tag2"]
+    assert developer.tags == [*dev.tags, "tag2"]
     assert developer.settings == {**dev.settings, "key2": "val2"}

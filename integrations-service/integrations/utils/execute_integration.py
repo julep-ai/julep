@@ -37,11 +37,7 @@ async def execute_integration(
         package="integrations",
     )
 
-    if (
-        setup is not None
-        and provider_obj.setup
-        and not isinstance(setup, provider_obj.setup)
-    ):
+    if setup is not None and provider_obj.setup and not isinstance(setup, provider_obj.setup):
         setup = provider_obj.setup(**setup.model_dump())
 
     arguments = (

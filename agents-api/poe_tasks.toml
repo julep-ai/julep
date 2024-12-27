@@ -1,6 +1,6 @@
 [tasks]
 format = "ruff format"
-lint = "ruff check --select I --fix --unsafe-fixes agents_api/**/*.py migrations/**/*.py tests/**/*.py"
+lint = "ruff check"
 typecheck = "pytype --config pytype.toml"
 validate-sql = "sqlvalidator --verbose-validate agents_api/"
 check = [

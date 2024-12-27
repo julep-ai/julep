@@ -1,14 +1,10 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
-
-# FIXME: Check if this query is correct
-
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to lookup temporal data
 lookup_temporal_data_query = """
@@ -24,15 +20,7 @@ LIMIT 1;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="No temporal data found for the specified execution",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("temporal_execution", ["get"]))
 @wrap_in_class(dict, one=True)
 @pg_query
 @beartype

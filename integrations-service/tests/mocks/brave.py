@@ -12,5 +12,3 @@ class MockBraveSearchClient:
 
 class MockBraveSearchException(Exception):
     """Mock exception for Brave Search errors"""
-
-    pass

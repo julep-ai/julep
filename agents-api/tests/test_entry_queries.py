@@ -3,10 +3,6 @@ This module contains tests for entry queries against the CozoDB database.
 It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
 """
 
-from fastapi import HTTPException
-from uuid_extensions import uuid7
-from ward import raises, test
-
 from agents_api.autogen.openapi_model import (
     CreateEntryRequest,
     Entry,
@@ -19,6 +15,10 @@ from agents_api.queries.entries import (
     get_history,
     list_entries,
 )
+from fastapi import HTTPException
+from uuid_extensions import uuid7
+from ward import raises, test
+
 from tests.fixtures import pg_dsn, test_developer, test_developer_id, test_session
 
 MODEL = "gpt-4o-mini"

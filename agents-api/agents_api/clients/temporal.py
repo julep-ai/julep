@@ -96,7 +96,6 @@ async def run_task_execution_workflow(
     execution_id = execution_input.execution.id
     execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
 
-    # FIXME: This is wrong logic
     old_args = execution_input.arguments
     execution_input.arguments = await offload_if_large(old_args)
 
@@ -109,11 +108,9 @@ async def run_task_execution_workflow(
         id=str(job_id),
         run_timeout=timedelta(days=31),
         retry_policy=DEFAULT_RETRY_POLICY,
-        search_attributes=TypedSearchAttributes(
-            [
-                SearchAttributePair(execution_id_key, str(execution_id)),
-            ]
-        ),
+        search_attributes=TypedSearchAttributes([
+            SearchAttributePair(execution_id_key, str(execution_id)),
+        ]),
     )
 
 
@@ -124,8 +121,6 @@ async def get_workflow_handle(
 ):
     client = client or (await get_client())
 
-    handle = client.get_workflow_handle(
+    return client.get_workflow_handle(
         handle_id,
     )
-
-    return handle

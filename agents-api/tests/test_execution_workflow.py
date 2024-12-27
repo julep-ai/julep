@@ -6,10 +6,6 @@ import json
 from unittest.mock import patch
 
 import yaml
-from google.protobuf.json_format import MessageToDict
-from litellm import Choices, ModelResponse
-from ward import raises, skip, test
-
 from agents_api.autogen.openapi_model import (
     CreateExecutionRequest,
     CreateTaskRequest,
@@ -17,6 +13,9 @@ from agents_api.autogen.openapi_model import (
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.tasks.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
+from google.protobuf.json_format import MessageToDict
+from litellm import Choices, ModelResponse
+from ward import raises, skip, test
 
 from .fixtures import (
     pg_dsn,
@@ -41,12 +40,10 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [{"evaluate": {"hello": '"world"'}}],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"hello": '"world"'}}],
         ),
         connection_pool=pool,
     )
@@ -82,15 +79,13 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {"evaluate": {"hello": '"nope"'}},
-                    {"evaluate": {"hello": '"world"'}},
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[
+                {"evaluate": {"hello": '"nope"'}},
+                {"evaluate": {"hello": '"world"'}},
+            ],
         ),
         connection_pool=pool,
     )
@@ -126,15 +121,13 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    # Testing that we can access the input
-                    {"evaluate": {"hello": '_["test"]'}},
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[
+                # Testing that we can access the input
+                {"evaluate": {"hello": '_["test"]'}},
+            ],
         ),
         connection_pool=pool,
     )
@@ -170,22 +163,20 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "other_workflow": [
-                    # Testing that we can access the input
-                    {"evaluate": {"hello": '_["test"]'}},
-                ],
-                "main": [
-                    # Testing that we can access the input
-                    {
-                        "workflow": "other_workflow",
-                        "arguments": {"test": '_["test"]'},
-                    },
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            other_workflow=[
+                # Testing that we can access the input
+                {"evaluate": {"hello": '_["test"]'}},
+            ],
+            main=[
+                # Testing that we can access the input
+                {
+                    "workflow": "other_workflow",
+                    "arguments": {"test": '_["test"]'},
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -221,23 +212,21 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "other_workflow": [
-                    # Testing that we can access the input
-                    {"evaluate": {"hello": '_["test"]'}},
-                    {"sleep": {"days": 5}},
-                ],
-                "main": [
-                    # Testing that we can access the input
-                    {
-                        "workflow": "other_workflow",
-                        "arguments": {"test": '_["test"]'},
-                    },
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            other_workflow=[
+                # Testing that we can access the input
+                {"evaluate": {"hello": '_["test"]'}},
+                {"sleep": {"days": 5}},
+            ],
+            main=[
+                # Testing that we can access the input
+                {
+                    "workflow": "other_workflow",
+                    "arguments": {"test": '_["test"]'},
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -273,17 +262,15 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    # Testing that we can access the input
-                    {"evaluate": {"hello": '_["test"]'}},
-                    {"return": {"value": '_["hello"]'}},
-                    {"return": {"value": '"banana"'}},
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[
+                # Testing that we can access the input
+                {"evaluate": {"hello": '_["test"]'}},
+                {"return": {"value": '_["hello"]'}},
+                {"return": {"value": '"banana"'}},
+            ],
         ),
         connection_pool=pool,
     )
@@ -319,24 +306,22 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "other_workflow": [
-                    # Testing that we can access the input
-                    {"evaluate": {"hello": '_["test"]'}},
-                    {"return": {"value": '_["hello"]'}},
-                    {"return": {"value": '"banana"'}},
-                ],
-                "main": [
-                    # Testing that we can access the input
-                    {
-                        "workflow": "other_workflow",
-                        "arguments": {"test": '_["test"]'},
-                    },
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            other_workflow=[
+                # Testing that we can access the input
+                {"evaluate": {"hello": '_["test"]'}},
+                {"return": {"value": '_["hello"]'}},
+                {"return": {"value": '"banana"'}},
+            ],
+            main=[
+                # Testing that we can access the input
+                {
+                    "workflow": "other_workflow",
+                    "arguments": {"test": '_["test"]'},
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -372,23 +357,21 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "other_workflow": [
-                    # Testing that we can access the input
-                    {"evaluate": {"hello": '_["test"]'}},
-                    {"log": "{{_.hello}}"},
-                ],
-                "main": [
-                    # Testing that we can access the input
-                    {
-                        "workflow": "other_workflow",
-                        "arguments": {"test": '_["test"]'},
-                    },
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            other_workflow=[
+                # Testing that we can access the input
+                {"evaluate": {"hello": '_["test"]'}},
+                {"log": "{{_.hello}}"},
+            ],
+            main=[
+                # Testing that we can access the input
+                {
+                    "workflow": "other_workflow",
+                    "arguments": {"test": '_["test"]'},
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -424,25 +407,21 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "other_workflow": [
-                    # Testing that we can access the input
-                    {"evaluate": {"hello": '_["test"]'}},
-                    {
-                        "log": '{{_["hell"].strip()}}'
-                    },  # <--- The "hell" key does not exist
-                ],
-                "main": [
-                    # Testing that we can access the input
-                    {
-                        "workflow": "other_workflow",
-                        "arguments": {"test": '_["test"]'},
-                    },
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            other_workflow=[
+                # Testing that we can access the input
+                {"evaluate": {"hello": '_["test"]'}},
+                {"log": '{{_["hell"].strip()}}'},  # <--- The "hell" key does not exist
+            ],
+            main=[
+                # Testing that we can access the input
+                {
+                    "workflow": "other_workflow",
+                    "arguments": {"test": '_["test"]'},
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -479,27 +458,25 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "Test system tool task",
-                "description": "List agents using system call",
-                "input_schema": {"type": "object"},
-                "tools": [
-                    {
-                        "name": "list_agents",
-                        "description": "List all agents",
-                        "type": "system",
-                        "system": {"resource": "agent", "operation": "list"},
+            name="Test system tool task",
+            description="List agents using system call",
+            input_schema={"type": "object"},
+            tools=[
+                {
+                    "name": "list_agents",
+                    "description": "List all agents",
+                    "type": "system",
+                    "system": {"resource": "agent", "operation": "list"},
+                },
+            ],
+            main=[
+                {
+                    "tool": "list_agents",
+                    "arguments": {
+                        "limit": "10",
                     },
-                ],
-                "main": [
-                    {
-                        "tool": "list_agents",
-                        "arguments": {
-                            "limit": "10",
-                        },
-                    },
-                ],
-            }
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -541,32 +518,30 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "tools": [
-                    {
-                        "type": "api_call",
-                        "name": "hello",
-                        "api_call": {
-                            "method": "GET",
-                            "url": "https://httpbin.org/get",
-                        },
-                    }
-                ],
-                "main": [
-                    {
-                        "tool": "hello",
-                        "arguments": {
-                            "params": {"test": "_.test"},
-                        },
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            tools=[
+                {
+                    "type": "api_call",
+                    "name": "hello",
+                    "api_call": {
+                        "method": "GET",
+                        "url": "https://httpbin.org/get",
                     },
-                    {
-                        "evaluate": {"hello": "_.json.args.test"},
+                }
+            ],
+            main=[
+                {
+                    "tool": "hello",
+                    "arguments": {
+                        "params": {"test": "_.test"},
                     },
-                ],
-            }
+                },
+                {
+                    "evaluate": {"hello": "_.json.args.test"},
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -603,35 +578,33 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "tools": [
-                    {
-                        "type": "api_call",
-                        "name": "hello",
-                        "api_call": {
-                            "method": "GET",
-                            "url": f"https://httpbin.org/status/{status_codes_to_retry}",
-                        },
-                    }
-                ],
-                "main": [
-                    {
-                        "tool": "hello",
-                        "arguments": {
-                            "params": {"test": "_.test"},
-                        },
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            tools=[
+                {
+                    "type": "api_call",
+                    "name": "hello",
+                    "api_call": {
+                        "method": "GET",
+                        "url": f"https://httpbin.org/status/{status_codes_to_retry}",
                     },
-                ],
-            }
+                }
+            ],
+            main=[
+                {
+                    "tool": "hello",
+                    "arguments": {
+                        "params": {"test": "_.test"},
+                    },
+                },
+            ],
         ),
         connection_pool=pool,
     )
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
-        execution, handle = await start_execution(
+        _execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
             data=data,
@@ -656,9 +629,7 @@ async def _(
 
         # NOTE: super janky but works
         events_strings = [json.dumps(event) for event in events]
-        num_retries = len(
-            [event for event in events_strings if "execute_api_call" in event]
-        )
+        num_retries = len([event for event in events_strings if "execute_api_call" in event])
 
         assert num_retries >= 2
 
@@ -677,26 +648,24 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "tools": [
-                    {
-                        "type": "integration",
-                        "name": "hello",
-                        "integration": {
-                            "provider": "dummy",
-                        },
-                    }
-                ],
-                "main": [
-                    {
-                        "tool": "hello",
-                        "arguments": {"test": "_.test"},
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            tools=[
+                {
+                    "type": "integration",
+                    "name": "hello",
+                    "integration": {
+                        "provider": "dummy",
                     },
-                ],
-            }
+                }
+            ],
+            main=[
+                {
+                    "tool": "hello",
+                    "arguments": {"test": "_.test"},
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -733,28 +702,26 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "tools": [
-                    {
-                        "type": "integration",
-                        "name": "get_weather",
-                        "integration": {
-                            "provider": "weather",
-                            "setup": {"openweathermap_api_key": "test"},
-                            "arguments": {"test": "fake"},
-                        },
-                    }
-                ],
-                "main": [
-                    {
-                        "tool": "get_weather",
-                        "arguments": {"location": "_.test"},
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            tools=[
+                {
+                    "type": "integration",
+                    "name": "get_weather",
+                    "integration": {
+                        "provider": "weather",
+                        "setup": {"openweathermap_api_key": "test"},
+                        "arguments": {"test": "fake"},
                     },
-                ],
-            }
+                }
+            ],
+            main=[
+                {
+                    "tool": "get_weather",
+                    "arguments": {"location": "_.test"},
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -794,14 +761,12 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {"wait_for_input": {"info": {"hi": '"bye"'}}},
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[
+                {"wait_for_input": {"info": {"hi": '"bye"'}}},
+            ],
         ),
         connection_pool=pool,
     )
@@ -824,7 +789,7 @@ async def _(
         task = asyncio.create_task(result_coroutine)
         try:
             await asyncio.wait_for(task, timeout=3)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             task.cancel()
 
         # Get the history
@@ -839,9 +804,7 @@ async def _(
             for event in events
             if "ACTIVITY_TASK_SCHEDULED" in event["eventType"]
         ]
-        activities_scheduled = [
-            activity for activity in activities_scheduled if activity
-        ]
+        activities_scheduled = [activity for activity in activities_scheduled if activity]
 
         assert "wait_for_input_step" in activities_scheduled
 
@@ -860,19 +823,17 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {
-                        "foreach": {
-                            "in": "'a b c'.split()",
-                            "do": {"wait_for_input": {"info": {"hi": '"bye"'}}},
-                        },
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[
+                {
+                    "foreach": {
+                        "in": "'a b c'.split()",
+                        "do": {"wait_for_input": {"info": {"hi": '"bye"'}}},
                     },
-                ],
-            }
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -895,7 +856,7 @@ async def _(
         task = asyncio.create_task(result_coroutine)
         try:
             await asyncio.wait_for(task, timeout=3)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             task.cancel()
 
         # Get the history
@@ -910,9 +871,7 @@ async def _(
             for event in events
             if "ACTIVITY_TASK_SCHEDULED" in event["eventType"]
         ]
-        activities_scheduled = [
-            activity for activity in activities_scheduled if activity
-        ]
+        activities_scheduled = [activity for activity in activities_scheduled if activity]
 
         assert "for_each_step" in activities_scheduled
 
@@ -928,18 +887,16 @@ async def _(
     data = CreateExecutionRequest(input={"test": "input"})
 
     task_def = CreateTaskRequest(
-        **{
-            "name": "test task",
-            "description": "test task about",
-            "input_schema": {"type": "object", "additionalProperties": True},
-            "main": [
-                {
-                    "if": "False",
-                    "then": {"evaluate": {"hello": '"world"'}},
-                    "else": {"evaluate": {"hello": "random.randint(0, 10)"}},
-                },
-            ],
-        }
+        name="test task",
+        description="test task about",
+        input_schema={"type": "object", "additionalProperties": True},
+        main=[
+            {
+                "if": "False",
+                "then": {"evaluate": {"hello": '"world"'}},
+                "else": {"evaluate": {"hello": "random.randint(0, 10)"}},
+            },
+        ],
     )
 
     task = await create_task(
@@ -981,29 +938,27 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {
-                        "switch": [
-                            {
-                                "case": "False",
-                                "then": {"evaluate": {"hello": '"bubbles"'}},
-                            },
-                            {
-                                "case": "True",
-                                "then": {"evaluate": {"hello": '"world"'}},
-                            },
-                            {
-                                "case": "True",
-                                "then": {"evaluate": {"hello": '"bye"'}},
-                            },
-                        ]
-                    },
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[
+                {
+                    "switch": [
+                        {
+                            "case": "False",
+                            "then": {"evaluate": {"hello": '"bubbles"'}},
+                        },
+                        {
+                            "case": "True",
+                            "then": {"evaluate": {"hello": '"world"'}},
+                        },
+                        {
+                            "case": "True",
+                            "then": {"evaluate": {"hello": '"bye"'}},
+                        },
+                    ]
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -1040,19 +995,17 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {
-                        "foreach": {
-                            "in": "'a b c'.split()",
-                            "do": {"evaluate": {"hello": '"world"'}},
-                        },
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[
+                {
+                    "foreach": {
+                        "in": "'a b c'.split()",
+                        "do": {"evaluate": {"hello": '"world"'}},
                     },
-                ],
-            }
+                },
+            ],
         ),
         connection_pool=pool,
     )
@@ -1204,17 +1157,15 @@ async def _(
             developer_id=developer_id,
             agent_id=agent.id,
             data=CreateTaskRequest(
-                **{
-                    "name": "test task",
-                    "description": "test task about",
-                    "input_schema": {"type": "object", "additionalProperties": True},
-                    "main": [
-                        {
-                            "prompt": "$_ [{'role': 'user', 'content': _.test}]",
-                            "settings": {},
-                        },
-                    ],
-                }
+                name="test task",
+                description="test task about",
+                input_schema={"type": "object", "additionalProperties": True},
+                main=[
+                    {
+                        "prompt": "$_ [{'role': 'user', 'content': _.test}]",
+                        "settings": {},
+                    },
+                ],
             ),
             connection_pool=pool,
         )
@@ -1262,22 +1213,20 @@ async def _(
             developer_id=developer_id,
             agent_id=agent.id,
             data=CreateTaskRequest(
-                **{
-                    "name": "test task",
-                    "description": "test task about",
-                    "input_schema": {"type": "object", "additionalProperties": True},
-                    "main": [
-                        {
-                            "prompt": [
-                                {
-                                    "role": "user",
-                                    "content": "message",
-                                },
-                            ],
-                            "settings": {},
-                        },
-                    ],
-                }
+                name="test task",
+                description="test task about",
+                input_schema={"type": "object", "additionalProperties": True},
+                main=[
+                    {
+                        "prompt": [
+                            {
+                                "role": "user",
+                                "content": "message",
+                            },
+                        ],
+                        "settings": {},
+                    },
+                ],
             ),
             connection_pool=pool,
         )
@@ -1325,23 +1274,21 @@ async def _(
             developer_id=developer_id,
             agent_id=agent.id,
             data=CreateTaskRequest(
-                **{
-                    "name": "test task",
-                    "description": "test task about",
-                    "input_schema": {"type": "object", "additionalProperties": True},
-                    "main": [
-                        {
-                            "prompt": [
-                                {
-                                    "role": "user",
-                                    "content": "message",
-                                },
-                            ],
-                            "unwrap": True,
-                            "settings": {},
-                        },
-                    ],
-                }
+                name="test task",
+                description="test task about",
+                input_schema={"type": "object", "additionalProperties": True},
+                main=[
+                    {
+                        "prompt": [
+                            {
+                                "role": "user",
+                                "content": "message",
+                            },
+                        ],
+                        "unwrap": True,
+                        "settings": {},
+                    },
+                ],
             ),
             connection_pool=pool,
         )
@@ -1377,15 +1324,13 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {"set": {"test_key": '"test_value"'}},
-                    {"get": "test_key"},
-                ],
-            }
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[
+                {"set": {"test_key": '"test_value"'}},
+                {"get": "test_key"},
+            ],
         ),
         connection_pool=pool,
     )
@@ -1418,9 +1363,7 @@ async def _(
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[
-            Choices(
-                message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"}
-            )
+            Choices(message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"})
         ],
         created=0,
         object="text_completion",
@@ -1428,13 +1371,13 @@ async def _(
 
     with (
         patch("agents_api.clients.litellm.acompletion") as acompletion,
-        open("./tests/sample_tasks/find_selector.yaml", "r") as task_file,
+        open("./tests/sample_tasks/find_selector.yaml") as task_file,
     ):
-        input = dict(
-            screenshot_base64="iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA",
-            network_requests=[{"request": {}, "response": {"body": "Lady Gaga"}}],
-            parameters=["name"],
-        )
+        input = {
+            "screenshot_base64": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA",
+            "network_requests": [{"request": {}, "response": {"body": "Lady Gaga"}}],
+            "parameters": ["name"],
+        }
         task_definition = yaml.safe_load(task_file)
         acompletion.return_value = mock_model_response
         data = CreateExecutionRequest(input=input)

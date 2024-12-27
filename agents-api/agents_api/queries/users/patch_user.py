@@ -1,33 +1,31 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import PatchUserRequest, ResourceUpdatedResponse
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
-user_query = parse_one("""
+user_query = """
 UPDATE users
-SET 
-    name = CASE 
+SET
+    name = CASE
         WHEN $3::text IS NOT NULL THEN $3 -- name
-        ELSE name 
+        ELSE name
     END,
-    about = CASE 
+    about = CASE
         WHEN $4::text IS NOT NULL THEN $4 -- about
-        ELSE about 
+        ELSE about
     END,
-    metadata = CASE 
+    metadata = CASE
         WHEN $5::jsonb IS NOT NULL THEN metadata || $5 -- metadata
-        ELSE metadata 
+        ELSE metadata
     END
-WHERE developer_id = $1 
+WHERE developer_id = $1
 AND user_id = $2
-RETURNING 
+RETURNING
     user_id as id, -- user_id
     developer_id, -- developer_id
     name, -- name
@@ -35,23 +33,10 @@ RETURNING
     metadata, -- metadata
     created_at, -- created_at
     updated_at; -- updated_at
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A user with this ID already exists for the specified developer.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("user", ["patch"]))
 @wrap_in_class(ResourceUpdatedResponse, one=True)
 @increase_counter("patch_user")
 @pg_query

@@ -9,11 +9,11 @@ from openai import BaseModel
 # Increase the max string length to 2048000
 simpleeval.MAX_STRING_LENGTH = 2048000
 
-from simpleeval import NameNotDefined, SimpleEval  # noqa: E402
-from temporalio import activity  # noqa: E402
-from thefuzz import fuzz  # noqa: E402
+from simpleeval import NameNotDefined, SimpleEval
+from temporalio import activity
+from thefuzz import fuzz
 
-from ..utils import get_evaluator  # noqa: E402
+from ..utils import get_evaluator
 
 
 class EvaluateError(Exception):
@@ -28,7 +28,7 @@ class EvaluateError(Exception):
         # Catch a possible misspell in a variable name
         if isinstance(error, NameNotDefined):
             misspelledName = error_message.split("'")[1]
-            for variableName in values.keys():
+            for variableName in values:
                 if fuzz.ratio(variableName, misspelledName) >= 90.0:
                     message += f"\nDid you mean '{variableName}' instead of '{misspelledName}'?"
         super().__init__(message)
@@ -44,9 +44,7 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
                 evaluate_error = EvaluateError(e, expr, evaluator.names)
 
                 variables_accessed = {
-                    name: value
-                    for name, value in evaluator.names.items()
-                    if name in expr
+                    name: value for name, value in evaluator.names.items() if name in expr
                 }
 
                 activity.logger.error(
@@ -58,7 +56,8 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
     elif isinstance(expr, dict):
         return {k: _recursive_evaluate(v, evaluator) for k, v in expr.items()}
     else:
-        raise ValueError(f"Invalid expression: {expr}")
+        msg = f"Invalid expression: {expr}"
+        raise ValueError(msg)
 
 
 @activity.defn
@@ -82,15 +81,14 @@ async def base_evaluate(
             try:
                 ast.parse(v)
             except Exception as e:
-                raise ValueError(f"Invalid lambda: {v}") from e
+                msg = f"Invalid lambda: {v}"
+                raise ValueError(msg) from e
 
             # Eval the lambda and add it to the extra lambdas
             extra_lambdas[k] = eval(v)
 
     # Turn the nested dict values from pydantic to dicts where possible
-    values = {
-        k: v.model_dump() if isinstance(v, BaseModel) else v for k, v in values.items()
-    }
+    values = {k: v.model_dump() if isinstance(v, BaseModel) else v for k, v in values.items()}
 
     # frozen_box doesn't work coz we need some mutability in the values
     values = Box(values, frozen_box=False, conversion_box=True)
@@ -98,5 +96,4 @@ async def base_evaluate(
     evaluator: SimpleEval = get_evaluator(names=values, extra_functions=extra_lambdas)
 
     # Recursively evaluate the expression
-    result = _recursive_evaluate(exprs, evaluator)
-    return result
+    return _recursive_evaluate(exprs, evaluator)

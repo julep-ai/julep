@@ -1,12 +1,12 @@
-from typing import Any, List, Literal
+from typing import Any, Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import DocReference
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Raw query for vector search
 search_docs_by_embedding_query = """
@@ -22,15 +22,7 @@ SELECT * FROM search_by_vector(
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        )
-    }
-)
+@rewrap_exceptions(common_db_exceptions("doc", ["search"]))
 @wrap_in_class(
     DocReference,
     transform=lambda d: {
@@ -47,7 +39,7 @@ SELECT * FROM search_by_vector(
 async def search_docs_by_embedding(
     *,
     developer_id: UUID,
-    query_embedding: List[float],
+    query_embedding: list[float],
     k: int = 10,
     owners: list[tuple[Literal["user", "agent"], UUID]],
     confidence: float = 0.5,

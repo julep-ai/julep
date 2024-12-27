@@ -28,8 +28,7 @@ async def switch_step(context: StepContext) -> StepOutcome:
                 output = i
                 break
 
-        result = StepOutcome(output=output)
-        return result
+        return StepOutcome(output=output)
 
     except BaseException as e:
         activity.logger.error(f"Error in switch_step: {e}")

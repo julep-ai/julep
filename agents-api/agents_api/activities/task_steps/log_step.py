@@ -20,12 +20,11 @@ async def log_step(context: StepContext) -> StepOutcome:
         template: str = context.current_step.log
         output = await render_template(
             template,
-            await context.prepare_for_step(include_remote=True),
+            await context.prepare_for_step(),
             skip_vars=["developer_id"],
         )
 
-        result = StepOutcome(output=output)
-        return result
+        return StepOutcome(output=output)
 
     except BaseException as e:
         activity.logger.error(f"Error in log_step: {e}")

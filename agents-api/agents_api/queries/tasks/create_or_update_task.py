@@ -1,25 +1,17 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateOrUpdateTaskRequest, ResourceUpdatedResponse
 from ...common.protocol.tasks import task_to_spec
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import (
-    generate_canonical_name,
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for creating or updating a task
-tools_query = parse_one("""
+tools_query = """
 INSERT INTO tools (
     developer_id,
     agent_id,
@@ -44,28 +36,10 @@ ON CONFLICT (agent_id, task_id, name) DO UPDATE SET
     type = EXCLUDED.type,
     description = EXCLUDED.description,
     spec = EXCLUDED.spec
-""").sql(pretty=True)
+RETURNING *;
+"""
 
-# Define the raw SQL query for creating or updating a task
-task_query = parse_one("""
-WITH current_version AS (
-    SELECT COALESCE(
-        (SELECT MAX("version")
-         FROM tasks
-         WHERE developer_id = $1
-           AND task_id = $4),
-        0
-    ) + 1 as next_version,
-    COALESCE(
-        (SELECT canonical_name
-         FROM tasks
-         WHERE developer_id = $1 AND task_id = $4
-         ORDER BY version DESC
-         LIMIT 1),
-        $2
-    ) as effective_canonical_name
-    FROM (SELECT 1) as dummy
-)
+task_query = """
 INSERT INTO tasks (
     "version",
     developer_id,
@@ -98,10 +72,10 @@ ON CONFLICT (developer_id, task_id, "version") DO UPDATE SET
     input_schema = EXCLUDED.input_schema,
     metadata = EXCLUDED.metadata
 RETURNING *, (SELECT next_version FROM current_version) as next_version;
-""").sql(pretty=True)
+"""
 
 # Define the raw SQL query for inserting workflows
-workflows_query = parse_one("""
+workflows_query = """
 WITH version AS (
     SELECT COALESCE(MAX("version"), 0) as current_version
     FROM tasks
@@ -126,23 +100,10 @@ SELECT
     $5,                 -- step_type
     $6                  -- step_definition
 FROM version
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or agent does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A task with this ID already exists for this agent.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("task", ["create_or_update"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
@@ -217,16 +178,14 @@ async def create_or_update_task(
         workflow_name = workflow.get("name")
         steps = workflow.get("steps", [])
         for step_idx, step in enumerate(steps):
-            workflow_params.append(
-                [
-                    developer_id,  # $1
-                    task_id,  # $2
-                    workflow_name,  # $3
-                    step_idx,  # $4
-                    step["kind_"],  # $5
-                    step,  # $6
-                ]
-            )
+            workflow_params.append([
+                developer_id,  # $1
+                task_id,  # $2
+                workflow_name,  # $3
+                step_idx,  # $4
+                step["kind_"],  # $5
+                step,  # $6
+            ])
 
     return [
         (

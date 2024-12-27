@@ -1,24 +1,15 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# Delete doc query + ownership check
-delete_doc_query = parse_one("""
-WITH deleted_owners AS (
-    DELETE FROM doc_owners
-    WHERE developer_id = $1
-      AND doc_id = $2
-      AND owner_type = $3 
-      AND owner_id = $4
-)
+# Delete doc query
+delete_doc_query = """
 DELETE FROM docs
 WHERE developer_id = $1
   AND doc_id = $2
@@ -30,18 +21,19 @@ WHERE developer_id = $1
       AND owner_id = $4
   )
 RETURNING doc_id;
-""").sql(pretty=True)
+"""
+
+delete_doc_owners_query = """
+DELETE FROM doc_owners
+WHERE developer_id = $1
+    AND doc_id = $2
+    AND owner_type = $3
+    AND owner_id = $4
+RETURNING doc_id;
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Doc not found",
-        )
-    }
-)
+@rewrap_exceptions(common_db_exceptions("doc", ["delete"]))
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,
@@ -59,7 +51,7 @@ async def delete_doc(
     doc_id: UUID,
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
-) -> tuple[str, list]:
+) -> list[tuple[str, list]]:
     """
     Deletes a doc (and associated doc_owners) for the given developer and doc_id.
     If owner_type/owner_id is specified, only remove doc if that matches.
@@ -73,7 +65,7 @@ async def delete_doc(
     Returns:
         tuple[str, list]: SQL query and parameters for deleting the document.
     """
-    return (
-        delete_doc_query,
-        [developer_id, doc_id, owner_type, owner_id],
-    )
+    return [
+        (delete_doc_query, [developer_id, doc_id, owner_type, owner_id]),
+        (delete_doc_owners_query, [developer_id, doc_id, owner_type, owner_id]),
+    ]

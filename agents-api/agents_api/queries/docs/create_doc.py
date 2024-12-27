@@ -1,15 +1,14 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateDocRequest, ResourceCreatedResponse
 from ...common.utils.datetime import utcnow
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Base INSERT for docs
 doc_query = """
@@ -48,25 +47,7 @@ RETURNING *;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A document with this ID already exists for this developer",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified owner does not exist",
-        ),
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Developer or doc owner not found",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("doc", ["create"]))
 @wrap_in_class(
     ResourceCreatedResponse,
     one=True,

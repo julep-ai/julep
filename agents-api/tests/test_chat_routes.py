@@ -1,7 +1,5 @@
 # Tests for session queries
 
-from ward import test
-
 from agents_api.autogen.openapi_model import ChatInput, CreateSessionRequest
 from agents_api.clients import litellm
 from agents_api.clients.pg import create_db_pool
@@ -9,6 +7,8 @@ from agents_api.common.protocol.sessions import ChatContext
 from agents_api.queries.chat.gather_messages import gather_messages
 from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
 from agents_api.queries.sessions.create_session import create_session
+from ward import test
+
 from tests.fixtures import (
     make_request,
     patch_embed_acompletion,
@@ -27,9 +27,7 @@ async def _(
     _=patch_embed_acompletion,
 ):
     assert (await litellm.acompletion(model="gpt-4o-mini", messages=[])).id == "fake_id"
-    assert (await litellm.aembedding())[0][
-        0
-    ] == 1.0  # pytype: disable=missing-parameter
+    assert (await litellm.aembedding())[0][0] == 1.0  # pytype: disable=missing-parameter
 
 
 @test("chat: check that non-recall gather_messages works")

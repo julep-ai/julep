@@ -2,15 +2,13 @@ import concurrent.futures
 import inspect
 import socket
 import time
-from functools import partialmethod, wraps
+from collections.abc import Awaitable, Callable
+from functools import wraps
 from typing import (
     Any,
-    Awaitable,
-    Callable,
     Literal,
     NotRequired,
     ParamSpec,
-    Type,
     TypeVar,
     cast,
 )
@@ -38,18 +36,6 @@ def generate_canonical_name() -> str:
     return namer.generate(separator="_", suffix_length=3, category=categories)
 
 
-def partialclass(cls, *args, **kwargs):
-    cls_signature = inspect.signature(cls)
-    bound = cls_signature.bind_partial(*args, **kwargs)
-
-    # The `updated=()` argument is necessary to avoid a TypeError when using @wraps for a class
-    @wraps(cls, updated=())
-    class NewCls(cls):
-        __init__ = partialmethod(cls.__init__, *bound.args, **bound.kwargs)
-
-    return NewCls
-
-
 class AsyncPGFetchArgs(TypedDict):
     query: str
     args: list[Any]
@@ -73,34 +59,23 @@ def prepare_pg_query_args(
     for query_arg in query_args:
         match query_arg:
             case (query, variables) | (query, variables, "fetch"):
-                batch.append(
-                    (
-                        "fetch",
-                        AsyncPGFetchArgs(
-                            query=query, args=variables, timeout=query_timeout
-                        ),
-                    )
-                )
+                batch.append((
+                    "fetch",
+                    AsyncPGFetchArgs(query=query, args=variables, timeout=query_timeout),
+                ))
             case (query, variables, "fetchmany"):
-                batch.append(
-                    (
-                        "fetchmany",
-                        AsyncPGFetchArgs(
-                            query=query, args=[variables], timeout=query_timeout
-                        ),
-                    )
-                )
+                batch.append((
+                    "fetchmany",
+                    AsyncPGFetchArgs(query=query, args=[variables], timeout=query_timeout),
+                ))
             case (query, variables, "fetchrow"):
-                batch.append(
-                    (
-                        "fetchrow",
-                        AsyncPGFetchArgs(
-                            query=query, args=variables, timeout=query_timeout
-                        ),
-                    )
-                )
+                batch.append((
+                    "fetchrow",
+                    AsyncPGFetchArgs(query=query, args=variables, timeout=query_timeout),
+                ))
             case _:
-                raise ValueError("Invalid query arguments")
+                msg = "Invalid query arguments"
+                raise ValueError(msg)
 
     return batch
 
@@ -145,40 +120,36 @@ def pg_query(
             )
 
             try:
-                async with pool.acquire() as conn:
-                    async with conn.transaction():
-                        start = timeit and time.perf_counter()
-                        all_results = []
+                async with pool.acquire() as conn, conn.transaction():
+                    start = timeit and time.perf_counter()
+                    all_results = []
 
-                        for method_name, payload in batch:
-                            method = getattr(conn, method_name)
+                    for method_name, payload in batch:
+                        method = getattr(conn, method_name)
 
-                            query = payload["query"]
-                            args = payload["args"]
-                            timeout = payload.get("timeout")
+                        query = payload["query"]
+                        args = payload["args"]
+                        timeout = payload.get("timeout")
 
-                            results: list[Record] = await method(
-                                query, *args, timeout=timeout
+                        results: list[Record] = await method(query, *args, timeout=timeout)
+                        if method_name == "fetchrow":
+                            results = (
+                                [results]
+                                if results is not None
+                                and results.get("bool", False) is not None
+                                and results.get("exists", True) is not False
+                                else []
                             )
-                            if method_name == "fetchrow":
-                                results = (
-                                    [results]
-                                    if results is not None
-                                    and results.get("bool", False) is not None
-                                    and results.get("exists", True) is not False
-                                    else []
-                                )
 
-                            if method_name == "fetchrow" and len(results) == 0:
-                                raise asyncpg.NoDataFoundError("No data found")
+                        if method_name == "fetchrow" and len(results) == 0:
+                            msg = "No data found"
+                            raise asyncpg.NoDataFoundError(msg)
 
-                            all_results.append(results)
+                        all_results.append(results)
 
-                        end = timeit and time.perf_counter()
+                    end = timeit and time.perf_counter()
 
-                        timeit and print(
-                            f"PostgreSQL query time: {end - start:.2f} seconds"
-                        )
+                    timeit and print(f"PostgreSQL query time: {end - start:.2f} seconds")
 
             except Exception as e:
                 if only_on_error and debug:
@@ -217,7 +188,7 @@ def pg_query(
 
 
 def wrap_in_class(
-    cls: Type[ModelT] | Callable[..., ModelT],
+    cls: type[ModelT] | Callable[..., ModelT],
     one: bool = False,
     transform: Callable[[dict], dict] | None = None,
 ) -> Callable[..., Callable[..., ModelT | list[ModelT]]]:
@@ -243,9 +214,7 @@ def wrap_in_class(
             return _return_data(func(*args, **kwargs))
 
         @wraps(func)
-        async def async_wrapper(
-            *args: P.args, **kwargs: P.kwargs
-        ) -> ModelT | list[ModelT]:
+        async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
             return _return_data(await func(*args, **kwargs))
 
         # Set the wrapped function as an attribute of the wrapper,
@@ -260,8 +229,8 @@ def wrap_in_class(
 
 def rewrap_exceptions(
     mapping: dict[
-        Type[BaseException] | Callable[[BaseException], bool],
-        Type[BaseException] | Callable[[BaseException], BaseException],
+        type[BaseException] | Callable[[BaseException], bool],
+        type[BaseException] | Callable[[BaseException], BaseException],
     ],
     /,
 ) -> Callable[..., Callable[P, T | Awaitable[T]]]:
@@ -269,15 +238,11 @@ def rewrap_exceptions(
         nonlocal mapping
 
         for check, transform in mapping.items():
-            should_catch = (
-                isinstance(error, check) if isinstance(check, type) else check(error)
-            )
+            should_catch = isinstance(error, check) if isinstance(check, type) else check(error)
 
             if should_catch:
                 new_error = (
-                    transform(str(error))
-                    if isinstance(transform, type)
-                    else transform(error)
+                    transform(str(error)) if isinstance(transform, type) else transform(error)
                 )
 
                 setattr(new_error, "__cause__", error)
@@ -323,8 +288,8 @@ def run_concurrently(
     args_list: list[tuple] = [],
     kwargs_list: list[dict] = [],
 ) -> list[Any]:
-    args_list = args_list or [tuple()] * len(fns)
-    kwargs_list = kwargs_list or [dict()] * len(fns)
+    args_list = args_list or [()] * len(fns)
+    kwargs_list = kwargs_list or [{}] * len(fns)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [

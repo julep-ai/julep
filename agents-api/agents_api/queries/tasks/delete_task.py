@@ -1,48 +1,28 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for deleting workflows
-workflow_query = parse_one("""
+workflow_query = """
 DELETE FROM workflows
 WHERE developer_id = $1 AND task_id = $2;
-""").sql(pretty=True)
+"""
 
 # Define the raw SQL query for deleting tasks
-task_query = parse_one("""
+task_query = """
 DELETE FROM tasks
 WHERE developer_id = $1 AND task_id = $2
 RETURNING task_id;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or agent does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A task with this ID already exists for this agent.",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Task not found",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("task", ["delete"]))
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,

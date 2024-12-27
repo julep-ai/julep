@@ -19,7 +19,7 @@ class ObjectWithState(Protocol):
     state: Assignable
 
 
-# TODO: This currently doesn't use .env variables, but we should move to using them
+# TODO: This currently doesn't use env.py, we should move to using them
 @asynccontextmanager
 async def lifespan(*containers: list[FastAPI | ObjectWithState]):
     # INIT POSTGRES #
@@ -75,10 +75,6 @@ app: FastAPI = FastAPI(
     },
     root_path=api_prefix,
     lifespan=lifespan,
-    #
-    # Global dependencies
-    # FIXME: This is blocking access to scalar
-    # dependencies=[Depends(valid_content_length)],
 )
 
 # Enable metrics
@@ -102,10 +98,8 @@ async def scalar_html():
 app.include_router(scalar_router)
 
 
-# content-length validation
-# FIXME: This is blocking access to scalar
+# TODO: Implement correct content-length validation (using streaming and chunked transfer encoding)
 # NOTE: This relies on client reporting the correct content-length header
-# TODO: We should use streaming for large payloads
 # @app.middleware("http")
 # async def validate_content_length(
 #     request: Request,

@@ -22,9 +22,7 @@ async def set_value_step(
 
         values = await context.prepare_for_step() | additional_values
         output = simple_eval_dict(expr, values)
-        result = StepOutcome(output=output)
-
-        return result
+        return StepOutcome(output=output)
 
     except BaseException as e:
         activity.logger.error(f"Error in set_value_step: {e}")

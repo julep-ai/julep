@@ -6,21 +6,16 @@ It constructs and executes SQL queries to fetch a list of agents based on develo
 from typing import Any, Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Agent
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
 raw_query = """
-SELECT 
+SELECT
     agent_id,
     developer_id,
     name,
@@ -34,7 +29,7 @@ SELECT
     updated_at
 FROM agents
 WHERE developer_id = $1 {metadata_filter_query}
-ORDER BY 
+ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST,
     CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at END ASC NULLS LAST,
@@ -43,21 +38,11 @@ LIMIT $2 OFFSET $3;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.exceptions.DataError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid data provided. Please check the input values.",
-        ),
-    }
+@rewrap_exceptions(common_db_exceptions("agent", ["list"]))
+@wrap_in_class(
+    Agent,
+    transform=lambda d: {**d, "id": d["agent_id"]},
 )
-@wrap_in_class(Agent, transform=lambda d: {"id": d["agent_id"], **d})
 @pg_query
 @beartype
 async def list_agents(

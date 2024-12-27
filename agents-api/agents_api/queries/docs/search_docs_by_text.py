@@ -1,12 +1,12 @@
 from typing import Any, Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import DocReference
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Raw query for text search
 search_docs_text_query = """
@@ -22,15 +22,7 @@ SELECT * FROM search_by_text(
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        )
-    }
-)
+@rewrap_exceptions(common_db_exceptions("doc", ["search"]))
 @wrap_in_class(
     DocReference,
     transform=lambda d: {

@@ -4,14 +4,13 @@ import subprocess
 from contextlib import asynccontextmanager, contextmanager
 from unittest.mock import patch
 
+from agents_api.worker.codec import pydantic_data_converter
+from agents_api.worker.worker import create_worker
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
 from testcontainers.localstack import LocalStackContainer
 from testcontainers.postgres import PostgresContainer
-
-from agents_api.worker.codec import pydantic_data_converter
-from agents_api.worker.worker import create_worker
 
 # Replicated here to prevent circular import
 EMBEDDING_SIZE: int = 1024
@@ -31,7 +30,7 @@ async def patch_testing_temporal():
     ) as env:
         # Create a worker with our workflows and start it
         worker = create_worker(client=env.client)
-        asyncio.create_task(worker.run())
+        env.worker_task = asyncio.create_task(worker.run())
 
         # Mock the Temporal client
         mock_client = worker.client
@@ -51,7 +50,7 @@ async def patch_testing_temporal():
 
 @asynccontextmanager
 async def patch_http_client_with_temporal(*, postgres_pool, developer_id):
-    async with patch_testing_temporal() as (worker, mock_get_client):
+    async with patch_testing_temporal() as (_worker, mock_get_client):
         from agents_api.env import api_key, api_key_header_name
         from agents_api.web import app
 
@@ -77,12 +76,12 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[
-            dict(
-                message=output,
-                tool_calls=[],
-                created_at=1,
+            {
+                "message": output,
+                "tool_calls": [],
+                "created_at": 1,
                 # finish_reason="stop",
-            )
+            }
         ],
         created=0,
         object="text_completion",

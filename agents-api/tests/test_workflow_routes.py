@@ -1,9 +1,9 @@
 # Tests for task queries
 
+from agents_api.clients.pg import create_db_pool
 from uuid_extensions import uuid7
 from ward import test
 
-from agents_api.clients.pg import create_db_pool
 from tests.fixtures import pg_dsn, test_agent, test_developer_id
 from tests.utils import patch_http_client_with_temporal
 
@@ -22,7 +22,7 @@ async def _(
         postgres_pool=pool, developer_id=developer_id
     ) as (
         make_request,
-        postgres_pool,
+        _postgres_pool,
     ):
         task_data = {
             "name": "test task",
@@ -37,7 +37,7 @@ async def _(
             json=task_data,
         ).raise_for_status()
 
-        execution_data = dict(input={"test": "input"})
+        execution_data = {"input": {"test": "input"}}
 
         make_request(
             method="POST",
@@ -59,7 +59,7 @@ async def _(
         postgres_pool=pool, developer_id=developer_id
     ) as (
         make_request,
-        postgres_pool,
+        _postgres_pool,
     ):
         task_data = """
 name: test task
@@ -86,7 +86,7 @@ main:
 
         task_id = result["id"]
 
-        execution_data = dict(input={"test": "input"})
+        execution_data = {"input": {"test": "input"}}
 
         make_request(
             method="POST",
@@ -109,7 +109,7 @@ async def _(
         postgres_pool=pool, developer_id=developer_id
     ) as (
         make_request,
-        postgres_pool,
+        _postgres_pool,
     ):
         task_data = """
 name: test task
@@ -130,7 +130,7 @@ main:
             headers={"Content-Type": "text/yaml"},
         ).raise_for_status()
 
-        execution_data = dict(input={"test": "input"})
+        execution_data = {"input": {"test": "input"}}
 
         make_request(
             method="POST",

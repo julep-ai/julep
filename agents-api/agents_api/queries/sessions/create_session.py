@@ -1,25 +1,16 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import (
-    CreateSessionRequest,
-    ResourceCreatedResponse,
-)
+from ...autogen.openapi_model import CreateSessionRequest, ResourceCreatedResponse
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL queries
-session_query = parse_one("""
+session_query = """
 INSERT INTO sessions (
     developer_id,
     session_id,
@@ -45,9 +36,9 @@ VALUES (
     $10 -- recall_options
 )
 RETURNING *;
-""").sql(pretty=True)
+"""
 
-lookup_query = parse_one("""
+lookup_query = """
 INSERT INTO session_lookup (
     developer_id,
     session_id,
@@ -55,28 +46,10 @@ INSERT INTO session_lookup (
     participant_id
 )
 VALUES ($1, $2, $3, $4);
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or session does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A session with this ID already exists.",
-        ),
-        asyncpg.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid session data provided.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("session", ["create"]))
 @wrap_in_class(
     ResourceCreatedResponse,
     one=True,

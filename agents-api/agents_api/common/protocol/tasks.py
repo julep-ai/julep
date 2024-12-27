@@ -45,7 +45,7 @@ with workflow.unsafe.imports_passed_through():
 # finish_branch -> wait | error | cancelled | step | finish | init_branch
 # error ->
 
-## Mermaid Diagram
+# Mermaid Diagram
 # ```mermaid
 # ---
 # title: Execution state machine
@@ -167,12 +167,9 @@ class StepContext(BaseModel):
         )
 
         if step_tools != "all":
-            if not all(
-                tool and isinstance(tool, CreateToolRequest) for tool in step_tools
-            ):
-                raise ApplicationError(
-                    "Invalid tools for step (ToolRef not supported yet)"
-                )
+            if not all(tool and isinstance(tool, CreateToolRequest) for tool in step_tools):
+                msg = "Invalid tools for step (ToolRef not supported yet)"
+                raise ApplicationError(msg)
 
             return step_tools
 
@@ -181,18 +178,14 @@ class StepContext(BaseModel):
         for tool in task.tools:
             tool_def = tool.model_dump()
             task_tools.append(
-                CreateToolRequest(
-                    **{tool_def["type"]: tool_def.pop("spec"), **tool_def}
-                )
+                CreateToolRequest(**{tool_def["type"]: tool_def.pop("spec"), **tool_def})
             )
 
         if not task.inherit_tools:
             return task_tools
 
         # Remove duplicates from agent_tools
-        filtered_tools = [
-            t for t in agent_tools if t.name not in map(lambda x: x.name, task.tools)
-        ]
+        filtered_tools = [t for t in agent_tools if t.name not in (x.name for x in task.tools)]
 
         return filtered_tools + task_tools
 
@@ -215,8 +208,7 @@ class StepContext(BaseModel):
     @computed_field
     @property
     def current_step(self) -> Annotated[WorkflowStep, Field(exclude=True)]:
-        step = self.current_workflow.steps[self.cursor.step]
-        return step
+        return self.current_workflow.steps[self.cursor.step]
 
     @computed_field
     @property
@@ -239,11 +231,7 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def prepare_for_step(
-        self, *args, include_remote=False, **kwargs
-    ) -> dict[str, Any]:
-        # FIXME: include_remote is deprecated
-
+    async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
         inputs = self.inputs
 

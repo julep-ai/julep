@@ -6,8 +6,9 @@ certain types of errors that are known to be non-retryable.
 
 import asyncio
 import sys
+from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
-from typing import Any, Awaitable, Callable, Optional, Sequence, Type
+from typing import Any
 
 from temporalio import workflow
 from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
@@ -65,9 +66,7 @@ async def offload_if_large[T](result: T) -> T:
 
 def offload_to_blob_store[S, T](
     func: Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T]],
-) -> Callable[
-    [S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T | RemoteObject[T]]
-]:
+) -> Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T | RemoteObject[T]]]:
     @wraps(func)
     async def wrapper(
         self,
@@ -173,7 +172,7 @@ class CustomInterceptor(Interceptor):
 
     def workflow_interceptor_class(
         self, input: WorkflowInterceptorClassInput
-    ) -> Optional[Type[WorkflowInboundInterceptor]]:
+    ) -> type[WorkflowInboundInterceptor] | None:
         """
         Returns the custom workflow interceptor class.
         """

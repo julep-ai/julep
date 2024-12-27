@@ -1,49 +1,39 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import PatchToolRequest, ResourceUpdatedResponse
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for patching a tool
-tools_query = parse_one("""
+tools_query = """
 WITH updated_tools AS (
-    UPDATE tools 
+    UPDATE tools
     SET
         type = COALESCE($4, type),
         name = COALESCE($5, name),
         description = COALESCE($6, description),
         spec = COALESCE($7, spec)
-    WHERE 
-        developer_id = $1 AND 
-        agent_id = $2 AND 
+    WHERE
+        developer_id = $1 AND
+        agent_id = $2 AND
         tool_id = $3
     RETURNING *
 )
 SELECT * FROM updated_tools;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="Developer or agent not found",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("tool", ["patch"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["tool_id"], "jobs": [], **d},
 )
-@pg_query
 @increase_counter("patch_tool")
+@pg_query
 @beartype
 async def patch_tool(
     *, developer_id: UUID, agent_id: UUID, tool_id: UUID, data: PatchToolRequest

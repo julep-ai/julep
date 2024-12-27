@@ -2,34 +2,21 @@
 
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# Define the raw SQL query outside the function
-raw_query = """
-SELECT COUNT(session_id) as count
+# Define the raw SQL query
+session_query = """
+SELECT COUNT(*)
 FROM sessions
 WHERE developer_id = $1;
 """
 
-# Parse and optimize the query
-query = parse_one(raw_query).sql(pretty=True)
 
-
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        )
-    }
-)
+@rewrap_exceptions(common_db_exceptions("session", ["count"]))
 @wrap_in_class(dict, one=True)
 @increase_counter("count_sessions")
 @pg_query
@@ -50,6 +37,6 @@ async def count_sessions(
     """
 
     return (
-        query,
+        session_query,
         [developer_id],
     )

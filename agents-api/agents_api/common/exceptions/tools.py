@@ -9,8 +9,6 @@ from . import BaseCommonException
 class BaseToolsException(BaseCommonException):
     """Base exception for tools-related errors."""
 
-    pass
-
 
 class IntegrationExecutionException(BaseToolsException):
     """Exception raised when an error occurs during an integration execution."""

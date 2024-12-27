@@ -13,15 +13,16 @@ async def yield_step(context: StepContext) -> StepOutcome:
         assert isinstance(context.current_step, YieldStep)
 
         if not isinstance(context.execution_input, ExecutionInput):
-            raise TypeError("Expected ExecutionInput type for context.execution_input")
+            msg = "Expected ExecutionInput type for context.execution_input"
+            raise TypeError(msg)
 
         all_workflows = context.execution_input.task.workflows
         workflow = context.current_step.workflow
         exprs = context.current_step.arguments
 
-        assert workflow in [
-            wf.name for wf in all_workflows
-        ], f"Workflow {workflow} not found in task"
+        assert workflow in [wf.name for wf in all_workflows], (
+            f"Workflow {workflow} not found in task"
+        )
 
         # Evaluate the expressions in the arguments
         arguments = await base_evaluate(exprs, await context.prepare_for_step())

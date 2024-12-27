@@ -13,4 +13,5 @@ async def get_value_step(
     context: StepContext,
 ) -> StepOutcome:
     key: str = context.current_step.get  # noqa: F841
-    raise NotImplementedError("Not implemented yet")
+    msg = "Not implemented yet"
+    raise NotImplementedError(msg)

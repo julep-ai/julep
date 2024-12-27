@@ -3,18 +3,17 @@
 from typing import Any, Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 
 from ...autogen.openapi_model import Session
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
 session_query = """
 WITH session_participants AS (
-    SELECT 
+    SELECT
         sl.session_id,
         array_agg(sl.participant_id) FILTER (WHERE sl.participant_type = 'agent') as agents,
         array_agg(sl.participant_id) FILTER (WHERE sl.participant_type = 'user') as users
@@ -22,7 +21,7 @@ WITH session_participants AS (
     WHERE sl.developer_id = $1
     GROUP BY sl.session_id
 )
-SELECT 
+SELECT
     s.session_id as id,
     s.developer_id,
     s.situation,
@@ -41,7 +40,7 @@ FROM sessions s
 LEFT JOIN session_participants sp ON s.session_id = sp.session_id
 WHERE s.developer_id = $1
     AND ($5::jsonb IS NULL OR s.metadata @> $5::jsonb)
-ORDER BY 
+ORDER BY
     CASE WHEN $3 = 'created_at' AND $4 = 'desc' THEN s.created_at END DESC,
     CASE WHEN $3 = 'created_at' AND $4 = 'asc' THEN s.created_at END ASC,
     CASE WHEN $3 = 'updated_at' AND $4 = 'desc' THEN s.updated_at END DESC,
@@ -50,25 +49,7 @@ LIMIT $2 OFFSET $6;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="No sessions found",
-        ),
-        asyncpg.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid session data provided.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("session", ["list"]))
 @wrap_in_class(Session)
 @increase_counter("list_sessions")
 @pg_query

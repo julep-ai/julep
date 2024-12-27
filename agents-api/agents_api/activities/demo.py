@@ -5,7 +5,8 @@ from ..env import testing
 
 async def demo_activity(a: int, b: int) -> int:
     # Should throw an error if testing is not enabled
-    raise Exception("This should not be called in production")
+    msg = "This should not be called in production"
+    raise Exception(msg)
 
 
 async def mock_demo_activity(a: int, b: int) -> int:

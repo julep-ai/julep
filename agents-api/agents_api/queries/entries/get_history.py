@@ -1,24 +1,17 @@
 import json
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import History
 from ...common.utils.datetime import utcnow
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for getting history with a developer check and relations
-history_query = parse_one("""
+history_query = """
 WITH entries AS (
-    SELECT 
+    SELECT
         e.entry_id AS id,
         e.session_id,
         e.role,
@@ -37,39 +30,21 @@ WITH entries AS (
     AND e.source = ANY($2)
 ),
 relations AS (
-    SELECT 
+    SELECT
         er.head,
         er.relation,
         er.tail
     FROM entry_relations er
     WHERE er.session_id = $1
 )
-SELECT 
+SELECT
     (SELECT json_agg(e) FROM entries e) AS entries,
     (SELECT json_agg(r) FROM relations r) AS relations,
-    $1::uuid AS session_id,
-""").sql(pretty=True)
+    $1::uuid AS session_id
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Session not found",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="Entry already exists",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Session not found",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("history", ["get"]))
 @wrap_in_class(
     History,
     one=True,

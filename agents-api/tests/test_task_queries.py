@@ -1,9 +1,5 @@
 # Tests for task queries
 
-from fastapi import HTTPException
-from uuid_extensions import uuid7
-from ward import raises, test
-
 from agents_api.autogen.openapi_model import (
     CreateTaskRequest,
     PatchTaskRequest,
@@ -19,6 +15,10 @@ from agents_api.queries.tasks.get_task import get_task
 from agents_api.queries.tasks.list_tasks import list_tasks
 from agents_api.queries.tasks.patch_task import patch_task
 from agents_api.queries.tasks.update_task import update_task
+from fastapi import HTTPException
+from uuid_extensions import uuid7
+from ward import raises, test
+
 from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_task
 
 
@@ -174,9 +174,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
 
 @test("query: list tasks sql - no filters")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
     """Test that a list of tasks can be successfully retrieved."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -188,15 +186,13 @@ async def _(
     assert result is not None, "Result is None"
     assert isinstance(result, list), f"Result is not a list, got {type(result)}"
     assert len(result) > 0, "Result is empty"
-    assert all(
-        isinstance(task, Task) for task in result
-    ), "Not all listed tasks are of type Task"
+    assert all(isinstance(task, Task) for task in result), (
+        "Not all listed tasks are of type Task"
+    )
 
 
 @test("query: update task sql - exists")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
     """Test that a task can be successfully updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -205,15 +201,13 @@ async def _(
         task_id=task.id,
         agent_id=agent.id,
         data=UpdateTaskRequest(
-            **{
-                "name": "updated task",
-                "canonical_name": "updated_task",
-                "description": "updated task description",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [{"evaluate": {"hi": "_"}}],
-                "inherit_tools": False,
-                "metadata": {"updated": True},
-            }
+            name="updated task",
+            canonical_name="updated_task",
+            description="updated task description",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"hi": "_"}}],
+            inherit_tools=False,
+            metadata={"updated": True},
         ),
         connection_pool=pool,
     )
@@ -246,14 +240,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
             task_id=task_id,
             agent_id=agent.id,
             data=UpdateTaskRequest(
-                **{
-                    "canonical_name": "updated_task",
-                    "name": "updated task",
-                    "description": "updated task description",
-                    "input_schema": {"type": "object", "additionalProperties": True},
-                    "main": [{"evaluate": {"hi": "_"}}],
-                    "inherit_tools": False,
-                }
+                canonical_name="updated_task",
+                name="updated task",
+                description="updated task description",
+                input_schema={"type": "object", "additionalProperties": True},
+                main=[{"evaluate": {"hi": "_"}}],
+                inherit_tools=False,
             ),
             connection_pool=pool,
         )
@@ -272,15 +264,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
-            **{
-                "canonical_name": "test_task",
-                "name": "test task",
-                "description": "test task description",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [{"evaluate": {"hi": "_"}}],
-                "inherit_tools": False,
-                "metadata": {"initial": True},
-            }
+            canonical_name="test_task",
+            name="test task",
+            description="test task description",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"hi": "_"}}],
+            inherit_tools=False,
+            metadata={"initial": True},
         ),
         connection_pool=pool,
     )
@@ -290,12 +280,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
         developer_id=developer_id,
         task_id=task.id,
         agent_id=agent.id,
-        data=PatchTaskRequest(
-            **{
-                "name": "patched task",
-                "metadata": {"patched": True},
-            }
-        ),
+        data=PatchTaskRequest(name="patched task", metadata={"patched": True}),
         connection_pool=pool,
     )
 
@@ -328,12 +313,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
             developer_id=developer_id,
             task_id=task_id,
             agent_id=agent.id,
-            data=PatchTaskRequest(
-                **{
-                    "name": "patched task",
-                    "metadata": {"patched": True},
-                }
-            ),
+            data=PatchTaskRequest(name="patched task", metadata={"patched": True}),
             connection_pool=pool,
         )
 

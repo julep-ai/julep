@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Union
 
 import numpy as np
 
-Matrix = Union[list[list[float]], list[np.ndarray], np.ndarray]
+Matrix = list[list[float]] | list[np.ndarray] | np.ndarray
 
 logger = logging.getLogger(__name__)
 
@@ -35,18 +34,14 @@ def _cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
     x = np.array(x)
     y = np.array(y)
     if x.shape[1] != y.shape[1]:
-        msg = (
-            f"Number of columns in X and Y must be the same. X has shape {x.shape} "
-            f"and Y has shape {y.shape}."
-        )
+        msg = f"Number of columns in X and Y must be the same. X has shape {x.shape} and Y has shape {y.shape}."
         raise ValueError(msg)
     try:
         import simsimd as simd  # type: ignore
 
         x = np.array(x, dtype=np.float32)
         y = np.array(y, dtype=np.float32)
-        z = 1 - np.array(simd.cdist(x, y, metric="cosine"))
-        return z
+        return 1 - np.array(simd.cdist(x, y, metric="cosine"))
     except ImportError:
         logger.debug(
             "Unable to import simsimd, defaulting to NumPy implementation. If you want "
@@ -98,9 +93,7 @@ def maximal_marginal_relevance(
             if i in idxs:
                 continue
             redundant_score = max(similarity_to_selected[i])
-            equation_score = (
-                lambda_mult * query_score - (1 - lambda_mult) * redundant_score
-            )
+            equation_score = lambda_mult * query_score - (1 - lambda_mult) * redundant_score
             if equation_score > best_score:
                 best_score = equation_score
                 idx_to_add = i

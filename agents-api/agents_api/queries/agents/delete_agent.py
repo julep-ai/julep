@@ -5,25 +5,18 @@ It constructs and executes SQL queries to remove agent records and associated da
 
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
-agent_query = parse_one("""
+agent_query = """
 WITH deleted_file_owners AS (
     DELETE FROM file_owners
-    WHERE developer_id = $1 
+    WHERE developer_id = $1
     AND owner_type = 'agent'
     AND owner_id = $2
 ),
@@ -37,9 +30,9 @@ deleted_files AS (
     DELETE FROM files
     WHERE developer_id = $1
     AND file_id IN (
-        SELECT file_id FROM file_owners 
-        WHERE developer_id = $1 
-        AND owner_type = 'agent' 
+        SELECT file_id FROM file_owners
+        WHERE developer_id = $1
+        AND owner_type = 'agent'
         AND owner_id = $2
     )
 ),
@@ -48,8 +41,8 @@ deleted_docs AS (
     WHERE developer_id = $1
     AND doc_id IN (
         SELECT doc_id FROM doc_owners
-        WHERE developer_id = $1 
-        AND owner_type = 'agent' 
+        WHERE developer_id = $1
+        AND owner_type = 'agent'
         AND owner_id = $2
     )
 ),
@@ -57,36 +50,13 @@ deleted_tools AS (
     DELETE FROM tools
     WHERE agent_id = $2 AND developer_id = $1
 )
-DELETE FROM agents 
+DELETE FROM agents
 WHERE agent_id = $2 AND developer_id = $1
 RETURNING developer_id, agent_id;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.exceptions.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="An agent with this canonical name already exists for this developer.",
-        ),
-        asyncpg.exceptions.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="The provided data violates one or more constraints. Please check the input values.",
-        ),
-        asyncpg.exceptions.DataError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid data provided. Please check the input values.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("agent", ["delete"]))
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,

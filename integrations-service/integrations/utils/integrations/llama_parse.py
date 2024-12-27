@@ -51,10 +51,7 @@ async def parse(
             base64.b64decode(arguments.file), extra_info=extra_info
         )
     else:
-        if arguments.filename:
-            extra_info = {"file_name": arguments.filename}
-        else:
-            extra_info = None
+        extra_info = {"file_name": arguments.filename} if arguments.filename else None
         # Parse the document (decode inline)
         documents = await parser.aload_data(arguments.file, extra_info=extra_info)
 

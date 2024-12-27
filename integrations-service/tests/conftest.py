@@ -1,13 +1,14 @@
-import pytest
 from unittest.mock import patch
 
+import pytest
 from integrations.providers import available_providers
+
 from .mocks.brave import MockBraveSearchClient
 from .mocks.email import MockEmailClient
+from .mocks.llama_parse import MockLlamaParseClient
 from .mocks.spider import MockSpiderClient
 from .mocks.weather import MockWeatherClient
 from .mocks.wikipedia import MockWikipediaClient
-from .mocks.llama_parse import MockLlamaParseClient
 
 
 @pytest.fixture(autouse=True)
@@ -17,12 +18,8 @@ def mock_external_services():
         patch("langchain_community.tools.BraveSearch", MockBraveSearchClient),
         patch("smtplib.SMTP", MockEmailClient),
         patch("langchain_community.document_loaders.SpiderLoader", MockSpiderClient),
-        patch(
-            "langchain_community.utilities.OpenWeatherMapAPIWrapper", MockWeatherClient
-        ),
-        patch(
-            "langchain_community.document_loaders.WikipediaLoader", MockWikipediaClient
-        ),
+        patch("langchain_community.utilities.OpenWeatherMapAPIWrapper", MockWeatherClient),
+        patch("langchain_community.document_loaders.WikipediaLoader", MockWikipediaClient),
         patch("llama_parse.LlamaParse", MockLlamaParseClient),
     ):
         yield

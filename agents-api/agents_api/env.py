@@ -5,7 +5,7 @@ It utilizes the environs library for environment variable parsing.
 
 import random
 from pprint import pprint
-from typing import Any, Dict
+from typing import Any
 
 from environs import Env
 
@@ -57,9 +57,7 @@ pg_dsn: str = env.str(
     "PG_DSN",
     default="postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable",
 )
-summarization_model_name: str = env.str(
-    "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
-)
+summarization_model_name: str = env.str("SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo")
 
 query_timeout: float = env.float("QUERY_TIMEOUT", default=90.0)
 
@@ -85,18 +83,14 @@ litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
 
 # Embedding service
 # -----------------
-embedding_model_id: str = env.str(
-    "EMBEDDING_MODEL_ID", default="Alibaba-NLP/gte-large-en-v1.5"
-)
+embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="Alibaba-NLP/gte-large-en-v1.5")
 
 embedding_dimensions: int = env.int("EMBEDDING_DIMENSIONS", default=1024)
 
 
 # Integration service
 # -------------------
-integration_service_url: str = env.str(
-    "INTEGRATION_SERVICE_URL", default="http://0.0.0.0:8000"
-)
+integration_service_url: str = env.str("INTEGRATION_SERVICE_URL", default="http://0.0.0.0:8000")
 
 
 # Temporal
@@ -111,9 +105,7 @@ temporal_schedule_to_close_timeout: int = env.int(
     "TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT", default=3600
 )
 temporal_heartbeat_timeout: int = env.int("TEMPORAL_HEARTBEAT_TIMEOUT", default=900)
-temporal_metrics_bind_host: str = env.str(
-    "TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0"
-)
+temporal_metrics_bind_host: str = env.str("TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0")
 temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=14000)
 temporal_activity_after_retry_timeout: int = env.int(
     "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
@@ -144,27 +136,27 @@ temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
 )
 
 # Consolidate environment variables
-environment: Dict[str, Any] = dict(
-    debug=debug,
-    multi_tenant_mode=multi_tenant_mode,
-    sentry_dsn=sentry_dsn,
-    temporal_endpoint=temporal_endpoint,
-    temporal_task_queue=temporal_task_queue,
-    api_key=api_key,
-    api_key_header_name=api_key_header_name,
-    hostname=hostname,
-    api_prefix=api_prefix,
-    temporal_worker_url=temporal_worker_url,
-    temporal_namespace=temporal_namespace,
-    embedding_model_id=embedding_model_id,
-    use_blob_store_for_temporal=use_blob_store_for_temporal,
-    blob_store_bucket=blob_store_bucket,
-    blob_store_cutoff_kb=blob_store_cutoff_kb,
-    s3_endpoint=s3_endpoint,
-    s3_access_key=s3_access_key,
-    s3_secret_key=s3_secret_key,
-    testing=testing,
-)
+environment: dict[str, Any] = {
+    "debug": debug,
+    "multi_tenant_mode": multi_tenant_mode,
+    "sentry_dsn": sentry_dsn,
+    "temporal_endpoint": temporal_endpoint,
+    "temporal_task_queue": temporal_task_queue,
+    "api_key": api_key,
+    "api_key_header_name": api_key_header_name,
+    "hostname": hostname,
+    "api_prefix": api_prefix,
+    "temporal_worker_url": temporal_worker_url,
+    "temporal_namespace": temporal_namespace,
+    "embedding_model_id": embedding_model_id,
+    "use_blob_store_for_temporal": use_blob_store_for_temporal,
+    "blob_store_bucket": blob_store_bucket,
+    "blob_store_cutoff_kb": blob_store_cutoff_kb,
+    "s3_endpoint": s3_endpoint,
+    "s3_access_key": s3_access_key,
+    "s3_secret_key": s3_secret_key,
+    "testing": testing,
+}
 
 if debug or testing:
     # Print the loaded environment variables for debugging purposes.

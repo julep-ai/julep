@@ -21,8 +21,7 @@ async def if_else_step(context: StepContext) -> StepOutcome:
         output = await base_evaluate(expr, await context.prepare_for_step())
         output: bool = bool(output)
 
-        result = StepOutcome(output=output)
-        return result
+        return StepOutcome(output=output)
 
     except BaseException as e:
         activity.logger.error(f"Error in if_else_step: {e}")

@@ -83,7 +83,6 @@ async def search(arguments: ArxivSearchArguments) -> ArxivSearchOutput:
                     pdf_content = base64.b64encode(pdf_file.read()).decode("utf-8")
             results.append(create_arxiv_search_result(result, pdf_content))
     else:
-        for result in search_results:
-            results.append(create_arxiv_search_result(result))
+        results.extend(create_arxiv_search_result(result) for result in search_results)
 
     return ArxivSearchOutput(result=results)

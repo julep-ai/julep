@@ -18,8 +18,7 @@ async def return_step(context: StepContext) -> StepOutcome:
         exprs: dict[str, str] = context.current_step.return_
         output = await base_evaluate(exprs, await context.prepare_for_step())
 
-        result = StepOutcome(output=output)
-        return result
+        return StepOutcome(output=output)
 
     except BaseException as e:
         activity.logger.error(f"Error in log_step: {e}")

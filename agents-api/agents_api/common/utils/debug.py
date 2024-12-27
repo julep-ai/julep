@@ -17,7 +17,7 @@ def breakpoint_on_exception(fn):
             print("Traceback:")
             traceback.print_exc()
 
-            breakpoint()
-            raise
+            breakpoint()  # noqa: T100
+            raise exc
 
     return wrapper

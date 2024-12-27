@@ -39,7 +39,8 @@ async def execute_system(
     arguments: dict[str, Any] = system.arguments or {}
 
     if not isinstance(context.execution_input, ExecutionInput):
-        raise TypeError("Expected ExecutionInput type for context.execution_input")
+        msg = "Expected ExecutionInput type for context.execution_input"
+        raise TypeError(msg)
 
     arguments["developer_id"] = context.execution_input.developer_id
 
@@ -131,9 +132,7 @@ async def execute_system(
 
         # Run the synchronous function in another process
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            process_pool_executor, partial(handler, **arguments)
-        )
+        return await loop.run_in_executor(process_pool_executor, partial(handler, **arguments))
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in execute_system_call: {e}")
@@ -151,19 +150,20 @@ def _create_search_request(arguments: dict) -> Any:
             confidence=arguments.pop("confidence", 0.5),
             limit=arguments.get("limit", 10),
         )
-    elif "text" in arguments:
+    if "text" in arguments:
         return TextOnlyDocSearchRequest(
             text=arguments.pop("text"),
             mmr_strength=arguments.pop("mmr_strength", 0),
             limit=arguments.get("limit", 10),
         )
-    elif "vector" in arguments:
+    if "vector" in arguments:
         return VectorDocSearchRequest(
             vector=arguments.pop("vector"),
             mmr_strength=arguments.pop("mmr_strength", 0),
             confidence=arguments.pop("confidence", 0.7),
             limit=arguments.get("limit", 10),
         )
+    return None
 
 
 # Keep the existing mock and activity definition

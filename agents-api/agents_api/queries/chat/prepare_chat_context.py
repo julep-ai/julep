@@ -2,23 +2,23 @@ from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
+from pydantic import ValidationError
 
 from ...common.protocol.sessions import ChatContext, make_session
 from ...common.utils.datetime import utcnow
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions, partialclass
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
 sql_query = """
-SELECT * FROM 
+SELECT * FROM
 (
     SELECT jsonb_agg(u) AS users FROM (
-        SELECT 
+        SELECT
             session_lookup.participant_id,
             users.user_id AS id,
             users.developer_id,
@@ -37,7 +37,7 @@ SELECT * FROM
 ) AS users,
 (
     SELECT jsonb_agg(a) AS agents FROM (
-        SELECT 
+        SELECT
             session_lookup.participant_id,
             agents.agent_id AS id,
             agents.developer_id,
@@ -60,7 +60,7 @@ SELECT * FROM
 ) AS agents,
 (
     SELECT to_jsonb(s) AS session FROM (
-        SELECT 
+        SELECT
             sessions.session_id AS id,
             sessions.developer_id,
             sessions.situation,
@@ -75,15 +75,15 @@ SELECT * FROM
             sessions.recall_options
         FROM sessions
         WHERE
-            developer_id = $1 AND 
+            developer_id = $1 AND
             session_id = $2
         LIMIT 1
     ) s
 ) AS session,
 (
     SELECT jsonb_agg(r) AS toolsets FROM (
-        SELECT 
-            session_lookup.participant_id, 
+        SELECT
+            session_lookup.participant_id,
             tools.tool_id as id,
             tools.developer_id,
             tools.agent_id,
@@ -97,8 +97,8 @@ SELECT * FROM
         FROM session_lookup
         INNER JOIN tools ON session_lookup.participant_id = tools.agent_id
         WHERE
-            session_lookup.developer_id = $1 AND 
-            session_id = $2 AND 
+            session_lookup.developer_id = $1 AND
+            session_id = $2 AND
             session_lookup.participant_type = 'agent'
     ) r
 ) AS toolsets"""
@@ -124,7 +124,7 @@ def _transform(d):
     d["session"]["updated_at"] = utcnow()
     d["users"] = d.get("users") or []
 
-    transformed_data = {
+    return {
         **d,
         "session": make_session(
             agents=[a["id"] for a in d.get("agents") or []],
@@ -146,16 +146,12 @@ def _transform(d):
         ],
     }
 
-    return transformed_data
 
-
-# TODO: implement this part
-# @rewrap_exceptions(
-#     {
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions({
+    ValidationError: partialclass(HTTPException, status_code=400),
+    TypeError: partialclass(HTTPException, status_code=400),
+    **common_db_exceptions("chat", ["get"]),
+})
 @wrap_in_class(
     ChatContext,
     one=True,

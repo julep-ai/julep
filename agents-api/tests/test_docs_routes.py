@@ -1,4 +1,4 @@
-import time
+import asyncio
 
 from ward import skip, test
 
@@ -17,10 +17,10 @@ from .utils import patch_testing_temporal
 @test("route: create user doc")
 async def _(make_request=make_request, user=test_user):
     async with patch_testing_temporal():
-        data = dict(
-            title="Test User Doc",
-            content=["This is a test user document."],
-        )
+        data = {
+            "title": "Test User Doc",
+            "content": ["This is a test user document."],
+        }
 
         response = make_request(
             method="POST",
@@ -34,10 +34,10 @@ async def _(make_request=make_request, user=test_user):
 @test("route: create agent doc")
 async def _(make_request=make_request, agent=test_agent):
     async with patch_testing_temporal():
-        data = dict(
-            title="Test Agent Doc",
-            content=["This is a test agent document."],
-        )
+        data = {
+            "title": "Test Agent Doc",
+            "content": ["This is a test agent document."],
+        }
 
         response = make_request(
             method="POST",
@@ -51,10 +51,10 @@ async def _(make_request=make_request, agent=test_agent):
 @test("route: delete doc")
 async def _(make_request=make_request, agent=test_agent):
     async with patch_testing_temporal():
-        data = dict(
-            title="Test Agent Doc",
-            content=["This is a test agent document."],
-        )
+        data = {
+            "title": "Test Agent Doc",
+            "content": ["This is a test agent document."],
+        }
 
         response = make_request(
             method="POST",
@@ -81,10 +81,10 @@ async def _(make_request=make_request, agent=test_agent):
 @test("route: get doc")
 async def _(make_request=make_request, agent=test_agent):
     async with patch_testing_temporal():
-        data = dict(
-            title="Test Agent Doc",
-            content=["This is a test agent document."],
-        )
+        data = {
+            "title": "Test Agent Doc",
+            "content": ["This is a test agent document."],
+        }
 
         response = make_request(
             method="POST",
@@ -168,11 +168,11 @@ def _(make_request=make_request, agent=test_agent):
 
 @test("route: search agent docs")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-    time.sleep(0.5)
-    search_params = dict(
-        text=doc.content[0],
-        limit=1,
-    )
+    await asyncio.sleep(0.5)
+    search_params = {
+        "text": doc.content[0],
+        "limit": 1,
+    }
 
     response = make_request(
         method="POST",
@@ -192,11 +192,11 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
 @skip("Fails randomly on CI")
 @test("route: search user docs")
 async def _(make_request=make_request, user=test_user, doc=test_user_doc):
-    time.sleep(0.5)
-    search_params = dict(
-        text=doc.content[0],
-        limit=1,
-    )
+    await asyncio.sleep(0.5)
+    search_params = {
+        "text": doc.content[0],
+        "limit": 1,
+    }
 
     response = make_request(
         method="POST",
@@ -215,15 +215,15 @@ async def _(make_request=make_request, user=test_user, doc=test_user_doc):
 
 @test("route: search agent docs hybrid with mmr")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
 
     EMBEDDING_SIZE = 1024
-    search_params = dict(
-        text=doc.content[0],
-        vector=[1.0] * EMBEDDING_SIZE,
-        mmr_strength=0.5,
-        limit=1,
-    )
+    search_params = {
+        "text": doc.content[0],
+        "vector": [1.0] * EMBEDDING_SIZE,
+        "mmr_strength": 0.5,
+        "limit": 1,
+    }
 
     response = make_request(
         method="POST",

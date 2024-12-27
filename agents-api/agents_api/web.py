@@ -4,7 +4,8 @@ This module initializes the FastAPI application, registers routes, sets up middl
 
 import asyncio
 import logging
-from typing import Any, Callable, Union, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import sentry_sdk
 import uvicorn
@@ -62,8 +63,8 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
         offending_input = None
 
         # Return the deepest matching possibility
-        if isinstance(exc, (ValidationError, RequestValidationError)):
-            exc = cast(Union[ValidationError, RequestValidationError], exc)
+        if isinstance(exc, ValidationError | RequestValidationError):
+            exc = cast(ValidationError | RequestValidationError, exc)
             errors = exc.errors()
 
             # Get the deepest matching errors
@@ -89,9 +90,7 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
                         if loc not in offending_input:
                             break
                     case list():
-                        if not (
-                            isinstance(loc, int) and 0 <= loc < len(offending_input)
-                        ):
+                        if not (isinstance(loc, int) and 0 <= loc < len(offending_input)):
                             break
                     case _:
                         break
@@ -182,9 +181,7 @@ async def http_exception_handler(request, exc: HTTPException):  # pylint: disabl
 async def validation_error_handler(request: Request, exc: RPCError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content={
-            "error": {"message": "job not found or invalid", "code": exc.status.name}
-        },
+        content={"error": {"message": "job not found or invalid", "code": exc.status.name}},
     )
 
 

@@ -1,19 +1,17 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
-delete_query = parse_one("""
+delete_query = """
 WITH deleted_file_owners AS (
     DELETE FROM file_owners
-    WHERE developer_id = $1 
+    WHERE developer_id = $1
     AND owner_type = 'user'
     AND owner_id = $2
 ),
@@ -27,9 +25,9 @@ deleted_files AS (
     DELETE FROM files
     WHERE developer_id = $1
     AND file_id IN (
-        SELECT file_id FROM file_owners 
-        WHERE developer_id = $1 
-        AND owner_type = 'user' 
+        SELECT file_id FROM file_owners
+        WHERE developer_id = $1
+        AND owner_type = 'user'
         AND owner_id = $2
     )
 ),
@@ -38,31 +36,18 @@ deleted_docs AS (
     WHERE developer_id = $1
     AND doc_id IN (
         SELECT doc_id FROM doc_owners
-        WHERE developer_id = $1 
-        AND owner_type = 'user' 
+        WHERE developer_id = $1
+        AND owner_type = 'user'
         AND owner_id = $2
     )
 )
-DELETE FROM users 
+DELETE FROM users
 WHERE developer_id = $1 AND user_id = $2
 RETURNING user_id, developer_id;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.DataError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified user does not exist.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("user", ["delete"]))
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,

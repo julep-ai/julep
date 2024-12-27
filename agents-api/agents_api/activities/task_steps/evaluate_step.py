@@ -15,18 +15,12 @@ async def evaluate_step(
     override_expr: dict[str, str] | None = None,
 ) -> StepOutcome:
     try:
-        expr = (
-            override_expr
-            if override_expr is not None
-            else context.current_step.evaluate
-        )
+        expr = override_expr if override_expr is not None else context.current_step.evaluate
 
-        values = await context.prepare_for_step(include_remote=True) | additional_values
+        values = await context.prepare_for_step() | additional_values
 
         output = simple_eval_dict(expr, values)
-        result = StepOutcome(output=output)
-
-        return result
+        return StepOutcome(output=output)
 
     except BaseException as e:
         activity.logger.error(f"Error in evaluate_step: {e}")
