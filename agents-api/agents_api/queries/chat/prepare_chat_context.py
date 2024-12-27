@@ -65,6 +65,7 @@ SELECT * FROM
             sessions.situation,
             sessions.system_template,
             sessions.created_at,
+            sessions.updated_at,
             sessions.metadata,
             sessions.render_templates,
             sessions.token_budget,
@@ -86,7 +87,6 @@ SELECT * FROM
             tools.developer_id,
             tools.agent_id,
             tools.task_id,
-            tools.task_version,
             tools.type,
             tools.name,
             tools.description,
@@ -105,18 +105,23 @@ SELECT * FROM
 
 def _transform(d):
     toolsets = {}
-    for tool in d["toolsets"]:
+
+    # Default to empty lists when users/agents are not present
+    d["users"] = d.get("users") or []
+    d["agents"] = d.get("agents") or []
+
+    for tool in d.get("toolsets") or []:
         agent_id = tool["agent_id"]
         if agent_id in toolsets:
             toolsets[agent_id].append(tool)
         else:
             toolsets[agent_id] = [tool]
 
-    return {
+    transformed_data = {
         **d,
         "session": make_session(
-            agents=[a["id"] for a in d["agents"]],
-            users=[u["id"] for u in d["users"]],
+            agents=[a["id"] for a in d.get("agents") or []],
+            users=[u["id"] for u in d.get("users") or []],
             **d["session"],
         ),
         "toolsets": [
@@ -133,6 +138,8 @@ def _transform(d):
             for agent_id, tools in toolsets.items()
         ],
     }
+
+    return transformed_data
 
 
 # TODO: implement this part
@@ -153,12 +160,12 @@ async def prepare_chat_context(
     *,
     developer_id: UUID,
     session_id: UUID,
-) -> tuple[list[str], list]:
+) -> tuple[str, list]:
     """
     Executes a complex query to retrieve memory context based on session ID.
     """
 
     return (
-        [sql_query.format()],
+        sql_query,
         [developer_id, session_id],
     )
