@@ -143,6 +143,11 @@ def common_db_exceptions(
             status_code=404,
             detail=get_operation_message(f"Required key not found for {resource_name}"),
         ),
+        AssertionError: partialclass(
+            HTTPException,
+            status_code=404,
+            detail=get_operation_message(f"No {resource_name} found"),
+        ),
         # Pydantic validation errors
         pydantic.ValidationError: lambda e: partialclass(
             HTTPException,
