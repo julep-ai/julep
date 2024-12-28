@@ -1,1 +1,2 @@
-from .routers import router  # noqa: F401
+# noqa: F401
+from .routers import router
