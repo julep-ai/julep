@@ -219,7 +219,6 @@ async def chat(
             developer_id=developer.id,
             session_id=session_id,
             data=new_entries,
-            mark_session_as_updated=True,
         )
 
     # Adaptive context handling
