@@ -10,6 +10,7 @@ import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from sqlglot import parse_one
+import ast
 
 from ...autogen.openapi_model import Doc
 from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
@@ -58,6 +59,13 @@ def transform_list_docs(d: dict) -> dict:
     content = d["content"][0] if len(d["content"]) == 1 else d["content"]
 
     embeddings = d["embeddings"][0] if len(d["embeddings"]) == 1 else d["embeddings"]
+
+    try:
+        # Embeddings are retreived as a string, so we need to evaluate it
+        embeddings = ast.literal_eval(embeddings)
+    except Exception as e:
+        raise ValueError(f"Error evaluating embeddings: {e}")
+
     if embeddings and all((e is None) for e in embeddings):
         embeddings = None
 
