@@ -73,7 +73,6 @@ async def _(make_request=make_request, agent=test_agent):
         assert response.json()["title"] == "Test Agent Doc"
         assert response.json()["content"] == "This is a test agent document."
 
-
         response = make_request(
             method="DELETE",
             url=f"/agents/{agent.id}/docs/{doc_id}",
@@ -173,6 +172,7 @@ def _(make_request=make_request, agent=test_agent):
 
     assert isinstance(docs, list)
 
+
 @skip("Fails due to FTS not working in Test Container")
 @test("route: search agent docs")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
@@ -194,6 +194,7 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
 
     assert isinstance(docs, list)
     assert len(docs) >= 1
+
 
 @skip("Fails due to FTS not working in Test Container")
 @test("route: search user docs")
