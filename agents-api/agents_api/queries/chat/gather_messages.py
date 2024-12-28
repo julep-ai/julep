@@ -126,8 +126,8 @@ async def gather_messages(
             doc_references: list[DocReference] = await search_docs_hybrid(
                 developer_id=developer.id,
                 owners=owners,
-                query=query_text,
-                query_embedding=query_embedding,
+                text_query=query_text,
+                embedding=query_embedding,
             )
         case "text":
             doc_references: list[DocReference] = await search_docs_by_text(
