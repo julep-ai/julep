@@ -51,6 +51,29 @@ SELECT
 """).sql(pretty=True)
 
 
+def _transform(d):
+    transformed_data = {
+        "entries": [
+            {
+                **entry,
+            }
+            for entry in json.loads(d.get("entries") or "[]")
+        ],
+        "relations": [
+            {
+                "head": r["head"],
+                "relation": r["relation"],
+                "tail": r["tail"],
+            }
+            for r in (d.get("relations") or [])
+        ],
+        "session_id": d.get("session_id"),
+        "created_at": utcnow(),
+    }
+
+    return transformed_data
+
+
 @rewrap_exceptions(
     {
         asyncpg.ForeignKeyViolationError: partialclass(
@@ -73,19 +96,7 @@ SELECT
 @wrap_in_class(
     History,
     one=True,
-    transform=lambda d: {
-        "entries": json.loads(d.get("entries") or "[]"),
-        "relations": [
-            {
-                "head": r["head"],
-                "relation": r["relation"],
-                "tail": r["tail"],
-            }
-            for r in (d.get("relations") or [])
-        ],
-        "session_id": d.get("session_id"),
-        "created_at": utcnow(),
-    },
+    transform=_transform,
 )
 @pg_query
 @beartype
