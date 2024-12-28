@@ -37,15 +37,14 @@ CREATE TABLE IF NOT EXISTS entries (
     name TEXT,
     content JSONB[] NOT NULL,
     tool_call_id TEXT DEFAULT NULL,
-    tool_calls JSONB[] NOT NULL DEFAULT '{}'::JSONB[],
+    tool_calls JSONB[] DEFAULT NULL,
     model TEXT NOT NULL,
     token_count INTEGER DEFAULT NULL,
     tokenizer TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp DOUBLE PRECISION NOT NULL,
     CONSTRAINT pk_entries PRIMARY KEY (session_id, entry_id, created_at),
-    CONSTRAINT ct_content_is_array_of_objects CHECK (all_jsonb_elements_are_objects (content)),
-    CONSTRAINT ct_tool_calls_is_array_of_objects CHECK (all_jsonb_elements_are_objects (tool_calls))
+    CONSTRAINT ct_content_is_array_of_objects CHECK (all_jsonb_elements_are_objects (content))
 );
 
 -- Convert to hypertable if not already
