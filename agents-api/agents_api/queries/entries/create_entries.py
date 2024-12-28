@@ -127,7 +127,7 @@ async def create_entries(
                 item.get("name"),  # $6
                 content_to_json(item.get("content") or {}),  # $7
                 item.get("tool_call_id"),  # $8
-                content_to_json(item.get("tool_calls") or {}),  # $9
+                item.get("tool_calls"),  # $9
                 item.get("model"),  # $10
                 item.get("token_count"),  # $11
                 select_tokenizer(item.get("model"))["type"],  # $12
