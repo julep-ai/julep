@@ -3,7 +3,6 @@ This module contains the functionality for listing documents from the PostgreSQL
 It constructs and executes SQL queries to fetch document details based on various filters.
 """
 
-import ast
 from typing import Any, Literal
 from uuid import UUID
 
