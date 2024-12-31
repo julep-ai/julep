@@ -3,10 +3,8 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for getting tool args from metadata
 tools_args_for_task_query = """
@@ -51,13 +49,7 @@ SELECT COALESCE(agents_md || sessions_md, agents_md, sessions_md, '{}') as value
 ) AS sessions_md"""
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(common_db_exceptions("tool_metadata", ["get"]))
 @wrap_in_class(dict, transform=lambda x: x["values"], one=True)
 @pg_query
 @beartype
@@ -89,4 +81,5 @@ async def get_tool_args_from_metadata(
             )
 
         case (_, _):
-            raise ValueError("Either session_id or task_id must be provided")
+            msg = "Either session_id or task_id must be provided"
+            raise ValueError(msg)

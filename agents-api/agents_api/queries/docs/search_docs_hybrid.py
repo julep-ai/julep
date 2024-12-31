@@ -1,12 +1,16 @@
-from typing import Any, List, Literal
+from typing import Any, Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import DocReference
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import (
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
+)
 from .utils import transform_to_doc_reference
 
 # Raw query for hybrid search
@@ -16,7 +20,7 @@ SELECT * FROM search_hybrid(
     $2, -- text_query
     $3::vector(1024), -- embedding
     $4::text[], -- owner_types
-    $5::uuid[], -- owner_ids 
+    $5::uuid[], -- owner_ids
     $6, -- k
     $7, -- alpha
     $8, -- confidence
@@ -26,15 +30,7 @@ SELECT * FROM search_hybrid(
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        )
-    }
-)
+@rewrap_exceptions(common_db_exceptions("doc", ["search"]))
 @wrap_in_class(
     DocReference,
     transform=transform_to_doc_reference,
@@ -45,7 +41,7 @@ async def search_docs_hybrid(
     developer_id: UUID,
     owners: list[tuple[Literal["user", "agent"], UUID]],
     text_query: str = "",
-    embedding: List[float] = None,
+    embedding: list[float] | None = None,
     k: int = 10,
     alpha: float = 0.5,
     metadata_filter: dict[str, Any] = {},

@@ -15,6 +15,4 @@ async def _init_conn(conn):
 
 
 async def create_db_pool(dsn: str | None = None):
-    return await asyncpg.create_pool(
-        dsn if dsn is not None else pg_dsn, init=_init_conn
-    )
+    return await asyncpg.create_pool(dsn if dsn is not None else pg_dsn, init=_init_conn)

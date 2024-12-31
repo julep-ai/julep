@@ -1,55 +1,39 @@
-import json
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
     UpdateToolRequest,
 )
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for updating a tool
-tools_query = parse_one("""
-UPDATE tools 
+tools_query = """
+UPDATE tools
 SET
     type = $4,
     name = $5,
     description = $6,
     spec = $7
-WHERE 
-    developer_id = $1 AND 
-    agent_id = $2 AND 
+WHERE
+    developer_id = $1 AND
+    agent_id = $2 AND
     tool_id = $3
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A tool with this name already exists for this agent",
-        ),
-        json.JSONDecodeError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid tool specification format",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("tool", ["update"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["tool_id"], "jobs": [], **d},
 )
-@pg_query
 @increase_counter("update_tool")
+@pg_query
 @beartype
 async def update_tool(
     *,

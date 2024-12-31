@@ -3,21 +3,19 @@ from uuid import UUID
 from beartype import beartype
 
 from ...common.protocol.tasks import ExecutionInput
-from ..utils import (
-    pg_query,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to prepare execution input
 prepare_execution_input_query = """
-SELECT * FROM 
+SELECT * FROM
 (
     SELECT to_jsonb(a) AS agent FROM (
         SELECT * FROM agents
         WHERE
             developer_id = $1  AND
             agent_id = (
-                SELECT agent_id FROM tasks 
+                SELECT agent_id FROM tasks
                 WHERE developer_id = $1 AND task_id = $2
                 LIMIT 1
             )
@@ -28,7 +26,7 @@ SELECT * FROM
     SELECT COALESCE(jsonb_agg(r), '[]'::jsonb) AS tools FROM (
         SELECT * FROM tools
         WHERE
-            developer_id = $1 AND 
+            developer_id = $1 AND
             task_id = $2
     ) r
 ) AS tools,
@@ -41,22 +39,11 @@ SELECT * FROM
             execution_id = $3
         LIMIT 1
     ) e
-) AS execution;                                       
+) AS execution;
 """
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#         AssertionError: lambda e: HTTPException(
-#             status_code=429,
-#             detail=str(e),
-#             headers={"x-should-retry": "true"},
-#         ),
-#     }
-# )
+@rewrap_exceptions(common_db_exceptions("execution_data", ["get"]))
 @wrap_in_class(
     ExecutionInput,
     one=True,
@@ -72,9 +59,7 @@ SELECT * FROM
             **d["agent"],
         },
         "agent_tools": [
-            {tool["type"]: tool.pop("spec"), **tool}
-            for tool in d["tools"]
-            if tool is not None
+            {tool["type"]: tool.pop("spec"), **tool} for tool in d["tools"] if tool is not None
         ],
         "arguments": d["execution"]["input"],
         "execution": {

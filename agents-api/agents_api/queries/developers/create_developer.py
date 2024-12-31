@@ -1,21 +1,14 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import ResourceCreatedResponse
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
-developer_query = parse_one("""
+developer_query = """
 INSERT INTO developers (
     developer_id,
     email,
@@ -31,18 +24,10 @@ VALUES (
     $5::jsonb -- settings
 )
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A developer with this email already exists.",
-        )
-    }
-)
+@rewrap_exceptions(common_db_exceptions("developer", ["create"]))
 @wrap_in_class(
     ResourceCreatedResponse,
     one=True,

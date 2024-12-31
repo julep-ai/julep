@@ -5,10 +5,11 @@ from temporalio import activity
 
 from ... import queries
 from ...app import lifespan
-from ...env import pg_dsn, testing
+from ...env import pg_dsn
 from ..container import container
 
 
+@activity.defn
 @lifespan(container)
 @beartype
 async def pg_query_step(
@@ -21,12 +22,3 @@ async def pg_query_step(
     module = getattr(queries, module_name)
     query = getattr(module, name)
     return await query(**values, connection_pool=container.state.postgres_pool)
-
-
-# Note: This is here just for clarity. We could have just imported pg_query_step directly
-# They do the same thing, so we dont need to mock the pg_query_step function
-mock_pg_query_step = pg_query_step
-
-pg_query_step = activity.defn(name="pg_query_step")(
-    pg_query_step if not testing else mock_pg_query_step
-)

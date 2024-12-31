@@ -142,7 +142,7 @@ def find_proximity_groups(
 
     # Initialize Union-Find with path compression and union by rank
     parent = {kw: kw for kw in keywords}
-    rank = {kw: 0 for kw in keywords}
+    rank = dict.fromkeys(keywords, 0)
 
     def find(u: str) -> str:
         if parent[u] != u:
@@ -277,9 +277,7 @@ def batch_paragraphs_to_custom_queries(
         list[list[str]]: A list where each element is a list of queries for a paragraph.
     """
     results = []
-    for doc in nlp.pipe(
-        paragraphs, disable=["lemmatizer", "textcat"], n_process=n_process
-    ):
+    for doc in nlp.pipe(paragraphs, disable=["lemmatizer", "textcat"], n_process=n_process):
         queries = []
         for sent in doc.sents:
             sent_doc = sent.as_doc()

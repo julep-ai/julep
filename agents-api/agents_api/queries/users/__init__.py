@@ -18,8 +18,8 @@ from .patch_user import patch_user
 from .update_user import update_user
 
 __all__ = [
-    "create_user",
     "create_or_update_user",
+    "create_user",
     "delete_user",
     "get_user",
     "list_users",

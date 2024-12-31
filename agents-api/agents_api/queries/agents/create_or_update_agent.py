@@ -5,23 +5,15 @@ It constructs and executes SQL queries to insert a new agent or update an existi
 
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import (
-    generate_canonical_name,
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
-agent_query = parse_one("""
+agent_query = """
 WITH existing_agent AS (
     SELECT canonical_name
     FROM agents
@@ -61,37 +53,14 @@ ON CONFLICT (developer_id, agent_id) DO UPDATE SET
     metadata = EXCLUDED.metadata,
     default_settings = EXCLUDED.default_settings
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.exceptions.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="An agent with this canonical name already exists for this developer.",
-        ),
-        asyncpg.exceptions.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="The provided data violates one or more constraints. Please check the input values.",
-        ),
-        asyncpg.exceptions.DataError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid data provided. Please check the input values.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("agent", ["create", "update"]))
 @wrap_in_class(
     Agent,
     one=True,
-    transform=lambda d: {"id": d["agent_id"], **d},
+    transform=lambda d: {**d, "id": d["agent_id"]},
 )
 @increase_counter("create_or_update_agent")
 @pg_query
@@ -113,15 +82,11 @@ async def create_or_update_agent(
 
     # Ensure instructions is a list
     data.instructions = (
-        data.instructions
-        if isinstance(data.instructions, list)
-        else [data.instructions]
+        data.instructions if isinstance(data.instructions, list) else [data.instructions]
     )
 
     # Convert default_settings to dict if it exists
-    default_settings = (
-        data.default_settings.model_dump() if data.default_settings else {}
-    )
+    default_settings = data.default_settings.model_dump() if data.default_settings else {}
 
     # Set default values
     data.metadata = data.metadata or {}

@@ -18,11 +18,7 @@ def get_api_key(setup: SpiderSetup) -> str:
     """
     Helper function to get the API key.
     """
-    return (
-        setup.spider_api_key
-        if setup.spider_api_key != "DEMO_API_KEY"
-        else spider_api_key
-    )
+    return setup.spider_api_key if setup.spider_api_key != "DEMO_API_KEY" else spider_api_key
 
 
 def create_spider_response(pages: list[dict]) -> list[SpiderResponse]:
@@ -56,12 +52,13 @@ async def execute_spider_method(
                 results = result
 
         if results is None:
-            raise ValueError("No results found")
-        else:
-            final_result = create_spider_response(results)
+            msg = "No results found"
+            raise ValueError(msg)
+        final_result = create_spider_response(results)
     except Exception as e:
         # Log the exception or handle it as needed
-        raise RuntimeError(f"Error executing spider method '{method_name}': {e}")
+        msg = f"Error executing spider method '{method_name}': {e}"
+        raise RuntimeError(msg)
 
     return SpiderOutput(result=final_result)
 
@@ -102,9 +99,7 @@ async def links(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderOu
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def screenshot(
-    setup: SpiderSetup, arguments: SpiderFetchArguments
-) -> SpiderOutput:
+async def screenshot(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderOutput:
     """
     Take a screenshot of the webpage.
     """

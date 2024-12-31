@@ -1,3 +1,4 @@
+import contextlib
 import os
 import tempfile
 
@@ -38,13 +39,9 @@ from ...models.browserbase import BrowserbaseExtensionOutput
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
-    setup.api_key = (
-        browserbase_api_key if setup.api_key == "DEMO_API_KEY" else setup.api_key
-    )
+    setup.api_key = browserbase_api_key if setup.api_key == "DEMO_API_KEY" else setup.api_key
     setup.project_id = (
-        browserbase_project_id
-        if setup.project_id == "DEMO_PROJECT_ID"
-        else setup.project_id
+        browserbase_project_id if setup.project_id == "DEMO_PROJECT_ID" else setup.project_id
     )
 
     return Browserbase(
@@ -178,8 +175,9 @@ async def install_extension_from_github(
 ) -> BrowserbaseExtensionOutput:
     """Download and install an extension from GitHub to the user's Browserbase account."""
 
-    github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{
-            arguments.ref}.zip"
+    github_url = (
+        f"https://github.com/{arguments.repository_name}/archive/refs/tags/{arguments.ref}.zip"
+    )
 
     async with httpx.AsyncClient(timeout=600) as client:
         # Download the extension zip
@@ -202,9 +200,7 @@ async def install_extension_from_github(
 
             with open(tmp_file_path, "rb") as f:
                 files = {"file": f}
-                upload_response = await client.post(
-                    upload_url, headers=headers, files=files
-                )
+                upload_response = await client.post(upload_url, headers=headers, files=files)
 
             try:
                 upload_response.raise_for_status()
@@ -213,9 +209,7 @@ async def install_extension_from_github(
                 raise
 
         # Delete the temporary file
-        try:
+        with contextlib.suppress(FileNotFoundError):
             os.remove(tmp_file_path)
-        except FileNotFoundError:
-            pass
 
         return BrowserbaseExtensionOutput(id=upload_response.json()["id"])

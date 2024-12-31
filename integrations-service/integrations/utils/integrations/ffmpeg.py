@@ -4,7 +4,6 @@ import os
 import shutil
 import tempfile
 from functools import lru_cache
-from typing import Tuple
 
 from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -15,7 +14,7 @@ from ...models import FfmpegSearchOutput
 
 # Cache for format validation
 @lru_cache(maxsize=128)
-def _sync_validate_format(binary_prefix: bytes) -> Tuple[bool, str]:
+def _sync_validate_format(binary_prefix: bytes) -> tuple[bool, str]:
     """Cached synchronous implementation of format validation"""
     signatures = {
         # Video formats
@@ -46,7 +45,7 @@ def _sync_validate_format(binary_prefix: bytes) -> Tuple[bool, str]:
     return False, "application/octet-stream"
 
 
-async def validate_format(binary_data: bytes) -> Tuple[bool, str]:
+async def validate_format(binary_data: bytes) -> tuple[bool, str]:
     """Validate file format using file signatures"""
     # Only check first 16 bytes for efficiency
     binary_prefix = binary_data[:16]
@@ -140,6 +139,4 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
         # Clean up in case of exception
         if "temp_dir" in locals():
             shutil.rmtree(temp_dir)
-        return FfmpegSearchOutput(
-            fileoutput=f"Error: {str(e)}", result=False, mime_type=None
-        )
+        return FfmpegSearchOutput(fileoutput=f"Error: {e!s}", result=False, mime_type=None)

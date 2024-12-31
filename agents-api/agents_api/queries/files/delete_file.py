@@ -6,55 +6,40 @@ It constructs and executes SQL queries to remove file records and associated dat
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Delete file query with ownership check
-delete_file_query = parse_one("""
+delete_file_query = """
 WITH deleted_owners AS (
     DELETE FROM file_owners
-    WHERE developer_id = $1 
+    WHERE developer_id = $1
     AND file_id = $2
     AND (
         ($3::text IS NULL AND $4::uuid IS NULL) OR
         (owner_type = $3 AND owner_id = $4)
     )
 )
-DELETE FROM files 
-WHERE developer_id = $1 
+DELETE FROM files
+WHERE developer_id = $1
 AND file_id = $2
 AND ($3::text IS NULL OR EXISTS (
-    SELECT 1 FROM file_owners 
-    WHERE developer_id = $1 
-    AND file_id = $2 
-    AND owner_type = $3 
+    SELECT 1 FROM file_owners
+    WHERE developer_id = $1
+    AND file_id = $2
+    AND owner_type = $3
     AND owner_id = $4
 ))
 RETURNING file_id;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="File not found",
-        ),
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or owner does not exist",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("file", ["delete"]))
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,

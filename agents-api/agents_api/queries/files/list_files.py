@@ -6,37 +6,23 @@ It constructs and executes SQL queries to fetch a list of files based on develop
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import File
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Base query for listing files
-base_files_query = parse_one("""
+base_files_query = """
 SELECT f.*
 FROM files f
 LEFT JOIN file_owners fo ON f.developer_id = fo.developer_id AND f.file_id = fo.file_id
 WHERE f.developer_id = $1
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or owner does not exist",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("file", ["list"]))
 @wrap_in_class(
     File,
     one=False,
@@ -85,7 +71,9 @@ async def list_files(
         params.extend([owner_type, owner_id])
 
     # Add sorting and pagination
-    query += f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+    query += (
+        f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+    )
     params.extend([limit, offset])
 
     return query, params

@@ -15,9 +15,7 @@ from ...models import BraveSearchOutput, SearchResult
     reraise=True,
     stop=stop_after_attempt(4),
 )
-async def search(
-    setup: BraveSearchSetup, arguments: BraveSearchArguments
-) -> BraveSearchOutput:
+async def search(setup: BraveSearchSetup, arguments: BraveSearchArguments) -> BraveSearchOutput:
     """
     Searches Brave Search with the provided query.
     """
@@ -36,6 +34,7 @@ async def search(
     try:
         parsed_result = [SearchResult(**item) for item in json.loads(result)]
     except json.JSONDecodeError as e:
-        raise ValueError("Malformed JSON response from Brave Search") from e
+        msg = "Malformed JSON response from Brave Search"
+        raise ValueError(msg) from e
 
     return BraveSearchOutput(result=parsed_result)

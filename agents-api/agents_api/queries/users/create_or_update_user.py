@@ -1,16 +1,14 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import CreateOrUpdateUserRequest, User
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for creating or updating a user
-user_query = parse_one("""
+user_query = """
 INSERT INTO users (
     developer_id,
     user_id,
@@ -30,23 +28,10 @@ ON CONFLICT (developer_id, user_id) DO UPDATE SET
     about = EXCLUDED.about,
     metadata = EXCLUDED.metadata
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A user with this ID already exists for the specified developer.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("user", ["create_or_update"]))
 @wrap_in_class(
     User,
     one=True,

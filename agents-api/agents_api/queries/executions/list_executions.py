@@ -6,12 +6,8 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Execution
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions, partialclass
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .constants import OUTPUT_UNNEST_KEY
 
 # Query to list executions
@@ -20,7 +16,7 @@ SELECT * FROM latest_executions
 WHERE
     developer_id = $1 AND
     task_id = $2
-ORDER BY 
+ORDER BY
     CASE WHEN $3 = 'created_at' AND $4 = 'asc' THEN created_at END ASC NULLS LAST,
     CASE WHEN $3 = 'created_at' AND $4 = 'desc' THEN created_at END DESC NULLS LAST,
     CASE WHEN $3 = 'updated_at' AND $4 = 'asc' THEN updated_at END ASC NULLS LAST,
@@ -29,16 +25,15 @@ LIMIT $5 OFFSET $6;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.InvalidRowCountInLimitClauseError: partialclass(
-            HTTPException, status_code=400, detail="Invalid limit clause"
-        ),
-        asyncpg.InvalidRowCountInResultOffsetClauseError: partialclass(
-            HTTPException, status_code=400, detail="Invalid offset clause"
-        ),
-    }
-)
+@rewrap_exceptions({
+    asyncpg.InvalidRowCountInLimitClauseError: partialclass(
+        HTTPException, status_code=400, detail="Invalid limit clause"
+    ),
+    asyncpg.InvalidRowCountInResultOffsetClauseError: partialclass(
+        HTTPException, status_code=400, detail="Invalid offset clause"
+    ),
+    **common_db_exceptions("execution", ["list"]),
+})
 @wrap_in_class(
     Execution,
     transform=lambda d: {

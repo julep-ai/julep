@@ -2,43 +2,33 @@
 
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL queries
-lookup_query = parse_one("""
+lookup_query = """
 DELETE FROM session_lookup
 WHERE developer_id = $1 AND session_id = $2;
-""").sql(pretty=True)
+"""
 
-session_query = parse_one("""
+session_query = """
 DELETE FROM sessions
 WHERE developer_id = $1 AND session_id = $2
-RETURNING session_id;
-""").sql(pretty=True)
+RETURNING session_id AS id;
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or session does not exist.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("session", ["delete"]))
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,
     transform=lambda d: {
-        "id": d["session_id"],
+        **d,
         "deleted_at": utcnow(),
         "jobs": [],
     },

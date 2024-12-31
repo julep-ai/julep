@@ -1,41 +1,26 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateUserRequest
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
-user_query = parse_one("""
+user_query = """
 UPDATE users
-SET 
+SET
     name = $3, -- name
     about = $4, -- about
     metadata = $5 -- metadata
 WHERE developer_id = $1 -- developer_id
 AND user_id = $2 -- user_id
 RETURNING *
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A user with this ID already exists for the specified developer.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("user", ["update"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,

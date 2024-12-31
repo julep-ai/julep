@@ -1,0 +1,92 @@
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+fix = true
+unsafe-fixes = true
+
+# Enumerate all fixed violations.
+show-fixes = true
+
+respect-gitignore = true
+
+# Enable preview features.
+preview = true
+
+line-length = 96
+indent-width = 4
+
+# Assume Python 3.12
+target-version = "py312"
+
+# Group violations by containing file.
+output-format = "grouped"
+
+[lint]
+# Enable preview features.
+preview = true
+
+# TODO: Need to add , "**/autogen/*.py"
+exclude = ["gunicorn_conf.py", "*.ipynb"]
+
+# TODO: Enable C09, S, B, ARG, PTH, ERA, PLW, FURB
+select = ["F", "E1", "E2", "E3", "E4", "E5", "E7", "W", "FAST", "I", "UP", "ASYNC", "COM", "C4", "DTZ", "T10", "EM", "FA", "ISC", "ICN", "INP", "PIE", "Q", "RSE", "RET", "SLF", "SLOT", "SIM", "INT", "PD", "PLE", "FLY", "NPY", "PERF", "RUF"]
+ignore = [
+  "E402",       # module-import-not-at-top-of-file
+  "E501",       # line-too-long
+  "E722",       # bare-except
+  "RUF001",     # ambiguous-unicode-character-string
+  "RUF029",     # unused-async
+  "ASYNC230",   # blocking-open-in-async
+  "ASYNC109",   # disallow-async-fns-with-timeout-param
+  "COM812", "ISC001", # conflict with each other
+]
+
+fixable = ["ALL"]
+unfixable = []
+
+[format]
+exclude = ["*.ipynb", "*.pyi", "*.pyc"]
+
+# Enable preview style formatting.
+preview = true
+
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+docstring-code-format = true
+docstring-code-line-length = "dynamic"

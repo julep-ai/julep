@@ -5,24 +5,17 @@ It constructs and executes SQL queries to replace an agent's details based on ag
 
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
-agent_query = parse_one("""
+agent_query = """
 UPDATE agents
-SET 
+SET
     metadata = $3,
     name = $4,
     about = $5,
@@ -30,33 +23,10 @@ SET
     default_settings = $7::jsonb
 WHERE agent_id = $2 AND developer_id = $1
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.exceptions.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="An agent with this canonical name already exists for this developer.",
-        ),
-        asyncpg.exceptions.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="The provided data violates one or more constraints. Please check the input values.",
-        ),
-        asyncpg.exceptions.DataError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid data provided. Please check the input values.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("agent", ["update"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,

@@ -1,24 +1,34 @@
 # Tests for task routes
 
+from agents_api.autogen.openapi_model import (
+    Transition,
+)
+from agents_api.queries.executions.create_execution_transition import (
+    create_execution_transition,
+)
 from uuid_extensions import uuid7
-from ward import test
+from ward import skip, test
 
 from .fixtures import (
+    CreateTransitionRequest,
     client,
+    create_db_pool,
     make_request,
+    pg_dsn,
     test_agent,
+    test_developer_id,
     test_execution,
+    test_execution_started,
     test_task,
-    test_transition,
 )
 from .utils import patch_testing_temporal
 
 
 @test("route: unauthorized should fail")
 def _(client=client, agent=test_agent):
-    data = dict(
-        name="test user",
-        main=[
+    data = {
+        "name": "test user",
+        "main": [
             {
                 "kind_": "evaluate",
                 "evaluate": {
@@ -26,11 +36,11 @@ def _(client=client, agent=test_agent):
                 },
             }
         ],
-    )
+    }
 
     response = client.request(
         method="POST",
-        url=f"/agents/{str(agent.id)}/tasks",
+        url=f"/agents/{agent.id!s}/tasks",
         json=data,
     )
 
@@ -39,9 +49,9 @@ def _(client=client, agent=test_agent):
 
 @test("route: create task")
 def _(make_request=make_request, agent=test_agent):
-    data = dict(
-        name="test user",
-        main=[
+    data = {
+        "name": "test user",
+        "main": [
             {
                 "kind_": "evaluate",
                 "evaluate": {
@@ -49,11 +59,11 @@ def _(make_request=make_request, agent=test_agent):
                 },
             }
         ],
-    )
+    }
 
     response = make_request(
         method="POST",
-        url=f"/agents/{str(agent.id)}/tasks",
+        url=f"/agents/{agent.id!s}/tasks",
         json=data,
     )
 
@@ -62,15 +72,15 @@ def _(make_request=make_request, agent=test_agent):
 
 @test("route: create task execution")
 async def _(make_request=make_request, task=test_task):
-    data = dict(
-        input={},
-        metadata={},
-    )
+    data = {
+        "input": {},
+        "metadata": {},
+    }
 
     async with patch_testing_temporal():
         response = make_request(
             method="POST",
-            url=f"/tasks/{str(task.id)}/executions",
+            url=f"/tasks/{task.id!s}/executions",
             json=data,
         )
 
@@ -93,7 +103,7 @@ def _(make_request=make_request):
 def _(make_request=make_request, execution=test_execution):
     response = make_request(
         method="GET",
-        url=f"/executions/{str(execution.id)}",
+        url=f"/executions/{execution.id!s}",
     )
 
     assert response.status_code == 200
@@ -115,17 +125,17 @@ def _(make_request=make_request):
 def _(make_request=make_request, task=test_task):
     response = make_request(
         method="GET",
-        url=f"/tasks/{str(task.id)}",
+        url=f"/tasks/{task.id!s}",
     )
 
     assert response.status_code == 200
 
 
-@test("route: list execution transitions")
-def _(make_request=make_request, execution=test_execution, transition=test_transition):
+@test("route: list all execution transition")
+async def _(make_request=make_request, execution=test_execution_started):
     response = make_request(
         method="GET",
-        url=f"/executions/{str(execution.id)}/transitions",
+        url=f"/executions/{execution.id!s}/transitions",
     )
 
     assert response.status_code == 200
@@ -136,31 +146,71 @@ def _(make_request=make_request, execution=test_execution, transition=test_trans
     assert len(transitions) > 0
 
 
-# @test("route: list task executions")
-# def _(make_request=make_request, execution=test_execution):
-#     response = make_request(
-#         method="GET",
-#         url=f"/tasks/{str(execution.task_id)}/executions",
-#     )
+@test("route: list a single execution transition")
+async def _(
+    dsn=pg_dsn,
+    make_request=make_request,
+    execution=test_execution_started,
+    developer_id=test_developer_id,
+):
+    pool = await create_db_pool(dsn=dsn)
 
-#     assert response.status_code == 200
-#     response = response.json()
-#     executions = response["items"]
+    # Create a transition
+    transition = await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="step",
+            output={},
+            current={"workflow": "main", "step": 0},
+            next={"workflow": "wf1", "step": 1},
+        ),
+        connection_pool=pool,
+    )
 
-#     assert isinstance(executions, list)
-#     assert len(executions) > 0
+    response = make_request(
+        method="GET",
+        url=f"/executions/{execution.id!s}/transitions/{transition.id!s}",
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+
+    assert isinstance(transition, Transition)
+    assert str(transition.id) == response["id"]
+    assert transition.type == response["type"]
+    assert transition.output == response["output"]
+    assert transition.current.workflow == response["current"]["workflow"]
+    assert transition.current.step == response["current"]["step"]
+    assert transition.next.workflow == response["next"]["workflow"]
+    assert transition.next.step == response["next"]["step"]
+
+
+@test("route: list task executions")
+def _(make_request=make_request, execution=test_execution):
+    response = make_request(
+        method="GET",
+        url=f"/tasks/{execution.task_id!s}/executions",
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    executions = response["items"]
+
+    assert isinstance(executions, list)
+    assert len(executions) > 0
 
 
 @test("route: list tasks")
 def _(make_request=make_request, agent=test_agent):
     response = make_request(
         method="GET",
-        url=f"/agents/{str(agent.id)}/tasks",
+        url=f"/agents/{agent.id!s}/tasks",
     )
 
-    data = dict(
-        name="test user",
-        main=[
+    data = {
+        "name": "test user",
+        "main": [
             {
                 "kind_": "evaluate",
                 "evaluate": {
@@ -168,11 +218,11 @@ def _(make_request=make_request, agent=test_agent):
                 },
             }
         ],
-    )
+    }
 
     response = make_request(
         method="POST",
-        url=f"/agents/{str(agent.id)}/tasks",
+        url=f"/agents/{agent.id!s}/tasks",
         json=data,
     )
 
@@ -180,7 +230,7 @@ def _(make_request=make_request, agent=test_agent):
 
     response = make_request(
         method="GET",
-        url=f"/agents/{str(agent.id)}/tasks",
+        url=f"/agents/{agent.id!s}/tasks",
     )
 
     assert response.status_code == 200
@@ -191,44 +241,45 @@ def _(make_request=make_request, agent=test_agent):
     assert len(tasks) > 0
 
 
-# FIXME: This test is failing
+@skip("Temporal connextion issue")
+@test("route: update execution")
+async def _(make_request=make_request, task=test_task):
+    data = {
+        "input": {},
+        "metadata": {},
+    }
 
-# @test("route: patch execution")
-# async def _(make_request=make_request, task=test_task):
-#     data = dict(
-#         input={},
-#         metadata={},
-#     )
+    async with patch_testing_temporal():
+        response = make_request(
+            method="POST",
+            url=f"/tasks/{task.id!s}/executions",
+            json=data,
+        )
 
-#     async with patch_testing_temporal():
-#         response = make_request(
-#             method="POST",
-#             url=f"/tasks/{str(task.id)}/executions",
-#             json=data,
-#         )
+        execution = response.json()
 
-#         execution = response.json()
+        data = {
+            "status": "running",
+        }
 
-#     data = dict(
-#         status="running",
-#     )
+        execution_id = execution["id"]
 
-#     response = make_request(
-#         method="PATCH",
-#         url=f"/tasks/{str(task.id)}/executions/{str(execution['id'])}",
-#         json=data,
-#     )
+        response = make_request(
+            method="PUT",
+            url=f"/executions/{execution_id}",
+            json=data,
+        )
 
-#     assert response.status_code == 200
+        assert response.status_code == 200
 
-#     execution_id = response.json()["id"]
+        execution_id = response.json()["id"]
 
-#     response = make_request(
-#         method="GET",
-#         url=f"/executions/{execution_id}",
-#     )
+        response = make_request(
+            method="GET",
+            url=f"/executions/{execution_id}",
+        )
 
-#     assert response.status_code == 200
-#     execution = response.json()
+        assert response.status_code == 200
+        execution = response.json()
 
-#     assert execution["status"] == "running"
+        assert execution["status"] == "running"

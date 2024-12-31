@@ -1,8 +1,6 @@
 import asyncio
 import base64
 import datetime as dt
-import functools
-import itertools
 import json
 import math
 import random
@@ -10,11 +8,11 @@ import statistics
 import string
 import time
 import urllib.parse
-import zoneinfo
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Lock as ThreadLock
-from typing import Any, Callable, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 import re2
 from beartype import beartype
@@ -24,21 +22,90 @@ from ..autogen.openapi_model import SystemDef
 from ..common.nlp import nlp
 from ..common.utils import yaml
 
+# Security limits
+MAX_STRING_LENGTH = 1_000_000  # 1MB
+MAX_COLLECTION_SIZE = 10_000
+MAX_RANGE_SIZE = 1_000_000
+
 T = TypeVar("T")
 R = TypeVar("R")
 P = ParamSpec("P")
+
+
+def safe_range(*args):
+    result = range(*args)
+    if len(result) > MAX_RANGE_SIZE:
+        msg = f"Range size exceeds maximum of {MAX_RANGE_SIZE}"
+        raise ValueError(msg)
+    return result
+
+
+def safe_json_loads(s: str):
+    if len(s) > MAX_STRING_LENGTH:
+        msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
+        raise ValueError(msg)
+    return json.loads(s)
+
+
+def safe_yaml_load(s: str):
+    if len(s) > MAX_STRING_LENGTH:
+        msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
+        raise ValueError(msg)
+    return yaml.load(s)
+
+
+def safe_base64_decode(s: str) -> str:
+    if len(s) > MAX_STRING_LENGTH:
+        msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
+        raise ValueError(msg)
+    try:
+        return base64.b64decode(s).decode("utf-8")
+    except Exception as e:
+        msg = f"Invalid base64 string: {e}"
+        raise ValueError(msg)
+
+
+def safe_base64_encode(s: str) -> str:
+    if len(s) > MAX_STRING_LENGTH:
+        msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
+        raise ValueError(msg)
+    return base64.b64encode(s.encode("utf-8")).decode("utf-8")
+
+
+def safe_random_choice(seq):
+    if len(seq) > MAX_COLLECTION_SIZE:
+        msg = f"Sequence exceeds maximum size of {MAX_COLLECTION_SIZE}"
+        raise ValueError(msg)
+    return random.choice(seq)
+
+
+def safe_random_sample(population, k):
+    if len(population) > MAX_COLLECTION_SIZE:
+        msg = f"Population exceeds maximum size of {MAX_COLLECTION_SIZE}"
+        raise ValueError(msg)
+    if k > MAX_COLLECTION_SIZE:
+        msg = f"Sample size exceeds maximum of {MAX_COLLECTION_SIZE}"
+        raise ValueError(msg)
+    if k > len(population):
+        msg = "Sample size cannot exceed population size"
+        raise ValueError(msg)
+    return random.sample(population, k)
 
 
 def chunk_doc(string: str) -> list[str]:
     """
     Chunk a string into sentences.
     """
+    if len(string) > MAX_STRING_LENGTH:
+        msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
+        raise ValueError(msg)
     doc = nlp(string)
     return [" ".join([sent.text for sent in chunk]) for chunk in doc._.chunks]
 
 
-# TODO: We need to make sure that we dont expose any security issues
+# Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
+    # Basic Python builtins
     "abs": abs,
     "all": all,
     "any": any,
@@ -46,32 +113,33 @@ ALLOWED_FUNCTIONS = {
     "dict": dict,
     "enumerate": enumerate,
     "float": float,
-    "frozenset": frozenset,
     "int": int,
     "len": len,
     "list": list,
     "map": map,
     "max": max,
     "min": min,
-    "range": range,
     "round": round,
     "set": set,
     "str": str,
     "sum": sum,
     "tuple": tuple,
-    "reduce": functools.reduce,
     "zip": zip,
-    "search_regex": lambda pattern, string: re2.search(pattern, string),
-    "load_json": json.loads,
-    "load_yaml": yaml.load,
+    # Safe versions of potentially dangerous functions
+    "range": safe_range,
+    "load_json": safe_json_loads,
+    "load_yaml": safe_yaml_load,
     "dump_json": json.dumps,
     "dump_yaml": yaml.dump,
+    # Regex and NLP functions (using re2 which is safe against ReDoS)
+    "search_regex": lambda pattern, string: re2.search(pattern, string),
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
     "nlp": nlp.__call__,
     "chunk_doc": chunk_doc,
 }
 
 
+# Safe regex operations (using re2)
 class stdlib_re:
     fullmatch = re2.fullmatch
     search = re2.search
@@ -84,59 +152,19 @@ class stdlib_re:
     subn = re2.subn
 
 
+# Safe JSON operations
 class stdlib_json:
-    loads = json.loads
+    loads = safe_json_loads
     dumps = json.dumps
 
 
+# Safe YAML operations
 class stdlib_yaml:
-    load = yaml.load
+    load = safe_yaml_load
     dump = yaml.dump
 
 
-class stdlib_time:
-    strftime = time.strftime
-    strptime = time.strptime
-    time = time
-
-
-class stdlib_random:
-    choice = random.choice
-    choices = random.choices
-    sample = random.sample
-    shuffle = random.shuffle
-    randrange = random.randrange
-    randint = random.randint
-    random = random.random
-
-
-class stdlib_itertools:
-    accumulate = itertools.accumulate
-
-
-class stdlib_functools:
-    partial = functools.partial
-    reduce = functools.reduce
-
-
-class stdlib_base64:
-    b64encode = base64.b64encode
-    b64decode = base64.b64decode
-
-
-class stdlib_urllib:
-    class parse:
-        urlparse = urllib.parse.urlparse
-        urlencode = urllib.parse.urlencode
-        unquote = urllib.parse.unquote
-        quote = urllib.parse.quote
-        parse_qs = urllib.parse.parse_qs
-        parse_qsl = urllib.parse.parse_qsl
-        urlsplit = urllib.parse.urlsplit
-        urljoin = urllib.parse.urljoin
-        unwrap = urllib.parse.unwrap
-
-
+# Safe string constants
 class stdlib_string:
     ascii_letters = string.ascii_letters
     ascii_lowercase = string.ascii_lowercase
@@ -149,14 +177,11 @@ class stdlib_string:
     printable = string.printable
 
 
-class stdlib_zoneinfo:
-    ZoneInfo = zoneinfo.ZoneInfo
-
-
+# Safe datetime operations
 class stdlib_datetime:
     class timezone:
         class utc:
-            utc = dt.timezone.utc
+            utc = dt.UTC
 
     class datetime:
         now = dt.datetime.now
@@ -168,6 +193,7 @@ class stdlib_datetime:
     timedelta = dt.timedelta
 
 
+# Safe math operations
 class stdlib_math:
     sqrt = math.sqrt
     exp = math.exp
@@ -191,6 +217,7 @@ class stdlib_math:
     e = math.e
 
 
+# Safe statistics operations
 class stdlib_statistics:
     mean = statistics.mean
     stdev = statistics.stdev
@@ -202,21 +229,57 @@ class stdlib_statistics:
     quantiles = statistics.quantiles
 
 
+# Safe base64 operations
+class stdlib_base64:
+    b64encode = safe_base64_encode
+    b64decode = safe_base64_decode
+
+
+# Safe URL parsing operations
+class stdlib_urllib:
+    class parse:
+        # Safe URL parsing operations that don't touch filesystem/network
+        urlparse = urllib.parse.urlparse
+        urlencode = urllib.parse.urlencode
+        unquote = urllib.parse.unquote
+        quote = urllib.parse.quote
+        parse_qs = urllib.parse.parse_qs
+        parse_qsl = urllib.parse.parse_qsl
+        urlsplit = urllib.parse.urlsplit
+
+
+# Safe random operations
+class stdlib_random:
+    # Limit to safe operations with bounded inputs
+    choice = safe_random_choice
+    sample = safe_random_sample
+    # Safe bounded random number generators
+    randint = random.randint  # Already bounded by integer limits
+    random = random.random  # Always returns 0.0 to 1.0
+
+
+# Safe time operations
+class stdlib_time:
+    # Time formatting/parsing operations
+    strftime = time.strftime
+    strptime = time.strptime
+    # Current time (safe, no side effects)
+    time = time.time
+
+
+# Restricted stdlib with only safe operations
 stdlib = {
     "re": stdlib_re,
     "json": stdlib_json,
     "yaml": stdlib_yaml,
-    "time": stdlib_time,
-    "random": stdlib_random,
-    "itertools": stdlib_itertools,
-    "functools": stdlib_functools,
-    "base64": stdlib_base64,
-    "urllib": stdlib_urllib,
     "string": stdlib_string,
-    "zoneinfo": stdlib_zoneinfo,
     "datetime": stdlib_datetime,
     "math": stdlib_math,
     "statistics": stdlib_statistics,
+    "base64": stdlib_base64,
+    "urllib": stdlib_urllib,
+    "random": stdlib_random,
+    "time": stdlib_time,
 }
 
 constants = {
@@ -231,18 +294,33 @@ constants = {
 def get_evaluator(
     names: dict[str, Any], extra_functions: dict[str, Callable] | None = None
 ) -> SimpleEval:
+    if len(names) > MAX_COLLECTION_SIZE:
+        msg = f"Too many variables (max {MAX_COLLECTION_SIZE})"
+        raise ValueError(msg)
+
     evaluator = EvalWithCompoundTypes(
         names=names | stdlib | constants,
         functions=ALLOWED_FUNCTIONS | (extra_functions or {}),
     )
+
+    # Add maximum execution time
+    evaluator.TIMEOUT = 1.0  # 1 second timeout
 
     return evaluator
 
 
 @beartype
 def simple_eval_dict(exprs: dict[str, str], values: dict[str, Any]) -> dict[str, Any]:
-    evaluator = get_evaluator(names=values)
+    if len(exprs) > MAX_COLLECTION_SIZE:
+        msg = f"Too many expressions (max {MAX_COLLECTION_SIZE})"
+        raise ValueError(msg)
 
+    for v in exprs.values():
+        if len(v) > MAX_STRING_LENGTH:
+            msg = f"Expression exceeds maximum length of {MAX_STRING_LENGTH}"
+            raise ValueError(msg)
+
+    evaluator = get_evaluator(names=values)
     return {k: evaluator.eval(v) for k, v in exprs.items()}
 
 
@@ -277,9 +355,7 @@ def get_handler_with_filtered_params(system: SystemDef) -> Callable:
 
     # Remove problematic parameters
     filtered_handler.__signature__ = sig.replace(
-        parameters=[
-            p for p in sig.parameters.values() if p.name not in parameters_to_exclude
-        ]
+        parameters=[p for p in sig.parameters.values() if p.name not in parameters_to_exclude]
     )
 
     return filtered_handler
@@ -390,9 +466,8 @@ def get_handler(system: SystemDef) -> Callable:
             return delete_task_query
 
         case _:
-            raise NotImplementedError(
-                f"System call not implemented for {system.resource}.{system.operation}"
-            )
+            msg = f"System call not implemented for {system.resource}.{system.operation}"
+            raise NotImplementedError(msg)
 
 
 @dataclass

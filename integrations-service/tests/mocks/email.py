@@ -15,5 +15,3 @@ class MockEmailClient:
 
 class MockEmailException(Exception):
     """Mock exception for email errors"""
-
-    pass

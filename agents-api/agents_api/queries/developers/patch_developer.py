@@ -1,36 +1,21 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...common.protocol.developers import Developer
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
-developer_query = parse_one("""
-UPDATE developers 
+developer_query = """
+UPDATE developers
 SET email = $1, active = $2, tags = tags || $3, settings = settings || $4 -- settings
 WHERE developer_id = $5 -- developer_id
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A developer with this email already exists.",
-        )
-    }
-)
+@rewrap_exceptions(common_db_exceptions("developer", ["patch"]))
 @wrap_in_class(Developer, one=True, transform=lambda d: {**d, "id": d["developer_id"]})
 @pg_query
 @beartype

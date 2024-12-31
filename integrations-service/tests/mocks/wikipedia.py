@@ -1,6 +1,5 @@
 """Mock implementation of Wikipedia API client"""
 
-from typing import List
 from langchain_core.documents import Document
 
 
@@ -15,11 +14,9 @@ class MockWikipediaClient:
             for _ in range(load_max_docs)
         ]
 
-    def load(self, *args, **kwargs) -> List[Document]:
+    def load(self, *args, **kwargs) -> list[Document]:
         return self.result
 
 
 class MockWikipediaException(Exception):
     """Mock exception for Wikipedia API errors"""
-
-    pass

@@ -1,8 +1,5 @@
 # # Tests for execution queries
 
-from temporalio.client import WorkflowHandle
-from ward import test
-
 from agents_api.autogen.openapi_model import (
     CreateExecutionRequest,
     CreateTransitionRequest,
@@ -18,6 +15,9 @@ from agents_api.queries.executions.create_temporal_lookup import create_temporal
 from agents_api.queries.executions.get_execution import get_execution
 from agents_api.queries.executions.list_executions import list_executions
 from agents_api.queries.executions.lookup_temporal_data import lookup_temporal_data
+from temporalio.client import WorkflowHandle
+from ward import test
+
 from tests.fixtures import (
     pg_dsn,
     test_developer_id,

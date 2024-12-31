@@ -8,10 +8,10 @@ from tests.fixtures import client, make_request, test_user
 
 @test("route: unauthorized should fail")
 def _(client=client):
-    data = dict(
-        name="test user",
-        about="test user about",
-    )
+    data = {
+        "name": "test user",
+        "about": "test user about",
+    }
 
     response = client.request(
         method="POST",
@@ -24,10 +24,10 @@ def _(client=client):
 
 @test("route: create user")
 def _(make_request=make_request):
-    data = dict(
-        name="test user",
-        about="test user about",
-    )
+    data = {
+        "name": "test user",
+        "about": "test user about",
+    }
 
     response = make_request(
         method="POST",
@@ -64,10 +64,10 @@ def _(make_request=make_request, user=test_user):
 
 @test("route: delete user")
 def _(make_request=make_request):
-    data = dict(
-        name="test user",
-        about="test user about",
-    )
+    data = {
+        "name": "test user",
+        "about": "test user about",
+    }
 
     response = make_request(
         method="POST",
@@ -93,10 +93,10 @@ def _(make_request=make_request):
 
 @test("route: update user")
 def _(make_request=make_request, user=test_user):
-    data = dict(
-        name="updated user",
-        about="updated user about",
-    )
+    data = {
+        "name": "updated user",
+        "about": "updated user about",
+    }
 
     user_id = str(user.id)
     response = make_request(
@@ -125,10 +125,10 @@ def _(make_request=make_request, user=test_user):
 def _(make_request=make_request, user=test_user):
     user_id = str(user.id)
 
-    data = dict(
-        name="patched user",
-        about="patched user about",
-    )
+    data = {
+        "name": "patched user",
+        "about": "patched user about",
+    }
 
     response = make_request(
         method="PATCH",

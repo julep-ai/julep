@@ -6,22 +6,15 @@ It constructs and executes SQL queries to fetch agent details based on agent ID 
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Agent
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
-agent_query = parse_one("""
-SELECT 
+agent_query = """
+SELECT
     agent_id,
     developer_id,
     name,
@@ -33,33 +26,19 @@ SELECT
     default_settings,
     created_at,
     updated_at
-FROM 
+FROM
     agents
-WHERE 
+WHERE
     agent_id = $2 AND developer_id = $1;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.exceptions.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer does not exist.",
-        ),
-        asyncpg.exceptions.DataError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid data provided. Please check the input values.",
-        ),
-        asyncpg.exceptions.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified agent does not exist.",
-        ),
-    }
+@rewrap_exceptions(common_db_exceptions("agent", ["get"]))
+@wrap_in_class(
+    Agent,
+    one=True,
+    transform=lambda d: {**d, "id": d["agent_id"]},
 )
-@wrap_in_class(Agent, one=True, transform=lambda d: {"id": d["agent_id"], **d})
 @pg_query
 @beartype
 async def get_agent(

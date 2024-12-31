@@ -7,18 +7,17 @@ import ast
 from typing import Any, Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import Doc
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ...common.utils.db_exceptions import common_db_exceptions
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Base query for listing docs with aggregated content and embeddings
-base_docs_query = parse_one("""
+base_docs_query = """
 WITH doc_data AS (
-    SELECT 
+    SELECT
         d.doc_id,
         d.developer_id,
         d.title,
@@ -32,13 +31,13 @@ WITH doc_data AS (
         d.metadata,
         d.created_at
     FROM docs d
-    JOIN doc_owners doc_own 
-        ON d.developer_id = doc_own.developer_id 
+    JOIN doc_owners doc_own
+        ON d.developer_id = doc_own.developer_id
         AND d.doc_id = doc_own.doc_id
-    LEFT JOIN docs_embeddings e 
+    LEFT JOIN docs_embeddings e
         ON d.doc_id = e.doc_id
     WHERE d.developer_id = $1
-        AND doc_own.owner_type = $3 
+        AND doc_own.owner_type = $3
         AND doc_own.owner_id = $4
     GROUP BY
         d.doc_id,
@@ -52,7 +51,7 @@ WITH doc_data AS (
         d.created_at
 )
 SELECT * FROM doc_data
-""").sql(pretty=True)
+"""
 
 
 def transform_list_docs(d: dict) -> dict:
@@ -60,38 +59,25 @@ def transform_list_docs(d: dict) -> dict:
 
     embeddings = d["embeddings"][0] if len(d["embeddings"]) == 1 else d["embeddings"]
 
-    try:
-        # Embeddings are retreived as a string, so we need to evaluate it
-        embeddings = ast.literal_eval(embeddings)
-    except Exception as e:
-        raise ValueError(f"Error evaluating embeddings: {e}")
+    # try:
+    #     # Embeddings are retreived as a string, so we need to evaluate it
+    #     embeddings = ast.literal_eval(embeddings)
+    # except Exception as e:
+    #     msg = f"Error evaluating embeddings: {e}"
+    #     raise ValueError(msg)
 
     if embeddings and all((e is None) for e in embeddings):
         embeddings = None
 
-    transformed = {
+    return {
         **d,
         "id": d["doc_id"],
         "content": content,
         "embeddings": embeddings,
     }
-    return transformed
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="No documents found",
-        ),
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or owner does not exist",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("doc", ["list"]))
 @wrap_in_class(
     Doc,
     one=False,
@@ -154,7 +140,9 @@ async def list_docs(
             params.append(value)
 
     # Add sorting and pagination
-    query += f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+    query += (
+        f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+    )
     params.extend([limit, offset])
 
     return query, params

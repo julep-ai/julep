@@ -1,5 +1,4 @@
-import re
-from typing import List, TypeVar
+from typing import TypeVar
 
 from beartype import beartype
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -8,7 +7,7 @@ from jsonschema import validate
 
 from ...activities.utils import ALLOWED_FUNCTIONS, constants, stdlib
 
-__all__: List[str] = [
+__all__: list[str] = [
     "render_template",
 ]
 
@@ -27,13 +26,6 @@ jinja_env: ImmutableSandboxedEnvironment = ImmutableSandboxedEnvironment(
 for k, v in (constants | stdlib | ALLOWED_FUNCTIONS).items():
     jinja_env.globals[k] = v
 
-simple_jinja_regex = re.compile(r"{{|{%.+}}|%}", re.DOTALL)
-
-
-# TODO: This does not work for some reason
-def is_simple_jinja(template_string: str) -> bool:
-    return simple_jinja_regex.search(template_string) is None
-
 
 # Funcs
 @beartype
@@ -43,7 +35,6 @@ async def render_template_string(
     check: bool = False,
 ) -> str:
     # Parse template
-    # TODO: Check that the string is indeed a jinjd template
     template = jinja_env.from_string(template_string)
 
     # If check is required, get required vars from template and validate variables
@@ -52,8 +43,7 @@ async def render_template_string(
         validate(instance=variables, schema=schema)
 
     # Render
-    rendered = await template.render_async(**variables)
-    return rendered
+    return await template.render_async(**variables)
 
 
 # A render function that can render arbitrarily nested lists of dicts
@@ -73,8 +63,7 @@ async def render_template_nested(
             return await render_template_string(input, variables, check)
         case dict():
             return {
-                k: await render_template_nested(v, variables, check)
-                for k, v in input.items()
+                k: await render_template_nested(v, variables, check) for k, v in input.items()
             }
         case list():
             return [await render_template_nested(v, variables, check) for v in input]

@@ -12,7 +12,8 @@ def transform_to_doc_reference(d: dict) -> dict:
         # Embeddings are retreived as a string, so we need to evaluate it
         embedding = ast.literal_eval(embedding)
     except Exception as e:
-        raise ValueError(f"Error evaluating embeddings: {e}")
+        msg = f"Error evaluating embeddings: {e}"
+        raise ValueError(msg)
 
     owner = {
         "id": d.pop("owner_id"),
@@ -25,12 +26,10 @@ def transform_to_doc_reference(d: dict) -> dict:
     }
     metadata = d.pop("metadata")
 
-    transformed_data = {
+    return {
         "id": id,
         "owner": owner,
         "snippet": snippet,
         "metadata": metadata,
         **d,
     }
-
-    return transformed_data

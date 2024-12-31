@@ -5,9 +5,6 @@ Tests verify the SQL queries without actually executing them against a database.
 
 from uuid import UUID
 
-from uuid_extensions import uuid7
-from ward import raises, test
-
 from agents_api.autogen.openapi_model import (
     CreateOrUpdateUserRequest,
     CreateUserRequest,
@@ -27,6 +24,9 @@ from agents_api.queries.users import (
     patch_user,
     update_user,
 )
+from uuid_extensions import uuid7
+from ward import raises, test
+
 from tests.fixtures import pg_dsn, test_developer_id, test_user
 
 # Test UUIDs for consistent testing
@@ -176,6 +176,4 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     except Exception:
         pass
     else:
-        assert (
-            False
-        ), "Expected an exception to be raised when retrieving a deleted user."
+        assert False, "Expected an exception to be raised when retrieving a deleted user."

@@ -1,56 +1,33 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import PatchSessionRequest, ResourceUpdatedResponse
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL queries
 # Build dynamic SET clause based on provided fields
-session_query = parse_one("""
-WITH updated_session AS (
-    UPDATE sessions 
-    SET
-        situation = COALESCE($3, situation),
-        system_template = COALESCE($4, system_template),
-        metadata = sessions.metadata || $5,
-        render_templates = COALESCE($6, render_templates),
-        token_budget = COALESCE($7, token_budget),
-        context_overflow = COALESCE($8, context_overflow),
-        forward_tool_calls = COALESCE($9, forward_tool_calls),
-        recall_options = sessions.recall_options || $10
-    WHERE 
-        developer_id = $1 
-        AND session_id = $2
-    RETURNING *
-)
-SELECT * FROM updated_session;
-""").sql(pretty=True)
+session_query = """
+UPDATE sessions
+SET
+    situation = COALESCE($3, situation),
+    system_template = COALESCE($4, system_template),
+    metadata = sessions.metadata || $5,
+    render_templates = COALESCE($6, render_templates),
+    token_budget = COALESCE($7, token_budget),
+    context_overflow = COALESCE($8, context_overflow),
+    forward_tool_calls = COALESCE($9, forward_tool_calls),
+    recall_options = sessions.recall_options || $10
+WHERE
+    developer_id = $1
+    AND session_id = $2
+RETURNING *
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or session does not exist.",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Session not found",
-        ),
-        asyncpg.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid session data provided.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("session", ["patch"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,

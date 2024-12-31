@@ -8,18 +8,16 @@ import hashlib
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateFileRequest, File
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Create file
-file_query = parse_one("""
+file_query = """
 INSERT INTO files (
     developer_id,
     file_id,
@@ -39,10 +37,10 @@ VALUES (
     $7  -- hash
 )
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 # Replace both user_file and agent_file queries with a single file_owner query
-file_owner_query = parse_one("""
+file_owner_query = """
 WITH inserted_owner AS (
     INSERT INTO file_owners (
         developer_id,
@@ -56,29 +54,11 @@ WITH inserted_owner AS (
 SELECT f.*
 FROM inserted_owner io
 JOIN files f ON f.file_id = io.file_id;
-""").sql(pretty=True)
+"""
 
 
 # Add error handling decorator
-@rewrap_exceptions(
-    {
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A file with this name already exists for this developer",
-        ),
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or owner does not exist",
-        ),
-        asyncpg.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="File size must be positive and name must be between 1 and 255 characters",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("file", ["create"]))
 @wrap_in_class(
     File,
     one=True,

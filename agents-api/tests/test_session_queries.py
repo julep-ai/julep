@@ -3,9 +3,6 @@
 # Tests verify the SQL queries without actually executing them against a database.
 # """
 
-from uuid_extensions import uuid7
-from ward import raises, test
-
 from agents_api.autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
     CreateSessionRequest,
@@ -27,6 +24,9 @@ from agents_api.queries.sessions import (
     patch_session,
     update_session,
 )
+from uuid_extensions import uuid7
+from ward import raises, test
+
 from tests.fixtures import (
     pg_dsn,
     test_agent,
@@ -37,9 +37,7 @@ from tests.fixtures import (
 
 
 @test("query: create session sql")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
     """Test that a session can be successfully created."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -57,16 +55,12 @@ async def _(
     )
 
     assert result is not None
-    assert isinstance(
-        result, ResourceCreatedResponse
-    ), f"Result is not a Session, {result}"
+    assert isinstance(result, ResourceCreatedResponse), f"Result is not a Session, {result}"
     assert result.id == session_id
 
 
 @test("query: create or update session sql")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
     """Test that a session can be successfully created or updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -150,9 +144,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
 
     assert isinstance(result, list)
     assert len(result) >= 1
-    assert all(
-        isinstance(s, Session) for s in result
-    ), f"Result is not a list of sessions, {result}"
+    assert all(isinstance(s, Session) for s in result), (
+        f"Result is not a list of sessions, {result}"
+    )
 
 
 @test("query: count sessions")
@@ -205,9 +199,7 @@ async def _(
 
 
 @test("query: patch session sql")
-async def _(
-    dsn=pg_dsn, developer_id=test_developer_id, session=test_session, agent=test_agent
-):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, agent=test_agent):
     """Test that a session can be successfully patched."""
 
     pool = await create_db_pool(dsn=dsn)

@@ -1,17 +1,15 @@
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateSessionRequest
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# Define the raw SQL queries
-session_query = parse_one("""
-UPDATE sessions 
+# Define the raw SQL query
+session_query = """
+UPDATE sessions
 SET
     situation = $3,
     system_template = $4,
@@ -21,32 +19,12 @@ SET
     context_overflow = $8,
     forward_tool_calls = $9,
     recall_options = $10
-WHERE 
-    developer_id = $1 
-    AND session_id = $2
+WHERE developer_id = $1 AND session_id = $2
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or session does not exist.",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Session not found",
-        ),
-        asyncpg.CheckViolationError: partialclass(
-            HTTPException,
-            status_code=400,
-            detail="Invalid session data provided.",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("session", ["update"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,

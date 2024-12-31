@@ -23,7 +23,8 @@ async def execute_integration(
     setup: dict[str, Any] = {},
 ) -> Any:
     if not isinstance(context.execution_input, ExecutionInput):
-        raise TypeError("Expected ExecutionInput type for context.execution_input")
+        msg = "Expected ExecutionInput type for context.execution_input"
+        raise TypeError(msg)
 
     developer_id = context.execution_input.developer_id
     agent_id = context.execution_input.agent.id
@@ -45,9 +46,7 @@ async def execute_integration(
         connection_pool=container.state.postgres_pool,
     )
 
-    arguments = (
-        merged_tool_args.get(tool_name, {}) | (integration.arguments or {}) | arguments
-    )
+    arguments = merged_tool_args.get(tool_name, {}) | (integration.arguments or {}) | arguments
 
     setup = merged_tool_setup.get(tool_name, {}) | (integration.setup or {}) | setup
 
@@ -62,10 +61,7 @@ async def execute_integration(
             arguments=arguments,
         )
 
-        if (
-            "error" in integration_service_response
-            and integration_service_response["error"]
-        ):
+        if integration_service_response.get("error"):
             raise IntegrationExecutionException(
                 integration=integration,
                 error=integration_service_response["error"],
@@ -78,9 +74,7 @@ async def execute_integration(
             integration_str = integration.provider + (
                 "." + integration.method if integration.method else ""
             )
-            activity.logger.error(
-                f"Error in execute_integration {integration_str}: {e}"
-            )
+            activity.logger.error(f"Error in execute_integration {integration_str}: {e}")
 
         raise
 

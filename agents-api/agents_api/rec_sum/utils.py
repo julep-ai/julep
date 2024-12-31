@@ -1,19 +1,19 @@
 ###########
-## Utils ##
+# Utils ##
 ###########
 
 
-from typing import Any, Dict, List, TypeVar
+from typing import Any, TypeVar
 
 _T2 = TypeVar("_T2")
 
 
 class chatml:
     @staticmethod
-    def make(content, role="system", name: _T2 = None, **_) -> Dict[str, _T2]:
+    def make(content, role="system", name: _T2 = None, **_) -> dict[str, _T2]:
         return {
             key: value
-            for key, value in dict(role=role, name=name, content=content).items()
+            for key, value in {"role": role, "name": name, "content": content}.items()
             if value is not None
         }
 
@@ -46,14 +46,12 @@ class chatml:
         return chatml.system(content, name="entity")
 
 
-def add_indices(list_of_dicts, idx_name="index") -> List[dict]:
+def add_indices(list_of_dicts, idx_name="index") -> list[dict]:
     return [{idx_name: i, **msg} for i, msg in enumerate(list_of_dicts)]
 
 
-def get_names_from_session(session) -> Dict[str, Any]:
+def get_names_from_session(session) -> dict[str, Any]:
     return {
-        role: next(
-            (msg.get("name", None) for msg in session if msg["role"] == role), None
-        )
+        role: next((msg.get("name", None) for msg in session if msg["role"] == role), None)
         for role in {"user", "assistant", "system"}
     }

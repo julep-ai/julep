@@ -129,22 +129,12 @@ async def create_task_execution(
             detail="Invalid request arguments schema",
         )
 
-    # except QueryException as e:
-    #     if e.code == "transact::assertion_failure":
-    #         raise HTTPException(
-    #             status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-    #         )
-
-    #     raise
-
     # get developer data
     developer: Developer = await get_developer(developer_id=x_developer_id)
 
     # # check if the developer is paid
     if "paid" not in developer.tags:
-        executions = await count_executions_query(
-            developer_id=x_developer_id, task_id=task_id
-        )
+        executions = await count_executions_query(developer_id=x_developer_id, task_id=task_id)
 
         execution_count = executions["count"]
         if execution_count > max_free_executions:
@@ -161,7 +151,6 @@ async def create_task_execution(
 
     background_tasks.add_task(
         create_temporal_lookup,
-        #
         execution_id=execution.id,
         workflow_handle=handle,
     )

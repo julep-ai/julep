@@ -1,21 +1,15 @@
 from typing import Annotated
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.datetime import utcnow
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...common.utils.types import dict_like
 from ...metrics.counters import increase_counter
-from ..utils import (
-    partialclass,
-    pg_query,
-    rewrap_exceptions,
-    wrap_in_class,
-)
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .constants import OUTPUT_UNNEST_KEY
 
 create_execution_query = """
@@ -41,20 +35,7 @@ RETURNING *;
 """
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="No executions found for the specified task",
-        ),
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or task does not exist",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("execution", ["create"]))
 @wrap_in_class(
     Execution,
     one=True,
@@ -65,8 +46,8 @@ RETURNING *;
         **d,
     },
 )
-@pg_query
 @increase_counter("create_execution")
+@pg_query
 @beartype
 async def create_execution(
     *,
@@ -100,9 +81,7 @@ async def create_execution(
         data["metadata"] = data.get("metadata", {})
         execution_data = data
 
-    if execution_data["output"] is not None and not isinstance(
-        execution_data["output"], dict
-    ):
+    if execution_data["output"] is not None and not isinstance(execution_data["output"], dict):
         execution_data["output"] = {OUTPUT_UNNEST_KEY: execution_data["output"]}
 
     return (

@@ -17,7 +17,8 @@ async def setup():
     from ..app import app
 
     if not app.state.s3_client:
-        raise RuntimeError("S3 client not initialized")
+        msg = "S3 client not initialized"
+        raise RuntimeError(msg)
 
     client = app.state.s3_client
 
@@ -37,8 +38,7 @@ async def list_buckets() -> list[str]:
     client = await setup()
 
     data = await client.list_buckets()
-    buckets = [bucket["Name"] for bucket in data["Buckets"]]
-    return buckets
+    return [bucket["Name"] for bucket in data["Buckets"]]
 
 
 @alru_cache(maxsize=10_000)
@@ -51,8 +51,7 @@ async def exists(key: str) -> bool:
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "404":
             return False
-        else:
-            raise e
+        raise e
 
 
 @beartype
@@ -75,8 +74,7 @@ async def get_object(key: str) -> bytes:
     client = await setup()
 
     response = await client.get_object(Bucket=blob_store_bucket, Key=key)
-    body = await response["Body"].read()
-    return body
+    return await response["Body"].read()
 
 
 @beartype

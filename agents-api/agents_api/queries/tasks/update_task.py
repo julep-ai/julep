@@ -1,24 +1,22 @@
 from typing import Literal
 from uuid import UUID
 
-import asyncpg
 from beartype import beartype
-from fastapi import HTTPException
-from sqlglot import parse_one
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateTaskRequest
 from ...common.protocol.tasks import task_to_spec
 from ...common.utils.datetime import utcnow
+from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import partialclass, pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Update task query using INSERT with version increment
-update_task_query = parse_one("""
+update_task_query = """
 WITH current_version AS (
     SELECT MAX("version") as current_version,
            canonical_name as existing_canonical_name
-    FROM tasks 
-    WHERE developer_id = $1 
+    FROM tasks
+    WHERE developer_id = $1
       AND task_id = $3
     GROUP BY task_id, canonical_name
     HAVING MAX("version") IS NOT NULL  -- This ensures we only proceed if a version exists
@@ -33,7 +31,7 @@ INSERT INTO tasks (
     name,                    -- $6
     description,             -- $7
     inherit_tools,           -- $8
-    input_schema,            -- $9
+    input_schema             -- $9
 )
 SELECT
     current_version + 1,           -- version
@@ -48,13 +46,13 @@ SELECT
     $9::jsonb                     -- input_schema
 FROM current_version
 RETURNING *;
-""").sql(pretty=True)
+"""
 
 # Update workflows query to use UPDATE instead of INSERT
-workflows_query = parse_one("""
+workflows_query = """
 WITH version AS (
     SELECT COALESCE(MAX(version), 0) as current_version
-    FROM tasks 
+    FROM tasks
     WHERE developer_id = $1 AND task_id = $2
 )
 INSERT INTO workflows (
@@ -74,29 +72,11 @@ SELECT
     $4,                 -- step_idx
     $5,                 -- step_type
     $6                  -- step_definition
-FROM version
-""").sql(pretty=True)
+FROM version;
+"""
 
 
-@rewrap_exceptions(
-    {
-        asyncpg.ForeignKeyViolationError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="The specified developer or agent does not exist.",
-        ),
-        asyncpg.UniqueViolationError: partialclass(
-            HTTPException,
-            status_code=409,
-            detail="A task with this ID already exists for this agent.",
-        ),
-        asyncpg.NoDataFoundError: partialclass(
-            HTTPException,
-            status_code=404,
-            detail="Task not found",
-        ),
-    }
-)
+@rewrap_exceptions(common_db_exceptions("task", ["update"]))
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
@@ -147,16 +127,14 @@ async def update_task(
         workflow_name = workflow.get("name")
         steps = workflow.get("steps", [])
         for step_idx, step in enumerate(steps):
-            workflow_params.append(
-                [
-                    developer_id,  # $1
-                    task_id,  # $2
-                    workflow_name,  # $3
-                    step_idx,  # $4
-                    step["kind_"],  # $5
-                    step,  # $6
-                ]
-            )
+            workflow_params.append([
+                developer_id,  # $1
+                task_id,  # $2
+                workflow_name,  # $3
+                step_idx,  # $4
+                step["kind_"],  # $5
+                step,  # $6
+            ])
 
     return [
         (
