@@ -107,9 +107,10 @@ def safe_extract_json(string: str):
     if len(string) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
         raise ValueError(msg)
-    extracted_string = string[string.find("```json")+7:string.find("```", string.find("```json")+7)]
+    extracted_string = string[
+        string.find("```json") + 7 : string.find("```", string.find("```json") + 7)
+    ]
     return json.loads(extracted_string)
-
 
 
 # Restricted set of allowed functions
