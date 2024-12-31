@@ -16,7 +16,7 @@ Each notebook explores a unique use case, demonstrating different aspects of Jul
 | `03-trip-planning-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb) | Plans trips using weather data and location information | Yes |
 | `04-hook-generator-trending-reels.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-hook-generator-trending-reels.ipynb) | Generates engaging hooks for trending social media reels | Yes |
 | `05-video-processing-with-natural-language.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb) | Processes videos using natural language commands | Yes |
-| `06-browser-use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/`06-browser-use.ipynb) | Demonstrates browser automation capabilities | Yes |
+| `06-browser-use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb) | Demonstrates browser automation capabilities | Yes |
 
 
 ## Potential Cookbooks for Contributors
