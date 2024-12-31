@@ -103,6 +103,15 @@ def chunk_doc(string: str) -> list[str]:
     return [" ".join([sent.text for sent in chunk]) for chunk in doc._.chunks]
 
 
+def safe_extract_json(string: str) -> dict:
+    if len(string) > MAX_STRING_LENGTH:
+        msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
+        raise ValueError(msg)
+    extarct_String = string[string.find("```json")+7:string.find("```", string.find("```json")+7)]
+    return json.loads(extarct_String)
+
+
+
 # Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
     # Basic Python builtins
@@ -131,6 +140,7 @@ ALLOWED_FUNCTIONS = {
     "load_yaml": safe_yaml_load,
     "dump_json": json.dumps,
     "dump_yaml": yaml.dump,
+    "extract_json": safe_extract_json,
     # Regex and NLP functions (using re2 which is safe against ReDoS)
     "search_regex": lambda pattern, string: re2.search(pattern, string),
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
