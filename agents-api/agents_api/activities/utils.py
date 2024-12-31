@@ -103,12 +103,12 @@ def chunk_doc(string: str) -> list[str]:
     return [" ".join([sent.text for sent in chunk]) for chunk in doc._.chunks]
 
 
-def safe_extract_json(string: str) -> dict:
+def safe_extract_json(string: str):
     if len(string) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
         raise ValueError(msg)
-    extarct_String = string[string.find("```json")+7:string.find("```", string.find("```json")+7)]
-    return json.loads(extarct_String)
+    extracted_string = string[string.find("```json")+7:string.find("```", string.find("```json")+7)]
+    return json.loads(extracted_string)
 
 
 
