@@ -65,7 +65,7 @@ async def patch_session(
         data.token_budget,  # $7
         data.context_overflow,  # $8
         data.forward_tool_calls,  # $9
-        data.recall_options or {},  # $10
+        data.recall_options.model_dump() if data.recall_options else {},  # $10
     ]
 
     return [(session_query, session_params)]

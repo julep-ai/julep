@@ -44,12 +44,14 @@ SELECT
 """
 
 
-@rewrap_exceptions(common_db_exceptions("history", ["get"]))
-@wrap_in_class(
-    History,
-    one=True,
-    transform=lambda d: {
-        "entries": json.loads(d.get("entries") or "[]"),
+def _transform(d):
+    return {
+        "entries": [
+            {
+                **entry,
+            }
+            for entry in json.loads(d.get("entries") or "[]")
+        ],
         "relations": [
             {
                 "head": r["head"],
@@ -60,7 +62,14 @@ SELECT
         ],
         "session_id": d.get("session_id"),
         "created_at": utcnow(),
-    },
+    }
+
+
+@rewrap_exceptions(common_db_exceptions("history", ["get"]))
+@wrap_in_class(
+    History,
+    one=True,
+    transform=_transform,
 )
 @pg_query
 @beartype

@@ -89,21 +89,6 @@ async def create_entries(
     # Convert the data to a list of dictionaries
     data_dicts = [item.model_dump(mode="json") for item in data]
 
-    # Prepare the parameters for the query
-    # $1
-    # $2
-    # $3
-    # $4
-    # $5
-    # $6
-    # $7
-    # $8
-    # $9
-    # $10
-    # $11
-    # $12
-    # $13
-    # $14
     params = [
         [
             session_id,  # $1

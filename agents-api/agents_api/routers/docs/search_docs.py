@@ -20,7 +20,7 @@ from ...queries.docs.search_docs_hybrid import search_docs_hybrid
 from .router import router
 
 
-async def get_search_fn_and_params(
+def get_search_fn_and_params(
     search_params,
 ) -> tuple[Any, dict[str, float | int | str | dict[str, float] | list[float]] | None]:
     search_fn, params = None, None
@@ -58,10 +58,10 @@ async def get_search_fn_and_params(
         ):
             search_fn = search_docs_hybrid
             params = {
-                "text_query": query,
-                "embedding": query_embedding,
+                "query": query,
+                "query_embedding": query_embedding,
                 "k": k * 3 if search_params.mmr_strength > 0 else k,
-                "confidence": confidence,
+                "embed_search_options": {"confidence": confidence},
                 "alpha": alpha,
                 "metadata_filter": metadata_filter,
             }
@@ -88,7 +88,7 @@ async def search_user_docs(
     """
 
     # MMR here
-    search_fn, params = await get_search_fn_and_params(search_params)
+    search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
     docs: list[DocReference] = await search_fn(
@@ -137,7 +137,7 @@ async def search_agent_docs(
         DocSearchResponse: The search results.
     """
 
-    search_fn, params = await get_search_fn_and_params(search_params)
+    search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
     docs: list[DocReference] = await search_fn(

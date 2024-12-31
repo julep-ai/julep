@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from ...autogen.openapi_model import DocReference
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from .utils import transform_to_doc_reference
 
 # Raw query for vector search
 search_docs_by_embedding_query = """
@@ -25,14 +26,7 @@ SELECT * FROM search_by_vector(
 @rewrap_exceptions(common_db_exceptions("doc", ["search"]))
 @wrap_in_class(
     DocReference,
-    transform=lambda d: {
-        "owner": {
-            "id": d["owner_id"],
-            "role": d["owner_type"],
-        },
-        "metadata": d.get("metadata", {}),
-        **d,
-    },
+    transform=transform_to_doc_reference,
 )
 @pg_query
 @beartype
