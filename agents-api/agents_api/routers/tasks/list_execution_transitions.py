@@ -1,6 +1,8 @@
 from typing import Literal
 from uuid import UUID
 
+from fastapi import HTTPException, status
+
 from ...autogen.openapi_model import (
     ListResponse,
     Transition,
@@ -30,22 +32,21 @@ async def list_execution_transitions(
     return ListResponse[Transition](items=transitions)
 
 
-# TODO: Do we need this?
-# @router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
-# async def get_execution_transition(
-#     execution_id: UUID,
-#     transition_id: UUID,
-# ) -> Transition:
-#     try:
-#         res = [
-#             row.to_dict()
-#             for _, row in get_execution_transition_query(
-#                 execution_id, transition_id
-#             ).iterrows()
-#         ][0]
-#         return Transition(**res)
-#     except (IndexError, KeyError):
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="Transition not found",
-#         )
+@router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
+async def get_execution_transition(
+    execution_id: UUID,
+    transition_id: UUID,
+) -> Transition:
+    try:
+        transitions = await list_execution_transitions_query(
+            execution_id=execution_id,
+            transition_id=transition_id,
+        )
+        if not transitions:
+            raise IndexError
+        return transitions[0]
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transition not found",
+        )

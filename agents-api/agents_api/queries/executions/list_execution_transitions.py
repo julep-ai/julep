@@ -20,6 +20,13 @@ ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
 """
+#  Query to get a single transition
+get_execution_transition_query = """
+SELECT * FROM transitions
+WHERE
+    execution_id = $1
+    AND transition_id = $2;
+"""
 
 
 def _transform(d):
@@ -53,11 +60,12 @@ def _transform(d):
     Transition,
     transform=_transform,
 )
-@pg_query
+@pg_query(debug=True)
 @beartype
 async def list_execution_transitions(
     *,
     execution_id: UUID,
+    transition_id: UUID | None = None,
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at"] = "created_at",
@@ -76,6 +84,14 @@ async def list_execution_transitions(
     Returns:
         tuple[str, list]: SQL query and parameters for listing execution transitions.
     """
+    if transition_id is not None:
+        return (
+            get_execution_transition_query,
+            [
+                str(execution_id),
+                str(transition_id),
+            ],
+        )
     return (
         list_execution_transitions_query,
         [

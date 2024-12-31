@@ -31,7 +31,7 @@ INSERT INTO tasks (
     name,                    -- $6
     description,             -- $7
     inherit_tools,           -- $8
-    input_schema,            -- $9
+    input_schema             -- $9
 )
 SELECT
     current_version + 1,           -- version
@@ -72,7 +72,7 @@ SELECT
     $4,                 -- step_idx
     $5,                 -- step_type
     $6                  -- step_definition
-FROM version
+FROM version;
 """
 
 

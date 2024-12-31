@@ -39,7 +39,26 @@ ON CONFLICT (agent_id, task_id, name) DO UPDATE SET
 RETURNING *;
 """
 
+# Define the raw SQL query for creating or updating a task
 task_query = """
+WITH current_version AS (
+    SELECT COALESCE(
+        (SELECT MAX("version")
+         FROM tasks
+         WHERE developer_id = $1
+           AND task_id = $4),
+        0
+    ) + 1 as next_version,
+    COALESCE(
+        (SELECT canonical_name
+         FROM tasks
+         WHERE developer_id = $1 AND task_id = $4
+         ORDER BY version DESC
+         LIMIT 1),
+        $2
+    ) as effective_canonical_name
+    FROM (SELECT 1) as dummy
+)
 INSERT INTO tasks (
     "version",
     developer_id,
@@ -53,9 +72,9 @@ INSERT INTO tasks (
     metadata
 )
 SELECT
-    next_version,                 -- version
+    next_version,                -- version
     $1,                          -- developer_id
-    effective_canonical_name,     -- canonical_name
+    effective_canonical_name,    -- canonical_name
     $3,                          -- agent_id
     $4,                          -- task_id
     $5,                          -- name
@@ -99,7 +118,7 @@ SELECT
     $4,                 -- step_idx
     $5,                 -- step_type
     $6                  -- step_definition
-FROM version
+FROM version;
 """
 
 
