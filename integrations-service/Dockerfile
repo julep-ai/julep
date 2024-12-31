@@ -15,20 +15,13 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Verify FFmpeg installation
-RUN ffmpeg -version
+COPY --from=ghcr.io/astral-sh/uv:0.5.5 /uv /uvx /bin/
 
-# Install Poetry
-RUN pip install poetry
+COPY .python-version pyproject.toml uv.lock ./
 
-# Copy only requirements to cache them in docker layer
-COPY pyproject.toml poetry.lock* /app/
+RUN \
+  uv sync --frozen --all-extras --no-group dev --color never --python-preference system
 
-# Project initialization:
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
-
-# Copy project
 COPY . ./
 
 # Set proper signal handling
@@ -36,4 +29,4 @@ ENV PYTHONUNBUFFERED=1
 ENV GUNICORN_CMD_ARGS="--capture-output --enable-stdio-inheritance"
 
 # Run the application with proper signal handling
-ENTRYPOINT ["gunicorn", "integrations.web:app", "-c", "gunicorn_conf.py"]
+ENTRYPOINT ["uv", "run", "gunicorn", "integrations.web:app", "-c", "gunicorn_conf.py"]

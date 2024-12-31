@@ -10,14 +10,23 @@ cd typespec/ && \
     tsp compile .
 cd -
 
+uv_run () {
+    uvx \
+      --with ruff --with datamodel-code-generator \
+      --from ${2:-poethepoet} \
+      $1
+}
+
+codegen_then_format () {
+    uv_run 'poe codegen'  && \
+    uv_run 'poe format'  && \
+    uv_run 'ruff check --fix --unsafe-fixes .' 'ruff' || exit 0
+}
+
 cd agents-api && \
-    # poetry update && \
-    poetry run poe codegen && \
-    poetry run poe format
+  codegen_then_format
 cd -
 
 cd integrations-service && \
-    # poetry update && \
-    poetry run poe codegen && \
-    poetry run poe format
+  codegen_then_format
 cd -

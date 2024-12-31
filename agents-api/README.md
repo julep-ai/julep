@@ -111,12 +111,13 @@ This guide provides a brief overview for new contributors to get started with th
 │ 2  │ source       │ True   │ String  │ False       │
 │ 3  │ role         │ True   │ String  │ False       │
 │ 4  │ name         │ True   │ String? │ True        │
-│ 5  │ content      │ False  │ String  │ False       │
+│ 5  │ content      │ False  │ [Json]  │ False       │
 │ 6  │ tool_call_id │ False  │ String? │ True        │
-│ 7  │ token_count  │ False  │ Int     │ False       │
-│ 8  │ tokenizer    │ False  │ String  │ False       │
-│ 9  │ created_at   │ False  │ Float   │ True        │
-│ 10 │ timestamp    │ False  │ Float   │ True        │
+│ 7  │ tool_calls   │ False  │ [Json]? │ True        │
+│ 8  │ token_count  │ False  │ Int     │ False       │
+│ 9  │ tokenizer    │ False  │ String  │ False       │
+│ 10 │ created_at   │ False  │ Float   │ True        │
+│ 11 │ timestamp    │ False  │ Float   │ True        │
 └────┴──────────────┴────────┴─────────┴─────────────┘
 
 [executions]
@@ -213,6 +214,7 @@ This guide provides a brief overview for new contributors to get started with th
 │ 8  │ token_budget       │ False  │ Int?     │ True        │
 │ 9  │ context_overflow   │ False  │ String?  │ True        │
 │ 10 │ forward_tool_calls │ False  │ Bool?    │ True        │
+│ 11 │ recall_options     │ False  │ Json     │ True        │
 └────┴────────────────────┴────────┴──────────┴─────────────┘
 
 [snippets]

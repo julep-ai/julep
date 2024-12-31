@@ -27,8 +27,6 @@ from .router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
-COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
-
 
 @router.post(
     "/sessions/{session_id}/chat",
@@ -55,18 +53,6 @@ async def chat(
     Returns:
         ChatResponse: The chat response.
     """
-
-    # check if the developer is paid
-    if "paid" not in developer.tags:
-        # get the session length
-        sessions = count_sessions_query(developer_id=developer.id)
-        session_length = sessions["count"]
-        if session_length > max_free_sessions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Session length exceeded the free tier limit",
-            )
-
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
@@ -108,7 +94,6 @@ async def chat(
         )
         for ref in doc_references
     ]
-
     # Render the system message
     if situation := chat_context.session.situation:
         system_message = dict(
@@ -134,14 +119,6 @@ async def chat(
 
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
-
-    # Check if using Claude model and has specific tool types
-    is_claude_model = settings["model"].lower().startswith("claude-3.5")
-
-    # Format tools for litellm
-    # formatted_tools = (
-    #     tools if is_claude_model else [format_tool(tool) for tool in tools]
-    # )
 
     # Check if using Claude model and has specific tool types
     is_claude_model = settings["model"].lower().startswith("claude-3.5")

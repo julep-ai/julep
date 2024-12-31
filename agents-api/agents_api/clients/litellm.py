@@ -83,6 +83,7 @@ async def aembedding(
     *,
     inputs: str | list[str],
     model: str = embedding_model_id,
+    embed_instruction: str | None = None,
     dimensions: int = embedding_dimensions,
     join_inputs: bool = False,
     custom_api_key: None | str = None,
@@ -96,6 +97,9 @@ async def aembedding(
         input = [inputs]
     else:
         input = ["\n\n".join(inputs)] if join_inputs else inputs
+
+    if embed_instruction:
+        input = [embed_instruction] + input
 
     response = await _aembedding(
         model=model,

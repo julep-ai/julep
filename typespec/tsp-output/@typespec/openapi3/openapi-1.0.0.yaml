@@ -2756,6 +2756,7 @@ components:
           format: uint16
           minimum: 1
           maximum: 50
+          description: The limit of documents to return
           default: 10
         lang:
           type: string
@@ -2766,6 +2767,7 @@ components:
         metadata_filter:
           type: object
           additionalProperties: {}
+          description: Metadata filter to apply to the search
           default: {}
         mmr_strength:
           type: number
@@ -3831,6 +3833,12 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptions'
+          nullable: true
+          default: null
         metadata:
           type: object
           additionalProperties: {}
@@ -3942,6 +3950,12 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptions'
+          nullable: true
+          default: null
         metadata:
           type: object
           additionalProperties: {}
@@ -4075,10 +4089,140 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptionsUpdate'
+          nullable: true
+          default: null
         metadata:
           type: object
           additionalProperties: {}
       description: Payload for patching a session
+    Sessions.RecallOptions:
+      type: object
+      required:
+        - mode
+        - num_search_messages
+        - max_query_length
+        - alpha
+        - confidence
+        - limit
+        - metadata_filter
+      properties:
+        mode:
+          allOf:
+            - $ref: '#/components/schemas/Sessions.SearchMode'
+          description: The mode to use for the search.
+          default: vector
+        num_search_messages:
+          type: integer
+          format: uint32
+          description: The number of search messages to use for the search.
+          default: 4
+        max_query_length:
+          type: integer
+          format: uint32
+          description: The maximum query length to use for the search.
+          default: 1000
+        alpha:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+          default: 0.7
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: The confidence cutoff level
+          default: 0.6
+        limit:
+          type: integer
+          format: uint16
+          minimum: 1
+          maximum: 50
+          description: The limit of documents to return
+          default: 10
+        lang:
+          type: string
+          enum:
+            - en-US
+          description: The language to be used for text-only search. Support for other languages coming soon.
+          default: en-US
+        metadata_filter:
+          type: object
+          additionalProperties: {}
+          description: Metadata filter to apply to the search
+          default: {}
+        mmr_strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          exclusiveMaximum: true
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          default: 0
+    Sessions.RecallOptionsUpdate:
+      type: object
+      properties:
+        mode:
+          allOf:
+            - $ref: '#/components/schemas/Sessions.SearchMode'
+          description: The mode to use for the search.
+          default: vector
+        num_search_messages:
+          type: integer
+          format: uint32
+          description: The number of search messages to use for the search.
+          default: 4
+        max_query_length:
+          type: integer
+          format: uint32
+          description: The maximum query length to use for the search.
+          default: 1000
+        alpha:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+          default: 0.7
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: The confidence cutoff level
+          default: 0.6
+        limit:
+          type: integer
+          format: uint16
+          minimum: 1
+          maximum: 50
+          description: The limit of documents to return
+          default: 10
+        lang:
+          type: string
+          enum:
+            - en-US
+          description: The language to be used for text-only search. Support for other languages coming soon.
+          default: en-US
+        metadata_filter:
+          type: object
+          additionalProperties: {}
+          description: Metadata filter to apply to the search
+          default: {}
+        mmr_strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          exclusiveMaximum: true
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          default: 0
+    Sessions.SearchMode:
+      type: string
+      enum:
+        - hybrid
+        - vector
+        - text
     Sessions.Session:
       type: object
       required:
@@ -4179,6 +4323,12 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptions'
+          nullable: true
+          default: null
         id:
           allOf:
             - $ref: '#/components/schemas/Common.uuid'
@@ -4334,6 +4484,12 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        recall_options:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Sessions.RecallOptions'
+          nullable: true
+          default: null
         metadata:
           type: object
           additionalProperties: {}
@@ -8378,12 +8534,15 @@ components:
           type: string
           format: uri
           description: The URL to fetch data from
-        mode:
+        content_type:
           type: string
           enum:
-            - scrape
-          description: The type of crawler to use
-          default: scrape
+            - application/json
+            - text/csv
+            - application/xml
+            - application/jsonl
+          description: The content type to return
+          default: application/json
         params:
           type: object
           additionalProperties: {}
@@ -8396,12 +8555,15 @@ components:
           type: string
           format: uri
           description: The URL to fetch data from
-        mode:
+        content_type:
           type: string
           enum:
-            - scrape
-          description: The type of crawler to use
-          default: scrape
+            - application/json
+            - text/csv
+            - application/xml
+            - application/jsonl
+          description: The content type to return
+          default: application/json
         params:
           type: object
           additionalProperties: {}
@@ -8420,6 +8582,11 @@ components:
           default: spider
         method:
           type: string
+          enum:
+            - crawl
+            - links
+            - screenshot
+            - search
           description: The specific method of the integration to call
         setup:
           allOf:
@@ -8443,6 +8610,11 @@ components:
           default: spider
         method:
           type: string
+          enum:
+            - crawl
+            - links
+            - screenshot
+            - search
           description: The specific method of the integration to call
         setup:
           allOf:

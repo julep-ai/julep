@@ -7,6 +7,7 @@ from uuid import UUID
 from beartype import beartype
 
 from ...autogen.openapi_model import DocReference
+from ..utils import run_concurrently
 from .search_docs_by_embedding import search_docs_by_embedding
 from .search_docs_by_text import search_docs_by_text
 
@@ -102,32 +103,36 @@ def search_docs_hybrid(
     text_search_options: dict = {},
     metadata_filter: dict[str, Any] = {},
 ) -> list[DocReference]:
-    # TODO: We should probably parallelize these queries
+    # Parallelize the text and embedding search queries
+    fns = [
+        search_docs_by_text if bool(query.strip()) else lambda: [],
+        search_docs_by_embedding if bool(sum(query_embedding)) else lambda: [],
+    ]
 
-    text_results = (
-        search_docs_by_text(
-            developer_id=developer_id,
-            owners=owners,
-            query=query,
-            k=k,
-            metadata_filter=metadata_filter,
+    kwargs_list = [
+        {
+            "developer_id": developer_id,
+            "owners": owners,
+            "query": query,
+            "k": k,
+            "metadata_filter": metadata_filter,
             **text_search_options,
-        )
+        }
         if bool(query.strip())
-        else []
-    )
-
-    embedding_results = (
-        search_docs_by_embedding(
-            developer_id=developer_id,
-            owners=owners,
-            query_embedding=query_embedding,
-            k=k,
-            metadata_filter=metadata_filter,
+        else {},
+        {
+            "developer_id": developer_id,
+            "owners": owners,
+            "query_embedding": query_embedding,
+            "k": k,
+            "metadata_filter": metadata_filter,
             **embed_search_options,
-        )
+        }
         if bool(sum(query_embedding))
-        else []
-    )
+        else {},
+    ]
+
+    results = run_concurrently(fns, kwargs_list=kwargs_list)
+    text_results, embedding_results = results
 
     return dbsf_fuse(text_results, embedding_results, alpha)[:k]

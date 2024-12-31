@@ -18,25 +18,41 @@ from .types import EmbedDocsPayload
 async def embed_docs(
     payload: EmbedDocsPayload, cozo_client=None, max_batch_size: int = 100
 ) -> None:
-    indices, snippets = list(zip(*enumerate(payload.content)))
-    batched_snippets = batched(snippets, max_batch_size)
+    # Create batches of both indices and snippets together
+    indexed_snippets = list(enumerate(payload.content))
+    # Batch snippets into groups of max_batch_size for parallel processing
+    batched_indexed_snippets = list(batched(indexed_snippets, max_batch_size))
+    # Get embedding instruction and title from payload, defaulting to empty strings
     embed_instruction: str = payload.embed_instruction or ""
     title: str = payload.title or ""
 
-    async def embed_batch(snippets):
-        return await litellm.aembedding(
+    # Helper function to embed a batch of snippets
+    async def embed_batch(indexed_batch):
+        # Split indices and snippets for the batch
+        batch_indices, batch_snippets = zip(*indexed_batch)
+        embeddings = await litellm.aembedding(
             inputs=[
-                (
-                    embed_instruction + (title + "\n\n" + snippet) if title else snippet
-                ).strip()
-                for snippet in snippets
-            ]
+                ((title + "\n\n" + snippet) if title else snippet).strip()
+                for snippet in batch_snippets
+            ],
+            embed_instruction=embed_instruction,
         )
+        return list(zip(batch_indices, embeddings))
 
-    embeddings = reduce(
+    # Gather embeddings with their corresponding indices
+    indexed_embeddings = reduce(
         operator.add,
-        await asyncio.gather(*[embed_batch(snippets) for snippets in batched_snippets]),
+        await asyncio.gather(
+            *[embed_batch(batch) for batch in batched_indexed_snippets]
+        ),
     )
+
+    # Split indices and embeddings after all batches are processed
+    indices, embeddings = zip(*indexed_embeddings)
+
+    # Convert to lists since embed_snippets_query expects list types
+    indices = list(indices)
+    embeddings = list(embeddings)
 
     embed_snippets_query(
         developer_id=payload.developer_id,

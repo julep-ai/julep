@@ -39,7 +39,7 @@ def count_executions(
 
     counter[count(id)] :=
         input[task_id],
-        *executions {
+        *executions:task_id_execution_id_idx {
             task_id,
             execution_id: id,
         }

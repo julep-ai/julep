@@ -12,10 +12,22 @@ WHITESPACE_RE = re.compile(r"\s+")
 NON_ALPHANUM_RE = re.compile(r"[^\w\s\-_]+")
 
 # Initialize spaCy with minimal pipeline
-nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat", "tok2vec"])
+nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat"])
 
 # Add sentencizer for faster sentence tokenization
 sentencizer = nlp.add_pipe("sentencizer")
+
+# spacy chunking pipeline
+nlp.add_pipe(
+    "spacy_chunks",
+    last=True,
+    config={
+        "chunking_method": "sentence",  # chunking method to use ("sentence" or "token")
+        "chunk_size": 15,  # Number of sentences or tokens per chunk
+        "overlap": 3,  # Number of overlapping sentences or tokens between chunks
+        "truncate": False,  # Whether to remove incomplete chunks at the end
+    },
+)
 
 
 # Singleton PhraseMatcher for better performance

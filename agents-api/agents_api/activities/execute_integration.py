@@ -6,7 +6,7 @@ from temporalio import activity
 from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
-from ..common.protocol.tasks import StepContext
+from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..common.storage_handler import auto_blob_store
 from ..env import testing
 from ..models.tools import get_tool_args_from_metadata
@@ -21,6 +21,9 @@ async def execute_integration(
     arguments: dict[str, Any],
     setup: dict[str, Any] = {},
 ) -> Any:
+    if not isinstance(context.execution_input, ExecutionInput):
+        raise TypeError("Expected ExecutionInput type for context.execution_input")
+
     developer_id = context.execution_input.developer_id
     agent_id = context.execution_input.agent.id
     task_id = context.execution_input.task.id

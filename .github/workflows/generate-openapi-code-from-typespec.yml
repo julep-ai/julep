@@ -1,0 +1,40 @@
+name: Generate OpenAPI code
+run-name: ${{ github.actor }} is generating openapi code
+
+on:
+  pull_request:
+    paths:
+      - 'typespec/**'
+  push:
+    paths:
+      - 'typespec/**'
+
+jobs:
+  Typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+          cache: npm
+          cache-dependency-path: 'typespec/package-lock.json'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate openapi code
+        run: |
+          bash scripts/generate_openapi_code.sh
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
