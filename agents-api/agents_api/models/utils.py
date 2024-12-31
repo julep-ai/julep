@@ -478,7 +478,12 @@ def wrap_in_class(
         transform = transform or (lambda x: x)
 
         if one:
-            assert len(data) >= 1, "Expected one result, got none"
+            resource_name = cls.__name__ if isinstance(cls, type) else "Resource"
+            if len(data) < 1:
+                raise HTTPException(
+                    status_code=404, detail=f"{resource_name} not found"
+                )
+
             obj: ModelT = cls(**transform(data[0]))
             return obj
 

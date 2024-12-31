@@ -34,17 +34,17 @@ buckets = (
     INF,
 )
 counter = Counter(
-    f"db_query_counter",
-    f"Number of db calls",
+    "db_query_counter",
+    "Number of db calls",
     labelnames=labelnames,
 )
 summary = Summary(
-    f"db_query_latency_summary",
+    "db_query_latency_summary",
     "Database query latency summary",
     labelnames=labelnames,
 )
 hist = Histogram(
-    f"db_query_latency_hist",
+    "db_query_latency_hist",
     "Database query latency histogram",
     labelnames=labelnames,
     buckets=buckets,
