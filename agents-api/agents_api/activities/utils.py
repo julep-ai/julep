@@ -107,9 +107,14 @@ def safe_extract_json(string: str):
     if len(string) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
         raise ValueError(msg)
-    extracted_string = string[
-        string.find("```json") + 7 : string.find("```", string.find("```json") + 7)
-    ]
+    # Check if the string contains JSON code block markers
+    if "```json" in string:
+        extracted_string = string[
+            string.find("```json") + 7 : string.find("```", string.find("```json") + 7)
+        ]
+    else:
+        # If no markers, try to parse the whole string as JSON
+        extracted_string = string
     return json.loads(extracted_string)
 
 
