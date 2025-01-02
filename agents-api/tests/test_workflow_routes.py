@@ -1,29 +1,21 @@
 # Tests for task queries
 
-from agents_api.clients.pg import create_db_pool
 from uuid_extensions import uuid7
 from ward import test
 
-from tests.fixtures import pg_dsn, test_agent, test_developer_id
-from tests.utils import patch_http_client_with_temporal
+from tests.fixtures import make_request, test_agent
+from tests.utils import patch_testing_temporal
 
 
 @test("workflow route: evaluate step single")
 async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
+    make_request=make_request,
     agent=test_agent,
 ):
-    pool = await create_db_pool(dsn=dsn)
     agent_id = str(agent.id)
     task_id = str(uuid7())
 
-    async with patch_http_client_with_temporal(
-        postgres_pool=pool, developer_id=developer_id
-    ) as (
-        make_request,
-        _postgres_pool,
-    ):
+    async with patch_testing_temporal():
         task_data = {
             "name": "test task",
             "description": "test task about",
@@ -48,19 +40,12 @@ async def _(
 
 @test("workflow route: evaluate step single with yaml")
 async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
+    make_request=make_request,
     agent=test_agent,
 ):
-    pool = await create_db_pool(dsn=dsn)
     agent_id = str(agent.id)
 
-    async with patch_http_client_with_temporal(
-        postgres_pool=pool, developer_id=developer_id
-    ) as (
-        make_request,
-        _postgres_pool,
-    ):
+    async with patch_testing_temporal():
         task_data = """
 name: test task
 description: test task about
@@ -97,20 +82,13 @@ main:
 
 @test("workflow route: create or update: evaluate step single with yaml")
 async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
+    make_request=make_request,
     agent=test_agent,
 ):
-    pool = await create_db_pool(dsn=dsn)
     agent_id = str(agent.id)
     task_id = str(uuid7())
 
-    async with patch_http_client_with_temporal(
-        postgres_pool=pool, developer_id=developer_id
-    ) as (
-        make_request,
-        _postgres_pool,
-    ):
+    async with patch_testing_temporal():
         task_data = """
 name: test task
 description: test task about
