@@ -31,7 +31,6 @@ using Versions;
     title: "Julep API",
 })
 @versioned(ApiVersions)
-@summary("A backend for creating stateful AI apps")
 @info({
     termsOfService: "https://julep.ai/terms",
     contact: {
@@ -50,7 +49,7 @@ using Versions;
     "The julep cloud service endpoint",
     {
         @doc("The environment to use")
-        serverEnv?: "api" | "api-alpha" = "api-alpha",
+        serverEnv?: "api" | "dev" = "api",
     }
 )
 @useAuth(

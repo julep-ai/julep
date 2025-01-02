@@ -1,0 +1,217 @@
+---
+title: 'Tasks'
+description: 'Create and manage tasks with the Node.js SDK'
+---
+
+Tasks are multi-step workflows that agents can execute. They can include prompts, tool calls, conditional logic, and more.
+
+## Creating Tasks
+
+Tasks can be created using either YAML or JavaScript objects:
+
+```javascript
+// Using a JavaScript object
+const task = await client.tasks.create(agentId, {
+  name: 'Customer Support Task',
+  description: 'Handle customer support requests',
+  main: [
+    {
+      prompt: [
+        {
+          role: 'system',
+          content: 'You are a helpful customer support agent.'
+        },
+        {
+          role: 'user',
+          content: '{{_.user_query}}'
+        }
+      ]
+    },
+    {
+      tool: 'web_search',
+      arguments: {
+        query: '{{_.user_query}}'
+      }
+    }
+  ]
+});
+
+// Using YAML
+const taskYaml = `
+name: Customer Support Task
+description: Handle customer support requests
+main:
+  - prompt:
+      - role: system
+        content: You are a helpful customer support agent.
+      - role: user
+        content: "{{_.user_query}}"
+  - tool: web_search
+    arguments:
+      query: "{{_.user_query}}"
+`;
+
+const task = await client.tasks.create(agentId, yaml.parse(taskYaml));
+```
+
+## Task Steps
+
+Tasks can include various types of steps:
+
+```javascript
+const task = await client.tasks.create(agentId, {
+  name: 'Complex Task',
+  description: 'A task with multiple step types',
+  main: [
+    // Prompt step
+    {
+      prompt: 'Analyze the following data: {{_.data}}'
+    },
+
+    // Tool call step
+    {
+      tool: 'web_search',
+      arguments: {
+        query: '{{_.search_query}}'
+      }
+    },
+
+    // Evaluate step
+    {
+      evaluate: {
+        average_score: 'sum(_.scores) / len(_.scores)'
+      }
+    },
+
+    // Conditional step
+    {
+      if: '_.score > 0.8',
+      then: [
+        { log: 'High score achieved' }
+      ],
+      else: [
+        { error: 'Score too low' }
+      ]
+    },
+
+    // Iteration step
+    {
+      foreach: {
+        in: '_.items',
+        do: [
+          { log: 'Processing item {{_}}' }
+        ]
+      }
+    },
+
+    // Parallel execution
+    {
+      parallel: [
+        {
+          tool: 'web_search',
+          arguments: { query: 'query1' }
+        },
+        {
+          tool: 'web_search',
+          arguments: { query: 'query2' }
+        }
+      ]
+    }
+  ]
+});
+```
+
+## Executing Tasks
+
+```javascript
+// Execute a task
+const execution = await client.executions.create(taskId, {
+  input: {
+    user_query: 'How do I reset my password?'
+  }
+});
+
+// Get execution status
+const status = await client.executions.get(execution.id);
+
+// Wait for execution to complete
+while (status.status !== 'succeeded' && status.status !== 'failed') {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  const updatedStatus = await client.executions.get(execution.id);
+  console.log('Execution status:', updatedStatus.status);
+}
+```
+
+## Managing Tasks
+
+```javascript
+// Get a specific task
+const task = await client.tasks.get(taskId);
+
+// List all tasks
+const tasks = await client.tasks.list({
+  limit: 10,
+  offset: 0
+});
+
+// Update a task
+const updatedTask = await client.tasks.update(taskId, {
+  description: 'Updated task description'
+});
+
+// Delete a task
+await client.tasks.delete(taskId);
+```
+
+## Error Handling
+
+```javascript
+try {
+  const execution = await client.executions.create(taskId, {
+    input: {
+      user_query: 'How do I reset my password?'
+    }
+  });
+} catch (error) {
+  if (error.name === 'ValidationError') {
+    console.error('Invalid task configuration:', error.message);
+  } else if (error.name === 'ExecutionError') {
+    console.error('Execution failed:', error.message);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Sessions"
+    icon="message-bot"
+    href="/sdks/nodejs/sessions"
+  >
+    Learn about session management
+  </Card>
+  <Card
+    title="Tools Integration"
+    icon="screwdriver-wrench"
+    href="/sdks/nodejs/tools-integration"
+  >
+    Add tools to your tasks
+  </Card>
+  <Card
+    title="Advanced Usage"
+    icon="graduation-cap"
+    href="/sdks/nodejs/advanced-usage"
+  >
+    Explore advanced patterns
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference"
+  >
+    View the complete API reference
+  </Card>
+</CardGroup> 

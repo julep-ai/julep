@@ -1,0 +1,219 @@
+---
+title: 'Introduction'
+description: 'Getting started with Julep SDKs for Python and Node.js'
+---
+
+The Julep SDKs provide powerful interfaces to interact with Julep's AI agent platform. These SDKs allow you to create, manage, and execute AI agents, tasks, and sessions directly from your applications.
+
+## Installation
+
+<CodeGroup>
+```bash Python
+# Install using pip
+pip install julep-sdk
+
+# Or using poetry
+poetry add julep-sdk
+```
+
+```bash Node.js
+# Install using npm
+npm install @julep/sdk
+
+# Or using yarn
+yarn add @julep/sdk
+
+# Or using bun
+bun add @julep/sdk
+```
+</CodeGroup>
+
+## Basic Usage
+
+<CodeGroup>
+```python Python
+from julep import Julep
+
+# Initialize the client
+client = Julep(
+    api_key='your_api_key',
+    environment='production'  # or 'development'
+)
+
+# Create an agent
+agent = client.agents.create(
+    name='My First Agent',
+    model='claude-3.5-sonnet',
+    about='A helpful AI assistant'
+)
+
+# Create a task
+task = client.tasks.create(
+    agent_id=agent.id,
+    name='Simple Task',
+    description='A basic task example',
+    main=[
+        {
+            'prompt': 'Hello! How can I help you today?'
+        }
+    ]
+)
+
+# Execute the task
+execution = client.executions.create(task_id=task.id)
+```
+
+```javascript Node.js
+const { Julep } = require('@julep/sdk');
+
+// Initialize the client
+const client = new Julep({
+  apiKey: 'your_api_key',
+  environment: 'production' // or 'development'
+});
+
+// Create an agent
+const agent = await client.agents.create({
+  name: 'My First Agent',
+  model: 'claude-3.5-sonnet',
+  about: 'A helpful AI assistant'
+});
+
+// Create a task
+const task = await client.tasks.create(agent.id, {
+  name: 'Simple Task',
+  description: 'A basic task example',
+  main: [
+    {
+      prompt: 'Hello! How can I help you today?'
+    }
+  ]
+});
+
+// Execute the task
+const execution = await client.executions.create(task.id);
+```
+</CodeGroup>
+
+## Features
+
+- **Comprehensive API Coverage**: Access all Julep platform features
+- **Type Safety**: Built with TypeScript (Node.js) and type hints (Python)
+- **Modern Async Support**: Promise-based interface in Node.js and optional async support in Python
+- **Error Handling**: Detailed error information and handling
+- **Automatic Retries**: Built-in retry mechanism for failed requests
+
+## SDK Documentation
+
+<CardGroup cols={2}>
+  <Card
+    title="Python SDK"
+    icon="python"
+    href="/sdks/python/installation"
+  >
+    Get started with the Python SDK
+  </Card>
+  <Card
+    title="Node.js SDK"
+    icon="node-js"
+    href="/sdks/nodejs/installation"
+  >
+    Get started with the Node.js SDK
+  </Card>
+</CardGroup>
+
+## Core Components
+
+<AccordionGroup>
+  <Accordion title="Python SDK" icon="python" defaultOpen={true}>
+    <CardGroup cols={2}>
+      <Card
+        title="Agents"
+        icon="robot"
+        href="/sdks/python/agents"
+      >
+        Learn how to create and manage AI agents with Python
+      </Card>
+      <Card
+        title="Tasks"
+        icon="list-check"
+        href="/sdks/python/tasks"
+      >
+        Create and execute complex AI workflows in Python
+      </Card>
+      <Card
+        title="Sessions"
+        icon="comments"
+        href="/sdks/python/sessions"
+      >
+        Manage stateful conversations with agents using Python
+      </Card>
+      <Card
+        title="Tools & Integration"
+        icon="plug"
+        href="/sdks/python/tools-integration"
+      >
+        Extend your agents with tools and integrations in Python
+      </Card>
+    </CardGroup>
+  </Accordion>
+
+  <Accordion title="Node.js SDK" icon="node-js">
+    <CardGroup cols={2}>
+      <Card
+        title="Agents"
+        icon="robot"
+        href="/sdks/nodejs/agents"
+      >
+        Learn how to create and manage AI agents with Node.js
+      </Card>
+      <Card
+        title="Tasks"
+        icon="list-check"
+        href="/sdks/nodejs/tasks"
+      >
+        Create and execute complex AI workflows in Node.js
+      </Card>
+      <Card
+        title="Sessions"
+        icon="comments"
+        href="/sdks/nodejs/sessions"
+      >
+        Manage stateful conversations with agents using Node.js
+      </Card>
+      <Card
+        title="Tools & Integration"
+        icon="plug"
+        href="/sdks/nodejs/tools-integration"
+      >
+        Extend your agents with tools and integrations in Node.js
+      </Card>
+    </CardGroup>
+  </Accordion>
+</AccordionGroup>
+
+## Additional Resources
+
+<CardGroup cols={3}>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference"
+  >
+    Complete API reference documentation
+  </Card>
+  <Card
+    title="Examples"
+    icon="lightbulb"
+    href="/examples"
+  >
+    Sample code and use cases
+  </Card>
+  <Card
+    title="Best Practices"
+    icon="graduation-cap"
+    href="/sdks/common/best-practices"
+  >
+    Learn advanced patterns and best practices
+  </Card>
+</CardGroup> 

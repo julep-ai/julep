@@ -1,0 +1,121 @@
+---
+title: 'Advanced Usage'
+description: 'Advanced patterns and best practices for the Python SDK'
+---
+
+## Async Operations
+
+Use the async client for better performance:
+
+```python
+from julep import AsyncJulep
+import asyncio
+
+async def main():
+    client = AsyncJulep(api_key="your_julep_api_key")
+    
+    # Create multiple agents concurrently
+    agents = await asyncio.gather(*[
+        client.agents.create(name=f"Agent {i}")
+        for i in range(5)
+    ])
+    
+    # Execute multiple tasks concurrently
+    executions = await asyncio.gather(*[
+        client.executions.create(task_id=task.id)
+        for task in tasks
+    ])
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Complex Workflows
+
+Create sophisticated task workflows:
+
+```yaml
+name: Advanced Workflow
+description: Complex task with multiple steps and error handling
+
+tools:
+  - name: web_search
+    type: integration
+    integration:
+      provider: brave
+      method: search
+
+  - name: process_data
+    type: function
+    function:
+      parameters:
+        type: object
+        properties:
+          data:
+            type: array
+            items:
+              type: string
+
+main:
+  # Parallel processing with error handling
+  - try:
+      - map_reduce:
+          over: _.topics
+          map:
+            - tool: web_search
+              arguments:
+                query: _
+          parallelism: 5
+    catch:
+      - log: Search failed
+      - return: {"error": "Search operation failed"}
+
+  # Conditional branching
+  - if: len(_.search_results) > 0
+    then:
+      - evaluate:
+          processed_data: process_results(_.search_results)
+    else:
+      - return: {"error": "No results found"}
+
+  # Custom aggregation
+  - evaluate:
+      summary: aggregate_results(_.processed_data)
+      confidence: calculate_confidence(_.processed_data)
+
+  # Dynamic tool selection
+  - switch:
+      - case: _.confidence > 0.8
+        then:
+          - tool: high_confidence_processor
+      - case: _.confidence > 0.5
+        then:
+          - tool: medium_confidence_processor
+      - case: _
+        then:
+          - tool: low_confidence_processor
+```
+
+## Custom Tool Implementation
+
+<Note>
+  Work in progress. We're working on a way to allow you to implement your own tools.
+</Note>
+
+## Advanced Error Handling
+
+<Note>
+  Work in progress. We're working on a way to handle errors in a more robust way.
+</Note>
+
+## Performance Optimization
+
+<Note>
+  Work in progress. We're working on a way to optimize the performance of the SDK.
+</Note>
+
+## Testing Strategies
+
+<Note>
+  Work in progress. We're working on a way to test the SDK.
+</Note>

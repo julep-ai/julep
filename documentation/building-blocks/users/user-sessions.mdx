@@ -1,0 +1,396 @@
+---
+title: 'User Sessions'
+description: 'Linking users with sessions and managing user state in Julep'
+---
+
+## Overview
+
+User sessions in Julep provide a way to manage user interactions and maintain state across conversations. This guide explains how to effectively manage user sessions and integrate them with your applications.
+
+## Session Management
+
+### Creating Sessions
+
+Create new user sessions:
+
+```python Python
+# Create basic session
+session = client.sessions.create(
+    user_id=user.id,
+    metadata={
+        "device": "web",
+        "ip_address": "192.168.1.1"
+    }
+)
+
+# Create session with configuration
+configured_session = client.sessions.create(
+    user_id=user.id,
+    metadata={
+        "device": "mobile",
+        "platform": "ios"
+    },
+    config={
+        "timeout": 3600,  # 1 hour
+        "max_messages": 100,
+        "context_window": 10
+    }
+)
+```
+
+### Session Lifecycle
+
+Manage session states:
+
+```python Python
+# Start session
+active_session = client.sessions.start(session.id)
+
+# Pause session
+paused_session = client.sessions.pause(session.id)
+
+# Resume session
+resumed_session = client.sessions.resume(session.id)
+
+# End session
+ended_session = client.sessions.end(session.id)
+```
+
+### Session Retrieval
+
+Access session information:
+
+```python Python
+# Get session by ID
+session = client.sessions.get(session_id)
+
+# List user sessions
+sessions = client.sessions.list(
+    user_id=user.id,
+    status="active"
+)
+
+# Search sessions
+filtered_sessions = client.sessions.search(
+    metadata_filter={
+        "device": "web"
+    }
+)
+```
+
+## Session Context
+
+### Managing Session State
+
+Handle session-specific context:
+
+```python Python
+# Set session context
+context = client.sessions.set_context(
+    session_id,
+    context={
+        "current_task": "analysis",
+        "last_response": "Previous response data",
+        "user_input": {
+            "query": "How does this work?",
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    }
+)
+
+# Get session context
+session_context = client.sessions.get_context(session_id)
+
+# Update session context
+updated_context = client.sessions.update_context(
+    session_id,
+    path="current_task",
+    value="processing"
+)
+```
+
+### Session History
+
+Track conversation history:
+
+```python Python
+# Add message to history
+client.sessions.add_message(
+    session_id,
+    message={
+        "role": "user",
+        "content": "How can I use this feature?",
+        "timestamp": "2024-01-01T00:00:00Z"
+    }
+)
+
+# Get session history
+history = client.sessions.get_history(
+    session_id,
+    limit=10
+)
+
+# Clear history
+client.sessions.clear_history(session_id)
+```
+
+## Session Integration
+
+### Tasks and Sessions
+
+Use sessions in task workflows:
+
+```yaml
+tools:
+  - name: get_session
+    system:
+      resource: agent
+      subresource: session
+      operation: get
+  
+  - name: update_session
+    system:
+      resource: agent
+      subresource: session
+      operation: update
+
+main:
+  # Get session context
+  - tool: get_session
+    arguments:
+      session_id: "{{inputs.session_id}}"
+  
+  # Use context in prompt
+  - prompt:
+      - role: system
+        content: >
+          Current task: {{_.context.current_task}}
+          Last response: {{_.context.last_response}}
+      - role: user
+        content: "{{inputs.query}}"
+  
+  # Update session
+  - tool: update_session
+    arguments:
+      session_id: "{{inputs.session_id}}"
+      context:
+        current_task: "completed"
+        last_response: _
+```
+
+### Session Events
+
+Handle session-related events:
+
+```python Python
+# Subscribe to session events
+client.sessions.subscribe(
+    session_id,
+    event_types=["message", "state_change"],
+    callback=handle_session_event
+)
+
+# Handle session events
+async def handle_session_event(event):
+    if event.type == "message":
+        print(f"New message in session {event.session_id}")
+        print(f"Content: {event.data.content}")
+    elif event.type == "state_change":
+        print(f"Session {event.session_id} state changed to {event.data.state}")
+```
+
+## Session Storage
+
+### Configuration Options
+
+Configure session storage:
+
+```python Python
+# Configure session storage
+session = client.sessions.create(
+    user_id=user.id,
+    storage_options={
+        "persistence": "permanent",
+        "encryption": True,
+        "ttl": 86400  # 24 hours
+    }
+)
+
+# Set temporary storage
+temp_session = client.sessions.create(
+    user_id=user.id,
+    storage_options={
+        "persistence": "temporary",
+        "ttl": 3600  # 1 hour
+    }
+)
+```
+
+### Data Management
+
+Manage session data:
+
+```python Python
+# Export session data
+session_data = client.sessions.export(session_id)
+
+# Import session data
+client.sessions.import_(
+    session_id,
+    session_data=session_data
+)
+
+# Archive session
+client.sessions.archive(session_id)
+
+# Delete session
+client.sessions.delete(session_id)
+```
+
+## Best Practices
+
+1. **Session Management**
+   - Set appropriate timeouts
+   - Handle session expiry
+   - Implement proper cleanup
+
+2. **Context Handling**
+   - Maintain relevant state
+   - Clear unnecessary data
+   - Handle context updates
+
+3. **Performance**
+   - Use efficient storage
+   - Implement caching
+   - Handle concurrent sessions
+
+## Example: Complete Session Management
+
+Here's a comprehensive example of session management:
+
+```python Python
+class SessionManager:
+    def __init__(self, client):
+        self.client = client
+    
+    async def create_user_session(self, user_id, device_info):
+        # Create session
+        session = await self.client.sessions.create(
+            user_id=user_id,
+            metadata={
+                "device": device_info["type"],
+                "platform": device_info["platform"],
+                "created_at": datetime.now().isoformat()
+            },
+            config={
+                "timeout": 3600,
+                "max_messages": 100,
+                "context_window": 10
+            }
+        )
+        
+        # Initialize session context
+        context = await self.client.sessions.set_context(
+            session.id,
+            context={
+                "state": "initialized",
+                "current_task": None,
+                "history": [],
+                "metadata": {
+                    "start_time": datetime.now().isoformat(),
+                    "message_count": 0
+                }
+            }
+        )
+        
+        return {
+            "session": session,
+            "context": context
+        }
+    
+    async def handle_user_message(self, session_id, message):
+        # Get session
+        session = await self.client.sessions.get(session_id)
+        
+        # Update context
+        context = await self.client.sessions.get_context(session_id)
+        
+        # Add message to history
+        history = context.get("history", [])
+        history.append({
+            "role": "user",
+            "content": message,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+        # Update session context
+        updated_context = await self.client.sessions.update_context(
+            session_id,
+            context={
+                "state": "processing",
+                "current_task": "handle_message",
+                "history": history[-10:],  # Keep last 10 messages
+                "metadata": {
+                    "start_time": context["metadata"]["start_time"],
+                    "message_count": len(history)
+                }
+            }
+        )
+        
+        return {
+            "session": session,
+            "context": updated_context
+        }
+    
+    async def end_user_session(self, session_id):
+        # Get final context
+        context = await self.client.sessions.get_context(session_id)
+        
+        # Export session data
+        session_data = await self.client.sessions.export(session_id)
+        
+        # Archive session
+        archived = await self.client.sessions.archive(session_id)
+        
+        # Store session summary
+        summary = {
+            "session_id": session_id,
+            "start_time": context["metadata"]["start_time"],
+            "end_time": datetime.now().isoformat(),
+            "message_count": context["metadata"]["message_count"],
+            "final_state": context["state"]
+        }
+        
+        return {
+            "summary": summary,
+            "data": session_data
+        }
+
+# Use the manager
+manager = SessionManager(client)
+
+# Create session
+session = await manager.create_user_session(
+    user_id,
+    device_info={
+        "type": "web",
+        "platform": "chrome"
+    }
+)
+
+# Handle message
+result = await manager.handle_user_message(
+    session["session"].id,
+    "How can I use this feature?"
+)
+
+# End session
+summary = await manager.end_user_session(session["session"].id)
+print("Session summary:", summary)
+```
+
+## Next Steps
+
+1. [Learn about user context](/building-blocks/users/user-context)
+2. [Explore user management](/building-blocks/users/user-management)
+3. [Understand session management](/building-blocks/sessions/session-management) 

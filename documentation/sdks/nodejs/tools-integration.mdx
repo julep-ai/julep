@@ -1,0 +1,262 @@
+---
+title: 'Tools Integration'
+description: 'Add powerful capabilities to your agents with tools'
+---
+
+Tools in Julep extend your agents' capabilities by allowing them to interact with external services and perform specific functions. There are several types of tools available:
+
+## Tool Types
+
+1. **User-defined Functions**: Custom functions that you implement
+2. **System Tools**: Built-in tools for interacting with Julep's APIs
+3. **Integrations**: Pre-built integrations with third-party services
+4. **Direct API Calls**: Make HTTP requests to external APIs
+
+## User-defined Functions
+
+Create custom tools that your agents can use:
+
+```javascript
+// Create a custom function tool
+const tool = await client.agents.tools.create(agentId, {
+  name: 'calculate_discount',
+  description: 'Calculate the final price after applying a discount',
+  type: 'function',
+  function: {
+    parameters: {
+      type: 'object',
+      properties: {
+        original_price: {
+          type: 'number',
+          description: 'Original price before discount'
+        },
+        discount_percentage: {
+          type: 'number',
+          description: 'Discount percentage (0-100)'
+        }
+      },
+      required: ['original_price', 'discount_percentage']
+    }
+  }
+});
+```
+
+## System Tools
+
+Use built-in tools to interact with Julep's APIs:
+
+```javascript
+// Add a system tool for listing agents
+const systemTool = await client.agents.tools.create(agentId, {
+  name: 'list_agent_docs',
+  description: 'List all documents for the given agent',
+  type: 'system',
+  system: {
+    resource: 'agent',
+    subresource: 'doc',
+    operation: 'list'
+  }
+});
+```
+
+## Built-in Integrations
+
+Julep provides several pre-built integrations:
+
+### Brave Search Integration
+
+```javascript
+// Add Brave Search integration
+const braveSearch = await client.agents.tools.create(agentId, {
+  name: 'web_search',
+  description: 'Search the web for information',
+  integration: {
+    provider: 'brave',
+    method: 'search',
+    setup: {
+      api_key: process.env.BRAVE_API_KEY
+    }
+  }
+});
+```
+
+### Email Integration
+
+```javascript
+// Add email integration
+const emailTool = await client.agents.tools.create(agentId, {
+  name: 'send_email',
+  description: 'Send an email',
+  integration: {
+    provider: 'email',
+    setup: {
+      host: 'smtp.example.com',
+      port: 587,
+      user: process.env.EMAIL_USER,
+      password: process.env.EMAIL_PASSWORD
+    }
+  }
+});
+```
+
+### Weather Integration
+
+```javascript
+// Add weather integration
+const weatherTool = await client.agents.tools.create(agentId, {
+  name: 'check_weather',
+  description: 'Get weather information',
+  integration: {
+    provider: 'weather',
+    setup: {
+      openweathermap_api_key: process.env.OPENWEATHER_API_KEY
+    }
+  }
+});
+```
+
+### Wikipedia Integration
+
+```javascript
+// Add Wikipedia integration
+const wikiTool = await client.agents.tools.create(agentId, {
+  name: 'wiki_search',
+  description: 'Search Wikipedia articles',
+  integration: {
+    provider: 'wikipedia'
+  }
+});
+```
+
+## Direct API Calls
+
+Make direct HTTP requests to external APIs:
+
+```javascript
+// Add a direct API call tool
+const apiTool = await client.agents.tools.create(agentId, {
+  name: 'github_stars',
+  description: 'Get GitHub repository stars',
+  type: 'api_call',
+  api_call: {
+    method: 'GET',
+    url: 'https://api.github.com/repos/{{owner}}/{{repo}}',
+    headers: {
+      Authorization: 'Bearer {{github_token}}'
+    }
+  }
+});
+```
+
+## Using Tools in Tasks
+
+Once tools are added to an agent, they can be used in tasks:
+
+```javascript
+const task = await client.tasks.create(agentId, {
+  name: 'Research Task',
+  description: 'Research a topic using multiple tools',
+  main: [
+    // Use web search
+    {
+      tool: 'web_search',
+      arguments: {
+        query: '{{_.topic}}'
+      }
+    },
+    
+    // Use Wikipedia
+    {
+      tool: 'wiki_search',
+      arguments: {
+        query: '{{_.topic}}'
+      }
+    },
+    
+    // Send results via email
+    {
+      tool: 'send_email',
+      arguments: {
+        to: '{{_.email}}',
+        subject: 'Research Results: {{_.topic}}',
+        body: '{{_.results}}'
+      }
+    }
+  ]
+});
+```
+
+## Tool Management
+
+```javascript
+// List tools for an agent
+const tools = await client.agents.tools.list(agentId);
+
+// Get a specific tool
+const tool = await client.agents.tools.get(agentId, toolId);
+
+// Update a tool
+const updatedTool = await client.agents.tools.update(agentId, toolId, {
+  description: 'Updated tool description'
+});
+
+// Delete a tool
+await client.agents.tools.delete(agentId, toolId);
+```
+
+## Error Handling
+
+```javascript
+try {
+  const tool = await client.agents.tools.create(agentId, {
+    name: 'web_search',
+    integration: {
+      provider: 'brave',
+      setup: {
+        api_key: process.env.BRAVE_API_KEY
+      }
+    }
+  });
+} catch (error) {
+  if (error.name === 'ValidationError') {
+    console.error('Invalid tool configuration:', error.message);
+  } else if (error.name === 'IntegrationError') {
+    console.error('Integration setup failed:', error.message);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Advanced Usage"
+    icon="graduation-cap"
+    href="/sdks/nodejs/advanced-usage"
+  >
+    Learn advanced patterns and best practices
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference"
+  >
+    View the complete API reference
+  </Card>
+  <Card
+    title="Examples"
+    icon="lightbulb"
+    href="/examples"
+  >
+    See real-world examples
+  </Card>
+  <Card
+    title="Common Patterns"
+    icon="puzzle-piece"
+    href="/sdks/common/error-handling"
+  >
+    Learn common integration patterns
+  </Card>
+</CardGroup> 

@@ -1,0 +1,158 @@
+---
+title: 'Working with Sessions'
+description: 'Learn how to manage sessions and maintain conversation context using the Python SDK'
+---
+
+## Creating Sessions
+
+Create a session to maintain conversation context:
+
+```python
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id,  # Optional
+    context_overflow="adaptive",  # or "truncate" or "summarize"
+    metadata={
+        "channel": "web",
+        "language": "english"
+    }
+)
+```
+
+## Session Chat
+
+Interact with an agent through a session:
+
+```python
+# Single message
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[
+        {
+            "role": "user",
+            "content": "What can you help me with?"
+        }
+    ]
+)
+
+# Multiple messages in a conversation
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[
+        {
+            "role": "user",
+            "content": "I need help with research"
+        },
+        {
+            "role": "assistant",
+            "content": "I can help you with that. What topic would you like to research?"
+        },
+        {
+            "role": "user",
+            "content": "Let's research quantum computing"
+        }
+    ]
+)
+```
+
+## Managing Session Context
+
+```python
+# Get session history
+history = client.sessions.history(
+    session_id=session.id,
+    limit=10,
+    before=datetime.now()
+)
+
+# Update session context
+session = client.sessions.update(
+    session_id=session.id,
+    metadata={"topic": "quantum computing"}
+)
+
+# Clear session history
+client.sessions.clear(session_id=session.id)
+```
+
+## Session Documents
+
+Manage documents associated with a session:
+
+```python
+# Add a document to the session
+doc = client.sessions.docs.create(
+    session_id=session.id,
+    title="Research Notes",
+    content="Notes about quantum computing...",
+    metadata={"type": "notes"}
+)
+
+# Search session documents
+results = client.sessions.docs.search(
+    session_id=session.id,
+    text="quantum",
+    metadata_filter={"type": "notes"}
+)
+
+# Delete a session document
+client.sessions.docs.delete(
+    session_id=session.id,
+    doc_id=doc.id
+)
+```
+
+## Session Management
+
+```python
+# List sessions
+sessions = client.sessions.list(
+    agent_id=agent.id,
+    user_id=user.id,  # Optional
+    limit=10,
+    offset=0
+)
+
+# Get session details
+session = client.sessions.get(session_id=session.id)
+
+# Delete a session
+client.sessions.delete(session_id=session.id)
+```
+
+## Error Handling
+
+```python
+from julep.exceptions import JulepError, SessionNotFoundError
+
+try:
+    session = client.sessions.get("nonexistent_id")
+except SessionNotFoundError:
+    print("Session not found")
+except JulepError as e:
+    print(f"An error occurred: {e}")
+```
+
+## Working with Context Overflow
+
+Julep provides different strategies for handling context overflow:
+
+```python
+# Adaptive context handling (default)
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="adaptive"
+)
+
+# Truncate old messages
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="truncate"
+)
+
+# Summarize old messages
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="summarize"
+)
+``` 
