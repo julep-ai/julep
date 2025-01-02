@@ -6,7 +6,7 @@ from .base_models import BaseOutput
 
 
 class SpiderResponse(BaseModel):
-    content: str | None = None
+    content: str | list[str] | None = None
     error: str | None = None
     status: int | None = None
     costs: dict[Any, Any] | None = None
