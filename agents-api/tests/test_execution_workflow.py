@@ -518,6 +518,7 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
+            inherit_tools=True,
             name="test task",
             description="test task about",
             input_schema={"type": "object", "additionalProperties": True},
@@ -578,6 +579,7 @@ async def _(
         developer_id=developer_id,
         agent_id=agent.id,
         data=CreateTaskRequest(
+            inherit_tools=True,
             name="test task",
             description="test task about",
             input_schema={"type": "object", "additionalProperties": True},
