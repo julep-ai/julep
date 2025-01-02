@@ -116,7 +116,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     passed_settings: dict = context.current_step.model_dump(
         exclude=excluded_keys, exclude_unset=True
     )
-    passed_settings.update(passed_settings.pop("settings", {}))
+    passed_settings.update(passed_settings.pop("settings", {}) or {})
 
     if not passed_settings.get("tools"):
         passed_settings.pop("tool_choice", None)

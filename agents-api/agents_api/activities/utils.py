@@ -11,6 +11,7 @@ import urllib.parse
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import reduce
 from threading import Lock as ThreadLock
 from typing import Any, ParamSpec, TypeVar
 
@@ -140,6 +141,7 @@ ALLOWED_FUNCTIONS = {
     "sum": sum,
     "tuple": tuple,
     "zip": zip,
+    "reduce": reduce,
     # Safe versions of potentially dangerous functions
     "range": safe_range,
     "load_json": safe_json_loads,

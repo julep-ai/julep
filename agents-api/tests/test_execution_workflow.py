@@ -668,6 +668,7 @@ async def _(
                     "arguments": {"test": "_.test"},
                 },
             ],
+            inherit_tools=True,
         ),
         connection_pool=pool,
     )

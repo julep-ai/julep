@@ -73,6 +73,7 @@ async def start_execution(
     )
 
     execution_input.task = task_to_spec(task)
+    execution_input.task.id = task.id
 
     job_id = uuid7()
 
