@@ -1,9 +1,9 @@
+from uuid_extensions import uuid7
 from ward import test
 
-from uuid_extensions import uuid7
-from tests.fixtures import client, make_request, test_agent, test_session, test_user
+from tests.fixtures import client, make_request, test_agent, test_session
 
-from agents_api.autogen.openapi_model import History
+
 @test("route: unauthorized should fail")
 def _(client=client):
     response = client.request(
@@ -12,6 +12,7 @@ def _(client=client):
     )
 
     assert response.status_code == 403
+
 
 @test("route: create session")
 def _(make_request=make_request, agent=test_agent):
@@ -30,10 +31,11 @@ def _(make_request=make_request, agent=test_agent):
 
     assert response.status_code == 201
 
+
 @test("route: create or update session - create")
 def _(make_request=make_request, agent=test_agent):
     session_id = uuid7()
-    
+
     data = {
         "agent": str(agent.id),
         "situation": "test session about",
@@ -48,6 +50,7 @@ def _(make_request=make_request, agent=test_agent):
     )
 
     assert response.status_code == 201
+
 
 @test("route: create or update session - update")
 def _(make_request=make_request, session=test_session, agent=test_agent):
@@ -65,6 +68,7 @@ def _(make_request=make_request, session=test_session, agent=test_agent):
     )
 
     assert response.status_code == 201, f"{response.json()}"
+
 
 @test("route: get session - exists")
 def _(make_request=make_request, session=test_session):
@@ -85,6 +89,7 @@ def _(make_request=make_request):
     )
 
     assert response.status_code == 404
+
 
 @test("route: list sessions")
 def _(make_request=make_request, session=test_session):
