@@ -443,6 +443,7 @@ async def _(
             result = await handle.result()
             assert result["hello"] == data.input["test"]
 
+
 @skip("workflow: thread race condition")
 @test("workflow: system call - list agents")
 async def _(
