@@ -14,11 +14,17 @@ class BaseDocSearchRequest(BaseModel):
         populate_by_name=True,
     )
     limit: Annotated[int, Field(ge=1, le=50)] = 10
+    """
+    The limit of documents to return
+    """
     lang: Literal["en-US"] = "en-US"
     """
     The language to be used for text-only search. Support for other languages coming soon.
     """
     metadata_filter: dict[str, Any] = {}
+    """
+    Metadata filter to apply to the search
+    """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
