@@ -104,8 +104,11 @@ async def aembedding(
 
     embedding_list: list[dict[Literal["embedding"], list[float]]] = response.data
 
-    return [
+    # Truncate the embedding to the specified dimensions
+    embedding_list = [
         item["embedding"][:dimensions]
         for item in embedding_list
-        if len(item["embedding"]) > dimensions
+        if len(item["embedding"]) >= dimensions
     ]
+    
+    return embedding_list
