@@ -271,11 +271,15 @@ BEGIN
                 d.title,
                 d.content,
                 ts_rank_cd(d.search_tsv, $1, 32)::double precision as distance,
-                d.embedding,
+                e.embedding,
                 d.metadata,
                 doc_owners.owner_type,
                 doc_owners.owner_id
-            FROM docs_embeddings d
+            FROM docs d
+            LEFT JOIN docs_embeddings e
+                ON e.developer_id = d.developer_id
+                AND e.doc_id = d.doc_id
+                AND e.index = d.index
             LEFT JOIN doc_owners ON d.doc_id = doc_owners.doc_id
             WHERE d.developer_id = $6
             AND d.search_tsv @@ $1

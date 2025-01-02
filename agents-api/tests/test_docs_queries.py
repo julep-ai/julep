@@ -1,5 +1,3 @@
-import asyncio
-
 from agents_api.autogen.openapi_model import CreateDocRequest
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.docs.create_doc import create_doc
@@ -11,7 +9,7 @@ from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
 from ward import skip, test
 
-from tests.fixtures import pg_dsn, test_agent, test_developer, test_doc, test_user
+from .fixtures import pg_dsn, test_agent, test_developer, test_doc, test_user
 
 EMBEDDING_SIZE: int = 1024
 
@@ -215,7 +213,6 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert not any(d.id == doc_agent.id for d in docs_list)
 
 
-@skip("text search: test container not vectorizing")
 @test("query: search docs by text")
 async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
@@ -233,9 +230,6 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
         ),
         connection_pool=pool,
     )
-
-    # Add a longer delay to ensure the search index is updated
-    await asyncio.sleep(3)
 
     # Search using simpler terms first
     result = await search_docs_by_text(
@@ -262,7 +256,7 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test document
-    await create_doc(
+    doc = await create_doc(
         developer_id=developer.id,
         owner_type="agent",
         owner_id=agent.id,
@@ -275,11 +269,23 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
         connection_pool=pool,
     )
 
+    # Create a test document
+    doc = await get_doc(
+        developer_id=developer.id,
+        doc_id=doc.id,
+        connection_pool=pool,
+    )
+
+    assert doc.embeddings is not None
+
+    # Get query embedding by averaging the embeddings (list of floats)
+    query_embedding = [sum(k) / len(k) for k in zip(*doc.embeddings)]
+
     # Search using the correct parameter types
     result = await search_docs_by_embedding(
         developer_id=developer.id,
         owners=[("agent", agent.id)],
-        query_embedding=[1.0] * 1024,
+        query_embedding=query_embedding,
         k=3,  # Add k parameter
         metadata_filter={"test": "test"},  # Add metadata filter
         connection_pool=pool,
@@ -289,7 +295,7 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     assert result[0].metadata is not None
 
 
-@skip("hybrid search: test container not vectorizing")
+@skip("embedding search: test container not vectorizing")
 @test("query: search docs by hybrid")
 async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)

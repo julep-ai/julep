@@ -8,37 +8,37 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Update the query to use DISTINCT ON to prevent duplicates
 doc_with_embedding_query = """
-WITH doc_data AS (
-    SELECT
-        d.doc_id,
-        d.developer_id,
-        d.title,
-        array_agg(d.content ORDER BY d.index) as content,
-        array_agg(d.index ORDER BY d.index) as indices,
-        array_agg(e.embedding ORDER BY d.index) as embeddings,
-        d.modality,
-        d.embedding_model,
-        d.embedding_dimensions,
-        d.language,
-        d.metadata,
-        d.created_at
-    FROM docs d
-    LEFT JOIN docs_embeddings e
-        ON d.doc_id = e.doc_id
-    WHERE d.developer_id = $1
-        AND d.doc_id = $2
-    GROUP BY
-        d.doc_id,
-        d.developer_id,
-        d.title,
-        d.modality,
-        d.embedding_model,
-        d.embedding_dimensions,
-        d.language,
-        d.metadata,
-        d.created_at
-)
-SELECT * FROM doc_data;
+SELECT
+    d.doc_id,
+    d.developer_id,
+    d.title,
+    array_agg(d.content ORDER BY d.index) as content,
+    array_agg(d.index ORDER BY d.index) as indices,
+    array_agg(e.embedding ORDER BY d.index) as embeddings,
+    d.modality,
+    d.embedding_model,
+    d.embedding_dimensions,
+    d.language,
+    d.metadata,
+    d.created_at
+FROM docs d
+LEFT JOIN docs_embeddings e
+    ON d.doc_id = e.doc_id
+    AND e.embedding IS NOT NULL
+WHERE d.developer_id = $1
+    AND d.doc_id = $2
+GROUP BY
+    d.doc_id,
+    d.developer_id,
+    d.title,
+    d.modality,
+    d.embedding_model,
+    d.embedding_dimensions,
+    d.language,
+    d.metadata,
+    d.created_at
+ORDER BY d.created_at DESC
+LIMIT 1;
 """
 
 

@@ -1,4 +1,4 @@
-import ast
+import json
 
 
 def transform_to_doc_reference(d: dict) -> dict:
@@ -6,14 +6,16 @@ def transform_to_doc_reference(d: dict) -> dict:
     content = d.pop("content")
     index = d.pop("index")
 
-    embedding = d.pop("embedding")
+    # Convert embedding array string to list of floats if present
+    if d["embedding"] is not None:
+        try:
+            embedding = json.loads(d["embedding"])
+        except Exception as e:
+            msg = f"Error evaluating embeddings: {e}"
+            raise ValueError(msg)
 
-    try:
-        # Embeddings are retreived as a string, so we need to evaluate it
-        embedding = ast.literal_eval(embedding)
-    except Exception as e:
-        msg = f"Error evaluating embeddings: {e}"
-        raise ValueError(msg)
+    else:
+        embedding = None
 
     owner = {
         "id": d.pop("owner_id"),

@@ -143,7 +143,53 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
-    return await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
+
+    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
+    # ensuring it's up-to-date before executing queries.
+    # This can be achieved by executing a REINDEX command
+    await pool.execute("REINDEX DATABASE")
+
+    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
+
+    # await delete_doc(
+    #     developer_id=developer.id,
+    #     doc_id=resp.id,
+    #     owner_type="agent",
+    #     owner_id=agent.id,
+    #     connection_pool=pool,
+    # )
+
+
+@fixture(scope="test")
+async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+    resp = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Hello",
+            content=["World", "World2", "World3"],
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
+    # ensuring it's up-to-date before executing queries.
+    # This can be achieved by executing a REINDEX command
+    await pool.execute("REINDEX DATABASE")
+
+    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
+
+    # await delete_doc(
+    #     developer_id=developer.id,
+    #     doc_id=resp.id,
+    #     owner_type="user",
+    #     owner_id=user.id,
+    #     connection_pool=pool,
+    # )
 
 
 @fixture(scope="test")
@@ -207,46 +253,6 @@ async def test_session(
         ),
         connection_pool=pool,
     )
-
-
-@fixture(scope="global")
-async def test_user_doc(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    user=test_user,
-):
-    pool = await create_db_pool(dsn=dsn)
-    doc = await create_doc(
-        developer_id=developer_id,
-        owner_type="user",
-        owner_id=user.id,
-        data=CreateDocRequest(title="Hello", content=["World"]),
-        connection_pool=pool,
-    )
-    yield doc
-
-
-# @fixture(scope="global")
-# async def test_task(
-#     dsn=pg_dsn,
-#     developer_id=test_developer_id,
-#     agent=test_agent,
-# ):
-#     async with get_pg_client(dsn=dsn) as client:
-#         task = await create_task(
-#             developer_id=developer_id,
-#             agent_id=agent.id,
-#             data=CreateTaskRequest(
-#                 **{
-#                     "name": "test task",
-#                     "description": "test task about",
-#                     "input_schema": {"type": "object", "additionalProperties": True},
-#                     "main": [{"evaluate": {"hello": '"world"'}}],
-#                 }
-#             ),
-#             client=client,
-#         )
-#         yield task
 
 
 @fixture(scope="global")

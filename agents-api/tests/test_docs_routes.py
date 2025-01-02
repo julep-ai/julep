@@ -2,7 +2,7 @@ import asyncio
 
 from ward import skip, test
 
-from tests.fixtures import (
+from .fixtures import (
     make_request,
     patch_embed_acompletion,
     test_agent,
@@ -10,7 +10,6 @@ from tests.fixtures import (
     test_user,
     test_user_doc,
 )
-
 from .utils import patch_testing_temporal
 
 
@@ -173,10 +172,9 @@ def _(make_request=make_request, agent=test_agent):
     assert isinstance(docs, list)
 
 
-@skip("Fails due to FTS not working in Test Container")
 @test("route: search agent docs")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1)
     search_params = {
         "text": doc.content[0],
         "limit": 1,
@@ -196,10 +194,9 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
     assert len(docs) >= 1
 
 
-@skip("Fails due to FTS not working in Test Container")
 @test("route: search user docs")
 async def _(make_request=make_request, user=test_user, doc=test_user_doc):
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1)
     search_params = {
         "text": doc.content[0],
         "limit": 1,
@@ -220,10 +217,10 @@ async def _(make_request=make_request, user=test_user, doc=test_user_doc):
     assert len(docs) >= 1
 
 
-@skip("Fails due to Vectorizer and FTS not working in Test Container")
+@skip("embedding search: test container not vectorizing")
 @test("route: search agent docs hybrid with mmr")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1)
 
     EMBEDDING_SIZE = 1024
     search_params = {
