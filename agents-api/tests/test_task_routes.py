@@ -241,7 +241,10 @@ def _(make_request=make_request, agent=test_agent):
     assert len(tasks) > 0
 
 
-@skip("Temporal connextion issue")
+# It's failing while getting the temporal client in
+# the `update_execution.py` route, but it's correctly
+# getting it in the `create_task_execution.py` route
+@skip("Temporal connection issue")
 @test("route: update execution")
 async def _(make_request=make_request, task=test_task):
     data = {
