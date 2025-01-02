@@ -9,6 +9,7 @@
 * [🔁 Sessions](concepts/sessions/README.md)
   * [Adaptive Context](concepts/sessions/adaptive-context.md)
 * [📖 Documents](concepts/documents.md)
+* [🔭 Monitoring](/monitoring.md)
 
 ## 📖 Guides
 
