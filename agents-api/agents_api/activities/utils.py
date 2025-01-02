@@ -13,6 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Lock as ThreadLock
 from typing import Any, ParamSpec, TypeVar
+from functools import reduce
 
 import re2
 from beartype import beartype
@@ -140,6 +141,7 @@ ALLOWED_FUNCTIONS = {
     "sum": sum,
     "tuple": tuple,
     "zip": zip,
+    "reduce": reduce,
     # Safe versions of potentially dangerous functions
     "range": safe_range,
     "load_json": safe_json_loads,
