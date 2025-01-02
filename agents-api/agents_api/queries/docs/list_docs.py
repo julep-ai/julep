@@ -15,41 +15,38 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Base query for listing docs with aggregated content and embeddings
 base_docs_query = """
-WITH doc_data AS (
-    SELECT
-        d.doc_id,
-        d.developer_id,
-        d.title,
-        array_agg(d.content ORDER BY d.index) as content,
-        array_agg(d.index ORDER BY d.index) as indices,
-        array_agg(CASE WHEN $2 THEN NULL ELSE e.embedding END ORDER BY d.index) as embeddings,
-        d.modality,
-        d.embedding_model,
-        d.embedding_dimensions,
-        d.language,
-        d.metadata,
-        d.created_at
-    FROM docs d
-    JOIN doc_owners doc_own
-        ON d.developer_id = doc_own.developer_id
-        AND d.doc_id = doc_own.doc_id
-    LEFT JOIN docs_embeddings e
-        ON d.doc_id = e.doc_id
-    WHERE d.developer_id = $1
-        AND doc_own.owner_type = $3
-        AND doc_own.owner_id = $4
-    GROUP BY
-        d.doc_id,
-        d.developer_id,
-        d.title,
-        d.modality,
-        d.embedding_model,
-        d.embedding_dimensions,
-        d.language,
-        d.metadata,
-        d.created_at
-)
-SELECT * FROM doc_data
+SELECT
+    d.doc_id,
+    d.developer_id,
+    d.title,
+    array_agg(d.content ORDER BY d.index) as content,
+    array_agg(d.index ORDER BY d.index) as indices,
+    array_agg(CASE WHEN $2 THEN NULL ELSE e.embedding END ORDER BY d.index) as embeddings,
+    d.modality,
+    d.embedding_model,
+    d.embedding_dimensions,
+    d.language,
+    d.metadata,
+    d.created_at
+FROM docs d
+JOIN doc_owners doc_own
+    ON d.developer_id = doc_own.developer_id
+    AND d.doc_id = doc_own.doc_id
+LEFT JOIN docs_embeddings e
+    ON d.doc_id = e.doc_id
+WHERE d.developer_id = $1
+    AND doc_own.owner_type = $3
+    AND doc_own.owner_id = $4
+GROUP BY
+    d.doc_id,
+    d.developer_id,
+    d.title,
+    d.modality,
+    d.embedding_model,
+    d.embedding_dimensions,
+    d.language,
+    d.metadata,
+    d.created_at
 """
 
 
@@ -57,13 +54,6 @@ def transform_list_docs(d: dict) -> dict:
     content = d["content"][0] if len(d["content"]) == 1 else d["content"]
 
     embeddings = d["embeddings"][0] if len(d["embeddings"]) == 1 else d["embeddings"]
-
-    # try:
-    #     # Embeddings are retreived as a string, so we need to evaluate it
-    #     embeddings = ast.literal_eval(embeddings)
-    # except Exception as e:
-    #     msg = f"Error evaluating embeddings: {e}"
-    #     raise ValueError(msg)
 
     if embeddings and all((e is None) for e in embeddings):
         embeddings = None

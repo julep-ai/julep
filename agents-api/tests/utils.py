@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import subprocess
 from contextlib import asynccontextmanager, contextmanager
 from unittest.mock import patch
@@ -9,6 +10,8 @@ from agents_api.worker.worker import create_worker
 from fastapi.testclient import TestClient
 from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
+from testcontainers.core.container import DockerContainer
+from testcontainers.core.waiting_utils import wait_for_logs
 from testcontainers.localstack import LocalStackContainer
 from testcontainers.postgres import PostgresContainer
 
@@ -108,13 +111,40 @@ def patch_integration_service(output: dict = {"result": "ok"}):
 
 
 @contextmanager
-def get_pg_dsn():
+def get_pg_dsn(start_vectorizer: bool = False):
     with PostgresContainer("timescale/timescaledb-ha:pg17") as postgres:
         test_psql_url = postgres.get_connection_url()
         pg_dsn = f"postgres://{test_psql_url[22:]}?sslmode=disable"
         command = f"migrate -database '{pg_dsn}' -path ../memory-store/migrations/ up"
         process = subprocess.Popen(command, shell=True)
         process.wait()
+
+        if not start_vectorizer:
+            yield pg_dsn
+            return
+
+        # ELSE:
+        with (
+            DockerContainer("timescale/pgai-vectorizer-worker:v0.3.0")
+            .with_network(postgres._network)  # noqa: SLF001
+            .with_env(
+                "PGAI_VECTORIZER_WORKER_DB_URL",
+                pg_dsn.replace("localhost", postgres.get_container_host_ip()),
+            )
+            .with_env(
+                "VOYAGE_API_KEY",
+                os.environ.get("VOYAGE_API_KEY"),
+            )
+        ) as vectorizer:
+            wait_for_logs(
+                vectorizer,
+                "finished processing vectorizer",
+                predicate_streams_and=True,
+                raise_on_exit=True,
+                timeout=10,
+            )
+
+        print("Vectorizer worker started")
 
         yield pg_dsn
 
