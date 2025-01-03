@@ -42,8 +42,7 @@ async def execute_system(
         arguments = await load_from_blob_store_if_remote(arguments)
 
     if not isinstance(context.execution_input, ExecutionInput):
-        raise TypeError(
-            "Expected ExecutionInput type for context.execution_input")
+        raise TypeError("Expected ExecutionInput type for context.execution_input")
 
     arguments["developer_id"] = context.execution_input.developer_id
 
@@ -96,8 +95,7 @@ async def execute_system(
 
         # Handle chat operations
         if system.operation == "chat" and system.resource == "session":
-            developer = get_developer(
-                developer_id=arguments.get("developer_id"))
+            developer = get_developer(developer_id=arguments.get("developer_id"))
             session_id = arguments.get("session_id")
             x_custom_api_key = arguments.get("x_custom_api_key", None)
             chat_input = ChatInput(**arguments)
