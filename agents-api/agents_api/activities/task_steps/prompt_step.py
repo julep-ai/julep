@@ -116,7 +116,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     passed_settings: dict = context.current_step.model_dump(
         exclude=excluded_keys, exclude_unset=True
     )
-    passed_settings.update(passed_settings.pop("settings", {}))
+    passed_settings.update(passed_settings.pop("settings", {}) or {})
 
     if not passed_settings.get("tools"):
         passed_settings.pop("tool_choice", None)
@@ -171,6 +171,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             }
             for message in prompt
         ]
+
+    # Remove None values from passed_settings (avoid overwriting agent's settings)
+    passed_settings = {k: v for k, v in passed_settings.items() if v is not None}
 
     # Use litellm for other models
     completion_data: dict = {

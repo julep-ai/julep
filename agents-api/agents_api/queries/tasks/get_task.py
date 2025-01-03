@@ -28,7 +28,7 @@ SELECT
         '[]'::jsonb
     ) as workflows,
     COALESCE(
-        jsonb_agg(tl) FILTER (WHERE tl IS NOT NULL),
+        jsonb_agg(to_jsonb(tl)) FILTER (WHERE tl.tool_id IS NOT NULL),
         '[]'::jsonb
     ) as tools
 FROM

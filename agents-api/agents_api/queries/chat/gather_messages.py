@@ -85,18 +85,19 @@ async def gather_messages(
     if len(search_messages) == 0:
         return past_messages, []
 
-    # FIXME: This should only search text messages and not embed if text is empty
     # Search matching docs
     embed_text = "\n\n".join([
         f"{msg.get('name') or msg['role']}: {msg['content']}" for msg in search_messages
     ]).strip()
 
-    [query_embedding, *_] = await litellm.aembedding(
-        # Truncate on the left to keep the last `search_query_chars` characters
-        inputs=embed_text[-(recall_options.max_query_length) :],
-        # TODO: Make this configurable once it's added to the ChatInput model
-        embed_instruction="Represent the query for retrieving supporting documents: ",
-    )
+    # Don't embed if search mode is text only
+    if recall_options.mode != "text":
+        [query_embedding, *_] = await litellm.aembedding(
+            # Truncate on the left to keep the last `search_query_chars` characters
+            inputs=embed_text[-(recall_options.max_query_length) :],
+            # TODO: Make this configurable once it's added to the ChatInput model
+            embed_instruction="Represent the query for retrieving supporting documents: ",
+        )
 
     # Truncate on the right to take only the first `search_query_chars` characters
     query_text = search_messages[-1]["content"].strip()[: recall_options.max_query_length]
@@ -131,5 +132,7 @@ async def gather_messages(
                 query=query_text,
                 connection_pool=connection_pool,
             )
+
+    # TODO: Add missing MMR implementation
 
     return past_messages, doc_references

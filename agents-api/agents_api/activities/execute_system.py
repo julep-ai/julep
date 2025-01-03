@@ -17,6 +17,8 @@ from ..autogen.openapi_model import (
     HybridDocSearchRequest,
     SystemDef,
     TextOnlyDocSearchRequest,
+    UpdateSessionRequest,
+    UpdateUserRequest,
     VectorDocSearchRequest,
 )
 from ..common.protocol.tasks import ExecutionInput, StepContext
@@ -111,10 +113,11 @@ async def execute_system(
             await bg_runner()
             return res
 
+        # Handle create session
         if system.operation == "create" and system.resource == "session":
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id", None)
-            data = CreateSessionRequest(**arguments)
+            create_session_request = CreateSessionRequest(**arguments)
 
             # In case sessions.create becomes asynchronous in the future
             if asyncio.iscoroutinefunction(handler):
@@ -123,7 +126,57 @@ async def execute_system(
             # Run the synchronous function in another process
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(
-                process_pool_executor, partial(handler, developer_id, session_id, data)
+                process_pool_executor,
+                partial(
+                    handler,
+                    developer_id=developer_id,
+                    session_id=session_id,
+                    data=create_session_request,
+                ),
+            )
+
+        # Handle update session
+        if system.operation == "update" and system.resource == "session":
+            developer_id = arguments.pop("developer_id")
+            session_id = arguments.pop("session_id")
+            update_session_request = UpdateSessionRequest(**arguments)
+
+            # In case sessions.update becomes asynchronous in the future
+            if asyncio.iscoroutinefunction(handler):
+                return await handler()
+
+            # Run the synchronous function in another process
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(
+                process_pool_executor,
+                partial(
+                    handler,
+                    developer_id=developer_id,
+                    session_id=session_id,
+                    data=update_session_request,
+                ),
+            )
+
+        # Handle update user
+        if system.operation == "update" and system.resource == "user":
+            developer_id = arguments.pop("developer_id")
+            user_id = arguments.pop("user_id")
+            update_user_request = UpdateUserRequest(**arguments)
+
+            # In case users.update becomes asynchronous in the future
+            if asyncio.iscoroutinefunction(handler):
+                return await handler()
+
+            # Run the synchronous function in another process
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(
+                process_pool_executor,
+                partial(
+                    handler,
+                    developer_id=developer_id,
+                    user_id=user_id,
+                    data=update_user_request,
+                ),
             )
 
         # Handle regular operations
@@ -131,6 +184,8 @@ async def execute_system(
             return await handler(**arguments)
 
         # Run the synchronous function in another process
+        # FIXME: When the handler throws an exception, the process dies and the error is not captured. Instead it throws:
+        # "concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending."
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(process_pool_executor, partial(handler, **arguments))
     except BaseException as e:

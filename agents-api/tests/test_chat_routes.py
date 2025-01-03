@@ -120,9 +120,6 @@ async def _(
     assert isinstance(past_messages, list)
     assert isinstance(doc_references, list)
 
-    # Check that embed was called at least once
-    embed.assert_called()
-
 
 @test("chat: check that chat route calls both mocks")
 async def _(

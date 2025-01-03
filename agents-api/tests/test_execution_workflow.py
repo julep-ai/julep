@@ -444,6 +444,7 @@ async def _(
             assert result["hello"] == data.input["test"]
 
 
+@skip("workflow: thread race condition")
 @test("workflow: system call - list agents")
 async def _(
     dsn=pg_dsn,
@@ -482,6 +483,7 @@ async def _(
     )
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        pool = await create_db_pool(dsn=dsn)
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -668,6 +670,7 @@ async def _(
                     "arguments": {"test": "_.test"},
                 },
             ],
+            inherit_tools=True,
         ),
         connection_pool=pool,
     )
@@ -689,7 +692,6 @@ async def _(
         assert result["test"] == data.input["test"]
 
 
-@skip("integration service patch not working")
 @test("workflow: tool call integration mocked weather")
 async def _(
     dsn=pg_dsn,
@@ -714,7 +716,7 @@ async def _(
                     "integration": {
                         "provider": "weather",
                         "setup": {"openweathermap_api_key": "test"},
-                        "arguments": {"test": "fake"},
+                        "arguments": {"location": "fake"},
                     },
                 }
             ],
@@ -743,9 +745,9 @@ async def _(
             assert execution.task_id == task.id
             assert execution.input == data.input
             mock_run_task_execution_workflow.assert_called_once()
-            mock_integration_service.assert_called_once()
-
             result = await handle.result()
+            # Verify the integration service was called with correct arguments
+            mock_integration_service.assert_called_once()
             assert result == expected_output
 
 

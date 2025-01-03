@@ -106,13 +106,16 @@ model EmbedQueryResponse {
 }
 
 model BaseDocSearchRequest {
+    /** The limit of documents to return */
     @minValue(1)
     @maxValue(50)
     limit: uint16 = 10;
 
     /** The language to be used for text-only search. Support for other languages coming soon. */
     lang: "en-US" = "en-US";
-    metadata_filter: MetadataFilter = #{},
+
+    /** Metadata filter to apply to the search */
+    metadata_filter: MetadataFilter = #{};
 
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)

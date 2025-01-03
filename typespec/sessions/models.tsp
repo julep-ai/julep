@@ -19,11 +19,40 @@ enum SearchMode {
 }
 
 model RecallOptions {
+    /** The mode to use for the search. */
     mode: SearchMode = SearchMode.vector;
+
+    /** The number of search messages to use for the search. */
     num_search_messages: uint32 = 4;
+
+    /** The maximum query length to use for the search. */
     max_query_length: uint32 = 1000;
-    hybrid_alpha: float = 0.7;
+
+    /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
+    @minValue(0)
+    @maxValue(1)
+    alpha: float = 0.7;
+
+    /** The confidence cutoff level */
+    @minValue(0)
+    @maxValue(1)
     confidence: float = 0.6;
+
+    /** The limit of documents to return */
+    @minValue(1)
+    @maxValue(50)
+    limit: uint16 = 10;
+
+    /** The language to be used for text-only search. Support for other languages coming soon. */
+    lang?: "en-US" = "en-US";
+
+    /** Metadata filter to apply to the search */
+    metadata_filter: MetadataFilter = #{};
+
+    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
+    @minValue(0)
+    @maxValueExclusive(1)
+    mmr_strength?: float = 0.0;
 }
 
 enum ContextOverflowType {

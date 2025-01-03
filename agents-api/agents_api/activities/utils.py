@@ -11,6 +11,7 @@ import urllib.parse
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import reduce
 from threading import Lock as ThreadLock
 from typing import Any, ParamSpec, TypeVar
 
@@ -140,6 +141,7 @@ ALLOWED_FUNCTIONS = {
     "sum": sum,
     "tuple": tuple,
     "zip": zip,
+    "reduce": reduce,
     # Safe versions of potentially dangerous functions
     "range": safe_range,
     "load_json": safe_json_loads,
@@ -464,10 +466,11 @@ def get_handler(system: SystemDef) -> Callable:
             return create_session_query
         case ("session", None, "update"):
             return update_session_query
-        case ("session", None, "delete"):
-            return delete_session_query
+        # TODO: Add support for create_or_update_session
         case ("session", None, "chat"):
             return chat
+        case ("session", None, "history"):
+            return get_history_query
 
         # TASKS
         case ("task", None, "list"):
