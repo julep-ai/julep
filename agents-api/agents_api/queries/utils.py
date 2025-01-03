@@ -247,6 +247,7 @@ def rewrap_exceptions(
 
                 setattr(new_error, "__cause__", error)
 
+                print(error)
                 raise new_error from error
 
     def decorator(

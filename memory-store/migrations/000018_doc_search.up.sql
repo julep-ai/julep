@@ -149,6 +149,8 @@ BEGIN
             AND 1 - (d.embedding <=> $1) >= $2
             %s
             %s
+            ORDER BY (1 - (d.embedding <=> $1)) DESC
+            LIMIT ($3 * 4)  -- Get more candidates than needed
         )
         SELECT DISTINCT ON (doc_id) *
         FROM ranked_docs
@@ -367,6 +369,7 @@ OR REPLACE FUNCTION search_hybrid (
 DECLARE
     text_weight float;
     embedding_weight float;
+    intermediate_limit integer;
 BEGIN
     -- Input validation
     IF k <= 0 THEN
@@ -375,6 +378,8 @@ BEGIN
 
     text_weight := 1.0 - alpha;
     embedding_weight := alpha;
+    -- Get more intermediate results than final to allow for better fusion
+    intermediate_limit := k * 4;
 
     RETURN QUERY
     WITH text_results AS (
@@ -384,7 +389,7 @@ BEGIN
             owner_types,
             owner_ids,
             search_language,
-            k,
+            intermediate_limit,  -- Use larger intermediate limit
             metadata_filter
         )
     ),
@@ -394,7 +399,7 @@ BEGIN
             query_embedding,
             owner_types,
             owner_ids,
-            k,
+            intermediate_limit,  -- Use larger intermediate limit
             confidence,
             metadata_filter
         )
@@ -410,7 +415,6 @@ BEGIN
     ),
     scores AS (
         SELECT
-            -- r.developer_id,
             r.doc_id,
             r.title,
             r.content,
@@ -420,7 +424,9 @@ BEGIN
             r.owner_type,
             r.owner_id,
             COALESCE(t.distance, 0.0) as text_score,
-            COALESCE(e.distance, 0.0) as embedding_score
+            COALESCE(e.distance, 0.0) as embedding_score,
+            RANK() OVER (ORDER BY COALESCE(t.distance, 0.0) DESC) as text_rank,
+            RANK() OVER (ORDER BY COALESCE(e.distance, 0.0) DESC) as embedding_rank
         FROM all_results r
         LEFT JOIN text_results t ON r.doc_id = t.doc_id
         LEFT JOIN embedding_results e ON r.doc_id = e.doc_id

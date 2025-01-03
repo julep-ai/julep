@@ -20,7 +20,6 @@ INSERT INTO transitions
     execution_id,
     transition_id,
     type,
-    step_definition,
     step_label,
     current_step,
     next_step,
@@ -38,8 +37,7 @@ VALUES
     $6,
     $7,
     $8,
-    $9,
-    $10
+    $9
 )
 RETURNING *;
 """
@@ -152,7 +150,7 @@ async def create_execution_transition(
             execution_id,
             transition_id,
             data.type,
-            {},
+            # TODO: Add step_label
             None,
             transition_data["current"],
             transition_data["next"],

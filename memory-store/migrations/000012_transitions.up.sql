@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS transitions (
     execution_id UUID NOT NULL,
     transition_id UUID NOT NULL,
     type transition_type NOT NULL,
-    step_definition JSONB NOT NULL,
     step_label TEXT DEFAULT NULL,
     current_step transition_cursor NOT NULL,
     next_step transition_cursor DEFAULT NULL,
@@ -50,7 +49,6 @@ CREATE TABLE IF NOT EXISTS transitions (
     task_token TEXT DEFAULT NULL,
     metadata JSONB DEFAULT '{}'::JSONB,
     CONSTRAINT pk_transitions PRIMARY KEY (created_at, execution_id, transition_id),
-    CONSTRAINT ct_step_definition_is_object CHECK (jsonb_typeof(step_definition) = 'object'),
     CONSTRAINT ct_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object')
 );
 
