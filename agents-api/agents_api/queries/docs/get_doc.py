@@ -1,3 +1,4 @@
+import json
 from uuid import UUID
 
 from beartype import beartype
@@ -46,6 +47,12 @@ def transform_get_doc(d: dict) -> dict:
     content = d["content"][0] if len(d["content"]) == 1 else d["content"]
 
     embeddings = d["embeddings"][0] if len(d["embeddings"]) == 1 else d["embeddings"]
+
+    if isinstance(embeddings, str):
+        embeddings = json.loads(embeddings)
+    elif isinstance(embeddings, list) and all(isinstance(e, str) for e in embeddings):
+        embeddings = [json.loads(e) for e in embeddings]
+
     if embeddings and all((e is None) for e in embeddings):
         embeddings = None
 

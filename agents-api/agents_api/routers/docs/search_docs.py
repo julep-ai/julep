@@ -4,6 +4,7 @@ from uuid import UUID
 
 import numpy as np
 from fastapi import Depends
+from langcodes import Language
 
 from ...autogen.openapi_model import (
     DocReference,
@@ -26,12 +27,16 @@ def get_search_fn_and_params(
     search_fn, params = None, None
 
     match search_params:
-        case TextOnlyDocSearchRequest(text=query, limit=k, metadata_filter=metadata_filter):
+        case TextOnlyDocSearchRequest(
+            text=query, limit=k, lang=lang, metadata_filter=metadata_filter
+        ):
+            search_language = Language.get(lang).describe()["language"].lower()
             search_fn = search_docs_by_text
             params = {
                 "query": query,
                 "k": k,
                 "metadata_filter": metadata_filter,
+                "search_language": search_language,
             }
 
         case VectorDocSearchRequest(
@@ -51,19 +56,22 @@ def get_search_fn_and_params(
         case HybridDocSearchRequest(
             text=query,
             vector=query_embedding,
+            lang=lang,
             limit=k,
             confidence=confidence,
             alpha=alpha,
             metadata_filter=metadata_filter,
         ):
+            search_language = Language.get(lang).describe()["language"].lower()
             search_fn = search_docs_hybrid
             params = {
-                "query": query,
-                "query_embedding": query_embedding,
+                "text_query": query,
+                "embedding": query_embedding,
                 "k": k * 3 if search_params.mmr_strength > 0 else k,
-                "embed_search_options": {"confidence": confidence},
+                "confidence": confidence,
                 "alpha": alpha,
                 "metadata_filter": metadata_filter,
+                "search_language": search_language,
             }
 
     return search_fn, params

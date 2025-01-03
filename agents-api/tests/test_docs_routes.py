@@ -1,12 +1,11 @@
-import asyncio
-
-from ward import skip, test
+from ward import test
 
 from .fixtures import (
     make_request,
     patch_embed_acompletion,
     test_agent,
     test_doc,
+    test_doc_with_embedding,
     test_user,
     test_user_doc,
 )
@@ -174,7 +173,6 @@ def _(make_request=make_request, agent=test_agent):
 
 @test("route: search agent docs")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-    await asyncio.sleep(1)
     search_params = {
         "text": doc.content[0],
         "limit": 1,
@@ -196,7 +194,6 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
 
 @test("route: search user docs")
 async def _(make_request=make_request, user=test_user, doc=test_user_doc):
-    await asyncio.sleep(1)
     search_params = {
         "text": doc.content[0],
         "limit": 1,
@@ -217,11 +214,8 @@ async def _(make_request=make_request, user=test_user, doc=test_user_doc):
     assert len(docs) >= 1
 
 
-@skip("embedding search: test container not vectorizing")
 @test("route: search agent docs hybrid with mmr")
-async def _(make_request=make_request, agent=test_agent, doc=test_doc):
-    await asyncio.sleep(1)
-
+async def _(make_request=make_request, agent=test_agent, doc=test_doc_with_embedding):
     EMBEDDING_SIZE = 1024
     search_params = {
         "text": doc.content[0],

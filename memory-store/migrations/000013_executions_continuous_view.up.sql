@@ -20,25 +20,32 @@ WITH
         timescaledb.materialized_only = FALSE
     ) AS
 SELECT
-    time_bucket ('1 day', created_at) AS bucket,
-    execution_id,
-    last(transition_id, created_at) AS transition_id,
+    time_bucket ('1 day', t.created_at) AS bucket,
+    t.execution_id,
+    last (t.transition_id, t.created_at) AS transition_id,
     count(*) AS total_transitions,
-    state_agg(created_at, to_text(type)) AS state,
-    max(created_at) AS created_at,
-    last(type, created_at) AS type,
-    last(step_definition, created_at) AS step_definition,
-    last(step_label, created_at) AS step_label,
-    last(current_step, created_at) AS current_step,
-    last(next_step, created_at) AS next_step,
-    last(output, created_at) AS output,
-    last(task_token, created_at) AS task_token,
-    last(metadata, created_at) AS metadata
+    state_agg (t.created_at, to_text (t.type)) AS state,
+    max(t.created_at) AS created_at,
+    last (t.type, t.created_at) AS type,
+    last (t.step_label, t.created_at) AS step_label,
+    last (t.current_step, t.created_at) AS current_step,
+    last (t.next_step, t.created_at) AS next_step,
+    last (t.output, t.created_at) AS output,
+    last (t.task_token, t.created_at) AS task_token,
+    last (t.metadata, t.created_at) AS metadata,
+    last (e.task_id, e.created_at) AS task_id,
+    last (e.task_version, e.created_at) AS task_version,
+    last (w.step_definition, e.created_at) AS step_definition
 FROM
-    transitions
+    transitions t
+    JOIN executions e ON t.execution_id = e.execution_id
+    JOIN workflows w ON e.task_id = w.task_id
+    AND e.task_version = w.version
+    AND w.step_idx = (t.current_step).step_index
+    AND w.name = (t.current_step).workflow_name
 GROUP BY
     bucket,
-    execution_id
+    t.execution_id
 WITH
     no data;
 

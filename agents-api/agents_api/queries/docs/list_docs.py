@@ -3,6 +3,7 @@ This module contains the functionality for listing documents from the PostgreSQL
 It constructs and executes SQL queries to fetch document details based on various filters.
 """
 
+import json
 from typing import Any, Literal
 from uuid import UUID
 
@@ -54,6 +55,11 @@ def transform_list_docs(d: dict) -> dict:
     content = d["content"][0] if len(d["content"]) == 1 else d["content"]
 
     embeddings = d["embeddings"][0] if len(d["embeddings"]) == 1 else d["embeddings"]
+
+    if isinstance(embeddings, str):
+        embeddings = json.loads(embeddings)
+    elif isinstance(embeddings, list) and all(isinstance(e, str) for e in embeddings):
+        embeddings = [json.loads(e) for e in embeddings]
 
     if embeddings and all((e is None) for e in embeddings):
         embeddings = None

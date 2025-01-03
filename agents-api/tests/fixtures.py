@@ -151,6 +151,7 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 
     yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
 
+    # TODO: Delete the doc
     # await delete_doc(
     #     developer_id=developer.id,
     #     doc_id=resp.id,
@@ -158,6 +159,23 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     #     owner_id=agent.id,
     #     connection_pool=pool,
     # )
+
+
+@fixture(scope="test")
+async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test_doc):
+    pool = await create_db_pool(dsn=dsn)
+    await pool.execute(
+        """
+        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
+        VALUES ($1, $2, 0, 0, $3, $4)
+    """,
+        developer.id,
+        doc.id,
+        doc.content[0] if isinstance(doc.content, list) else doc.content,
+        f"[{', '.join([str(x) for x in [1.0] * 1024])}]",
+    )
+
+    yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
 
 
 @fixture(scope="test")
@@ -183,6 +201,7 @@ async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
 
     yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
 
+    # TODO: Delete the doc
     # await delete_doc(
     #     developer_id=developer.id,
     #     doc_id=resp.id,
