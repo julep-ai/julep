@@ -1,7 +1,8 @@
+import os
 import uuid
+
 import yaml
 from julep import Client
-import os
 
 openweathermap_api_key = os.getenv("OPENWEATHERMAP_API_KEY")
 brave_api_key = os.getenv("BRAVE_API_KEY")
@@ -139,6 +140,7 @@ print(f"Execution ID: {execution.id}")
 
 # Wait for the execution to complete
 import time
+
 time.sleep(200)
 
 # Getting the execution details
@@ -146,10 +148,10 @@ time.sleep(200)
 execution = client.executions.get(execution.id)
 # Print the output
 print(execution.output)
-print("-"*50)
+print("-" * 50)
 
-if 'final_plan' in execution.output:
-    print(execution.output['final_plan'])
+if "final_plan" in execution.output:
+    print(execution.output["final_plan"])
 
 # Lists all the task steps that have been executed up to this point in time
 transitions = client.executions.transitions.list(execution_id=execution.id).items
@@ -158,4 +160,4 @@ transitions = client.executions.transitions.list(execution_id=execution.id).item
 for transition in reversed(transitions):
     print("Transition type: ", transition.type)
     print("Transition output: ", transition.output)
-    print("-"*50)
+    print("-" * 50)

@@ -97,7 +97,7 @@ async def _(
         connection_pool=pool,
     )
 
-    (embed, _) = mocks
+    (_embed, _) = mocks
 
     chat_context = await prepare_chat_context(
         developer_id=developer_id,

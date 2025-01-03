@@ -2,30 +2,34 @@
 
 # %%
 # Global UUID is generated for agent and task
-import time, yaml
-from dotenv import load_dotenv
 import os
+import time
 import uuid
+
+import yaml
+from dotenv import load_dotenv
+
 load_dotenv(override=True)
 
-AGENT_UUID =  uuid.uuid4()
+AGENT_UUID = uuid.uuid4()
 TASK_UUID = uuid.uuid4()
-RAPID_API_KEY = os.getenv('RAPID_API_KEY')
-RAPID_API_HOST = os.getenv('RAPID_API_HOST')
-JULEP_API_KEY = os.getenv('JULEP_API_KEY') or os.getenv('JULEP_API_KEY_LOCAL')
+RAPID_API_KEY = os.getenv("RAPID_API_KEY")
+RAPID_API_HOST = os.getenv("RAPID_API_HOST")
+JULEP_API_KEY = os.getenv("JULEP_API_KEY") or os.getenv("JULEP_API_KEY_LOCAL")
 
-print(f'AGENT_UUID: {AGENT_UUID}')
-print(f'TASK_UUID: {TASK_UUID}')
-print(f'JULEP_API_KEY: {JULEP_API_KEY}')
-print(f'RAPID_API_KEY: {RAPID_API_KEY}')
-print(f'RAPID_API_HOST: {RAPID_API_HOST}')
+print(f"AGENT_UUID: {AGENT_UUID}")
+print(f"TASK_UUID: {TASK_UUID}")
+print(f"JULEP_API_KEY: {JULEP_API_KEY}")
+print(f"RAPID_API_KEY: {RAPID_API_KEY}")
+print(f"RAPID_API_HOST: {RAPID_API_HOST}")
 
 
 # ### Creating Julep Client with the API Key
 
 from julep import Client
+
 # # Create a client
-client = Client(api_key=JULEP_API_KEY,environment="dev")
+client = Client(api_key=JULEP_API_KEY, environment="dev")
 
 #  Creating an agent for handling persistent sessions
 agent = client.agents.create_or_update(
@@ -180,7 +184,7 @@ hooks_data = [
          "Take [discount] off when you try [product].",
          "I didn’t know X could be related to X.",
          "Why is it important to [do product-related task]?",
-         "99\% of your [target audience] don't. To be the 1% you need to [X].",
+         r"99\% of your [target audience] don't. To be the 1% you need to [X].",
          "This [product] is the secret to [X]."
      ]},
     {"categories": "Curiosity & Engagement",
@@ -220,7 +224,7 @@ hooks_data = [
 
 hooks_doc_content = []
 for category in hooks_data:
-    hooks_doc_content.extend(category['content'])
+    hooks_doc_content.extend(category["content"])
 
 doc = client.agents.docs.create(
     agent_id=AGENT_UUID, title="hooks_doc", content=hooks_doc_content)
@@ -231,7 +235,6 @@ for doc in client.agents.docs.list(agent_id=AGENT_UUID):
     print(doc.content)
 
 # Task Definition
-import yaml
 task_def = yaml.safe_load(f"""
 name: Agent Crawler
 
@@ -241,7 +244,7 @@ tools:
   api_call:
     method: GET
     url: "https://instagram-scraper-api2.p.rapidapi.com/v1/hashtag"
-    headers: 
+    headers:
       x-rapidapi-key: "{RAPID_API_KEY}"
       x-rapidapi-host: "{RAPID_API_HOST}"
     follow_redirects: true
@@ -279,7 +282,7 @@ main:
                       'virality_score': (((response.get('reshare_count') or 0) / (response.get('play_count') or 1)) if (response.get('play_count') or 0) > 0 else 0),
                       'engagement_score': (((response.get('like_count') or 0) / (response.get('play_count') or 1)) if (response.get('play_count') or 0) > 0 else 0),
                       'video_duration': (response.get('video_duration') or 0)
-                      }} for response in _['json']['data']['items'])" 
+                      }} for response in _['json']['data']['items'])"
 
 - over: _['summary']
   parallelism: 4
@@ -295,7 +298,7 @@ main:
           Engagement Score: {{{{_['engagement_score']}}}}
 
           Provide a json repsonse containing the caption, virality score, enagement score and one-liner description for the reel.
-    unwrap: true   
+    unwrap: true
 
 - evaluate:
     summary: outputs[1]['summary']
@@ -304,7 +307,7 @@ main:
 - tool: get_hooks_doc
   arguments:
     agent_id: "'{AGENT_UUID}'"
-                          
+
 - evaluate:
     hooks_doc: _[0]['content']
 
@@ -315,9 +318,9 @@ main:
       - role: system
         content: >-
           You are a skilled content creator tasked with generating 3 engaging video hooks for each reel having its description and caption. Use the following document containing hook templates to create effective hooks:
-          
+
           {{{{_.hooks_doc}}}}
-          
+
           Here are the caption and description to create hooks for:
 
           Caption: {{{{_['caption']}}}}
@@ -326,7 +329,7 @@ main:
           Engagement Score: {{{{_['engagement_score']}}}}
 
           Your task is to generate 3 hooks (for the reel) by adapting the most suitable templates from the document. Each hook should be no more than 1 sentence long and directly relate to its corresponding idea.
-          
+
           Basically, all the ideas are taken from a search about this topic, which is {{{{inputs[0].topic}}}}. You should focus on this while writing the hooks.
 
           Ensure that each hook is creative, engaging, and relevant to its idea while following the structure of the chosen template.
@@ -355,7 +358,6 @@ execution = client.executions.create(
 )
 
 # Waiting for the execution to complete
-import time
 time.sleep(120)
 
 # Lists all the task steps that have been executed up to this point in time
@@ -365,11 +367,9 @@ transitions = client.executions.transitions.list(execution_id=execution.id).item
 for transition in reversed(transitions):
     print("Transition type: ", transition.type)
     print("Transition output: ", transition.output)
-    print("-"*50)
+    print("-" * 50)
 
 import json
+
 response = client.executions.transitions.list(execution_id=execution.id).items[0].output
 print(json.dumps(response, indent=4))
-
-
-

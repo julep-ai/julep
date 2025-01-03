@@ -26,7 +26,7 @@ async def lifespan(*containers: list[FastAPI | ObjectWithState]):
     pg_dsn = os.environ.get("PG_DSN")
 
     for container in containers:
-        if not getattr(container.state, "postgres_pool", None):
+        if hasattr(container, "state") and not getattr(container.state, "postgres_pool", None):
             container.state.postgres_pool = await create_db_pool(pg_dsn)
 
     # INIT S3 #
@@ -35,7 +35,7 @@ async def lifespan(*containers: list[FastAPI | ObjectWithState]):
     s3_endpoint = os.environ.get("S3_ENDPOINT")
 
     for container in containers:
-        if not getattr(container.state, "s3_client", None):
+        if hasattr(container, "state") and not getattr(container.state, "s3_client", None):
             session = get_session()
             container.state.s3_client = await session.create_client(
                 "s3",
@@ -49,13 +49,13 @@ async def lifespan(*containers: list[FastAPI | ObjectWithState]):
     finally:
         # CLOSE POSTGRES #
         for container in containers:
-            if getattr(container.state, "postgres_pool", None):
+            if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
                 await container.state.postgres_pool.close()
                 container.state.postgres_pool = None
 
         # CLOSE S3 #
         for container in containers:
-            if getattr(container.state, "s3_client", None):
+            if hasattr(container, "state") and getattr(container.state, "s3_client", None):
                 await container.state.s3_client.close()
                 container.state.s3_client = None
 

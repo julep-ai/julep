@@ -1,5 +1,6 @@
 import os
 import uuid
+
 import yaml
 from julep import Client
 
@@ -10,7 +11,8 @@ TASK_UUID = uuid.uuid4()
 # Create Julep Client with the API Key
 api_key = os.getenv("JULEP_API_KEY")
 if not api_key:
-    raise ValueError("JULEP_API_KEY not found in environment variables")
+    msg = "JULEP_API_KEY not found in environment variables"
+    raise ValueError(msg)
 
 client = Client(api_key=api_key, environment="dev")
 
@@ -76,7 +78,8 @@ execution = client.executions.create(
 )
 
 # Waiting for the execution to complete
-import time 
+import time
+
 time.sleep(5)
 
 # Getting the execution details
@@ -92,4 +95,3 @@ for transition in transitions:
 # Stream the steps of the defined task
 print("Streaming execution transitions:")
 print(client.executions.transitions.stream(execution_id=execution.id))
-

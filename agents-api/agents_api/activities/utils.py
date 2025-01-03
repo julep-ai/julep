@@ -397,8 +397,8 @@ def get_handler(system: SystemDef) -> Callable:
     from ..queries.agents.update_agent import update_agent as update_agent_query
     from ..queries.docs.delete_doc import delete_doc as delete_doc_query
     from ..queries.docs.list_docs import list_docs as list_docs_query
+    from ..queries.entries.get_history import get_history as get_history_query
     from ..queries.sessions.create_session import create_session as create_session_query
-    from ..queries.sessions.delete_session import delete_session as delete_session_query
     from ..queries.sessions.get_session import get_session as get_session_query
     from ..queries.sessions.list_sessions import list_sessions as list_sessions_query
     from ..queries.sessions.update_session import update_session as update_session_query
