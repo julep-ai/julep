@@ -83,17 +83,10 @@ main:
 """)
 
 # Creating/Updating a task
-task = client.tasks.create_or_update(
-    task_id=TASK_UUID,
-    agent_id=AGENT_UUID,
-    **task_def
-)
+task = client.tasks.create_or_update(task_id=TASK_UUID, agent_id=AGENT_UUID, **task_def)
 
 # Creating an Execution
-execution = client.executions.create(
-    task_id=TASK_UUID,
-    input={}
-)
+execution = client.executions.create(task_id=TASK_UUID, input={})
 
 # Waiting for the execution to complete
 import time

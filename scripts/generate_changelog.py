@@ -18,7 +18,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 # Constants and configurations
 HTML_TAGS_PATTERN = re.compile(r"(<[^>]+>)")  # Regex pattern to match HTML tags
-REQUIRED_ENV_VARS = ["AGENT_UUID", "TASK_UUID", "JULEP_API_KEY"]  # List of required environment variables
+REQUIRED_ENV_VARS = [
+    "AGENT_UUID",
+    "TASK_UUID",
+    "JULEP_API_KEY",
+]  # List of required environment variables
 
 
 def load_template(filename: str) -> str:
@@ -61,20 +65,20 @@ def run_task(pr_data: str) -> str:
 
     # Create or update the task configuration
     client.tasks.create_or_update(
-        task_id=os.environ["TASK_UUID"],
-        agent_id=os.environ["AGENT_UUID"],
-        **task_description
+        task_id=os.environ["TASK_UUID"], agent_id=os.environ["AGENT_UUID"], **task_description
     )
 
     # Create a new execution instance
     execution = client.executions.create(
-        task_id=os.environ["TASK_UUID"],
-        input={"pr_data": str(pr_data)}
+        task_id=os.environ["TASK_UUID"], input={"pr_data": str(pr_data)}
     )
 
     # Wait for task completion using context manager for proper resource cleanup
     with client:
-        while (result := client.executions.get(execution.id)).status not in ["succeeded", "failed"]:
+        while (result := client.executions.get(execution.id)).status not in [
+            "succeeded",
+            "failed",
+        ]:
             time.sleep(3)
 
         if result.status != "succeeded":
@@ -147,10 +151,10 @@ def process_pr_data(pr_data: str) -> str:
 
     # Use list comprehension with f-strings
     entries = [
-        f"""- PR #{pr['number']}: {pr['title']}
-            Author: {pr['author']}
+        f"""- PR #{pr["number"]}: {pr["title"]}
+            Author: {pr["author"]}
             Body:
-            {process_body(pr.get('body', ''))}
+            {process_body(pr.get("body", ""))}
         """
         for pr in prs
     ]

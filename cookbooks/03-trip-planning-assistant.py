@@ -122,18 +122,11 @@ main:
 """)
 
 # Creating/Updating a task
-task = client.tasks.create_or_update(
-    task_id=TASK_UUID,
-    agent_id=AGENT_UUID,
-    **task_def
-)
+task = client.tasks.create_or_update(task_id=TASK_UUID, agent_id=AGENT_UUID, **task_def)
 
 # Creating an Execution
 execution = client.executions.create(
-    task_id=task.id,
-    input={
-         "locations": ["New York", "London", "Paris", "Tokyo", "Sydney"]
-    }
+    task_id=task.id, input={"locations": ["New York", "London", "Paris", "Tokyo", "Sydney"]}
 )
 
 print(f"Execution ID: {execution.id}")
