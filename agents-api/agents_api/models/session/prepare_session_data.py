@@ -32,6 +32,7 @@ T = TypeVar("T")
     one=True,
     transform=lambda d: {
         "session": make_session(
+            updated_at=d["session"].pop("updated_at") / (1000000.0),
             **d["session"],
             agents=[a["id"] for a in d["agents"]],
             users=[u["id"] for u in d["users"]],
