@@ -137,12 +137,10 @@ async def gather_messages(
 
     # Apply MMR if enabled
     if (
-        # MMR is enabled
         recall_options.mmr_strength > 0
-        # The number of doc references is greater than the limit
         and len(doc_references) > recall_options.limit
-        # MMR is not applied to text search
         and recall_options.mode != "text"
+        and len([doc for doc in doc_references if doc.snippet.embedding is not None]) >= 2
     ):
         # FIXME: This is a temporary fix to ensure that the MMR algorithm works.
         # We shouldn't be having references without embeddings.
