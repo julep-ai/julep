@@ -90,6 +90,10 @@ async def run_task_execution_workflow(
 ):
     from ..workflows.task_execution import TaskExecutionWorkflow
 
+    if execution_input.execution is None:
+        msg = "execution_input.execution cannot be None"
+        raise ValueError(msg)
+
     start: TransitionTarget = start or TransitionTarget(workflow="main", step=0)
 
     client = client or (await get_client())

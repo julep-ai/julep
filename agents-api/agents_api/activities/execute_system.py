@@ -23,7 +23,7 @@ from ..autogen.openapi_model import (
 )
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
-from ..queries.developers import get_developer
+from ..queries import developers
 from .container import container
 from .utils import get_handler
 
@@ -95,7 +95,7 @@ async def execute_system(
 
         # Handle chat operations
         if system.operation == "chat" and system.resource == "session":
-            developer = await get_developer(
+            developer = await developers.get_developer(
                 developer_id=arguments["developer_id"],
                 connection_pool=container.state.postgres_pool,
             )

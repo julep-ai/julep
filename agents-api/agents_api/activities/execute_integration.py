@@ -9,7 +9,7 @@ from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
-from ..queries.tools import get_tool_args_from_metadata
+from ..queries import tools
 from .container import container
 
 
@@ -28,9 +28,14 @@ async def execute_integration(
 
     developer_id = context.execution_input.developer_id
     agent_id = context.execution_input.agent.id
+
+    if context.execution_input.task is None:
+        msg = "Task cannot be None in execution_input"
+        raise ValueError(msg)
+
     task_id = context.execution_input.task.id
 
-    merged_tool_args = await get_tool_args_from_metadata(
+    merged_tool_args = await tools.get_tool_args_from_metadata(
         developer_id=developer_id,
         agent_id=agent_id,
         task_id=task_id,
@@ -38,7 +43,7 @@ async def execute_integration(
         connection_pool=container.state.postgres_pool,
     )
 
-    merged_tool_setup = await get_tool_args_from_metadata(
+    merged_tool_setup = await tools.get_tool_args_from_metadata(
         developer_id=developer_id,
         agent_id=agent_id,
         task_id=task_id,
