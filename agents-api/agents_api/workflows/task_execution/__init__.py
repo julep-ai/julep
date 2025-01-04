@@ -143,6 +143,10 @@ class TaskExecutionWorkflow:
         start: TransitionTarget,
         previous_inputs: list,
     ) -> Any:
+        if not execution_input.task:
+            msg = "execution_input.task cannot be None"
+            raise ApplicationError(msg)
+
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
             f" [LOC {start.workflow}.{start.step}]"

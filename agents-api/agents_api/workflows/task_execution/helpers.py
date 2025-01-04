@@ -1,6 +1,6 @@
 import asyncio
 from datetime import timedelta
-from typing import Any
+from typing import Any, TypeVar
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
@@ -11,6 +11,7 @@ with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
         EvaluateStep,
+        TaskSpecDef,
         TransitionTarget,
         Workflow,
         WorkflowStep,
@@ -20,6 +21,26 @@ with workflow.unsafe.imports_passed_through():
         StepContext,
     )
     from ...env import task_max_parallelism, temporal_heartbeat_timeout
+
+T = TypeVar("T")
+
+
+def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
+    """Validates and returns the task from execution input.
+
+    Args:
+        execution_input: The execution input to validate
+
+    Returns:
+        The validated task
+
+    Raises:
+        ApplicationError: If task is None
+    """
+    if execution_input.task is None:
+        msg = "Execution input task cannot be None"
+        raise ApplicationError(msg)
+    return execution_input.task
 
 
 async def continue_as_child(
@@ -57,12 +78,13 @@ async def execute_switch_branch(
     previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
+    task = validate_execution_input(execution_input)
     workflow.logger.info(f"Switch step: Chose branch {index}")
     chosen_branch = switch[index]
 
     case_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].case"
 
-    case_task = execution_input.task.model_copy()
+    case_task = task.model_copy()
     case_task.workflows = [
         Workflow(name=case_wf_name, steps=[chosen_branch.then]),
         *case_task.workflows,
@@ -91,6 +113,7 @@ async def execute_if_else_branch(
     previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
+    task = validate_execution_input(execution_input)
     workflow.logger.info(f"If-Else step: Condition evaluated to {condition}")
     chosen_branch = then_branch if condition else else_branch
 
@@ -100,7 +123,7 @@ async def execute_if_else_branch(
     if_else_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].if_else"
     if_else_wf_name += ".then" if condition else ".else"
 
-    if_else_task = execution_input.task.model_copy()
+    if_else_task = task.model_copy()
     if_else_task.workflows = [
         Workflow(name=if_else_wf_name, steps=[chosen_branch]),
         *if_else_task.workflows,
@@ -128,12 +151,13 @@ async def execute_foreach_step(
     previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
+    task = validate_execution_input(execution_input)
     workflow.logger.info(f"Foreach step: Iterating over {len(items)} items")
     results = []
 
     for i, item in enumerate(items):
         foreach_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
-        foreach_task = execution_input.task.model_copy()
+        foreach_task = task.model_copy()
         foreach_task.workflows = [
             Workflow(name=foreach_wf_name, steps=[do_step]),
             *foreach_task.workflows,
@@ -165,13 +189,14 @@ async def execute_map_reduce_step(
     reduce: str | None = None,
     initial: Any = [],
 ) -> Any:
+    task = validate_execution_input(execution_input)
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     result = initial
     reduce = "results + [_]" if reduce is None else reduce
 
     for i, item in enumerate(items):
         workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
-        map_reduce_task = execution_input.task.model_copy()
+        map_reduce_task = task.model_copy()
         map_reduce_task.workflows = [
             Workflow(name=workflow_name, steps=[map_defn]),
             *map_reduce_task.workflows,
@@ -211,6 +236,7 @@ async def execute_map_reduce_step_parallel(
     reduce: str | None = None,
     parallelism: int = task_max_parallelism,
 ) -> Any:
+    task = validate_execution_input(execution_input)
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     results = initial
 
@@ -240,7 +266,7 @@ async def execute_map_reduce_step_parallel(
             workflow_name = (
                 f"PAR:`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}][{j}]"
             )
-            map_reduce_task = execution_input.task.model_copy()
+            map_reduce_task = task.model_copy()
             map_reduce_task.workflows = [
                 Workflow(name=workflow_name, steps=[map_defn]),
                 *map_reduce_task.workflows,

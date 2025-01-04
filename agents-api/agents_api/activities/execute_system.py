@@ -23,7 +23,7 @@ from ..autogen.openapi_model import (
 )
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
-from ..queries.developers import get_developer
+from ..queries import developers
 from .container import container
 from .utils import get_handler
 
@@ -78,14 +78,10 @@ async def execute_system(
         # Handle special cases for doc operations
         if system.operation == "create" and system.subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
-            bg_runner = BackgroundTasks()
-            res = await handler(
+            return await handler(
                 data=CreateDocRequest(**arguments.pop("data")),
-                background_tasks=bg_runner,
                 **arguments,
             )
-            await bg_runner()
-            return res
 
         # Handle search operations
         if system.operation == "search" and system.subresource == "doc":
@@ -95,7 +91,7 @@ async def execute_system(
 
         # Handle chat operations
         if system.operation == "chat" and system.resource == "session":
-            developer = await get_developer(
+            developer = await developers.get_developer(
                 developer_id=arguments["developer_id"],
                 connection_pool=container.state.postgres_pool,
             )

@@ -16,9 +16,19 @@ async def yield_step(context: StepContext) -> StepOutcome:
             msg = "Expected ExecutionInput type for context.execution_input"
             raise TypeError(msg)
 
+        # Add validation for task
+        if not context.execution_input.task:
+            msg = "Task is required in execution_input"
+            raise ValueError(msg)
+
         all_workflows = context.execution_input.task.workflows
         workflow = context.current_step.workflow
         exprs = context.current_step.arguments
+
+        # Validate workflows exists
+        if not all_workflows:
+            msg = "No workflows found in task"
+            raise ValueError(msg)
 
         assert workflow in [wf.name for wf in all_workflows], (
             f"Workflow {workflow} not found in task"
