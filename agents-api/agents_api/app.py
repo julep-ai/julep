@@ -21,14 +21,15 @@ class State(Protocol):
 class ObjectWithState(Protocol):
     state: State
 
+
 pool = None
+
 
 # TODO: This currently doesn't use env.py, we should move to using them
 @asynccontextmanager
 async def lifespan(*containers: FastAPI | ObjectWithState):
     # INIT POSTGRES #
     pg_dsn = os.environ.get("PG_DSN")
-
 
     global pool
     if not pool:
