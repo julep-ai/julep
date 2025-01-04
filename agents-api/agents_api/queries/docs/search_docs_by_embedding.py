@@ -13,7 +13,7 @@ from .utils import transform_to_doc_reference
 search_docs_by_embedding_query = """
 SELECT * FROM search_by_vector(
     $1, -- developer_id
-    $2::vector(1024), -- query_embedding
+    $2::vector(1024), -- embedding
     $3::text[], -- owner_types
     $4::uuid[], -- owner_ids
     $5, -- k
@@ -33,7 +33,7 @@ SELECT * FROM search_by_vector(
 async def search_docs_by_embedding(
     *,
     developer_id: UUID,
-    query_embedding: list[float],
+    embedding: list[float],
     k: int = 10,
     owners: list[tuple[Literal["user", "agent"], UUID]],
     confidence: float = 0.5,
@@ -44,7 +44,7 @@ async def search_docs_by_embedding(
 
     Parameters:
         developer_id (UUID): The ID of the developer.
-        query_embedding (List[float]): The vector to query.
+        embedding (List[float]): The vector to query.
         k (int): The number of results to return.
         owners (list[tuple[Literal["user", "agent"], UUID]]): List of (owner_type, owner_id) tuples.
         confidence (float): The confidence threshold for the search.
@@ -56,11 +56,11 @@ async def search_docs_by_embedding(
     if k < 1:
         raise HTTPException(status_code=400, detail="k must be >= 1")
 
-    if not query_embedding:
+    if not embedding:
         raise HTTPException(status_code=400, detail="Empty embedding provided")
 
-    # Convert query_embedding to a string
-    query_embedding_str = f"[{', '.join(map(str, query_embedding))}]"
+    # Convert embedding to a string
+    embedding_str = f"[{', '.join(map(str, embedding))}]"
 
     # Extract owner types and IDs
     owner_types: list[str] = [owner[0] for owner in owners]
@@ -70,7 +70,7 @@ async def search_docs_by_embedding(
         search_docs_by_embedding_query,
         [
             developer_id,
-            query_embedding_str,
+            embedding_str,
             owner_types,
             owner_ids,
             k,

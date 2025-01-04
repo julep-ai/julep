@@ -40,14 +40,14 @@ def get_search_fn_and_params(
             }
 
         case VectorDocSearchRequest(
-            vector=query_embedding,
+            vector=embedding,
             limit=k,
             confidence=confidence,
             metadata_filter=metadata_filter,
         ):
             search_fn = search_docs_by_embedding
             params = {
-                "query_embedding": query_embedding,
+                "embedding": embedding,
                 "k": k * 3 if search_params.mmr_strength > 0 else k,
                 "confidence": confidence,
                 "metadata_filter": metadata_filter,
@@ -55,7 +55,7 @@ def get_search_fn_and_params(
 
         case HybridDocSearchRequest(
             text=query,
-            vector=query_embedding,
+            vector=embedding,
             lang=lang,
             limit=k,
             confidence=confidence,
@@ -66,7 +66,7 @@ def get_search_fn_and_params(
             search_fn = search_docs_hybrid
             params = {
                 "text_query": query,
-                "embedding": query_embedding,
+                "embedding": embedding,
                 "k": k * 3 if search_params.mmr_strength > 0 else k,
                 "confidence": confidence,
                 "alpha": alpha,
@@ -111,7 +111,7 @@ async def search_user_docs(
         and len(docs) > search_params.limit
     ):
         indices = maximal_marginal_relevance(
-            np.asarray(params["query_embedding"]),
+            np.asarray(params["embedding"]),
             [doc.snippet.embedding for doc in docs],
             k=search_params.limit,
         )
@@ -160,7 +160,7 @@ async def search_agent_docs(
         and len(docs) > search_params.limit
     ):
         indices = maximal_marginal_relevance(
-            np.asarray(params["query_embedding"]),
+            np.asarray(params["embedding"]),
             [doc.snippet.embedding for doc in docs],
             k=search_params.limit,
         )
