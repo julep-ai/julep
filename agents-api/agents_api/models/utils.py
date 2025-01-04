@@ -1,3 +1,4 @@
+import concurrent.futures
 import inspect
 import re
 import time
@@ -7,7 +8,8 @@ from uuid import UUID
 
 import pandas as pd
 from fastapi import HTTPException
-from httpcore import NetworkError, TimeoutException
+from httpcore import ConnectError, NetworkError, TimeoutException
+from httpx import ConnectError as HttpxConnectError
 from httpx import RequestError
 from pydantic import BaseModel
 from requests.exceptions import ConnectionError, Timeout
@@ -92,6 +94,7 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
         token_budget,
         context_overflow,
         updated_at,
+        recall_options,
     ] :=
         input[developer_id, session_id],
         *sessions {{
@@ -103,6 +106,7 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
             render_templates,
             token_budget,
             context_overflow,
+            recall_options,
             @ 'END'
         }},
         updated_at = [floor(now()), true]
@@ -117,6 +121,7 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
         render_templates,
         token_budget,
         context_overflow,
+        recall_options,
         updated_at,
     }}
     """
@@ -213,12 +218,17 @@ def cozo_query(
         )
 
         def is_resource_busy(e: Exception) -> bool:
-            return isinstance(e, HTTPException) and e.status_code == 429
+            return (
+                isinstance(e, HTTPException)
+                and e.status_code == 429
+                and not getattr(e, "cozo_offline", False)
+            )
 
         @retry(
             stop=stop_after_attempt(4),
             wait=wait_exponential(multiplier=1, min=4, max=10),
             retry=retry_if_exception(is_resource_busy),
+            reraise=True,
         )
         @wraps(func)
         def wrapper(*args: P.args, client=None, **kwargs: P.kwargs) -> pd.DataFrame:
@@ -261,6 +271,10 @@ def cozo_query(
                 cozo_busy = ("busy" in pretty_error) or (
                     "when executing against relation '_" in pretty_error
                 )
+                cozo_offline = isinstance(e, ConnectionError) and (
+                    ("connection refused" in pretty_error)
+                    or ("name or service not known" in pretty_error)
+                )
                 connection_error = isinstance(
                     e,
                     (
@@ -271,10 +285,13 @@ def cozo_query(
                         RequestError,
                     ),
                 )
-                if cozo_busy or connection_error:
-                    raise HTTPException(
+
+                if cozo_busy or connection_error or cozo_offline:
+                    exc = HTTPException(
                         status_code=429, detail="Resource busy. Please try again later."
-                    ) from e
+                    )
+                    exc.cozo_offline = cozo_offline
+                    raise exc from e
 
                 raise
 
@@ -335,7 +352,11 @@ def cozo_query_async(
         )
 
         def is_resource_busy(e: Exception) -> bool:
-            return isinstance(e, HTTPException) and e.status_code == 429
+            return (
+                isinstance(e, HTTPException)
+                and e.status_code == 429
+                and not getattr(e, "cozo_offline", False)
+            )
 
         @retry(
             stop=stop_after_attempt(6),
@@ -389,20 +410,31 @@ def cozo_query_async(
                 cozo_busy = ("busy" in pretty_error) or (
                     "when executing against relation '_" in pretty_error
                 )
+                cozo_offline = (
+                    isinstance(e, ConnectError)
+                    or isinstance(e, HttpxConnectError)
+                    and (
+                        ("all connection attempts failed" in pretty_error)
+                        or ("name or service not known" in pretty_error)
+                    )
+                )
                 connection_error = isinstance(
                     e,
                     (
-                        ConnectionError,
-                        Timeout,
+                        ConnectError,
+                        HttpxConnectError,
                         TimeoutException,
                         NetworkError,
                         RequestError,
                     ),
                 )
-                if cozo_busy or connection_error:
-                    raise HTTPException(
+
+                if cozo_busy or connection_error or cozo_offline:
+                    exc = HTTPException(
                         status_code=429, detail="Resource busy. Please try again later."
-                    ) from e
+                    )
+                    exc.cozo_offline = cozo_offline
+                    raise exc from e
 
                 raise
 
@@ -446,7 +478,12 @@ def wrap_in_class(
         transform = transform or (lambda x: x)
 
         if one:
-            assert len(data) >= 1, "Expected one result, got none"
+            resource_name = cls.__name__ if isinstance(cls, type) else "Resource"
+            if len(data) < 1:
+                raise HTTPException(
+                    status_code=404, detail=f"{resource_name} not found"
+                )
+
             obj: ModelT = cls(**transform(data[0]))
             return obj
 
@@ -529,3 +566,21 @@ def rewrap_exceptions(
         return async_wrapper if inspect.iscoroutinefunction(func) else wrapper
 
     return decorator
+
+
+def run_concurrently(
+    fns: list[Callable[..., Any]],
+    *,
+    args_list: list[tuple] = [],
+    kwargs_list: list[dict] = [],
+) -> list[Any]:
+    args_list = args_list or [tuple()] * len(fns)
+    kwargs_list = kwargs_list or [dict()] * len(fns)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(fn, *args, **kwargs)
+            for fn, args, kwargs in zip(fns, args_list, kwargs_list)
+        ]
+
+        return [future.result() for future in concurrent.futures.as_completed(futures)]

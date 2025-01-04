@@ -109,7 +109,15 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
         "finish_branch",
         "init_branch",
     ],
-    "finish_branch": ["wait", "error", "cancelled", "step", "finish", "init_branch"],
+    "finish_branch": [
+        "wait",
+        "error",
+        "cancelled",
+        "step",
+        "finish",
+        "init_branch",
+        "finish_branch",
+    ],
 }  # type: ignore
 
 valid_previous_statuses: dict[ExecutionStatus, list[ExecutionStatus]] = {

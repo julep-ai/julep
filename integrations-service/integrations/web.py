@@ -3,6 +3,7 @@ import logging
 import os
 from typing import Any, Callable
 
+import sentry_sdk
 import uvicorn
 import uvloop
 from fastapi import FastAPI, Request, status
@@ -10,8 +11,17 @@ from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
+from .env import sentry_dsn
 from .routers.execution.router import router as execution_router
 from .routers.integrations.router import router as integrations_router
+
+if not sentry_dsn:
+    print("Sentry DSN not found. Sentry will not be enabled.")
+else:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        enable_tracing=True,
+    )
 
 app: FastAPI = FastAPI(
     title="Integrations Service",

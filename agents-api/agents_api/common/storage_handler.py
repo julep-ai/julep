@@ -14,6 +14,7 @@ from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..env import (
     blob_store_cutoff_kb,
     debug,
+    temporal_heartbeat_timeout,
     temporal_schedule_to_close_timeout,
     testing,
     use_blob_store_for_temporal,
@@ -212,6 +213,7 @@ def auto_blob_store_workflow(f: Callable) -> Callable:
                 seconds=60 if debug or testing else temporal_schedule_to_close_timeout
             ),
             retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
 
         loaded_args = loaded[: len(args)]

@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+
+
 class AgentsBaseException(Exception):
     pass
 
@@ -23,3 +26,26 @@ class UnknownTokenizerError(AgentsBaseException):
 
     def __init__(self) -> None:
         super().__init__("unknown tokenizer")
+
+
+class TooManyRequestsError(Exception):
+    pass
+
+
+@dataclass
+class LastErrorInput:
+    last_error: BaseException | None
+
+
+@dataclass
+class FailedDecodingSentinel:
+    """Sentinel object returned when failed to decode payload."""
+
+    payload_data: bytes
+
+
+@dataclass
+class FailedEncodingSentinel:
+    """Sentinel object returned when failed to encode payload."""
+
+    payload_data: bytes

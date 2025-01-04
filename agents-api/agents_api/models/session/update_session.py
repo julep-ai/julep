@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateSessionRequest
 from ...common.utils.cozo import cozo_process_mutate_data
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics_update
 from ..utils import (
     cozo_query,
     partialclass,
@@ -22,6 +22,7 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 _fields: List[str] = [
+    "recall_options",
     "situation",
     "summary",
     "metadata",
@@ -52,7 +53,7 @@ _fields: List[str] = [
     _kind="inserted",
 )
 @cozo_query
-@increase_counter("update_session")
+@query_metrics_update("update_session")
 @beartype
 def update_session(
     *,

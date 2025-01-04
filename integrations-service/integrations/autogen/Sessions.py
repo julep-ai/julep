@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel, StrictBool
 
 
 class CreateSessionRequest(BaseModel):
@@ -51,6 +51,7 @@ class CreateSessionRequest(BaseModel):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None
 
 
@@ -86,7 +87,61 @@ class PatchSessionRequest(BaseModel):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptionsUpdate | None = None
     metadata: dict[str, Any] | None = None
+
+
+class RecallOptions(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    mode: Literal["hybrid", "vector", "text"] = "vector"
+    """
+    The mode to use for the search.
+    """
+    num_search_messages: int = 4
+    """
+    The number of search messages to use for the search.
+    """
+    max_query_length: int = 1000
+    """
+    The maximum query length to use for the search.
+    """
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.7
+    """
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    """
+    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    """
+    The confidence cutoff level
+    """
+    limit: Annotated[int, Field(ge=1, le=50)] = 10
+    """
+    The limit of documents to return
+    """
+    lang: Literal["en-US"] = "en-US"
+    """
+    The language to be used for text-only search. Support for other languages coming soon.
+    """
+    metadata_filter: dict[str, Any] = {}
+    """
+    Metadata filter to apply to the search
+    """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
+
+
+class RecallOptionsUpdate(RecallOptions):
+    pass
+
+
+class SearchMode(RootModel[Literal["hybrid", "vector", "text"]]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Literal["hybrid", "vector", "text"]
 
 
 class Session(BaseModel):
@@ -121,6 +176,7 @@ class Session(BaseModel):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptions | None = None
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -192,6 +248,7 @@ class UpdateSessionRequest(BaseModel):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None
 
 
@@ -234,6 +291,7 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
     """
+    recall_options: RecallOptions | None = None
     metadata: dict[str, Any] | None = None
 
 

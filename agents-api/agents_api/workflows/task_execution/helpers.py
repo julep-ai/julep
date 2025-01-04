@@ -20,7 +20,7 @@ with workflow.unsafe.imports_passed_through():
         StepContext,
     )
     from ...common.storage_handler import auto_blob_store_workflow
-    from ...env import task_max_parallelism
+    from ...env import task_max_parallelism, temporal_heartbeat_timeout
 
 
 @auto_blob_store_workflow
@@ -203,6 +203,7 @@ async def execute_map_reduce_step(
             args=[reduce, {"results": result, "_": output}],
             schedule_to_close_timeout=timedelta(seconds=30),
             retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
 
     return result
@@ -283,6 +284,7 @@ async def execute_map_reduce_step_parallel(
                 ],
                 schedule_to_close_timeout=timedelta(seconds=30),
                 retry_policy=DEFAULT_RETRY_POLICY,
+                heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
 
         except BaseException as e:
