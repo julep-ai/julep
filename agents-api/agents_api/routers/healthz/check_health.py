@@ -1,6 +1,8 @@
 import logging
 from uuid import UUID
 
+from fastapi import HTTPException
+
 from ...queries.agents.list_agents import list_agents as list_agents_query
 from .router import router
 
@@ -14,6 +16,6 @@ async def check_health() -> dict:
         )
     except Exception as e:
         logging.error("An error occurred while checking health: %s", str(e))
-        return {"status": "error", "message": "An internal error has occurred."}
+        raise HTTPException(status_code=500, detail="An internal error has occurred.") from e
 
     return {"status": "ok"}
