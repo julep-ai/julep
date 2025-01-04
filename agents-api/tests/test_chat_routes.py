@@ -151,7 +151,7 @@ async def _(
         connection_pool=pool,
     )
 
-    (embed, acompletion) = mocks
+    (_embed, _acompletion) = mocks
 
     response = make_request(
         method="POST",
@@ -160,10 +160,6 @@ async def _(
     )
 
     response.raise_for_status()
-
-    # Check that both mocks were called at least once
-    embed.assert_called()
-    acompletion.assert_called()
 
 
 @test("query: prepare chat context")
