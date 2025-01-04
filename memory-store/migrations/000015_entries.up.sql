@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS entries (
     token_count INTEGER DEFAULT NULL,
     tokenizer TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp DOUBLE PRECISION NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL,
     CONSTRAINT pk_entries PRIMARY KEY (session_id, entry_id, created_at),
     CONSTRAINT ct_content_is_array_of_objects CHECK (all_jsonb_elements_are_objects (content))
 );
