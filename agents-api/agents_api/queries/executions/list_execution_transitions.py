@@ -60,7 +60,7 @@ def _transform(d):
     Transition,
     transform=_transform,
 )
-@pg_query(debug=True)
+@pg_query
 @beartype
 async def list_execution_transitions(
     *,

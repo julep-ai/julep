@@ -48,7 +48,7 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
                 }
 
                 activity.logger.error(
-                    f"Error in base_evaluate: {evaluate_error}\nVariables accessed: {variables_accessed}"
+                    f"Error in base_evaluate: {evaluate_error}\n"
                 )
             raise evaluate_error from e
     elif isinstance(expr, list):

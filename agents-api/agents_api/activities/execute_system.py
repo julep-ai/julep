@@ -78,14 +78,10 @@ async def execute_system(
         # Handle special cases for doc operations
         if system.operation == "create" and system.subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
-            bg_runner = BackgroundTasks()
-            res = await handler(
+            return await handler(
                 data=CreateDocRequest(**arguments.pop("data")),
-                background_tasks=bg_runner,
                 **arguments,
             )
-            await bg_runner()
-            return res
 
         # Handle search operations
         if system.operation == "search" and system.subresource == "doc":
