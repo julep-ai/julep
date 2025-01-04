@@ -116,7 +116,7 @@ def pg_query(
             pool = (
                 connection_pool
                 if connection_pool is not None
-                else cast(asyncpg.Pool, app.state.postgres_pool)
+                else cast(asyncpg.Pool, getattr(app.state, "postgres_pool", None))
             )
 
             try:

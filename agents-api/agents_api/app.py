@@ -21,6 +21,7 @@ class State(Protocol):
 class ObjectWithState(Protocol):
     state: State
 
+pool = None
 
 # TODO: This currently doesn't use env.py, we should move to using them
 @asynccontextmanager
@@ -28,9 +29,14 @@ async def lifespan(*containers: FastAPI | ObjectWithState):
     # INIT POSTGRES #
     pg_dsn = os.environ.get("PG_DSN")
 
+
+    global pool
+    if not pool:
+        pool = await create_db_pool(pg_dsn)
+
     for container in containers:
         if hasattr(container, "state") and not getattr(container.state, "postgres_pool", None):
-            container.state.postgres_pool = await create_db_pool(pg_dsn)
+            container.state.postgres_pool = pool
 
     # INIT S3 #
     s3_access_key = os.environ.get("S3_ACCESS_KEY")
@@ -50,13 +56,13 @@ async def lifespan(*containers: FastAPI | ObjectWithState):
     try:
         yield
     finally:
-        # CLOSE POSTGRES #
-        for container in containers:
-            if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
-                pool = getattr(container.state, "postgres_pool", None)
-                if pool:
-                    await pool.close()
-                container.state.postgres_pool = None
+        # # CLOSE POSTGRES #
+        # for container in containers:
+        #     if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
+        #         pool = getattr(container.state, "postgres_pool", None)
+        #         if pool:
+        #             await pool.close()
+        #         container.state.postgres_pool = None
 
         # CLOSE S3 #
         for container in containers:
