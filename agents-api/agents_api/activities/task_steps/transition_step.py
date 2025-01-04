@@ -39,6 +39,10 @@ async def transition_step(
         msg = "Expected ExecutionInput type for context.execution_input"
         raise TypeError(msg)
 
+    if not context.execution_input.execution:
+        msg = "Execution is required in execution_input"
+        raise ValueError(msg)
+
     # Create transition
     try:
         transition = await create_execution_transition(

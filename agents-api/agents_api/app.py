@@ -1,8 +1,10 @@
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Protocol
+from typing import Protocol
 
+from aiobotocore.client import AioBaseClient
 from aiobotocore.session import get_session
+from asyncpg.pool import Pool
 from fastapi import APIRouter, FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 from scalar_fastapi import get_scalar_api_reference
@@ -11,22 +13,23 @@ from .clients.pg import create_db_pool
 from .env import api_prefix, hostname, protocol, public_port
 
 
-class Assignable(Protocol):
-    def __setattr__(self, name: str, value: Any) -> None: ...
+class State(Protocol):
+    postgres_pool: Pool | None
+    s3_client: AioBaseClient | None
 
 
 class ObjectWithState(Protocol):
-    state: Assignable
+    state: State
 
 
 # TODO: This currently doesn't use env.py, we should move to using them
 @asynccontextmanager
-async def lifespan(*containers: list[FastAPI | ObjectWithState]):
+async def lifespan(*containers: FastAPI | ObjectWithState):
     # INIT POSTGRES #
     pg_dsn = os.environ.get("PG_DSN")
 
     for container in containers:
-        if not getattr(container.state, "postgres_pool", None):
+        if hasattr(container, "state") and not getattr(container.state, "postgres_pool", None):
             container.state.postgres_pool = await create_db_pool(pg_dsn)
 
     # INIT S3 #
@@ -35,7 +38,7 @@ async def lifespan(*containers: list[FastAPI | ObjectWithState]):
     s3_endpoint = os.environ.get("S3_ENDPOINT")
 
     for container in containers:
-        if not getattr(container.state, "s3_client", None):
+        if hasattr(container, "state") and not getattr(container.state, "s3_client", None):
             session = get_session()
             container.state.s3_client = await session.create_client(
                 "s3",
@@ -49,14 +52,18 @@ async def lifespan(*containers: list[FastAPI | ObjectWithState]):
     finally:
         # CLOSE POSTGRES #
         for container in containers:
-            if getattr(container.state, "postgres_pool", None):
-                await container.state.postgres_pool.close()
+            if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
+                pool = getattr(container.state, "postgres_pool", None)
+                if pool:
+                    await pool.close()
                 container.state.postgres_pool = None
 
         # CLOSE S3 #
         for container in containers:
-            if getattr(container.state, "s3_client", None):
-                await container.state.s3_client.close()
+            if hasattr(container, "state") and getattr(container.state, "s3_client", None):
+                s3_client = getattr(container.state, "s3_client", None)
+                if s3_client:
+                    await s3_client.close()
                 container.state.s3_client = None
 
 

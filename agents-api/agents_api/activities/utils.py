@@ -41,21 +41,60 @@ def safe_range(*args):
     return result
 
 
-def safe_json_loads(s: str):
+@beartype
+def safe_json_loads(s: str) -> Any:
+    """
+    Safely load a JSON string with size limits.
+
+    Args:
+        s: JSON string to parse
+
+    Returns:
+        Parsed JSON data
+
+    Raises:
+        ValueError: If string exceeds size limit
+    """
     if len(s) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
         raise ValueError(msg)
     return json.loads(s)
 
 
-def safe_yaml_load(s: str):
+@beartype
+def safe_yaml_load(s: str) -> Any:
+    """
+    Safely load a YAML string with size limits.
+
+    Args:
+        s: YAML string to parse
+
+    Returns:
+        Parsed YAML data
+
+    Raises:
+        ValueError: If string exceeds size limit
+    """
     if len(s) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
         raise ValueError(msg)
     return yaml.load(s)
 
 
+@beartype
 def safe_base64_decode(s: str) -> str:
+    """
+    Safely decode a base64 string with size limits.
+
+    Args:
+        s: Base64 string to decode
+
+    Returns:
+        Decoded UTF-8 string
+
+    Raises:
+        ValueError: If string exceeds size limit or is invalid base64
+    """
     if len(s) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
         raise ValueError(msg)
@@ -66,21 +105,66 @@ def safe_base64_decode(s: str) -> str:
         raise ValueError(msg)
 
 
+@beartype
 def safe_base64_encode(s: str) -> str:
+    """
+    Safely encode a string to base64 with size limits.
+
+    Args:
+        s: String to encode
+
+    Returns:
+        Base64 encoded string
+
+    Raises:
+        ValueError: If string exceeds size limit
+    """
     if len(s) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
         raise ValueError(msg)
     return base64.b64encode(s.encode("utf-8")).decode("utf-8")
 
 
-def safe_random_choice(seq):
+@beartype
+def safe_random_choice(seq: list[Any] | tuple[Any, ...] | str) -> Any:
+    """
+    Safely choose a random element from a sequence with size limits.
+
+    Args:
+        seq: A sequence (list, tuple, or string) to choose from
+
+    Returns:
+        A randomly selected element
+
+    Raises:
+        ValueError: If sequence exceeds size limit
+        TypeError: If input is not a valid sequence type
+    """
     if len(seq) > MAX_COLLECTION_SIZE:
         msg = f"Sequence exceeds maximum size of {MAX_COLLECTION_SIZE}"
         raise ValueError(msg)
     return random.choice(seq)
 
 
-def safe_random_sample(population, k):
+@beartype
+def safe_random_sample(population: list[T] | tuple[T, ...] | str, k: int) -> list[T]:
+    """
+    Safely sample k elements from a population with size limits.
+
+    Args:
+        population: A sequence to sample from
+        k: Number of elements to sample
+
+    Returns:
+        A list containing k randomly selected elements
+
+    Raises:
+        ValueError: If population/sample size exceeds limits
+        TypeError: If input is not a valid sequence type
+    """
+    if not isinstance(population, list | tuple | str):
+        msg = "Expected a sequence (list, tuple, or string)"
+        raise TypeError(msg)
     if len(population) > MAX_COLLECTION_SIZE:
         msg = f"Population exceeds maximum size of {MAX_COLLECTION_SIZE}"
         raise ValueError(msg)
@@ -93,9 +177,19 @@ def safe_random_sample(population, k):
     return random.sample(population, k)
 
 
+@beartype
 def chunk_doc(string: str) -> list[str]:
     """
     Chunk a string into sentences.
+
+    Args:
+        string: The text to chunk into sentences
+
+    Returns:
+        A list of sentence chunks
+
+    Raises:
+        ValueError: If string exceeds size limit
     """
     if len(string) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
@@ -397,8 +491,8 @@ def get_handler(system: SystemDef) -> Callable:
     from ..queries.agents.update_agent import update_agent as update_agent_query
     from ..queries.docs.delete_doc import delete_doc as delete_doc_query
     from ..queries.docs.list_docs import list_docs as list_docs_query
+    from ..queries.entries.get_history import get_history as get_history_query
     from ..queries.sessions.create_session import create_session as create_session_query
-    from ..queries.sessions.delete_session import delete_session as delete_session_query
     from ..queries.sessions.get_session import get_session as get_session_query
     from ..queries.sessions.list_sessions import list_sessions as list_sessions_query
     from ..queries.sessions.update_session import update_session as update_session_query
