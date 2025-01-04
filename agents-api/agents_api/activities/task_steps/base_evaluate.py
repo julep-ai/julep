@@ -42,11 +42,6 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
         except Exception as e:
             if activity.in_activity():
                 evaluate_error = EvaluateError(e, expr, evaluator.names)
-
-                {
-                    name: value for name, value in evaluator.names.items() if name in expr
-                }
-
                 activity.logger.error(f"Error in base_evaluate: {evaluate_error}\n")
             raise evaluate_error from e
     elif isinstance(expr, list):
