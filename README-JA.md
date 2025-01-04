@@ -1,4 +1,4 @@
-<sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
+<sup>[英語](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [フランス語](README-FR.md)</sup>
 
 <div align="center" id="top">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
@@ -113,7 +113,7 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 3. 🔄 **複数ステップのタスク**: ループと意思決定を含む複雑な複数ステップのプロセスを構築します。
 4. ⏳ **タスク管理**: 無期限に実行される可能性のある長時間実行タスクを処理します。
 5. 🛠️ **組み込みツール**: タスクで組み込みツールと外部 API を使用します。
-6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、一般的にタスクがスムーズに実行されるようにします。
+6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、タスクがスムーズに実行されるようにします。
 7. 📚 **RAG**: Julep のドキュメント ストアを使用して、独自のデータを取得して使用するためのシステムを構築します。
 
 ![機能](https://github.com/user-attachments/assets/4355cbae-fcbd-4510-ac0d-f8f77b73af70)
@@ -535,7 +535,7 @@ plot_ideas: load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip())
 in: _.research_queries
 する：
 ツール: research_wikipedia
-議論：
+引数:
 クエリ: _
 
 - 評価する：
@@ -589,7 +589,7 @@ const タスク = client.tasks.create(agentId, yaml.parse(taskYaml)) を待機�
 /* ステップ 3: タスクを実行する */
 
 非同期関数executeTask(taskId) {
-const 実行 = クライアント.実行.作成(taskId, {
+const 実行 = クライアントの実行の作成を待機します(taskId、{
 入力: { アイデア: 「飛ぶことを学ぶ猫」 },
   });
 

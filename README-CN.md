@@ -1,4 +1,4 @@
-<sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
+<sup>[中文](README.md) | [中文翻译](README-CN.md) | [日本语翻訳](README-JA.md) | [法语](README-FR.md)</sup>
 
 <div align="center" id="top">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
@@ -72,7 +72,7 @@
 - [`系统` 工具](#system-tools)
 - [可用的系统资源和操作](#available-system-resources-and-operations)
 - [内置 `integrations`](#built-in-integrations)
--[直接`api_calls`](#direct-api_calls)
+-[直接`api_calls`]（#direct-api_calls）
 - [集成](#integrations)
 - [其他功能](#other-features)
 - [向代理添加工具](#adding-tools-to-agents)
@@ -110,7 +110,7 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 
 1. 🧠 **持久 AI 代理**：在长期交互​​中记住上下文和信息。
 2. 💾 **状态会话**：跟踪过去的互动以获得个性化回应。
-3. 🔄 **多步骤任务**：通过循环和决策构建复杂的多步骤流程。
+3. 🔄 **多步骤任务**：使用循环和决策构建复杂的多步骤流程。
 4. ⏳ **任务管理**：处理可以无限期运行的长时间运行的任务。
 5.🛠️**内置工具**：在您的任务中使用内置工具和外部 API。
 6. 🔧 **自我修复**：Julep 将自动重试失败的步骤、重新发送消息，并确保您的任务顺利运行。
@@ -434,7 +434,7 @@ agent_id=代理.id，
 )
 
 # 🎉 观看故事和漫画面板的生成
-while (result := client.executions.get(execution.id)).status 不在 ['成功', '失败'] 中：
+当（result：= client.executions.get（execution.id））.status 不在['succeeded'，'failed']中时：
 打印（结果.状态，结果.输出）
 时间.睡眠(1)
 
@@ -1031,7 +1031,7 @@ Pause the workflow for a specified duration
 秒：30
 # 分钟：1
 #小时数：1
-#天数：1
+# 天数：1
 ```
 
 </td>
