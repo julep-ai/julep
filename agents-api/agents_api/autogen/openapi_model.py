@@ -372,7 +372,7 @@ class CreateTransitionRequest(Transition):
 
 
 class CreateEntryRequest(BaseEntry):
-    timestamp: Annotated[float, Field(ge=0.0, default_factory=lambda: utcnow().timestamp())]
+    timestamp: Annotated[AwareDatetime, Field(default_factory=lambda: utcnow())]
 
     @classmethod
     def from_model_input(
