@@ -3350,8 +3350,8 @@ components:
           description: The tool call id of the tool call this message is a response to
           default: null
         timestamp:
-          type: number
-          minimum: 0
+          type: string
+          format: date-time
           description: This is the time that this event refers to.
     Entries.ChatMLRole:
       type: string

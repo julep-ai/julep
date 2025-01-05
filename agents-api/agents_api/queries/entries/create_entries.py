@@ -104,7 +104,7 @@ async def create_entries(
             item.get("token_count"),  # $11
             select_tokenizer(item.get("model"))["type"],  # $12
             item.get("created_at") or utcnow(),  # $13
-            utcnow().timestamp(),  # $14
+            utcnow(),  # $14
         ]
         for item in data_dicts
     ]

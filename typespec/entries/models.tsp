@@ -116,8 +116,7 @@ model BaseEntry {
     tool_call_id?: string | null = null;
 
     /** This is the time that this event refers to. */
-    @minValue(0)
-    timestamp: float;
+    timestamp: utcDateTime;
 }
 
 model Entry extends BaseEntry {

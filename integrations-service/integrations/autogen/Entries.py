@@ -69,7 +69,7 @@ class BaseEntry(BaseModel):
     """
     The tool call id of the tool call this message is a response to
     """
-    timestamp: Annotated[float, Field(ge=0.0)]
+    timestamp: AwareDatetime
     """
     This is the time that this event refers to.
     """
