@@ -3,30 +3,32 @@ This module contains tests for entry queries against the CozoDB database.
 It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
 """
 
-# Tests for entry queries
+from agents_api.autogen.openapi_model import (
+    CreateEntryRequest,
+    Entry,
+    History,
+)
+from agents_api.clients.pg import create_db_pool
+from agents_api.queries.entries import (
+    create_entries,
+    delete_entries,
+    get_history,
+    list_entries,
+)
+from fastapi import HTTPException
+from uuid_extensions import uuid7
+from ward import raises, test
 
-import time
-
-from ward import test
-
-from agents_api.autogen.openapi_model import CreateEntryRequest
-from agents_api.models.entry.create_entries import create_entries
-from agents_api.models.entry.delete_entries import delete_entries
-from agents_api.models.entry.get_history import get_history
-from agents_api.models.entry.list_entries import list_entries
-from agents_api.models.session.get_session import get_session
-from tests.fixtures import cozo_client, test_developer_id, test_session
+from tests.fixtures import pg_dsn, test_developer, test_developer_id, test_session
 
 MODEL = "gpt-4o-mini"
 
 
-@test("model: create entry")
-def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
-    """
-    Tests the addition of a new entry to the database.
-    Verifies that the entry can be successfully added using the create_entries function.
-    """
+@test("query: create entry no session")
+async def _(dsn=pg_dsn, developer=test_developer):
+    """Test the addition of a new entry to the database."""
 
+    pool = await create_db_pool(dsn=dsn)
     test_entry = CreateEntryRequest.from_model_input(
         model=MODEL,
         role="user",
@@ -34,56 +36,36 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
         content="test entry content",
     )
 
-    create_entries(
-        developer_id=developer_id,
-        session_id=session.id,
-        data=[test_entry],
-        mark_session_as_updated=False,
-        client=client,
-    )
+    with raises(HTTPException) as exc_info:
+        await create_entries(
+            developer_id=developer.id,
+            session_id=uuid7(),
+            data=[test_entry],
+            connection_pool=pool,
+        )
+    assert exc_info.raised.status_code == 404
 
 
-@test("model: create entry, update session")
-def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
-    """
-    Tests the addition of a new entry to the database.
-    Verifies that the entry can be successfully added using the create_entries function.
-    """
+@test("query: list entries sql - no session")
+async def _(dsn=pg_dsn, developer=test_developer):
+    """Test the retrieval of entries from the database."""
 
-    test_entry = CreateEntryRequest.from_model_input(
-        model=MODEL,
-        role="user",
-        source="internal",
-        content="test entry content",
-    )
+    pool = await create_db_pool(dsn=dsn)
 
-    # TODO: We should make sessions.updated_at also a updated_at_ms field to avoid this sleep
-    time.sleep(1)
-
-    create_entries(
-        developer_id=developer_id,
-        session_id=session.id,
-        data=[test_entry],
-        mark_session_as_updated=True,
-        client=client,
-    )
-
-    updated_session = get_session(
-        developer_id=developer_id,
-        session_id=session.id,
-        client=client,
-    )
-
-    assert updated_session.updated_at > session.updated_at
+    with raises(HTTPException) as exc_info:
+        await list_entries(
+            developer_id=developer.id,
+            session_id=uuid7(),
+            connection_pool=pool,
+        )
+    assert exc_info.raised.status_code == 404
 
 
-@test("model: get entries")
-def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
-    """
-    Tests the retrieval of entries from the database.
-    Verifies that entries matching specific criteria can be successfully retrieved.
-    """
+@test("query: list entries sql - session exists")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """Test the retrieval of entries from the database."""
 
+    pool = await create_db_pool(dsn=dsn)
     test_entry = CreateEntryRequest.from_model_input(
         model=MODEL,
         role="user",
@@ -98,30 +80,30 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
         source="internal",
     )
 
-    create_entries(
+    await create_entries(
         developer_id=developer_id,
         session_id=session.id,
         data=[test_entry, internal_entry],
-        client=client,
+        connection_pool=pool,
     )
 
-    result = list_entries(
+    result = await list_entries(
         developer_id=developer_id,
         session_id=session.id,
-        client=client,
+        connection_pool=pool,
     )
 
-    # Asserts that only one entry is retrieved, matching the session_id.
+    # Assert that only one entry is retrieved, matching the session_id.
     assert len(result) == 1
+    assert isinstance(result[0], Entry)
+    assert result is not None
 
 
-@test("model: get history")
-def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
-    """
-    Tests the retrieval of entries from the database.
-    Verifies that entries matching specific criteria can be successfully retrieved.
-    """
+@test("query: get history sql - session exists")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """Test the retrieval of entry history from the database."""
 
+    pool = await create_db_pool(dsn=dsn)
     test_entry = CreateEntryRequest.from_model_input(
         model=MODEL,
         role="user",
@@ -136,31 +118,31 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
         source="internal",
     )
 
-    create_entries(
+    await create_entries(
         developer_id=developer_id,
         session_id=session.id,
         data=[test_entry, internal_entry],
-        client=client,
+        connection_pool=pool,
     )
 
-    result = get_history(
+    result = await get_history(
         developer_id=developer_id,
         session_id=session.id,
-        client=client,
+        connection_pool=pool,
     )
 
-    # Asserts that only one entry is retrieved, matching the session_id.
+    # Assert that entries are retrieved and have valid IDs.
+    assert result is not None
+    assert isinstance(result, History)
     assert len(result.entries) > 0
     assert result.entries[0].id
 
 
-@test("model: delete entries")
-def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
-    """
-    Tests the deletion of entries from the database.
-    Verifies that entries can be successfully deleted using the delete_entries function.
-    """
+@test("query: delete entries sql - session exists")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """Test the deletion of entries from the database."""
 
+    pool = await create_db_pool(dsn=dsn)
     test_entry = CreateEntryRequest.from_model_input(
         model=MODEL,
         role="user",
@@ -175,27 +157,29 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
         source="internal",
     )
 
-    created_entries = create_entries(
+    created_entries = await create_entries(
         developer_id=developer_id,
         session_id=session.id,
         data=[test_entry, internal_entry],
-        client=client,
+        connection_pool=pool,
     )
 
     entry_ids = [entry.id for entry in created_entries]
 
-    delete_entries(
+    await delete_entries(
         developer_id=developer_id,
         session_id=session.id,
         entry_ids=entry_ids,
-        client=client,
+        connection_pool=pool,
     )
 
-    result = list_entries(
+    result = await list_entries(
         developer_id=developer_id,
         session_id=session.id,
-        client=client,
+        connection_pool=pool,
     )
 
-    # Asserts that no entries are retrieved after deletion.
+    # Assert that no entries are retrieved after deletion.
     assert all(id not in [entry.id for entry in result] for id in entry_ids)
+    assert len(result) == 0
+    assert result is not None

@@ -28,7 +28,8 @@ async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGet
         openweathermap_api_key = openweather_api_key
 
     if not location:
-        raise ValueError("Location parameter is required for weather data")
+        msg = "Location parameter is required for weather data"
+        raise ValueError(msg)
 
     weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=openweathermap_api_key)
     result = weather.run(location)

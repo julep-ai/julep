@@ -1,7 +1,9 @@
 import logging
 from uuid import UUID
 
-from ...models.agent.list_agents import list_agents as list_agents_query
+from fastapi import HTTPException
+
+from ...queries.agents.list_agents import list_agents as list_agents_query
 from .router import router
 
 
@@ -9,11 +11,11 @@ from .router import router
 async def check_health() -> dict:
     try:
         # Check if the database is reachable
-        list_agents_query(
+        await list_agents_query(
             developer_id=UUID("00000000-0000-0000-0000-000000000000"),
         )
     except Exception as e:
         logging.error("An error occurred while checking health: %s", str(e))
-        return {"status": "error", "message": "An internal error has occurred."}
+        raise HTTPException(status_code=500, detail="An internal error has occurred.") from e
 
     return {"status": "ok"}

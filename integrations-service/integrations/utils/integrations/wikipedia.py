@@ -21,7 +21,8 @@ async def search(
 
     query = arguments.query
     if not query:
-        raise ValueError("Query parameter is required for Wikipedia search")
+        msg = "Query parameter is required for Wikipedia search"
+        raise ValueError(msg)
 
     load_max_docs = arguments.load_max_docs
 

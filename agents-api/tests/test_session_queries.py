@@ -1,160 +1,247 @@
-# Tests for session queries
-from uuid import uuid4
-
-from ward import test
+# """
+# This module contains tests for SQL query generation functions in the sessions module.
+# Tests verify the SQL queries without actually executing them against a database.
+# """
 
 from agents_api.autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
     CreateSessionRequest,
+    PatchSessionRequest,
+    ResourceCreatedResponse,
+    ResourceDeletedResponse,
+    ResourceUpdatedResponse,
     Session,
+    UpdateSessionRequest,
 )
-from agents_api.models.session.count_sessions import count_sessions
-from agents_api.models.session.create_or_update_session import create_or_update_session
-from agents_api.models.session.create_session import create_session
-from agents_api.models.session.delete_session import delete_session
-from agents_api.models.session.get_session import get_session
-from agents_api.models.session.list_sessions import list_sessions
+from agents_api.clients.pg import create_db_pool
+from agents_api.queries.sessions import (
+    count_sessions,
+    create_or_update_session,
+    create_session,
+    delete_session,
+    get_session,
+    list_sessions,
+    patch_session,
+    update_session,
+)
+from uuid_extensions import uuid7
+from ward import raises, test
+
 from tests.fixtures import (
-    cozo_client,
+    pg_dsn,
     test_agent,
     test_developer_id,
     test_session,
     test_user,
 )
 
-MODEL = "gpt-4o-mini"
 
+@test("query: create session sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
+    """Test that a session can be successfully created."""
 
-@test("model: create session")
-def _(
-    client=cozo_client, developer_id=test_developer_id, agent=test_agent, user=test_user
-):
-    create_session(
+    pool = await create_db_pool(dsn=dsn)
+    session_id = uuid7()
+    data = CreateSessionRequest(
+        users=[user.id],
+        agents=[agent.id],
+        system_template="test system template",
+    )
+    result = await create_session(
         developer_id=developer_id,
-        data=CreateSessionRequest(
-            users=[user.id],
-            agents=[agent.id],
-            situation="test session about",
-        ),
-        client=client,
+        session_id=session_id,
+        data=data,
+        connection_pool=pool,
     )
 
+    assert result is not None
+    assert isinstance(result, ResourceCreatedResponse), f"Result is not a Session, {result}"
+    assert result.id == session_id
 
-@test("model: create session no user")
-def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-    create_session(
+
+@test("query: create or update session sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
+    """Test that a session can be successfully created or updated."""
+
+    pool = await create_db_pool(dsn=dsn)
+    session_id = uuid7()
+    data = CreateOrUpdateSessionRequest(
+        users=[user.id],
+        agents=[agent.id],
+        system_template="test system template",
+    )
+    result = await create_or_update_session(
         developer_id=developer_id,
-        data=CreateSessionRequest(
-            agents=[agent.id],
-            situation="test session about",
-        ),
-        client=client,
+        session_id=session_id,
+        data=data,
+        connection_pool=pool,
     )
 
-
-@test("model: get session not exists")
-def _(client=cozo_client, developer_id=test_developer_id):
-    session_id = uuid4()
-
-    try:
-        get_session(
-            session_id=session_id,
-            developer_id=developer_id,
-            client=client,
-        )
-    except Exception:
-        pass
-    else:
-        assert False, "Session should not exist"
+    assert result is not None
+    assert isinstance(result, ResourceUpdatedResponse)
+    assert result.id == session_id
+    assert result.updated_at is not None
 
 
-@test("model: get session exists")
-def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
-    result = get_session(
+@test("query: get session exists")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """Test retrieving an existing session."""
+
+    pool = await create_db_pool(dsn=dsn)
+    result = await get_session(
+        developer_id=developer_id,
         session_id=session.id,
-        developer_id=developer_id,
-        client=client,
+        connection_pool=pool,
     )
 
     assert result is not None
     assert isinstance(result, Session)
+    assert result.id == session.id
 
 
-@test("model: delete session")
-def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
-    session = create_session(
-        developer_id=developer_id,
-        data=CreateSessionRequest(
-            agent=agent.id,
-            situation="test session about",
-        ),
-        client=client,
-    )
+@test("query: get session does not exist")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test retrieving a non-existent session."""
 
-    delete_session(
-        session_id=session.id,
-        developer_id=developer_id,
-        client=client,
-    )
-
-    try:
-        get_session(
-            session_id=session.id,
+    session_id = uuid7()
+    pool = await create_db_pool(dsn=dsn)
+    with raises(Exception):
+        await get_session(
+            session_id=session_id,
             developer_id=developer_id,
-            client=client,
+            connection_pool=pool,
         )
-    except Exception:
-        pass
-
-    else:
-        assert False, "Session should not exist"
 
 
-@test("model: list sessions")
-def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
-    result = list_sessions(
+@test("query: list sessions")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """Test listing sessions with default pagination."""
+
+    pool = await create_db_pool(dsn=dsn)
+    result = await list_sessions(
         developer_id=developer_id,
-        client=client,
+        limit=10,
+        offset=0,
+        connection_pool=pool,
     )
 
     assert isinstance(result, list)
-    assert len(result) > 0
+    assert len(result) >= 1
+    assert any(s.id == session.id for s in result)
 
 
-@test("model: count sessions")
-def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
-    result = count_sessions(
+@test("query: list sessions with filters")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """Test listing sessions with specific filters."""
+
+    pool = await create_db_pool(dsn=dsn)
+    result = await list_sessions(
         developer_id=developer_id,
-        client=client,
+        limit=10,
+        offset=0,
+        connection_pool=pool,
     )
 
-    assert isinstance(result, dict)
-    assert result["count"] > 0
+    assert isinstance(result, list)
+    assert len(result) >= 1
+    assert all(isinstance(s, Session) for s in result), (
+        f"Result is not a list of sessions, {result}"
+    )
 
 
-@test("model: create or update session")
-def _(
-    client=cozo_client, developer_id=test_developer_id, agent=test_agent, user=test_user
+@test("query: count sessions")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """Test counting the number of sessions for a developer."""
+
+    pool = await create_db_pool(dsn=dsn)
+    count = await count_sessions(
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
+
+    assert isinstance(count, dict)
+    assert count["count"] >= 1
+
+
+@test("query: update session sql")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    session=test_session,
+    agent=test_agent,
+    user=test_user,
 ):
-    session_id = uuid4()
+    """Test that an existing session's information can be successfully updated."""
 
-    create_or_update_session(
-        session_id=session_id,
-        developer_id=developer_id,
-        data=CreateOrUpdateSessionRequest(
-            users=[user.id],
-            agents=[agent.id],
-            situation="test session about",
-        ),
-        client=client,
+    pool = await create_db_pool(dsn=dsn)
+    data = UpdateSessionRequest(
+        token_budget=1000,
+        forward_tool_calls=True,
+        system_template="updated system template",
     )
-
-    result = get_session(
-        session_id=session_id,
+    result = await update_session(
+        session_id=session.id,
         developer_id=developer_id,
-        client=client,
+        data=data,
+        connection_pool=pool,
     )
 
     assert result is not None
-    assert isinstance(result, Session)
-    assert result.id == session_id
+    assert isinstance(result, ResourceUpdatedResponse)
+    assert result.updated_at > session.created_at
+
+    updated_session = await get_session(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+    assert updated_session.forward_tool_calls is True
+
+
+@test("query: patch session sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, agent=test_agent):
+    """Test that a session can be successfully patched."""
+
+    pool = await create_db_pool(dsn=dsn)
+    data = PatchSessionRequest(
+        metadata={"test": "metadata"},
+    )
+    result = await patch_session(
+        developer_id=developer_id,
+        session_id=session.id,
+        data=data,
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert isinstance(result, ResourceUpdatedResponse)
+    assert result.updated_at > session.created_at
+
+    patched_session = await get_session(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+    assert patched_session.metadata == {"test": "metadata"}
+
+
+@test("query: delete session sql")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """Test that a session can be successfully deleted."""
+
+    pool = await create_db_pool(dsn=dsn)
+    delete_result = await delete_session(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+
+    assert delete_result is not None
+    assert isinstance(delete_result, ResourceDeletedResponse)
+
+    with raises(Exception):
+        await get_session(
+            developer_id=developer_id,
+            session_id=session.id,
+            connection_pool=pool,
+        )

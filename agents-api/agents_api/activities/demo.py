@@ -1,5 +1,3 @@
-from typing import Callable
-
 from temporalio import activity
 
 from ..env import testing
@@ -7,13 +5,14 @@ from ..env import testing
 
 async def demo_activity(a: int, b: int) -> int:
     # Should throw an error if testing is not enabled
-    raise Exception("This should not be called in production")
+    msg = "This should not be called in production"
+    raise Exception(msg)
 
 
 async def mock_demo_activity(a: int, b: int) -> int:
     return a + b
 
 
-demo_activity: Callable[[int, int], int] = activity.defn(name="demo_activity")(
+demo_activity = activity.defn(name="demo_activity")(
     demo_activity if not testing else mock_demo_activity
 )

@@ -8,12 +8,10 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
-from ...common.storage_handler import auto_blob_store
-from ...env import testing
 from .base_evaluate import base_evaluate
 
 
-@auto_blob_store(deep=True)
+@activity.defn
 @beartype
 async def map_reduce_step(context: StepContext) -> StepOutcome:
     try:
@@ -28,12 +26,3 @@ async def map_reduce_step(context: StepContext) -> StepOutcome:
     except BaseException as e:
         logging.error(f"Error in map_reduce_step: {e}")
         return StepOutcome(error=str(e))
-
-
-# Note: This is here just for clarity. We could have just imported if_else_step directly
-# They do the same thing, so we dont need to mock the if_else_step function
-mock_if_else_step = map_reduce_step
-
-map_reduce_step = activity.defn(name="map_reduce_step")(
-    map_reduce_step if not testing else mock_if_else_step
-)

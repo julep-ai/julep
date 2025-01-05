@@ -28,8 +28,6 @@ class SessionSettings(AgentDefaultSettings):
     Currently, it does not extend the base class with additional properties.
     """
 
-    pass
-
 
 class SessionData(BaseModel):
     """
@@ -75,17 +73,13 @@ class ChatContext(SessionData):
         active_agent = self.get_active_agent()
 
         default_settings: AgentDefaultSettings | None = active_agent.default_settings
-        default_settings: dict = (
-            default_settings and default_settings.model_dump() or {}
-        )
+        default_settings: dict = (default_settings and default_settings.model_dump()) or {}
 
-        self.settings = settings = ChatSettings(
-            **{
-                "model": active_agent.model,
-                **default_settings,
-                **request_settings,
-            }
-        )
+        self.settings = settings = ChatSettings(**{
+            "model": active_agent.model,
+            **default_settings,
+            **request_settings,
+        })
 
         return settings
 
@@ -103,14 +97,14 @@ class ChatContext(SessionData):
 
         return active_toolset.tools
 
-    def get_chat_environment(self) -> dict[str, dict | list[dict]]:
+    def get_chat_environment(self) -> dict[str, dict | list[dict] | None]:
         """
         Get the chat environment from the session data.
         """
         current_agent = self.get_active_agent()
         tools = self.get_active_tools()
         settings: ChatSettings | None = self.settings
-        settings: dict = settings and settings.model_dump() or {}
+        settings: dict = (settings and settings.model_dump()) or {}
 
         return {
             "session": self.session.model_dump(),
@@ -137,7 +131,8 @@ def make_session(
 
     match (len(agents), len(users)):
         case (0, _):
-            raise ValueError("At least one agent must be provided.")
+            msg = "At least one agent must be provided."
+            raise ValueError(msg)
         case (1, 0):
             cls = SingleAgentNoUserSession
             participants = {"agent": agents[0]}

@@ -20,6 +20,12 @@ You are talking to a user
   {%- endif -%}
 {%- endif -%}
 
+{{NEWLINE}}
+
+{%- if session.situation -%}
+Situation: {{session.situation}}
+{%- endif -%}
+
 {{NEWLINE+NEWLINE}}
 
 {%- if agent.instructions -%}
@@ -32,15 +38,6 @@ Instructions:{{NEWLINE}}
     {%- endfor -%}
   {%- endif -%}
   {{NEWLINE}}
-{%- endif -%}
-
-{%- if tools -%}
-Tools:{{NEWLINE}}
-  {%- for tool in tools -%}
-    - {{tool.name + NEWLINE}}
-    {%- if tool.description -%}: {{tool.description + NEWLINE}}{%- endif -%}
-  {%- endfor -%}
-{{NEWLINE+NEWLINE}}
 {%- endif -%}
 
 {%- if docs -%}

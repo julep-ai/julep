@@ -2,9 +2,7 @@
 Model Registry maintains a list of supported models and their configs.
 """
 
-from typing import Dict
-
-GPT4_MODELS: Dict[str, int] = {
+GPT4_MODELS: dict[str, int] = {
     # stable model names:
     #   resolves to gpt-4-0314 before 2023-06-27,
     #   resolves to gpt-4-0613 after
@@ -27,7 +25,7 @@ GPT4_MODELS: Dict[str, int] = {
     "gpt-4-32k-0314": 32768,
 }
 
-TURBO_MODELS: Dict[str, int] = {
+TURBO_MODELS: dict[str, int] = {
     # stable model names:
     #   resolves to gpt-3.5-turbo-0301 before 2023-06-27,
     #   resolves to gpt-3.5-turbo-0613 until 2023-12-11,
@@ -48,14 +46,14 @@ TURBO_MODELS: Dict[str, int] = {
     "gpt-3.5-turbo-0301": 4096,
 }
 
-GPT3_5_MODELS: Dict[str, int] = {
+GPT3_5_MODELS: dict[str, int] = {
     "text-davinci-003": 4097,
     "text-davinci-002": 4097,
     # instruct models
     "gpt-3.5-turbo-instruct": 4096,
 }
 
-GPT3_MODELS: Dict[str, int] = {
+GPT3_MODELS: dict[str, int] = {
     "text-ada-001": 2049,
     "text-babbage-001": 2040,
     "text-curie-001": 2049,
@@ -66,14 +64,14 @@ GPT3_MODELS: Dict[str, int] = {
 }
 
 
-DISCONTINUED_MODELS: Dict[str, int] = {
+DISCONTINUED_MODELS: dict[str, int] = {
     "code-davinci-002": 8001,
     "code-davinci-001": 8001,
     "code-cushman-002": 2048,
     "code-cushman-001": 2048,
 }
 
-CLAUDE_MODELS: Dict[str, int] = {
+CLAUDE_MODELS: dict[str, int] = {
     "claude-instant-1": 100000,
     "claude-instant-1.2": 100000,
     "claude-2": 100000,
@@ -84,14 +82,14 @@ CLAUDE_MODELS: Dict[str, int] = {
     "claude-3-haiku-20240307": 180000,
 }
 
-OPENAI_MODELS: Dict[str, int] = {
+OPENAI_MODELS: dict[str, int] = {
     **GPT4_MODELS,
     **TURBO_MODELS,
     **GPT3_5_MODELS,
     **GPT3_MODELS,
 }
 
-LOCAL_MODELS: Dict[str, int] = {
+LOCAL_MODELS: dict[str, int] = {
     "gpt-4o": 32768,
     "gpt-4o-awq": 32768,
     "TinyLlama/TinyLlama_v1.1": 2048,
@@ -100,13 +98,13 @@ LOCAL_MODELS: Dict[str, int] = {
     "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768,
 }
 
-LOCAL_MODELS_WITH_TOOL_CALLS: Dict[str, int] = {
+LOCAL_MODELS_WITH_TOOL_CALLS: dict[str, int] = {
     "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768,
     "julep-ai/Hermes-2-Theta-Llama-3-8B": 8192,
 }
 
-OLLAMA_MODELS: Dict[str, int] = {
+OLLAMA_MODELS: dict[str, int] = {
     "llama2": 4096,
 }
 
-CHAT_MODELS: Dict[str, int] = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}
+CHAT_MODELS: dict[str, int] = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}

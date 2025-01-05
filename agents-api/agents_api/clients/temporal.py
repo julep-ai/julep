@@ -12,9 +12,9 @@ from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 
 from ..autogen.openapi_model import TransitionTarget
+from ..common.interceptors import offload_if_large
 from ..common.protocol.tasks import ExecutionInput
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
-from ..common.storage_handler import store_in_blob_store_if_large
 from ..env import (
     temporal_client_cert,
     temporal_metrics_bind_host,
@@ -90,15 +90,20 @@ async def run_task_execution_workflow(
 ):
     from ..workflows.task_execution import TaskExecutionWorkflow
 
+    if execution_input.execution is None:
+        msg = "execution_input.execution cannot be None"
+        raise ValueError(msg)
+
     start: TransitionTarget = start or TransitionTarget(workflow="main", step=0)
-    previous_inputs: list[dict] = previous_inputs or []
 
     client = client or (await get_client())
     execution_id = execution_input.execution.id
     execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
-    execution_input.arguments = await store_in_blob_store_if_large(
-        execution_input.arguments
-    )
+
+    old_args = execution_input.arguments
+    execution_input.arguments = await offload_if_large(old_args)
+
+    previous_inputs: list[dict] = previous_inputs or [execution_input.arguments]
 
     return await client.start_workflow(
         TaskExecutionWorkflow.run,
@@ -107,11 +112,9 @@ async def run_task_execution_workflow(
         id=str(job_id),
         run_timeout=timedelta(days=31),
         retry_policy=DEFAULT_RETRY_POLICY,
-        search_attributes=TypedSearchAttributes(
-            [
-                SearchAttributePair(execution_id_key, str(execution_id)),
-            ]
-        ),
+        search_attributes=TypedSearchAttributes([
+            SearchAttributePair(execution_id_key, str(execution_id)),
+        ]),
     )
 
 
@@ -122,8 +125,6 @@ async def get_workflow_handle(
 ):
     client = client or (await get_client())
 
-    handle = client.get_workflow_handle(
+    return client.get_workflow_handle(
         handle_id,
     )
-
-    return handle

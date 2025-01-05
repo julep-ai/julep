@@ -1,5 +1,4 @@
 # Local database files
-cozo.db
 temporal.db
 *.bak
 *.dat

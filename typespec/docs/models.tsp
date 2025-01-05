@@ -26,7 +26,23 @@ model Doc {
 
     /** Embeddings for the document */
     @visibility("read")
-    embeddings?: float32[] | float32[][];
+    embeddings: float32[] | float32[][] | null = null;
+
+    @visibility("read")
+    /** Modality of the document */
+    modality?: string;
+
+    @visibility("read")
+    /** Language of the document */
+    language?: string;
+
+    @visibility("read")
+    /** Embedding model used for the document */
+    embedding_model?: string;
+
+    @visibility("read")
+    /** Dimensions of the embedding model */
+    embedding_dimensions?: uint16;
 }
 
 /** Payload for creating a doc */

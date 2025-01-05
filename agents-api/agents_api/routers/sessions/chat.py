@@ -1,8 +1,9 @@
-from typing import Annotated, Optional
-from uuid import UUID, uuid4
+from typing import Annotated
+from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header, HTTPException, status
 from starlette.status import HTTP_201_CREATED
+from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import (
     ChatInput,
@@ -18,10 +19,10 @@ from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
 from ...env import max_free_sessions
-from ...models.chat.gather_messages import gather_messages
-from ...models.chat.prepare_chat_context import prepare_chat_context
-from ...models.entry.create_entries import create_entries
-from ...models.session.count_sessions import count_sessions as count_sessions_query
+from ...queries.chat.gather_messages import gather_messages
+from ...queries.chat.prepare_chat_context import prepare_chat_context
+from ...queries.entries.create_entries import create_entries
+from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from .metrics import total_tokens_per_user
 from .router import router
 
@@ -38,7 +39,7 @@ async def chat(
     session_id: UUID,
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
-    x_custom_api_key: Optional[str] = Header(None, alias="X-Custom-Api-Key"),
+    x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
 ) -> ChatResponse:
     """
     Initiates a chat session.
@@ -56,7 +57,7 @@ async def chat(
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
-        sessions = count_sessions_query(developer_id=developer.id)
+        sessions = await count_sessions_query(developer_id=developer.id)
         session_length = sessions["count"]
         if session_length > max_free_sessions:
             raise HTTPException(
@@ -65,10 +66,11 @@ async def chat(
             )
 
     if chat_input.stream:
-        raise NotImplementedError("Streaming is not yet implemented")
+        msg = "Streaming is not yet implemented"
+        raise NotImplementedError(msg)
 
     # First get the chat context
-    chat_context: ChatContext = prepare_chat_context(
+    chat_context: ChatContext = await prepare_chat_context(
         developer_id=developer.id,
         session_id=session_id,
     )
@@ -88,22 +90,20 @@ async def chat(
     # Prepare the environment
     env: dict = chat_context.get_chat_environment()
     env["docs"] = [
-        dict(
-            title=ref.title,
-            content=[ref.snippet.content],
-        )
+        {
+            "title": ref.title,
+            "content": [ref.snippet.content],
+        }
         for ref in doc_references
     ]
     # Render the system message
-    if situation := chat_context.session.situation:
-        system_message = dict(
-            role="system",
-            content=situation,
-        )
+    if system_template := chat_context.session.system_template:
+        system_message = {
+            "role": "system",
+            "content": system_template,
+        }
 
-        system_messages: list[dict] = await render_template(
-            [system_message], variables=env
-        )
+        system_messages: list[dict] = await render_template([system_message], variables=env)
         past_messages = system_messages + past_messages
 
     # Render the incoming messages
@@ -132,7 +132,8 @@ async def chat(
     # SCRUM-7
     if chat_context.session.context_overflow == "truncate":
         # messages = messages[-settings["max_tokens"] :]
-        raise NotImplementedError("Truncation is not yet implemented")
+        msg = "Truncation is not yet implemented"
+        raise NotImplementedError(msg)
 
     # FIXME: Hotfix for datetime not serializable. Needs investigation
     messages = [
@@ -218,7 +219,6 @@ async def chat(
             developer_id=developer.id,
             session_id=session_id,
             data=new_entries,
-            mark_session_as_updated=True,
         )
 
     # Adaptive context handling
@@ -228,15 +228,14 @@ async def chat(
         # SCRUM-8
 
         # jobs = [await start_adaptive_context_workflow]
-        raise NotImplementedError("Adaptive context is not yet implemented")
+        msg = "Adaptive context is not yet implemented"
+        raise NotImplementedError(msg)
 
     # Return the response
     # FIXME: Implement streaming for chat
-    chat_response_class = (
-        ChunkChatResponse if chat_input.stream else MessageChatResponse
-    )
+    chat_response_class = ChunkChatResponse if chat_input.stream else MessageChatResponse
     chat_response: ChatResponse = chat_response_class(
-        id=uuid4(),
+        id=uuid7(),
         created_at=utcnow(),
         jobs=jobs,
         docs=doc_references,
@@ -245,9 +244,7 @@ async def chat(
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(
-        amount=chat_response.usage.total_tokens
-        if chat_response.usage is not None
-        else 0
+        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0
     )
 
     return chat_response

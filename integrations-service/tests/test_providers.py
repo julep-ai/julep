@@ -4,18 +4,16 @@ from integrations.models import BaseProvider, BaseProviderMethod, ProviderInfo
 def test_available_providers(providers):
     """Test that the available providers dictionary is properly structured"""
     assert isinstance(providers, dict)
-    assert all(isinstance(key, str) for key in providers.keys())
+    assert all(isinstance(key, str) for key in providers)
     assert all(isinstance(value, BaseProvider) for value in providers.values())
 
 
 def test_provider_structure(providers):
     """Test that each provider has the required attributes"""
-    for provider_name, provider in providers.items():
+    for provider in providers.values():
         assert isinstance(provider.provider, str)
         assert isinstance(provider.methods, list)
-        assert all(
-            isinstance(method, BaseProviderMethod) for method in provider.methods
-        )
+        assert all(isinstance(method, BaseProviderMethod) for method in provider.methods)
         assert isinstance(provider.info, ProviderInfo)
 
 

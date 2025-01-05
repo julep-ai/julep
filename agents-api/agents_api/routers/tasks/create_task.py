@@ -11,7 +11,7 @@ from ...autogen.openapi_model import (
     ResourceCreatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.task.create_task import create_task as create_task_query
+from ...queries.tasks.create_task import create_task as create_task_query
 from .router import router
 
 
@@ -35,7 +35,7 @@ async def create_task(
     except ValidationError:
         pass
 
-    return create_task_query(
+    return await create_task_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=data,

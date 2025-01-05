@@ -11,15 +11,13 @@ from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.task.create_or_update_task import (
+from ...queries.tasks.create_or_update_task import (
     create_or_update_task as create_or_update_task_query,
 )
 from .router import router
 
 
-@router.post(
-    "/agents/{agent_id}/tasks/{task_id}", status_code=HTTP_201_CREATED, tags=["tasks"]
-)
+@router.post("/agents/{agent_id}/tasks/{task_id}", status_code=HTTP_201_CREATED, tags=["tasks"])
 async def create_or_update_task(
     data: CreateOrUpdateTaskRequest,
     agent_id: UUID,
@@ -40,7 +38,7 @@ async def create_or_update_task(
     except ValidationError:
         pass
 
-    return create_or_update_task_query(
+    return await create_or_update_task_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         task_id=task_id,

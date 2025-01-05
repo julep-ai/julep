@@ -1,26 +1,24 @@
 import base64
-from typing import Any, Optional, TypedDict, Union
+from typing import Any, TypedDict
 
 import httpx
 from beartype import beartype
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
-from ..common.storage_handler import auto_blob_store
 from ..env import testing
 
 
 class RequestArgs(TypedDict):
-    content: Optional[str]
-    data: Optional[dict[str, Any]]
-    json_: Optional[dict[str, Any]]
-    cookies: Optional[dict[str, str]]
-    params: Optional[Union[str, dict[str, Any]]]
-    url: Optional[str]
-    headers: Optional[dict[str, str]]
+    content: str | None
+    data: dict[str, Any] | None
+    json_: dict[str, Any] | None
+    cookies: dict[str, str] | None
+    params: str | dict[str, Any] | None
+    url: str | None
+    headers: dict[str, str] | None
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def execute_api_call(
     api_call: ApiCallDef,

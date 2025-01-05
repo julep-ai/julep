@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from browserbase import DebugConnectionURLs, Session
 from pydantic import AnyUrl, Field
@@ -15,17 +15,13 @@ class BrowserbaseCreateSessionOutput(BaseOutput):
     createdAt: str | None = Field(
         None, description="Timestamp indicating when the session was created"
     )
-    projectId: str | None = Field(
-        None, description="The Project ID linked to the Session"
-    )
-    startedAt: str | None = Field(
-        None, description="Timestamp when the session started"
-    )
+    projectId: str | None = Field(None, description="The Project ID linked to the Session")
+    startedAt: str | None = Field(None, description="Timestamp when the session started")
     endedAt: str | None = Field(None, description="Timestamp when the session ended")
     expiresAt: str | None = Field(
         None, description="Timestamp when the session is set to expire"
     )
-    status: None | Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
+    status: Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] | None = Field(
         None, description="Current status of the session"
     )
     proxyBytes: int | None = Field(None, description="Bytes used via the Proxy")
@@ -45,17 +41,13 @@ class BrowserbaseGetSessionOutput(BaseOutput):
     createdAt: str | None = Field(
         None, description="Timestamp indicating when the session was created"
     )
-    projectId: str | None = Field(
-        None, description="The Project ID linked to the Session"
-    )
-    startedAt: str | None = Field(
-        None, description="Timestamp when the session started"
-    )
+    projectId: str | None = Field(None, description="The Project ID linked to the Session")
+    startedAt: str | None = Field(None, description="Timestamp when the session started")
     endedAt: str | None = Field(None, description="Timestamp when the session ended")
     expiresAt: str | None = Field(
         None, description="Timestamp when the session is set to expire"
     )
-    status: None | Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] = Field(
+    status: Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] | None = Field(
         None, description="Current status of the session"
     )
     proxyBytes: int | None = Field(None, description="Bytes used via the Proxy")
@@ -85,14 +77,14 @@ class BrowserbaseGetSessionConnectUrlOutput(BaseOutput):
 
 
 class PageInfo(BaseOutput):
-    id: Optional[str] = Field(None, description="Unique identifier for the page")
-    url: Optional[AnyUrl] = Field(None, description="URL of the page")
-    faviconUrl: Optional[AnyUrl] = Field(None, description="URL for the page's favicon")
-    title: Optional[str] = Field(None, description="Title of the page")
-    debuggerUrl: Optional[AnyUrl] = Field(
+    id: str | None = Field(None, description="Unique identifier for the page")
+    url: AnyUrl | None = Field(None, description="URL of the page")
+    faviconUrl: AnyUrl | None = Field(None, description="URL for the page's favicon")
+    title: str | None = Field(None, description="Title of the page")
+    debuggerUrl: AnyUrl | None = Field(
         None, description="URL to access the debugger for this page"
     )
-    debuggerFullscreenUrl: Optional[AnyUrl] = Field(
+    debuggerFullscreenUrl: AnyUrl | None = Field(
         None, description="URL to access the debugger in fullscreen for this page"
     )
 

@@ -11,7 +11,6 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
-from ...common.storage_handler import auto_blob_store
 
 
 # FIXME: This shouldn't be here.
@@ -25,9 +24,7 @@ def generate_call_id():
 
 
 # FIXME: This shouldn't be here, and shouldn't be done this way. Should be refactored.
-def construct_tool_call(
-    tool: CreateToolRequest | Tool, arguments: dict, call_id: str
-) -> dict:
+def construct_tool_call(tool: CreateToolRequest | Tool, arguments: dict, call_id: str) -> dict:
     return {
         tool.type: {
             "arguments": arguments,
@@ -47,7 +44,6 @@ def construct_tool_call(
 
 
 @activity.defn
-@auto_blob_store(deep=True)
 @beartype
 async def tool_call_step(context: StepContext) -> StepOutcome:
     assert isinstance(context.current_step, ToolCallStep)
@@ -58,7 +54,8 @@ async def tool_call_step(context: StepContext) -> StepOutcome:
     tool = next((t for t in tools if t.name == tool_name), None)
 
     if tool is None:
-        raise ApplicationError(f"Tool {tool_name} not found in the toolset")
+        msg = f"Tool {tool_name} not found in the toolset"
+        raise ApplicationError(msg)
 
     arguments = await base_evaluate(
         context.current_step.arguments, await context.prepare_for_step()

@@ -4,25 +4,24 @@ This module initializes the FastAPI application, registers routes, sets up middl
 
 import asyncio
 import logging
-from typing import Any, Callable, Union, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import sentry_sdk
 import uvicorn
 import uvloop
-from fastapi import APIRouter, Depends, FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
-from prometheus_fastapi_instrumentator import Instrumentator
-from pycozo.client import QueryException
 from pydantic import ValidationError
-from scalar_fastapi import get_scalar_api_reference
 from temporalio.service import RPCError
 
+from .app import app
 from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
-from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
+from .env import sentry_dsn
 from .exceptions import PromptTooBigError
 from .routers import (
     agents,
@@ -65,8 +64,8 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
         offending_input = None
 
         # Return the deepest matching possibility
-        if isinstance(exc, (ValidationError, RequestValidationError)):
-            exc = cast(Union[ValidationError, RequestValidationError], exc)
+        if isinstance(exc, ValidationError | RequestValidationError):
+            exc = cast(ValidationError | RequestValidationError, exc)
             errors = exc.errors()
 
             # Get the deepest matching errors
@@ -92,9 +91,7 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
                         if loc not in offending_input:
                             break
                     case list():
-                        if not (
-                            isinstance(loc, int) and 0 <= loc < len(offending_input)
-                        ):
+                        if not (isinstance(loc, int) and 0 <= loc < len(offending_input)):
                             break
                     case _:
                         break
@@ -135,50 +132,16 @@ def register_exceptions(app: FastAPI) -> None:
         RequestValidationError,
         make_exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY),
     )
-    app.add_exception_handler(
-        QueryException,
-        make_exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR),
-    )
+    # app.add_exception_handler(
+    #     QueryException,
+    #     make_exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR),
+    # )
 
 
 # TODO: Auth logic should be moved into global middleware _per router_
 #       Because some routes don't require auth
 # See: https://fastapi.tiangolo.com/tutorial/bigger-applications/
 #
-app: FastAPI = FastAPI(
-    docs_url="/swagger",
-    openapi_prefix=api_prefix,
-    redoc_url=None,
-    title="Julep Agents API",
-    description="API for Julep Agents",
-    version="0.4.0",
-    terms_of_service="https://www.julep.ai/terms",
-    contact={
-        "name": "Julep",
-        "url": "https://www.julep.ai",
-        "email": "team@julep.ai",
-    },
-    root_path=api_prefix,
-)
-
-# Enable metrics
-Instrumentator().instrument(app).expose(app, include_in_schema=False)
-
-# Create a new router for the docs
-scalar_router = APIRouter()
-
-
-@scalar_router.get("/docs", include_in_schema=False)
-async def scalar_html():
-    return get_scalar_api_reference(
-        openapi_url=app.openapi_url[1:],  # Remove leading '/'
-        title=app.title,
-        servers=[{"url": f"{protocol}://{hostname}:{public_port}{api_prefix}"}],
-    )
-
-
-# Add the docs_router without dependencies
-app.include_router(scalar_router)
 
 # Add other routers with the get_api_key dependency
 app.include_router(agents.router, dependencies=[Depends(get_api_key)])
@@ -220,9 +183,7 @@ async def http_exception_handler(request, exc: HTTPException):  # pylint: disabl
 async def validation_error_handler(request: Request, exc: RPCError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content={
-            "error": {"message": "job not found or invalid", "code": exc.status.name}
-        },
+        content={"error": {"message": "job not found or invalid", "code": exc.status.name}},
     )
 
 

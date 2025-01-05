@@ -1449,9 +1449,12 @@ components:
           readOnly: true
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -1485,9 +1488,12 @@ components:
           additionalProperties: {}
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -1525,9 +1531,12 @@ components:
           additionalProperties: {}
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -1558,9 +1567,12 @@ components:
           additionalProperties: {}
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -1595,9 +1607,12 @@ components:
           additionalProperties: {}
         name:
           allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
+            - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
-          default: ''
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the agent
         about:
           type: string
           description: About the agent
@@ -2706,6 +2721,21 @@ components:
           description: IDs (if any) of jobs created as part of this request
           default: []
           readOnly: true
+    Common.canonicalName:
+      type: string
+      minLength: 1
+      maxLength: 255
+      pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+      description: |-
+        For canonical names (machine-friendly identifiers)
+        Must start with a letter and can only contain letters, numbers, and underscores
+    Common.displayName:
+      type: string
+      minLength: 1
+      maxLength: 255
+      description: |-
+        For display names
+        Must be between 1 and 255 characters
     Common.identifierSafeUnicode:
       type: string
       maxLength: 120
@@ -2810,6 +2840,7 @@ components:
         - created_at
         - title
         - content
+        - embeddings
       properties:
         id:
           allOf:
@@ -2846,7 +2877,26 @@ components:
                 items:
                   type: number
                   format: float
+          nullable: true
           description: Embeddings for the document
+          default: null
+          readOnly: true
+        modality:
+          type: string
+          description: Modality of the document
+          readOnly: true
+        language:
+          type: string
+          description: Language of the document
+          readOnly: true
+        embedding_model:
+          type: string
+          description: Embedding model used for the document
+          readOnly: true
+        embedding_dimensions:
+          type: integer
+          format: uint16
+          description: Dimensions of the embedding model
           readOnly: true
     Docs.DocOwner:
       type: object
@@ -3036,6 +3086,7 @@ components:
         - source
         - tokenizer
         - token_count
+        - model
         - timestamp
       properties:
         role:
@@ -3279,6 +3330,9 @@ components:
         token_count:
           type: integer
           format: uint16
+        model:
+          type: string
+          default: gpt-4o-mini
         tool_calls:
           type: array
           items:
@@ -3729,10 +3783,12 @@ components:
       required:
         - id
         - situation
+        - system_template
         - render_templates
         - token_budget
         - context_overflow
         - auto_run_tools
+        - forward_tool_calls
       properties:
         id:
           $ref: '#/components/schemas/Common.uuid'
@@ -3754,7 +3810,12 @@ components:
             $ref: '#/components/schemas/Common.uuid'
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -3771,6 +3832,12 @@ components:
               {%- endif -%}
             {%- endif -%}
 
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
             {{NEWLINE+NEWLINE}}
 
             {%- if agent.instructions -%}
@@ -3783,15 +3850,6 @@ components:
                 {%- endfor -%}
               {%- endif -%}
               {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if tools -%}
-            Tools:{{NEWLINE}}
-              {%- for tool in tools -%}
-                - {{tool.name + NEWLINE}}
-                {%- if tool.description -%}: {{tool.description + NEWLINE}}{%- endif -%}
-              {%- endfor -%}
-            {{NEWLINE+NEWLINE}}
             {%- endif -%}
 
             {%- if docs -%}
@@ -3833,6 +3891,10 @@ components:
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
           default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
+          default: false
         recall_options:
           type: object
           allOf:
@@ -3848,10 +3910,12 @@ components:
       type: object
       required:
         - situation
+        - system_template
         - render_templates
         - token_budget
         - context_overflow
         - auto_run_tools
+        - forward_tool_calls
       properties:
         user:
           allOf:
@@ -3871,7 +3935,12 @@ components:
             $ref: '#/components/schemas/Common.uuid'
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -3888,6 +3957,12 @@ components:
               {%- endif -%}
             {%- endif -%}
 
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
             {{NEWLINE+NEWLINE}}
 
             {%- if agent.instructions -%}
@@ -3900,15 +3975,6 @@ components:
                 {%- endfor -%}
               {%- endif -%}
               {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if tools -%}
-            Tools:{{NEWLINE}}
-              {%- for tool in tools -%}
-                - {{tool.name + NEWLINE}}
-                {%- if tool.description -%}: {{tool.description + NEWLINE}}{%- endif -%}
-              {%- endfor -%}
-            {{NEWLINE+NEWLINE}}
             {%- endif -%}
 
             {%- if docs -%}
@@ -3949,6 +4015,10 @@ components:
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
+          default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
           default: false
         recall_options:
           type: object
@@ -4010,7 +4080,12 @@ components:
       properties:
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -4027,6 +4102,12 @@ components:
               {%- endif -%}
             {%- endif -%}
 
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
             {{NEWLINE+NEWLINE}}
 
             {%- if agent.instructions -%}
@@ -4039,15 +4120,6 @@ components:
                 {%- endfor -%}
               {%- endif -%}
               {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if tools -%}
-            Tools:{{NEWLINE}}
-              {%- for tool in tools -%}
-                - {{tool.name + NEWLINE}}
-                {%- if tool.description -%}: {{tool.description + NEWLINE}}{%- endif -%}
-              {%- endfor -%}
-            {{NEWLINE+NEWLINE}}
             {%- endif -%}
 
             {%- if docs -%}
@@ -4088,6 +4160,10 @@ components:
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
+          default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
           default: false
         recall_options:
           type: object
@@ -4227,18 +4303,25 @@ components:
       type: object
       required:
         - situation
+        - system_template
         - summary
         - render_templates
         - token_budget
         - context_overflow
         - auto_run_tools
+        - forward_tool_calls
         - id
         - created_at
         - updated_at
       properties:
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -4255,6 +4338,12 @@ components:
               {%- endif -%}
             {%- endif -%}
 
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
             {{NEWLINE+NEWLINE}}
 
             {%- if agent.instructions -%}
@@ -4267,15 +4356,6 @@ components:
                 {%- endfor -%}
               {%- endif -%}
               {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if tools -%}
-            Tools:{{NEWLINE}}
-              {%- for tool in tools -%}
-                - {{tool.name + NEWLINE}}
-                {%- if tool.description -%}: {{tool.description + NEWLINE}}{%- endif -%}
-              {%- endfor -%}
-            {{NEWLINE+NEWLINE}}
             {%- endif -%}
 
             {%- if docs -%}
@@ -4322,6 +4402,10 @@ components:
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
+          default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
           default: false
         recall_options:
           type: object
@@ -4398,14 +4482,21 @@ components:
       type: object
       required:
         - situation
+        - system_template
         - render_templates
         - token_budget
         - context_overflow
         - auto_run_tools
+        - forward_tool_calls
       properties:
         situation:
           type: string
-          description: A specific situation that sets the background for this session
+          nullable: true
+          description: Session situation
+          default: null
+        system_template:
+          type: string
+          description: A specific system prompt template that sets the background for this session
           default: |-
             {%- if agent.name -%}
             You are {{agent.name}}.{{" "}}
@@ -4422,6 +4513,12 @@ components:
               {%- endif -%}
             {%- endif -%}
 
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
             {{NEWLINE+NEWLINE}}
 
             {%- if agent.instructions -%}
@@ -4434,15 +4531,6 @@ components:
                 {%- endfor -%}
               {%- endif -%}
               {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if tools -%}
-            Tools:{{NEWLINE}}
-              {%- for tool in tools -%}
-                - {{tool.name + NEWLINE}}
-                {%- if tool.description -%}: {{tool.description + NEWLINE}}{%- endif -%}
-              {%- endfor -%}
-            {{NEWLINE+NEWLINE}}
             {%- endif -%}
 
             {%- if docs -%}
@@ -4483,6 +4571,10 @@ components:
 
             If a tool call is made, the tool's output will be sent back to the model as the model's input.
             If a tool call is not made, the model's output will be returned as is.
+          default: false
+        forward_tool_calls:
+          type: boolean
+          description: Whether to forward tool calls to the model
           default: false
         recall_options:
           type: object
@@ -4559,9 +4651,16 @@ components:
         - inherit_tools
       properties:
         name:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: The name of the task.
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: The canonical name of the task.
         description:
           type: string
+          description: The description of the task.
           default: ''
         main:
           type: array
@@ -5175,8 +5274,17 @@ components:
     Tasks.PatchTaskRequest:
       type: object
       properties:
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: The name of the task.
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: The canonical name of the task.
         description:
           type: string
+          description: The description of the task.
           default: ''
         main:
           type: array
@@ -5971,9 +6079,16 @@ components:
         - updated_at
       properties:
         name:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: The name of the task.
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: The canonical name of the task.
         description:
           type: string
+          description: The description of the task.
           default: ''
         main:
           type: array
@@ -6318,14 +6433,24 @@ components:
     Tasks.UpdateTaskRequest:
       type: object
       required:
+        - name
         - description
         - main
         - input_schema
         - tools
         - inherit_tools
       properties:
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: The name of the task.
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: The canonical name of the task.
         description:
           type: string
+          description: The description of the task.
           default: ''
         main:
           type: array

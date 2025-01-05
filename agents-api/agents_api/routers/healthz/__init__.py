@@ -1,3 +1,2 @@
-# ruff: noqa: F401
-from .check_health import check_health
-from .router import router
+from .check_health import check_health as check_health
+from .router import router as router
