@@ -120,7 +120,7 @@ async def gather_messages(
                 doc_references = await search_docs_by_embedding(
                     developer_id=developer.id,
                     owners=owners,
-                    query_embedding=query_embedding,
+                    embedding=query_embedding,
                     connection_pool=connection_pool,
                 )
             case "hybrid":

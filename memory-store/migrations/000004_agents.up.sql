@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS agents (
     ),
     about TEXT CONSTRAINT ct_agents_about_length CHECK (
         about IS NULL
-        OR length(about) <= 1000
+        OR length(about) <= 5000
     ),
     instructions TEXT[] DEFAULT ARRAY[]::TEXT[],
     model TEXT NOT NULL,
