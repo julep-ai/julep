@@ -99,7 +99,7 @@ requires-dist = [
     { name = "langchain-core", specifier = "~=0.3.14" },
     { name = "langcodes", specifier = ">=3.5.0" },
     { name = "larch-pickle", specifier = "~=1.4.3" },
-    { name = "litellm", url = "https://github.com/julep-ai/litellm/archive/fix_anthropic_tool_image_content.zip" },
+    { name = "litellm", specifier = "~=1.57.0" },
     { name = "lz4", specifier = "~=4.3.3" },
     { name = "msgpack", specifier = "~=1.1.0" },
     { name = "numpy", specifier = ">=2.0.0,<2.1.0" },
@@ -1492,54 +1492,24 @@ wheels = [
 
 [[package]]
 name = "litellm"
-version = "1.52.10"
-source = { url = "https://github.com/julep-ai/litellm/archive/fix_anthropic_tool_image_content.zip" }
+version = "1.57.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "click" },
+    { name = "httpx" },
     { name = "importlib-metadata" },
     { name = "jinja2" },
     { name = "jsonschema" },
     { name = "openai" },
     { name = "pydantic" },
     { name = "python-dotenv" },
-    { name = "requests" },
     { name = "tiktoken" },
     { name = "tokenizers" },
 ]
-sdist = { url = "https://github.com/julep-ai/litellm/archive/fix_anthropic_tool_image_content.zip", hash = "sha256:9615e960a74e8051ed63bbd5f1f914c1bfd835f8fe1e9ab4145e657940f75049" }
-
-[package.metadata]
-requires-dist = [
-    { name = "aiohttp" },
-    { name = "apscheduler", marker = "extra == 'proxy'", specifier = ">=3.10.4,<4.0.0" },
-    { name = "azure-identity", marker = "extra == 'extra-proxy'", specifier = ">=1.15.0,<2.0.0" },
-    { name = "azure-keyvault-secrets", marker = "extra == 'extra-proxy'", specifier = ">=4.8.0,<5.0.0" },
-    { name = "backoff", marker = "extra == 'proxy'" },
-    { name = "click" },
-    { name = "cryptography", marker = "extra == 'proxy'", specifier = ">=42.0.5,<43.0.0" },
-    { name = "fastapi", marker = "extra == 'proxy'", specifier = ">=0.111.0,<0.112.0" },
-    { name = "fastapi-sso", marker = "extra == 'proxy'", specifier = ">=0.10.0,<0.11.0" },
-    { name = "google-cloud-kms", marker = "extra == 'extra-proxy'", specifier = ">=2.21.3,<3.0.0" },
-    { name = "gunicorn", marker = "extra == 'proxy'", specifier = ">=22.0.0,<23.0.0" },
-    { name = "importlib-metadata", specifier = ">=6.8.0" },
-    { name = "jinja2", specifier = ">=3.1.2,<4.0.0" },
-    { name = "jsonschema", specifier = ">=4.22.0,<5.0.0" },
-    { name = "openai", specifier = ">=1.54.0" },
-    { name = "orjson", marker = "extra == 'proxy'", specifier = ">=3.9.7,<4.0.0" },
-    { name = "prisma", marker = "extra == 'extra-proxy'", specifier = "==0.11.0" },
-    { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
-    { name = "pyjwt", marker = "extra == 'proxy'", specifier = ">=2.8.0,<3.0.0" },
-    { name = "pynacl", marker = "extra == 'proxy'", specifier = ">=1.5.0,<2.0.0" },
-    { name = "python-dotenv", specifier = ">=0.2.0" },
-    { name = "python-multipart", marker = "extra == 'proxy'", specifier = ">=0.0.9,<0.0.10" },
-    { name = "pyyaml", marker = "extra == 'proxy'", specifier = ">=6.0.1,<7.0.0" },
-    { name = "requests", specifier = ">=2.31.0,<3.0.0" },
-    { name = "resend", marker = "extra == 'extra-proxy'", specifier = ">=0.8.0,<0.9.0" },
-    { name = "rq", marker = "extra == 'proxy'" },
-    { name = "tiktoken", specifier = ">=0.7.0" },
-    { name = "tokenizers" },
-    { name = "uvicorn", marker = "extra == 'proxy'", specifier = ">=0.22.0,<0.23.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/3d/68/248a36d9e1c8e0ce513fead605a669cf1d9f1804afe08e34e68b0e4eca8b/litellm-1.57.0.tar.gz", hash = "sha256:53a6f2bd9575823e102f7d18dde5cbd2d48eed027cecbb585f18a208605b34c5", size = 6298524 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/59/db/68210cd6e616a13a62fa52317d166086456e1d642a6ad72973f1e1f5a07e/litellm-1.57.0-py3-none-any.whl", hash = "sha256:339aec6f3ecac2035bf6311aa8913ce587c9aca2dc7d72a63a210c659e9721ca", size = 6581529 },
 ]
 
 [[package]]

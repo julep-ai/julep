@@ -23,7 +23,7 @@ dependencies = [
   "jsonschema~=4.22.0",
   "langchain-core~=0.3.14",
   "larch-pickle~=1.4.3",
-  "litellm~1.57.0",
+  "litellm~=1.57.0",
   "lz4~=4.3.3",
   "msgpack~=1.1.0",
   "numpy>=2.0.0,<2.1.0",
@@ -77,6 +77,7 @@ py-modules = [
     "agents_api",
 ]
 
-#[tool.uv.sources]
-#litellm = { url = "https://github.com/julep-ai/litellm/archive/fix_anthropic_tool_image_content.zip" }
+# Commented out uv sources config for litellm
+# [tool.uv.sources]
+# litellm = { url = "https://github.com/julep-ai/litellm/archive/fix_anthropic_tool_image_content.zip" }
 
