@@ -272,7 +272,7 @@ async def _(
     result = await search_docs_by_embedding(
         developer_id=developer.id,
         owners=[("agent", agent.id)],
-        query_embedding=query_embedding,
+        embedding=query_embedding,
         k=3,  # Add k parameter
         metadata_filter={"test": "test"},  # Add metadata filter
         connection_pool=pool,
