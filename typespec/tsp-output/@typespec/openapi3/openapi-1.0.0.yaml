@@ -2986,7 +2986,7 @@ components:
           minimum: 0
           maximum: 1
           description: The confidence cutoff level
-          default: 0.5
+          default: 0
         alpha:
           type: number
           minimum: 0
@@ -3069,7 +3069,7 @@ components:
           minimum: 0
           maximum: 1
           description: The confidence cutoff level
-          default: 0.5
+          default: 0
         vector:
           type: array
           items:

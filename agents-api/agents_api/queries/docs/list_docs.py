@@ -52,9 +52,9 @@ GROUP BY
 
 
 def transform_list_docs(d: dict) -> dict:
-    content = d["content"][0] if len(d["content"]) == 1 else d["content"]
+    content = d["content"]
 
-    embeddings = d["embeddings"][0] if len(d["embeddings"]) == 1 else d["embeddings"]
+    embeddings = d["embeddings"]
 
     if isinstance(embeddings, str):
         embeddings = json.loads(embeddings)
