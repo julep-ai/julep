@@ -7,7 +7,7 @@ from ..app import lifespan
 from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
-from ..common.protocol.tasks import ExecutionInput, StepContext
+from ..common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
 from ..env import testing
 from ..queries import tools
 from .container import container
@@ -81,7 +81,7 @@ async def execute_integration(
             )
             activity.logger.error(f"Error in execute_integration {integration_str}: {e}")
 
-        raise
+        return StepOutcome(error=str(e))
 
 
 mock_execute_integration = execute_integration

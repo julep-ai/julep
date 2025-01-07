@@ -1,3 +1,4 @@
+import traceback
 from datetime import timedelta
 
 from temporalio import workflow
@@ -26,13 +27,21 @@ async def transition(
     if state is None:
         state = PartialTransition()
 
-    match context.is_last_step, context.cursor:
+    error_type = kwargs.get("type", None)
+    
+    if state.type is not None and state.type == "error":
+        error_type = "error"
+
+    match context.is_last_step, context.cursor and not error_type:
         case (True, TransitionTarget(workflow="main")):
             state.type = "finish"
         case (True, _):
             state.type = "finish_branch"
         case _, _:
             state.type = "step"
+
+    if error_type:
+        state.type = "error"
 
     transition_request = CreateTransitionRequest(
         current=context.cursor,

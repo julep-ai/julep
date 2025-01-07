@@ -7,7 +7,7 @@ from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
 from ..env import testing
-
+from ..common.protocol.tasks import StepOutcome
 
 class RequestArgs(TypedDict):
     content: str | None
@@ -58,7 +58,7 @@ async def execute_api_call(
         if activity.in_activity():
             activity.logger.error(f"Error in execute_api_call: {e}")
 
-        raise
+        return StepOutcome(error=str(e))
 
 
 mock_execute_api_call = execute_api_call

@@ -18,7 +18,7 @@ from ..autogen.openapi_model import (
     UpdateUserRequest,
     VectorDocSearchRequest,
 )
-from ..common.protocol.tasks import ExecutionInput, StepContext
+from ..common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
 from ..env import testing
 from ..queries import developers
 from .container import container
@@ -143,7 +143,7 @@ async def execute_system(
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in execute_system_call: {e}")
-        raise
+        return StepOutcome(error=str(e))
 
 
 def _create_search_request(arguments: dict) -> Any:
