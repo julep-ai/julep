@@ -36,7 +36,7 @@ async def search_docs_by_embedding(
     embedding: list[float],
     k: int = 10,
     owners: list[tuple[Literal["user", "agent"], UUID]],
-    confidence: float = 0.5,
+    confidence: int | float = 0.5,
     metadata_filter: dict[str, Any] = {},
 ) -> tuple[str, list]:
     """

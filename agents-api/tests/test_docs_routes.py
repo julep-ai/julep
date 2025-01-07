@@ -69,7 +69,7 @@ async def _(make_request=make_request, agent=test_agent):
         assert response.status_code == 200
         assert response.json()["id"] == doc_id
         assert response.json()["title"] == "Test Agent Doc"
-        assert response.json()["content"] == "This is a test agent document."
+        assert response.json()["content"] == ["This is a test agent document."]
 
         response = make_request(
             method="DELETE",
