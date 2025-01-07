@@ -1,7 +1,6 @@
 """Tests for provider execution using mocks"""
 
 import pytest
-
 from integrations.autogen.Tools import (
     WikipediaSearchArguments,
 )
@@ -20,7 +19,7 @@ async def test_weather_get_mock(wikipedia_provider):
     )
 
     assert len(result.documents) > 0
-    assert any([(query in doc.page_content) for doc in result.documents])
+    assert any((query in doc.page_content) for doc in result.documents)
 
 
 # @pytest.mark.asyncio

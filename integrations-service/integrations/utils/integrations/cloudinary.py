@@ -65,16 +65,18 @@ async def media_upload(
         }
 
         if arguments.return_base64:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(result["secure_url"]) as response:
-                    if response.status == 200:
-                        content = await response.read()
-                        base64_encoded = base64.b64encode(content).decode("utf-8")
-                        result["base64"] = base64_encoded
-                    else:
-                        raise RuntimeError(
-                            f"Failed to download file from URL: {result['secure_url']}"
-                        )
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(result["secure_url"]) as response,
+            ):
+                if response.status == 200:
+                    content = await response.read()
+                    base64_encoded = base64.b64encode(content).decode("utf-8")
+                    result["base64"] = base64_encoded
+                else:
+                    msg = f"Failed to download file from URL: {result['secure_url']}"
+                    raise RuntimeError(msg)
+
         return CloudinaryUploadOutput(
             url=result["secure_url"],
             public_id=result["public_id"],
@@ -83,9 +85,11 @@ async def media_upload(
         )
 
     except cloudinary.exceptions.Error as e:
-        raise RuntimeError(f"Cloudinary error occurred: {e}")
+        msg = f"Cloudinary error occurred: {e}"
+        raise RuntimeError(msg)
     except Exception as e:
-        raise RuntimeError(f"An unexpected error occurred: {e}")
+        msg = f"An unexpected error occurred: {e}"
+        raise RuntimeError(msg)
 
 
 @beartype
@@ -128,16 +132,17 @@ async def media_edit(
                 base64=None,
             )
         if arguments.return_base64:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(transformed_url[0]) as response:
-                    if response.status == 200:
-                        content = await response.read()
-                        base64_encoded = base64.b64encode(content).decode("utf-8")
-                        transformed_url_base64 = base64_encoded
-                    else:
-                        raise RuntimeError(
-                            f"Failed to download file from URL: {transformed_url[0]}"
-                        )
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(transformed_url[0]) as response,
+            ):
+                if response.status == 200:
+                    content = await response.read()
+                    base64_encoded = base64.b64encode(content).decode("utf-8")
+                    transformed_url_base64 = base64_encoded
+                else:
+                    msg = f"Failed to download file from URL: {transformed_url[0]}"
+                    raise RuntimeError(msg)
 
         return CloudinaryEditOutput(
             transformed_url=transformed_url[0],
@@ -145,6 +150,8 @@ async def media_edit(
         )
 
     except cloudinary.exceptions.Error as e:
-        raise RuntimeError(f"Cloudinary error occurred: {e}")
+        msg = f"Cloudinary error occurred: {e}"
+        raise RuntimeError(msg)
     except Exception as e:
-        raise RuntimeError(f"An unexpected error occurred: {e}")
+        msg = f"An unexpected error occurred: {e}"
+        raise RuntimeError(msg)

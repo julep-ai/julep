@@ -1,13 +1,14 @@
-### Step 0: Setup
+# Step 0: Setup
 
 import os
 import time
+
 import yaml
-from julep import Julep # or AsyncJulep
+from julep import Julep  # or AsyncJulep
 
 client = Julep(api_key=os.environ["JULEP_API_KEY"])
 
-### Step 1: Create an Agent
+# Step 1: Create an Agent
 
 agent = client.agents.create(
     name="Storytelling Agent",
@@ -15,7 +16,7 @@ agent = client.agents.create(
     about="You are a creative storyteller that crafts engaging stories on a myriad of topics.",
 )
 
-### Step 2: Create a Task that generates a story and comic strip
+# Step 2: Create a Task that generates a story and comic strip
 
 task_yaml = """
 name: Storyteller
@@ -83,7 +84,7 @@ main:
           {% for idea in outputs[1].plot_ideas %}
           - {{idea}}
           {% endfor %}
-          
+
           Here are the results from researching the plot ideas on Wikipedia:
           {{_.wikipedia_results}}
 
@@ -113,20 +114,14 @@ main:
       plot: "load_yaml(_.split('```yaml')[1].split('```')[0].strip())"
 """
 
-task = client.tasks.create(
-    agent_id=agent.id,
-    **yaml.safe_load(task_yaml)
-)
+task = client.tasks.create(agent_id=agent.id, **yaml.safe_load(task_yaml))
 
-### Step 3: Execute the Task
+# Step 3: Execute the Task
 
-execution = client.executions.create(
-    task_id=task.id,
-    input={"idea": "A cat who learns to fly"}
-)
+execution = client.executions.create(task_id=task.id, input={"idea": "A cat who learns to fly"})
 
 # 🎉 Watch as the story and comic panels are generated
-while (result := client.executions.get(execution.id)).status not in ['succeeded', 'failed']:
+while (result := client.executions.get(execution.id)).status not in ["succeeded", "failed"]:
     print(result.status, result.output)
     time.sleep(1)
 

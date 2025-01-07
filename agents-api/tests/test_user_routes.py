@@ -1,6 +1,6 @@
 # Tests for user routes
-from uuid import uuid4
 
+from uuid_extensions import uuid7
 from ward import test
 
 from tests.fixtures import client, make_request, test_user
@@ -8,15 +8,15 @@ from tests.fixtures import client, make_request, test_user
 
 @test("route: unauthorized should fail")
 def _(client=client):
-    data = dict(
-        name="test user",
-        about="test user about",
-    )
+    data = {
+        "name": "test user",
+        "about": "test user about",
+    }
 
     response = client.request(
         method="POST",
         url="/users",
-        data=data,
+        json=data,
     )
 
     assert response.status_code == 403
@@ -24,10 +24,10 @@ def _(client=client):
 
 @test("route: create user")
 def _(make_request=make_request):
-    data = dict(
-        name="test user",
-        about="test user about",
-    )
+    data = {
+        "name": "test user",
+        "about": "test user about",
+    }
 
     response = make_request(
         method="POST",
@@ -40,7 +40,7 @@ def _(make_request=make_request):
 
 @test("route: get user not exists")
 def _(make_request=make_request):
-    user_id = str(uuid4())
+    user_id = str(uuid7())
 
     response = make_request(
         method="GET",
@@ -64,10 +64,10 @@ def _(make_request=make_request, user=test_user):
 
 @test("route: delete user")
 def _(make_request=make_request):
-    data = dict(
-        name="test user",
-        about="test user about",
-    )
+    data = {
+        "name": "test user",
+        "about": "test user about",
+    }
 
     response = make_request(
         method="POST",
@@ -93,10 +93,10 @@ def _(make_request=make_request):
 
 @test("route: update user")
 def _(make_request=make_request, user=test_user):
-    data = dict(
-        name="updated user",
-        about="updated user about",
-    )
+    data = {
+        "name": "updated user",
+        "about": "updated user about",
+    }
 
     user_id = str(user.id)
     response = make_request(
@@ -121,14 +121,14 @@ def _(make_request=make_request, user=test_user):
     assert user["about"] == "updated user about"
 
 
-@test("model: patch user")
+@test("query: patch user")
 def _(make_request=make_request, user=test_user):
     user_id = str(user.id)
 
-    data = dict(
-        name="patched user",
-        about="patched user about",
-    )
+    data = {
+        "name": "patched user",
+        "about": "patched user about",
+    }
 
     response = make_request(
         method="PATCH",
@@ -152,7 +152,7 @@ def _(make_request=make_request, user=test_user):
     assert user["about"] == "patched user about"
 
 
-@test("model: list users")
+@test("query: list users")
 def _(make_request=make_request):
     response = make_request(
         method="GET",
@@ -167,7 +167,7 @@ def _(make_request=make_request):
     assert len(users) > 0
 
 
-@test("model: list users with right metadata filter")
+@test("query: list users with right metadata filter")
 def _(make_request=make_request, user=test_user):
     response = make_request(
         method="GET",

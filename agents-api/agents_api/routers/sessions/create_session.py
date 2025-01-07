@@ -9,7 +9,7 @@ from ...autogen.openapi_model import (
     ResourceCreatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.create_session import create_session as create_session_query
+from ...queries.sessions.create_session import create_session as create_session_query
 from .router import router
 
 
@@ -18,7 +18,7 @@ async def create_session(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     data: CreateSessionRequest,
 ) -> ResourceCreatedResponse:
-    session = create_session_query(
+    session = await create_session_query(
         developer_id=x_developer_id,
         data=data,
     )

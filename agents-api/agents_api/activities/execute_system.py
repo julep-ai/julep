@@ -1,6 +1,3 @@
-import asyncio
-from concurrent.futures import ProcessPoolExecutor
-from functools import partial
 from typing import Any
 from uuid import UUID
 
@@ -9,6 +6,7 @@ from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
+from ..app import app, lifespan
 from ..autogen.openapi_model import (
     ChatInput,
     CreateDocRequest,
@@ -16,19 +14,18 @@ from ..autogen.openapi_model import (
     HybridDocSearchRequest,
     SystemDef,
     TextOnlyDocSearchRequest,
+    UpdateSessionRequest,
+    UpdateUserRequest,
     VectorDocSearchRequest,
 )
 from ..common.protocol.tasks import ExecutionInput, StepContext
-from ..common.storage_handler import auto_blob_store, load_from_blob_store_if_remote
 from ..env import testing
-from ..models.developer import get_developer
+from ..queries import developers
+from .container import container
 from .utils import get_handler
 
-# For running synchronous code in the background
-process_pool_executor = ProcessPoolExecutor()
 
-
-@auto_blob_store(deep=True)
+@lifespan(app, container)  # Both are needed because we are using the routes
 @beartype
 async def execute_system(
     context: StepContext,
@@ -37,11 +34,9 @@ async def execute_system(
     """Execute a system call with the appropriate handler and transformed arguments."""
     arguments: dict[str, Any] = system.arguments or {}
 
-    if set(arguments.keys()) == {"bucket", "key"}:
-        arguments = await load_from_blob_store_if_remote(arguments)
-
     if not isinstance(context.execution_input, ExecutionInput):
-        raise TypeError("Expected ExecutionInput type for context.execution_input")
+        msg = "Expected ExecutionInput type for context.execution_input"
+        raise TypeError(msg)
 
     arguments["developer_id"] = context.execution_input.developer_id
 
@@ -77,14 +72,10 @@ async def execute_system(
         # Handle special cases for doc operations
         if system.operation == "create" and system.subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
-            bg_runner = BackgroundTasks()
-            res = await handler(
+            return await handler(
                 data=CreateDocRequest(**arguments.pop("data")),
-                background_tasks=bg_runner,
                 **arguments,
             )
-            await bg_runner()
-            return res
 
         # Handle search operations
         if system.operation == "search" and system.subresource == "doc":
@@ -94,7 +85,10 @@ async def execute_system(
 
         # Handle chat operations
         if system.operation == "chat" and system.resource == "session":
-            developer = get_developer(developer_id=arguments.get("developer_id"))
+            developer = await developers.get_developer(
+                developer_id=arguments["developer_id"],
+                connection_pool=container.state.postgres_pool,
+            )
             session_id = arguments.get("session_id")
             x_custom_api_key = arguments.get("x_custom_api_key", None)
             chat_input = ChatInput(**arguments)
@@ -109,31 +103,43 @@ async def execute_system(
             await bg_runner()
             return res
 
-        # Handle create operations
+        # Handle create session
         if system.operation == "create" and system.resource == "session":
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id", None)
-            data = CreateSessionRequest(**arguments)
+            create_session_request = CreateSessionRequest(**arguments)
 
-            # In case sessions.create becomes asynchronous in the future
-            if asyncio.iscoroutinefunction(handler):
-                return await handler()
-
-            # Run the synchronous function in another process
-            loop = asyncio.get_running_loop()
-            return await loop.run_in_executor(
-                process_pool_executor, partial(handler, developer_id, session_id, data)
+            return await handler(
+                developer_id=developer_id,
+                session_id=session_id,
+                data=create_session_request,
             )
 
-        # Handle regular operations
-        if asyncio.iscoroutinefunction(handler):
-            return await handler(**arguments)
+        # Handle update session
+        if system.operation == "update" and system.resource == "session":
+            developer_id = arguments.pop("developer_id")
+            session_id = arguments.pop("session_id")
+            update_session_request = UpdateSessionRequest(**arguments)
 
-        # Run the synchronous function in another process
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            process_pool_executor, partial(handler, **arguments)
-        )
+            return await handler(
+                developer_id=developer_id,
+                session_id=session_id,
+                data=update_session_request,
+            )
+
+        # Handle update user
+        if system.operation == "update" and system.resource == "user":
+            developer_id = arguments.pop("developer_id")
+            user_id = arguments.pop("user_id")
+            update_user_request = UpdateUserRequest(**arguments)
+
+            return await handler(
+                developer_id=developer_id,
+                user_id=user_id,
+                data=update_user_request,
+            )
+
+        return await handler(**arguments)
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in execute_system_call: {e}")
@@ -151,19 +157,20 @@ def _create_search_request(arguments: dict) -> Any:
             confidence=arguments.pop("confidence", 0.5),
             limit=arguments.get("limit", 10),
         )
-    elif "text" in arguments:
+    if "text" in arguments:
         return TextOnlyDocSearchRequest(
             text=arguments.pop("text"),
             mmr_strength=arguments.pop("mmr_strength", 0),
             limit=arguments.get("limit", 10),
         )
-    elif "vector" in arguments:
+    if "vector" in arguments:
         return VectorDocSearchRequest(
             vector=arguments.pop("vector"),
             mmr_strength=arguments.pop("mmr_strength", 0),
             confidence=arguments.pop("confidence", 0.7),
             limit=arguments.get("limit", 10),
         )
+    return None
 
 
 # Keep the existing mock and activity definition

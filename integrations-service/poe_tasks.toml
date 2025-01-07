@@ -1,6 +1,6 @@
 [tasks]
 format = "ruff format"
-lint = "ruff check --select I --fix --unsafe-fixes integrations/**/*.py"
+lint = "ruff check"
 typecheck = "pytype --config pytype.toml"
 check = [
     "lint",

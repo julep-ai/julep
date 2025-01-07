@@ -50,9 +50,14 @@ model ToolRef {
 
 /** Object describing a Task */
 model Task {
-    @visibility("read", "create")
-    name: string;
+    /** The name of the task. */
+    @visibility("read", "create", "update")
+    name: displayName;
 
+    /** The canonical name of the task. */
+    canonical_name?: canonicalName;
+
+    /** The description of the task. */
     description: string = "";
 
     /** The entrypoint of the task. */

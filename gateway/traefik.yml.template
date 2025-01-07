@@ -46,8 +46,17 @@ http:
       middlewares:
         - agents-api-strip-prefix-api
       service: service-agents-api
-      priority: 2 
-      
+      priority: 2
+
+    agents-api-healthz:
+      entryPoints:
+        - web
+      rule: Path(`/api/healthz`)
+      middlewares:
+        - agents-api-strip-prefix-api
+      service: service-agents-api
+      priority: 3
+
     agents-api-redirect-to-docs:
       entryPoints:
         - web

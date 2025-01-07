@@ -52,6 +52,7 @@ class BaseEntry(BaseModel):
     ]
     tokenizer: str
     token_count: int
+    model: str = "gpt-4o-mini"
     tool_calls: (
         list[
             ChosenFunctionCall
@@ -68,7 +69,7 @@ class BaseEntry(BaseModel):
     """
     The tool call id of the tool call this message is a response to
     """
-    timestamp: Annotated[float, Field(ge=0.0)]
+    timestamp: AwareDatetime
     """
     This is the time that this event refers to.
     """

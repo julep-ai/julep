@@ -12,8 +12,6 @@ class BaseUserException(BaseCommonException):
     This class serves as a parent for all user-related exceptions to facilitate catching errors specific to user operations.
     """
 
-    pass
-
 
 class UserNotFoundError(BaseUserException):
     """
@@ -26,7 +24,7 @@ class UserNotFoundError(BaseUserException):
     def __init__(self, developer_id: UUID | str, user_id: UUID | str):
         # Construct an error message indicating the user and developer involved in the error.
         super().__init__(
-            f"User {str(user_id)} not found for developer {str(developer_id)}",
+            f"User {user_id!s} not found for developer {developer_id!s}",
             http_code=404,
         )
 
@@ -41,6 +39,4 @@ class UserDocNotFoundError(BaseUserException):
 
     def __init__(self, user_id: UUID | str, doc_id: UUID | str):
         # Construct an error message indicating the document and user involved in the error.
-        super().__init__(
-            f"Doc {str(doc_id)} not found for user {str(user_id)}", http_code=404
-        )
+        super().__init__(f"Doc {doc_id!s} not found for user {user_id!s}", http_code=404)

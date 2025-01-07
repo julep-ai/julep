@@ -26,7 +26,23 @@ model Doc {
 
     /** Embeddings for the document */
     @visibility("read")
-    embeddings?: float32[] | float32[][];
+    embeddings: float32[] | float32[][] | null = null;
+
+    @visibility("read")
+    /** Modality of the document */
+    modality?: string;
+
+    @visibility("read")
+    /** Language of the document */
+    language?: string;
+
+    @visibility("read")
+    /** Embedding model used for the document */
+    embedding_model?: string;
+
+    @visibility("read")
+    /** Dimensions of the embedding model */
+    embedding_dimensions?: uint16;
 }
 
 /** Payload for creating a doc */
@@ -111,7 +127,7 @@ model VectorDocSearchRequest extends BaseDocSearchRequest {
     /** The confidence cutoff level */
     @minValue(0)
     @maxValue(1)
-    confidence: float = 0.5;
+    confidence: float = 0;
 
     /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
     vector: float[];
@@ -132,7 +148,7 @@ model HybridDocSearchRequest extends BaseDocSearchRequest {
     /** The confidence cutoff level */
     @minValue(0)
     @maxValue(1)
-    confidence: float = 0.5;
+    confidence: float = 0;
 
     /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
     @minValue(0)

@@ -1,6 +1,4 @@
-# Tests for tool queries
-
-from ward import test
+# # Tests for tool queries
 
 from agents_api.autogen.openapi_model import (
     CreateToolRequest,
@@ -8,17 +6,21 @@ from agents_api.autogen.openapi_model import (
     Tool,
     UpdateToolRequest,
 )
-from agents_api.models.tools.create_tools import create_tools
-from agents_api.models.tools.delete_tool import delete_tool
-from agents_api.models.tools.get_tool import get_tool
-from agents_api.models.tools.list_tools import list_tools
-from agents_api.models.tools.patch_tool import patch_tool
-from agents_api.models.tools.update_tool import update_tool
-from tests.fixtures import cozo_client, test_agent, test_developer_id, test_tool
+from agents_api.clients.pg import create_db_pool
+from agents_api.queries.tools.create_tools import create_tools
+from agents_api.queries.tools.delete_tool import delete_tool
+from agents_api.queries.tools.get_tool import get_tool
+from agents_api.queries.tools.list_tools import list_tools
+from agents_api.queries.tools.patch_tool import patch_tool
+from agents_api.queries.tools.update_tool import update_tool
+from ward import test
+
+from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_tool
 
 
-@test("model: create tool")
-def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
+@test("query: create tool")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
     function = {
         "name": "hello_world",
         "description": "A function that prints hello world",
@@ -31,19 +33,20 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
         "type": "function",
     }
 
-    result = create_tools(
+    result = await create_tools(
         developer_id=developer_id,
         agent_id=agent.id,
         data=[CreateToolRequest(**tool)],
-        client=client,
+        connection_pool=pool,
     )
 
     assert result is not None
     assert isinstance(result[0], Tool)
 
 
-@test("model: delete tool")
-def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
+@test("query: delete tool")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
     function = {
         "name": "temp_temp",
         "description": "A function that prints hello world",
@@ -56,79 +59,78 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
         "type": "function",
     }
 
-    [tool, *_] = create_tools(
+    [tool, *_] = await create_tools(
         developer_id=developer_id,
         agent_id=agent.id,
         data=[CreateToolRequest(**tool)],
-        client=client,
+        connection_pool=pool,
     )
 
-    result = delete_tool(
+    result = await delete_tool(
         developer_id=developer_id,
         agent_id=agent.id,
         tool_id=tool.id,
-        client=client,
+        connection_pool=pool,
     )
 
     assert result is not None
 
 
-@test("model: get tool")
-def _(
-    client=cozo_client, developer_id=test_developer_id, tool=test_tool, agent=test_agent
-):
-    result = get_tool(
+@test("query: get tool")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, tool=test_tool, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+    result = await get_tool(
         developer_id=developer_id,
         agent_id=agent.id,
         tool_id=tool.id,
-        client=client,
+        connection_pool=pool,
     )
 
-    assert result is not None
+    assert result is not None, "Result is None"
 
 
-@test("model: list tools")
-def _(
-    client=cozo_client, developer_id=test_developer_id, agent=test_agent, tool=test_tool
-):
-    result = list_tools(
+@test("query: list tools")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
+    pool = await create_db_pool(dsn=dsn)
+    result = await list_tools(
         developer_id=developer_id,
         agent_id=agent.id,
-        client=client,
+        connection_pool=pool,
     )
 
-    assert result is not None
-    assert all(isinstance(tool, Tool) for tool in result)
+    assert result is not None, "Result is None"
+    assert len(result) > 0, "Result is empty"
+    assert all(isinstance(tool, Tool) for tool in result), (
+        "Not all listed tools are of type Tool"
+    )
 
 
-@test("model: patch tool")
-def _(
-    client=cozo_client, developer_id=test_developer_id, agent=test_agent, tool=test_tool
-):
+@test("query: patch tool")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
+    pool = await create_db_pool(dsn=dsn)
     patch_data = PatchToolRequest(
-        **{
-            "name": "patched_tool",
-            "function": {
-                "description": "A patched function that prints hello world",
-            },
-        }
+        name="patched_tool",
+        function={
+            "description": "A patched function that prints hello world",
+            "parameters": {"param1": "value1"},
+        },
     )
 
-    result = patch_tool(
+    result = await patch_tool(
         developer_id=developer_id,
         agent_id=agent.id,
         tool_id=tool.id,
         data=patch_data,
-        client=client,
+        connection_pool=pool,
     )
 
     assert result is not None
 
-    tool = get_tool(
+    tool = await get_tool(
         developer_id=developer_id,
         agent_id=agent.id,
         tool_id=tool.id,
-        client=client,
+        connection_pool=pool,
     )
 
     assert tool.name == "patched_tool"
@@ -136,10 +138,9 @@ def _(
     assert tool.function.parameters
 
 
-@test("model: update tool")
-def _(
-    client=cozo_client, developer_id=test_developer_id, agent=test_agent, tool=test_tool
-):
+@test("query: update tool")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
+    pool = await create_db_pool(dsn=dsn)
     update_data = UpdateToolRequest(
         name="updated_tool",
         description="An updated description",
@@ -149,21 +150,21 @@ def _(
         },
     )
 
-    result = update_tool(
+    result = await update_tool(
         developer_id=developer_id,
         agent_id=agent.id,
         tool_id=tool.id,
         data=update_data,
-        client=client,
+        connection_pool=pool,
     )
 
     assert result is not None
 
-    tool = get_tool(
+    tool = await get_tool(
         developer_id=developer_id,
         agent_id=agent.id,
         tool_id=tool.id,
-        client=client,
+        connection_pool=pool,
     )
 
     assert tool.name == "updated_tool"

@@ -21,54 +21,34 @@ def create_worker(client: Client) -> Any:
 
     from ..activities import task_steps
     from ..activities.demo import demo_activity
-    from ..activities.embed_docs import embed_docs
     from ..activities.excecute_api_call import execute_api_call
     from ..activities.execute_integration import execute_integration
     from ..activities.execute_system import execute_system
-    from ..activities.mem_mgmt import mem_mgmt
-    from ..activities.mem_rating import mem_rating
-    from ..activities.summarization import summarization
     from ..activities.sync_items_remote import load_inputs_remote, save_inputs_remote
-    from ..activities.truncation import truncation
     from ..common.interceptors import CustomInterceptor
     from ..env import (
         temporal_task_queue,
     )
     from ..workflows.demo import DemoWorkflow
-    from ..workflows.embed_docs import EmbedDocsWorkflow
-    from ..workflows.mem_mgmt import MemMgmtWorkflow
-    from ..workflows.mem_rating import MemRatingWorkflow
-    from ..workflows.summarization import SummarizationWorkflow
     from ..workflows.task_execution import TaskExecutionWorkflow
-    from ..workflows.truncation import TruncationWorkflow
 
-    task_activity_names, task_activities = zip(*getmembers(task_steps, isfunction))
+    _task_activity_names, task_activities = zip(*getmembers(task_steps, isfunction))
 
     # Initialize the worker with the specified task queue, workflows, and activities
-    worker = Worker(
+    return Worker(
         client,
         graceful_shutdown_timeout=timedelta(seconds=30),
         task_queue=temporal_task_queue,
         workflows=[
             DemoWorkflow,
-            SummarizationWorkflow,
-            MemMgmtWorkflow,
-            MemRatingWorkflow,
-            EmbedDocsWorkflow,
             TaskExecutionWorkflow,
-            TruncationWorkflow,
         ],
         activities=[
             *task_activities,
             demo_activity,
-            embed_docs,
             execute_integration,
             execute_system,
             execute_api_call,
-            mem_mgmt,
-            mem_rating,
-            summarization,
-            truncation,
             save_inputs_remote,
             load_inputs_remote,
         ],
@@ -78,5 +58,3 @@ def create_worker(client: Client) -> Any:
         max_activities_per_second=temporal_max_activities_per_second,
         max_task_queue_activities_per_second=temporal_max_task_queue_activities_per_second,
     )
-
-    return worker

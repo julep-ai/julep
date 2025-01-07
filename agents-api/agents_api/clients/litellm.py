@@ -1,17 +1,10 @@
 from functools import wraps
-from typing import List, Literal
+from typing import Literal
 
-import litellm
 from beartype import beartype
-from litellm import (
-    acompletion as _acompletion,
-)
-from litellm import (
-    aembedding as _aembedding,
-)
-from litellm import (
-    get_supported_openai_params,
-)
+from litellm import acompletion as _acompletion
+from litellm import aembedding as _aembedding
+from litellm import get_supported_openai_params
 from litellm.utils import CustomStreamWrapper, ModelResponse
 
 from ..env import (
@@ -21,10 +14,7 @@ from ..env import (
     litellm_url,
 )
 
-__all__: List[str] = ["acompletion"]
-
-# TODO: Should check if this is really needed
-litellm.drop_params = True
+__all__: list[str] = ["acompletion"]
 
 
 def patch_litellm_response(
@@ -39,9 +29,11 @@ def patch_litellm_response(
             if choice.finish_reason == "eos":
                 choice.finish_reason = "stop"
 
-    elif isinstance(model_response, CustomStreamWrapper):
-        if model_response.received_finish_reason == "eos":
-            model_response.received_finish_reason = "stop"
+    elif (
+        isinstance(model_response, CustomStreamWrapper)
+        and model_response.received_finish_reason == "eos"
+    ):
+        model_response.received_finish_reason = "stop"
 
     return model_response
 
@@ -49,19 +41,18 @@ def patch_litellm_response(
 @wraps(_acompletion)
 @beartype
 async def acompletion(
-    *, model: str, messages: list[dict], custom_api_key: None | str = None, **kwargs
+    *, model: str, messages: list[dict], custom_api_key: str | None = None, **kwargs
 ) -> ModelResponse | CustomStreamWrapper:
     if not custom_api_key:
-        model = f"openai/{model}"  # FIXME: This is for litellm
+        model = f"openai/{model}"  # This is needed for litellm
 
     supported_params = get_supported_openai_params(model)
     settings = {k: v for k, v in kwargs.items() if k in supported_params}
 
-    # FIXME: This is a hotfix for Mistral API, which expects a different message format
+    # NOTE: This is a fix for Mistral API, which expects a different message format
     if model[7:].startswith("mistral"):
         messages = [
-            {"role": message["role"], "content": message["content"]}
-            for message in messages
+            {"role": message["role"], "content": message["content"]} for message in messages
         ]
 
     model_response = await _acompletion(
@@ -72,9 +63,7 @@ async def acompletion(
         api_key=custom_api_key or litellm_master_key,
     )
 
-    model_response = patch_litellm_response(model_response)
-
-    return model_response
+    return patch_litellm_response(model_response)
 
 
 @wraps(_aembedding)
@@ -86,25 +75,27 @@ async def aembedding(
     embed_instruction: str | None = None,
     dimensions: int = embedding_dimensions,
     join_inputs: bool = False,
-    custom_api_key: None | str = None,
+    custom_api_key: str | None = None,
     **settings,
 ) -> list[list[float]]:
     # Temporarily commented out (causes errors when using voyage/voyage-3)
     # if not custom_api_key:
-    # model = f"openai/{model}"  # FIXME: This is for litellm
+    # model = f"openai/{model}"  # FIXME: Is this still needed for litellm?
 
-    if isinstance(inputs, str):
-        input = [inputs]
-    else:
-        input = ["\n\n".join(inputs)] if join_inputs else inputs
+    input = (
+        [inputs]
+        if isinstance(inputs, str)
+        else ["\n\n".join(inputs)]
+        if join_inputs
+        else inputs
+    )
 
     if embed_instruction:
-        input = [embed_instruction] + input
+        input = [embed_instruction, *input]
 
     response = await _aembedding(
         model=model,
         input=input,
-        # dimensions=dimensions,  # FIXME: litellm doesn't support dimensions correctly
         api_base=None if custom_api_key else litellm_url,
         api_key=custom_api_key or litellm_master_key,
         drop_params=True,
@@ -113,7 +104,9 @@ async def aembedding(
 
     embedding_list: list[dict[Literal["embedding"], list[float]]] = response.data
 
-    # FIXME: Truncation should be handled by litellm
-    result = [embedding["embedding"][:dimensions] for embedding in embedding_list]
-
-    return result
+    # Truncate the embedding to the specified dimensions
+    return [
+        item["embedding"][:dimensions]
+        for item in embedding_list
+        if len(item["embedding"]) >= dimensions
+    ]

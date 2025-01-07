@@ -9,7 +9,7 @@ from .generate import generate
 from .utils import chatml, get_names_from_session
 
 ##############
-## Entities ##
+# Entities ##
 ##############
 
 entities_example_plan: str = """\
@@ -77,10 +77,7 @@ async def get_entities(
 
     assert "<ct:entities>" in result["content"]
     result["content"] = (
-        result["content"]
-        .split("<ct:entities>")[-1]
-        .replace("</ct:entities>", "")
-        .strip()
+        result["content"].split("<ct:entities>")[-1].replace("</ct:entities>", "").strip()
     )
     result["role"] = "system"
     result["name"] = "entities"

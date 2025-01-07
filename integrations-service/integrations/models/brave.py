@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, Field
 
 from .base_models import BaseOutput
@@ -12,4 +10,4 @@ class SearchResult(BaseModel):
 
 
 class BraveSearchOutput(BaseOutput):
-    result: List[SearchResult] = Field(..., description="A list of search results")
+    result: list[SearchResult] = Field(..., description="A list of search results")
