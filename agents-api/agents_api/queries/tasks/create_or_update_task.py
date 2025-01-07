@@ -32,7 +32,7 @@ VALUES (
     $7,                 -- description
     $8                  -- spec
 )
-ON CONFLICT (agent_id, task_id, name) DO UPDATE SET
+ON CONFLICT (developer_id, agent_id, task_id, name) DO UPDATE SET
     type = EXCLUDED.type,
     description = EXCLUDED.description,
     spec = EXCLUDED.spec
