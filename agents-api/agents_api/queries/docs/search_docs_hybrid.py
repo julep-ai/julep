@@ -46,7 +46,7 @@ async def search_docs_hybrid(
     alpha: float = 0.5,
     metadata_filter: dict[str, Any] = {},
     search_language: str = "english",
-    confidence: float = 0.5,
+    confidence: int | float = 0.5,
 ) -> tuple[str, list]:
     """
     Hybrid text-and-embedding doc search. We get top-K from each approach,
