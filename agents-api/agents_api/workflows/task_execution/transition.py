@@ -1,4 +1,3 @@
-import traceback
 from datetime import timedelta
 
 from temporalio import workflow
@@ -27,8 +26,8 @@ async def transition(
     if state is None:
         state = PartialTransition()
 
-    error_type = kwargs.get("type", None)
-    
+    error_type = kwargs.get("type")
+
     if state.type is not None and state.type == "error":
         error_type = "error"
 

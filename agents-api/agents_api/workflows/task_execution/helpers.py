@@ -6,7 +6,6 @@ from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
-
 from .transition import transition
 
 with workflow.unsafe.imports_passed_through():
@@ -26,12 +25,14 @@ with workflow.unsafe.imports_passed_through():
 
 T = TypeVar("T")
 
+
 async def handle_error(context: StepContext, error: BaseException):
     workflow.logger.error(f"Error in workflow: {error!s}")
     workflow.logger.error(f"Error in step {context.cursor.step}: {error}")
     await transition(context, type="error", output=error)
     msg = f"Step {type(context.current_step).__name__} threw error: {error}"
     raise ApplicationError(msg) from error
+
 
 def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
     """Validates and returns the task from execution input.

@@ -6,8 +6,9 @@ from beartype import beartype
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
-from ..env import testing
 from ..common.protocol.tasks import StepOutcome
+from ..env import testing
+
 
 class RequestArgs(TypedDict):
     content: str | None

@@ -325,7 +325,9 @@ class TaskExecutionWorkflow:
                         days=days,
                     )
                 ), _:
-                    total_seconds = seconds + minutes * 60 + hours * 60 * 60 + days * 24 * 60 * 60
+                    total_seconds = (
+                        seconds + minutes * 60 + hours * 60 * 60 + days * 24 * 60 * 60
+                    )
                     workflow.logger.info(f"Sleep step: Sleeping for {total_seconds} seconds")
                     assert total_seconds > 0, "Sleep duration must be greater than 0"
 
@@ -355,7 +357,9 @@ class TaskExecutionWorkflow:
                 case YieldStep(), StepOutcome(
                     output=output, transition_to=(yield_transition_type, yield_next_target)
                 ):
-                    workflow.logger.info(f"Yield step: Transitioning to {yield_transition_type}")
+                    workflow.logger.info(
+                        f"Yield step: Transitioning to {yield_transition_type}"
+                    )
                     await transition(
                         context,
                         output=output,
@@ -389,7 +393,9 @@ class TaskExecutionWorkflow:
                     workflow.logger.debug(f"Prompt step: Received response: {message}")
                     state = PartialTransition(output=message)
 
-                case PromptStep(auto_run_tools=False, unwrap=False), StepOutcome(output=response):
+                case PromptStep(auto_run_tools=False, unwrap=False), StepOutcome(
+                    output=response
+                ):
                     workflow.logger.debug(f"Prompt step: Received response: {response}")
                     state = PartialTransition(output=response)
 
@@ -430,7 +436,9 @@ class TaskExecutionWorkflow:
                         task_steps.prompt_step,
                         context,
                         schedule_to_close_timeout=timedelta(
-                            seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                            seconds=30
+                            if debug or testing
+                            else temporal_schedule_to_close_timeout
                         ),
                         retry_policy=DEFAULT_RETRY_POLICY,
                         heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -533,7 +541,9 @@ class TaskExecutionWorkflow:
                     call = tool_call["integration"]
                     tool_name = call["name"]
                     arguments = call["arguments"]
-                    integration_tool = next((t for t in context.tools if t.name == tool_name), None)
+                    integration_tool = next(
+                        (t for t in context.tools if t.name == tool_name), None
+                    )
 
                     if integration_tool is None:
                         msg = f"Integration {tool_name} not found"
@@ -557,7 +567,9 @@ class TaskExecutionWorkflow:
                         execute_integration,
                         args=[context, tool_name, integration, arguments],
                         schedule_to_close_timeout=timedelta(
-                            seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                            seconds=30
+                            if debug or testing
+                            else temporal_schedule_to_close_timeout
                         ),
                         retry_policy=DEFAULT_RETRY_POLICY,
                         heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -598,14 +610,18 @@ class TaskExecutionWorkflow:
                             arguments,
                         ],
                         schedule_to_close_timeout=timedelta(
-                            seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                            seconds=30
+                            if debug or testing
+                            else temporal_schedule_to_close_timeout
                         ),
                         heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                     )
 
                     state = PartialTransition(output=tool_call_response)
 
-                case ToolCallStep(), StepOutcome(output=tool_call) if tool_call["type"] == "system":
+                case ToolCallStep(), StepOutcome(output=tool_call) if (
+                    tool_call["type"] == "system"
+                ):
                     # MANUAL TOOL CALL SYSTEM
                     workflow.logger.debug("ToolCallStep: Received SYSTEM tool call")
                     call = tool_call.get("system")
@@ -615,7 +631,9 @@ class TaskExecutionWorkflow:
                         execute_system,
                         args=[context, system_call],
                         schedule_to_close_timeout=timedelta(
-                            seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                            seconds=30
+                            if debug or testing
+                            else temporal_schedule_to_close_timeout
                         ),
                         heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                     )
@@ -690,4 +708,5 @@ class TaskExecutionWorkflow:
         except Exception as e:
             workflow.logger.error(f"Unhandled error: {e!s}")
             await transition(context, type="error", output=str(e))
-            raise ApplicationError("Workflow encountered an error") from e
+            msg = "Workflow encountered an error"
+            raise ApplicationError(msg) from e
