@@ -668,7 +668,7 @@ class TaskExecutionWorkflow:
             if not final_state.next:
                 msg = "No next step"
                 raise ApplicationError(msg)
-            
+
             workflow.logger.info(
                 f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
             )
@@ -683,11 +683,12 @@ class TaskExecutionWorkflow:
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
-            
+
         except Exception as e:
             workflow.logger.error(f"Unhandled error: {e!s}")
             await transition(context, type="error", output=str(e), last_error=self.last_error)
-            raise ApplicationError("Workflow encountered an error") from e
+            msg = "Workflow encountered an error"
+            raise ApplicationError(msg) from e
 
         previous_inputs.append(final_output)
 
@@ -697,5 +698,4 @@ class TaskExecutionWorkflow:
             start=final_state.next,
             previous_inputs=previous_inputs,
             user_state=state.user_state,
-            )
-
+        )

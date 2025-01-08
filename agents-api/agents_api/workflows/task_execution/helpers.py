@@ -6,7 +6,6 @@ from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
-from .transition import transition
 
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
