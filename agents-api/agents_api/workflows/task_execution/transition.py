@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError
 
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
@@ -74,5 +73,4 @@ async def transition(
 
     except Exception as e:
         workflow.logger.error(f"Error in transition: {e!s}")
-        msg = f"Error in transition: {e}"
         raise
