@@ -7,7 +7,7 @@ services:
     # See: https://github.com/timescale/timescaledb-docker?tab=readme-ov-file#notes-on-timescaledb-tune
     environment:
       - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-postgres}
-      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     ports:
       - "5432:5432"
     volumes:
@@ -29,8 +29,8 @@ services:
     image: timescale/pgai-vectorizer-worker:v0.3.0
     environment:
       - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres
-      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
-    command: [ "--poll-interval", "5s" ]
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    command: [ "--poll-interval", "2s" ]
     depends_on:
       memory-store:
         condition: service_healthy

@@ -132,8 +132,8 @@ def get_pg_dsn(start_vectorizer: bool = False):
                 pg_dsn.replace("localhost", postgres.get_container_host_ip()),
             )
             .with_env(
-                "VOYAGE_API_KEY",
-                os.environ.get("VOYAGE_API_KEY"),
+                "OPENAI_API_KEY",
+                os.environ.get("OPENAI_API_KEY"),
             )
         ) as vectorizer:
             wait_for_logs(
