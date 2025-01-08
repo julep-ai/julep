@@ -81,7 +81,7 @@ async def execute_integration(
             )
             activity.logger.error(f"Error in execute_integration {integration_str}: {e}")
 
-        return StepOutcome(error=str(e))
+        raise
 
 
 mock_execute_integration = execute_integration

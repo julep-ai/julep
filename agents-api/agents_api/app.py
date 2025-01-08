@@ -10,8 +10,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from scalar_fastapi import get_scalar_api_reference
 
 from .clients.pg import create_db_pool
-from .env import api_prefix, hostname, protocol, public_port
-
+from .env import api_prefix, hostname, protocol, public_port, testing
 
 class State(Protocol):
     postgres_pool: Pool | None
@@ -32,12 +31,14 @@ async def lifespan(*containers: FastAPI | ObjectWithState):
     pg_dsn = os.environ.get("PG_DSN")
 
     global pool
-    if not pool:
+    if not pool and not testing:
         pool = await create_db_pool(pg_dsn)
+    local_pool = await create_db_pool(pg_dsn) if testing else None
+    pools = [pool, local_pool]
 
     for container in containers:
         if hasattr(container, "state") and not getattr(container.state, "postgres_pool", None):
-            container.state.postgres_pool = pool
+            container.state.postgres_pool = pools[testing]
 
     # INIT S3 #
     s3_access_key = os.environ.get("S3_ACCESS_KEY")
@@ -57,13 +58,14 @@ async def lifespan(*containers: FastAPI | ObjectWithState):
     try:
         yield
     finally:
-        # # CLOSE POSTGRES #
-        # for container in containers:
-        #     if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
-        #         pool = getattr(container.state, "postgres_pool", None)
-        #         if pool:
-        #             await pool.close()
-        #         container.state.postgres_pool = None
+        # CLOSE POSTGRES #
+        if testing:
+            for container in containers:
+                if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
+                    pools[testing] = getattr(container.state, "postgres_pool", None)
+                    if pools[testing]:
+                        await pools[testing].close()
+                    container.state.postgres_pool = None
 
         # CLOSE S3 #
         for container in containers:

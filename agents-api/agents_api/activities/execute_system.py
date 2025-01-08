@@ -143,7 +143,7 @@ async def execute_system(
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in execute_system_call: {e}")
-        return StepOutcome(error=str(e))
+        raise
 
 
 def _create_search_request(arguments: dict) -> Any:

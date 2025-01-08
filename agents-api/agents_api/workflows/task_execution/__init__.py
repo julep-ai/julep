@@ -203,16 +203,18 @@ class TaskExecutionWorkflow:
                 workflow.logger.debug(f"Step {context.cursor.step} completed successfully")
 
             except Exception as e:
-                if isinstance(e, CancelledError) or (
-                    isinstance(e, ActivityError) and isinstance(e.__cause__, CancelledError)
-                ):
-                    workflow.logger.info("Workflow cancelled")
-                    await transition(context, type="cancelled", output=None)
-                    raise
-                workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
-                await transition(context, type="error", output=str(e))
-                msg = f"Activity {activity} threw error: {e}"
-                raise ApplicationError(msg) from e
+                match e:
+                    case CancelledError() | ActivityError(__cause__=CancelledError()):
+                        workflow.logger.info("Workflow cancelled")
+                        await transition(context, type="cancelled", output=None)
+                    case ApplicationError(_non_retryable=True):
+                        workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
+                        await transition(context, type="error", output=str(e))
+                    case ActivityError(__cause__=ApplicationError(_non_retryable=True)):
+                        workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
+                        await transition(context, type="error", output=str(e.__cause__))
+
+                raise
 
         # ---
 
@@ -693,18 +695,21 @@ class TaskExecutionWorkflow:
             )
 
         except Exception as e:
-            if isinstance(e, CancelledError) or (
-                isinstance(e, ActivityError) and isinstance(e.__cause__, CancelledError)
-            ):
-                workflow.logger.info("Workflow cancelled")
-                await transition(context, type="cancelled", output=None)
-                raise
-            workflow.logger.error(f"Unhandled error: {e!s}")
-            await transition(
-                context, type="error", output=str(e), last_error=self.last_error
-            )
-            msg = "Workflow encountered an error"
-            raise ApplicationError(msg) from e
+            match e:
+                case CancelledError() | ActivityError(__cause__=CancelledError()):
+                    workflow.logger.info("Workflow cancelled")
+                    await transition(context, type="cancelled", output=None)
+                case ApplicationError(_non_retryable=True):
+                    workflow.logger.error(f"Unhandled error: {e!s}")
+                    await transition(
+                    context, type="error", output=str(e), last_error=self.last_error
+                )
+                case ActivityError(__cause__=ApplicationError(_non_retryable=True)):
+                    workflow.logger.error(f"Unhandled error: {e!s}")
+                    await transition(
+                        context, type="error", output=str(e.__cause__), last_error=self.last_error
+                    )
+            raise
 
         previous_inputs.append(final_output)
 

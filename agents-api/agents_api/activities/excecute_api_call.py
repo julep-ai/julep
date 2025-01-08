@@ -59,7 +59,7 @@ async def execute_api_call(
         if activity.in_activity():
             activity.logger.error(f"Error in execute_api_call: {e}")
 
-        return StepOutcome(error=str(e))
+        raise
 
 
 mock_execute_api_call = execute_api_call
