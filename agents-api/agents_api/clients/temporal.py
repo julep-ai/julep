@@ -43,7 +43,7 @@ async def get_client(
         )
     elif temporal_api_key:
         tls_config = True
-        rpc_metadata = rpc_metadata={"temporal-namespace": namespace}
+        rpc_metadata = rpc_metadata = {"temporal-namespace": namespace}
 
     return await Client.connect(
         worker_url,
@@ -70,7 +70,7 @@ async def get_client_with_metrics(
         )
     elif temporal_api_key:
         tls_config = True
-        rpc_metadata = rpc_metadata={"temporal-namespace": namespace}
+        rpc_metadata = rpc_metadata = {"temporal-namespace": namespace}
 
     new_runtime = Runtime(
         telemetry=TelemetryConfig(
