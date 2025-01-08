@@ -25,8 +25,8 @@ declare
     cached_embedding vector(1024);
     model_input_md5 text;
 begin
-    if _provider != 'voyageai' then
-        raise exception 'Only voyageai provider is supported';
+    if _provider != 'openai' then
+        raise exception 'Only openai provider is supported';
     end if;
 
     model_input_md5 := md5(_provider || '++' || _model || '++' || _input_text || '++' || _input_type);
@@ -40,7 +40,7 @@ begin
     end if;
 
     -- Not found in cache, call AI embedding function
-    cached_embedding := ai.voyageai_embed(
+    cached_embedding := ai.openai_embed(
         _model,
         _input_text,
         _input_type,
@@ -185,8 +185,8 @@ OR REPLACE FUNCTION embed_and_search_by_vector (
     k integer DEFAULT 3,
     confidence float DEFAULT 0.5,
     metadata_filter jsonb DEFAULT NULL,
-    embedding_provider text DEFAULT 'voyageai',
-    embedding_model text DEFAULT 'voyage-3',
+    embedding_provider text DEFAULT 'openai',
+    embedding_model text DEFAULT 'text-embedding-3-large',
     input_type text DEFAULT 'query',
     api_key text DEFAULT NULL,
     api_key_name text DEFAULT NULL
@@ -469,8 +469,8 @@ OR REPLACE FUNCTION embed_and_search_hybrid (
     confidence float DEFAULT 0.5,
     metadata_filter jsonb DEFAULT NULL,
     search_language text DEFAULT 'english',
-    embedding_provider text DEFAULT 'voyageai',
-    embedding_model text DEFAULT 'voyage-3',
+    embedding_provider text DEFAULT 'openai',
+    embedding_model text DEFAULT 'text-embedding-3-large',
     input_type text DEFAULT 'query',
     api_key text DEFAULT NULL,
     api_key_name text DEFAULT NULL
