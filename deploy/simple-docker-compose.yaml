@@ -13,7 +13,7 @@ services:
       AGENTS_API_PROTOCOL: http
       AGENTS_API_PUBLIC_PORT: "80"
       AGENTS_API_URL: http://agents-api:8080
-      EMBEDDING_MODEL_ID: voyage/voyage-3
+      EMBEDDING_MODEL_ID: openai/text-embedding-3-large
       INTEGRATION_SERVICE_URL: http://integrations:8000
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       LITELLM_URL: http://litellm:4000
@@ -32,6 +32,10 @@ services:
         target: 8080
         published: "8080"
         protocol: tcp
+    deploy:
+      resources:
+        limits:
+          memory: 4G
 
   integrations:
     image: julepai/integrations:${TAG:-dev}
@@ -128,11 +132,49 @@ services:
         target: /data
         volume: {}
 
-  # TODO: Add memory-store with postgres
-  # memory-store:
+  memory-store:
+    image: timescale/timescaledb-ha:pg16
+    environment:
+      POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:-postgres}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "5432:5432"
+    volumes:
+      - memory_store_data:/home/postgres/pgdata/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # TODO: Add memory-store-backup-cron  
-  # memory-store-backup-cron:
+  vectorizer:
+    image: timescale/pgai-vectorizer-worker:v0.2.1
+    environment:
+      PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    command: [ "--poll-interval", "2s" ]
+    ports:
+      - "8501:8501"
+    volumes:
+      - vectorizer_data:/app/data
+    depends_on:
+      memory-store:
+        condition: service_healthy
+
+  memory-store-backup-cron:
+    image: appropriate/curl
+    command: >
+      sh -c "while true; do
+      pg_dump -h memory-store -U postgres -F c -b -v -f /backup/memory-store-$(date +\%Y-\%m-\%d-\%H-\%M-\%S).backup;
+      sleep 86400;
+      done"
+    environment:
+      PGPASSWORD: ${MEMORY_STORE_PASSWORD:-postgres}
+    volumes:
+      - memory_store_backup:/backup
+    depends_on:
+      memory-store:
+        condition: service_healthy
 
   temporal:
     depends_on:
@@ -223,7 +265,7 @@ services:
       AGENTS_API_PUBLIC_PORT: "80"
       AGENTS_API_URL: http://agents-api:8080
       PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
-      EMBEDDING_MODEL_ID: voyage/voyage-3
+      EMBEDDING_MODEL_ID: openai/text-embedding-3-large
       INTEGRATION_SERVICE_URL: http://integrations:8000
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       LITELLM_URL: http://litellm:4000
@@ -249,3 +291,9 @@ volumes:
     name: julep_litellm-redis-data
   temporal-db-data:
     name: julep_temporal-db-data
+  memory_store_data:
+    name: julep_memory_store_data
+  memory_store_backup:
+    name: julep_memory_store_backup
+  vectorizer_data:
+    name: julep_vectorizer_data
