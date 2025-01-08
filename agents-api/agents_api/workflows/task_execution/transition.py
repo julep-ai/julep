@@ -31,16 +31,16 @@ async def transition(
     if state.type is not None and state.type == "error":
         error_type = "error"
 
-    match context.is_last_step, context.cursor and not error_type:
-        case (True, TransitionTarget(workflow="main")):
-            state.type = "finish"
-        case (True, _):
-            state.type = "finish_branch"
-        case _, _:
-            state.type = "step"
-
-    if error_type:
+    if error_type and error_type == "error":
         state.type = "error"
+    else:
+        match context.is_last_step, context.cursor:
+            case (True, TransitionTarget(workflow="main")):
+                state.type = "finish"
+            case (True, _):
+                state.type = "finish_branch"
+            case _, _:
+                state.type = "step"
 
     transition_request = CreateTransitionRequest(
         current=context.cursor,

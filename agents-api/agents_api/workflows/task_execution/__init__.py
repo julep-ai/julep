@@ -220,7 +220,6 @@ class TaskExecutionWorkflow:
                 # Handle errors (activity returns None)
                 case step, StepOutcome(error=error) if error is not None:
                     workflow.logger.error(f"Error in step {context.cursor.step}: {error}")
-                    await transition(context, type="error", output=error)
                     msg = f"Step {type(step).__name__} threw error: {error}"
                     raise ApplicationError(msg)
 
@@ -345,11 +344,6 @@ class TaskExecutionWorkflow:
                     workflow.logger.error(f"Error step: {error}")
 
                     state = PartialTransition(type="error", output=error)
-                    await transition(
-                        context,
-                        state,
-                        last_error=self.last_error,
-                    )
 
                     msg = f"Error raised by ErrorWorkflowStep: {error}"
                     raise ApplicationError(msg)
@@ -644,11 +638,6 @@ class TaskExecutionWorkflow:
                         f"Unhandled step type: {type(context.current_step).__name__}"
                     )
                     state = PartialTransition(type="error", output="Not implemented")
-                    await transition(
-                        context,
-                        state,
-                        last_error=self.last_error,
-                    )
 
                     msg = "Not implemented"
                     raise ApplicationError(msg)
@@ -679,7 +668,7 @@ class TaskExecutionWorkflow:
             if not final_state.next:
                 msg = "No next step"
                 raise ApplicationError(msg)
-
+            
             workflow.logger.info(
                 f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
             )
@@ -694,19 +683,19 @@ class TaskExecutionWorkflow:
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
-
-            previous_inputs.append(final_output)
-
-            # Continue as a child workflow
-            return await continue_as_child(
-                context.execution_input,
-                start=final_state.next,
-                previous_inputs=previous_inputs,
-                user_state=state.user_state,
-            )
-
+            
         except Exception as e:
             workflow.logger.error(f"Unhandled error: {e!s}")
-            await transition(context, type="error", output=str(e))
-            msg = "Workflow encountered an error"
-            raise ApplicationError(msg) from e
+            await transition(context, type="error", output=str(e), last_error=self.last_error)
+            raise ApplicationError("Workflow encountered an error") from e
+
+        previous_inputs.append(final_output)
+
+        # Continue as a child workflow
+        return await continue_as_child(
+            context.execution_input,
+            start=final_state.next,
+            previous_inputs=previous_inputs,
+            user_state=state.user_state,
+            )
+
