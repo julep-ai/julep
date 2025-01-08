@@ -12,6 +12,7 @@ from scalar_fastapi import get_scalar_api_reference
 from .clients.pg import create_db_pool
 from .env import api_prefix, hostname, protocol, public_port, testing
 
+
 class State(Protocol):
     postgres_pool: Pool | None
     s3_client: AioBaseClient | None
@@ -61,7 +62,9 @@ async def lifespan(*containers: FastAPI | ObjectWithState):
         # CLOSE POSTGRES #
         if testing:
             for container in containers:
-                if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
+                if hasattr(container, "state") and getattr(
+                    container.state, "postgres_pool", None
+                ):
                     pools[testing] = getattr(container.state, "postgres_pool", None)
                     if pools[testing]:
                         await pools[testing].close()

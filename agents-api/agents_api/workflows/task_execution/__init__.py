@@ -702,12 +702,15 @@ class TaskExecutionWorkflow:
                 case ApplicationError(_non_retryable=True):
                     workflow.logger.error(f"Unhandled error: {e!s}")
                     await transition(
-                    context, type="error", output=str(e), last_error=self.last_error
-                )
+                        context, type="error", output=str(e), last_error=self.last_error
+                    )
                 case ActivityError(__cause__=ApplicationError(_non_retryable=True)):
                     workflow.logger.error(f"Unhandled error: {e!s}")
                     await transition(
-                        context, type="error", output=str(e.__cause__), last_error=self.last_error
+                        context,
+                        type="error",
+                        output=str(e.__cause__),
+                        last_error=self.last_error,
                     )
             raise
 

@@ -7,7 +7,7 @@ from ..app import lifespan
 from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
-from ..common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
+from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
 from ..queries import tools
 from .container import container

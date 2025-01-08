@@ -6,7 +6,6 @@ from beartype import beartype
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
-from ..common.protocol.tasks import StepOutcome
 from ..env import testing
 
 

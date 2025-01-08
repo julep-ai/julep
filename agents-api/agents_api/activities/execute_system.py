@@ -18,7 +18,7 @@ from ..autogen.openapi_model import (
     UpdateUserRequest,
     VectorDocSearchRequest,
 )
-from ..common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
+from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
 from ..queries import developers
 from .container import container
