@@ -30,8 +30,12 @@ async def transition(
 
     if state.type is not None and state.type == "error":
         error_type = "error"
+    elif state.type is not None and state.type == "cancelled":
+        error_type = "cancelled"
 
-    if error_type and error_type == "error":
+    if error_type and error_type == "cancelled":
+        state.type = "cancelled"
+    elif error_type and error_type == "error":
         state.type = "error"
     else:
         match context.is_last_step, context.cursor:
@@ -71,4 +75,4 @@ async def transition(
     except Exception as e:
         workflow.logger.error(f"Error in transition: {e!s}")
         msg = f"Error in transition: {e}"
-        raise ApplicationError(msg) from e
+        raise

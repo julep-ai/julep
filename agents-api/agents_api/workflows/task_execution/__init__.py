@@ -10,7 +10,7 @@ from temporalio.exceptions import ApplicationError
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
     from pydantic import RootModel
-
+    from temporalio.exceptions import ActivityError, CancelledError
     from ...activities import task_steps
     from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
@@ -202,10 +202,18 @@ class TaskExecutionWorkflow:
                 workflow.logger.debug(f"Step {context.cursor.step} completed successfully")
 
             except Exception as e:
-                workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
-                await transition(context, type="error", output=str(e))
-                msg = f"Activity {activity} threw error: {e}"
-                raise ApplicationError(msg) from e
+                if isinstance(e, CancelledError) or (
+                    isinstance(e, ActivityError)
+                    and isinstance(e.__cause__, CancelledError)
+                ):
+                    workflow.logger.info("Workflow cancelled")
+                    await transition(context, type="cancelled", output=None)
+                    raise
+                else:
+                    workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
+                    await transition(context, type="error", output=str(e))
+                    msg = f"Activity {activity} threw error: {e}"
+                    raise ApplicationError(msg) from e
 
         # ---
 
@@ -647,6 +655,7 @@ class TaskExecutionWorkflow:
 
             # The returned value is the transition finally created
             state = state or PartialTransition(type="error", output="Not implemented")
+
             if state.output and isinstance(state.output, StepOutcome) and state.output.error:
                 state = PartialTransition(type="error", output=state.output.error)
             final_state = await transition(
@@ -685,10 +694,17 @@ class TaskExecutionWorkflow:
             )
 
         except Exception as e:
-            workflow.logger.error(f"Unhandled error: {e!s}")
-            await transition(context, type="error", output=str(e), last_error=self.last_error)
-            msg = "Workflow encountered an error"
-            raise ApplicationError(msg) from e
+            if isinstance(e, CancelledError) or (
+                isinstance(e, ActivityError)
+                and isinstance(e.__cause__, CancelledError)
+            ):
+                workflow.logger.info("Workflow cancelled")
+                await transition(context, type="cancelled", output=None)
+                raise
+            else:
+                workflow.logger.error(f"Unhandled error: {e!s}")
+                await transition(context, type="error", output=str(e), last_error=self.last_error)
+                raise ApplicationError("Workflow encountered an error") from e
 
         previous_inputs.append(final_output)
 
