@@ -8,6 +8,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-postgres}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TS_TUNE_MAX_CONNS=${TS_TUNE_MAX_CONNS:-1000}
     ports:
       - "5432:5432"
     volumes:
@@ -26,7 +27,7 @@ services:
       retries: 5
 
   vectorizer-worker:
-    image: timescale/pgai-vectorizer-worker:v0.3.0
+    image: timescale/pgai-vectorizer-worker:latest
     environment:
       - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres
       - OPENAI_API_KEY=${OPENAI_API_KEY}

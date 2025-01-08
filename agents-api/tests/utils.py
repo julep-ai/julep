@@ -125,7 +125,7 @@ def get_pg_dsn(start_vectorizer: bool = False):
 
         # ELSE:
         with (
-            DockerContainer("timescale/pgai-vectorizer-worker:v0.3.0")
+            DockerContainer("timescale/pgai-vectorizer-worker:latest")
             .with_network(postgres._network)  # noqa: SLF001
             .with_env(
                 "PGAI_VECTORIZER_WORKER_DB_URL",
