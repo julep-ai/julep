@@ -10,7 +10,7 @@ x--shared-environment: &shared-environment
   AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
   PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
   DEBUG: ${AGENTS_API_DEBUG:-False}
-  EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
+  EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
   INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
   LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
