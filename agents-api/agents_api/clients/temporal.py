@@ -16,6 +16,7 @@ from ..common.interceptors import offload_if_large
 from ..common.protocol.tasks import ExecutionInput
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..env import (
+    temporal_api_key,
     temporal_client_cert,
     temporal_metrics_bind_host,
     temporal_metrics_bind_port,
@@ -45,6 +46,7 @@ async def get_client(
         namespace=namespace,
         tls=tls_config,
         data_converter=data_converter,
+        api_key=temporal_api_key or None,
     )
 
 
@@ -76,6 +78,7 @@ async def get_client_with_metrics(
         data_converter=data_converter,
         runtime=new_runtime,
         interceptors=[TracingInterceptor()],
+        api_key=temporal_api_key or None,
     )
 
 

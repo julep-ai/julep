@@ -99,6 +99,7 @@ temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:723
 temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
+temporal_api_key: str = env.str("TEMPORAL_API_KEY", default=None)
 temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 temporal_schedule_to_close_timeout: int = env.int(
