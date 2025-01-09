@@ -14,6 +14,16 @@ DROP INDEX IF EXISTS idx_transitions_next;
 DROP INDEX IF EXISTS idx_transitions_current;
 
 -- Drop the transitions table (this will also remove it from hypertables)
+DO $$
+BEGIN
+    BEGIN
+        DELETE FROM transitions;
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during deleting all from transitions: %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
+
 DROP TABLE IF EXISTS transitions;
 
 -- Drop custom types if they exist
