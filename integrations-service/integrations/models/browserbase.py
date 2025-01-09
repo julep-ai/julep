@@ -1,6 +1,7 @@
 from typing import Literal
 
-from browserbase import DebugConnectionURLs, Session
+from browserbase.types import Session
+from browserbase.types.session_live_urls import SessionLiveURLs
 from pydantic import AnyUrl, Field
 
 from .base_models import BaseOutput
@@ -90,7 +91,7 @@ class PageInfo(BaseOutput):
 
 
 class BrowserbaseGetSessionLiveUrlsOutput(BaseOutput):
-    urls: DebugConnectionURLs = Field(..., description="The live URLs for the session")
+    urls: SessionLiveURLs = Field(..., description="The live URLs for the session")
 
 
 class BrowserbaseContextOutput(BaseOutput):
