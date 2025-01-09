@@ -91,7 +91,7 @@ async def search_docs_hybrid(
             owner_ids,
             k,
             alpha,
-            1.0 - confidence,
+            confidence,
             metadata_filter,
             search_language,
         ],

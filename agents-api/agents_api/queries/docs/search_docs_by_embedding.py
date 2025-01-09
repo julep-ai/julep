@@ -74,7 +74,7 @@ async def search_docs_by_embedding(
             owner_types,
             owner_ids,
             k,
-            1.0 - confidence,
+            confidence,
             metadata_filter,
         ],
     )
