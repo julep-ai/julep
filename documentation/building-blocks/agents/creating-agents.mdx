@@ -11,29 +11,31 @@ Agents in Julep are AI-powered entities that can execute tasks and interact with
 
 You can create an agent using either the Python or Node.js SDK:
 
-```python Python
-from julep import Julep
+<CodeGroup>
+    ```python Python
+    from julep import Julep
 
-client = Julep(api_key="your_api_key")
+    client = Julep(api_key="your_api_key")
 
-agent = client.agents.create(
-    name="My Agent",
-    model="claude-3.5-sonnet",
-    about="A helpful AI assistant that specializes in data analysis"
-)
-```
+    agent = client.agents.create(
+        name="My Agent",
+        model="claude-3.5-sonnet",
+        about="A helpful AI assistant that specializes in data analysis"
+    )
+    ```
 
-```javascript JavaScript
-import { Julep } from '@julep/sdk';
+    ```javascript JavaScript
+    import { Julep } from '@julep/sdk';
 
-const client = new Julep({ apiKey: 'your_api_key' });
+    const client = new Julep({ apiKey: 'your_api_key' });
 
-const agent = await client.agents.create({
-    name: "My Agent",
-    model: "claude-3.5-sonnet",
-    about: "A helpful AI assistant that specializes in data analysis"
-});
-```
+    const agent = await client.agents.create({
+        name: "My Agent",
+        model: "claude-3.5-sonnet",
+        about: "A helpful AI assistant that specializes in data analysis"
+    });
+    ```
+</CodeGroup>
 
 ## Agent Configuration Options
 
@@ -73,50 +75,54 @@ Julep supports various language models:
 
 Here's an example of creating a more specialized agent with metadata and tools:
 
-```python Python
-agent = client.agents.create(
-    name="Research Assistant",
-    model="claude-3.5-sonnet",
-    about="An AI assistant specialized in academic research and paper analysis",
-    metadata={
-        "expertise": ["academic research", "paper analysis"],
-        "language": "en",
-        "max_papers_per_session": 5
-    }
-)
+<CodeGroup>
+    ```python Python
+    agent = client.agents.create(
+        name="Research Assistant",
+        model="claude-3.5-sonnet",
+        about="An AI assistant specialized in academic research and paper analysis",
+        metadata={
+            "expertise": ["academic research", "paper analysis"],
+            "language": "en",
+            "max_papers_per_session": 5
+        }
+    )
 
-# Add tools to the agent
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="arxiv_search",
-    description="Search for academic papers on arXiv",
-    integration={
-        "provider": "arxiv",
-        "method": "search"
-    }
-)
-```
+    # Add tools to the agent
+    client.agents.tools.create(
+        agent_id=agent.id,
+        name="arxiv_search",
+        description="Search for academic papers on arXiv",
+        integration={
+            "provider": "arxiv",
+            "method": "search"
+        }
+    )
+    ```
+</CodeGroup>
 
 ## Managing Agents
 
 Once created, you can manage your agents:
 
-```python Python
-# List all agents
-agents = client.agents.list()
+<CodeGroup>
+    ```python Python
+    # List all agents
+    agents = client.agents.list()
 
-# Get a specific agent
-agent = client.agents.get(agent_id="agent_id")
+    # Get a specific agent
+    agent = client.agents.get(agent_id="agent_id")
 
-# Update an agent
-agent = client.agents.update(
-    agent_id="agent_id",
-    metadata={"new_config": "value"}
-)
+    # Update an agent
+    agent = client.agents.update(
+        agent_id="agent_id",
+        metadata={"new_config": "value"}
+    )
 
-# Delete an agent
-client.agents.delete(agent_id="agent_id")
-```
+    # Delete an agent
+    client.agents.delete(agent_id="agent_id")
+    ```
+</CodeGroup>
 
 ## Next Steps
 

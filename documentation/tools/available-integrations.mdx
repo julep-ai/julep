@@ -1,0 +1,111 @@
+---
+title: 'Available Integrations'
+description: 'Overview of all available integrations in Julep'
+---
+
+# Overview
+
+Julep provides several built-in integrations that extend the capabilities of your AI agents. Here's a comprehensive list of all available integrations:
+
+## Search & Research
+
+### Wikipedia
+- **Description**: Search for pages on Wikipedia
+- **Setup Required**: No
+- **Methods**:
+  - `search`: Search for a page on Wikipedia
+- **Documentation**: [Wikipedia API Docs](https://en.wikipedia.org/api/rest_v1/)
+
+### Brave Search
+- **Description**: Perform web searches using Brave's search engine
+- **Setup Required**: Yes (API key)
+- **Methods**:
+  - `search`: Search the web using Brave
+- **Documentation**: [Brave Search Docs](https://api.search.brave.com/app/documentation/web-search/get-started)
+
+### Arxiv
+- **Description**: Search academic papers on Arxiv
+- **Setup Required**: No
+- **Methods**:
+  - `search`: Search in Arxiv's database
+- **Documentation**: [Arxiv API Docs](https://info.arxiv.org/help/api/index.html)
+
+## Web & Browser Automation
+
+### Spider
+- **Description**: Web crawling and data extraction
+- **Setup Required**: Yes
+- **Methods**:
+  - `crawl`: Crawl a website and extract data
+  - `links`: Extract all links from the webpage
+  - `screenshot`: Take a screenshot of the webpage
+  - `search`: Search content within the webpage
+- **Documentation**: [Spider Docs](https://spider.cloud/docs/api)
+
+### BrowserBase
+- **Description**: Browser automation and session management
+- **Setup Required**: Yes
+- **Methods**:
+  - `list_sessions`: List sessions in Browserbase
+  - `create_session`: Create a new session
+  - `get_session`: Get session details
+  - `complete_session`: Complete a session
+  - `get_live_urls`: Get sessions' live URLs
+  - `install_extension_from_github`: Install GitHub extensions
+  - `get_connect_url`: Get session connection URL
+- **Documentation**: [BrowserBase Docs](https://docs.browserbase.com/)
+
+### Remote Browser
+- **Description**: Remote browser control using Playwright
+- **Setup Required**: Yes
+- **Methods**:
+  - `perform_action`: Perform an action in the browser
+- **Documentation**: [Playwright Docs](https://playwright.dev/docs/intro)
+
+## Media & File Processing
+
+### FFmpeg
+- **Description**: Video and audio processing
+- **Setup Required**: No
+- **Methods**:
+  - `bash_cmd`: Run FFmpeg bash commands
+- **Documentation**: [FFmpeg Docs](https://ffmpeg.org/documentation.html)
+
+### Cloudinary
+- **Description**: Cloud-based media management
+- **Setup Required**: Yes
+- **Methods**:
+  - `media_edit`: Edit media in Cloudinary
+  - `media_upload`: Upload media to Cloudinary
+- **Documentation**: [Cloudinary Python SDK](https://cloudinary.com/documentation/python_quickstart)
+
+### LlamaParse
+- **Description**: Document parsing and extraction
+- **Setup Required**: Yes
+- **Methods**:
+  - `parse`: Parse and extract content from files
+- **Documentation**: [LlamaParse Docs](https://docs.cloud.llamaindex.ai/llamaparse/getting_started)
+
+## Communication & Data
+
+### Email
+- **Description**: Send emails programmatically
+- **Setup Required**: Yes (SMTP settings)
+- **Methods**:
+  - `send`: Send an email
+- **Required Setup**:
+  - `host`: SMTP server host
+  - `port`: SMTP server port
+  - `user`: Username/email
+  - `password`: SMTP password
+
+### Weather
+- **Description**: Get weather information
+- **Setup Required**: Yes (API key)
+- **Methods**:
+  - `get`: Get current weather for a city
+- **Documentation**: [WeatherAPI Docs](https://www.weatherapi.com/docs/)
+
+## Usage Example
+
+For detailed examples of how to use these integrations with your agents, please refer to our [Agent Tools Integration Guide](/building-blocks/agents/agent-tools#3-integrations).

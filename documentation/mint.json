@@ -109,7 +109,9 @@
       "pages": [
         "getting-started/quick-start",
         "getting-started/installation",
-        "getting-started/core-concepts"
+        "getting-started/core-concepts",
+        "getting-started/examples",
+        "getting-started/julep-task-walkthrough"
       ]
     },
     {
