@@ -24,8 +24,7 @@ BEGIN
     END IF;
 
     IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND
-        array_length(owner_types, 1) != array_length(owner_ids, 1) AND
-        array_length(owner_types, 1) <= 0 THEN
+        array_length(owner_types, 1) != array_length(owner_ids, 1) THEN
         RAISE EXCEPTION 'owner_types and owner_ids arrays must have the same length';
     END IF;
 
