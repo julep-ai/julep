@@ -5,9 +5,9 @@ import tempfile
 import httpx
 from beartype import beartype
 from browserbase import Browserbase
+from browserbase.types.session import Session
 from browserbase.types.session_create_params import BrowserSettings
 from browserbase.types.session_live_urls import SessionLiveURLs
-from browserbase.types.session import Session
 from pydantic import TypeAdapter
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -57,13 +57,13 @@ async def list_sessions(
     setup: BrowserbaseSetup, arguments: BrowserbaseListSessionsArguments
 ) -> BrowserbaseListSessionsOutput:
     client = get_browserbase_client(setup)
-    
+
     try:
         # Add status filter if provided
         params = {}
-        if hasattr(arguments, 'status') and arguments.status:
-            params['status'] = arguments.status
-            
+        if hasattr(arguments, "status") and arguments.status:
+            params["status"] = arguments.status
+
         sessions: list[Session] = client.sessions.list(**params)
         return BrowserbaseListSessionsOutput(sessions=sessions)
     except Exception as e:
@@ -162,9 +162,7 @@ async def complete_session(
     try:
         # Changed to use sessions.update() with REQUEST_RELEASE status
         client.sessions.update(
-            id=arguments.id,
-            status="REQUEST_RELEASE",
-            project_id=setup.project_id
+            id=arguments.id, status="REQUEST_RELEASE", project_id=setup.project_id
         )
     except Exception:
         return BrowserbaseCompleteSessionOutput(success=False)
@@ -204,7 +202,7 @@ async def get_connect_url(
     """Get the connect URL for a session."""
     client = get_browserbase_client(setup)
 
-    print("*"*100)
+    print("*" * 100)
     try:
         # Get session to access its connect_url
         session = client.sessions.retrieve(id=arguments.id)
@@ -226,9 +224,7 @@ async def install_extension_from_github(
 ) -> BrowserbaseExtensionOutput:
     """Download and install an extension from GitHub to the user's Browserbase account."""
     try:
-        github_url = (
-            f"https://github.com/{arguments.repository_name}/archive/refs/tags/{arguments.ref}.zip"
-        )
+        github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{arguments.ref}.zip"
 
         async with httpx.AsyncClient(timeout=600) as client:
             # Download the extension zip
@@ -253,11 +249,13 @@ async def install_extension_from_github(
                 try:
                     with open(tmp_file_path, "rb") as f:
                         files = {"file": f}
-                        upload_response = await client.post(upload_url, headers=headers, files=files)
+                        upload_response = await client.post(
+                            upload_url, headers=headers, files=files
+                        )
                         upload_response.raise_for_status()
                 except httpx.HTTPError as e:
                     print(f"Error uploading extension to Browserbase: {e}")
-                    if hasattr(e, 'response') and e.response is not None:
+                    if hasattr(e, "response") and e.response is not None:
                         print(f"Response content: {e.response.text}")
                     raise
 
