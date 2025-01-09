@@ -122,22 +122,27 @@ DO $$
 DECLARE
     lang text;
 BEGIN
-    FOR lang IN (SELECT cfgname FROM pg_ts_config WHERE cfgname IN (
-        'arabic', 'danish', 'dutch', 'english', 'finnish', 'french',
-        'german', 'greek', 'hungarian', 'indonesian', 'irish', 'italian',
-        'lithuanian', 'nepali', 'norwegian', 'portuguese', 'romanian',
-        'russian', 'spanish', 'swedish', 'tamil', 'turkish'
-    ))
-    LOOP
-        -- Configure integer dictionary
-        EXECUTE format('ALTER TEXT SEARCH CONFIGURATION %I
-            ALTER MAPPING FOR int, uint WITH intdict', lang);
+    BEGIN
+        FOR lang IN (SELECT cfgname FROM pg_ts_config WHERE cfgname IN (
+            'arabic', 'danish', 'dutch', 'english', 'finnish', 'french',
+            'german', 'greek', 'hungarian', 'indonesian', 'irish', 'italian',
+            'lithuanian', 'nepali', 'norwegian', 'portuguese', 'romanian',
+            'russian', 'spanish', 'swedish', 'tamil', 'turkish'
+        ))
+        LOOP
+            -- Configure integer dictionary
+            EXECUTE format('ALTER TEXT SEARCH CONFIGURATION %I
+                ALTER MAPPING FOR int, uint WITH intdict', lang);
 
-        -- Configure synonym and stemming
-        EXECUTE format('ALTER TEXT SEARCH CONFIGURATION %I
-            ALTER MAPPING FOR asciihword, hword_asciipart, hword, hword_part, word, asciiword
-            WITH xsyn, %I_stem', lang, lang);
-    END LOOP;
+            -- Configure synonym and stemming
+            EXECUTE format('ALTER TEXT SEARCH CONFIGURATION %I
+                ALTER MAPPING FOR asciihword, hword_asciipart, hword, hword_part, word, asciiword
+                WITH xsyn, %I_stem', lang, lang);
+        END LOOP;
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during altering search configurations: %, %', SQLSTATE, SQLERRM;
+    END;
 END
 $$;
 
