@@ -83,7 +83,7 @@ litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
 
 # Embedding service
 # -----------------
-embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="Alibaba-NLP/gte-large-en-v1.5")
+embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="openai/text-embedding-3-large")
 
 embedding_dimensions: int = env.int("EMBEDDING_DIMENSIONS", default=1024)
 

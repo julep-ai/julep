@@ -69,7 +69,7 @@ async def create_doc(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
     modality: Literal["text", "image", "mixed"] | None = "text",
-    embedding_model: str | None = "voyage-3",
+    embedding_model: str | None = "text-embedding-3-large",
     embedding_dimensions: int | None = 1024,
     language: str | None = "english",
     index: int | None = 0,

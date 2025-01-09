@@ -125,15 +125,15 @@ def get_pg_dsn(start_vectorizer: bool = False):
 
         # ELSE:
         with (
-            DockerContainer("timescale/pgai-vectorizer-worker:v0.3.0")
+            DockerContainer("timescale/pgai-vectorizer-worker:latest")
             .with_network(postgres._network)  # noqa: SLF001
             .with_env(
                 "PGAI_VECTORIZER_WORKER_DB_URL",
                 pg_dsn.replace("localhost", postgres.get_container_host_ip()),
             )
             .with_env(
-                "VOYAGE_API_KEY",
-                os.environ.get("VOYAGE_API_KEY"),
+                "OPENAI_API_KEY",
+                os.environ.get("OPENAI_API_KEY"),
             )
         ) as vectorizer:
             wait_for_logs(

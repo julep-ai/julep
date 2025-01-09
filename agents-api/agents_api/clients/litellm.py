@@ -78,9 +78,8 @@ async def aembedding(
     custom_api_key: str | None = None,
     **settings,
 ) -> list[list[float]]:
-    # Temporarily commented out (causes errors when using voyage/voyage-3)
-    # if not custom_api_key:
-    # model = f"openai/{model}"  # FIXME: Is this still needed for litellm?
+    if not custom_api_key:
+        model = f"openai/{model}"  # This is needed for litellm
 
     input = (
         [inputs]
