@@ -506,6 +506,8 @@ def get_handler(system: SystemDef) -> Callable:
     from ..queries.users.get_user import get_user as get_user_query
     from ..queries.users.list_users import list_users as list_users_query
     from ..queries.users.update_user import update_user as update_user_query
+
+    # FIXME: Do not use routes directly;
     from ..routers.docs.create_doc import create_agent_doc, create_user_doc
     from ..routers.docs.search_docs import search_agent_docs, search_user_docs
     from ..routers.sessions.chat import chat
