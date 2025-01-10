@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Any
 from uuid import UUID
 
@@ -6,7 +7,7 @@ from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
-from ..app import app, lifespan
+from ..app import app
 from ..autogen.openapi_model import (
     ChatInput,
     CreateDocRequest,
@@ -21,18 +22,19 @@ from ..autogen.openapi_model import (
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
 from ..queries import developers
-from .container import container
 from .utils import get_handler
 
 
-@lifespan(app, container)  # Both are needed because we are using the routes
 @beartype
 async def execute_system(
     context: StepContext,
     system: SystemDef,
 ) -> Any:
     """Execute a system call with the appropriate handler and transformed arguments."""
+
     arguments: dict[str, Any] = system.arguments or {}
+
+    connection_pool = getattr(app.state, "postgres_pool", None)
 
     if not isinstance(context.execution_input, ExecutionInput):
         msg = "Expected ExecutionInput type for context.execution_input"
@@ -54,7 +56,9 @@ async def execute_system(
             arguments[field] = UUID(arguments[field])
 
     try:
+        # Partial with connection pool
         handler = get_handler(system)
+        handler = partial(handler, connection_pool=connection_pool)
 
         # Transform arguments for doc-related operations (except create and search
         # as we're calling the endpoint function rather than the model method)
@@ -87,8 +91,9 @@ async def execute_system(
         if system.operation == "chat" and system.resource == "session":
             developer = await developers.get_developer(
                 developer_id=arguments["developer_id"],
-                connection_pool=container.state.postgres_pool,
+                connection_pool=connection_pool,
             )
+
             session_id = arguments.get("session_id")
             x_custom_api_key = arguments.get("x_custom_api_key", None)
             chat_input = ChatInput(**arguments)

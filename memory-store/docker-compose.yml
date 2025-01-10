@@ -3,12 +3,9 @@ services:
   memory-store:
     image: timescale/timescaledb-ha:pg17
 
-    # For timescaledb specific options,
-    # See: https://github.com/timescale/timescaledb-docker?tab=readme-ov-file#notes-on-timescaledb-tune
     environment:
       - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-postgres}
       - OPENAI_API_KEY=${OPENAI_API_KEY:?OPENAI_API_KEY is required}
-      - TS_TUNE_MAX_CONNS=${TS_TUNE_MAX_CONNS:-1000}
     ports:
       - "5432:5432"
     volumes:
