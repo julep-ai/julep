@@ -42,8 +42,6 @@ async def transition_step(
         raise ValueError(msg)
 
     # Create transition
-    # FIXME: Remove
-    assert container.state.postgres_pool is not None
     try:
         transition = await create_execution_transition(
             developer_id=context.execution_input.developer_id,

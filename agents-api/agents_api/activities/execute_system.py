@@ -32,13 +32,6 @@ async def execute_system(
 ) -> Any:
     """Execute a system call with the appropriate handler and transformed arguments."""
 
-    connection_pool = getattr(container.state, "postgres_pool", None) or getattr(
-        app.state, "postgres_pool", None
-    )
-
-    # FIXME: Remove
-    assert connection_pool is not None
-
     arguments: dict[str, Any] = system.arguments or {}
 
     connection_pool = getattr(app.state, "postgres_pool", None)
