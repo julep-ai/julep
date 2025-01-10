@@ -3,8 +3,9 @@ This module is responsible for loading and providing access to environment varia
 It utilizes the environs library for environment variable parsing.
 """
 
-import random
+import multiprocessing
 from pprint import pprint
+import random
 from typing import Any
 
 from environs import Env
@@ -60,6 +61,7 @@ pg_dsn: str = env.str(
 summarization_model_name: str = env.str("SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo")
 
 query_timeout: float = env.float("QUERY_TIMEOUT", default=90.0)
+pool_max_size: int = env.int("POOL_MAX_SIZE", default=multiprocessing.cpu_count() * 2)
 
 
 # Auth
