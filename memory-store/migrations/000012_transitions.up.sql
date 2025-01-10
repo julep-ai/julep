@@ -158,7 +158,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create a trigger on the transitions table
-CREATE TRIGGER validate_transition BEFORE INSERT ON transitions FOR EACH ROW
+CREATE OR REPLACE TRIGGER validate_transition BEFORE INSERT ON transitions FOR EACH ROW
 EXECUTE FUNCTION check_valid_transition ();
 
 COMMIT;

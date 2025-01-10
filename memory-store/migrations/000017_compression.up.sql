@@ -7,26 +7,57 @@
 
 BEGIN;
 
-ALTER TABLE entries
-SET
-    (
-        timescaledb.compress = TRUE,
-        timescaledb.compress_segmentby = 'session_id',
-        timescaledb.compress_orderby = 'created_at DESC, entry_id DESC'
-    );
+DO $$
+BEGIN
+    BEGIN
+        ALTER TABLE entries
+            SET (
+                timescaledb.compress = TRUE,
+                timescaledb.compress_segmentby = 'session_id',
+                timescaledb.compress_orderby = 'created_at DESC, entry_id DESC'
+            );
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during entries.compress: %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
 
-SELECT
-    add_compression_policy ('entries', INTERVAL '7 days');
+DO $$
+BEGIN
+    BEGIN
+        SELECT
+            add_compression_policy ('entries', INTERVAL '7 days');
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during add_compression_policy(entries): %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
 
-ALTER TABLE transitions
-SET
-    (
-        timescaledb.compress = TRUE,
-        timescaledb.compress_segmentby = 'execution_id',
-        timescaledb.compress_orderby = 'created_at DESC, transition_id DESC'
-    );
+DO $$
+BEGIN
+    BEGIN
+        ALTER TABLE transitions
+        SET
+            (
+                timescaledb.compress = TRUE,
+                timescaledb.compress_segmentby = 'execution_id',
+                timescaledb.compress_orderby = 'created_at DESC, transition_id DESC'
+            );
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during transitions.compress: %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
 
-SELECT
-    add_compression_policy ('transitions', INTERVAL '7 days');
+DO $$
+BEGIN
+    BEGIN
+        SELECT
+            add_compression_policy ('transitions', INTERVAL '7 days');
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during add_compression_policy(transitions): %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
 
 COMMIT;
