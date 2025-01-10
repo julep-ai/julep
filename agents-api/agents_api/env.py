@@ -4,8 +4,8 @@ It utilizes the environs library for environment variable parsing.
 """
 
 import multiprocessing
-from pprint import pprint
 import random
+from pprint import pprint
 from typing import Any
 
 from environs import Env
