@@ -16,6 +16,7 @@ from ..common.interceptors import offload_if_large
 from ..common.protocol.tasks import ExecutionInput
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..env import (
+    temporal_api_key,
     temporal_client_cert,
     temporal_metrics_bind_host,
     temporal_metrics_bind_port,
@@ -33,18 +34,24 @@ async def get_client(
     data_converter=pydantic_data_converter,
 ):
     tls_config = False
+    rpc_metadata = {}
 
     if temporal_private_key and temporal_client_cert:
         tls_config = TLSConfig(
             client_cert=temporal_client_cert.encode(),
             client_private_key=temporal_private_key.encode(),
         )
+    elif temporal_api_key:
+        tls_config = True
+        rpc_metadata = {"temporal-namespace": namespace}
 
     return await Client.connect(
         worker_url,
         namespace=namespace,
         tls=tls_config,
         data_converter=data_converter,
+        api_key=temporal_api_key or None,
+        rpc_metadata=rpc_metadata,
     )
 
 
@@ -54,12 +61,16 @@ async def get_client_with_metrics(
     data_converter=pydantic_data_converter,
 ):
     tls_config = False
+    rpc_metadata = {}
 
     if temporal_private_key and temporal_client_cert:
         tls_config = TLSConfig(
             client_cert=temporal_client_cert.encode(),
             client_private_key=temporal_private_key.encode(),
         )
+    elif temporal_api_key:
+        tls_config = True
+        rpc_metadata = {"temporal-namespace": namespace}
 
     new_runtime = Runtime(
         telemetry=TelemetryConfig(
@@ -76,6 +87,8 @@ async def get_client_with_metrics(
         data_converter=data_converter,
         runtime=new_runtime,
         interceptors=[TracingInterceptor()],
+        api_key=temporal_api_key or None,
+        rpc_metadata=rpc_metadata,
     )
 
 

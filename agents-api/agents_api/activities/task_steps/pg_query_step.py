@@ -4,13 +4,11 @@ from beartype import beartype
 from temporalio import activity
 
 from ... import queries
-from ...app import lifespan
+from ...app import app
 from ...env import pg_dsn
-from ..container import container
 
 
 @activity.defn
-@lifespan(container)
 @beartype
 async def pg_query_step(
     query_name: str,
@@ -21,4 +19,4 @@ async def pg_query_step(
 
     module = getattr(queries, module_name)
     query = getattr(module, name)
-    return await query(**values, connection_pool=container.state.postgres_pool)
+    return await query(**values, connection_pool=app.state.postgres_pool)

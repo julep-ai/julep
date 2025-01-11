@@ -3,6 +3,7 @@ This module is responsible for loading and providing access to environment varia
 It utilizes the environs library for environment variable parsing.
 """
 
+import multiprocessing
 import random
 from pprint import pprint
 from typing import Any
@@ -60,6 +61,7 @@ pg_dsn: str = env.str(
 summarization_model_name: str = env.str("SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo")
 
 query_timeout: float = env.float("QUERY_TIMEOUT", default=90.0)
+pool_max_size: int = env.int("POOL_MAX_SIZE", default=multiprocessing.cpu_count())
 
 
 # Auth
@@ -83,7 +85,7 @@ litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
 
 # Embedding service
 # -----------------
-embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="Alibaba-NLP/gte-large-en-v1.5")
+embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="openai/text-embedding-3-large")
 
 embedding_dimensions: int = env.int("EMBEDDING_DIMENSIONS", default=1024)
 
@@ -99,6 +101,7 @@ temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:723
 temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
+temporal_api_key: str = env.str("TEMPORAL_API_KEY", default=None)
 temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 temporal_schedule_to_close_timeout: int = env.int(

@@ -82,6 +82,7 @@ async def search_user_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     search_params: (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest),
     user_id: UUID,
+    connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> DocSearchResponse:
     """
     Searches for documents associated with a specific user.

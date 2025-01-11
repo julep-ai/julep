@@ -10,7 +10,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from scalar_fastapi import get_scalar_api_reference
 
 from .clients.pg import create_db_pool
-from .env import api_prefix, hostname, protocol, public_port, testing
+from .env import api_prefix, hostname, pool_max_size, protocol, public_port
 
 
 class State(Protocol):
@@ -22,61 +22,47 @@ class ObjectWithState(Protocol):
     state: State
 
 
-pool = None
-
-
 # TODO: This currently doesn't use env.py, we should move to using them
 @asynccontextmanager
-async def lifespan(*containers: FastAPI | ObjectWithState):
+async def lifespan(container: FastAPI | ObjectWithState):
     # INIT POSTGRES #
     pg_dsn = os.environ.get("PG_DSN")
 
-    global pool
-    if not pool and not testing:
-        pool = await create_db_pool(pg_dsn)
-    local_pool = await create_db_pool(pg_dsn) if testing else None
-    pools = [pool, local_pool]
+    pool = await create_db_pool(pg_dsn, max_size=pool_max_size)
 
-    for container in containers:
-        if hasattr(container, "state") and not getattr(container.state, "postgres_pool", None):
-            container.state.postgres_pool = pools[testing]
+    if hasattr(container, "state") and not getattr(container.state, "postgres_pool", None):
+        container.state.postgres_pool = pool
 
     # INIT S3 #
     s3_access_key = os.environ.get("S3_ACCESS_KEY")
     s3_secret_key = os.environ.get("S3_SECRET_KEY")
     s3_endpoint = os.environ.get("S3_ENDPOINT")
 
-    for container in containers:
-        if hasattr(container, "state") and not getattr(container.state, "s3_client", None):
-            session = get_session()
-            container.state.s3_client = await session.create_client(
-                "s3",
-                aws_access_key_id=s3_access_key,
-                aws_secret_access_key=s3_secret_key,
-                endpoint_url=s3_endpoint,
-            ).__aenter__()
+    if hasattr(container, "state") and not getattr(container.state, "s3_client", None):
+        session = get_session()
+        container.state.s3_client = await session.create_client(
+            "s3",
+            aws_access_key_id=s3_access_key,
+            aws_secret_access_key=s3_secret_key,
+            endpoint_url=s3_endpoint,
+        ).__aenter__()
 
     try:
         yield
     finally:
         # CLOSE POSTGRES #
-        if testing:
-            for container in containers:
-                if hasattr(container, "state") and getattr(
-                    container.state, "postgres_pool", None
-                ):
-                    pools[testing] = getattr(container.state, "postgres_pool", None)
-                    if pools[testing]:
-                        await pools[testing].close()
-                    container.state.postgres_pool = None
+        if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
+            pool = getattr(container.state, "postgres_pool", None)
+            if pool:
+                await pool.close()
+            container.state.postgres_pool = None
 
         # CLOSE S3 #
-        for container in containers:
-            if hasattr(container, "state") and getattr(container.state, "s3_client", None):
-                s3_client = getattr(container.state, "s3_client", None)
-                if s3_client:
-                    await s3_client.close()
-                container.state.s3_client = None
+        if hasattr(container, "state") and getattr(container.state, "s3_client", None):
+            s3_client = getattr(container.state, "s3_client", None)
+            if s3_client:
+                await s3_client.close()
+            container.state.s3_client = None
 
 
 app: FastAPI = FastAPI(

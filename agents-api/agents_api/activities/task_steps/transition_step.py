@@ -5,7 +5,7 @@ from beartype import beartype
 from fastapi import HTTPException
 from temporalio import activity
 
-from ...app import lifespan
+from ...app import app
 from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...clients.temporal import get_workflow_handle
 from ...common.protocol.tasks import ExecutionInput, StepContext
@@ -14,10 +14,8 @@ from ...exceptions import LastErrorInput, TooManyRequestsError
 from ...queries.executions.create_execution_transition import (
     create_execution_transition,
 )
-from ..container import container
 
 
-@lifespan(container)
 @beartype
 async def transition_step(
     context: StepContext,
@@ -50,7 +48,7 @@ async def transition_step(
             execution_id=context.execution_input.execution.id,
             data=transition_info,
             task_token=transition_info.task_token,
-            connection_pool=container.state.postgres_pool,
+            connection_pool=app.state.postgres_pool,
         )
 
     except Exception as e:
