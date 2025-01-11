@@ -1,4 +1,5 @@
-from typing import Annotated, Any, Callable
+from collections.abc import Callable
+from typing import Annotated, Any
 
 from fastapi import Query, Request
 from pydantic import BaseModel, ConfigDict
@@ -38,9 +39,7 @@ def create_filter_extractor(
 
     def extract_filters(
         request: Request,
-        metadata_filter: Annotated[
-            MetadataFilter, Query(default_factory=MetadataFilter)
-        ],
+        metadata_filter: Annotated[MetadataFilter, Query(default_factory=MetadataFilter)],
     ) -> MetadataFilter:
         """
         Extracts query parameters that start with the specified prefix and returns them as a dictionary.

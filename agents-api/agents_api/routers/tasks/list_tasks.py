@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     Task,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.task.list_tasks import list_tasks as list_tasks_query
+from ...queries.tasks.list_tasks import list_tasks as list_tasks_query
 from .router import router
 
 
@@ -21,7 +21,7 @@ async def list_tasks(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Task]:
-    query_results = list_tasks_query(
+    query_results = await list_tasks_query(
         agent_id=agent_id,
         developer_id=x_developer_id,
         limit=limit,

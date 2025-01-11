@@ -16,8 +16,6 @@ class BaseSessionException(BaseCommonException):
     This class serves as a base for all session-related exceptions, allowing for a structured exception handling approach specific to session operations.
     """
 
-    pass
-
 
 class SessionNotFoundError(BaseSessionException):
     """
@@ -32,6 +30,6 @@ class SessionNotFoundError(BaseSessionException):
 
     def __init__(self, developer_id: UUID | str, session_id: UUID | str):
         super().__init__(
-            f"Session {str(session_id)} not found for developer {str(developer_id)}",
+            f"Session {session_id!s} not found for developer {developer_id!s}",
             http_code=404,
         )

@@ -1,5 +1,3 @@
-from typing import Optional, Union
-
 from pydantic import BaseModel
 
 from ..autogen.Tools import (
@@ -63,70 +61,70 @@ class ExecutionError(BaseModel):
 
 
 # Setup configurations
-ExecutionSetup = Union[
-    EmailSetup,
-    SpiderSetup,
-    WeatherSetup,
-    BraveSearchSetup,
-    BrowserbaseSetup,
-    RemoteBrowserSetup,
-    LlamaParseSetup,
-    CloudinarySetup,
-]
+ExecutionSetup = (
+    EmailSetup
+    | SpiderSetup
+    | WeatherSetup
+    | BraveSearchSetup
+    | BrowserbaseSetup
+    | RemoteBrowserSetup
+    | LlamaParseSetup
+    | CloudinarySetup
+)
 
 # Argument configurations
-ExecutionArguments = Union[
-    SpiderFetchArguments,
-    WeatherGetArguments,
-    EmailArguments,
-    WikipediaSearchArguments,
-    BraveSearchArguments,
-    BrowserbaseCreateSessionArguments,
-    BrowserbaseGetSessionArguments,
-    BrowserbaseGetSessionConnectUrlArguments,
-    BrowserbaseGetSessionLiveUrlsArguments,
-    BrowserbaseCompleteSessionArguments,
-    BrowserbaseContextArguments,
-    BrowserbaseExtensionArguments,
-    BrowserbaseListSessionsArguments,
-    RemoteBrowserArguments,
-    LlamaParseFetchArguments,
-    FfmpegSearchArguments,
-    CloudinaryUploadArguments,
-    CloudinaryEditArguments,
-    ArxivSearchArguments,
-]
+ExecutionArguments = (
+    SpiderFetchArguments
+    | WeatherGetArguments
+    | EmailArguments
+    | WikipediaSearchArguments
+    | BraveSearchArguments
+    | BrowserbaseCreateSessionArguments
+    | BrowserbaseGetSessionArguments
+    | BrowserbaseGetSessionConnectUrlArguments
+    | BrowserbaseGetSessionLiveUrlsArguments
+    | BrowserbaseCompleteSessionArguments
+    | BrowserbaseContextArguments
+    | BrowserbaseExtensionArguments
+    | BrowserbaseListSessionsArguments
+    | RemoteBrowserArguments
+    | LlamaParseFetchArguments
+    | FfmpegSearchArguments
+    | CloudinaryUploadArguments
+    | CloudinaryEditArguments
+    | ArxivSearchArguments
+)
 
-ExecutionResponse = Union[
-    WeatherGetOutput,
-    EmailOutput,
-    WikipediaSearchOutput,
-    BraveSearchOutput,
-    BrowserbaseCreateSessionOutput,
-    BrowserbaseGetSessionOutput,
-    BrowserbaseGetSessionConnectUrlOutput,
-    BrowserbaseGetSessionLiveUrlsOutput,
-    BrowserbaseCompleteSessionOutput,
-    BrowserbaseContextOutput,
-    BrowserbaseExtensionOutput,
-    BrowserbaseListSessionsOutput,
-    RemoteBrowserOutput,
-    LlamaParseFetchOutput,
-    FfmpegSearchOutput,
-    CloudinaryEditOutput,
-    CloudinaryUploadOutput,
-    ExecutionError,
-    ArxivSearchOutput,
-    SpiderOutput,
-]
+ExecutionResponse = (
+    WeatherGetOutput
+    | EmailOutput
+    | WikipediaSearchOutput
+    | BraveSearchOutput
+    | BrowserbaseCreateSessionOutput
+    | BrowserbaseGetSessionOutput
+    | BrowserbaseGetSessionConnectUrlOutput
+    | BrowserbaseGetSessionLiveUrlsOutput
+    | BrowserbaseCompleteSessionOutput
+    | BrowserbaseContextOutput
+    | BrowserbaseExtensionOutput
+    | BrowserbaseListSessionsOutput
+    | RemoteBrowserOutput
+    | LlamaParseFetchOutput
+    | FfmpegSearchOutput
+    | CloudinaryEditOutput
+    | CloudinaryUploadOutput
+    | ExecutionError
+    | ArxivSearchOutput
+    | SpiderOutput
+)
 
 
 class ExecutionRequest(BaseModel):
-    setup: Optional[ExecutionSetup]
+    setup: ExecutionSetup | None
     """
     The setup parameters the integration accepts (such as API keys)
     """
-    arguments: Optional[ExecutionArguments]
+    arguments: ExecutionArguments | None
     """
     The arguments to pass to the integration
     """

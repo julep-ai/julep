@@ -4,13 +4,12 @@ from uuid import UUID
 from fastapi import Depends
 from starlette.status import HTTP_201_CREATED
 
-import agents_api.models as models
-
 from ...autogen.openapi_model import (
     CreateToolRequest,
     ResourceCreatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
+from ...queries.tools.create_tools import create_tools as create_tools_query
 from .router import router
 
 
@@ -20,7 +19,7 @@ async def create_agent_tool(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     data: CreateToolRequest,
 ) -> ResourceCreatedResponse:
-    tool = models.tools.create_tools(
+    tool = await create_tools_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=[data],

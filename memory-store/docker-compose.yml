@@ -1,46 +1,54 @@
-name: julep-memory-store
-
+name: pgai
 services:
   memory-store:
-    image: julepai/memory-store:${TAG:-dev}
-    environment:
-      - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
-      - COZO_PORT=${COZO_PORT:-9070}
-      - COZO_MNT_DIR=${MNT_DIR:-/data}
-      - COZO_BACKUP_DIR=${COZO_BACKUP_DIR:-/backup}
-    volumes:
-      - cozo_data:/data
-      - cozo_backup:/backup
-    build:
-      context: .
-    ports:
-      - "9070:9070"
+    image: timescale/timescaledb-ha:pg17
 
+    environment:
+      - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-postgres}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+    ports:
+      - "5432:5432"
+    volumes:
+      - memory_store_data:/home/postgres/pgdata/data
+
+    # TODO: Fix this to install pgaudit
+    # entrypoint: []
+    # command: >-
+    #   sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'pgaudit,\2'/;s/,'/'/" /home/postgres/pgdata/data/postgresql.conf
+    #   && exec /docker-entrypoint.sh
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vectorizer-worker:
+    image: timescale/pgai-vectorizer-worker:latest
+    environment:
+      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres
+      - OPENAI_API_KEY=${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+    command: [ "--poll-interval", "5s" ]
+    depends_on:
+      memory-store:
+        condition: service_healthy
+
+  migration:
+    image: migrate/migrate:latest
+    volumes:
+      - ./migrations:/migrations
+    command: [ "-path", "/migrations", "-database", "postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres?sslmode=disable" , "up"]
+    
+    restart: "no"
     develop:
       watch:
-        - action: sync+restart
-          path: ./options
-          target: /data/cozo.db/OPTIONS-000007
-        - action: rebuild
-          path: Dockerfile
-
-    labels:
-      ofelia.enabled: "true"
-      ofelia.job-exec.backupcron.schedule: "@every 3h"
-      ofelia.job-exec.backupcron.environment: '["COZO_PORT=${COZO_PORT}", "COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}", "COZO_BACKUP_DIR=${COZO_BACKUP_DIR}"]'
-      ofelia.job-exec.backupcron.command: bash /app/backup.sh
-
-  memory-store-backup-cron:
-    image: mcuadros/ofelia:latest
-    restart: unless-stopped
+        - path: ./migrations
+          target: ./migrations
+          action: sync+restart
     depends_on:
-      - memory-store
-    command: daemon --docker -f label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      memory-store:
+        condition: service_healthy
 
 volumes:
-  cozo_data:
-    external: true
-  cozo_backup:
+  memory_store_data:
     external: true

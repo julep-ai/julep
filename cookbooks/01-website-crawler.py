@@ -1,5 +1,6 @@
 import os
 import uuid
+
 import yaml
 from julep import Client
 
@@ -10,7 +11,8 @@ TASK_UUID = uuid.uuid4()
 # Creating Julep Client with the API Key
 api_key = os.getenv("JULEP_API_KEY")
 if not api_key:
-    raise ValueError("JULEP_API_KEY not found in environment variables")
+    msg = "JULEP_API_KEY not found in environment variables"
+    raise ValueError(msg)
 
 client = Client(api_key=api_key, environment="dev")
 
@@ -25,6 +27,11 @@ agent = client.agents.create_or_update(
     about=about,
     model="gpt-4o",
 )
+
+spider_api_key = os.getenv("SPIDER_API_KEY")
+if not spider_api_key:
+    msg = "SPIDER_API_KEY not found in environment variables"
+    raise ValueError(msg)
 
 # Defining a Task
 task_def = yaml.safe_load(f"""
@@ -63,7 +70,7 @@ main:
         page['content'] for page in _['result']
         )
       )
-      
+
 # Prompt step to create a summary of the results
 - prompt: |
     You are {{{{agent.about}}}}
@@ -76,20 +83,14 @@ main:
 """)
 
 # Creating/Updating a task
-task = client.tasks.create_or_update(
-    task_id=TASK_UUID,
-    agent_id=AGENT_UUID,
-    **task_def
-)
+task = client.tasks.create_or_update(task_id=TASK_UUID, agent_id=AGENT_UUID, **task_def)
 
 # Creating an Execution
-execution = client.executions.create(
-    task_id=TASK_UUID,
-    input={}
-)
+execution = client.executions.create(task_id=TASK_UUID, input={})
 
 # Waiting for the execution to complete
 import time
+
 time.sleep(5)
 
 # Getting the execution details

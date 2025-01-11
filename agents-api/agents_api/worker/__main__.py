@@ -3,13 +3,14 @@ This script initializes and runs a Temporal worker that listens for tasks on a s
 It supports various workflows and activities related to agents' operations.
 """
 
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 
 import asyncio
 import logging
 
 from tenacity import after_log, retry, retry_if_exception_type, wait_fixed
 
+from ..app import app, lifespan
 from ..clients import temporal
 from .worker import create_worker
 
@@ -35,8 +36,9 @@ async def main():
     client = await temporal.get_client_with_metrics()
     worker = create_worker(client)
 
-    # Start the worker to listen for and process tasks
-    await worker.run()
+    async with lifespan(app):
+        # Start the worker to listen for and process tasks
+        await worker.run()
 
 
 if __name__ == "__main__":

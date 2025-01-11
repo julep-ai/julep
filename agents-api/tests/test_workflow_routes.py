@@ -1,28 +1,21 @@
 # Tests for task queries
 
-from uuid import uuid4
-
+from uuid_extensions import uuid7
 from ward import test
 
-from tests.fixtures import cozo_client, test_agent, test_developer_id
-from tests.utils import patch_http_client_with_temporal
+from tests.fixtures import make_request, test_agent
+from tests.utils import patch_testing_temporal
 
 
 @test("workflow route: evaluate step single")
 async def _(
-    cozo_client=cozo_client,
-    developer_id=test_developer_id,
+    make_request=make_request,
     agent=test_agent,
 ):
     agent_id = str(agent.id)
-    task_id = str(uuid4())
+    task_id = str(uuid7())
 
-    async with patch_http_client_with_temporal(
-        cozo_client=cozo_client, developer_id=developer_id
-    ) as (
-        make_request,
-        client,
-    ):
+    async with patch_testing_temporal():
         task_data = {
             "name": "test task",
             "description": "test task about",
@@ -36,7 +29,7 @@ async def _(
             json=task_data,
         ).raise_for_status()
 
-        execution_data = dict(input={"test": "input"})
+        execution_data = {"input": {"test": "input"}}
 
         make_request(
             method="POST",
@@ -47,18 +40,12 @@ async def _(
 
 @test("workflow route: evaluate step single with yaml")
 async def _(
-    cozo_client=cozo_client,
-    developer_id=test_developer_id,
+    make_request=make_request,
     agent=test_agent,
 ):
     agent_id = str(agent.id)
 
-    async with patch_http_client_with_temporal(
-        cozo_client=cozo_client, developer_id=developer_id
-    ) as (
-        make_request,
-        client,
-    ):
+    async with patch_testing_temporal():
         task_data = """
 name: test task
 description: test task about
@@ -84,7 +71,7 @@ main:
 
         task_id = result["id"]
 
-        execution_data = dict(input={"test": "input"})
+        execution_data = {"input": {"test": "input"}}
 
         make_request(
             method="POST",
@@ -95,19 +82,13 @@ main:
 
 @test("workflow route: create or update: evaluate step single with yaml")
 async def _(
-    cozo_client=cozo_client,
-    developer_id=test_developer_id,
+    make_request=make_request,
     agent=test_agent,
 ):
     agent_id = str(agent.id)
-    task_id = str(uuid4())
+    task_id = str(uuid7())
 
-    async with patch_http_client_with_temporal(
-        cozo_client=cozo_client, developer_id=developer_id
-    ) as (
-        make_request,
-        client,
-    ):
+    async with patch_testing_temporal():
         task_data = """
 name: test task
 description: test task about
@@ -127,7 +108,7 @@ main:
             headers={"Content-Type": "text/yaml"},
         ).raise_for_status()
 
-        execution_data = dict(input={"test": "input"})
+        execution_data = {"input": {"test": "input"}}
 
         make_request(
             method="POST",

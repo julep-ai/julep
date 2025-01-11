@@ -1,6 +1,6 @@
 # ruff: noqa: F401, F403, F405
 import ast
-from typing import Annotated, Any, Generic, Literal, Self, Type, TypeVar, get_args
+from typing import Annotated, Any, Generic, Self, TypeVar, get_args
 from uuid import UUID
 
 import jinja2
@@ -14,7 +14,6 @@ from pydantic import (
     model_validator,
 )
 
-from ..common.storage_handler import RemoteObject
 from ..common.utils.datetime import utcnow
 from .Agents import *
 from .Chat import *
@@ -126,7 +125,7 @@ def validate_python_expression(expr: str) -> tuple[bool, str]:
         ast.parse(expr)
         return True, ""
     except SyntaxError as e:
-        return False, f"SyntaxError in '{expr}': {str(e)}"
+        return False, f"SyntaxError in '{expr}': {e!s}"
 
 
 def validate_jinja_template(template: str) -> tuple[bool, str]:
@@ -146,7 +145,7 @@ def validate_jinja_template(template: str) -> tuple[bool, str]:
                             )
         return True, ""
     except jinja2.exceptions.TemplateSyntaxError as e:
-        return False, f"TemplateSyntaxError in '{template}': {str(e)}"
+        return False, f"TemplateSyntaxError in '{template}': {e!s}"
 
 
 @field_validator("evaluate")
@@ -154,7 +153,8 @@ def validate_evaluate_expressions(cls, v):
     for key, expr in v.items():
         is_valid, error = validate_python_expression(expr)
         if not is_valid:
-            raise ValueError(f"Invalid Python expression in key '{key}': {error}")
+            msg = f"Invalid Python expression in key '{key}': {error}"
+            raise ValueError(msg)
     return v
 
 
@@ -168,9 +168,8 @@ def validate_arguments(cls, v):
             if isinstance(expr, str):
                 is_valid, error = validate_python_expression(expr)
                 if not is_valid:
-                    raise ValueError(
-                        f"Invalid Python expression in arguments key '{key}': {error}"
-                    )
+                    msg = f"Invalid Python expression in arguments key '{key}': {error}"
+                    raise ValueError(msg)
     return v
 
 
@@ -183,15 +182,15 @@ def validate_prompt(cls, v):
     if isinstance(v, str):
         is_valid, error = validate_jinja_template(v)
         if not is_valid:
-            raise ValueError(f"Invalid Jinja template in prompt: {error}")
+            msg = f"Invalid Jinja template in prompt: {error}"
+            raise ValueError(msg)
     elif isinstance(v, list):
         for item in v:
             if "content" in item:
                 is_valid, error = validate_jinja_template(item["content"])
                 if not is_valid:
-                    raise ValueError(
-                        f"Invalid Jinja template in prompt content: {error}"
-                    )
+                    msg = f"Invalid Jinja template in prompt content: {error}"
+                    raise ValueError(msg)
     return v
 
 
@@ -204,7 +203,8 @@ def validate_set_expressions(cls, v):
     for key, expr in v.items():
         is_valid, error = validate_python_expression(expr)
         if not is_valid:
-            raise ValueError(f"Invalid Python expression in set key '{key}': {error}")
+            msg = f"Invalid Python expression in set key '{key}': {error}"
+            raise ValueError(msg)
     return v
 
 
@@ -215,7 +215,8 @@ SetStep.validate_set_expressions = validate_set_expressions
 def validate_log_template(cls, v):
     is_valid, error = validate_jinja_template(v)
     if not is_valid:
-        raise ValueError(f"Invalid Jinja template in log: {error}")
+        msg = f"Invalid Jinja template in log: {error}"
+        raise ValueError(msg)
     return v
 
 
@@ -227,9 +228,8 @@ def validate_return_expressions(cls, v):
     for key, expr in v.items():
         is_valid, error = validate_python_expression(expr)
         if not is_valid:
-            raise ValueError(
-                f"Invalid Python expression in return key '{key}': {error}"
-            )
+            msg = f"Invalid Python expression in return key '{key}': {error}"
+            raise ValueError(msg)
     return v
 
 
@@ -242,9 +242,8 @@ def validate_yield_arguments(cls, v):
         for key, expr in v.items():
             is_valid, error = validate_python_expression(expr)
             if not is_valid:
-                raise ValueError(
-                    f"Invalid Python expression in yield arguments key '{key}': {error}"
-                )
+                msg = f"Invalid Python expression in yield arguments key '{key}': {error}"
+                raise ValueError(msg)
     return v
 
 
@@ -255,7 +254,8 @@ YieldStep.validate_yield_arguments = validate_yield_arguments
 def validate_if_expression(cls, v):
     is_valid, error = validate_python_expression(v)
     if not is_valid:
-        raise ValueError(f"Invalid Python expression in if condition: {error}")
+        msg = f"Invalid Python expression in if condition: {error}"
+        raise ValueError(msg)
     return v
 
 
@@ -266,7 +266,8 @@ IfElseWorkflowStep.validate_if_expression = validate_if_expression
 def validate_over_expression(cls, v):
     is_valid, error = validate_python_expression(v)
     if not is_valid:
-        raise ValueError(f"Invalid Python expression in over: {error}")
+        msg = f"Invalid Python expression in over: {error}"
+        raise ValueError(msg)
     return v
 
 
@@ -275,7 +276,8 @@ def validate_reduce_expression(cls, v):
     if v is not None:
         is_valid, error = validate_python_expression(v)
         if not is_valid:
-            raise ValueError(f"Invalid Python expression in reduce: {error}")
+            msg = f"Invalid Python expression in reduce: {error}"
+            raise ValueError(msg)
     return v
 
 
@@ -288,20 +290,16 @@ MapReduceStep.validate_reduce_expression = validate_reduce_expression
 
 _CreateTaskRequest = CreateTaskRequest
 
-CreateTaskRequest.model_config = ConfigDict(
-    **{
-        **_CreateTaskRequest.model_config,
-        "extra": "allow",
-    }
-)
+CreateTaskRequest.model_config = ConfigDict(**{
+    **_CreateTaskRequest.model_config,
+    "extra": "allow",
+})
 
 
 @model_validator(mode="after")
 def validate_subworkflows(self):
     subworkflows = {
-        k: v
-        for k, v in self.model_dump().items()
-        if k not in _CreateTaskRequest.model_fields
+        k: v for k, v in self.model_dump().items() if k not in _CreateTaskRequest.model_fields
     }
 
     for workflow_name, workflow_definition in subworkflows.items():
@@ -309,7 +307,8 @@ def validate_subworkflows(self):
             WorkflowType.model_validate(workflow_definition)
             setattr(self, workflow_name, WorkflowType(workflow_definition))
         except Exception as e:
-            raise ValueError(f"Invalid subworkflow '{workflow_name}': {str(e)}")
+            msg = f"Invalid subworkflow '{workflow_name}': {e!s}"
+            raise ValueError(msg)
     return self
 
 
@@ -358,7 +357,7 @@ assert TransitionType == Transition.model_fields["type"].annotation
 
 
 class SystemDef(SystemDef):
-    arguments: dict[str, Any] | None | RemoteObject = None
+    arguments: dict[str, Any] | None = None
 
 
 class CreateTransitionRequest(Transition):
@@ -373,13 +372,11 @@ class CreateTransitionRequest(Transition):
 
 
 class CreateEntryRequest(BaseEntry):
-    timestamp: Annotated[
-        float, Field(ge=0.0, default_factory=lambda: utcnow().timestamp())
-    ]
+    timestamp: Annotated[AwareDatetime, Field(default_factory=lambda: utcnow())]
 
     @classmethod
     def from_model_input(
-        cls: Type[Self],
+        cls: type[Self],
         model: str,
         *,
         role: ChatMLRole,
@@ -400,6 +397,7 @@ class CreateEntryRequest(BaseEntry):
             source=source,
             tokenizer=tokenizer["type"],
             token_count=token_count,
+            model=model,
             **kwargs,
         )
 
@@ -467,12 +465,10 @@ class PartialTaskSpecDef(TaskSpecDef):
 
 
 class Task(_Task):
-    model_config = ConfigDict(
-        **{
-            **_Task.model_config,
-            "extra": "allow",
-        }
-    )
+    model_config = ConfigDict(**{
+        **_Task.model_config,
+        "extra": "allow",
+    })
 
 
 # Patch some models to allow extra fields
@@ -506,21 +502,17 @@ _PatchTaskRequest = PatchTaskRequest
 
 
 class PatchTaskRequest(_PatchTaskRequest):
-    model_config = ConfigDict(
-        **{
-            **_PatchTaskRequest.model_config,
-            "extra": "allow",
-        }
-    )
+    model_config = ConfigDict(**{
+        **_PatchTaskRequest.model_config,
+        "extra": "allow",
+    })
 
 
 _UpdateTaskRequest = UpdateTaskRequest
 
 
 class UpdateTaskRequest(_UpdateTaskRequest):
-    model_config = ConfigDict(
-        **{
-            **_UpdateTaskRequest.model_config,
-            "extra": "allow",
-        }
-    )
+    model_config = ConfigDict(**{
+        **_UpdateTaskRequest.model_config,
+        "extra": "allow",
+    })

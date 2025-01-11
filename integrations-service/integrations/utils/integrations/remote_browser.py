@@ -47,13 +47,11 @@ class PlaywrightActions:
 
     async def _is_initialized(self) -> bool:
         """Check if the page is initialized"""
-        result = bool(
+        return bool(
             await self._execute_javascript("""
                 window.$$julep$$_initialized
             """)
         )
-
-        return result
 
     async def initialize(self, debug: bool = False) -> None:
         if debug:
@@ -69,7 +67,7 @@ class PlaywrightActions:
 
         // Update mouse coordinates on mouse move
         // but only on the top document
-        if (window === window.parent) 
+        if (window === window.parent)
             window.addEventListener(
                 'DOMContentLoaded',
                 () => {
@@ -137,11 +135,9 @@ class PlaywrightActions:
     async def _set_screen_size(self, width: int, height: int) -> None:
         """Set the current browser viewport size"""
 
-        await self.page.set_viewport_size(dict(width=width, height=height))
+        await self.page.set_viewport_size({"width": width, "height": height})
 
-    async def _wait_for_load(
-        self, event: str = "domcontentloaded", timeout: int = 0
-    ) -> None:
+    async def _wait_for_load(self, event: str = "domcontentloaded", timeout: int = 0) -> None:
         """Wait for document to be fully loaded"""
         await self.page.wait_for_load_state(event, timeout=timeout)
 
@@ -174,7 +170,8 @@ class PlaywrightActions:
         if element:
             box = await element.bounding_box()
             return (box["x"], box["y"])
-        raise Exception(f"Element not found: {selector}")
+        msg = f"Element not found: {selector}"
+        raise Exception(msg)
 
     def _overlay_cursor(self, screenshot_bytes: bytes, x: int, y: int) -> bytes:
         """Overlay the cursor image on the screenshot at the specified coordinates."""
@@ -363,12 +360,14 @@ class PlaywrightActions:
             }
 
             if action not in actions:
-                raise ValueError(f"Invalid action: {action}")
+                msg = f"Invalid action: {action}"
+                raise ValueError(msg)
 
             return await actions[action]()
 
         except Exception as e:
-            raise Exception(f"Error performing action {action}: {str(e)}")
+            msg = f"Error performing action {action}: {e!s}"
+            raise Exception(msg)
 
 
 @beartype

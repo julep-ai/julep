@@ -23,7 +23,7 @@ dependencies = [
   "jsonschema~=4.22.0",
   "langchain-core~=0.3.14",
   "larch-pickle~=1.4.3",
-  "litellm",
+  "litellm~=1.57.0",
   "lz4~=4.3.3",
   "msgpack~=1.1.0",
   "numpy>=2.0.0,<2.1.0",
@@ -31,8 +31,6 @@ dependencies = [
   "pandas~=2.2.2",
   "prometheus-client~=0.21.0",
   "prometheus-fastapi-instrumentator~=7.0.0",
-  "pycozo-async~=0.7.7",
-  "pycozo[embedded]~=0.7.6",
   "pydantic-partial~=0.5.5",
   "pydantic[email]~=2.10.2",
   "python-box~=7.2.0",
@@ -50,24 +48,36 @@ dependencies = [
   "uvloop~=0.21.0",
   "xxhash~=3.5.0",
   "spacy-chunks>=0.0.2",
+  "uuid7>=0.1.0",
+  "asyncpg>=0.30.0",
+  "unique-namer>=1.6.1",
+  "langcodes>=3.5.0",
 ]
 
 [dependency-groups]
 dev = [
-    "cozo-migrate>=0.2.4",
     "datamodel-code-generator>=0.26.3",
     "ipython>=8.30.0",
     "ipywidgets>=8.1.5",
     "julep>=1.43.1",
     "jupyterlab>=4.3.1",
+    "pip>=24.3.1",
     "poethepoet>=0.31.1",
     "pyjwt>=2.10.1",
-    "pyright>=1.1.389",
+    "pyright>=1.1.391",
     "pytype>=2024.10.11",
-    "ruff>=0.8.1",
+    "ruff>=0.8.4",
+    "sqlvalidator>=0.0.20",
+    "testcontainers[postgres,localstack]>=4.9.0",
     "ward>=0.68.0b0",
 ]
 
-[tool.uv.sources]
-litellm = { url = "https://github.com/julep-ai/litellm/archive/fix_anthropic_tool_image_content.zip" }
+[tool.setuptools]
+py-modules = [
+    "agents_api",
+]
+
+# Commented out uv sources config for litellm
+# [tool.uv.sources]
+# litellm = { url = "https://github.com/julep-ai/litellm/archive/fix_anthropic_tool_image_content.zip" }
 

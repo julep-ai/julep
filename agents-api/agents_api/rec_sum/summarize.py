@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 from tenacity import retry, stop_after_attempt
 
@@ -8,7 +7,7 @@ from .generate import generate
 from .utils import add_indices, chatml, get_names_from_session
 
 ##########
-## summarize ##
+# summarize ##
 ##########
 
 summarize_example_plan: str = """\
@@ -35,9 +34,7 @@ Instructions:
 - VERY IMPORTANT: Add the indices of messages that are being summarized so that those messages can then be removed from the session otherwise, there'll be no way to identify which messages to remove. See example for more details."""
 
 
-def make_summarize_prompt(
-    session, user="a user", assistant="gpt-4-turbo", **_
-) -> List[str]:
+def make_summarize_prompt(session, user="a user", assistant="gpt-4-turbo", **_) -> list[str]:
     return [
         f"You are given a session history of a chat between {user or 'a user'} and {assistant or 'gpt-4-turbo'}. The session is formatted in the ChatML JSON format (from OpenAI).\n\n{summarize_instructions}\n\n<ct:example-session>\n{json.dumps(add_indices(summarize_example_chat), indent=2)}\n</ct:example-session>\n\n<ct:example-plan>\n{summarize_example_plan}\n</ct:example-plan>\n\n<ct:example-summarized-messages>\n{json.dumps(summarize_example_result, indent=2)}\n</ct:example-summarized-messages>",
         f"Begin! Write the summarized messages as a json list just like the example above. First write your plan inside <ct:plan></ct:plan> and then your answer between <ct:summarized-messages></ct:summarized-messages>. Don't forget to add the indices of the messages being summarized alongside each summary.\n\n<ct:session>\n{json.dumps(add_indices(session), indent=2)}\n\n</ct:session>",
@@ -57,10 +54,7 @@ async def summarize_messages(
     offset = 0
 
     # Remove the system prompt if present
-    if (
-        chat_session[0]["role"] == "system"
-        and chat_session[0].get("name") != "entities"
-    ):
+    if chat_session[0]["role"] == "system" and chat_session[0].get("name") != "entities":
         chat_session = chat_session[1:]
 
         # The indices are not matched up correctly
@@ -85,12 +79,10 @@ async def summarize_messages(
         .strip()
     )
 
-    assert all((msg.get("summarizes") is not None for msg in summarized_messages))
+    assert all(msg.get("summarizes") is not None for msg in summarized_messages)
 
     # Correct offset
-    summarized_messages = [
+    return [
         {**msg, "summarizes": [i + offset for i in msg["summarizes"]]}
         for msg in summarized_messages
     ]
-
-    return summarized_messages

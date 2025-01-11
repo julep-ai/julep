@@ -1,7 +1,7 @@
 """
 The `utils` module within the `agents-api` project offers a collection of utility functions designed to support various aspects of the application. This includes:
 
-- `cozo.py`: Utilities for interacting with the Cozo API client, including data mutation processes.
+- `pg.py`: Utilities for interacting with the PostgreSQL API client, including data mutation processes.
 - `datetime.py`: Functions for handling date and time operations, ensuring consistent use of time zones and formats across the application.
 - `json.py`: Custom JSON utilities, including a custom JSON encoder for handling specific object types like UUIDs, and a utility function for JSON serialization with support for default values for None objects.
 

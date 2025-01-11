@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def utcnow():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

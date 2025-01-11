@@ -12,5 +12,3 @@ class MockWeatherClient:
 
 class MockWeatherException(Exception):
     """Mock exception for weather API errors"""
-
-    pass
