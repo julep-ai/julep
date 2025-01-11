@@ -134,7 +134,6 @@ async def search_agent_docs(
     search_params: (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest),
     agent_id: UUID,
     connection_pool: Any = None,  # FIXME: Placeholder that should be removed
-
 ) -> DocSearchResponse:
     """
     Searches for documents associated with a specific agent.
