@@ -1,3 +1,5 @@
+notebooks/
+
 # Local database files
 temporal.db
 *.bak

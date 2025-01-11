@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import Depends
@@ -15,6 +15,7 @@ async def create_user_doc(
     user_id: UUID,
     data: CreateDocRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> ResourceCreatedResponse:
     """
     Creates a new document for a user.
@@ -43,6 +44,7 @@ async def create_agent_doc(
     agent_id: UUID,
     data: CreateDocRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> ResourceCreatedResponse:
     doc: Doc = await create_doc_query(
         developer_id=x_developer_id,
