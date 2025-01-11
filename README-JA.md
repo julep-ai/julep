@@ -1,4 +1,4 @@
-<sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
+<sup>[英語](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [フランス語](README-FR.md)</sup>
 
 <div align="center" id="top">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
@@ -47,35 +47,38 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 目次</h3>
 
-- [主な特徴](#%E4%B8%BB%E3%81%AA%E7%89%B9%E5%BE%B4)
-- [簡単な例](#%E7%B0%A1%E5%8D%98%E3%81%AA%E4%BE%8B)
-- [インストール](#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
-- [Python クイックスタート 🐍](#python-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-- [Node.js Quick Start 🟩](#nodejs-quick-start-)
-- [Components](#components)
-  - [Mental Model](#mental-model)
-- [Concepts](#concepts)
-- [Understanding Tasks](#understanding-tasks)
-  - [Lifecycle of a Task](#lifecycle-of-a-task)
-  - [Types of Workflow Steps](#types-of-workflow-steps)
-- [Tool Types](#tool-types)
-  - [User-defined `functions`](#user-defined-functions)
-  - [`system` tools](#system-tools)
-  - [Built-in `integrations`](#built-in-integrations)
-  - [Direct `api_calls`](#direct-api_calls)
-- [Integrations](#integrations)
-- [Other Features](#other-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
-  - [SDK リファレンス](#sdk-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-  - [API リファレンス](#api-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-- [ローカルクイックスタート](#%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88)
-- [Julep と LangChain などの違いは何ですか?](#julep-%E3%81%A8-langchain-%E3%81%AA%E3%81%A9%E3%81%AE%E9%81%95%E3%81%84%E3%81%AF%E4%BD%95%E3%81%A7%E3%81%99%E3%81%8B)
-  - [さまざまなユースケース](#%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%A6%E3%83%BC%E3%82%B9%E3%82%B1%E3%83%BC%E3%82%B9)
-  - [異なるフォームファクタ](#%E7%95%B0%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A9%E3%83%BC%E3%83%A0%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF)
+- [はじめに](#introduction)
+- [主な特徴](#key-features)
+- [簡単な例](#quick-example)
+- [インストール](#installation)
+- [Python クイックスタート 🐍](#python-quick-start-)
+- [Node.js クイック スタート 🟩](#nodejs-quick-start-)
+- [コンポーネント](#components)
+- [メンタルモデル](#mental-model)
+- [コンセプト](#concepts)
+- [タスクの理解](#understanding-tasks)
+- [タスクのライフサイクル](#lifecycle-of-a-task)
+- [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [ツールの種類](#tool-types)
+- [ユーザー定義の `functions`](#user-defined-functions)
+- [`システム` ツール](#system-tools)
+- [組み込みの `integrations`](#built-in-integrations)
+- [直接の `api_calls`](#direct-api_calls)
+- [統合](#integrations)
+- [その他の機能](#other-features)
+- [エージェントへのツールの追加](#adding-tools-to-agents)
+- [セッションとユーザーの管理](#managing-sessions-and-users)
+- [ドキュメントの統合と検索](#document-integration-and-search)
+- [参考](#reference)
+- [SDKリファレンス](#sdk-reference)
+- [APIリファレンス](#api-reference)
+- [ローカルクイックスタート](#local-quickstart)
+- [Julep と LangChain などの違いは何ですか?](#whats-the-difference-between-julep-and-langchain-etc)
+- [さまざまなユースケース](#different-use-cases)
+- [異なるフォームファクター](#different-form-factor)
+- [要約](#in-summary)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -342,9 +345,9 @@ plot_ideas: load_yaml(_.split('```yaml')[1].split('```')[0].ストリップ())
 - プロンプト：
 - 役割: システム
 内容: あなたは {{agent.name}} です。 {{agent.about}}
-- 役割: ユーザー
+- 役割：ユーザー
 内容: >
-ストーリーのプロットのアイデアをいくつか紹介します。
+ストーリーのプロットのアイデアは次のとおりです。
 {% for idea in _.plot_ideas %}
 - {{アイデア}}
 {% endfor %}
@@ -387,7 +390,7 @@ plot_ideas: load_yaml(_.split('```yaml')[1].split('```')[0].ストリップ())
 
           Think about the plot ideas critically. Combine the plot ideas with the results from Wikipedia to create a detailed plot for a story.
           Write down all your notes and thoughts.
-          Then finally write the plot as a yaml object inside ```応答の最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
+          Then finally write the plot as a yaml object inside ```レスポンスの最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
 
           ```yaml
           title: "<string>"
@@ -525,7 +528,7 @@ plot_ideas: load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip())
 in: _.research_queries
 する：
 ツール: research_wikipedia
-議論：
+引数:
 クエリ: _
 
 - 評価する：
@@ -1296,7 +1299,7 @@ session_id: 文字列 # (オプション) BrowserBaseのセッションID
 urls: list[string] # BrowserBaseで読み込むURL
 
 出力：
-ドキュメント: リスト # URLから読み込まれたドキュメント
+documents: list # URLから読み込まれたドキュメント
 ```
 
 </td>
@@ -1506,7 +1509,7 @@ query: 文字列 # Arxivで検索するための検索クエリ
 id_list: list[string] | None # (オプション) 検索するArxiv IDのリスト
 max_results: 整数 # 返される結果の最大数は 1 から 300000 の間でなければなりません
 download_pdf: boolean # 結果の PDF をダウンロードするかどうか。デフォルトは false です。
-sort_by: 文字列 # 結果の並べ替え基準。オプション: 関連性、lastUpdatedDate、submittedDate
+sort_by: 文字列 # 結果の並べ替え基準、オプション: 関連性、lastUpdatedDate、submittedDate
 sort_order: 文字列 # 結果の並べ替え順序。オプション: 昇順、降順
 
 出力：
@@ -1642,7 +1645,7 @@ metadata_filter={"category": "研究論文"}
 1. `git clone https://github.com/julep-ai/julep.git`
 2. `cd ジュレップ`
 3. `docker volume create cozo_backup`
-4. docker ボリュームを作成します cozo_data
+4. `docker volume create cozo_data`
 5. `cp .env.example .env # <-- このファイルを編集します`
 6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
 

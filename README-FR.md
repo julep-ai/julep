@@ -1,4 +1,4 @@
-<sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
+<sup>[Anglais](LISEZMOI.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [Français](README-FR.md)</sup>
 
 <div align="center" id="top">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
@@ -47,38 +47,38 @@ Vos contributions, grandes ou petites, nous sont précieuses. Construisons ensem
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 Table des matières</h3>
 
-- [Introduction](#introduction)
-- [Principales caractéristiques](#principales-caract%C3%A9ristiques)
-- [Exemple rapide](#exemple-rapide)
+- [Présentation](#introduction)
+- [Caractéristiques principales](#key-features)
+- [Exemple rapide](#quick-example)
 - [Installation](#installation)
-- [Démarrage rapide de Python 🐍](#d%C3%A9marrage-rapide-de-python-)
-- [Node.js Quick Start 🟩](#nodejs-quick-start-)
-- [Components](#components)
-  - [Mental Model](#mental-model)
+- [Démarrage rapide de Python 🐍](#python-quick-start-)
+- [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
+- [Composants](#composants)
+- [Modèle mental](#mental-model)
 - [Concepts](#concepts)
-- [Understanding Tasks](#understanding-tasks)
-  - [Lifecycle of a Task](#lifecycle-of-a-task)
-  - [Types of Workflow Steps](#types-of-workflow-steps)
-- [Tool Types](#tool-types)
-  - [User-defined `functions`](#user-defined-functions)
-  - [`system` tools](#system-tools)
-  - [Built-in `integrations`](#built-in-integrations)
-  - [Direct `api_calls`](#direct-api_calls)
-- [Integrations](#integrations)
-- [Other Features](#other-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
-- [Référence](#r%C3%A9f%C3%A9rence)
-  - [Référence du SDK](#r%C3%A9f%C3%A9rence-du-sdk)
-  - [Référence API](#r%C3%A9f%C3%A9rence-api)
-- [Démarrage rapide local](#d%C3%A9marrage-rapide-local)
-- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-diff%C3%A9rence-entre-julep-et-langchain-etc-)
-  - [Différents cas d'utilisation](#diff%C3%A9rents-cas-dutilisation)
-  - [Facteur de forme différent](#facteur-de-forme-diff%C3%A9rent)
-  - [En résumé](#en-r%C3%A9sum%C3%A9)
+- [Comprendre les tâches](#understanding-tasks)
+- [Cycle de vie d'une tâche](#cycle-de-vie-d-une-tâche)
+- [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Types d'outils](#types-d'outils)
+- [`Fonctions` définies par l'utilisateur](#user-defined-functions)
+- [outils système](#outils-système)
+- [`Intégrations` intégrées](#integrations-integrées)
+- [Appels directs `api_calls`](#appels directs-api_calls)
+- [Intégrations](#intégrations)
+- [Autres fonctionnalités](#other-features)
+- [Ajout d'outils aux agents](#adding-tools-to-agents)
+- [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
+- [Intégration et recherche de documents](#document-integration-and-search)
+- [Référence](#référence)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
+- [Démarrage rapide local](#local-quickstart)
+- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-différence-entre-julep-et-langchain-etc)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -426,7 +426,7 @@ task_id=tâche.id,
 input={"idea": "Un chat qui apprend à voler"}
 )
 
-# 🎉 Regardez l'histoire et les panneaux de bande dessinée se générer
+# 🎉 Regardez l'histoire et les panneaux de bandes dessinées se générer
 while (result := client.executions.get(execution.id)).status n'est pas dans ['réussi', 'échec'] :
 print(résultat.statut, résultat.sortie)
 heure.sommeil(1)
@@ -775,7 +775,7 @@ Execute an integrated tool or API that you have previously declared in the task.
 <td>
 
 ```YAML
-- outil : recherche sur le Web
+- outil : recherche_sur_le_web
 Arguments:
 requête : « Derniers développements de l'IA » # <-- il s'agit d'une expression Python (remarquez les guillemets)
 num_results: len(_.topics) # <-- expression python pour accéder à la longueur d'une liste
@@ -941,7 +941,7 @@ Run multiple steps in parallel
 
 ```YAML
 - parallèle:
-- outil : recherche sur le Web
+- outil : recherche_sur_le_web
 Arguments:
 requête : « Actualités sur l'IA »
 - outil : weather_check
@@ -1061,7 +1061,7 @@ Run a subworkflow and await its completion
 - rendement:
 flux de travail : données_de_processus
 Arguments:
-données d'entrée : _. données brutes # <-- expression Python
+données_d'entrée : _. données_raw # <-- expression python
 ```
 
 </td>
@@ -1513,7 +1513,7 @@ sort_by : chaîne # Le critère de tri pour les résultats, options : relevanc
 sort_order : chaîne # L'ordre de tri des résultats, options : croissant, décroissant
 
 sortir:
-résultat : liste[dict] # Une liste de résultats de recherche, chacun contenant : entry_id, title, updated, published, authors, summary, comment, journal_ref, doi, primary_category, categories, links, pdf_url, pdf_downloaded
+résultat : liste[dict] # Une liste de résultats de recherche, chacun contenant : entry_id, title, updated, published, authors, summary, comment, journal_ref, doi, primary_category, categorys, links, pdf_url, pdf_downloaded
 ```
 
 </td>
