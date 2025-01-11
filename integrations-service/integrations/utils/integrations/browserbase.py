@@ -104,6 +104,7 @@ async def create_session(
     # Convert datetime fields to ISO format strings
     return BrowserbaseCreateSessionOutput(
         id=session.id,
+        connectionslqUrl=session.connect_url,
         createdAt=session.created_at.isoformat() if session.created_at else None,
         projectId=session.project_id,
         startedAt=session.started_at.isoformat() if session.started_at else None,
@@ -202,11 +203,9 @@ async def get_connect_url(
     """Get the connect URL for a session."""
     client = get_browserbase_client(setup)
 
-    print("*" * 100)
     try:
         # Get session to access its connect_url
         session = client.sessions.retrieve(id=arguments.id)
-        print(session)
         return BrowserbaseGetSessionConnectUrlOutput(url=session.connect_url)
     except Exception as e:
         print(f"Error getting connect URL: {e}")
