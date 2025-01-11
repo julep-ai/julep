@@ -44,6 +44,7 @@ async def create_agent_doc(
     agent_id: UUID,
     data: CreateDocRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> ResourceCreatedResponse:
     doc: Doc = await create_doc_query(
         developer_id=x_developer_id,
