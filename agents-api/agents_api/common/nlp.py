@@ -295,43 +295,44 @@ def batch_paragraphs_to_custom_queries(
 
     return results
 
+
 @lru_cache(maxsize=1000)
 def text_to_tsvector_query(text: str, top_n: int = 10) -> str:
     """
     Converts text into a PostgreSQL tsquery format using sophisticated NLP processing.
     Cached for repeated queries.
-    
+
     Args:
         text (str): Input text to convert
         top_n (int): Number of top keywords to include
-        
+
     Returns:
         str: PostgreSQL tsquery compatible string
     """
     if not text or not text.strip():
         return ""
-        
+
     # Process text with spaCy
     doc = nlp(text)
-    
+
     # Extract important keywords using existing extract_keywords function
     keywords = extract_keywords(doc, top_n=top_n, clean=True)
-    
+
     if not keywords:
         return ""
-    
+
     # Find keyword positions using existing matcher
     keyword_positions = keyword_matcher.find_matches(doc, keywords)
-    
+
     if not keyword_positions:
         return ""
-    
+
     # Find proximity groups
     groups = find_proximity_groups(keywords, keyword_positions, n=10)
-    
+
     # Convert groups to tsquery format
     tsquery_parts = []
-    
+
     for group in groups:
         if len(group) == 1:
             # Single keyword
@@ -339,11 +340,10 @@ def text_to_tsvector_query(text: str, top_n: int = 10) -> str:
         else:
             # For multiple keywords in proximity, use <-> operator in PostgreSQL
             sorted_group = sorted(group, key=len, reverse=True)
-            tsquery_parts.append(
-                "(" + " <-> ".join(f"'{word}'" for word in sorted_group) + ")"
-            )
-    
+            tsquery_parts.append("(" + " <-> ".join(f"'{word}'" for word in sorted_group) + ")")
+
     return " | ".join(tsquery_parts)
+
 
 def batch_text_to_tsvector_queries(
     paragraphs: list[str],  # Changed to list since we don't need tuple for caching
@@ -351,11 +351,11 @@ def batch_text_to_tsvector_queries(
 ) -> list[str]:
     """
     Process multiple paragraphs into tsquery format efficiently.
-    
+
     Args:
         paragraphs (list[str]): List of paragraphs to process
         top_n (int): Number of top keywords to include per paragraph
-        
+
     Returns:
         list[str]: List of tsquery strings
     """
