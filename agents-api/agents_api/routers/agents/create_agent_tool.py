@@ -28,4 +28,3 @@ async def create_agent_tool(
     tool = tools[0]
 
     return ResourceCreatedResponse(id=tool.id, created_at=tool.created_at, jobs=[])
-
