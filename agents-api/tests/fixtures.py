@@ -42,10 +42,10 @@ from ward import fixture
 from .utils import (
     get_localstack,
     get_pg_dsn,
+    make_vector_with_similarity,
 )
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
-    make_vector_with_similarity,
 )
 
 

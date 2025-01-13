@@ -19,8 +19,6 @@ from .fixtures import (
     test_user,
 )
 
-from .utils import make_vector_with_similarity
-
 EMBEDDING_SIZE: int = 1024
 
 
@@ -392,7 +390,7 @@ async def _():
             [
                 "basketball OR lebron james OR michael jordan",
                 "LeBron James OR Michael Jordan OR basketball",
-                "Michael Jordan OR basketball OR LeBron James"
+                "Michael Jordan OR basketball OR LeBron James",
             ],
         ),
         # Quoted phrases

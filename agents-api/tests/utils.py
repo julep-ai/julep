@@ -1,7 +1,7 @@
 import asyncio
 import logging
-import os
 import math
+import os
 import subprocess
 from contextlib import asynccontextmanager, contextmanager
 from unittest.mock import patch
@@ -18,6 +18,7 @@ from testcontainers.postgres import PostgresContainer
 
 # Replicated here to prevent circular import
 EMBEDDING_SIZE: int = 1024
+
 
 def make_vector_with_similarity(n: int = EMBEDDING_SIZE, d: float = 0.5):
     """
@@ -63,6 +64,7 @@ def make_vector_with_similarity(n: int = EMBEDDING_SIZE, d: float = 0.5):
         v[i] = base[i] + alpha * u[i]
 
     return v
+
 
 @asynccontextmanager
 async def patch_testing_temporal():
