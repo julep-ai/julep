@@ -6,9 +6,10 @@ from beartype import beartype
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
+# FIXME: We should use latest_transitions instead of transitions
 # Query to get a paused execution token
 get_paused_execution_token_query = """
-SELECT * FROM latest_transitions
+SELECT * FROM transitions
 WHERE
     execution_id = $1
         AND type = 'wait'
