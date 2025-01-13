@@ -7,7 +7,6 @@ from fastapi import HTTPException
 from ...autogen.openapi_model import DocReference
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
-from ...common.nlp import text_to_tsvector_query
 from .utils import transform_to_doc_reference
 
 # Raw query for text search

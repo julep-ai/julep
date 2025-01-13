@@ -96,7 +96,8 @@ def extract_keywords(doc: Doc, top_n: int = 10, clean: bool = True) -> list[str]
     ent_spans = [ent for ent in doc.ents if ent.label_ not in excluded_labels]
     # Add more comprehensive stopword filtering for noun chunks
     chunk_spans = [
-        chunk for chunk in doc.noun_chunks 
+        chunk
+        for chunk in doc.noun_chunks
         if not chunk.root.is_stop and not all(token.is_stop for token in chunk)
     ]
     all_spans = filter_spans(ent_spans + chunk_spans)
@@ -109,7 +110,7 @@ def extract_keywords(doc: Doc, top_n: int = 10, clean: bool = True) -> list[str]
         # Skip if all tokens in span are stopwords
         if all(token.is_stop for token in span):
             continue
-            
+
         text = span.text.strip()
         lower_text = text.lower()
 
@@ -194,7 +195,7 @@ def text_to_tsvector_query(
 ) -> str:
     """
     Extracts meaningful keywords/phrases from text and joins them with OR.
-    
+
     Example:
         Input: "I like basketball especially Michael Jordan"
         Output: "basketball OR Michael Jordan"
@@ -216,7 +217,7 @@ def text_to_tsvector_query(
 
     for sent in doc.sents:
         sent_doc = sent.as_doc()
-        
+
         # Extract keywords
         keywords = extract_keywords(sent_doc, top_n)
         if len(keywords) < min_keywords:
@@ -235,7 +236,7 @@ def text_to_tsvector_query(
             if len(group) > 1:
                 # Sort by length descending to prioritize longer phrases
                 sorted_group = sorted(group, key=len, reverse=True)
-                # For truly proximate multi-word groups, group words 
+                # For truly proximate multi-word groups, group words
                 queries.add(" OR ".join(sorted_group))
             else:
                 # For non-proximate words or single words, add them separately
@@ -265,7 +266,7 @@ def batch_text_to_tsvector_queries(
     results = []
 
     for doc in nlp.pipe(paragraphs, disable=["lemmatizer", "textcat"], n_process=n_process):
-        queries = set() # Use set to avoid duplicates
+        queries = set()  # Use set to avoid duplicates
         for sent in doc.sents:
             sent_doc = sent.as_doc()
             keywords = extract_keywords(sent_doc, top_n)
@@ -280,7 +281,7 @@ def batch_text_to_tsvector_queries(
                 if len(group) > 1:
                     # Sort by length descending to prioritize longer phrases
                     sorted_group = sorted(group, key=len, reverse=True)
-                    # For truly proximate multi-word groups, group words 
+                    # For truly proximate multi-word groups, group words
                     queries.add(" OR ".join(sorted_group))
                 else:
                     # For non-proximate words or single words, add them separately

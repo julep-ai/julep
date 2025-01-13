@@ -1,5 +1,6 @@
 from agents_api.autogen.openapi_model import CreateDocRequest
 from agents_api.clients.pg import create_db_pool
+from agents_api.common.nlp import text_to_tsvector_query
 from agents_api.queries.docs.create_doc import create_doc
 from agents_api.queries.docs.delete_doc import delete_doc
 from agents_api.queries.docs.get_doc import get_doc
@@ -8,8 +9,6 @@ from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embe
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
 from ward import test
-
-from agents_api.common.nlp import text_to_tsvector_query
 
 from .fixtures import (
     pg_dsn,
@@ -24,34 +23,36 @@ EMBEDDING_SIZE: int = 1024
 
 import math
 
+
 def make_vector_with_similarity(n: int, d: float):
     """
     Returns a list `v` of length `n` such that the cosine similarity
     between `v` and the all-ones vector of length `n` is approximately d.
     """
     if not -1.0 <= d <= 1.0:
-        raise ValueError("d must lie in [-1, 1].")
-    
+        msg = "d must lie in [-1, 1]."
+        raise ValueError(msg)
+
     # Handle special cases exactly:
     if abs(d - 1.0) < 1e-12:  # d ~ +1
         return [1.0] * n
     if abs(d + 1.0) < 1e-12:  # d ~ -1
         return [-1.0] * n
-    if abs(d) < 1e-12:        # d ~ 0
-        v = [0.0]*n
+    if abs(d) < 1e-12:  # d ~ 0
+        v = [0.0] * n
         if n >= 2:
             v[0] = 1.0
             v[1] = -1.0
         return v
 
     sign_d = 1.0 if d >= 0 else -1.0
-    
+
     # Base part: sign(d)*[1,1,...,1]
-    base = [sign_d]*n
-    
+    base = [sign_d] * n
+
     # Orthogonal unit vector u with sum(u)=0; for simplicity:
     #   u = [1/sqrt(2), -1/sqrt(2), 0, 0, ..., 0]
-    u = [0.0]*n
+    u = [0.0] * n
     if n >= 2:
         u[0] = 1.0 / math.sqrt(2)
         u[1] = -1.0 / math.sqrt(2)
@@ -59,13 +60,13 @@ def make_vector_with_similarity(n: int, d: float):
 
     # Solve for alpha:
     # alpha^2 = n*(1 - d^2)/d^2
-    alpha = math.sqrt(n*(1 - d*d)) / abs(d)
+    alpha = math.sqrt(n * (1 - d * d)) / abs(d)
 
     # Construct v
-    v = [0.0]*n
+    v = [0.0] * n
     for i in range(n):
         v[i] = base[i] + alpha * u[i]
-    
+
     return v
 
 
@@ -304,6 +305,7 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     assert any(d.id == doc.id for d in result), f"Should find document {doc.id}"
     assert result[0].metadata == {"test": "test"}, "Metadata should match"
 
+
 @test("query: search docs by text with technical terms and phrases")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
@@ -340,7 +342,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         "API endpoints",
         "REST architecture",
         "database optimization",
-        "indexing"
+        "indexing",
     ]
 
     for query in technical_queries:
@@ -357,9 +359,14 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 
         # Verify appropriate document is found based on query
         if "API" in query or "REST" in query:
-            assert any(doc.id == doc1.id for doc in results), f"Doc1 should be found with query '{query}'"
+            assert any(doc.id == doc1.id for doc in results), (
+                f"Doc1 should be found with query '{query}'"
+            )
         if "database" in query.lower() or "indexing" in query:
-            assert any(doc.id == doc2.id for doc in results), f"Doc2 should be found with query '{query}'"
+            assert any(doc.id == doc2.id for doc in results), (
+                f"Doc2 should be found with query '{query}'"
+            )
+
 
 @test("query: search docs by embedding")
 async def _(
@@ -409,75 +416,49 @@ async def _(
     assert len(result) >= 1
     assert result[0].metadata is not None
 
+
 @test("utility: test text_to_tsvector_query")
 async def _():
     test_cases = [
         # Single words
-        (
-            "test",
-            "test"
-        ),
-
+        ("test", "test"),
         # Multiple words in single sentence
         (
             "quick brown fox",
-            "quick brown fox"  # Now kept as a single phrase due to proximity
+            "quick brown fox",  # Now kept as a single phrase due to proximity
         ),
-
         # Technical terms and phrases
         (
             "Machine Learning algorithm",
-            "machine learning algorithm"  # Common technical phrase
+            "machine learning algorithm",  # Common technical phrase
         ),
         # Multiple sentences
         (
             "Machine learning is great. Data science rocks.",
-            "machine learning OR data science rocks"
+            "machine learning OR data science rocks",
         ),
-
         # Quoted phrases
         (
             '"quick brown fox"',
-            "quick brown fox"  # Quotes removed, phrase kept together
+            "quick brown fox",  # Quotes removed, phrase kept together
         ),
-        (
-            'Find "machine learning" algorithms',
-            "machine learning"
-        ),
-
+        ('Find "machine learning" algorithms', "machine learning"),
         # Multiple quoted phrases
-        (
-            '"data science" and "machine learning"',
-            "machine learning OR data science"
-        ),
-
+        ('"data science" and "machine learning"', "machine learning OR data science"),
         # Edge cases
-        (
-            "",
-            ""
-        ),
+        ("", ""),
         (
             "the and or",
-            ""  # All stop words should result in empty string
+            "",  # All stop words should result in empty string
         ),
         (
             "a",
-            ""  # Single stop word should result in empty string
+            "",  # Single stop word should result in empty string
         ),
-        (
-            "X",
-            "X"
-        ),
-
+        ("X", "X"),
         # Empty quotes
-        (
-            '""',
-            ""
-        ),
-        (
-            'test "" phrase',
-            "phrase OR test"
-        ),
+        ('""', ""),
+        ('test "" phrase', "phrase OR test"),
     ]
 
     for input_text, expected_output in test_cases:
@@ -485,8 +466,9 @@ async def _():
         result = text_to_tsvector_query(input_text)
         print(f"Generated query: '{result}'")
         print(f"Expected: '{expected_output}'\n")
-        assert result.lower() == expected_output.lower(), \
+        assert result.lower() == expected_output.lower(), (
             f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
+        )
 
 
 # @test("query: search docs by embedding with different confidence levels")

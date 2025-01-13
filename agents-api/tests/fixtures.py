@@ -187,7 +187,7 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         f"[{', '.join([str(0.3 + 0.4 * (i % 3) / 2) for i in range(1024)])}]",
     )
 
-    # Insert embedding with random values between -0.8 and 0.8 
+    # Insert embedding with random values between -0.8 and 0.8
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
@@ -195,7 +195,7 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         """,
         developer.id,
         doc.id,
-        "Test content 2", 
+        "Test content 2",
         f"[{', '.join([str(-0.8 + 1.6 * (i % 5) / 4) for i in range(1024)])}]",
     )
 
