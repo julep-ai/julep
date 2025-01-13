@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION search_by_vector (
     owner_types TEXT[],
     owner_ids UUID [],
     k integer DEFAULT 3,
-    confidence float DEFAULT 0.5,
+    confidence float DEFAULT 0.0,
     metadata_filter jsonb DEFAULT NULL
 ) RETURNS SETOF doc_search_result LANGUAGE plpgsql AS $$
 DECLARE
@@ -19,8 +19,8 @@ BEGIN
         RAISE EXCEPTION 'k must be greater than 0';
     END IF;
 
-    IF confidence < 0 OR confidence > 1 THEN
-        RAISE EXCEPTION 'confidence must be between 0 and 1';
+    IF confidence < -1 OR confidence > 1 THEN
+        RAISE EXCEPTION 'confidence must be between -1 and 1';
     END IF;
 
     IF owner_types IS NOT NULL AND owner_ids IS NOT NULL AND
@@ -29,7 +29,7 @@ BEGIN
     END IF;
 
     -- Calculate search threshold from confidence
-    search_threshold := confidence;
+    search_threshold := 1.0 - confidence;
 
     -- Build owner filter SQL
     owner_filter_sql := '
@@ -53,7 +53,7 @@ BEGIN
                 d.index,
                 d.title,
                 d.content,
-                ((1 - (d.embedding <=> $1)) + 1) * 0.5 as distance,
+                (d.embedding <=> $1) as distance,
                 d.embedding,
                 d.metadata,
                 doc_owners.owner_type,
@@ -61,15 +61,15 @@ BEGIN
             FROM docs_embeddings d
             LEFT JOIN doc_owners ON d.doc_id = doc_owners.doc_id
             WHERE d.developer_id = $7
-            AND ((1 - (d.embedding <=> $1)) + 1) * 0.5 >= $2
+            AND (d.embedding <=> $1) <= $2
             %s
             %s
-            ORDER BY ((1 - (d.embedding <=> $1)) + 1) * 0.5 DESC
+            ORDER BY (d.embedding <=> $1) ASC
             LIMIT ($3 * 4)  -- Get more candidates than needed
         )
         SELECT DISTINCT ON (doc_id) *
         FROM ranked_docs
-        ORDER BY doc_id, distance DESC
+        ORDER BY doc_id, distance ASC
         LIMIT $3',
         owner_filter_sql,
         metadata_filter_sql
