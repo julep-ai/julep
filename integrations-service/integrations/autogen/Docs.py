@@ -153,7 +153,7 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
     """
     The confidence cutoff level
     """
@@ -222,7 +222,7 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
     """
     The confidence cutoff level
     """
