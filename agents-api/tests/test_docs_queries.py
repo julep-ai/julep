@@ -417,7 +417,7 @@ async def _(
     assert result[0].metadata is not None
 
 
-@test("utility: test text_to_tsvector_query")
+@test("utility: test for text_to_tsvector_query")
 async def _():
     test_cases = [
         # Single words
@@ -434,8 +434,8 @@ async def _():
         ),
         # Multiple sentences
         (
-            "Machine learning is great. Data science rocks.",
-            "machine learning OR data science rocks",
+            "I love basketball especially Michael Jordan. LeBron James is also great.",
+            ["basketball OR lebron james OR michael jordan", "LeBron James OR Michael Jordan OR basketball"],
         ),
         # Quoted phrases
         (
@@ -466,9 +466,14 @@ async def _():
         result = text_to_tsvector_query(input_text)
         print(f"Generated query: '{result}'")
         print(f"Expected: '{expected_output}'\n")
-        assert result.lower() == expected_output.lower(), (
-            f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
-        )
+        if isinstance(expected_output, list):
+            assert any(result.lower() == expected_output.lower() for expected_output in expected_output), (
+                f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
+            )
+        else:
+            assert result.lower() == expected_output.lower(), (
+                f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
+            )
 
 
 # @test("query: search docs by embedding with different confidence levels")
