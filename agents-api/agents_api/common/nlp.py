@@ -180,35 +180,162 @@ def find_proximity_groups(
     return list(groups.values())
 
 
-def build_query_pattern(group_size: int, n: int) -> str:
-    """Cache query patterns for common group sizes."""
-    if group_size == 1:
-        return '"{}"'
-    return f"NEAR/{n}(" + " ".join('"{}"' for _ in range(group_size)) + ")"
+# def build_query_pattern(group_size: int, n: int) -> str:
+#     """Cache query patterns for common group sizes."""
+#     if group_size == 1:
+#         return '"{}"'
+#     return f"NEAR/{n}(" + " ".join('"{}"' for _ in range(group_size)) + ")"
 
 
-def build_query(groups: list[set[str]], n: int = 10) -> str:
-    """Build query with cached patterns."""
-    clauses = []
+# def build_query(groups: list[set[str]], n: int = 10) -> str:
+#     """Build query with cached patterns."""
+#     clauses = []
+
+#     for group in groups:
+#         if len(group) == 1:
+#             clauses.append(f'"{next(iter(group))}"')
+#         else:
+#             # Sort by length descending to prioritize longer phrases
+#             sorted_group = sorted(group, key=len, reverse=True)
+#             # Get cached pattern and format with keywords
+#             pattern = build_query_pattern(len(group), n)
+#             clause = pattern.format(*sorted_group)
+#             clauses.append(clause)
+
+#     return " OR ".join(clauses)
+
+
+# @lru_cache(maxsize=100)
+# def paragraph_to_custom_queries(
+#     paragraph: str, top_n: int = 10, proximity_n: int = 10, min_keywords: int = 1
+# ) -> list[str]:
+#     """
+#     Optimized paragraph processing with minimal behavior changes.
+#     Added min_keywords parameter to filter out low-value queries.
+
+#     Args:
+#         paragraph (str): The input paragraph to convert.
+#         top_n (int): Number of top keywords to extract per sentence.
+#         proximity_n (int): The proximity window for NEAR/n.
+#         min_keywords (int): Minimum number of keywords required to form a query.
+
+#     Returns:
+#         list[str]: The list of custom query strings.
+#     """
+#     if not paragraph or not paragraph.strip():
+#         return []
+
+#     # Process entire paragraph once
+#     doc = nlp(paragraph)
+#     queries = []
+
+#     # Process sentences
+#     for sent in doc.sents:
+#         # Convert to doc for consistent API
+#         sent_doc = sent.as_doc()
+
+#         # Extract and clean keywords
+#         keywords = extract_keywords(sent_doc, top_n)
+#         if len(keywords) < min_keywords:
+#             continue
+
+#         # Find keyword positions using matcher
+#         keyword_positions = keyword_matcher.find_matches(sent_doc, keywords)
+
+#         # Skip if no keywords found in positions
+#         if not keyword_positions:
+#             continue
+
+#         # Find proximity groups and build query
+#         groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
+#         query = build_query(groups, proximity_n)
+
+#         if query:
+#             queries.append(query)
+
+#     return queries
+
+
+# def batch_paragraphs_to_custom_queries(
+#     paragraphs: list[str],
+#     top_n: int = 10,
+#     proximity_n: int = 10,
+#     min_keywords: int = 1,
+#     n_process: int = 1,
+# ) -> list[list[str]]:
+#     """
+#     Processes multiple paragraphs using nlp.pipe for better performance.
+
+#     Args:
+#         paragraphs (list[str]): list of paragraphs to process.
+#         top_n (int): Number of top keywords to extract per sentence.
+#         proximity_n (int): The proximity window for NEAR/n.
+#         min_keywords (int): Minimum number of keywords required to form a query.
+#         n_process (int): Number of processes to use for multiprocessing.
+
+#     Returns:
+#         list[list[str]]: A list where each element is a list of queries for a paragraph.
+#     """
+#     results = []
+#     for doc in nlp.pipe(paragraphs, disable=["lemmatizer", "textcat"], n_process=n_process):
+#         queries = []
+#         for sent in doc.sents:
+#             sent_doc = sent.as_doc()
+#             keywords = extract_keywords(sent_doc, top_n)
+#             if len(keywords) < min_keywords:
+#                 continue
+#             keyword_positions = keyword_matcher.find_matches(sent_doc, keywords)
+#             if not keyword_positions:
+#                 continue
+#             groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
+#             query = build_query(groups, proximity_n)
+#             if query:
+#                 queries.append(query)
+#         results.append(queries)
+
+#    return results
+
+
+def build_ts_query(groups: list[set[str]], proximity_n: int = 10) -> str:
+    """
+    Builds a PostgreSQL tsquery string from groups of keywords.
+
+    Args:
+        groups (list[set[str]]): List of keyword groups
+        proximity_n (int): Maximum distance between words for proximity search
+
+    Returns:
+        str: PostgreSQL tsquery compatible string
+    """
+    if not groups:
+        return ""
+
+    query_parts = []
 
     for group in groups:
+        if not group:  # Skip empty groups
+            continue
+
         if len(group) == 1:
-            clauses.append(f'"{next(iter(group))}"')
+            # Single word - just wrap in quotes
+            word = next(iter(group))
+            # No need to check for stopwords since they should be filtered earlier
+            query_parts.append(f"'{word.lower()}'")
         else:
-            # Sort by length descending to prioritize longer phrases
-            sorted_group = sorted(group, key=len, reverse=True)
-            # Get cached pattern and format with keywords
-            pattern = build_query_pattern(len(group), n)
-            clause = pattern.format(*sorted_group)
-            clauses.append(clause)
+            # Multiple words - sort by length (descending) and connect with <->
+            sorted_words = sorted(group, key=len, reverse=True)
+            filtered_words = [word.lower() for word in sorted_words]
+            if filtered_words:
+                phrase = " <-> ".join(f"'{word}'" for word in filtered_words)
+                query_parts.append(f"({phrase})")
 
-    return " OR ".join(clauses)
+    return " & ".join(query_parts) if query_parts else ""
 
 
-@lru_cache(maxsize=100)
-def paragraph_to_custom_queries(
+@lru_cache(maxsize=1000)
+def text_to_tsvector_query(
     paragraph: str, top_n: int = 10, proximity_n: int = 10, min_keywords: int = 1
-) -> list[str]:
+) -> str:
     """
     Optimized paragraph processing with minimal behavior changes.
     Added min_keywords parameter to filter out low-value queries.
@@ -219,8 +346,9 @@ def paragraph_to_custom_queries(
         proximity_n (int): The proximity window for NEAR/n.
         min_keywords (int): Minimum number of keywords required to form a query.
 
+
     Returns:
-        list[str]: The list of custom query strings.
+        str: PostgreSQL tsquery compatible string
     """
     if not paragraph or not paragraph.strip():
         return []
@@ -248,7 +376,7 @@ def paragraph_to_custom_queries(
 
         # Find proximity groups and build query
         groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
-        query = build_query(groups, proximity_n)
+        query = build_ts_query(groups, proximity_n)
 
         if query:
             queries.append(query)
@@ -256,7 +384,7 @@ def paragraph_to_custom_queries(
     return queries
 
 
-def batch_paragraphs_to_custom_queries(
+def batch_text_to_tsvector_queries(
     paragraphs: list[str],
     top_n: int = 10,
     proximity_n: int = 10,
@@ -267,16 +395,14 @@ def batch_paragraphs_to_custom_queries(
     Processes multiple paragraphs using nlp.pipe for better performance.
 
     Args:
-        paragraphs (list[str]): list of paragraphs to process.
-        top_n (int): Number of top keywords to extract per sentence.
-        proximity_n (int): The proximity window for NEAR/n.
-        min_keywords (int): Minimum number of keywords required to form a query.
-        n_process (int): Number of processes to use for multiprocessing.
+        paragraphs (list[str]): List of paragraphs to process
+        top_n (int): Number of top keywords to include per paragraph
 
     Returns:
-        list[list[str]]: A list where each element is a list of queries for a paragraph.
+        list[str]: List of tsquery strings
     """
     results = []
+
     for doc in nlp.pipe(paragraphs, disable=["lemmatizer", "textcat"], n_process=n_process):
         queries = []
         for sent in doc.sents:
@@ -288,109 +414,9 @@ def batch_paragraphs_to_custom_queries(
             if not keyword_positions:
                 continue
             groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
-            query = build_query(groups, proximity_n)
+            query = build_ts_query(groups, proximity_n)
             if query:
                 queries.append(query)
         results.append(queries)
-
-    return results
-
-
-@lru_cache(maxsize=1000)
-def text_to_tsvector_query(text: str, top_n: int = 10) -> str:
-    """
-    Converts text into a PostgreSQL tsquery format using sophisticated NLP processing.
-    Cached for repeated queries.
-
-    Args:
-        text (str): Input text to convert
-        top_n (int): Number of top keywords to include
-
-    Returns:
-        str: PostgreSQL tsquery compatible string
-    """
-    if not text or not text.strip():
-        return ""
-
-    # Process text with spaCy
-    doc = nlp(text)
-
-    # Extract important keywords using existing extract_keywords function
-    keywords = extract_keywords(doc, top_n=top_n, clean=True)
-
-    if not keywords:
-        return ""
-
-    # Find keyword positions using existing matcher
-    keyword_positions = keyword_matcher.find_matches(doc, keywords)
-
-    if not keyword_positions:
-        return ""
-
-    # Find proximity groups
-    groups = find_proximity_groups(keywords, keyword_positions, n=10)
-
-    # Convert groups to tsquery format
-    tsquery_parts = []
-
-    for group in groups:
-        if len(group) == 1:
-            # Single keyword
-            tsquery_parts.append(next(iter(group)))
-        else:
-            # For multiple keywords in proximity, use <-> operator in PostgreSQL
-            sorted_group = sorted(group, key=len, reverse=True)
-            tsquery_parts.append("(" + " <-> ".join(f"'{word}'" for word in sorted_group) + ")")
-
-    return " | ".join(tsquery_parts)
-
-
-def batch_text_to_tsvector_queries(
-    paragraphs: list[str],  # Changed to list since we don't need tuple for caching
-    top_n: int = 10,
-) -> list[str]:
-    """
-    Process multiple paragraphs into tsquery format efficiently.
-
-    Args:
-        paragraphs (list[str]): List of paragraphs to process
-        top_n (int): Number of top keywords to include per paragraph
-
-    Returns:
-        list[str]: List of tsquery strings
-    """
-    results = []
-
-    # Use spaCy's pipe for efficient batch processing
-    docs = nlp.pipe(paragraphs)
-
-    for doc in docs:
-        # Process each paragraph
-        keywords = extract_keywords(doc, top_n=top_n, clean=True)
-
-        if not keywords:
-            results.append("")
-            continue
-
-        keyword_positions = keyword_matcher.find_matches(doc, keywords)
-
-        if not keyword_positions:
-            results.append("")
-            continue
-
-        groups = find_proximity_groups(keywords, keyword_positions, n=10)
-
-        # Build tsquery for this paragraph
-        tsquery_parts = []
-        for group in groups:
-            if len(group) == 1:
-                tsquery_parts.append(next(iter(group)))
-            else:
-                sorted_group = sorted(group, key=len, reverse=True)
-                tsquery_parts.append(
-                    "(" + " <-> ".join(f"'{word}'" for word in sorted_group) + ")"
-                )
-
-        results.append(" | ".join(tsquery_parts))
 
     return results
