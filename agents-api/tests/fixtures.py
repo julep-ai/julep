@@ -175,15 +175,40 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         f"[{', '.join([str(x) for x in [1.0] * 1024])}]",
     )
 
+    # Insert embedding with random values between 0.3 and 0.7
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
         VALUES ($1, $2, 0, 1, $3, $4)
-        """,  # Changed chunk_seq from 0 to 1
+        """,
         developer.id,
         doc.id,
-        "Different test content",
-        f"[{', '.join([str(x) for x in [0.5] * 1024])}]",
+        "Test content 1",
+        f"[{', '.join([str(0.3 + 0.4 * (i % 3) / 2) for i in range(1024)])}]",
+    )
+
+    # Insert embedding with random values between -0.8 and 0.8 
+    await pool.execute(
+        """
+        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
+        VALUES ($1, $2, 0, 2, $3, $4)
+        """,
+        developer.id,
+        doc.id,
+        "Test content 2", 
+        f"[{', '.join([str(-0.8 + 1.6 * (i % 5) / 4) for i in range(1024)])}]",
+    )
+
+    # Insert embedding with alternating -1 and 1
+    await pool.execute(
+        """
+        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
+        VALUES ($1, $2, 0, 3, $3, $4)
+        """,
+        developer.id,
+        doc.id,
+        "Test content 3",
+        f"[{', '.join([str(-1 if i % 2 else 1) for i in range(1024)])}]",
     )
 
     yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
