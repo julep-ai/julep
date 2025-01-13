@@ -64,12 +64,12 @@ BEGIN
             AND (d.embedding <=> $1) <= $2
             %s
             %s
-            ORDER BY (d.embedding <=> $1)
+            ORDER BY (d.embedding <=> $1) ASC
             LIMIT ($3 * 4)  -- Get more candidates than needed
         )
         SELECT DISTINCT ON (doc_id) *
         FROM ranked_docs
-        ORDER BY doc_id, distance
+        ORDER BY doc_id, distance ASC
         LIMIT $3',
         owner_filter_sql,
         metadata_filter_sql
