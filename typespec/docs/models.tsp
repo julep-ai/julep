@@ -125,7 +125,7 @@ model BaseDocSearchRequest {
 
 model VectorDocSearchRequest extends BaseDocSearchRequest {
     /** The confidence cutoff level */
-    @minValue(0)
+    @minValue(-1)
     @maxValue(1)
     confidence: float = 0;
 
@@ -146,7 +146,7 @@ model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
 
 model HybridDocSearchRequest extends BaseDocSearchRequest {
     /** The confidence cutoff level */
-    @minValue(0)
+    @minValue(-1)
     @maxValue(1)
     confidence: float = 0;
 

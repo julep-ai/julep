@@ -1,9 +1,9 @@
 name: Translate ReadME
 
-on:
-  push:
-    paths:
-      - "README.md"
+# on:
+#   push:
+#     paths:
+#       - "README.md"
 
 jobs:
   readme-translator:

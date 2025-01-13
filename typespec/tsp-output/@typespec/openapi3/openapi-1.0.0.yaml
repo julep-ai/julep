@@ -2983,7 +2983,7 @@ components:
       properties:
         confidence:
           type: number
-          minimum: 0
+          minimum: -1
           maximum: 1
           description: The confidence cutoff level
           default: 0
@@ -3066,7 +3066,7 @@ components:
       properties:
         confidence:
           type: number
-          minimum: 0
+          minimum: -1
           maximum: 1
           description: The confidence cutoff level
           default: 0
