@@ -175,6 +175,17 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         f"[{', '.join([str(x) for x in [1.0] * 1024])}]",
     )
 
+    await pool.execute(
+        """
+        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
+        VALUES ($1, $2, 0, 1, $3, $4)
+        """,  # Changed chunk_seq from 0 to 1
+        developer.id,
+        doc.id,
+        "Different test content",
+        f"[{', '.join([str(x) for x in [0.5] * 1024])}]",
+    )
+
     yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
 
 
