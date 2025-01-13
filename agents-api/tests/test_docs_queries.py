@@ -435,7 +435,10 @@ async def _():
         # Multiple sentences
         (
             "I love basketball especially Michael Jordan. LeBron James is also great.",
-            ["basketball OR lebron james OR michael jordan", "LeBron James OR Michael Jordan OR basketball"],
+            [
+                "basketball OR lebron james OR michael jordan",
+                "LeBron James OR Michael Jordan OR basketball",
+            ],
         ),
         # Quoted phrases
         (
@@ -467,9 +470,9 @@ async def _():
         print(f"Generated query: '{result}'")
         print(f"Expected: '{expected_output}'\n")
         if isinstance(expected_output, list):
-            assert any(result.lower() == expected_output.lower() for expected_output in expected_output), (
-                f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
-            )
+            assert any(
+                result.lower() == expected_output.lower() for expected_output in expected_output
+            ), f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
         else:
             assert result.lower() == expected_output.lower(), (
                 f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
