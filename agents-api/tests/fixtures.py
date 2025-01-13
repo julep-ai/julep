@@ -45,6 +45,7 @@ from .utils import (
 )
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
+    make_vector_with_similarity,
 )
 
 
@@ -164,6 +165,10 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 @fixture(scope="test")
 async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     pool = await create_db_pool(dsn=dsn)
+    embedding_with_confidence_0 = make_vector_with_similarity(d=0.0)
+    embedding_with_confidence_05 = make_vector_with_similarity(d=0.5)
+    embedding_with_confidence_05_neg = make_vector_with_similarity(d=-0.5)
+    embedding_with_confidence_1_neg = make_vector_with_similarity(d=-1.0)
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
@@ -175,7 +180,7 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         f"[{', '.join([str(x) for x in [1.0] * 1024])}]",
     )
 
-    # Insert embedding with random values between 0.3 and 0.7
+    # Insert embedding with confidence 0 with respect to unit vector
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
@@ -184,10 +189,10 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         developer.id,
         doc.id,
         "Test content 1",
-        f"[{', '.join([str(0.3 + 0.4 * (i % 3) / 2) for i in range(1024)])}]",
+        f"[{', '.join([str(x) for x in embedding_with_confidence_0])}]",
     )
 
-    # Insert embedding with random values between -0.8 and 0.8
+    # Insert embedding with confidence 0.5 with respect to unit vector
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
@@ -196,10 +201,10 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         developer.id,
         doc.id,
         "Test content 2",
-        f"[{', '.join([str(-0.8 + 1.6 * (i % 5) / 4) for i in range(1024)])}]",
+        f"[{', '.join([str(x) for x in embedding_with_confidence_05])}]",
     )
 
-    # Insert embedding with alternating -1 and 1
+    # Insert embedding with confidence -0.5 with respect to unit vector
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
@@ -208,7 +213,19 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         developer.id,
         doc.id,
         "Test content 3",
-        f"[{', '.join([str(-1 if i % 2 else 1) for i in range(1024)])}]",
+        f"[{', '.join([str(x) for x in embedding_with_confidence_05_neg])}]",
+    )
+
+    # Insert embedding with confidence -1 with respect to unit vector
+    await pool.execute(
+        """
+        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
+        VALUES ($1, $2, 0, 4, $3, $4)
+        """,
+        developer.id,
+        doc.id,
+        "Test content 4",
+        f"[{', '.join([str(x) for x in embedding_with_confidence_1_neg])}]",
     )
 
     yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
