@@ -296,40 +296,40 @@ def find_proximity_groups(
 #    return results
 
 
-def build_ts_query(groups: list[set[str]], proximity_n: int = 10) -> str:
-    """
-    Builds a PostgreSQL tsquery string from groups of keywords.
+# def build_ts_query(groups: list[set[str]], proximity_n: int = 10) -> str:
+#     """
+#     Builds a PostgreSQL tsquery string from groups of keywords.
 
-    Args:
-        groups (list[set[str]]): List of keyword groups
-        proximity_n (int): Maximum distance between words for proximity search
+#     Args:
+#         groups (list[set[str]]): List of keyword groups
+#         proximity_n (int): Maximum distance between words for proximity search
 
-    Returns:
-        str: PostgreSQL tsquery compatible string
-    """
-    if not groups:
-        return ""
+#     Returns:
+#         str: PostgreSQL tsquery compatible string
+#     """
+#     if not groups:
+#         return ""
 
-    query_parts = []
+#     query_parts = []
 
-    for group in groups:
-        if not group:  # Skip empty groups
-            continue
+#     for group in groups:
+#         if not group:  # Skip empty groups
+#             continue
 
-        if len(group) == 1:
-            # Single word - just wrap in quotes
-            word = next(iter(group))
-            # No need to check for stopwords since they should be filtered earlier
-            query_parts.append(f"'{word.lower()}'")
-        else:
-            # Multiple words - sort by length (descending) and connect with <->
-            sorted_words = sorted(group, key=len, reverse=True)
-            filtered_words = [word.lower() for word in sorted_words]
-            if filtered_words:
-                phrase = " <-> ".join(f"'{word}'" for word in filtered_words)
-                query_parts.append(f"({phrase})")
+#         if len(group) == 1:
+#             # Single word - just wrap in quotes
+#             word = next(iter(group))
+#             # No need to check for stopwords since they should be filtered earlier
+#             query_parts.append(f"'{word.lower()}'")
+#         else:
+#             # Multiple words - sort by length (descending) and connect with <->
+#             sorted_words = sorted(group, key=len, reverse=True)
+#             filtered_words = [word.lower() for word in sorted_words]
+#             if filtered_words:
+#                 phrase = " <-> ".join(f"'{word}'" for word in filtered_words)
+#                 query_parts.append(f"({phrase})")
 
-    return " & ".join(query_parts) if query_parts else ""
+#     return " & ".join(query_parts) if query_parts else ""
 
 
 @lru_cache(maxsize=1000)
@@ -376,10 +376,8 @@ def text_to_tsvector_query(
 
         # Find proximity groups and build query
         groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
-        query = build_ts_query(groups, proximity_n)
-
-        if query:
-            queries.append(query)
+        if groups:
+            queries.append(" AND ".join([f'({" OR ".join(grp)})' for grp in groups]))
 
     return queries
 
@@ -414,9 +412,9 @@ def batch_text_to_tsvector_queries(
             if not keyword_positions:
                 continue
             groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
-            query = build_ts_query(groups, proximity_n)
-            if query:
-                queries.append(query)
+            if groups:
+                queries.append(" AND ".join([f'({" OR ".join(grp)})' for grp in groups]))
+
         results.append(queries)
 
     return results
