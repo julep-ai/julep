@@ -19,10 +19,13 @@ async def create_agent_tool(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     data: CreateToolRequest,
 ) -> ResourceCreatedResponse:
-    tool = await create_tools_query(
+    tools = await create_tools_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=[data],
-    )[0]
+    )
+
+    tool = tools[0]
 
     return ResourceCreatedResponse(id=tool.id, created_at=tool.created_at, jobs=[])
+
