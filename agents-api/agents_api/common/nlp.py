@@ -377,7 +377,7 @@ def text_to_tsvector_query(
         # Find proximity groups and build query
         groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
         if groups:
-            queries.append(" AND ".join([f'({" OR ".join(grp)})' for grp in groups]))
+            queries.append(" AND ".join([f"({' OR '.join(grp)})" for grp in groups]))
 
     return queries
 
@@ -413,7 +413,7 @@ def batch_text_to_tsvector_queries(
                 continue
             groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
             if groups:
-                queries.append(" AND ".join([f'({" OR ".join(grp)})' for grp in groups]))
+                queries.append(" AND ".join([f"({' OR '.join(grp)})" for grp in groups]))
 
         results.append(queries)
 
