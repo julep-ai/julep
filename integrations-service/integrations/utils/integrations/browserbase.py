@@ -204,11 +204,14 @@ async def get_connect_url(
     # TODO: Get a better way to get the connect URL than this
     try:
         # Get session to access its connect_url
-        CONNECT_URL = f"wss://connect.browserbase.com?sessionId={arguments.id}&apiKey={setup.api_key}"
+        CONNECT_URL = (
+            f"wss://connect.browserbase.com?sessionId={arguments.id}&apiKey={setup.api_key}"
+        )
         return BrowserbaseGetSessionConnectUrlOutput(url=CONNECT_URL)
     except Exception as e:
         print(f"Error getting connect URL: {e}")
         raise
+
 
 @beartype
 @retry(
