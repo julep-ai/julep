@@ -263,31 +263,13 @@ def batch_text_to_tsvector_queries(
     Returns:
         list[str]: List of tsquery strings
     """
-    results = []
+    # Use a set to avoid duplicates
+    results = set()
 
     for doc in nlp.pipe(paragraphs, disable=["lemmatizer", "textcat"], n_process=n_process):
-        queries = set()  # Use set to avoid duplicates
-        for sent in doc.sents:
-            sent_doc = sent.as_doc()
-            keywords = extract_keywords(sent_doc, top_n)
-            if len(keywords) < min_keywords:
-                continue
-            keyword_positions = keyword_matcher.find_matches(sent_doc, keywords)
-            if not keyword_positions:
-                continue
-            groups = find_proximity_groups(keywords, keyword_positions, proximity_n)
-            # Add each group as a single term to our set
-            for group in groups:
-                if len(group) > 1:
-                    # Sort by length descending to prioritize longer phrases
-                    sorted_group = sorted(group, key=len, reverse=True)
-                    # For truly proximate multi-word groups, group words
-                    queries.add(" OR ".join(sorted_group))
-                else:
-                    # For non-proximate words or single words, add them separately
-                    queries.update(group)
-
-        # Join all terms with " OR "
-        results.append(" OR ".join(queries) if queries else "")
+        # Generate tsquery string for each paragraph
+        queries = text_to_tsvector_query(doc, top_n, proximity_n, min_keywords)
+        # Add to results set
+        results.add(queries)
 
     return results
