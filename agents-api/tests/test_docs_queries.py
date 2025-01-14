@@ -387,11 +387,7 @@ async def _():
         # Multiple sentences
         (
             "I love basketball especially Michael Jordan. LeBron James is also great.",
-            [
-                "basketball OR lebron james OR michael jordan",
-                "LeBron James OR Michael Jordan OR basketball",
-                "Michael Jordan OR basketball OR LeBron James",
-            ],
+            "basketball OR lebron james OR michael jordan",
         ),
         # Quoted phrases
         (
@@ -422,14 +418,12 @@ async def _():
         result = text_to_tsvector_query(input_text)
         print(f"Generated query: '{result}'")
         print(f"Expected: '{expected_output}'\n")
-        if isinstance(expected_output, list):
-            assert any(
-                result.lower() == expected_output.lower() for expected_output in expected_output
-            ), f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
-        else:
-            assert result.lower() == expected_output.lower(), (
-                f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
-            )
+           
+        result_terms = set(term.lower() for term in result.split(" OR ") if term)
+        expected_terms = set(term.lower() for term in expected_output.split(" OR ") if term)
+        assert result_terms == expected_terms, (
+            f"Expected terms {expected_terms} but got {result_terms} for input '{input_text}'"
+        )
 
 
 # @test("query: search docs by embedding with different confidence levels")
