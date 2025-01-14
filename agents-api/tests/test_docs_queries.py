@@ -418,9 +418,9 @@ async def _():
         result = text_to_tsvector_query(input_text)
         print(f"Generated query: '{result}'")
         print(f"Expected: '{expected_output}'\n")
-           
-        result_terms = set(term.lower() for term in result.split(" OR ") if term)
-        expected_terms = set(term.lower() for term in expected_output.split(" OR ") if term)
+
+        result_terms = {term.lower() for term in result.split(" OR ") if term}
+        expected_terms = {term.lower() for term in expected_output.split(" OR ") if term}
         assert result_terms == expected_terms, (
             f"Expected terms {expected_terms} but got {result_terms} for input '{input_text}'"
         )

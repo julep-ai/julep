@@ -1,9 +1,8 @@
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from functools import lru_cache
 
 import spacy
-from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc
 from spacy.util import filter_spans
 
@@ -29,6 +28,7 @@ nlp.add_pipe(
     },
 )
 
+
 @lru_cache(maxsize=10000)
 def clean_keyword(kw: str) -> str:
     """Cache cleaned keywords for reuse."""
@@ -38,13 +38,13 @@ def clean_keyword(kw: str) -> str:
 def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True) -> list[str]:
     """Optimized keyword extraction with minimal behavior change."""
     excluded_labels = {
-        "DATE",        # Absolute or relative dates or periods.
-        "TIME",        # Times smaller than a day.
-        "PERCENT",     # Percentage, including ”%“.
-        "MONEY",       # Monetary values, including unit.
-        "QUANTITY",    # Measurements, as of weight or distance.
-        "ORDINAL",     # “first”, “second”, etc.
-        "CARDINAL",    # Numerals that do not fall under another type.
+        "DATE",  # Absolute or relative dates or periods.
+        "TIME",  # Times smaller than a day.
+        "PERCENT",  # Percentage, including ”%“.
+        "MONEY",  # Monetary values, including unit.
+        "QUANTITY",  # Measurements, as of weight or distance.
+        "ORDINAL",  # “first”, “second”, etc.
+        "CARDINAL",  # Numerals that do not fall under another type.
         # "PERSON",      # People, including fictional.
         # "NORP",        # Nationalities or religious or political groups.
         # "FAC",         # Buildings, airports, highways, bridges, etc.
@@ -91,7 +91,6 @@ def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True) -> list[str]
         seen_texts.add(lower_text)
         ent_keywords.append(text) if span in ent_spans_set else keywords.append(text)
 
-
     # Normalize keywords by replacing multiple spaces with single space and stripping
     normalized_ent_keywords = [WHITESPACE_RE.sub(" ", kw).strip() for kw in ent_keywords]
     normalized_keywords = [WHITESPACE_RE.sub(" ", kw).strip() for kw in keywords]
@@ -99,7 +98,6 @@ def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True) -> list[str]
     # Count frequencies efficiently
     ent_freq = Counter(normalized_ent_keywords)
     freq = Counter(normalized_keywords)
-
 
     top_keywords = [kw for kw, _ in ent_freq.most_common(top_n)]
     remaining_slots = max(0, top_n - len(top_keywords))
@@ -111,9 +109,7 @@ def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True) -> list[str]
 
 
 @lru_cache(maxsize=1000)
-def text_to_tsvector_query(
-    paragraph: str, top_n: int = 25,  min_keywords: int = 1
-) -> str:
+def text_to_tsvector_query(paragraph: str, top_n: int = 25, min_keywords: int = 1) -> str:
     """
     Extracts meaningful keywords/phrases from text and joins them with OR.
 
