@@ -32,4 +32,10 @@ ADD CONSTRAINT ct_tasks_description_length CHECK (
     OR length(description) <= 1000
 );
 
+ALTER TABLE agents
+ADD CONSTRAINT ct_agents_about_length CHECK (
+    about IS NULL
+    OR length(about) <= 5000
+);
+
 COMMIT;
