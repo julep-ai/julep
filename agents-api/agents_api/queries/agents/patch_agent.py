@@ -80,7 +80,7 @@ async def patch_agent(
         data.metadata,
         data.model,
         data.default_settings.model_dump() if data.default_settings else None,
-        data.instructions,
+        [data.instructions] if isinstance(data.instructions, str) else data.instructions,
         data.canonical_name,
     ]
 
