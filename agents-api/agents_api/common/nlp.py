@@ -272,4 +272,4 @@ def batch_text_to_tsvector_queries(
         # Add to results set
         results.add(queries)
 
-    return results
+    return list(results)
