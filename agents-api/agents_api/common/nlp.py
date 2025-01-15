@@ -41,9 +41,7 @@ def clean_keyword(kw: str) -> str:
     return WHITESPACE_RE.sub(" ", cleaned).strip()
 
 
-def extract_keywords(
-    doc: Doc, top_n: int = 25, split_chunks: bool = False
-) -> list[str]:
+def extract_keywords(doc: Doc, top_n: int = 25, split_chunks: bool = False) -> list[str]:
     """Optimized keyword extraction with minimal behavior change."""
     excluded_labels = {
         "DATE",  # Absolute or relative dates or periods.
@@ -115,6 +113,7 @@ def extract_keywords(
     top_keywords += [kw for kw, _ in freq.most_common(remaining_slots)]
 
     return [clean_keyword(kw) for kw in top_keywords]
+
 
 @lru_cache(maxsize=1000)
 def text_to_tsvector_query(
