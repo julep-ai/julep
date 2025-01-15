@@ -257,6 +257,68 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     assert result[0].metadata == {"test": "test"}, "Metadata should match"
 
 
+@test("query: search docs by text with technical terms and phrases")
+async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create documents with technical content
+    doc1 = await create_doc(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        data=CreateDocRequest(
+            title="Technical Document",
+            content="API endpoints using REST architecture with JSON payloads",
+            metadata={"domain": "technical"},
+            embed_instruction="Embed the document",
+        ),
+        connection_pool=pool,
+    )
+
+    doc2 = await create_doc(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        data=CreateDocRequest(
+            title="More Technical Terms",
+            content="Database optimization using indexing and query planning",
+            metadata={"domain": "technical"},
+            embed_instruction="Embed the document",
+        ),
+        connection_pool=pool,
+    )
+
+    # Test with technical terms
+    technical_queries = [
+        "API endpoints",
+        "REST architecture",
+        "database optimization",
+        "indexing",
+    ]
+
+    for query in technical_queries:
+        results = await search_docs_by_text(
+            developer_id=developer.id,
+            owners=[("agent", agent.id)],
+            query=query,
+            k=3,
+            search_language="english",
+            connection_pool=pool,
+        )
+
+        print(f"\nSearch results for '{query}':", results)
+
+        # Verify appropriate document is found based on query
+        if "API" in query or "REST" in query:
+            assert any(doc.id == doc1.id for doc in results), (
+                f"Doc1 should be found with query '{query}'"
+            )
+        if "database" in query.lower() or "indexing" in query:
+            assert any(doc.id == doc2.id for doc in results), (
+                f"Doc2 should be found with query '{query}'"
+            )
+
+
 @test("query: search docs by embedding")
 async def _(
     dsn=pg_dsn, agent=test_agent, developer=test_developer, doc=test_doc_with_embedding
@@ -304,3 +366,48 @@ async def _(
 
     assert len(result) >= 1
     assert result[0].metadata is not None
+
+
+# @test("query: search docs by embedding with different confidence levels")
+# async def _(
+#     dsn=pg_dsn, agent=test_agent, developer=test_developer, doc=test_doc_with_embedding
+# ):
+#     pool = await create_db_pool(dsn=dsn)
+
+#     # Get query embedding (using original doc's embedding)
+#     query_embedding = make_vector_with_similarity(EMBEDDING_SIZE, 0.7)
+
+#     # Test with different confidence levels
+#     confidence_tests = [
+#         (0.99, 0),  # Very high similarity threshold - should find no results
+#         (0.7, 1),   # High similarity - should find 1 result (the embedding with all 1.0s)
+#         (0.3, 2),   # Medium similarity - should find 2 results (including 0.3-0.7 embedding)
+#         (-0.8, 3),  # Low similarity - should find 3 results (including -0.8 to 0.8 embedding)
+#         (-1.0, 4)   # Lowest similarity - should find all 4 results (including alternating -1/1)
+#     ]
+
+#     for confidence, expected_min_results in confidence_tests:
+#         results = await search_docs_by_embedding(
+#             developer_id=developer.id,
+#             owners=[("agent", agent.id)],
+#             embedding=query_embedding,
+#             k=3,
+#             confidence=confidence,
+#             metadata_filter={"test": "test"},
+#             connection_pool=pool,
+#         )
+
+#         print(f"\nSearch results with confidence {confidence}:")
+#         for r in results:
+#             print(f"- Doc ID: {r.id}, Distance: {r.distance}")
+
+#         assert len(results) >= expected_min_results, (
+#             f"Expected at least {expected_min_results} results with confidence {confidence}, got {len(results)}"
+#         )
+
+#         if results:
+#             # Verify that all returned results meet the confidence threshold
+#             for result in results:
+#                 assert result.distance >= confidence, (
+#                     f"Result distance {result.distance} is below confidence threshold {confidence}"
+#                 )
