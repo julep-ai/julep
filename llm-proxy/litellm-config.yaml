@@ -119,6 +119,12 @@ model_list:
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
   
+- model_name: "l3.1-euryale-70b"
+  litellm_params:
+    model: "openrouter/sao10k/l3.1-euryale-70b"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
 - model_name: "l3.3-euryale-70b"
   litellm_params:
     model: "openrouter/sao10k/l3.3-euryale-70b"
