@@ -83,7 +83,7 @@ async def search_docs_hybrid(
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
 
     # Pre-process rawtext query
-    text_query = text_to_tsvector_query(text_query)
+    text_query = text_to_tsvector_query(text_query, split_chunks=True)
 
     return (
         search_docs_hybrid_query,

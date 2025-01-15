@@ -80,6 +80,15 @@ async def _():
             "google OR john doe OR a software engineer",
         ),
         ("- google", "google"),
+        # Test duplicate keyword handling
+        (
+            "John Doe is great. John Doe is awesome.",
+            "john doe",  # Should only include "John Doe" once
+        ),
+        (
+            "Software Engineer at Google. Also, a Software Engineer.",
+            "Google OR Also a Software Engineer OR Software Engineer",  # Should only include "Software Engineer" once
+        ),
     ]
 
     for input_text, expected_output in test_cases:
@@ -140,6 +149,15 @@ async def _():
         (
             "John Doe is a software engineer at Google.",
             "google OR john doe OR a OR software OR engineer",
+        ),
+        # Test duplicate keyword handling
+        (
+            "John Doe is great. John Doe is awesome.",
+            "john doe",  # Should only include "John Doe" once even with split_chunks=True
+        ),
+        (
+            "Software Engineer at Google. Also, a Software Engineer.",
+            "Also OR a OR google OR software OR engineer",  # When split, each word appears once
         ),
     ]
 
