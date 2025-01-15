@@ -60,34 +60,28 @@
     }
   ],
   "topbarCtaButton": {
-    "name": "Dashboard",
+    "name": "Get API Key",
     "url": "https://dashboard.julep.ai"
   },
   "tabs": [
     {
-      "name": "Documentation",
-      "url": "welcome"
+      "name": "🚀 Get Started",
+      "url": "getting-started"
     },
     {
-      "name": "Examples",
+      "name": "🙋 How-to guides",
       "url": "examples"
     },
     {
-      "name": "SDKs",
+      "name": "🔧 SDKs",
       "url": "sdks"
     },
     {
-      "name": "API Reference",
+      "name": "🔍 API Reference",
       "url": "api-reference"
     }
   ],
   "anchors": [
-    {
-      "name": "Documentation",
-      "icon": "book-open",
-      "iconType": "sharp-duotone-solid",
-      "url": "/"
-    },
     {
       "name": "Community",
       "icon": "discord",
@@ -96,86 +90,70 @@
   ],
   "navigation": [
     {
-      "group": "Introduction",
+      "group": "Get Started",
       "pages": [
-        "welcome",
-        "introduction/what-is-julep",
-        "introduction/key-features",
-        "introduction/architecture-overview"
+        "getting-started/what-is-julep",
+        "getting-started/try-it-out",
+        "getting-started/create-agent",
+        "getting-started/run-task",
+        "getting-started/explore-features"
       ]
     },
     {
-      "group": "Getting Started",
+      "group": "Concepts",
       "pages": [
-        "getting-started/quick-start",
-        "getting-started/installation",
-        "getting-started/core-concepts",
-        "getting-started/examples",
-        "getting-started/julep-task-walkthrough"
+        "getting-started/agents",
+        "getting-started/tasks",
+        "getting-started/sessions",
+        "getting-started/users",
+        "getting-started/docs"
       ]
     },
     {
-      "group": "Building Blocks",
+      "group": "Tutorials",
+      "pages": [
+        "getting-started/multi-agent-workflow",
+        "getting-started/agent-with-tools",
+        "getting-started/agent-with-files",
+        "getting-started/agent-with-integrations"
+      ]
+    },
+    {
+      "group": "Integrations",
       "pages": [
         {
-          "group": "Agents",
+          "group": "Google",
           "pages": [
-            "building-blocks/agents/creating-agents",
-            "building-blocks/agents/agent-memory",
-            "building-blocks/agents/agent-tools"
-          ]
-        },
-        {
-          "group": "Tasks",
-          "pages": [
-            "building-blocks/tasks/task-basics",
-            "building-blocks/tasks/workflow-steps",
-            "building-blocks/tasks/control-flow"
-          ]
-        },
-        {
-          "group": "Sessions",
-          "pages": [
-            "building-blocks/sessions/session-management",
-            "building-blocks/sessions/context-and-state"
-          ]
-        },
-        {
-          "group": "Doc Store",
-          "pages": [
-            "building-blocks/doc-store/document-management",
-            "building-blocks/doc-store/vector-search",
-            "building-blocks/doc-store/document-integration"
-          ]
-        },
-        {
-          "group": "Users",
-          "pages": [
-            "building-blocks/users/user-management",
-            "building-blocks/users/user-context",
-            "building-blocks/users/user-sessions"
+            "getting-started/google-sheets",
+            "getting-started/google-docs",
+            "getting-started/google-drive",
+            "getting-started/google-chat",
+            "getting-started/google-meet",
+            "getting-started/google-tasks",
+            "getting-started/integrations"
           ]
         }
       ]
     },
     {
-      "group": "Tools & Integrations",
-      "pages": [
-        "tools/built-in-tools",
-        "tools/integration-types",
-        "tools/available-integrations"
-      ]
-    },
-    {
       "group": "Advanced Topics",
       "pages": [
-        "advanced/error-handling",
-        "advanced/performance-optimization",
-        "advanced/security-best-practices"
+        "getting-started/supported-models",
+        "getting-started/executions",
+        "getting-started/files",
+        "getting-started/tools"
       ]
     },
     {
-      "group": "Examples",
+      "group": "Reference",
+      "pages": [
+        "api-reference/built-in-tools",
+        "api-reference/integration-types",
+        "api-reference/available-integrations"
+      ]
+    },
+    {
+      "group": "How-to guides",
       "pages": [
         {
           "group": "Getting Started Examples",
@@ -322,10 +300,7 @@
       "name": "Authorization",
       "inputPrefix": "Bearer "
     },
-    "baseUrl": [
-      "https://api.julep.ai/api",
-      "https://dev.julep.ai/api"
-    ],
+    "baseUrl": ["https://api.julep.ai/api", "https://dev.julep.ai/api"],
     "maintainOrder": false,
     "paramFields": {
       "expanded": "topLevel"
@@ -341,9 +316,7 @@
       "mode": "show"
     }
   },
-  "openapi": [
-    "https://dev.julep.ai/api/openapi.json"
-  ],
+  "openapi": ["https://dev.julep.ai/api/openapi.json"],
   "feedback": {
     "suggestEdit": true,
     "raiseIssue": true
