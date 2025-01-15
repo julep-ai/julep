@@ -5,8 +5,8 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import DocReference
-from ...common.utils.db_exceptions import common_db_exceptions
 from ...common.nlp import text_to_tsvector_query
+from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import (
     pg_query,
     rewrap_exceptions,
