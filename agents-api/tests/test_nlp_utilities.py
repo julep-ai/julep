@@ -26,11 +26,28 @@ async def _():
     assert clean_keyword("- try") == "try"
 
 
-@test("utility: extract_keywords")
+@test("utility: extract_keywords - split_chunks=False")
 async def _():
     nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat"])
     doc = nlp("John Doe is a software engineer at Google.")
-    assert set(extract_keywords(doc)) == {"John Doe", "a software engineer", "Google"}
+    assert set(extract_keywords(doc, split_chunks=False)) == {
+        "John Doe",
+        "a software engineer",
+        "Google",
+    }
+
+
+@test("utility: extract_keywords - split_chunks=True")
+async def _():
+    nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat"])
+    doc = nlp("John Doe is a software engineer at Google.")
+    assert set(extract_keywords(doc, split_chunks=True)) == {
+        "John Doe",
+        "a",
+        "software",
+        "engineer",
+        "Google",
+    }
 
 
 @test("utility: text_to_tsvector_query - split_chunks=False")
