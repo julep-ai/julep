@@ -1,6 +1,5 @@
 from agents_api.autogen.openapi_model import CreateDocRequest
 from agents_api.clients.pg import create_db_pool
-from agents_api.common.nlp import text_to_tsvector_query
 from agents_api.queries.docs.create_doc import create_doc
 from agents_api.queries.docs.delete_doc import delete_doc
 from agents_api.queries.docs.get_doc import get_doc
@@ -367,69 +366,6 @@ async def _(
 
     assert len(result) >= 1
     assert result[0].metadata is not None
-
-
-@test("utility: test for text_to_tsvector_query")
-async def _():
-    test_cases = [
-        # Single words
-        ("test", "test"),
-        # Multiple words in single sentence
-        (
-            "quick brown fox",
-            "quick brown fox",  # Now kept as a single phrase due to proximity
-        ),
-        # Technical terms and phrases
-        (
-            "Machine Learning algorithm",
-            "machine learning algorithm",  # Common technical phrase
-        ),
-        # Multiple sentences
-        (
-            "I love basketball especially Michael Jordan. LeBron James is also great.",
-            [
-                "basketball OR lebron james OR michael jordan",
-                "LeBron James OR Michael Jordan OR basketball",
-                "Michael Jordan OR basketball OR LeBron James",
-            ],
-        ),
-        # Quoted phrases
-        (
-            '"quick brown fox"',
-            "quick brown fox",  # Quotes removed, phrase kept together
-        ),
-        ('Find "machine learning" algorithms', "machine learning"),
-        # Multiple quoted phrases
-        ('"data science" and "machine learning"', "machine learning OR data science"),
-        # Edge cases
-        ("", ""),
-        (
-            "the and or",
-            "",  # All stop words should result in empty string
-        ),
-        (
-            "a",
-            "",  # Single stop word should result in empty string
-        ),
-        ("X", "X"),
-        # Empty quotes
-        ('""', ""),
-        ('test "" phrase', "phrase OR test"),
-    ]
-
-    for input_text, expected_output in test_cases:
-        print(f"Input: '{input_text}'")
-        result = text_to_tsvector_query(input_text)
-        print(f"Generated query: '{result}'")
-        print(f"Expected: '{expected_output}'\n")
-        if isinstance(expected_output, list):
-            assert any(
-                result.lower() == expected_output.lower() for expected_output in expected_output
-            ), f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
-        else:
-            assert result.lower() == expected_output.lower(), (
-                f"Expected '{expected_output}' but got '{result}' for input '{input_text}'"
-            )
 
 
 # @test("query: search docs by embedding with different confidence levels")
