@@ -104,7 +104,7 @@ async def create_session(
     # Convert datetime fields to ISO format strings
     return BrowserbaseCreateSessionOutput(
         id=session.id,
-        connectionslqUrl=session.connect_url,
+        connectionUrl=session.connect_url,
         createdAt=session.created_at.isoformat() if session.created_at else None,
         projectId=session.project_id,
         startedAt=session.started_at.isoformat() if session.started_at else None,
