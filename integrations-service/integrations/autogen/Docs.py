@@ -79,6 +79,24 @@ class Doc(BaseModel):
     """
     Embeddings for the document
     """
+    modality: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
+    """
+    Modality of the document
+    """
+    language: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
+    """
+    Language of the document
+    """
+    embedding_model: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
+    """
+    Embedding model used for the document
+    """
+    embedding_dimensions: Annotated[int | None, Field(json_schema_extra={"readOnly": True})] = (
+        None
+    )
+    """
+    Dimensions of the embedding model
+    """
 
 
 class DocOwner(BaseModel):
@@ -135,7 +153,7 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
     """
     The confidence cutoff level
     """
@@ -204,7 +222,7 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
     """
     The confidence cutoff level
     """

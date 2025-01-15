@@ -89,8 +89,11 @@ model Session {
     @visibility("create")
     agents?: uuid[];
 
-    /** A specific situation that sets the background for this session */
-    situation: string = defaultSessionSystemMessage;
+    /** Session situation */
+    situation: string | null = null;
+
+    /** A specific system prompt template that sets the background for this session */
+    system_template: string = defaultSessionSystemMessage;
 
     /** Summary (null at the beginning) - generated automatically after every interaction */
     @visibility("read")
@@ -111,6 +114,9 @@ model Session {
      * If a tool call is made, the tool's output will be sent back to the model as the model's input.
      * If a tool call is not made, the model's output will be returned as is. */
     auto_run_tools: boolean = false;
+
+    /** Whether to forward tool calls to the model */
+    forward_tool_calls: boolean = false;
 
     recall_options?: RecallOptions | null = null;
 

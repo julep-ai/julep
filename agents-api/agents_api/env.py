@@ -3,9 +3,10 @@ This module is responsible for loading and providing access to environment varia
 It utilizes the environs library for environment variable parsing.
 """
 
+import multiprocessing
 import random
 from pprint import pprint
-from typing import Any, Dict
+from typing import Any
 
 from environs import Env
 
@@ -25,6 +26,10 @@ protocol: str = env.str("AGENTS_API_PROTOCOL", default="http")
 hostname: str = env.str("AGENTS_API_HOSTNAME", default="localhost")
 public_port: int = env.int("AGENTS_API_PUBLIC_PORT", default=80)
 api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
+max_payload_size: int = env.int(
+    "AGENTS_API_MAX_PAYLOAD_SIZE",
+    default=50 * 1024 * 1024,  # 50MB
+)
 
 # Tasks
 # -----
@@ -36,8 +41,8 @@ transition_requests_per_minute: int = env.int(
 
 # Blob Store
 # ----------
-use_blob_store_for_temporal: bool = (
-    env.bool("USE_BLOB_STORE_FOR_TEMPORAL", default=False) if not testing else False
+use_blob_store_for_temporal: bool = testing or env.bool(
+    "USE_BLOB_STORE_FOR_TEMPORAL", default=False
 )
 
 blob_store_bucket: str = env.str("BLOB_STORE_BUCKET", default="agents-api")
@@ -47,17 +52,16 @@ s3_access_key: str | None = env.str("S3_ACCESS_KEY", default=None)
 s3_secret_key: str | None = env.str("S3_SECRET_KEY", default=None)
 
 
-# Cozo
+# PostgreSQL
 # ----
-cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
-cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
-summarization_model_name: str = env.str(
-    "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
+pg_dsn: str = env.str(
+    "PG_DSN",
+    default="postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable",
 )
-do_verify_developer: bool = env.bool("DO_VERIFY_DEVELOPER", default=True)
-do_verify_developer_owns_resource: bool = env.bool(
-    "DO_VERIFY_DEVELOPER_OWNS_RESOURCE", default=True
-)
+summarization_model_name: str = env.str("SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo")
+
+query_timeout: float = env.float("QUERY_TIMEOUT", default=90.0)
+pool_max_size: int = env.int("POOL_MAX_SIZE", default=multiprocessing.cpu_count())
 
 
 # Auth
@@ -81,18 +85,14 @@ litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
 
 # Embedding service
 # -----------------
-embedding_model_id: str = env.str(
-    "EMBEDDING_MODEL_ID", default="Alibaba-NLP/gte-large-en-v1.5"
-)
+embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="openai/text-embedding-3-large")
 
 embedding_dimensions: int = env.int("EMBEDDING_DIMENSIONS", default=1024)
 
 
 # Integration service
 # -------------------
-integration_service_url: str = env.str(
-    "INTEGRATION_SERVICE_URL", default="http://0.0.0.0:8000"
-)
+integration_service_url: str = env.str("INTEGRATION_SERVICE_URL", default="http://0.0.0.0:8000")
 
 
 # Temporal
@@ -101,15 +101,14 @@ temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:723
 temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
+temporal_api_key: str = env.str("TEMPORAL_API_KEY", default=None)
 temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 temporal_schedule_to_close_timeout: int = env.int(
     "TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT", default=3600
 )
 temporal_heartbeat_timeout: int = env.int("TEMPORAL_HEARTBEAT_TIMEOUT", default=900)
-temporal_metrics_bind_host: str = env.str(
-    "TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0"
-)
+temporal_metrics_bind_host: str = env.str("TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0")
 temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=14000)
 temporal_activity_after_retry_timeout: int = env.int(
     "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
@@ -140,29 +139,27 @@ temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
 )
 
 # Consolidate environment variables
-environment: Dict[str, Any] = dict(
-    debug=debug,
-    multi_tenant_mode=multi_tenant_mode,
-    cozo_host=cozo_host,
-    cozo_auth=cozo_auth,
-    sentry_dsn=sentry_dsn,
-    temporal_endpoint=temporal_endpoint,
-    temporal_task_queue=temporal_task_queue,
-    api_key=api_key,
-    api_key_header_name=api_key_header_name,
-    hostname=hostname,
-    api_prefix=api_prefix,
-    temporal_worker_url=temporal_worker_url,
-    temporal_namespace=temporal_namespace,
-    embedding_model_id=embedding_model_id,
-    use_blob_store_for_temporal=use_blob_store_for_temporal,
-    blob_store_bucket=blob_store_bucket,
-    blob_store_cutoff_kb=blob_store_cutoff_kb,
-    s3_endpoint=s3_endpoint,
-    s3_access_key=s3_access_key,
-    s3_secret_key=s3_secret_key,
-    testing=testing,
-)
+environment: dict[str, Any] = {
+    "debug": debug,
+    "multi_tenant_mode": multi_tenant_mode,
+    "sentry_dsn": sentry_dsn,
+    "temporal_endpoint": temporal_endpoint,
+    "temporal_task_queue": temporal_task_queue,
+    "api_key": api_key,
+    "api_key_header_name": api_key_header_name,
+    "hostname": hostname,
+    "api_prefix": api_prefix,
+    "temporal_worker_url": temporal_worker_url,
+    "temporal_namespace": temporal_namespace,
+    "embedding_model_id": embedding_model_id,
+    "use_blob_store_for_temporal": use_blob_store_for_temporal,
+    "blob_store_bucket": blob_store_bucket,
+    "blob_store_cutoff_kb": blob_store_cutoff_kb,
+    "s3_endpoint": s3_endpoint,
+    "s3_access_key": s3_access_key,
+    "s3_secret_key": s3_secret_key,
+    "testing": testing,
+}
 
 if debug or testing:
     # Print the loaded environment variables for debugging purposes.

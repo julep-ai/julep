@@ -5,6 +5,4 @@ from .base_models import BaseOutput
 
 
 class LlamaParseFetchOutput(BaseOutput):
-    documents: list[Document] = Field(
-        ..., description="The documents returned from the spider"
-    )
+    documents: list[Document] = Field(..., description="The documents returned from the spider")

@@ -1,11 +1,11 @@
-from typing import Any, List
+from typing import Any
 
 from beartype import beartype
 from httpx import AsyncClient
 
 from ..env import integration_service_url
 
-__all__: List[str] = ["run_integration_service"]
+__all__: list[str] = ["run_integration_service"]
 
 
 @beartype

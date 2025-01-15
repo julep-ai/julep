@@ -4,8 +4,13 @@ The main purpose of these interceptors is to handle errors and prevent retrying
 certain types of errors that are known to be non-retryable.
 """
 
-from typing import Optional, Type
+import asyncio
+import sys
+from collections.abc import Awaitable, Callable, Sequence
+from functools import wraps
+from typing import Any
 
+from temporalio import workflow
 from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
 from temporalio.exceptions import ApplicationError, FailureError, TemporalError
 from temporalio.service import RPCError
@@ -23,7 +28,95 @@ from temporalio.workflow import (
     ReadOnlyContextError,
 )
 
-from .exceptions.tasks import is_retryable_error
+with workflow.unsafe.imports_passed_through():
+    from ..env import blob_store_cutoff_kb, use_blob_store_for_temporal
+    from .exceptions.tasks import is_retryable_error
+    from .protocol.remote import RemoteObject
+
+# Common exceptions that should be re-raised without modification
+PASSTHROUGH_EXCEPTIONS = (
+    ContinueAsNewError,
+    ReadOnlyContextError,
+    NondeterminismError,
+    RPCError,
+    CompleteAsyncError,
+    TemporalError,
+    FailureError,
+    ApplicationError,
+)
+
+
+def is_too_large(result: Any) -> bool:
+    return sys.getsizeof(result) > blob_store_cutoff_kb * 1024
+
+
+async def load_if_remote[T](arg: T | RemoteObject[T]) -> T:
+    if use_blob_store_for_temporal and isinstance(arg, RemoteObject):
+        return await arg.load()
+
+    return arg
+
+
+async def offload_if_large[T](result: T) -> T:
+    if use_blob_store_for_temporal and is_too_large(result):
+        return await RemoteObject.from_value(result)
+
+    return result
+
+
+def offload_to_blob_store[S, T](
+    func: Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T]],
+) -> Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T | RemoteObject[T]]]:
+    @wraps(func)
+    async def wrapper(
+        self,
+        input: ExecuteActivityInput | ExecuteWorkflowInput,
+    ) -> T | RemoteObject[T]:
+        # Load all remote arguments from the blob store
+        args: Sequence[Any] = input.args
+
+        if use_blob_store_for_temporal:
+            input.args = await asyncio.gather(*[load_if_remote(arg) for arg in args])
+
+        # Execute the function
+        result = await func(self, input)
+
+        # Save the result to the blob store if necessary
+        return await offload_if_large(result)
+
+    return wrapper
+
+
+async def handle_execution_with_errors[I, T](
+    execution_fn: Callable[[I], Awaitable[T]],
+    input: I,
+) -> T:
+    """
+    Common error handling logic for both activities and workflows.
+
+    Args:
+        execution_fn: Async function to execute with error handling
+        input: Input to the execution function
+
+    Returns:
+        The result of the execution function
+
+    Raises:
+        ApplicationError: For non-retryable errors
+        Any other exception: For retryable errors
+    """
+    try:
+        return await execution_fn(input)
+    except PASSTHROUGH_EXCEPTIONS:
+        raise
+    except BaseException as e:
+        if not is_retryable_error(e):
+            raise ApplicationError(
+                str(e),
+                type=type(e).__name__,
+                non_retryable=True,
+            )
+        raise
 
 
 class CustomActivityInterceptor(ActivityInboundInterceptor):
@@ -35,105 +128,52 @@ class CustomActivityInterceptor(ActivityInboundInterceptor):
     as non-retryable errors.
     """
 
-    async def execute_activity(self, input: ExecuteActivityInput):
+    @offload_to_blob_store
+    async def execute_activity(self, input: ExecuteActivityInput) -> Any:
         """
-        🎭 The Activity Whisperer: Handles activity execution with style and grace
-
-        This is like a safety net for your activities - catching errors and deciding
-        their fate with the wisdom of a fortune cookie.
+        Handles activity execution by intercepting errors and determining their retry behavior.
         """
-        try:
-            return await super().execute_activity(input)
-        except (
-            ContinueAsNewError,  # When you need a fresh start
-            ReadOnlyContextError,  # When someone tries to write in a museum
-            NondeterminismError,  # When chaos theory kicks in
-            RPCError,  # When computers can't talk to each other
-            CompleteAsyncError,  # When async goes wrong
-            TemporalError,  # When time itself rebels
-            FailureError,  # When failure is not an option, but happens anyway
-            ApplicationError,  # When the app says "nope"
-        ):
-            raise
-        except BaseException as e:
-            if not is_retryable_error(e):
-                # If it's not retryable, we wrap it in a nice bow (ApplicationError)
-                # and mark it as non-retryable to prevent further attempts
-                raise ApplicationError(
-                    str(e),
-                    type=type(e).__name__,
-                    non_retryable=True,
-                )
-            # For retryable errors, we'll let Temporal retry with backoff
-            # Default retry policy ensures at least 2 retries
-            raise
+        return await handle_execution_with_errors(
+            super().execute_activity,
+            input,
+        )
 
 
 class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
     """
-    🎪 The Workflow Circus Ringmaster
+    Custom interceptor for Temporal workflows.
 
-    This interceptor is like a circus ringmaster - keeping all the workflow acts
-    running smoothly and catching any lions (errors) that escape their cages.
+    Handles workflow execution errors and determines their retry behavior.
     """
 
-    async def execute_workflow(self, input: ExecuteWorkflowInput):
+    @offload_to_blob_store
+    async def execute_workflow(self, input: ExecuteWorkflowInput) -> Any:
         """
-        🎪 The Main Event: Workflow Execution Extravaganza!
-
-        Watch as we gracefully handle errors like a trapeze artist catching their partner!
+        Executes workflows and handles error cases appropriately.
         """
-        try:
-            return await super().execute_workflow(input)
-        except (
-            ContinueAsNewError,  # The show must go on!
-            ReadOnlyContextError,  # No touching, please!
-            NondeterminismError,  # When butterflies cause hurricanes
-            RPCError,  # Lost in translation
-            CompleteAsyncError,  # Async said "bye" too soon
-            TemporalError,  # Time is relative, errors are absolute
-            FailureError,  # Task failed successfully
-            ApplicationError,  # App.exe has stopped working
-        ):
-            raise
-        except BaseException as e:
-            if not is_retryable_error(e):
-                # Pack the error in a nice box with a "do not retry" sticker
-                raise ApplicationError(
-                    str(e),
-                    type=type(e).__name__,
-                    non_retryable=True,
-                )
-            # Let it retry - everyone deserves a second (or third) chance!
-            raise
+        return await handle_execution_with_errors(
+            super().execute_workflow,
+            input,
+        )
 
 
 class CustomInterceptor(Interceptor):
     """
-    🎭 The Grand Interceptor: Master of Ceremonies
-
-    This is like the backstage manager of a theater - making sure both the
-    activity actors and workflow directors have their interceptor costumes on.
+    Main interceptor class that provides both activity and workflow interceptors.
     """
 
     def intercept_activity(
         self, next: ActivityInboundInterceptor
     ) -> ActivityInboundInterceptor:
         """
-        🎬 Activity Interceptor Factory: Where the magic begins!
-
-        Creating custom activity interceptors faster than a caffeinated barista
-        makes espresso shots.
+        Creates and returns a custom activity interceptor.
         """
         return CustomActivityInterceptor(super().intercept_activity(next))
 
     def workflow_interceptor_class(
         self, input: WorkflowInterceptorClassInput
-    ) -> Optional[Type[WorkflowInboundInterceptor]]:
+    ) -> type[WorkflowInboundInterceptor] | None:
         """
-        🎪 Workflow Interceptor Class Selector
-
-        Like a matchmaker for workflows and their interceptors - a match made in
-        exception handling heaven!
+        Returns the custom workflow interceptor class.
         """
         return CustomWorkflowInterceptor

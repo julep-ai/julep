@@ -1,12 +1,8 @@
-import time
-from uuid import UUID, uuid4
-
-from cozo_migrate.api import apply, init
-from fastapi.testclient import TestClient
-from pycozo import Client as CozoClient
-from pycozo_async import Client as AsyncCozoClient
-from temporalio.client import WorkflowHandle
-from ward import fixture
+import os
+import random
+import string
+import sys
+from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
@@ -19,351 +15,318 @@ from agents_api.autogen.openapi_model import (
     CreateTransitionRequest,
     CreateUserRequest,
 )
+from agents_api.clients.pg import create_db_pool
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
-from agents_api.models.agent.create_agent import create_agent
-from agents_api.models.agent.delete_agent import delete_agent
-from agents_api.models.developer.get_developer import get_developer
-from agents_api.models.docs.create_doc import create_doc
-from agents_api.models.docs.delete_doc import delete_doc
-from agents_api.models.execution.create_execution import create_execution
-from agents_api.models.execution.create_execution_transition import (
+from agents_api.queries.agents.create_agent import create_agent
+from agents_api.queries.developers.create_developer import create_developer
+from agents_api.queries.developers.get_developer import get_developer
+from agents_api.queries.docs.create_doc import create_doc
+from agents_api.queries.docs.get_doc import get_doc
+from agents_api.queries.executions.create_execution import create_execution
+from agents_api.queries.executions.create_execution_transition import (
     create_execution_transition,
 )
-from agents_api.models.execution.create_temporal_lookup import create_temporal_lookup
-from agents_api.models.files.create_file import create_file
-from agents_api.models.files.delete_file import delete_file
-from agents_api.models.session.create_session import create_session
-from agents_api.models.session.delete_session import delete_session
-from agents_api.models.task.create_task import create_task
-from agents_api.models.task.delete_task import delete_task
-from agents_api.models.tools.create_tools import create_tools
-from agents_api.models.tools.delete_tool import delete_tool
-from agents_api.models.user.create_user import create_user
-from agents_api.models.user.delete_user import delete_user
+from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
+from agents_api.queries.files.create_file import create_file
+from agents_api.queries.sessions.create_session import create_session
+from agents_api.queries.tasks.create_task import create_task
+from agents_api.queries.tools.create_tools import create_tools
+from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
-from tests.utils import (
+from aiobotocore.session import get_session
+from fastapi.testclient import TestClient
+from temporalio.client import WorkflowHandle
+from uuid_extensions import uuid7
+from ward import fixture
+
+from .utils import (
+    get_localstack,
+    get_pg_dsn,
+)
+from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
-from tests.utils import (
-    patch_s3_client,
-)
-
-EMBEDDING_SIZE: int = 1024
 
 
 @fixture(scope="global")
-def cozo_client(migrations_dir: str = "./migrations"):
-    # Create a new client for each test
-    # and initialize the schema.
-    client = CozoClient()
+def pg_dsn():
+    with get_pg_dsn() as pg_dsn:
+        os.environ["PG_DSN"] = pg_dsn
 
-    setattr(app.state, "cozo_client", client)
-
-    init(client)
-    apply(client, migrations_dir=migrations_dir, all_=True)
-
-    return client
+        try:
+            yield pg_dsn
+        finally:
+            del os.environ["PG_DSN"]
 
 
 @fixture(scope="global")
-def cozo_clients_with_migrations(sync_client=cozo_client):
-    async_client = AsyncCozoClient()
-    async_client.embedded = sync_client.embedded
-    setattr(app.state, "async_cozo_client", async_client)
-
-    return sync_client, async_client
-
-
-@fixture(scope="global")
-def async_cozo_client(migrations_dir: str = "./migrations"):
-    # Create a new client for each test
-    # and initialize the schema.
-    client = AsyncCozoClient()
-    migrations_client = CozoClient()
-    setattr(migrations_client, "embedded", client.embedded)
-
-    setattr(app.state, "async_cozo_client", client)
-
-    init(migrations_client)
-    apply(migrations_client, migrations_dir=migrations_dir, all_=True)
-
-    return client
-
-
-@fixture(scope="global")
-def test_developer_id(cozo_client=cozo_client):
+def test_developer_id():
     if not multi_tenant_mode:
-        yield UUID(int=0)
-        return
+        return UUID(int=0)
 
-    developer_id = uuid4()
-
-    cozo_client.run(
-        f"""
-    ?[developer_id, email, settings] <- [["{str(developer_id)}", "developers@julep.ai", {{}}]]
-    :insert developers {{ developer_id, email, settings }}
-    """
-    )
-
-    yield developer_id
-
-    cozo_client.run(
-        f"""
-    ?[developer_id, email] <- [["{str(developer_id)}", "developers@julep.ai"]]
-    :delete developers {{ developer_id, email }}
-    """
-    )
+    return uuid7()
 
 
 @fixture(scope="global")
-def test_file(client=cozo_client, developer_id=test_developer_id):
-    file = create_file(
+async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
+    pool = await create_db_pool(dsn=dsn)
+    return await get_developer(
         developer_id=developer_id,
-        data=CreateFileRequest(
-            name="Hello",
-            description="World",
-            mime_type="text/plain",
-            content="eyJzYW1wbGUiOiAidGVzdCJ9",
-        ),
-        client=client,
-    )
-
-    yield file
-
-    delete_file(
-        developer_id=developer_id,
-        file_id=file.id,
-        client=client,
-    )
-
-
-@fixture(scope="global")
-def test_developer(cozo_client=cozo_client, developer_id=test_developer_id):
-    return get_developer(
-        developer_id=developer_id,
-        client=cozo_client,
+        connection_pool=pool,
     )
 
 
 @fixture(scope="test")
 def patch_embed_acompletion():
     output = {"role": "assistant", "content": "Hello, world!"}
-
     with patch_embed_acompletion_ctx(output) as (embed, acompletion):
         yield embed, acompletion
 
 
-@fixture(scope="global")
-def test_agent(cozo_client=cozo_client, developer_id=test_developer_id):
-    agent = create_agent(
-        developer_id=developer_id,
+@fixture(scope="test")
+async def test_agent(dsn=pg_dsn, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+
+    return await create_agent(
+        developer_id=developer.id,
         data=CreateAgentRequest(
             model="gpt-4o-mini",
             name="test agent",
             about="test agent about",
             metadata={"test": "test"},
         ),
-        client=cozo_client,
-    )
-
-    yield agent
-
-    delete_agent(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        client=cozo_client,
-    )
-
-
-@fixture(scope="global")
-def test_user(cozo_client=cozo_client, developer_id=test_developer_id):
-    user = create_user(
-        developer_id=developer_id,
-        data=CreateUserRequest(
-            name="test user",
-            about="test user about",
-        ),
-        client=cozo_client,
-    )
-
-    yield user
-
-    delete_user(
-        developer_id=developer_id,
-        user_id=user.id,
-        client=cozo_client,
-    )
-
-
-@fixture(scope="global")
-def test_session(
-    cozo_client=cozo_client,
-    developer_id=test_developer_id,
-    test_user=test_user,
-    test_agent=test_agent,
-):
-    session = create_session(
-        developer_id=developer_id,
-        data=CreateSessionRequest(
-            agent=test_agent.id, user=test_user.id, metadata={"test": "test"}
-        ),
-        client=cozo_client,
-    )
-
-    yield session
-
-    delete_session(
-        developer_id=developer_id,
-        session_id=session.id,
-        client=cozo_client,
-    )
-
-
-@fixture(scope="global")
-def test_doc(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    doc = create_doc(
-        developer_id=developer_id,
-        owner_type="agent",
-        owner_id=agent.id,
-        data=CreateDocRequest(title="Hello", content=["World"]),
-        client=client,
-    )
-
-    time.sleep(0.5)
-
-    yield doc
-
-    delete_doc(
-        developer_id=developer_id,
-        doc_id=doc.id,
-        owner_type="agent",
-        owner_id=agent.id,
-        client=client,
-    )
-
-
-@fixture(scope="global")
-def test_user_doc(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    user=test_user,
-):
-    doc = create_doc(
-        developer_id=developer_id,
-        owner_type="user",
-        owner_id=user.id,
-        data=CreateDocRequest(title="Hello", content=["World"]),
-        client=client,
-    )
-
-    time.sleep(0.5)
-
-    yield doc
-
-    delete_doc(
-        developer_id=developer_id,
-        doc_id=doc.id,
-        owner_type="user",
-        owner_id=user.id,
-        client=client,
-    )
-
-
-@fixture(scope="global")
-def test_task(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    task = create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [{"evaluate": {"hello": '"world"'}}],
-            }
-        ),
-        client=client,
-    )
-
-    yield task
-
-    delete_task(
-        developer_id=developer_id,
-        task_id=task.id,
-        client=client,
-    )
-
-
-@fixture(scope="global")
-def test_execution(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    task=test_task,
-):
-    workflow_handle = WorkflowHandle(
-        client=None,
-        id="blah",
-    )
-
-    execution = create_execution(
-        developer_id=developer_id,
-        task_id=task.id,
-        data=CreateExecutionRequest(input={"test": "test"}),
-        client=client,
-    )
-    create_temporal_lookup(
-        developer_id=developer_id,
-        execution_id=execution.id,
-        workflow_handle=workflow_handle,
-        client=client,
-    )
-
-    yield execution
-
-    client.run(
-        f"""
-    ?[execution_id] <- ["{str(execution.id)}"]
-    :delete executions {{ execution_id  }}
-    """
+        connection_pool=pool,
     )
 
 
 @fixture(scope="test")
-def test_execution_started(
-    client=cozo_client,
+async def test_user(dsn=pg_dsn, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+
+    return await create_user(
+        developer_id=developer.id,
+        data=CreateUserRequest(
+            name="test user",
+            about="test user about",
+        ),
+        connection_pool=pool,
+    )
+
+
+@fixture(scope="test")
+async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+    return await create_file(
+        developer_id=developer.id,
+        data=CreateFileRequest(
+            name="Hello",
+            description="World",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+        ),
+        connection_pool=pool,
+    )
+
+
+@fixture(scope="test")
+async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+    resp = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Hello",
+            content=["World", "World2", "World3"],
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+
+    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
+    # ensuring it's up-to-date before executing queries.
+    # This can be achieved by executing a REINDEX command
+    await pool.execute("REINDEX DATABASE")
+
+    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
+
+    # TODO: Delete the doc
+    # await delete_doc(
+    #     developer_id=developer.id,
+    #     doc_id=resp.id,
+    #     owner_type="agent",
+    #     owner_id=agent.id,
+    #     connection_pool=pool,
+    # )
+
+
+@fixture(scope="test")
+async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test_doc):
+    pool = await create_db_pool(dsn=dsn)
+    await pool.execute(
+        """
+        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
+        VALUES ($1, $2, 0, 0, $3, $4)
+    """,
+        developer.id,
+        doc.id,
+        doc.content[0] if isinstance(doc.content, list) else doc.content,
+        f"[{', '.join([str(x) for x in [1.0] * 1024])}]",
+    )
+
+    yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
+
+
+@fixture(scope="test")
+async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+    resp = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Hello",
+            content=["World", "World2", "World3"],
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
+    # ensuring it's up-to-date before executing queries.
+    # This can be achieved by executing a REINDEX command
+    await pool.execute("REINDEX DATABASE")
+
+    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
+
+    # TODO: Delete the doc
+    # await delete_doc(
+    #     developer_id=developer.id,
+    #     doc_id=resp.id,
+    #     owner_type="user",
+    #     owner_id=user.id,
+    #     connection_pool=pool,
+    # )
+
+
+@fixture(scope="test")
+async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+    return await create_task(
+        developer_id=developer.id,
+        agent_id=agent.id,
+        task_id=uuid7(),
+        data=CreateTaskRequest(
+            name="test task",
+            description="test task about",
+            input_schema={"type": "object", "additionalProperties": True},
+            main=[{"evaluate": {"hi": "_"}}],
+            metadata={"test": True},
+        ),
+        connection_pool=pool,
+    )
+
+
+@fixture(scope="test")
+async def random_email():
+    return f"{''.join([random.choice(string.ascii_lowercase) for _ in range(10)])}@mail.com"
+
+
+@fixture(scope="test")
+async def test_new_developer(dsn=pg_dsn, email=random_email):
+    pool = await create_db_pool(dsn=dsn)
+    dev_id = uuid7()
+    await create_developer(
+        email=email,
+        active=True,
+        tags=["tag1"],
+        settings={"key1": "val1"},
+        developer_id=dev_id,
+        connection_pool=pool,
+    )
+
+    return await get_developer(
+        developer_id=dev_id,
+        connection_pool=pool,
+    )
+
+
+@fixture(scope="test")
+async def test_session(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    test_user=test_user,
+    test_agent=test_agent,
+):
+    pool = await create_db_pool(dsn=dsn)
+
+    return await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=test_agent.id,
+            user=test_user.id,
+            metadata={"test": "test"},
+            system_template="test system template",
+        ),
+        connection_pool=pool,
+    )
+
+
+@fixture(scope="global")
+async def test_execution(
+    dsn=pg_dsn,
     developer_id=test_developer_id,
     task=test_task,
 ):
+    pool = await create_db_pool(dsn=dsn)
     workflow_handle = WorkflowHandle(
         client=None,
         id="blah",
     )
 
-    execution = create_execution(
+    execution = await create_execution(
         developer_id=developer_id,
         task_id=task.id,
         data=CreateExecutionRequest(input={"test": "test"}),
-        client=client,
+        connection_pool=pool,
     )
-    create_temporal_lookup(
-        developer_id=developer_id,
+    await create_temporal_lookup(
         execution_id=execution.id,
         workflow_handle=workflow_handle,
-        client=client,
+        connection_pool=pool,
+    )
+    yield execution
+
+
+@fixture(scope="test")
+async def test_execution_started(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="blah",
+    )
+
+    execution = await create_execution(
+        developer_id=developer_id,
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "test"}),
+        connection_pool=pool,
+    )
+    await create_temporal_lookup(
+        execution_id=execution.id,
+        workflow_handle=workflow_handle,
+        connection_pool=pool,
     )
 
     # Start the execution
-    create_execution_transition(
+    await create_execution_transition(
         developer_id=developer_id,
-        task_id=task.id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
             type="init",
@@ -371,27 +334,19 @@ def test_execution_started(
             current={"workflow": "main", "step": 0},
             next={"workflow": "main", "step": 0},
         ),
-        update_execution_status=True,
-        client=client,
+        connection_pool=pool,
     )
-
     yield execution
-
-    client.run(
-        f"""
-    ?[execution_id, task_id] <- [[to_uuid("{str(execution.id)}"), to_uuid("{str(task.id)}")]]
-    :delete executions {{ execution_id, task_id }}
-    """
-    )
 
 
 @fixture(scope="global")
-def test_transition(
-    client=cozo_client,
+async def test_transition(
+    dsn=pg_dsn,
     developer_id=test_developer_id,
-    execution=test_execution,
+    execution=test_execution_started,
 ):
-    transition = create_execution_transition(
+    pool = await create_db_pool(dsn=dsn)
+    transition = await create_execution_transition(
         developer_id=developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
@@ -400,63 +355,46 @@ def test_transition(
             current={"workflow": "main", "step": 0},
             next={"workflow": "wf1", "step": 1},
         ),
-        client=client,
+        connection_pool=pool,
     )
-
     yield transition
 
-    client.run(
-        f"""
-    ?[transition_id] <- ["{str(transition.id)}"]
-    :delete transitions {{ transition_id  }}
-    """
-    )
 
-
-@fixture(scope="global")
-def test_tool(
-    client=cozo_client,
+@fixture(scope="test")
+async def test_tool(
+    dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
+    pool = await create_db_pool(dsn=dsn)
     function = {
         "description": "A function that prints hello world",
         "parameters": {"type": "object", "properties": {}},
     }
 
-    tool = {
+    tool_spec = {
         "function": function,
         "name": "hello_world1",
         "type": "function",
     }
 
-    [tool, *_] = create_tools(
+    [tool, *_] = await create_tools(
         developer_id=developer_id,
         agent_id=agent.id,
-        data=[CreateToolRequest(**tool)],
-        client=client,
+        data=[CreateToolRequest(**tool_spec)],
+        connection_pool=pool,
     )
-
-    yield tool
-
-    delete_tool(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        tool_id=tool.id,
-        client=client,
-    )
+    return tool
 
 
 @fixture(scope="global")
-def client(cozo_client=cozo_client):
-    client = TestClient(app=app)
-    app.state.cozo_client = cozo_client
-
-    return client
+def client(_dsn=pg_dsn):
+    with TestClient(app=app) as client:
+        yield client
 
 
 @fixture(scope="global")
-def make_request(client=client, developer_id=test_developer_id):
+async def make_request(client=client, developer_id=test_developer_id):
     def _make_request(method, url, **kwargs):
         headers = kwargs.pop("headers", {})
         headers = {
@@ -467,12 +405,30 @@ def make_request(client=client, developer_id=test_developer_id):
         if multi_tenant_mode:
             headers["X-Developer-Id"] = str(developer_id)
 
+        headers["Content-Length"] = str(sys.getsizeof(kwargs.get("json", {})))
+
         return client.request(method, url, headers=headers, **kwargs)
 
     return _make_request
 
 
 @fixture(scope="global")
-def s3_client():
-    with patch_s3_client() as s3_client:
-        yield s3_client
+async def s3_client():
+    with get_localstack() as localstack:
+        s3_endpoint = localstack.get_url()
+
+        session = get_session()
+        s3_client = await session.create_client(
+            "s3",
+            endpoint_url=s3_endpoint,
+            aws_access_key_id=localstack.env["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=localstack.env["AWS_SECRET_ACCESS_KEY"],
+        ).__aenter__()
+
+        app.state.s3_client = s3_client
+
+        try:
+            yield s3_client
+        finally:
+            await s3_client.close()
+            app.state.s3_client = None

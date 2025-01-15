@@ -49,7 +49,6 @@ Your contributions, big or small, are valuable to us. Let's build something amaz
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 Table of Contents</h3>
 
-- [Call for Contributors 🌟](#call-for-contributors-)
 - [Introduction](#introduction)
 - [Key Features](#key-features)
 - [Quick Example](#quick-example)
@@ -62,15 +61,9 @@ Your contributions, big or small, are valuable to us. Let's build something amaz
 - [Understanding Tasks](#understanding-tasks)
   - [Lifecycle of a Task](#lifecycle-of-a-task)
   - [Types of Workflow Steps](#types-of-workflow-steps)
-    - [Common Steps](#common-steps)
-    - [Key-Value Steps](#key-value-steps)
-    - [Iteration Steps](#iteration-steps)
-    - [Conditional Steps](#conditional-steps)
-    - [Other Control Flow](#other-control-flow)
 - [Tool Types](#tool-types)
   - [User-defined `functions`](#user-defined-functions)
   - [`system` tools](#system-tools)
-    - [Available `system` resources and operations](#available-system-resources-and-operations)
   - [Built-in `integrations`](#built-in-integrations)
   - [Direct `api_calls`](#direct-api_calls)
 - [Integrations](#integrations)

@@ -1,12 +1,10 @@
-from typing import List
-
 from ...providers import available_providers
 from .router import router
 
 
 @router.get("/integrations", tags=["integrations"])
-async def get_integrations() -> List[dict]:
-    integrations = [
+async def get_integrations() -> list[dict]:
+    return [
         {
             "provider": p.provider,
             "setup": p.setup.model_json_schema() if p.setup else None,
@@ -28,4 +26,3 @@ async def get_integrations() -> List[dict]:
         }
         for p in available_providers.values()
     ]
-    return integrations

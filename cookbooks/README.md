@@ -16,8 +16,10 @@ Each notebook explores a unique use case, demonstrating different aspects of Jul
 | `03-trip-planning-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb) | Plans trips using weather data and location information | Yes |
 | `04-hook-generator-trending-reels.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-hook-generator-trending-reels.ipynb) | Generates engaging hooks for trending social media reels | Yes |
 | `05-video-processing-with-natural-language.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb) | Processes videos using natural language commands | Yes |
-| `06-browser-use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/`06-browser-use.ipynb) | Demonstrates browser automation capabilities | Yes |
-
+| `06-browser-use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb) | Demonstrates browser automation capabilities | Yes |
+| `07-personalized-research-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb) | Demonstrates personalized research assistant capabilities | Yes |
+| `08-customer-support-chatbot.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/08-customer-support-chatbot.ipynb) | Demonstrates customer support chatbot capabilities | Yes |
+| `09_companion_agent.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/09_companion_agent.ipynb) | Demonstrates companion agent capabilities like story generation, user persona management, and more | Yes |
 
 ## Potential Cookbooks for Contributors
 
@@ -25,8 +27,6 @@ We welcome contributions to expand our cookbook collection. Here are some ideas 
 
 | **Potential Cookbook Name** | **Description** | **Key Features** |
 |---------------------------- |----------------- |------------------|
-| Automated Research Assistant | Conducts research on given topics using web search and summarization | Web search, Tool integration, Multi-step tasks |
-| Customer Support Chatbot | Interacts with users, analyzes sentiment, and routes complex issues | Chat functionality, Sentiment analysis, Conditional logic |
 | Daily News Aggregator | Collects and summarizes news articles, emails summaries to subscribers | Scheduled tasks, Email integration, Content summarization |
 | Social Media Monitoring System | Monitors social platforms for keywords and sends alerts | API integration, Real-time monitoring, Alert system |
 | Weather-Based Notification Service | Checks weather forecasts and notifies users of severe conditions | Weather API integration, Conditional alerts, Scheduling |

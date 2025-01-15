@@ -3,16 +3,15 @@ from typing import Any
 from beartype import beartype
 from temporalio import activity
 
+from ..app import app
 from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
 from ..common.protocol.tasks import ExecutionInput, StepContext
-from ..common.storage_handler import auto_blob_store
 from ..env import testing
-from ..models.tools import get_tool_args_from_metadata
+from ..queries import tools
 
 
-@auto_blob_store(deep=True)
 @beartype
 async def execute_integration(
     context: StepContext,
@@ -22,23 +21,35 @@ async def execute_integration(
     setup: dict[str, Any] = {},
 ) -> Any:
     if not isinstance(context.execution_input, ExecutionInput):
-        raise TypeError("Expected ExecutionInput type for context.execution_input")
+        msg = "Expected ExecutionInput type for context.execution_input"
+        raise TypeError(msg)
 
     developer_id = context.execution_input.developer_id
     agent_id = context.execution_input.agent.id
+
+    if context.execution_input.task is None:
+        msg = "Task cannot be None in execution_input"
+        raise ValueError(msg)
+
     task_id = context.execution_input.task.id
 
-    merged_tool_args = get_tool_args_from_metadata(
-        developer_id=developer_id, agent_id=agent_id, task_id=task_id, arg_type="args"
+    merged_tool_args = await tools.get_tool_args_from_metadata(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        arg_type="args",
+        connection_pool=app.state.postgres_pool,
     )
 
-    merged_tool_setup = get_tool_args_from_metadata(
-        developer_id=developer_id, agent_id=agent_id, task_id=task_id, arg_type="setup"
+    merged_tool_setup = await tools.get_tool_args_from_metadata(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        arg_type="setup",
+        connection_pool=app.state.postgres_pool,
     )
 
-    arguments = (
-        merged_tool_args.get(tool_name, {}) | (integration.arguments or {}) | arguments
-    )
+    arguments = merged_tool_args.get(tool_name, {}) | (integration.arguments or {}) | arguments
 
     setup = merged_tool_setup.get(tool_name, {}) | (integration.setup or {}) | setup
 
@@ -53,10 +64,7 @@ async def execute_integration(
             arguments=arguments,
         )
 
-        if (
-            "error" in integration_service_response
-            and integration_service_response["error"]
-        ):
+        if integration_service_response.get("error"):
             raise IntegrationExecutionException(
                 integration=integration,
                 error=integration_service_response["error"],
@@ -69,9 +77,7 @@ async def execute_integration(
             integration_str = integration.provider + (
                 "." + integration.method if integration.method else ""
             )
-            activity.logger.error(
-                f"Error in execute_integration {integration_str}: {e}"
-            )
+            activity.logger.error(f"Error in execute_integration {integration_str}: {e}")
 
         raise
 

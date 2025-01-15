@@ -61,5 +61,6 @@ async def transition(
         )
 
     except Exception as e:
-        workflow.logger.error(f"Error in transition: {str(e)}")
-        raise ApplicationError(f"Error in transition: {e}") from e
+        workflow.logger.error(f"Error in transition: {e!s}")
+        msg = f"Error in transition: {e}"
+        raise ApplicationError(msg) from e

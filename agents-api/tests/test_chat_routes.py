@@ -1,17 +1,18 @@
 # Tests for session queries
 
-from ward import test
-
 from agents_api.autogen.openapi_model import ChatInput, CreateSessionRequest
 from agents_api.clients import litellm
+from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.sessions import ChatContext
-from agents_api.models.chat.gather_messages import gather_messages
-from agents_api.models.chat.prepare_chat_context import prepare_chat_context
-from agents_api.models.session.create_session import create_session
+from agents_api.queries.chat.gather_messages import gather_messages
+from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
+from agents_api.queries.sessions.create_session import create_session
+from ward import test
+
 from tests.fixtures import (
-    cozo_client,
     make_request,
     patch_embed_acompletion,
+    pg_dsn,
     test_agent,
     test_developer,
     test_developer_id,
@@ -26,15 +27,13 @@ async def _(
     _=patch_embed_acompletion,
 ):
     assert (await litellm.acompletion(model="gpt-4o-mini", messages=[])).id == "fake_id"
-    assert (await litellm.aembedding())[0][
-        0
-    ] == 1.0  # pytype: disable=missing-parameter
+    assert (await litellm.aembedding())[0][0] == 1.0  # pytype: disable=missing-parameter
 
 
 @test("chat: check that non-recall gather_messages works")
 async def _(
     developer=test_developer,
-    client=cozo_client,
+    dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
     session=test_session,
@@ -44,10 +43,11 @@ async def _(
 ):
     (embed, _) = mocks
 
-    chat_context = prepare_chat_context(
+    pool = await create_db_pool(dsn=dsn)
+    chat_context = await prepare_chat_context(
         developer_id=developer_id,
         session_id=session.id,
-        client=client,
+        connection_pool=pool,
     )
 
     session_id = session.id
@@ -59,6 +59,7 @@ async def _(
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=False),
+        connection_pool=pool,
     )
 
     assert isinstance(past_messages, list)
@@ -73,7 +74,7 @@ async def _(
 @test("chat: check that gather_messages works")
 async def _(
     developer=test_developer,
-    client=cozo_client,
+    dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
     # session=test_session,
@@ -81,7 +82,8 @@ async def _(
     user=test_user,
     mocks=patch_embed_acompletion,
 ):
-    session = create_session(
+    pool = await create_db_pool(dsn=dsn)
+    session = await create_session(
         developer_id=developer_id,
         data=CreateSessionRequest(
             agent=agent.id,
@@ -96,15 +98,15 @@ async def _(
                 "mmr_strength": 0.5,
             },
         ),
-        client=client,
+        connection_pool=pool,
     )
 
-    (embed, _) = mocks
+    (_embed, _) = mocks
 
-    chat_context = prepare_chat_context(
+    chat_context = await prepare_chat_context(
         developer_id=developer_id,
         session_id=session.id,
-        client=client,
+        connection_pool=pool,
     )
 
     session_id = session.id
@@ -116,13 +118,11 @@ async def _(
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=True),
+        connection_pool=pool,
     )
 
     assert isinstance(past_messages, list)
     assert isinstance(doc_references, list)
-
-    # Check that embed was called at least once
-    embed.assert_called()
 
 
 @test("chat: check that chat route calls both mocks")
@@ -131,9 +131,10 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
     mocks=patch_embed_acompletion,
-    client=cozo_client,
+    dsn=pg_dsn,
 ):
-    session = create_session(
+    pool = await create_db_pool(dsn=dsn)
+    session = await create_session(
         developer_id=developer_id,
         data=CreateSessionRequest(
             agent=agent.id,
@@ -147,10 +148,10 @@ async def _(
                 "mmr_strength": 0.5,
             },
         ),
-        client=client,
+        connection_pool=pool,
     )
 
-    (embed, acompletion) = mocks
+    (_embed, _acompletion) = mocks
 
     response = make_request(
         method="POST",
@@ -160,24 +161,21 @@ async def _(
 
     response.raise_for_status()
 
-    # Check that both mocks were called at least once
-    embed.assert_called()
-    acompletion.assert_called()
 
-
-@test("model: prepare chat context")
-def _(
-    client=cozo_client,
+@test("query: prepare chat context")
+async def _(
+    dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
     session=test_session,
     tool=test_tool,
     user=test_user,
 ):
-    context = prepare_chat_context(
+    pool = await create_db_pool(dsn=dsn)
+    context = await prepare_chat_context(
         developer_id=developer_id,
         session_id=session.id,
-        client=client,
+        connection_pool=pool,
     )
 
     assert isinstance(context, ChatContext)

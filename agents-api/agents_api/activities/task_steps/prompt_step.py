@@ -8,7 +8,6 @@ from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
-from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import debug
 from .base_evaluate import base_evaluate
@@ -28,7 +27,7 @@ def format_tool(tool: Tool) -> dict:
         }
 
     # For other tool types, we need to translate them to the OpenAI function tool format
-    formatted = {
+    return {
         "type": "function",
         "function": {"name": tool.name, "description": tool.description},
     }
@@ -55,39 +54,29 @@ def format_tool(tool: Tool) -> dict:
     # elif tool.type == "api_call":
     #     raise NotImplementedError("API call tools are not supported")
 
-    return formatted
-
 
 EVAL_PROMPT_PREFIX = "$_ "
 
 
 @activity.defn
-@auto_blob_store(deep=True)
 @beartype
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
-    context_data: dict = await context.prepare_for_step(include_remote=True)
+    context_data: dict = await context.prepare_for_step()
 
     # If the prompt is a string and starts with $_ then we need to evaluate it
-    should_evaluate_prompt = isinstance(prompt, str) and prompt.startswith(
-        EVAL_PROMPT_PREFIX
-    )
+    should_evaluate_prompt = isinstance(prompt, str) and prompt.startswith(EVAL_PROMPT_PREFIX)
 
     if should_evaluate_prompt:
-        prompt = await base_evaluate(
-            prompt[len(EVAL_PROMPT_PREFIX) :].strip(), context_data
-        )
+        prompt = await base_evaluate(prompt[len(EVAL_PROMPT_PREFIX) :].strip(), context_data)
 
-        if not isinstance(prompt, (str, list)):
-            raise ApplicationError(
-                "Invalid prompt expression, expected a string or list"
-            )
+        if not isinstance(prompt, str | list):
+            msg = "Invalid prompt expression, expected a string or list"
+            raise ApplicationError(msg)
 
     # Wrap the prompt in a list if it is not already
-    prompt = (
-        prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
-    )
+    prompt = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
 
     # Render template messages if we didn't evaluate the prompt
     if not should_evaluate_prompt:
@@ -99,7 +88,8 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         )
 
     if not isinstance(context.execution_input, ExecutionInput):
-        raise TypeError("Expected ExecutionInput type for context.execution_input")
+        msg = "Expected ExecutionInput type for context.execution_input"
+        raise TypeError(msg)
 
     # Get settings and run llm
     agent_default_settings: dict = (
@@ -109,9 +99,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     )
 
     agent_model: str = (
-        context.execution_input.agent.model
-        if context.execution_input.agent.model
-        else "gpt-4o"
+        context.execution_input.agent.model if context.execution_input.agent.model else "gpt-4o"
     )
 
     excluded_keys = [
@@ -128,7 +116,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     passed_settings: dict = context.current_step.model_dump(
         exclude=excluded_keys, exclude_unset=True
     )
-    passed_settings.update(passed_settings.pop("settings", {}))
+    passed_settings.update(passed_settings.pop("settings", {}) or {})
 
     if not passed_settings.get("tools"):
         passed_settings.pop("tool_choice", None)
@@ -207,11 +195,13 @@ async def prompt_step(context: StepContext) -> StepOutcome:
 
     if context.current_step.unwrap:
         if len(response.choices) != 1:
-            raise ApplicationError("Only one choice is supported")
+            msg = "Only one choice is supported"
+            raise ApplicationError(msg)
 
         choice = response.choices[0]
         if choice.finish_reason == "tool_calls":
-            raise ApplicationError("Tool calls cannot be unwrapped")
+            msg = "Tool calls cannot be unwrapped"
+            raise ApplicationError(msg)
 
         return StepOutcome(
             output=choice.message.content,
@@ -231,7 +221,8 @@ async def prompt_step(context: StepContext) -> StepOutcome:
 
                 original_tool = tools_mapping.get(call_name)
                 if not original_tool:
-                    raise ApplicationError(f"Tool {call_name} not found")
+                    msg = f"Tool {call_name} not found"
+                    raise ApplicationError(msg)
 
                 if original_tool.type == "function":
                     continue

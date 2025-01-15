@@ -44,6 +44,12 @@ model_list:
     api_key: os.environ/OPENAI_API_KEY
     tags: ["paid"]
 
+- model_name: o1
+  litellm_params:
+    model: openai/o1-mini
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["paid"]
+
 # Anthropic models
 - model_name: "claude-3.5-sonnet-20240620"
   litellm_params:
@@ -104,6 +110,48 @@ model_list:
 - model_name: "qwen-2.5-72b-instruct"
   litellm_params:
     model: "openrouter/qwen/qwen-2.5-72b-instruct"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+ 
+- model_name: "eva-llama-3.33-70b"
+  litellm_params:
+    model: "openrouter/eva-unit-01/eva-llama-3.33-70b"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+  
+- model_name: "l3.1-euryale-70b"
+  litellm_params:
+    model: "openrouter/sao10k/l3.1-euryale-70b"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "l3.3-euryale-70b"
+  litellm_params:
+    model: "openrouter/sao10k/l3.3-euryale-70b"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "magnum-v4-72b"
+  litellm_params:
+    model: "openrouter/anthracite-org/magnum-v4-72b"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "eva-qwen-2.5-72b"
+  litellm_params:
+    model: "openrouter/eva-unit-01/eva-qwen-2.5-72b"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "hermes-3-llama-3.1-70b"
+  litellm_params:
+    model: "openrouter/nousresearch/hermes-3-llama-3.1-70b"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "deepseek-chat"
+  litellm_params:
+    model: "openrouter/deepseek/deepseek-chat"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 

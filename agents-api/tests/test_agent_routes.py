@@ -1,6 +1,6 @@
-# Tests for agent queries
-from uuid import uuid4
+# # Tests for agent queries
 
+from uuid_extensions import uuid7
 from ward import test
 
 from tests.fixtures import client, make_request, test_agent
@@ -8,11 +8,11 @@ from tests.fixtures import client, make_request, test_agent
 
 @test("route: unauthorized should fail")
 def _(client=client):
-    data = dict(
-        name="test agent",
-        about="test agent about",
-        model="gpt-4o-mini",
-    )
+    data = {
+        "name": "test agent",
+        "about": "test agent about",
+        "model": "gpt-4o-mini",
+    }
 
     response = client.request(
         method="POST",
@@ -25,11 +25,11 @@ def _(client=client):
 
 @test("route: create agent")
 def _(make_request=make_request):
-    data = dict(
-        name="test agent",
-        about="test agent about",
-        model="gpt-4o-mini",
-    )
+    data = {
+        "name": "test agent",
+        "about": "test agent about",
+        "model": "gpt-4o-mini",
+    }
 
     response = make_request(
         method="POST",
@@ -42,12 +42,12 @@ def _(make_request=make_request):
 
 @test("route: create agent with instructions")
 def _(make_request=make_request):
-    data = dict(
-        name="test agent",
-        about="test agent about",
-        model="gpt-4o-mini",
-        instructions=["test instruction"],
-    )
+    data = {
+        "name": "test agent",
+        "about": "test agent about",
+        "model": "gpt-4o-mini",
+        "instructions": ["test instruction"],
+    }
 
     response = make_request(
         method="POST",
@@ -60,14 +60,14 @@ def _(make_request=make_request):
 
 @test("route: create or update agent")
 def _(make_request=make_request):
-    agent_id = str(uuid4())
+    agent_id = str(uuid7())
 
-    data = dict(
-        name="test agent",
-        about="test agent about",
-        model="gpt-4o-mini",
-        instructions=["test instruction"],
-    )
+    data = {
+        "name": "test agent",
+        "about": "test agent about",
+        "model": "gpt-4o-mini",
+        "instructions": ["test instruction"],
+    }
 
     response = make_request(
         method="POST",
@@ -80,7 +80,7 @@ def _(make_request=make_request):
 
 @test("route: get agent not exists")
 def _(make_request=make_request):
-    agent_id = str(uuid4())
+    agent_id = str(uuid7())
 
     response = make_request(
         method="GET",
@@ -104,12 +104,12 @@ def _(make_request=make_request, agent=test_agent):
 
 @test("route: delete agent")
 def _(make_request=make_request):
-    data = dict(
-        name="test agent",
-        about="test agent about",
-        model="gpt-4o-mini",
-        instructions=["test instruction"],
-    )
+    data = {
+        "name": "test agent",
+        "about": "test agent about",
+        "model": "gpt-4o-mini",
+        "instructions": ["test instruction"],
+    }
 
     response = make_request(
         method="POST",
@@ -135,13 +135,13 @@ def _(make_request=make_request):
 
 @test("route: update agent")
 def _(make_request=make_request, agent=test_agent):
-    data = dict(
-        name="updated agent",
-        about="updated agent about",
-        default_settings={"temperature": 1.0},
-        model="gpt-4o-mini",
-        metadata={"hello": "world"},
-    )
+    data = {
+        "name": "updated agent",
+        "about": "updated agent about",
+        "default_settings": {"temperature": 1.0},
+        "model": "gpt-4o-mini",
+        "metadata": {"hello": "world"},
+    }
 
     agent_id = str(agent.id)
     response = make_request(
@@ -169,12 +169,12 @@ def _(make_request=make_request, agent=test_agent):
 def _(make_request=make_request, agent=test_agent):
     agent_id = str(agent.id)
 
-    data = dict(
-        name="patched agent",
-        about="patched agent about",
-        default_settings={"temperature": 1.0},
-        metadata={"something": "else"},
-    )
+    data = {
+        "name": "patched agent",
+        "about": "patched agent about",
+        "default_settings": {"temperature": 1.0},
+        "metadata": {"hello": "world"},
+    }
 
     response = make_request(
         method="PATCH",
