@@ -11,7 +11,6 @@ from ..autogen.Tools import (
     BrowserbaseCreateSessionArguments,
     BrowserbaseExtensionArguments,
     BrowserbaseGetSessionArguments,
-    BrowserbaseGetSessionConnectUrlArguments,
     BrowserbaseGetSessionLiveUrlsArguments,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
@@ -38,7 +37,6 @@ from .browserbase import (
     BrowserbaseContextOutput,
     BrowserbaseCreateSessionOutput,
     BrowserbaseExtensionOutput,
-    BrowserbaseGetSessionConnectUrlOutput,
     BrowserbaseGetSessionLiveUrlsOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
@@ -81,7 +79,6 @@ ExecutionArguments = (
     | BraveSearchArguments
     | BrowserbaseCreateSessionArguments
     | BrowserbaseGetSessionArguments
-    | BrowserbaseGetSessionConnectUrlArguments
     | BrowserbaseGetSessionLiveUrlsArguments
     | BrowserbaseCompleteSessionArguments
     | BrowserbaseContextArguments
@@ -102,7 +99,6 @@ ExecutionResponse = (
     | BraveSearchOutput
     | BrowserbaseCreateSessionOutput
     | BrowserbaseGetSessionOutput
-    | BrowserbaseGetSessionConnectUrlOutput
     | BrowserbaseGetSessionLiveUrlsOutput
     | BrowserbaseCompleteSessionOutput
     | BrowserbaseContextOutput

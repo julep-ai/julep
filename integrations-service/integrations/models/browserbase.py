@@ -13,7 +13,7 @@ class BrowserbaseListSessionsOutput(BaseOutput):
 
 class BrowserbaseCreateSessionOutput(BaseOutput):
     id: str = Field(..., description="Unique identifier for the session")
-    connectionUrl: str | None = Field(None, description="The connection URL for the session")
+    connect_url: str | None = Field(None, description="The connection URL for the session")
     createdAt: str | None = Field(
         None, description="Timestamp indicating when the session was created"
     )
@@ -72,10 +72,6 @@ class BrowserbaseCompleteSessionOutput(BaseOutput):
 
 class BrowserbaseExtensionOutput(BaseOutput):
     id: str = Field(..., description="Unique identifier for the extension")
-
-
-class BrowserbaseGetSessionConnectUrlOutput(BaseOutput):
-    url: AnyUrl = Field(..., description="The connection URL for the session")
 
 
 class PageInfo(BaseOutput):

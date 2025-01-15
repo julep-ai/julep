@@ -16,7 +16,6 @@ from ...autogen.Tools import (
     BrowserbaseCreateSessionArguments,
     BrowserbaseExtensionArguments,
     BrowserbaseGetSessionArguments,
-    BrowserbaseGetSessionConnectUrlArguments,
     BrowserbaseGetSessionLiveUrlsArguments,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
@@ -28,7 +27,6 @@ from ...env import (
 from ...models import (
     BrowserbaseCompleteSessionOutput,
     BrowserbaseCreateSessionOutput,
-    BrowserbaseGetSessionConnectUrlOutput,
     BrowserbaseGetSessionLiveUrlsOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
@@ -104,7 +102,7 @@ async def create_session(
     # Convert datetime fields to ISO format strings
     return BrowserbaseCreateSessionOutput(
         id=session.id,
-        connectionUrl=session.connect_url,
+        connect_url=session.connect_url,
         createdAt=session.created_at.isoformat() if session.created_at else None,
         projectId=session.project_id,
         startedAt=session.started_at.isoformat() if session.started_at else None,
@@ -188,28 +186,6 @@ async def get_live_urls(
         return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
     except Exception as e:
         print(f"Error getting debug URLs: {e}")
-        raise
-
-
-@beartype
-@retry(
-    wait=wait_exponential(multiplier=1, min=4, max=10),
-    reraise=True,
-    stop=stop_after_attempt(4),
-)
-async def get_connect_url(
-    setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionConnectUrlArguments
-) -> BrowserbaseGetSessionConnectUrlOutput:
-    """Get the connect URL for a session."""
-    # TODO: Get a better way to get the connect URL than this
-    try:
-        # Get session to access its connect_url
-        CONNECT_URL = (
-            f"wss://connect.browserbase.com?sessionId={arguments.id}&apiKey={setup.api_key}"
-        )
-        return BrowserbaseGetSessionConnectUrlOutput(url=CONNECT_URL)
-    except Exception as e:
-        print(f"Error getting connect URL: {e}")
         raise
 
 
