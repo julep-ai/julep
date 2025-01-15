@@ -9,6 +9,7 @@ from spacy.util import filter_spans
 # Precompile regex patterns
 WHITESPACE_RE = re.compile(r"\s+")
 NON_ALPHANUM_RE = re.compile(r"[^\w\s\-_]+")
+LONE_HYPHEN_RE = re.compile(r'\s*-\s*(?!\w)|(?<!\w)\s*-\s*')
 
 # Initialize spaCy with minimal pipeline
 nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat"])
@@ -32,10 +33,16 @@ nlp.add_pipe(
 @lru_cache(maxsize=10000)
 def clean_keyword(kw: str) -> str:
     """Cache cleaned keywords for reuse."""
-    return NON_ALPHANUM_RE.sub("", kw).strip()
+    # First remove non-alphanumeric chars (except whitespace, hyphens, underscores)
+    cleaned = NON_ALPHANUM_RE.sub("", kw).strip()
+    # Replace lone hyphens with spaces
+    cleaned = LONE_HYPHEN_RE.sub(" ", cleaned)
+    # Clean up any resulting multiple spaces
+    cleaned = WHITESPACE_RE.sub(" ", cleaned).strip()
+    return cleaned
 
 
-def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True) -> list[str]:
+def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True, split_chunks: bool = False) -> list[str]:
     """Optimized keyword extraction with minimal behavior change."""
     excluded_labels = {
         "DATE",  # Absolute or relative dates or periods.
@@ -95,6 +102,9 @@ def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True) -> list[str]
     normalized_ent_keywords = [WHITESPACE_RE.sub(" ", kw).strip() for kw in ent_keywords]
     normalized_keywords = [WHITESPACE_RE.sub(" ", kw).strip() for kw in keywords]
 
+    if split_chunks:
+        normalized_keywords = [word for kw in normalized_keywords for word in kw.split()]
+
     # Count frequencies efficiently
     ent_freq = Counter(normalized_ent_keywords)
     freq = Counter(normalized_keywords)
@@ -109,7 +119,9 @@ def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True) -> list[str]
 
 
 @lru_cache(maxsize=1000)
-def text_to_tsvector_query(paragraph: str, top_n: int = 25, min_keywords: int = 1) -> str:
+def text_to_tsvector_query(
+    paragraph: str, top_n: int = 25, min_keywords: int = 1, split_chunks: bool = False
+) -> str:
     """
     Extracts meaningful keywords/phrases from text and joins them with OR.
 
@@ -121,6 +133,7 @@ def text_to_tsvector_query(paragraph: str, top_n: int = 25, min_keywords: int = 
         paragraph (str): The input text to process
         top_n (int): Number of top keywords to extract per sentence
         min_keywords (int): Minimum number of keywords required
+        split_chunks (bool): If True, breaks multi-word noun chunks into individual words
 
     Returns:
         str: Keywords/phrases joined by OR
@@ -135,11 +148,11 @@ def text_to_tsvector_query(paragraph: str, top_n: int = 25, min_keywords: int = 
         sent_doc = sent.as_doc()
 
         # Extract keywords
-        keywords = extract_keywords(sent_doc, top_n)
+        keywords = extract_keywords(sent_doc, top_n, split_chunks=split_chunks)
         if len(keywords) < min_keywords:
             continue
 
-        queries.add(" OR ".join(keywords))
+        queries.update(keywords)
 
     # Join all terms with " OR "
     return " OR ".join(queries) if queries else ""

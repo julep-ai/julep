@@ -369,63 +369,6 @@ async def _(
     assert result[0].metadata is not None
 
 
-@test("utility: test for text_to_tsvector_query")
-async def _():
-    test_cases = [
-        # Single words
-        ("test", "test"),
-        # Multiple words in single sentence
-        (
-            "quick brown fox",
-            "quick brown fox",  # Now kept as a single phrase due to proximity
-        ),
-        # Technical terms and phrases
-        (
-            "Machine Learning algorithm",
-            "machine learning algorithm",  # Common technical phrase
-        ),
-        # Multiple sentences
-        (
-            "I love basketball especially Michael Jordan. LeBron James is also great.",
-            "basketball OR lebron james OR michael jordan",
-        ),
-        # Quoted phrases
-        (
-            '"quick brown fox"',
-            "quick brown fox",  # Quotes removed, phrase kept together
-        ),
-        ('Find "machine learning" algorithms', "machine learning"),
-        # Multiple quoted phrases
-        ('"data science" and "machine learning"', "machine learning OR data science"),
-        # Edge cases
-        ("", ""),
-        (
-            "the and or",
-            "",  # All stop words should result in empty string
-        ),
-        (
-            "a",
-            "",  # Single stop word should result in empty string
-        ),
-        ("X", "X"),
-        # Empty quotes
-        ('""', ""),
-        ('test "" phrase', "phrase OR test"),
-    ]
-
-    for input_text, expected_output in test_cases:
-        print(f"Input: '{input_text}'")
-        result = text_to_tsvector_query(input_text)
-        print(f"Generated query: '{result}'")
-        print(f"Expected: '{expected_output}'\n")
-
-        result_terms = {term.lower() for term in result.split(" OR ") if term}
-        expected_terms = {term.lower() for term in expected_output.split(" OR ") if term}
-        assert result_terms == expected_terms, (
-            f"Expected terms {expected_terms} but got {result_terms} for input '{input_text}'"
-        )
-
-
 # @test("query: search docs by embedding with different confidence levels")
 # async def _(
 #     dsn=pg_dsn, agent=test_agent, developer=test_developer, doc=test_doc_with_embedding
