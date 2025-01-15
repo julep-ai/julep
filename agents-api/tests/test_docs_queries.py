@@ -1,6 +1,5 @@
 from agents_api.autogen.openapi_model import CreateDocRequest
 from agents_api.clients.pg import create_db_pool
-from agents_api.common.nlp import text_to_tsvector_query
 from agents_api.queries.docs.create_doc import create_doc
 from agents_api.queries.docs.delete_doc import delete_doc
 from agents_api.queries.docs.get_doc import get_doc

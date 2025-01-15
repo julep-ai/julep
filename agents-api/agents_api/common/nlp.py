@@ -9,7 +9,7 @@ from spacy.util import filter_spans
 # Precompile regex patterns
 WHITESPACE_RE = re.compile(r"\s+")
 NON_ALPHANUM_RE = re.compile(r"[^\w\s\-_]+")
-LONE_HYPHEN_RE = re.compile(r'\s*-\s*(?!\w)|(?<!\w)\s*-\s*')
+LONE_HYPHEN_RE = re.compile(r"\s*-\s*(?!\w)|(?<!\w)\s*-\s*")
 
 # Initialize spaCy with minimal pipeline
 nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat"])
@@ -38,11 +38,12 @@ def clean_keyword(kw: str) -> str:
     # Replace lone hyphens with spaces
     cleaned = LONE_HYPHEN_RE.sub(" ", cleaned)
     # Clean up any resulting multiple spaces
-    cleaned = WHITESPACE_RE.sub(" ", cleaned).strip()
-    return cleaned
+    return WHITESPACE_RE.sub(" ", cleaned).strip()
 
 
-def extract_keywords(doc: Doc, top_n: int = 25, clean: bool = True, split_chunks: bool = False) -> list[str]:
+def extract_keywords(
+    doc: Doc, top_n: int = 25, clean: bool = True, split_chunks: bool = False
+) -> list[str]:
     """Optimized keyword extraction with minimal behavior change."""
     excluded_labels = {
         "DATE",  # Absolute or relative dates or periods.
