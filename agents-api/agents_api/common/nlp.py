@@ -42,7 +42,7 @@ def clean_keyword(kw: str) -> str:
 
 
 def extract_keywords(
-    doc: Doc, top_n: int = 25, clean: bool = True, split_chunks: bool = False
+    doc: Doc, top_n: int = 25, split_chunks: bool = False
 ) -> list[str]:
     """Optimized keyword extraction with minimal behavior change."""
     excluded_labels = {
@@ -114,10 +114,7 @@ def extract_keywords(
     remaining_slots = max(0, top_n - len(top_keywords))
     top_keywords += [kw for kw, _ in freq.most_common(remaining_slots)]
 
-    if clean:
-        return [clean_keyword(kw) for kw in top_keywords]
-    return top_keywords
-
+    return [clean_keyword(kw) for kw in top_keywords]
 
 @lru_cache(maxsize=1000)
 def text_to_tsvector_query(
