@@ -8,6 +8,7 @@ from ...autogen.openapi_model import DocReference
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .utils import transform_to_doc_reference
+from ...common.nlp import text_to_tsvector_query
 
 # Raw query for text search
 search_docs_text_query = """
@@ -61,7 +62,7 @@ async def search_docs_by_text(
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
     #  Pre-process rawtext query
-    # query = text_to_tsvector_query(query)
+    query = text_to_tsvector_query(query)
 
     return (
         search_docs_text_query,
