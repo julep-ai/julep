@@ -8,7 +8,6 @@ from .autogen.Tools import (
     BrowserbaseCreateSessionArguments,
     BrowserbaseExtensionArguments,
     BrowserbaseGetSessionArguments,
-    BrowserbaseGetSessionConnectUrlArguments,
     BrowserbaseGetSessionLiveUrlsArguments,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
@@ -36,7 +35,6 @@ from .models import (
     BrowserbaseCompleteSessionOutput,
     BrowserbaseCreateSessionOutput,
     BrowserbaseExtensionOutput,
-    BrowserbaseGetSessionConnectUrlOutput,
     BrowserbaseGetSessionLiveUrlsOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
@@ -220,12 +218,6 @@ browserbase = BaseProvider(
             description="Install an extension from GitHub to the browserbase context",
             arguments=BrowserbaseExtensionArguments,
             output=BrowserbaseExtensionOutput,
-        ),
-        BaseProviderMethod(
-            method="get_connect_url",
-            description="Get the connection URL for a session",
-            arguments=BrowserbaseGetSessionConnectUrlArguments,
-            output=BrowserbaseGetSessionConnectUrlOutput,
         ),
     ],
     info=ProviderInfo(
