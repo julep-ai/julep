@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError
 
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
@@ -26,13 +25,25 @@ async def transition(
     if state is None:
         state = PartialTransition()
 
-    match context.is_last_step, context.cursor:
-        case (True, TransitionTarget(workflow="main")):
-            state.type = "finish"
-        case (True, _):
-            state.type = "finish_branch"
-        case _, _:
-            state.type = "step"
+    error_type = kwargs.get("type")
+
+    if state.type is not None and state.type == "error":
+        error_type = "error"
+    elif state.type is not None and state.type == "cancelled":
+        error_type = "cancelled"
+
+    if error_type and error_type == "cancelled":
+        state.type = "cancelled"
+    elif error_type and error_type == "error":
+        state.type = "error"
+    else:
+        match context.is_last_step, context.cursor:
+            case (True, TransitionTarget(workflow="main")):
+                state.type = "finish"
+            case (True, _):
+                state.type = "finish_branch"
+            case _, _:
+                state.type = "step"
 
     transition_request = CreateTransitionRequest(
         current=context.cursor,
@@ -62,5 +73,4 @@ async def transition(
 
     except Exception as e:
         workflow.logger.error(f"Error in transition: {e!s}")
-        msg = f"Error in transition: {e}"
-        raise ApplicationError(msg) from e
+        raise
