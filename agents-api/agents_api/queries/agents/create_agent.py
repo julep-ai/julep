@@ -127,6 +127,7 @@ class CreateAgentQuery(BaseQuery):
     RETURNING *;
     """
 
+    @rewrap_exceptions(common_db_exceptions("agent", ["create"]))
     async def _execute(self, conn, developer_id: UUID, data: CreateAgentRequest) -> ResourceCreatedResponse:
         agent_id = uuid7()
 
