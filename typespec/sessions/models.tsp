@@ -34,7 +34,7 @@ model RecallOptions {
     alpha: float = 0.7;
 
     /** The confidence cutoff level */
-    @minValue(0)
+    @minValue(-1)
     @maxValue(1)
     confidence: float = 0.6;
 
