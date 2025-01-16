@@ -1,10 +1,140 @@
 ---
 title: 'Supported Models'
-description: 'Overview of AI models supported by Julep'
+description: 'Comprehensive guide to AI models and parameters supported by Julep'
+icon: 'sliders'
 ---
 
-# Supported Models
+## Connect Julep to LLMs
 
-Learn about the AI models supported by Julep.
+Julep leverages LiteLLM to seamlessly connect you to a wide array of Language Models (LLMs). This integration offers incredible flexibility, allowing you to tap into models from various providers with a straightforward, unified interface.
 
-[Placeholder content] 
+<Info>
+With our unified API, switching between different providers is a breeze, ensuring you maintain consistent functionality across the board.
+</Info>
+
+## Available Models
+
+We’ve organized our supported models into the following categories to help you find what you need:
+
+### Premium Models
+
+<Tip>
+Looking for top-notch quality? Premium models deliver the best outputs and are perfect for production environments where reliability and accuracy are key.
+</Tip>
+
+#### Anthropic Models
+| Model Name | Context Window | Best For |
+|------------|---------------|-----------|
+| claude-3-opus | 200K tokens | Complex reasoning, analysis |
+| claude-3-sonnet | 200K tokens | General purpose tasks |
+| claude-3-haiku | 200K tokens | Quick responses |
+| claude-3.5-sonnet | 200K tokens | Improved reasoning |
+
+#### Google Models
+| Model Name | Context Window | Best For |
+|------------|---------------|-----------|
+| gemini-1.5-pro | 1M tokens | Complex tasks |
+| gemini-1.5-pro-latest | 1M tokens | Cutting-edge performance |
+
+#### OpenAI Models
+| Model Name | Context Window | Best For |
+|------------|---------------|-----------|
+| gpt-4-turbo | 128K tokens | Advanced reasoning |
+| gpt-4o | 8K tokens | Balanced performance |
+| o1-mini¹ | 128K tokens | Quick tasks |
+| o1-preview¹ | 128K tokens | Testing features |
+| o1¹ | 128K tokens | General tasks |
+
+<Warning>
+¹ Heads up: The O1 series models are temporarily unavailable due to some OpenAI service issues. We’re working to get them back online soon!
+</Warning>
+
+### Specialized Models
+
+#### Groq Models
+| Model Name | Context Window | Best For |
+|------------|---------------|-----------|
+| llama-3.1-70b | 8K tokens | Long-form content |
+| llama-3.1-8b | 8K tokens | Quick processing |
+
+#### OpenRouter Models
+| Model Name | Context Window | Best For |
+|------------|---------------|-----------|
+| mistral-large-2411 | 32K tokens | High performance |
+| qwen-2.5-72b-instruct | 32K tokens | Complex instructions |
+| eva-llama-3.33-70b | 8K tokens | Creative tasks |
+| deepseek-chat | 32K tokens | Conversational AI |
+
+### Embedding Models
+| Model Name | Context Window | Best For |
+|------------|---------------|-----------|
+| text-embedding-3-large | 8K tokens | High-quality vectors |
+| voyage-multilingual-2 | 8K tokens | Cross-language tasks |
+| voyage-3 | 8K tokens | Advanced embeddings |
+| BAAI/bge-m3 | 8K tokens | Cost-effective solutions |
+
+## Supported Parameters
+
+<Info>
+These parameters let you tweak the model's behavior to suit your needs. Keep in mind, not every parameter is supported by all models.
+</Info>
+
+<AccordionGroup>
+  <Accordion title="Generation Parameters" icon="sliders" defaultOpen={true}>
+    | Parameter | Range | Default | Description |
+    |-----------|--------|---------|-------------|
+    | temperature | 0.0 - 5.0 | None | Controls randomness in outputs. Higher values (e.g., 0.8) increase randomness, lower values (e.g., 0.2) make output more focused |
+    | max_tokens | ≥ 1 | None | Maximum number of tokens to generate in the response |
+    | top_p | 0.0 - 1.0 | None | Controls nucleus sampling - only tokens with cumulative probability < top_p are considered |
+    | frequency_penalty | -2.0 - 2.0 | None | Penalizes frequent tokens. Positive values reduce repetition |
+    | presence_penalty | -2.0 - 2.0 | None | Penalizes tokens based on presence in text so far |
+  </Accordion>
+
+  <Accordion title="Advanced Parameters" icon="gear">
+    | Parameter | Range | Default | Description |
+    |-----------|--------|---------|-------------|
+    | repetition_penalty | 0.0 - 2.0 | None | Penalizes repetition (1.0 is neutral) |
+    | length_penalty | 0.0 - 2.0 | None | Penalizes based on generation length (1.0 is neutral) |
+    | min_p | 0.0 - 1.0 | None | Minimum probability threshold for token consideration |
+    | seed | -1 - 1000 | None | For deterministic generation |
+    | stream | boolean | false | Enable streaming of responses |
+    | stop | list[str] (max 4) | [] | Sequences where generation should stop |
+  </Accordion>
+
+  <Accordion title="Response Formatting" icon="code">
+    You can control how the model outputs its responses using the `response_format` parameter:
+    
+    - `text` (default): Free-form text output
+    - `json_object`: Structured JSON output
+    - `json_schema`: Custom schema-based output
+  </Accordion>
+</AccordionGroup>
+
+## Usage Guidelines
+
+<AccordionGroup>
+  <Accordion title="API Keys and Authentication" icon="key" defaultOpen={true}>
+    <Warning>
+    Remember, API keys are a must for paid models. Make sure your environment variables are set up with the right keys before diving in.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Model Selection Guidelines" icon="magnifying-glass">
+    <Note>
+    When picking a model, think about:
+    - Your budget and cost constraints
+    - How fast you need responses
+    - The quality you’re aiming for
+    - The context window size you require
+    </Note>
+  </Accordion>
+
+  <Accordion title="Best Practices" icon="lightbulb">
+    - Start with smaller models for development and testing
+    - Use larger context windows only when necessary
+    - Keep an eye on token usage to manage costs
+    - Implement proper error handling for API failures
+  </Accordion>
+</AccordionGroup>
+
+To learn more about the service we use for accessing multiple LLMs, check out the [LiteLLM documentation](https://docs.litellm.ai/docs/providers).
