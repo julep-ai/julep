@@ -11,6 +11,7 @@ from uuid_extensions import uuid7
 from ...autogen.openapi_model import CreateAgentRequest, ResourceCreatedResponse
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
+from ..base_query import BaseQuery
 from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
@@ -97,3 +98,65 @@ async def create_agent(
         agent_query,
         params,
     )
+
+
+class CreateAgentQuery(BaseQuery):
+    query = """
+    INSERT INTO agents (
+        developer_id,
+        agent_id,
+        canonical_name,
+        name,
+        about,
+        instructions,
+        model,
+        metadata,
+        default_settings
+    )
+    VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9
+    )
+    RETURNING *;
+    """
+
+    async def _execute(self, conn, developer_id: UUID, data: CreateAgentRequest) -> ResourceCreatedResponse:
+        agent_id = uuid7()
+
+        # Ensure instructions is a list
+        data.instructions = (
+            data.instructions if isinstance(data.instructions, list) else [data.instructions]
+        )
+
+        # Convert default_settings to dict if it exists
+        default_settings = data.default_settings.model_dump() if data.default_settings else {}
+
+        # Set default values
+        data.metadata = data.metadata or {}
+        data.canonical_name = data.canonical_name or generate_canonical_name()
+
+        params = [
+            developer_id,
+            agent_id,
+            data.canonical_name,
+            data.name,
+            data.about,
+            data.instructions,
+            data.model,
+            data.metadata,
+            default_settings,
+        ]
+        result = await conn.fetchrow(self.query, *params)
+
+        return self.wrap_in_class(
+            [result],
+            ResourceCreatedResponse,
+            transform=lambda d: {"id": d["agent_id"], "created_at": d["created_at"]},
+        )[0]

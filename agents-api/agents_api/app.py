@@ -11,6 +11,7 @@ from scalar_fastapi import get_scalar_api_reference
 
 from .clients.pg import create_db_pool
 from .env import api_prefix, hostname, pool_max_size, protocol, public_port
+from .queries.container import Queries
 
 
 class State(Protocol):
@@ -65,23 +66,36 @@ async def lifespan(container: FastAPI | ObjectWithState):
             container.state.s3_client = None
 
 
-app: FastAPI = FastAPI(
-    docs_url="/swagger",
-    openapi_prefix=api_prefix,
-    redoc_url=None,
-    title="Julep Agents API",
-    description="API for Julep Agents",
-    version="0.4.0",
-    terms_of_service="https://www.julep.ai/terms",
-    contact={
-        "name": "Julep",
-        "url": "https://www.julep.ai",
-        "email": "developers@julep.ai",
-    },
-    root_path=api_prefix,
-    lifespan=lifespan,
-)
+def create_app():
+    app: FastAPI = FastAPI(
+        docs_url="/swagger",
+        openapi_prefix=api_prefix,
+        redoc_url=None,
+        title="Julep Agents API",
+        description="API for Julep Agents",
+        version="0.4.0",
+        terms_of_service="https://www.julep.ai/terms",
+        contact={
+            "name": "Julep",
+            "url": "https://www.julep.ai",
+            "email": "developers@julep.ai",
+        },
+        root_path=api_prefix,
+        lifespan=lifespan,
+    )
+    container = Queries()
+    # FIXME: This does not work
+    # container.init_resources()
+    container.config.db.dsn.from_env(
+        "PG_DSN",
+        default="postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable",
+    )
+    app.container = container
 
+    return app
+
+
+app = create_app()
 # Enable metrics
 Instrumentator().instrument(app).expose(app, include_in_schema=False)
 

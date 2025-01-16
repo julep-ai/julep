@@ -21,7 +21,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
-from ..app import app
+# from ..app import app
 from ..env import query_timeout
 
 P = ParamSpec("P")
