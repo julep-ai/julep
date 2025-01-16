@@ -127,7 +127,7 @@ class RecallOptions(BaseModel):
     """
     The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
-    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.6
     """
     The confidence cutoff level
     """
