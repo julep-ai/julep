@@ -65,12 +65,8 @@
   },
   "tabs": [
     {
-      "name": "🚀 Get Started",
-      "url": "getting-started"
-    },
-    {
-      "name": "🙋 How-to guides",
-      "url": "examples"
+      "name": "🙋 Guides",
+      "url": "guides"
     },
     {
       "name": "🔧 SDKs",
@@ -86,51 +82,86 @@
       "name": "Community",
       "icon": "discord",
       "url": "https://discord.gg/p4c7ehs4vD"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/julep-ai/julep"
     }
   ],
   "navigation": [
     {
       "group": "Get Started",
       "pages": [
-        "getting-started/what-is-julep",
-        "getting-started/try-it-out",
-        "getting-started/create-agent",
-        "getting-started/run-task",
-        "getting-started/explore-features"
+        "docs/introduction/what-is-julep",
+        "docs/introduction/try-it-out",
+        "docs/introduction/create-agent",
+        "docs/introduction/run-task",
+        "docs/introduction/explore-features"
       ]
     },
     {
       "group": "Concepts",
       "pages": [
-        "getting-started/agents",
-        "getting-started/tasks",
-        "getting-started/sessions",
-        "getting-started/users",
-        "getting-started/docs"
+        "docs/concepts/agents",
+        "docs/concepts/tasks",
+        "docs/concepts/sessions",
+        "docs/concepts/users",
+        "docs/concepts/docs",
+        "docs/concepts/tools"
       ]
     },
     {
       "group": "Tutorials",
       "pages": [
-        "getting-started/multi-agent-workflow",
-        "getting-started/agent-with-tools",
-        "getting-started/agent-with-files",
-        "getting-started/agent-with-integrations"
+        "docs/tutorials/crawling-web-pages-with-rag",
+        "docs/tutorials/browser-use",
+        "docs/tutorials/video-processing",
+        "docs/tutorials/multi-agent-research"
       ]
     },
     {
       "group": "Integrations",
       "pages": [
+        "docs/integrations/supported-models",
         {
-          "group": "Google",
+          "group": "Search & Research",
           "pages": [
-            "getting-started/google-sheets",
-            "getting-started/google-docs",
-            "getting-started/google-drive",
-            "getting-started/google-chat",
-            "getting-started/google-meet",
-            "getting-started/google-tasks",
-            "getting-started/integrations"
+            "docs/integrations/search-research/brave-search",
+            "docs/integrations/search-research/wikipedia",
+            "docs/integrations/search-research/arxiv"
+          ]
+        },
+        {
+          "group": "Web & Browser",
+          "pages": [
+            "docs/integrations/web-browser/browser-base",
+            "docs/integrations/web-browser/spider"
+          ]
+        },
+        {
+          "group": "Media Processing",
+          "pages": [
+            "docs/integrations/media-processing/ffmpeg",
+            "docs/integrations/media-processing/cloudinary"
+          ]
+        },
+        {
+          "group": "Document Processing",
+          "pages": [
+            "docs/integrations/document-processing/llama-parse"
+          ]
+        },
+        {
+          "group": "Communication",
+          "pages": [
+            "docs/integrations/communication/email"
+          ]
+        },
+        {
+          "group": "Data Services",
+          "pages": [
+            "docs/integrations/data-services/weather"
           ]
         }
       ]
@@ -138,54 +169,48 @@
     {
       "group": "Advanced Topics",
       "pages": [
-        "getting-started/supported-models",
-        "getting-started/executions",
-        "getting-started/files",
-        "getting-started/tools"
+        "docs/advanced/architecture-deep-dive",
+        "docs/advanced/agentic-patterns",
+        "docs/advanced/execution-lifecycle",
+        "docs/advanced/types-of-task-steps",
+        "docs/advanced/multi-agent-multi-user-sessions",
+        "docs/advanced/files"
       ]
     },
     {
-      "group": "Reference",
-      "pages": [
-        "api-reference/built-in-tools",
-        "api-reference/integration-types",
-        "api-reference/available-integrations"
-      ]
-    },
-    {
-      "group": "How-to guides",
+      "group": "Guides",
       "pages": [
         {
           "group": "Getting Started Examples",
           "pages": [
-            "examples/basic-agent-creation",
-            "examples/task-workflow-basics",
-            "examples/tool-integration-demo"
+            "guides/getting-started/basic-agent-creation",
+            "guides/getting-started/task-workflow-basics",
+            "guides/getting-started/tool-integration-demo"
           ]
         },
         {
           "group": "Use Case Examples",
           "pages": [
-            "examples/customer-service",
-            "examples/research-assistant",
-            "examples/document-processing",
-            "examples/data-analysis"
+            "guides/use-cases/customer-service",
+            "guides/use-cases/research-assistant",
+            "guides/use-cases/document-processing",
+            "guides/use-cases/data-analysis"
           ]
         },
         {
           "group": "Advanced Examples",
           "pages": [
-            "examples/multi-agent-systems",
-            "examples/complex-workflows",
-            "examples/integration-patterns"
+            "guides/advanced/multi-agent-systems",
+            "guides/advanced/complex-workflows",
+            "guides/advanced/integration-patterns"
           ]
         },
         {
           "group": "Cookbooks",
           "pages": [
-            "examples/quick-solutions",
-            "examples/industry-solutions",
-            "examples/community-examples"
+            "guides/cookbooks/quick-solutions",
+            "guides/cookbooks/industry-solutions",
+            "guides/cookbooks/community-examples"
           ]
         }
       ]
@@ -243,45 +268,124 @@
       "pages": [
         "api-reference/introduction",
         {
-          "group": "Agent Endpoints",
+          "group": "Agents",
           "pages": [
             "api-reference/agents/create",
-            "api-reference/agents/update",
+            "api-reference/agents/create-or-update", 
             "api-reference/agents/delete",
-            "api-reference/agents/list"
+            "api-reference/agents/get",
+            "api-reference/agents/list",
+            "api-reference/agents/patch",
+            "api-reference/agents/update",
+            {
+              "group": "Agent Tools",
+              "pages": [
+                "api-reference/agents/tools/create",
+                "api-reference/agents/tools/delete",
+                "api-reference/agents/tools/list",
+                "api-reference/agents/tools/patch",
+                "api-reference/agents/tools/update"
+              ]
+            }
           ]
         },
         {
-          "group": "Task Endpoints",
+          "group": "Sessions",
+          "pages": [
+            "api-reference/sessions/chat",
+            "api-reference/sessions/create",
+            "api-reference/sessions/create-or-update",
+            "api-reference/sessions/delete",
+            "api-reference/sessions/get",
+            "api-reference/sessions/list",
+            "api-reference/sessions/patch",
+            "api-reference/sessions/update",
+            {
+              "group": "Session History",
+              "pages": [
+                "api-reference/sessions/history/get",
+                "api-reference/sessions/history/delete"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "Users",
+          "pages": [
+            "api-reference/users/create",
+            "api-reference/users/create-or-update",
+            "api-reference/users/delete",
+            "api-reference/users/get",
+            "api-reference/users/list",
+            "api-reference/users/patch",
+            "api-reference/users/update"
+          ]
+        },
+        {
+          "group": "Tasks",
           "pages": [
             "api-reference/tasks/create",
-            "api-reference/tasks/execute",
-            "api-reference/tasks/status",
-            "api-reference/tasks/list"
+            "api-reference/tasks/create-or-update",
+            "api-reference/tasks/delete", 
+            "api-reference/tasks/get",
+            "api-reference/tasks/list",
+            "api-reference/tasks/patch",
+            "api-reference/tasks/update",
+            {
+              "group": "Task Executions",
+              "pages": [
+                "api-reference/tasks/executions/create",
+                "api-reference/tasks/executions/list"
+              ]
+            }
           ]
         },
         {
-          "group": "Session Endpoints",
+          "group": "Executions",
           "pages": [
-            "api-reference/sessions/create",
-            "api-reference/sessions/update",
-            "api-reference/sessions/list"
+            "api-reference/executions/create",
+            "api-reference/executions/get",
+            "api-reference/executions/transitions",
+            "api-reference/executions/transitions-stream",
+            "api-reference/executions/update"
           ]
         },
         {
-          "group": "Tool Endpoints",
+          "group": "Documents",
           "pages": [
-            "api-reference/tools/register",
-            "api-reference/tools/update",
-            "api-reference/tools/list"
+            "api-reference/docs/embed",
+            "api-reference/docs/get",
+            {
+              "group": "Agent Documents",
+              "pages": [
+                "api-reference/docs/agents/create",
+                "api-reference/docs/agents/delete",
+                "api-reference/docs/agents/list",
+                "api-reference/docs/agents/search"
+              ]
+            },
+            {
+              "group": "User Documents", 
+              "pages": [
+                "api-reference/docs/users/list",
+                "api-reference/docs/users/create",
+                "api-reference/docs/users/delete",
+                "api-reference/docs/users/search"
+              ]
+            }
           ]
         },
         {
-          "group": "Types",
+          "group": "Files",
           "pages": [
-            "api-reference/types/responses",
-            "api-reference/types/errors",
-            "api-reference/types/pagination"
+            "api-reference/files/create",
+            "api-reference/files/get"
+          ]
+        },
+        {
+          "group": "Jobs",
+          "pages": [
+            "api-reference/jobs/get"
           ]
         }
       ]
@@ -289,7 +393,8 @@
   ],
   "footerSocials": {
     "x": "https://x.com/julepai",
-    "github": "https://github.com/julep-ai"
+    "github": "https://github.com/julep-ai/julep",
+    "linkedin": "https://www.linkedin.com/company/julep-ai"
   },
   "seo": {
     "indexHiddenPages": false
