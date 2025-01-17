@@ -5,13 +5,15 @@ It includes functions to construct and execute SQL queries for inserting new age
 
 from uuid import UUID
 
+from typing import cast
+from asyncpg import Record
 from beartype import beartype
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateAgentRequest, ResourceCreatedResponse
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..base_query import BaseQuery
+from ..base_queries import AsyncpgBaseQuery
 from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
@@ -100,7 +102,7 @@ async def create_agent(
     )
 
 
-class CreateAgentQuery(BaseQuery):
+class CreateAgentQuery(AsyncpgBaseQuery, metrics=increase_counter):
     query = """
     INSERT INTO agents (
         developer_id,
@@ -127,8 +129,13 @@ class CreateAgentQuery(BaseQuery):
     RETURNING *;
     """
 
-    @rewrap_exceptions(common_db_exceptions("agent", ["create"]))
-    async def _execute(self, conn, developer_id: UUID, data: CreateAgentRequest) -> ResourceCreatedResponse:
+    single_result = True
+    errors_mapping = common_db_exceptions("agent", ["create"])
+
+    def transform_record(self, rec: Record):
+        return {"id": rec["agent_id"], "created_at": rec["created_at"]}
+
+    async def execute(self, *, developer_id: UUID, data: CreateAgentRequest) -> ResourceCreatedResponse:
         agent_id = uuid7()
 
         # Ensure instructions is a list
@@ -154,10 +161,5 @@ class CreateAgentQuery(BaseQuery):
             data.metadata,
             default_settings,
         ]
-        result = await conn.fetchrow(self.query, *params)
-
-        return self.wrap_in_class(
-            [result],
-            ResourceCreatedResponse,
-            transform=lambda d: {"id": d["agent_id"], "created_at": d["created_at"]},
-        )[0]
+        async with self.pool.acquire() as conn, conn.transaction():
+            return await conn.fetch(self.query, *params)

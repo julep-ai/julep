@@ -22,7 +22,6 @@ async def create_agent(
     data: CreateAgentRequest,
     query: CreateAgentQuery = Depends(Provide[Queries.agents.create])
 ) -> ResourceCreatedResponse:
-    # TODO: Validate model name
     agent = await query.execute(
         developer_id=x_developer_id,
         data=data,
