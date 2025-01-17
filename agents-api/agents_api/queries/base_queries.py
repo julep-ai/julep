@@ -51,9 +51,9 @@ class AsyncpgBaseQuery(AbstractQuery):
             metrics: Callable | None = None,
         ):
         exec_meth = getattr(cls, "execute", None)
+        exec_meth = _check_errors(exec_meth)
         if metrics is not None:
             exec_meth = metrics(cls.__name__)(exec_meth)
-        exec_meth = _check_errors(exec_meth)
         setattr(cls, "execute", exec_meth)
 
     def transform_record(self, rec: Record) -> dict | Record:
