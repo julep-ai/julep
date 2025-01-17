@@ -52,6 +52,7 @@ dependencies = [
   "asyncpg>=0.30.0",
   "unique-namer>=1.6.1",
   "langcodes>=3.5.0",
+  "dependency-injector>=4.45.0",
 ]
 
 [dependency-groups]

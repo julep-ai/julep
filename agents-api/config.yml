@@ -1,0 +1,7 @@
+agents:
+  create_agent:
+    debug: true
+
+log:
+  level: "DEBUG"
+  format: "[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s"
