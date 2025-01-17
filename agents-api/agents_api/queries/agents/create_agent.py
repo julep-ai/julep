@@ -5,7 +5,6 @@ It includes functions to construct and execute SQL queries for inserting new age
 
 from uuid import UUID
 
-from typing import cast
 from asyncpg import Record
 from beartype import beartype
 from uuid_extensions import uuid7
@@ -129,13 +128,13 @@ class CreateAgentQuery(AsyncpgBaseQuery, metrics=increase_counter):
     RETURNING *;
     """
 
-    single_result = True
     errors_mapping = common_db_exceptions("agent", ["create"])
 
     def transform_record(self, rec: Record):
         return {"id": rec["agent_id"], "created_at": rec["created_at"]}
 
-    async def execute(self, *, developer_id: UUID, data: CreateAgentRequest) -> ResourceCreatedResponse:
+    @beartype
+    async def execute(self, *, developer_id: UUID, data: CreateAgentRequest):
         agent_id = uuid7()
 
         # Ensure instructions is a list
@@ -162,4 +161,4 @@ class CreateAgentQuery(AsyncpgBaseQuery, metrics=increase_counter):
             default_settings,
         ]
         async with self.pool.acquire() as conn, conn.transaction():
-            return await conn.fetch(self.query, *params)
+            return self.wrap_single(await conn.fetch(self.query, *params), cls=ResourceCreatedResponse)
