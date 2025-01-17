@@ -1,7 +1,7 @@
 ---
 title: 'Supported Models'
 description: 'Comprehensive guide to AI models and parameters supported by Julep'
-icon: 'list'
+icon: 'bars'
 ---
 
 ## Connect Julep to LLMs
@@ -22,7 +22,10 @@ While we provide API keys for quick testing and development, you'll need to use 
 Looking for top-notch quality? Our curated selection of models delivers excellent outputs for all your use cases.
 </Tip>
 
-#### Anthropic Models
+#### Anthropic
+
+Here are the Anthropic models supported by Julep:
+
 | Model Name | Context Window | Best For |
 |------------|---------------|-----------|
 | claude-3-opus | 200K tokens | Complex reasoning, analysis |
@@ -32,17 +35,21 @@ Looking for top-notch quality? Our curated selection of models delivers excellen
 | claude-3.5-sonnet-20240620 | 200K tokens | Enhanced reasoning capabilities |
 | claude-3.5-sonnet-20241022 | 200K tokens | Latest improvements |
 
-#### Google Models
+#### Google
+
+Here are the Google models supported by Julep:
 | Model Name | Context Window | Best For |
 |------------|---------------|-----------|
 | gemini-1.5-pro | 1M tokens | Complex tasks |
 | gemini-1.5-pro-latest | 1M tokens | Cutting-edge performance |
 
-#### OpenAI Models
+#### OpenAI
+
+Here are the OpenAI models supported by Julep:
 | Model Name | Context Window | Best For |
 |------------|---------------|-----------|
 | gpt-4-turbo | 128K tokens | Advanced reasoning |
-| gpt-4o | 8K tokens | Balanced performance |
+| gpt-4o | 128K tokens | Balanced performance |
 | o1-mini¹ | 128K tokens | Quick tasks |
 | o1-preview¹ | 128K tokens | Testing features |
 | o1¹ | 128K tokens | General tasks |
@@ -51,34 +58,46 @@ Looking for top-notch quality? Our curated selection of models delivers excellen
 ¹ Heads up: The O1 series models are temporarily unavailable due to some OpenAI service issues. We're working to get them back online soon!
 </Warning>
 
-#### Groq Models
+#### Groq
+
+Here are the Groq models supported by Julep:
 | Model Name | Context Window | Best For |
 |------------|---------------|-----------|
 | llama-3.1-70b | 8K tokens | Long-form content |
 | llama-3.1-8b | 8K tokens | Quick processing |
 
-#### OpenRouter Models
+#### OpenRouter
+
+Here are the OpenRouter models supported by Julep:
+
 | Model Name | Context Window | Best For |
 |------------|---------------|-----------|
-| mistral-large-2411 | 32K tokens | High performance |
-| qwen-2.5-72b-instruct | 32K tokens | Complex instructions |
-| eva-llama-3.33-70b | 8K tokens | Creative tasks |
-| l3.1-euryale-70b | 8K tokens | Creative tasks |
+| mistral-large-2411 | 128K tokens | High performance |
+| qwen-2.5-72b-instruct | 131K tokens | Complex instructions |
+| eva-llama-3.33-70b | 128K tokens | Creative tasks |
+| l3.1-euryale-70b | 128K tokens | Creative tasks |
 | l3.3-euryale-70b | 8K tokens | Creative tasks |
 | magnum-v4-72b | 8K tokens | Creative tasks |
 | eva-qwen-2.5-72b | 8K tokens | Creative tasks |
 | hermes-3-llama-3.1-70b | 8K tokens | Creative tasks |
 | deepseek-chat | 32K tokens | Conversational AI |
 
-#### Embedding Models
-| Model Name | Context Window | Best For |
+#### Embedding
+
+Here are the embedding models supported by Julep:
+
+| Model Name | Embedding Dimensions | Best For |
 |------------|---------------|-----------|
-| text-embedding-3-large | 8K tokens | High-quality vectors |
-| voyage-multilingual-2 | 8K tokens | Cross-language tasks |
-| voyage-3 | 8K tokens | Advanced embeddings |
-| Alibaba-NLP/gte-large-en-v1.5 | 8K tokens | Cost-effective solutions |
-| BAAI/bge-m3 | 8K tokens | Cost-effective solutions |
-| vertex_ai/text-embedding-004 | 8K tokens | Google Cloud integration |
+| text-embedding-3-large | 1024 | High-quality vectors |
+| voyage-multilingual-2 | 1024 | Cross-language tasks |
+| voyage-3 | 1024 | Advanced embeddings |
+| Alibaba-NLP/gte-large-en-v1.5 | 1024 | Cost-effective solutions |
+| BAAI/bge-m3 | 1024 | Cost-effective solutions |
+| vertex_ai/text-embedding-004 | 1024 | Google Cloud integration |
+
+<Info>
+Though the models mention above support different embedding dimensions, Julep uses  fixed 1024 dimensions for all embedding models for now. We plan to support different dimensions in the future.
+</Info>
 
 ## Supported Parameters
 

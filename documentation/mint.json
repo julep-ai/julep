@@ -134,7 +134,7 @@
         {
           "group": "Browser & Crawler",
           "pages": [
-            "docs/integrations/web-browser/browser-base",
+            "docs/integrations/web-browser/browserbase",
             "docs/integrations/web-browser/spider"
           ]
         },
