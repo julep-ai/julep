@@ -1,7 +1,7 @@
 ---
 title: 'Supported Models'
 description: 'Comprehensive guide to AI models and parameters supported by Julep'
-icon: 'sliders'
+icon: 'list'
 ---
 
 ## Connect Julep to LLMs
@@ -29,6 +29,8 @@ Looking for top-notch quality? Our curated selection of models delivers excellen
 | claude-3-sonnet | 200K tokens | General purpose tasks |
 | claude-3-haiku | 200K tokens | Quick responses |
 | claude-3.5-sonnet | 200K tokens | Improved reasoning |
+| claude-3.5-sonnet-20240620 | 200K tokens | Enhanced reasoning capabilities |
+| claude-3.5-sonnet-20241022 | 200K tokens | Latest improvements |
 
 #### Google Models
 | Model Name | Context Window | Best For |
@@ -61,6 +63,11 @@ Looking for top-notch quality? Our curated selection of models delivers excellen
 | mistral-large-2411 | 32K tokens | High performance |
 | qwen-2.5-72b-instruct | 32K tokens | Complex instructions |
 | eva-llama-3.33-70b | 8K tokens | Creative tasks |
+| l3.1-euryale-70b | 8K tokens | Creative tasks |
+| l3.3-euryale-70b | 8K tokens | Creative tasks |
+| magnum-v4-72b | 8K tokens | Creative tasks |
+| eva-qwen-2.5-72b | 8K tokens | Creative tasks |
+| hermes-3-llama-3.1-70b | 8K tokens | Creative tasks |
 | deepseek-chat | 32K tokens | Conversational AI |
 
 #### Embedding Models
@@ -69,7 +76,9 @@ Looking for top-notch quality? Our curated selection of models delivers excellen
 | text-embedding-3-large | 8K tokens | High-quality vectors |
 | voyage-multilingual-2 | 8K tokens | Cross-language tasks |
 | voyage-3 | 8K tokens | Advanced embeddings |
+| Alibaba-NLP/gte-large-en-v1.5 | 8K tokens | Cost-effective solutions |
 | BAAI/bge-m3 | 8K tokens | Cost-effective solutions |
+| vertex_ai/text-embedding-004 | 8K tokens | Google Cloud integration |
 
 ## Supported Parameters
 
@@ -78,7 +87,7 @@ These parameters let you tweak the model's behavior to suit your needs. Keep in 
 </Info>
 
 <AccordionGroup>
-  <Accordion title="Generation Parameters" icon="sliders" defaultOpen={true}>
+  <Accordion title="Generation Parameters" icon="sliders">
     | Parameter | Range | Default | Description |
     |-----------|--------|---------|-------------|
     | temperature | 0.0 - 5.0 | None | Controls randomness in outputs. Higher values (e.g., 0.8) increase randomness, lower values (e.g., 0.2) make output more focused |
