@@ -5,11 +5,208 @@ description: 'Learn how to process and analyze videos using Julep'
 
 # Video Processing
 
-Coming soon...
-
 ## Overview
 
-This tutorial will show you how to:
-- Process video files using FFmpeg integration
-- Extract frames and audio
-- Analyze video content 
+This tutorial demonstrates how to:
+- Upload and process videos using Cloudinary integration
+- Extract and analyze video content
+- Add overlays and transformations
+- Process video subtitles and speaker information
+
+## Task Structure
+
+Let's break down the task into its core components:
+
+### 1. Input Schema
+
+First, we define what inputs our task expects:
+
+```yaml
+input_schema:
+  type: object
+  properties:
+    upload_file:
+      type: string
+      description: The url of the file to upload
+    public_id:
+      type: string
+      description: The public id of the file to upload
+    transformation_prompt:
+      type: string
+      description: The prompt for the transformations to apply to the file
+    subtitle_vtt:
+      type: string
+      description: The vtt file content to add subtitles to the video
+```
+
+This schema specifies that our task expects:
+- A video file URL
+- A public ID for the video
+- A transformation prompt describing desired changes
+- VTT subtitle content (optional)
+
+### 2. Tools Configuration
+
+Next, we define the external tools our task will use:
+
+```yaml
+- name: cloudinary_upload
+  type: integration
+  integration:
+    provider: cloudinary
+    method: media_upload
+    setup:
+      cloudinary_api_key: YOUR_CLOUDINARY_API_KEY
+      cloudinary_api_secret: YOUR_CLOUDINARY_API_SECRET
+      cloudinary_cloud_name: YOUR_CLOUDINARY_CLOUD_NAME
+
+- name: cloudinary_edit
+  type: integration
+  integration:
+    provider: cloudinary
+    method: media_edit
+
+- name: ffmpeg_edit
+  type: integration
+  integration:
+    provider: ffmpeg
+```
+
+We're using three main integrations:
+- Cloudinary for video uploads and transformations
+- FFmpeg for additional video processing capabilities
+
+### 3. Main Workflow Steps
+
+#### Step 1: Initial Video Upload
+
+```yaml
+- tool: cloudinary_upload
+  arguments:
+    file: '_0.upload_file'
+    public_id: '_0.public_id'
+    upload_params:
+      resource_type: "'video'"
+```
+
+This step:
+- Takes the input video URL
+- Uploads it to Cloudinary
+- Specifies the resource type as video
+
+#### Step 2: Create Video Preview
+
+```yaml
+- tool: cloudinary_upload
+  arguments:
+    file: '_0.upload_file'
+    public_id: '_0.public_id'
+    upload_params:
+      resource_type: "'video'"
+      transformation:
+        - start_offset: "0"
+          end_offset: "30"
+```
+
+This step:
+- Creates a 30-second preview of the video
+- Useful for quick analysis and processing
+
+#### Step 3: Analyze Video Content
+
+```yaml
+- prompt:
+  - role: user
+    content: 
+      - type: image_url
+        image_url:
+          url: "{{trimmed_video_url}}"
+      - type: text
+        text: |-
+          Which speakers are speaking in the video? And where does each of them sit?
+```
+
+This step:
+- Analyzes the video content
+- Identifies speakers and their positions
+- Uses VTT subtitles for additional context
+
+#### Step 4: Generate Speaker Transformations
+
+```yaml
+- evaluate:
+    speakers_transformations: |-
+      [
+      transform
+      for speaker in _.speakers_json
+        for transform in [
+        {
+          "overlay": {"font_family": "Arial", "font_size": 32, "text": speaker.speaker},
+          "color": "white"
+        },
+        {
+          "duration": 5,
+          "flags": "layer_apply",
+          "gravity": "south_east" if speaker.position == "right" else "south_west",
+          "start_offset": speaker.timestamps[0].start,
+          "y": 80,
+          "x": 80
+        }
+        ]
+      ]
+```
+
+This step:
+- Creates transformations for each speaker
+- Adds speaker labels with proper positioning
+- Sets timing for each overlay
+
+#### Step 5: Apply Transformations
+
+```yaml
+- tool: cloudinary_upload
+  arguments:
+    file: '_0.upload_file'
+    public_id: '_0.public_id'
+    upload_params:
+      resource_type: "'video'"
+      transformation: _.speakers_transformations
+```
+
+This step:
+- Uses the Cloudinary upload tool to apply the generated transformations
+- Processes the video with speaker labels and positioning
+- Returns a URL to the transformed video with all overlays applied
+
+Note: While this step uses the `cloudinary_upload` tool, its primary purpose is to apply the transformations rather than just uploading the video. When you upload a video with transformations specified, Cloudinary processes these transformations and returns a URL to the processed video.
+
+
+## Example Usage
+
+Here's how to use this task with the Julep SDK:
+
+```python
+from julep import Client
+
+client = Client(api_key=JULEP_API_KEY)
+
+execution = client.executions.create(
+    task_id=TASK_UUID,
+    input={
+        "upload_file": "https://example.com/sample-video.mp4",
+        "public_id": "video_test",
+        "subtitle_vtt": "WEBVTT\n\n1\n00:00:05.550 --> 00:00:28.509\nSpeaker: Hello...",
+        "transformation_prompt": "Add a logo overlay to top-left corner"
+    }
+)
+```
+
+## Next Steps
+
+To try this task yourself:
+1. Get your API keys for Cloudinary
+2. Create a new agent using the Julep SDK
+3. Create and execute the task with your video file
+4. Experiment with different transformations and analyses
+
+For more examples and task patterns, check out our other [cookbooks](https://github.com/julep-ai/julep/tree/dev/cookbooks).
