@@ -125,18 +125,17 @@
       "pages": [
         "docs/integrations/supported-models",
         {
-          "group": "Search & Research",
+          "group": "Search",
           "pages": [
-            "docs/integrations/search-research/brave-search",
-            "docs/integrations/search-research/wikipedia",
-            "docs/integrations/search-research/arxiv"
+            "docs/integrations/search/brave-search",
+            "docs/integrations/search/wikipedia"
           ]
         },
         {
-          "group": "Web & Browser",
+          "group": "Browser & Crawler",
           "pages": [
-            "docs/integrations/web-browser/browser-base",
-            "docs/integrations/web-browser/spider"
+            "docs/integrations/web/browserbase",
+            "docs/integrations/web/spider"
           ]
         },
         {
@@ -161,7 +160,8 @@
         {
           "group": "Data Services",
           "pages": [
-            "docs/integrations/data-services/weather"
+            "docs/integrations/data-services/weather",
+            "docs/integrations/data-services/arxiv"
           ]
         }
       ]
