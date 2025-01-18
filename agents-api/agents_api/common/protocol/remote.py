@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Generic, Self, TypeVar, cast
+import json
 
 from temporalio import workflow
 
@@ -32,3 +33,17 @@ class RemoteObject(Generic[T]):
 
         fetched = await async_s3.get_object(self.key)
         return cast(self._type, deserialize(fetched))
+
+    def __json_encode__(self) -> dict:
+        """Method that json.dumps will automatically use"""
+        return {
+            'key': self.key,
+            'bucket': self.bucket,
+            '_type': str(self._type)
+        }
+    
+    @classmethod
+    def from_json(cls, data: dict) -> 'RemoteObject':
+        """Reconstruct RemoteObject from JSON data"""
+        # For now, default to dict as the type since we can't safely reconstruct the exact type
+        return cls(_type=dict, key=data['key'], bucket=data['bucket'])
