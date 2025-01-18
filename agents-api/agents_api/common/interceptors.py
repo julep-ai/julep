@@ -113,7 +113,7 @@ async def load_if_remote[T](arg: T | RemoteObject[T]) -> T:
 
 
 async def offload_if_large[T](result: T) -> T:
-    if use_blob_store_for_temporal: # and is_too_large(result):
+    if use_blob_store_for_temporal:  # and is_too_large(result):
         return await RemoteObject.from_value(result)
 
     return result

@@ -2,14 +2,14 @@ from beartype import beartype
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    import botocore
-    from async_lru import alru_cache
-    from xxhash import xxh3_64_hexdigest as xxhash_key
-    from aiobotocore.session import get_session
     import os
+
+    import botocore
+    from aiobotocore.session import get_session
+    from xxhash import xxh3_64_hexdigest as xxhash_key
+
     from ..env import (
         blob_store_bucket,
-        blob_store_cutoff_kb,
     )
 
 
