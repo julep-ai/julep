@@ -5,22 +5,27 @@ with workflow.unsafe.imports_passed_through():
     import botocore
     from async_lru import alru_cache
     from xxhash import xxh3_64_hexdigest as xxhash_key
-
+    from aiobotocore.session import get_session
+    import os
     from ..env import (
         blob_store_bucket,
         blob_store_cutoff_kb,
     )
 
 
-@alru_cache(maxsize=1)
+# @alru_cache(maxsize=1)
 async def setup():
-    from ..app import app
+    s3_access_key = os.environ.get("S3_ACCESS_KEY")
+    s3_secret_key = os.environ.get("S3_SECRET_KEY")
+    s3_endpoint = os.environ.get("S3_ENDPOINT")
 
-    if not app.state.s3_client:
-        msg = "S3 client not initialized"
-        raise RuntimeError(msg)
-
-    client = app.state.s3_client
+    session = get_session()
+    client = await session.create_client(
+        "s3",
+        aws_access_key_id=s3_access_key,
+        aws_secret_access_key=s3_secret_key,
+        endpoint_url=s3_endpoint,
+    ).__aenter__()
 
     try:
         await client.head_bucket(Bucket=blob_store_bucket)
@@ -33,7 +38,7 @@ async def setup():
     return client
 
 
-@alru_cache(maxsize=1024)
+# @alru_cache(maxsize=1024)
 async def list_buckets() -> list[str]:
     client = await setup()
 
@@ -41,7 +46,7 @@ async def list_buckets() -> list[str]:
     return [bucket["Name"] for bucket in data["Buckets"]]
 
 
-@alru_cache(maxsize=10_000)
+# @alru_cache(maxsize=10_000)
 async def exists(key: str) -> bool:
     client = await setup()
 
@@ -68,7 +73,7 @@ async def add_object(key: str, body: bytes, replace: bool = False) -> None:
     await client.put_object(Bucket=blob_store_bucket, Key=key, Body=body)
 
 
-@alru_cache(maxsize=256 * 1024 // max(1, blob_store_cutoff_kb))  # 256mb in cache
+# @alru_cache(maxsize=256 * 1024 // max(1, blob_store_cutoff_kb))  # 256mb in cache
 @beartype
 async def get_object(key: str) -> bytes:
     client = await setup()

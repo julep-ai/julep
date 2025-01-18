@@ -20,16 +20,12 @@ class RemoteObject(Generic[T]):
 
     @classmethod
     async def from_value(cls, x: T) -> Self:
-        await async_s3.setup()
-
         serialized = serialize(x)
 
         key = await async_s3.add_object_with_hash(serialized)
         return RemoteObject[T](key=key, bucket=blob_store_bucket, _type=type(x))
 
     async def load(self) -> T:
-        await async_s3.setup()
-
         fetched = await async_s3.get_object(self.key)
         return cast(self._type, deserialize(fetched))
 
