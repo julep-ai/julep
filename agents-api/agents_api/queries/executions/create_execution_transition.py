@@ -117,7 +117,6 @@ async def create_execution_transition(
         tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]: SQL query and parameters for creating the transition.
     """
 
-
     transition_id = transition_id or uuid7()
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
@@ -125,8 +124,10 @@ async def create_execution_transition(
     # Dump to json
     if isinstance(data.output, list):
         data.output = [
-            item.model_dump(mode="json") if hasattr(item, "model_dump") 
-            else item.__json_encode__() if hasattr(item, "__json_encode__")
+            item.model_dump(mode="json")
+            if hasattr(item, "model_dump")
+            else item.__json_encode__()
+            if hasattr(item, "__json_encode__")
             else item
             for item in data.output
         ]
@@ -134,7 +135,6 @@ async def create_execution_transition(
         data.output = data.output.model_dump(mode="json")
     elif hasattr(data.output, "__json_encode__"):
         data.output = data.output.__json_encode__()
-
 
     # Prepare the transition data
     transition_data = data.model_dump(exclude_unset=True, exclude={"id"})
