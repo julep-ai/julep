@@ -172,6 +172,7 @@
         "docs/advanced/architecture-deep-dive",
         "docs/advanced/agentic-patterns",
         "docs/advanced/execution-lifecycle",
+        "docs/advanced/python-expression",
         "docs/advanced/types-of-task-steps",
         "docs/advanced/multi-agent-multi-user-sessions",
         "docs/advanced/files"
