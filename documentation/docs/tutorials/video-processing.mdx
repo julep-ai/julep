@@ -79,107 +79,112 @@ We're using three main integrations:
 
 ### 3. Main Workflow Steps
 
-#### Step 1: Initial Video Upload
+<Steps>
+  <Step title="Initial Video Upload">
+    ```yaml
+    - tool: cloudinary_upload
+      arguments:
+        file: '_0.upload_file'
+        public_id: '_0.public_id'
+        upload_params:
+          resource_type: "'video'"
+    ```
 
-```yaml
-- tool: cloudinary_upload
-  arguments:
-    file: '_0.upload_file'
-    public_id: '_0.public_id'
-    upload_params:
-      resource_type: "'video'"
-```
+    <Accordion title="Understanding the use of the _0 variable">
+      The `_0` variable refers to the initial input object passed to the task. It's used to access the input parameters defined in the input schema.
+    </Accordion>
 
-This step:
-- Takes the input video URL
-- Uploads it to Cloudinary
-- Specifies the resource type as video
+    This step:
+    - Takes the input video URL
+    - Uploads it to Cloudinary
+    - Specifies the resource type as video
+  </Step>
 
-#### Step 2: Create Video Preview
+  <Step title="Create Video Preview">
+    ```yaml
+    - tool: cloudinary_upload
+      arguments:
+        file: '_0.upload_file'
+        public_id: '_0.public_id'
+        upload_params:
+          resource_type: "'video'"
+          transformation:
+            - start_offset: "0"
+              end_offset: "30"
+    ```
 
-```yaml
-- tool: cloudinary_upload
-  arguments:
-    file: '_0.upload_file'
-    public_id: '_0.public_id'
-    upload_params:
-      resource_type: "'video'"
-      transformation:
-        - start_offset: "0"
-          end_offset: "30"
-```
+    This step:
+    - Creates a 30-second preview of the video
+    - Useful for quick analysis and processing
+  </Step>
 
-This step:
-- Creates a 30-second preview of the video
-- Useful for quick analysis and processing
+  <Step title="Analyze Video Content">
+    ```yaml
+    - prompt:
+      - role: user
+        content: 
+          - type: image_url
+            image_url:
+              url: "{{trimmed_video_url}}"
+          - type: text
+            text: |-
+              Which speakers are speaking in the video? And where does each of them sit?
+    ```
 
-#### Step 3: Analyze Video Content
+    This step:
+    - Analyzes the video content
+    - Identifies speakers and their positions
+    - Uses VTT subtitles for additional context
+  </Step>
 
-```yaml
-- prompt:
-  - role: user
-    content: 
-      - type: image_url
-        image_url:
-          url: "{{trimmed_video_url}}"
-      - type: text
-        text: |-
-          Which speakers are speaking in the video? And where does each of them sit?
-```
+  <Step title="Generate Speaker Transformations">
+    ```yaml
+    - evaluate:
+        speakers_transformations: |-
+          [
+          transform
+          for speaker in _.speakers_json
+            for transform in [
+            {
+              "overlay": {"font_family": "Arial", "font_size": 32, "text": speaker.speaker},
+              "color": "white"
+            },
+            {
+              "duration": 5,
+              "flags": "layer_apply",
+              "gravity": "south_east" if speaker.position == "right" else "south_west",
+              "start_offset": speaker.timestamps[0].start,
+              "y": 80,
+              "x": 80
+            }
+            ]
+          ]
+    ```
 
-This step:
-- Analyzes the video content
-- Identifies speakers and their positions
-- Uses VTT subtitles for additional context
+    This step:
+    - Creates transformations for each speaker
+    - Adds speaker labels with proper positioning
+    - Sets timing for each overlay
+  </Step>
 
-#### Step 4: Generate Speaker Transformations
+  <Step title="Apply Transformations">
+    ```yaml
+    - tool: cloudinary_upload
+      arguments:
+        file: '_0.upload_file'
+        public_id: '_0.public_id'
+        upload_params:
+          resource_type: "'video'"
+          transformation: _.speakers_transformations
+    ```
 
-```yaml
-- evaluate:
-    speakers_transformations: |-
-      [
-      transform
-      for speaker in _.speakers_json
-        for transform in [
-        {
-          "overlay": {"font_family": "Arial", "font_size": 32, "text": speaker.speaker},
-          "color": "white"
-        },
-        {
-          "duration": 5,
-          "flags": "layer_apply",
-          "gravity": "south_east" if speaker.position == "right" else "south_west",
-          "start_offset": speaker.timestamps[0].start,
-          "y": 80,
-          "x": 80
-        }
-        ]
-      ]
-```
+    This step:
+    - Uses the Cloudinary upload tool to apply the generated transformations
+    - Processes the video with speaker labels and positioning
+    - Returns a URL to the transformed video with all overlays applied
+  </Step>
+</Steps>
 
-This step:
-- Creates transformations for each speaker
-- Adds speaker labels with proper positioning
-- Sets timing for each overlay
-
-#### Step 5: Apply Transformations
-
-```yaml
-- tool: cloudinary_upload
-  arguments:
-    file: '_0.upload_file'
-    public_id: '_0.public_id'
-    upload_params:
-      resource_type: "'video'"
-      transformation: _.speakers_transformations
-```
-
-This step:
-- Uses the Cloudinary upload tool to apply the generated transformations
-- Processes the video with speaker labels and positioning
-- Returns a URL to the transformed video with all overlays applied
-
-Note: While this step uses the `cloudinary_upload` tool, its primary purpose is to apply the transformations rather than just uploading the video. When you upload a video with transformations specified, Cloudinary processes these transformations and returns a URL to the processed video.
 
 
 ## Example Usage
@@ -187,20 +192,34 @@ Note: While this step uses the `cloudinary_upload` tool, its primary purpose is 
 Here's how to use this task with the Julep SDK:
 
 ```python
-from julep import Client
+transformation_prompt = """
+1- I want to add an overlay an the following image to the video, and apply a layer apply flag also. Here's the image url:
+https://res.cloudinary.com/demo/image/upload/logos/cloudinary_icon_white.png
 
-client = Client(api_key=JULEP_API_KEY)
+2- I also want you to to blur the video, and add a fade in and fade out effect to the video with a duration of 3 seconds each.
+"""
 
 execution = client.executions.create(
     task_id=TASK_UUID,
     input={
-        "upload_file": "https://example.com/sample-video.mp4",
+        "video_url":  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
         "public_id": "video_test",
-        "subtitle_vtt": "WEBVTT\n\n1\n00:00:05.550 --> 00:00:28.509\nSpeaker: Hello...",
-        "transformation_prompt": "Add a logo overlay to top-left corner"
+        "transformation_prompt": transformation_prompt,
     }
 )
 ```
+
+### Sample Video Input
+
+<Accordion title="Sample Video Input">
+  <video src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4" controls />
+</Accordion>
+
+### Sample Video Output
+
+<Accordion title="Sample Video Output">
+  <video src="https://res.cloudinary.com/dpnjjk8mb/video/upload/v1737201857/video_test2.mp4" controls />
+</Accordion>
 
 ## Next Steps
 
@@ -210,4 +229,4 @@ To try this task yourself:
 3. Create and execute the task with your video file
 4. Experiment with different transformations and analyses
 
-For more examples and task patterns, check out our other [cookbooks](https://github.com/julep-ai/julep/tree/dev/cookbooks).
+For more examples, check out our other [cookbooks](https://github.com/julep-ai/julep/tree/dev/cookbooks).
