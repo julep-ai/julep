@@ -59,109 +59,134 @@ We're using two integrations:
 
 ### 3. Main Workflow Steps
 
-#### Step 1: Fetch Weather Data
+<Steps>
 
-```yaml
-- over: inputs[0].locations
-  map:
-    tool: weather
-    arguments:
-      location: _
-```
+  <Step title="Get Weather Data">
 
-This step:
-- Iterates over each location in the input array
-- Calls the weather API for each location
-- The `_` represents the current location in the iteration
+    ```yaml
+    - over: inputs[0].locations
+      map:
+        tool: weather
+        arguments:
+          location: _
+    ```
 
-#### Step 2: Search for Tourist Attractions
+    <Accordion title="Understanding the use of the _ Variable in iteration steps">
+      When used inside a `map` or a `foreach` step, the `_` variable is a reference to the current value in the iteration.
 
-```yaml
-- over: inputs[0].locations
-  map:
-    tool: internet_search
-    arguments:
-      query: "'tourist attractions in ' + _"
-```
-
-
-This step:
-- Iterates over the locations again
-- Searches for tourist attractions in each location
-- Constructs a search query by concatenating "tourist attractions in " with the location
-
-#### Step 3: Combine Data
-
-```yaml
-- evaluate:
-    zipped: |-
-      list(
-        zip(
-          inputs[0].locations,
-          [output['result'] for output in outputs[0]],
-          outputs[1]
-        )
-      )
-```
+      For example:
+      ```yaml
+      - over: ["Paris", "London"]
+        map:
+          tool: weather
+          arguments:
+            location: _ # _ will be "Paris", then "London"
+      ```
+    </Accordion>
 
 
-This step:
-- Combines the data from previous steps into tuples
-- Each tuple contains: (location, weather_data, attractions_data)
-- Uses Python's `zip` function to align the data
+    This step:
+    - Iterates over each location in the input array
+    - Calls the weather API for each location
+  </Step>
 
-#### Step 4: Generate Itineraries
+  <Step title="Search for Tourist Attractions">
 
-```yaml
-- over: _['zipped']
-  parallelism: 3
-  # Inside the map step, each `_` represents the current element in the list
-  # which is a tuple of (location, weather, attractions)
-  map:
-    prompt:
-    - role: system
-      content: >-
-        You are {{agent.name}}. Your task is to create a detailed itinerary
-        for visiting tourist attractions in some locations.
-        The user will give you the following information for each location:
-
-        - The location
-        - The current weather condition
-        - The top tourist attractions
-    - role: user
-      content: >-
-        Location: "{{_[0]}}"
-        Weather: "{{_[1]}}"
-        Attractions: "{{_[2]}}"
-    unwrap: true
-```
+    ```yaml
+    - over: inputs[0].locations
+      map:
+        tool: internet_search
+        arguments:
+          query: "'tourist attractions in ' + _"
+    ```
 
 
-This step:
-- Processes up to 3 locations in parallel
-- For each location tuple:
-  - Sends a prompt to the AI model
-  - Includes location, weather, and attraction data
-  - Generates a personalized itinerary
+    This step:
+    - Iterates over the locations again
+    - Searches for tourist attractions in each location
+    - Constructs a search query by concatenating "tourist attractions in " with the location
+  </Step>
 
-#### Step 5: Format Final Output
+  <Step title="Combine Data">
 
-```yaml
-- evaluate:
-    final_plan: |-
-      '\\n---------------\\n'.join(activity for activity in _)
-```
+      ```yaml
+      - evaluate:
+        zipped: |-
+          list(
+            zip(
+              inputs[0].locations,
+              [output['result'] for output in outputs[0]],
+              outputs[1]
+            )
+          )
+    ```
 
 
-This step:
-- Combines all itineraries into a single output
-- Separates each itinerary with a divider
+    This step:
+    - Combines the data from previous steps into tuples
+    - Each tuple contains: (location, weather_data, attractions_data)
+    - Uses Python's `zip` function to align the data
+
+  </Step>
+
+  <Step title="Generate Itineraries">
+
+    ```yaml
+    - over: _['zipped']
+      parallelism: 3
+      # Inside the map step, each `_` represents the current element in the list
+      # which is a tuple of (location, weather, attractions)
+      map:
+        prompt:
+        - role: system
+          content: >-
+            You are {{agent.name}}. Your task is to create a detailed itinerary
+            for visiting tourist attractions in some locations.
+            The user will give you the following information for each location:
+
+            - The location
+            - The current weather condition
+            - The top tourist attractions
+        - role: user
+          content: >-
+            Location: "{{_[0]}}"
+            Weather: "{{_[1]}}"
+            Attractions: "{{_[2]}}"
+        unwrap: true
+    ```
+
+
+    This step:
+    - Processes up to 3 locations in parallel
+    - For each location tuple:
+      - Sends a prompt to the AI model
+      - Includes location, weather, and attraction data
+      - Generates a personalized itinerary
+
+  </Step>
+
+  <Step title="Format Final Output">
+
+      ```yaml
+    - evaluate:
+        final_plan: |-
+          '\\n---------------\\n'.join(activity for activity in _)
+    ```
+
+
+    This step:
+    - Combines all itineraries into a single output
+    - Separates each itinerary with a divider
+
+  </Step>
+
+</Steps>
 
 ## Example Output
 
 An example output when running this task with an input of `["New York", "London", "Paris", "Tokyo", "Sydney"]`:
 
-<div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #ccc', padding: '1rem', borderRadius: '4px' }}>
+<Accordion title="Example Output">
 Here's a detailed itinerary for visiting top tourist attractions in New York, considering the current weather conditions. 
 
 ### Day 1: Iconic Landmarks and Observation Decks
@@ -401,7 +426,7 @@ Here's a detailed itinerary for exploring some of Sydney's top tourist attractio
 - If you're interested in more unique experiences, consider visiting some of the attractions listed on [Time Out Sydney](https://www.timeout.com/sydney/attractions/tourist-attractions-that-dont-suck), which includes thrilling adventures and scenic tours.
 
 With clear skies and mild temperatures, this itinerary offers a balanced mix of cultural, historical, and scenic experiences. Enjoy your visit to Sydney!
-</div>
+</Accordion>
 
 
 ## Next Steps
