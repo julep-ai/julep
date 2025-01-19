@@ -63,112 +63,123 @@ We're using two tools:
 
 ### 3. Main Workflow Steps
 
-#### Step 1: Crawl Website
+<Steps>
+  <Step title="Crawl Website">
+    ```yaml
+    - tool: spider_crawler
+      arguments:
+        url: "_['url']"
+        params:
+          request: "'smart_mode'"
+          limit: _['pages_limit']
+          return_format: "'markdown'"
+          proxy_enabled: "True"
+          filter_output_images: "True"
+          filter_output_svg: "True"
+          readability: "True"
+          sitemap: "True"
+          chunking_alg:
+            type: "'bysentence'"
+            value: "15"
+    ```
 
-```yaml
-- tool: spider_crawler
-  arguments:
-    url: "_['url']"
-    params:
-      request: "'smart_mode'"
-      limit: _['pages_limit']
-      return_format: "'markdown'"
-      proxy_enabled: "True"
-      filter_output_images: "True"
-      filter_output_svg: "True"
-      readability: "True"
-      sitemap: "True"
-      chunking_alg:
-        type: "'bysentence'"
-        value: "15"
+    <Accordion title="Understanding the use of the _ variable">
+      The `_` variable refers to the current context object. When accessing properties like `_['url']`, it's retrieving values from the input parameters passed to the task.
+    </Accordion>
+
+    This step:
+    - Takes the input URL and crawls the website
+    - Processes content into readable markdown format
+    - Chunks content into manageable segments
+    - Filters out unnecessary elements like images and SVGs
+  </Step>
+
+  <Step title="Process and Index Content">
+    ```yaml
+    - evaluate:
+        documents: _['content']
+
+    - over: "[(_0.content, chunk) for chunk in _['documents']]"
+      parallelism: 3
+      map:
+        prompt:
+        - role: user
+          content: >-
+            <document>
+            {{_[0]}}
+            </document>
+
+            <chunk>
+            {{_[1]}}
+            </chunk>
+
+            Please give a short succinct context to situate this chunk within the overall document.
+    ```
+
+    This step:
+    - Processes each content chunk in parallel
+    - Generates contextual metadata for improved retrieval
+    - Prepares content for storage
+  </Step>
+
+  <Step title="Store Documents">
+    ```yaml
+    - over: _['final_chunks']
+      parallelism: 3
+      map:
+        tool: create_agent_doc
+        arguments:
+          agent_id: "'{agent.id}'"
+          data:
+            metadata:
+              source: "'spider_crawler'"
+            title: "'Website Document'"
+            content: _
+    ```
+
+    This step:
+    - Stores processed content in the document store
+    - Adds metadata for source tracking
+    - Creates searchable documents for RAG
+  </Step>
+</Steps>
+
+## Example Usage
+
+Start by creating an execution for the task. This execution will make the agent crawl the website and store the content in the document store.
+
+```python
+execution = client.executions.create(
+  task_id=TASK_UUID,
+  input={"url": "https://julep.ai/", "pages_limit": 5}
+)
 ```
 
-This step:
-- Takes the input URL and crawls the website
-- Processes content into readable markdown format
-- Chunks content into manageable segments
-- Filters out unnecessary elements like images and SVGs
-
-#### Step 2: Process and Index Content
-
-```yaml
-- evaluate:
-    documents: _['content']
-
-- over: "[(_0.content, chunk) for chunk in _['documents']]"
-  parallelism: 3
-  map:
-    prompt:
-    - role: user
-      content: >-
-        <document>
-        {{_[0]}}
-        </document>
-
-        <chunk>
-        {{_[1]}}
-        </chunk>
-
-        Please give a short succinct context to situate this chunk within the overall document.
-```
-
-This step:
-- Processes each content chunk in parallel
-- Generates contextual metadata for improved retrieval
-- Prepares content for storage
-
-#### Step 3: Store Documents
-
-```yaml
-- over: _['final_chunks']
-  parallelism: 3
-  map:
-    tool: create_agent_doc
-    arguments:
-      agent_id: "'{agent.id}'"
-      data:
-        metadata:
-          source: "'spider_crawler'"
-        title: "'Website Document'"
-        content: _
-```
-
-This step:
-- Stores processed content in the document store
-- Adds metadata for source tracking
-- Creates searchable documents for RAG
-
-## Using the Crawled Content
-
-Once content is crawled and stored, you can create a session to interact with it:
+Next, create a session for the agent. This session will be used to chat with the agent.
 
 ```python
 session = client.sessions.create(
-    agent=agent_id,
-    recall_options={
-        "mode": "hybrid",
-        "num_search_messages": 1,
-        "confidence": -0.9,
-        "alpha": 0.5,
-        "limit": 10,
-    }
-)
-
-response = client.sessions.chat(
-    session_id=session.id,
-    messages=[{
-        "role": "user",
-        "content": "Tell me about julep"
-    }],
-    recall=True
+  agent_id=AGENT_ID
 )
 ```
 
-## Example Output
+Finally, chat with the agent.
 
-An example output when running this task with an input of `{"url": "https://julep.ai/", "pages_limit": 5}`:
+```python
+response = client.sessions.chat(
+  session_id=session.id,
+  messages=[
+    {
+      "role": "user",
+      "content": "What is Julep?"
+    }
+  ]
+)
 
-<div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #ccc', padding: '1rem', borderRadius: '4px' }}>
+print(response)
+```
+
+<Accordion title="Output">
 Julep is a comprehensive platform designed for creating production-ready AI systems and agents. Here are the key aspects of Julep:
 
 Core Features:
@@ -220,7 +231,7 @@ For additional support or to learn more:
 - Discord Community: https://discord.gg/2EUJzJU2Yt
 - Book a Demo: https://calendly.com/ishita-julep
 - Dev Support: hey@julep.ai
-</div>
+</Accordion>
 
 
 ## Next Steps
