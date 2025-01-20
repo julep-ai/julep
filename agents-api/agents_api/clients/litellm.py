@@ -1,6 +1,7 @@
 from functools import wraps
 from typing import Literal
 
+import aiohttp
 from beartype import beartype
 from litellm import acompletion as _acompletion
 from litellm import aembedding as _aembedding
@@ -109,3 +110,26 @@ async def aembedding(
         for item in embedding_list
         if len(item["embedding"]) >= dimensions
     ]
+
+
+@beartype
+async def get_model_list(*, custom_api_key: str | None = None) -> list[dict]:
+    """
+    Fetches the list of available models from the LiteLLM server.
+
+    Returns:
+        list[dict]: A list of model information dictionaries
+    """
+
+    headers = {
+        "accept": "application/json",
+        "x-api-key": custom_api_key or litellm_master_key
+    }
+
+    async with aiohttp.ClientSession() as session, session.get(
+        url=f"{litellm_url}/models" if not custom_api_key else "/models",
+        headers=headers
+    ) as response:
+        response.raise_for_status()
+        data = await response.json()
+        return data["data"]

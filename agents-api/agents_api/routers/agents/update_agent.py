@@ -7,6 +7,7 @@ from starlette.status import HTTP_200_OK
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...dependencies.developer_id import get_developer_id
 from ...queries.agents.update_agent import update_agent as update_agent_query
+from ..utils.model_validation import validate_model
 from .router import router
 
 
@@ -20,7 +21,11 @@ async def update_agent(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     agent_id: UUID,
     data: UpdateAgentRequest,
-) -> ResourceUpdatedResponse:
+    ) -> ResourceUpdatedResponse:
+
+    if data.model:
+        await validate_model(data.model)
+
     return await update_agent_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
