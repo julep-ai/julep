@@ -280,7 +280,7 @@ class StepOutcome(BaseModel):
 
     def load_transition_to(self) -> None:
         if isinstance(self.transition_to[1], RemoteObject):
-            self.transition_to[1] = self.transition_to[1].load()
+            self.transition_to = (self.transition_to[0], self.transition_to[1].load())
 
 
 @beartype
