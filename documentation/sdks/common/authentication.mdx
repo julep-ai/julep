@@ -1,0 +1,59 @@
+---
+title: 'Authentication'
+description: 'Authentication patterns for Julep SDKs'
+---
+
+# Authentication
+
+Learn about different authentication methods and best practices when using Julep SDKs.
+
+## API Key Authentication
+
+### Basic Usage
+```python
+from julep import Client
+
+client = Client(api_key="your_api_key")
+```
+
+### Environment Variables
+```python
+import os
+from julep import Client
+
+client = Client(api_key=os.environ.get("JULEP_API_KEY"))
+```
+
+## Advanced Authentication
+
+### Custom Authentication Headers
+```python
+client = Client(
+    api_key="your_api_key",
+    headers={
+        "X-Custom-Header": "value"
+    }
+)
+```
+
+### Multiple Environments
+```python
+class JulepConfig:
+    def __init__(self, environment="production"):
+        self.api_key = self._get_api_key(environment)
+        self.base_url = self._get_base_url(environment)
+    
+    def create_client(self):
+        return Client(
+            api_key=self.api_key,
+            base_url=self.base_url
+        )
+```
+
+## Security Best Practices
+
+1. Never hardcode API keys in your code
+2. Use environment variables or secure vaults
+3. Rotate API keys periodically
+4. Use different API keys for different environments
+5. Implement proper key management policies 

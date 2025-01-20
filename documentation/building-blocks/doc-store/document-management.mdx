@@ -1,0 +1,338 @@
+---
+title: 'Document Management'
+description: 'Adding, updating, and managing documents in Julep'
+---
+
+## Overview
+
+The Julep Document Store allows you to store, manage, and retrieve documents that can be used by agents and tasks. This guide covers how to effectively manage documents in your Julep applications.
+
+## Creating Documents
+
+Add documents to the store using the SDK:
+
+```python Python
+# Create a simple document
+document = client.agents.docs.create(
+    agent_id=agent.id,
+    title="Product Manual",
+    content="Detailed product instructions...",
+    metadata={
+        "type": "manual",
+        "version": "1.0"
+    }
+)
+
+# Create document with chunks
+document = client.agents.docs.create(
+    agent_id=agent.id,
+    title="Research Paper",
+    content="Research paper content...",
+    chunks=True,  # Automatically split into chunks
+    metadata={
+        "type": "research",
+        "author": "John Doe",
+        "date": "2024-03-24"
+    }
+)
+```
+
+```javascript JavaScript
+// Create a simple document
+const document = await client.agents.docs.create({
+    agentId: agent.id,
+    title: "Product Manual",
+    content: "Detailed product instructions...",
+    metadata: {
+        type: "manual",
+        version: "1.0"
+    }
+});
+
+// Create document with chunks
+const document = await client.agents.docs.create({
+    agentId: agent.id,
+    title: "Research Paper",
+    content: "Research paper content...",
+    chunks: true,  // Automatically split into chunks
+    metadata: {
+        type: "research",
+        author: "John Doe",
+        date: "2024-03-24"
+    }
+});
+```
+
+## Document Types
+
+Julep supports various document types:
+
+1. **Text Documents**
+   - Plain text
+   - Markdown
+   - HTML
+
+2. **Structured Documents**
+   - JSON
+   - YAML
+   - XML
+
+3. **Binary Documents**
+   - PDF (with automatic text extraction)
+   - Word documents
+   - Images (with OCR capabilities)
+
+## Document Management
+
+### Listing Documents
+
+```python Python
+# List all documents
+documents = client.agents.docs.list(agent_id=agent.id)
+
+# List with filters
+documents = client.agents.docs.list(
+    agent_id=agent.id,
+    metadata_filter={
+        "type": "manual",
+        "version": "1.0"
+    }
+)
+```
+
+### Updating Documents
+
+```python Python
+# Update document content
+document = client.agents.docs.update(
+    agent_id=agent.id,
+    document_id=document.id,
+    content="Updated content..."
+)
+
+# Update metadata
+document = client.agents.docs.update(
+    agent_id=agent.id,
+    document_id=document.id,
+    metadata={
+        "version": "1.1",
+        "last_updated": "2024-03-24"
+    }
+)
+```
+
+### Deleting Documents
+
+```python Python
+# Delete a single document
+client.agents.docs.delete(
+    agent_id=agent.id,
+    document_id=document.id
+)
+
+# Delete multiple documents
+client.agents.docs.delete_many(
+    agent_id=agent.id,
+    document_ids=[doc1.id, doc2.id]
+)
+```
+
+## Document Processing
+
+### Chunking
+
+Control how documents are split into chunks:
+
+```python Python
+# Custom chunking configuration
+document = client.agents.docs.create(
+    agent_id=agent.id,
+    title="Long Document",
+    content="Very long content...",
+    chunks=True,
+    chunk_config={
+        "size": 1000,  # Characters per chunk
+        "overlap": 100,  # Overlap between chunks
+        "split_method": "sentence"  # Split at sentence boundaries
+    }
+)
+```
+
+### Metadata Management
+
+Add and update document metadata:
+
+```python Python
+# Add rich metadata
+document = client.agents.docs.create(
+    agent_id=agent.id,
+    title="Technical Specification",
+    content="Technical details...",
+    metadata={
+        "type": "specification",
+        "project": "Project X",
+        "version": "2.0",
+        "tags": ["technical", "specification"],
+        "authors": ["John Doe", "Jane Smith"],
+        "created_at": "2024-03-24T12:00:00Z",
+        "status": "draft"
+    }
+)
+
+# Update specific metadata fields
+document = client.agents.docs.update_metadata(
+    agent_id=agent.id,
+    document_id=document.id,
+    metadata={
+        "status": "published",
+        "published_at": "2024-03-24T15:00:00Z"
+    }
+)
+```
+
+## Document Access Control
+
+### Scoping Documents
+
+Control document access:
+
+```python Python
+# Create agent-specific document
+document = client.agents.docs.create(
+    agent_id=agent.id,
+    title="Agent Guidelines",
+    content="Guidelines content...",
+    scope="agent"
+)
+
+# Create user-specific document
+document = client.users.docs.create(
+    user_id=user.id,
+    title="User Preferences",
+    content="User preferences...",
+    scope="user"
+)
+```
+
+### Access Patterns
+
+Configure document access patterns:
+
+```python Python
+# Create document with access patterns
+document = client.agents.docs.create(
+    agent_id=agent.id,
+    title="Shared Document",
+    content="Shared content...",
+    access_patterns={
+        "read": ["agent:*", "user:*"],
+        "write": ["agent:owner"],
+        "delete": ["agent:owner"]
+    }
+)
+```
+
+## Best Practices
+
+1. **Document Organization**
+   - Use clear, descriptive titles
+   - Add comprehensive metadata
+   - Organize documents by type and purpose
+
+2. **Content Management**
+   - Keep documents focused and single-purpose
+   - Update content atomically
+   - Maintain version history in metadata
+
+3. **Performance**
+   - Use appropriate chunk sizes
+   - Index important metadata fields
+   - Clean up unused documents
+
+## Example: Complex Document Management
+
+Here's an example of advanced document management:
+
+```python Python
+# Create a document processor
+def process_document(title, content, doc_type, metadata=None):
+    base_metadata = {
+        "type": doc_type,
+        "created_at": datetime.now().isoformat(),
+        "status": "processing"
+    }
+    
+    if metadata:
+        base_metadata.update(metadata)
+    
+    # Create initial document
+    document = client.agents.docs.create(
+        agent_id=agent.id,
+        title=title,
+        content=content,
+        chunks=True,
+        chunk_config={
+            "size": 1000,
+            "overlap": 100,
+            "split_method": "sentence"
+        },
+        metadata=base_metadata
+    )
+    
+    try:
+        # Process document content
+        processed_content = process_content(content)
+        
+        # Extract additional metadata
+        extracted_metadata = extract_metadata(processed_content)
+        
+        # Update document with processed content and metadata
+        document = client.agents.docs.update(
+            agent_id=agent.id,
+            document_id=document.id,
+            content=processed_content,
+            metadata={
+                **base_metadata,
+                **extracted_metadata,
+                "status": "processed",
+                "processed_at": datetime.now().isoformat()
+            }
+        )
+        
+        return document
+    
+    except Exception as e:
+        # Update document status on error
+        client.agents.docs.update_metadata(
+            agent_id=agent.id,
+            document_id=document.id,
+            metadata={
+                "status": "error",
+                "error": str(e)
+            }
+        )
+        raise
+
+# Use the document processor
+try:
+    document = process_document(
+        title="Technical Report",
+        content="Technical report content...",
+        doc_type="report",
+        metadata={
+            "project": "Project Y",
+            "author": "John Doe"
+        }
+    )
+    
+    print(f"Document processed: {document.id}")
+    
+except Exception as e:
+    print(f"Error processing document: {e}")
+```
+
+## Next Steps
+
+1. [Learn about vector search](/building-blocks/doc-store/vector-search)
+2. [Explore document integration](/building-blocks/doc-store/document-integration)
+3. [Understand agent memory](/building-blocks/agents/agent-memory) 

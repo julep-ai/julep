@@ -1,0 +1,291 @@
+---
+title: 'Agent Tools'
+description: 'Adding and managing tools for Julep agents'
+---
+
+## Overview
+
+Tools in Julep extend an agent's capabilities by allowing them to interact with external services, perform computations, and access various APIs. This guide covers how to add and manage tools for your agents.
+
+## Tool Types
+
+Julep supports four types of tools:
+
+### 1. User-defined Functions
+
+Custom functions that you implement and handle on the client side:
+
+```python Python
+# Define a tool
+tool = client.agents.tools.create(
+    agent_id=agent.id,
+    name="calculate_total",
+    description="Calculate the total of a list of numbers",
+    function={
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "numbers": {
+                    "type": "array",
+                    "items": {"type": "number"}
+                }
+            }
+        }
+    }
+)
+```
+
+### 2. System Tools
+
+Built-in tools for interacting with Julep's core functionality:
+
+```python Python
+# Add a system tool
+tool = client.agents.tools.create(
+    agent_id=agent.id,
+    name="list_documents",
+    description="List all documents for this agent",
+    system={
+        "resource": "agent",
+        "subresource": "doc",
+        "operation": "list"
+    }
+)
+```
+
+### 3. Integrations
+
+Pre-built integrations with third-party services:
+
+```python Python
+# Add an integration
+tool = client.agents.tools.create(
+    agent_id=agent.id,
+    name="search_web",
+    description="Search the web using Brave Search",
+    integration={
+        "provider": "brave",
+        "method": "search",
+        "setup": {
+            "api_key": "your_brave_api_key"
+        }
+    }
+)
+```
+
+### 4. API Calls
+
+Direct API calls to external services:
+
+```python Python
+# Add an API call tool
+tool = client.agents.tools.create(
+    agent_id=agent.id,
+    name="weather_api",
+    description="Get weather information",
+    api_call={
+        "method": "GET",
+        "url": "https://api.weather.com/v1/current",
+        "headers": {
+            "Authorization": "Bearer {{agent.metadata.weather_api_key}}"
+        }
+    }
+)
+```
+
+## Using Tools in Tasks
+
+Tools can be used in task workflows:
+
+```yaml
+tools:
+  - name: web_search
+    integration:
+      provider: brave
+      method: search
+  
+  - name: summarize
+    function:
+      parameters:
+        type: object
+        properties:
+          text:
+            type: string
+
+main:
+  # Use the web search tool
+  - tool: web_search
+    arguments:
+      query: "Latest AI developments"
+  
+  # Use the results in a function
+  - tool: summarize
+    arguments:
+      text: _.search_results
+```
+
+## Available Integrations
+
+Julep provides several built-in integrations:
+
+1. **Web Search**
+   - Brave Search
+   - Wikipedia
+
+2. **Document Processing**
+   - Llama Parse
+   - BrowserBase
+
+3. **Media Processing**
+   - Cloudinary
+   - FFmpeg
+
+4. **Research**
+   - Arxiv
+   - Academic databases
+
+5. **Communication**
+   - Email
+   - Discord
+
+## Tool Management
+
+### Adding Tools
+
+```python Python
+# Add a single tool
+tool = client.agents.tools.create(
+    agent_id=agent.id,
+    name="tool_name",
+    description="Tool description",
+    integration={
+        "provider": "provider_name",
+        "method": "method_name"
+    }
+)
+
+# Add multiple tools
+tools = client.agents.tools.create_many(
+    agent_id=agent.id,
+    tools=[
+        {
+            "name": "tool1",
+            "description": "First tool",
+            "integration": {...}
+        },
+        {
+            "name": "tool2",
+            "description": "Second tool",
+            "function": {...}
+        }
+    ]
+)
+```
+
+### Listing Tools
+
+```python Python
+# List all tools for an agent
+tools = client.agents.tools.list(agent_id=agent.id)
+
+# Get a specific tool
+tool = client.agents.tools.get(
+    agent_id=agent.id,
+    tool_id="tool_id"
+)
+```
+
+### Updating Tools
+
+```python Python
+# Update a tool
+tool = client.agents.tools.update(
+    agent_id=agent.id,
+    tool_id="tool_id",
+    description="Updated description"
+)
+```
+
+### Removing Tools
+
+```python Python
+# Remove a tool
+client.agents.tools.delete(
+    agent_id=agent.id,
+    tool_id="tool_id"
+)
+```
+
+## Best Practices
+
+1. **Tool Design**
+   - Keep tool functions focused and single-purpose
+   - Provide clear descriptions of tool functionality
+   - Use appropriate parameter types and validation
+
+2. **Security**
+   - Store API keys in metadata or environment variables
+   - Implement proper error handling
+   - Validate tool inputs and outputs
+
+3. **Performance**
+   - Use appropriate timeouts for API calls
+   - Cache results when possible
+   - Handle rate limits properly
+
+## Example: Complex Tool Setup
+
+Here's an example setting up multiple tools for a research assistant agent:
+
+```python Python
+# Create the agent
+agent = client.agents.create(
+    name="Research Assistant",
+    model="claude-3.5-sonnet",
+    about="An AI assistant for academic research",
+    metadata={
+        "arxiv_max_results": 10,
+        "brave_api_key": "your_brave_api_key"
+    }
+)
+
+# Add research tools
+tools = client.agents.tools.create_many(
+    agent_id=agent.id,
+    tools=[
+        {
+            "name": "search_papers",
+            "description": "Search academic papers on arXiv",
+            "integration": {
+                "provider": "arxiv",
+                "method": "search"
+            }
+        },
+        {
+            "name": "web_search",
+            "description": "Search the web for additional information",
+            "integration": {
+                "provider": "brave",
+                "method": "search",
+                "setup": {
+                    "api_key": "{{agent.metadata.brave_api_key}}"
+                }
+            }
+        },
+        {
+            "name": "parse_pdf",
+            "description": "Parse PDF documents",
+            "integration": {
+                "provider": "llama_parse",
+                "method": "parse"
+            }
+        }
+    ]
+)
+```
+
+## Next Steps
+
+1. [Understand task basics](/building-blocks/tasks/task-basics)
+2. [Learn about workflow steps](/building-blocks/tasks/workflow-steps)
+3. [Explore available integrations](/tools/available-integrations) 

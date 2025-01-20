@@ -1,0 +1,64 @@
+---
+title: 'Error Handling'
+description: 'Best practices for handling errors in Julep SDKs'
+---
+
+# Error Handling
+
+Learn how to effectively handle errors and exceptions when using Julep SDKs.
+
+## Common Error Types
+
+### API Errors
+```python
+try:
+    agent = client.agents.create(name="Test Agent")
+except julep.APIError as e:
+    print(f"API Error: {e.status_code} - {e.message}")
+```
+
+### Authentication Errors
+```python
+try:
+    client = julep.Client(api_key="invalid_key")
+except julep.AuthenticationError as e:
+    print(f"Auth failed: {e}")
+```
+
+### Rate Limit Errors
+```python
+try:
+    results = client.agents.list()
+except julep.RateLimitError as e:
+    print(f"Rate limited. Retry after: {e.retry_after} seconds")
+```
+
+## Error Handling Patterns
+
+### Retrying Failed Requests
+```python
+from julep.utils import retry_with_backoff
+
+@retry_with_backoff(max_retries=3)
+def create_agent_with_retry():
+    return client.agents.create(name="Test Agent")
+```
+
+### Graceful Degradation
+```python
+def get_agent_safely(agent_id):
+    try:
+        return client.agents.get(agent_id)
+    except julep.NotFoundError:
+        return create_default_agent()
+    except julep.APIError:
+        return use_cached_agent(agent_id)
+```
+
+## Best Practices
+
+1. Always wrap API calls in try-except blocks
+2. Handle specific exceptions before generic ones
+3. Implement retry logic for transient failures
+4. Log errors with appropriate context
+5. Provide meaningful error messages to users 

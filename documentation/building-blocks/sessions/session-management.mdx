@@ -1,0 +1,366 @@
+---
+title: 'Session Management'
+description: 'Creating and managing user sessions in Julep'
+---
+
+## Overview
+
+Sessions in Julep enable persistent interactions between users and agents. They maintain conversation history, context, and state across multiple exchanges. This guide covers how to create, manage, and utilize sessions effectively.
+
+## Creating Sessions
+
+Create sessions using the SDK:
+
+```python Python
+# Create a basic session
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id
+)
+
+# Create a session with configuration
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id,
+    context_overflow="adaptive",
+    max_messages=50,
+    metadata={
+        "language": "en",
+        "timezone": "UTC"
+    }
+)
+```
+
+```javascript JavaScript
+// Create a basic session
+const session = await client.sessions.create({
+    agentId: agent.id,
+    userId: user.id
+});
+
+// Create a session with configuration
+const session = await client.sessions.create({
+    agentId: agent.id,
+    userId: user.id,
+    contextOverflow: "adaptive",
+    maxMessages: 50,
+    metadata: {
+        language: "en",
+        timezone: "UTC"
+    }
+});
+```
+
+## Session Configuration
+
+### Context Management
+
+Control how conversation context is managed:
+
+```python Python
+# Fixed context window
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="fixed",
+    max_messages=20
+)
+
+# Adaptive context
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="adaptive",
+    max_tokens=4000
+)
+
+# Summary-based context
+session = client.sessions.create(
+    agent_id=agent.id,
+    context_overflow="summary",
+    summary_interval=10  # Summarize every 10 messages
+)
+```
+
+### Metadata Management
+
+Store session-specific information:
+
+```python Python
+# Set metadata during creation
+session = client.sessions.create(
+    agent_id=agent.id,
+    metadata={
+        "user_preferences": {
+            "language": "en",
+            "style": "formal"
+        },
+        "session_type": "support"
+    }
+)
+
+# Update metadata
+session = client.sessions.update(
+    session_id=session.id,
+    metadata={
+        "last_interaction": "2024-03-24T12:00:00Z"
+    }
+)
+```
+
+## Interacting with Sessions
+
+### Chat Messages
+
+Send and receive messages:
+
+```python Python
+# Send a message
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[
+        {
+            "role": "user",
+            "content": "Hello, how can you help me today?"
+        }
+    ]
+)
+
+# Send multiple messages
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[
+        {
+            "role": "system",
+            "content": "You are a helpful assistant"
+        },
+        {
+            "role": "user",
+            "content": "What can you do?"
+        }
+    ]
+)
+```
+
+### Chat History
+
+Retrieve conversation history:
+
+```python Python
+# Get all messages
+history = client.sessions.history(
+    session_id=session.id
+)
+
+# Get recent messages
+history = client.sessions.history(
+    session_id=session.id,
+    limit=10
+)
+
+# Get messages with metadata
+history = client.sessions.history(
+    session_id=session.id,
+    include_metadata=True
+)
+```
+
+## Session Management
+
+### Listing Sessions
+
+```python Python
+# List all sessions
+sessions = client.sessions.list()
+
+# List sessions with filters
+sessions = client.sessions.list(
+    agent_id=agent.id,
+    user_id=user.id,
+    status="active"
+)
+```
+
+### Updating Sessions
+
+```python Python
+# Update session configuration
+session = client.sessions.update(
+    session_id=session.id,
+    context_overflow="adaptive",
+    max_messages=100
+)
+
+# Update metadata
+session = client.sessions.update(
+    session_id=session.id,
+    metadata={
+        "last_active": "2024-03-24T12:00:00Z",
+        "interaction_count": 42
+    }
+)
+```
+
+### Ending Sessions
+
+```python Python
+# End a session
+client.sessions.delete(session_id=session.id)
+
+# End all user sessions
+client.sessions.delete_many(user_id=user.id)
+```
+
+## Session Context in Tasks
+
+Access session context in task workflows:
+
+```yaml
+main:
+  # Access session metadata
+  - evaluate:
+      language: session.metadata.language
+  
+  # Use session context
+  - prompt:
+      - role: system
+        content: "Previous context: {{session.context}}"
+  
+  # Update session metadata
+  - tool: update_session
+    arguments:
+      metadata:
+        last_task: "data_analysis"
+```
+
+## Best Practices
+
+1. **Session Management**
+   - Use appropriate context overflow strategies
+   - Clean up inactive sessions
+   - Store relevant metadata
+
+2. **Context Handling**
+   - Choose appropriate context window sizes
+   - Use summaries for long conversations
+   - Clear context when switching topics
+
+3. **Performance**
+   - Monitor token usage
+   - Use appropriate timeouts
+   - Cache frequently accessed data
+
+## Example: Complex Session Usage
+
+Here's an example of advanced session management:
+
+```python Python
+# Create a session with custom configuration
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id,
+    context_overflow="adaptive",
+    max_tokens=8000,
+    metadata={
+        "preferences": {
+            "language": "en",
+            "style": "formal",
+            "expertise_level": "advanced"
+        },
+        "session_type": "technical_support",
+        "started_at": datetime.now().isoformat()
+    }
+)
+
+# Create a task that uses session context
+task = client.tasks.create(
+    agent_id=agent.id,
+    yaml="""
+    name: Technical Support
+    description: Handle technical support requests
+
+    tools:
+      - name: search_docs
+        integration:
+          provider: document_store
+          method: search
+      
+      - name: update_session
+        system:
+          resource: session
+          operation: update
+
+    main:
+      # Check session context
+      - evaluate:
+          language: session.metadata.preferences.language
+          expertise: session.metadata.preferences.expertise_level
+      
+      # Customize response based on user preferences
+      - prompt:
+          - role: system
+            content: >
+              You are a technical support agent.
+              User language: {{_.language}}
+              Expertise level: {{_.expertise}}
+              Previous context: {{session.context}}
+          - role: user
+            content: "{{inputs.query}}"
+      
+      # Search documentation
+      - tool: search_docs
+        arguments:
+          query: inputs.query
+          language: _.language
+      
+      # Generate response
+      - prompt:
+          - role: system
+            content: "Generate a response using these docs: {{_.search_results}}"
+          - role: user
+            content: "{{inputs.query}}"
+      
+      # Update session metadata
+      - tool: update_session
+        arguments:
+          metadata:
+            last_query: inputs.query
+            last_response_time: "datetime.now().isoformat()"
+            interaction_count: "session.metadata.interaction_count + 1"
+    """
+)
+
+# Execute the task in the session
+execution = client.executions.create(
+    task_id=task.id,
+    session_id=session.id,
+    input={
+        "query": "How do I configure SSL certificates?"
+    }
+)
+
+# Monitor the execution
+while True:
+    result = client.executions.get(execution.id)
+    if result.status in ["succeeded", "failed"]:
+        break
+    time.sleep(1)
+
+# Get updated session history
+history = client.sessions.history(
+    session_id=session.id,
+    include_metadata=True
+)
+
+# Clean up if needed
+if history.total_messages > 100:
+    # Summarize and archive old messages
+    client.sessions.update(
+        session_id=session.id,
+        context_overflow="summary"
+    )
+```
+
+## Next Steps
+
+1. [Learn about context and state](/building-blocks/sessions/context-and-state)
+2. [Explore task basics](/building-blocks/tasks/task-basics)
+3. [Understand agent memory](/building-blocks/agents/agent-memory) 

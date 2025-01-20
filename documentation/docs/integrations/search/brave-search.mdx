@@ -1,0 +1,79 @@
+---
+title: 'Brave Search'
+description: 'Learn how to use the Brave Search integration with Julep'
+icon: 'searchengin'
+---
+
+Welcome to the Brave Search integration guide for Julep! This integration allows you to perform web searches using Brave, enabling you to build workflows that require comprehensive search capabilities. Whether you're developing a search engine or need to retrieve web data, this guide will walk you through the setup and usage.
+
+## Prerequisites
+
+<Info type="info" title="API Key Required">
+  To use the Brave Search integration, you need an API key. You can obtain this key by signing up at [Brave](https://brave.com/search/api/).
+</Info>
+
+## How to Use the Integration
+
+To get started with the Brave Search integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Configure Your API Key">
+    Add your API key to the tools section of your task. This will allow Julep to authenticate requests to Brave Search on your behalf.
+  </Step>
+  <Step title="Create Task Definition">
+    Use the following YAML configuration to define your search task:
+
+    ```yaml Brave Search Example
+    name: Brave Search Task
+    tools:
+      - name: brave_search
+        type: integration
+        integration:
+          provider: brave
+          setup:
+            api_key: {brave_api_key}
+    main:
+      - tool: brave_search
+        arguments:
+          query: "latest technology trends"
+    ```
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "Brave Search Task".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `brave_search` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `brave` for Brave Search.
+      - **_setup_**: Contains configuration details, such as the API key (`api_key`) required for authentication.
+  </Accordion>
+
+  <Accordion title="Workflow Configuration">
+    - **_main_**: Defines the main execution steps.
+      - **_tool_**: Refers to the tool defined earlier (`brave_search`).
+      - **_arguments_**: Specifies the input parameters for the tool:
+        - **_query_**: The search query for Brave Search.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Remember to replace `{brave_api_key}` with your actual API key. Customize the `query` parameter to suit your specific search needs.
+</Note>
+
+## Conclusion
+
+With the Brave Search integration, you can efficiently perform web searches and retrieve relevant data. 
+This integration provides a robust solution for search capabilities, enhancing your workflow's functionality and user experience.
+
+For further assistance, feel free to reach out to our support team or consult the [Brave Search API documentation](https://api.search.brave.com/app/documentation/web-search/get-started).
+
+<Callout type="success" title="Need Help?">
+  If you encounter any issues or have questions, our support team is here to help. Don't hesitate to reach out!
+</Callout> 

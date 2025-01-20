@@ -1,0 +1,132 @@
+---
+title: 'Installation & Setup'
+description: 'Get started with the Julep Node.js SDK'
+---
+
+## Installation
+
+The Julep Node.js SDK can be installed using npm, yarn, or bun:
+
+```bash
+# Using npm
+npm install @julep/sdk
+
+# Using yarn
+yarn add @julep/sdk
+
+# Using bun
+bun add @julep/sdk
+```
+
+## Configuration
+
+After installation, you'll need to configure the SDK with your API key:
+
+```javascript
+const { Julep } = require('@julep/sdk');
+// Or using ES modules
+import { Julep } from '@julep/sdk';
+
+const client = new Julep({
+  apiKey: 'your_api_key',
+  environment: 'production', // or 'development'
+  // Optional configuration
+  timeout: 30000, // Request timeout in milliseconds
+  retries: 3,     // Number of retries for failed requests
+  baseUrl: 'https://api.julep.ai' // Custom API endpoint if needed
+});
+```
+
+## Environment Variables
+
+We recommend using environment variables to manage your API key securely:
+
+```javascript
+// Load environment variables
+require('dotenv').config();
+
+const client = new Julep({
+  apiKey: process.env.JULEP_API_KEY,
+  environment: process.env.JULEP_ENVIRONMENT || 'production'
+});
+```
+
+Example `.env` file:
+```plaintext
+JULEP_API_KEY=your_api_key_here
+JULEP_ENVIRONMENT=production
+```
+
+## TypeScript Support
+
+The SDK is written in TypeScript and includes type definitions out of the box. No additional installation is required for TypeScript support.
+
+```typescript
+import { Julep, Agent, Task, Execution } from '@julep/sdk';
+
+const client = new Julep({
+  apiKey: process.env.JULEP_API_KEY
+});
+
+async function createAgent(): Promise<Agent> {
+  return await client.agents.create({
+    name: 'My Agent',
+    model: 'claude-3.5-sonnet',
+    about: 'A helpful AI assistant'
+  });
+}
+```
+
+## Verification
+
+To verify your installation and configuration, you can run a simple test:
+
+```javascript
+async function testConnection() {
+  try {
+    const agent = await client.agents.create({
+      name: 'Test Agent',
+      model: 'claude-3.5-sonnet',
+      about: 'Testing the SDK setup'
+    });
+    console.log('Successfully connected to Julep!', agent);
+  } catch (error) {
+    console.error('Connection test failed:', error);
+  }
+}
+
+testConnection();
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Agents"
+    icon="robot"
+    href="/sdks/nodejs/agents"
+  >
+    Learn how to create and manage AI agents
+  </Card>
+  <Card
+    title="Tasks"
+    icon="list-check"
+    href="/sdks/nodejs/tasks"
+  >
+    Create and execute tasks with your agents
+  </Card>
+  <Card
+    title="Sessions"
+    icon="message-bot"
+    href="/sdks/nodejs/sessions"
+  >
+    Manage conversational sessions
+  </Card>
+  <Card
+    title="Tools Integration"
+    icon="screwdriver-wrench"
+    href="/sdks/nodejs/tools-integration"
+  >
+    Add capabilities to your agents
+  </Card>
+</CardGroup> 

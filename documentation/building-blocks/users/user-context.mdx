@@ -1,0 +1,373 @@
+---
+title: 'User Context'
+description: 'Managing user-specific data and preferences in Julep'
+---
+
+## Overview
+
+User context in Julep enables personalized experiences by maintaining user-specific data, preferences, and settings across interactions. This guide explains how to effectively manage and utilize user context in your applications.
+
+## Understanding User Context
+
+### Context Types
+
+1. **User Preferences**
+   - Language settings
+   - UI preferences
+   - Notification settings
+
+2. **Interaction History**
+   - Past conversations
+   - Previous tasks
+   - Usage patterns
+
+3. **Custom Data**
+   - Application-specific settings
+   - User-defined variables
+   - Integration preferences
+
+## Managing User Context
+
+### Setting Context
+
+Set user-specific context:
+
+```python Python
+# Update user preferences
+context = client.context.set(
+    user_id,
+    preferences={
+        "language": "en",
+        "theme": "dark",
+        "notifications": {
+            "email": True,
+            "push": False
+        }
+    }
+)
+
+# Add custom context
+custom_context = client.context.set(
+    user_id,
+    custom_data={
+        "project_id": "proj_123",
+        "role": "admin",
+        "features": ["advanced_search", "analytics"]
+    }
+)
+```
+
+### Retrieving Context
+
+Access user context:
+
+```python Python
+# Get all context
+context = client.context.get(user_id)
+
+# Get specific context
+preferences = client.context.get(
+    user_id,
+    path="preferences"
+)
+
+# Get nested context
+notification_settings = client.context.get(
+    user_id,
+    path="preferences.notifications"
+)
+```
+
+### Updating Context
+
+Modify existing context:
+
+```python Python
+# Update specific fields
+updated_context = client.context.update(
+    user_id,
+    path="preferences.theme",
+    value="light"
+)
+
+# Merge context
+merged_context = client.context.merge(
+    user_id,
+    preferences={
+        "notifications": {
+            "desktop": True
+        }
+    }
+)
+```
+
+## Context in Tasks
+
+### Accessing Context
+
+Use context in task workflows:
+
+```yaml
+tools:
+  - name: get_context
+    system:
+      resource: agent
+      subresource: context
+      operation: get
+
+main:
+  # Get user preferences
+  - tool: get_context
+    arguments:
+      user_id: "{{inputs.user_id}}"
+      path: "preferences"
+  
+  # Use preferences in prompt
+  - prompt:
+      - role: system
+        content: >
+          User preferences:
+          Language: {{_.preferences.language}}
+          Theme: {{_.preferences.theme}}
+      - role: user
+        content: "{{inputs.query}}"
+```
+
+### Updating Context in Tasks
+
+Modify context during task execution:
+
+```yaml
+tools:
+  - name: update_context
+    system:
+      resource: agent
+      subresource: context
+      operation: update
+
+main:
+  # Update user preferences based on interaction
+  - prompt:
+      - role: user
+        content: "{{inputs.query}}"
+  
+  - tool: update_context
+    arguments:
+      user_id: "{{inputs.user_id}}"
+      path: "preferences.last_topic"
+      value: "{{inputs.query}}"
+```
+
+## Context Persistence
+
+### Storage Options
+
+Configure context storage:
+
+```python Python
+# Set context with storage options
+context = client.context.set(
+    user_id,
+    preferences={
+        "language": "en"
+    },
+    storage_options={
+        "persistence": "permanent",
+        "encryption": True,
+        "ttl": 86400  # 24 hours
+    }
+)
+
+# Set temporary context
+temp_context = client.context.set(
+    user_id,
+    temporary_data={
+        "current_task": "analysis"
+    },
+    storage_options={
+        "persistence": "temporary",
+        "ttl": 3600  # 1 hour
+    }
+)
+```
+
+### Context Lifecycle
+
+Manage context lifecycle:
+
+```python Python
+# Clear specific context
+client.context.clear(
+    user_id,
+    path="temporary_data"
+)
+
+# Clear all context
+client.context.clear(user_id)
+
+# Export context
+context_backup = client.context.export(user_id)
+
+# Import context
+client.context.import_(
+    user_id,
+    context_data=context_backup
+)
+```
+
+## Best Practices
+
+1. **Context Organization**
+   - Use clear hierarchical structure
+   - Separate permanent and temporary data
+   - Document context schema
+
+2. **Performance**
+   - Cache frequently accessed context
+   - Use selective updates
+   - Implement context pruning
+
+3. **Security**
+   - Encrypt sensitive data
+   - Implement access controls
+   - Regular context cleanup
+
+## Example: Advanced Context Management
+
+Here's a comprehensive example of context management:
+
+```python Python
+class ContextManager:
+    def __init__(self, client):
+        self.client = client
+    
+    async def initialize_user_context(self, user_id, initial_data):
+        # Set up basic context structure
+        context = await self.client.context.set(
+            user_id,
+            preferences=initial_data.get("preferences", {}),
+            settings=initial_data.get("settings", {}),
+            metadata={
+                "created_at": datetime.now().isoformat(),
+                "version": "1.0"
+            }
+        )
+        
+        # Set up temporary storage
+        temp_context = await self.client.context.set(
+            user_id,
+            temporary_data={},
+            storage_options={
+                "persistence": "temporary",
+                "ttl": 3600
+            }
+        )
+        
+        return {
+            "permanent": context,
+            "temporary": temp_context
+        }
+    
+    async def update_interaction_context(self, user_id, interaction_data):
+        # Get current context
+        context = await self.client.context.get(user_id)
+        
+        # Update interaction history
+        history = context.get("interaction_history", [])
+        history.append({
+            "timestamp": datetime.now().isoformat(),
+            "type": interaction_data["type"],
+            "data": interaction_data["data"]
+        })
+        
+        # Trim history if needed
+        if len(history) > 100:
+            history = history[-100:]
+        
+        # Update context
+        updated_context = await self.client.context.merge(
+            user_id,
+            interaction_history=history,
+            metadata={
+                "last_interaction": datetime.now().isoformat()
+            }
+        )
+        
+        # Update temporary context
+        temp_context = await self.client.context.set(
+            user_id,
+            temporary_data={
+                "current_interaction": interaction_data,
+                "session_data": {
+                    "start_time": context.get("temporary_data", {}).get("session_data", {}).get("start_time", datetime.now().isoformat()),
+                    "interaction_count": len(history)
+                }
+            },
+            storage_options={
+                "persistence": "temporary",
+                "ttl": 3600
+            }
+        )
+        
+        return {
+            "permanent": updated_context,
+            "temporary": temp_context
+        }
+    
+    async def get_user_insights(self, user_id):
+        # Get full context
+        context = await self.client.context.get(user_id)
+        
+        # Analyze interaction history
+        history = context.get("interaction_history", [])
+        
+        # Generate insights
+        insights = {
+            "total_interactions": len(history),
+            "interaction_types": Counter(i["type"] for i in history),
+            "recent_topics": [i["data"].get("topic") for i in history[-5:]],
+            "preferences": context.get("preferences", {}),
+            "session_data": context.get("temporary_data", {}).get("session_data", {})
+        }
+        
+        return insights
+
+# Use the manager
+manager = ContextManager(client)
+
+# Initialize context
+context = await manager.initialize_user_context(
+    user_id,
+    initial_data={
+        "preferences": {
+            "language": "en",
+            "theme": "dark"
+        },
+        "settings": {
+            "notifications": True
+        }
+    }
+)
+
+# Update context with interaction
+updated = await manager.update_interaction_context(
+    user_id,
+    interaction_data={
+        "type": "query",
+        "data": {
+            "topic": "AI",
+            "query": "How does machine learning work?"
+        }
+    }
+)
+
+# Get insights
+insights = await manager.get_user_insights(user_id)
+print("User insights:", insights)
+```
+
+## Next Steps
+
+1. [Explore user sessions](/building-blocks/users/user-sessions)
+2. [Learn about user management](/building-blocks/users/user-management)
+3. [Understand session management](/building-blocks/sessions/session-management) 

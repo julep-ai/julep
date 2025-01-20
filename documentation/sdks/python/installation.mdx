@@ -1,0 +1,68 @@
+---
+title: 'Installation & Setup'
+description: 'Getting started with the Python SDK'
+---
+
+## Installation
+
+Install the Julep Python SDK using pip:
+
+```bash
+pip install julep
+```
+
+## Quick Setup
+
+```python
+from julep import Julep
+
+# Initialize the client
+client = Julep(api_key="your_julep_api_key")
+```
+
+## Environment Setup
+
+You can also configure the client using environment variables:
+
+```bash
+export JULEP_API_KEY=your_julep_api_key
+export JULEP_ENVIRONMENT=production  # or development
+```
+
+Then initialize without parameters:
+
+```python
+from julep import Julep
+
+client = Julep()  # Will use environment variables
+```
+
+## Configuration Options
+
+The Julep client can be configured with several options:
+
+```python
+client = Julep(
+    api_key="your_julep_api_key",
+    environment="production",  # or "development"
+    base_url="https://api.julep.ai",  # Optional: custom API endpoint
+    timeout=30  # Optional: custom timeout in seconds
+)
+```
+
+## Async Support
+
+Julep also provides an async client for use with asyncio:
+
+```python
+from julep import AsyncJulep
+
+async def main():
+    client = AsyncJulep(api_key="your_julep_api_key")
+    # Use the client asynchronously
+    agent = await client.agents.create(name="My Agent")
+
+# Run with asyncio
+import asyncio
+asyncio.run(main())
+``` 

@@ -1,0 +1,170 @@
+---
+title: 'Working with Tasks'
+description: 'Learn how to create and manage tasks using the Python SDK'
+---
+
+## Creating Tasks
+
+Create a task with a specific workflow:
+
+```python
+import yaml
+
+task_yaml = """
+name: Research Task
+description: Perform research on a given topic
+
+tools:
+  - name: web_search
+    type: integration
+    integration:
+      provider: brave
+      method: search
+
+main:
+  - prompt:
+      - role: system
+        content: You are {{agent.name}}. {{agent.about}}
+      - role: user
+        content: Research the topic: {{_.topic}}
+    unwrap: true
+
+  - tool: web_search
+    arguments:
+      query: _.topic
+
+  - prompt:
+      - role: system
+        content: Summarize the research findings
+      - role: user
+        content: Here are the search results: {{_.search_results}}
+"""
+
+task = client.tasks.create(
+    agent_id=agent.id,
+    **yaml.safe_load(task_yaml)
+)
+```
+
+## Task Components
+
+A task in Julep consists of several components:
+
+```python
+task = client.tasks.create(
+    agent_id=agent.id,
+    name="Complex Task",
+    description="A multi-step task with various components",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "topic": {"type": "string"},
+            "depth": {"type": "integer", "minimum": 1, "maximum": 5}
+        },
+        "required": ["topic"]
+    },
+    tools=[
+        {
+            "name": "web_search",
+            "type": "integration",
+            "integration": {
+                "provider": "brave",
+                "method": "search"
+            }
+        }
+    ],
+    main=[
+        {"prompt": "Research {{_.topic}} at depth {{_.depth}}"},
+        {"tool": "web_search", "arguments": {"query": "_.topic"}},
+        {"evaluate": {"results": "process_results(_)"}}
+    ]
+)
+```
+
+## Executing Tasks
+
+Execute a task with specific inputs:
+
+```python
+# Create an execution
+execution = client.executions.create(
+    task_id=task.id,
+    input={"topic": "quantum computing", "depth": 3}
+)
+
+# Check execution status
+while True:
+    result = client.executions.get(execution.id)
+    if result.status in ['succeeded', 'failed']:
+        break
+    time.sleep(1)
+
+# Get the results
+if result.status == "succeeded":
+    print(result.output)
+else:
+    print(f"Execution failed: {result.error}")
+```
+
+## Managing Task Executions
+
+```python
+# List executions for a task
+executions = client.executions.list(
+    task_id=task.id,
+    limit=10,
+    offset=0,
+    status="succeeded"  # Filter by status
+)
+
+# Cancel an execution
+client.executions.cancel(execution_id=execution.id)
+```
+
+## Task Control Flow
+
+Julep supports various control flow operations in tasks:
+
+```yaml
+main:
+  # Conditional execution
+  - if: _.score > 0.8
+    then:
+      - log: High score achieved
+    else:
+      - log: Score needs improvement
+
+  # Iteration
+  - foreach:
+      in: _.data_list
+      do:
+        - log: "Processing {{_}}"
+
+  # Parallel processing
+  - map_reduce:
+      over: _.topics
+      map:
+        - prompt: Write about {{_}}
+      parallelism: 5
+
+  # Error handling
+  - try:
+      - tool: risky_operation
+    catch:
+      - log: Operation failed
+```
+
+## Error Handling
+
+```python
+from julep.exceptions import JulepError, TaskNotFoundError, ExecutionError
+
+try:
+    execution = client.executions.create(task_id="nonexistent_id")
+except TaskNotFoundError:
+    print("Task not found")
+except ExecutionError as e:
+    print(f"Execution failed: {e}")
+except JulepError as e:
+    print(f"An error occurred: {e}")
+``` 

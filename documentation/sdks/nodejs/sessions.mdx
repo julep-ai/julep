@@ -1,0 +1,218 @@
+---
+title: 'Sessions'
+description: 'Manage conversational sessions with the Node.js SDK'
+---
+
+Sessions in Julep enable persistent, stateful interactions between users and agents. They maintain context across multiple exchanges and can be used to build conversational interfaces.
+
+## Creating Sessions
+
+```javascript
+// Create a new session
+const session = await client.sessions.create({
+  agent_id: agentId,
+  user_id: userId, // Optional
+  metadata: {
+    channel: 'web',
+    language: 'english'
+  },
+  context_overflow: 'adaptive' // or 'truncate' or 'summarize'
+});
+```
+
+## Session Chat
+
+```javascript
+// Send a message and get a response
+const response = await client.sessions.chat(sessionId, {
+  messages: [
+    {
+      role: 'user',
+      content: 'Hello! Can you help me with my order?'
+    }
+  ]
+});
+
+// Continue the conversation in the same session
+const followUp = await client.sessions.chat(sessionId, {
+  messages: [
+    {
+      role: 'user',
+      content: 'I need to change my shipping address.'
+    }
+  ]
+});
+```
+
+## Managing Context
+
+Sessions automatically maintain context, but you can also manage it manually:
+
+```javascript
+// Add context to the session
+await client.sessions.update(sessionId, {
+  metadata: {
+    order_id: '12345',
+    customer_tier: 'premium'
+  }
+});
+
+// Get session history
+const history = await client.sessions.history(sessionId, {
+  limit: 10,
+  offset: 0
+});
+```
+
+## Session Tools
+
+Tools can be added specifically for a session:
+
+```javascript
+// Add a session-specific tool
+await client.sessions.tools.create(sessionId, {
+  name: 'check_order_status',
+  description: 'Check the status of an order',
+  type: 'function',
+  function: {
+    parameters: {
+      type: 'object',
+      properties: {
+        order_id: {
+          type: 'string',
+          description: 'The order ID to check'
+        }
+      },
+      required: ['order_id']
+    }
+  }
+});
+```
+
+## Session Documents
+
+Add relevant documents to the session for context:
+
+```javascript
+// Add a document to the session
+const document = await client.sessions.docs.create(sessionId, {
+  title: 'Order Details',
+  content: 'Order #12345: 2 items, shipping to...',
+  metadata: {
+    order_id: '12345',
+    type: 'order_details'
+  }
+});
+
+// Search session documents
+const docs = await client.sessions.docs.search(sessionId, {
+  query: 'shipping policy',
+  metadata: {
+    type: 'policy'
+  }
+});
+```
+
+## Managing Sessions
+
+```javascript
+// Get a specific session
+const session = await client.sessions.get(sessionId);
+
+// List all sessions
+const sessions = await client.sessions.list({
+  limit: 10,
+  offset: 0,
+  agent_id: agentId // Optional filter
+});
+
+// Update a session
+const updatedSession = await client.sessions.update(sessionId, {
+  metadata: {
+    status: 'resolved'
+  }
+});
+
+// Delete a session
+await client.sessions.delete(sessionId);
+```
+
+## Error Handling
+
+```javascript
+try {
+  const response = await client.sessions.chat(sessionId, {
+    messages: [
+      {
+        role: 'user',
+        content: 'Hello!'
+      }
+    ]
+  });
+} catch (error) {
+  if (error.name === 'SessionError') {
+    console.error('Session error:', error.message);
+  } else if (error.name === 'ApiError') {
+    console.error('API error:', error.message, error.status);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+## Context Overflow Strategies
+
+Julep provides different strategies for handling context overflow:
+
+```javascript
+// Adaptive strategy (default)
+const adaptiveSession = await client.sessions.create({
+  agent_id: agentId,
+  context_overflow: 'adaptive'
+});
+
+// Truncate strategy
+const truncateSession = await client.sessions.create({
+  agent_id: agentId,
+  context_overflow: 'truncate'
+});
+
+// Summarize strategy
+const summarizeSession = await client.sessions.create({
+  agent_id: agentId,
+  context_overflow: 'summarize'
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Tools Integration"
+    icon="screwdriver-wrench"
+    href="/sdks/nodejs/tools-integration"
+  >
+    Add tools to your sessions
+  </Card>
+  <Card
+    title="Advanced Usage"
+    icon="graduation-cap"
+    href="/sdks/nodejs/advanced-usage"
+  >
+    Explore advanced patterns
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference"
+  >
+    View the complete API reference
+  </Card>
+  <Card
+    title="Examples"
+    icon="lightbulb"
+    href="/examples"
+  >
+    See real-world examples
+  </Card>
+</CardGroup> 

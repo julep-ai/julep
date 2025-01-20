@@ -1,0 +1,129 @@
+---
+title: Welcome
+description: 'Welcome to Julep - The Platform for Building Advanced AI Agents'
+---
+
+<Frame>
+  <img
+    className="block dark:hidden"
+    src="/images/julep-hero-light.png"
+    alt="Julep Hero Light"
+    style={{ height: "40vh" }}
+  />
+  <img
+    className="hidden dark:block"
+    src="/images/julep-hero-dark.png"
+    alt="Julep Hero Dark"
+    style={{ height: "40vh" }}
+  />
+</Frame>
+
+## Welcome to Julep
+
+Julep is a platform that helps you build advanced AI agents capable of handling complex tasks, maintaining long-term memory, and integrating with various tools and services. Whether you're building a sophisticated AI assistant, automating workflows, or creating intelligent systems, Julep provides the infrastructure you need.
+
+## Quick Overview
+
+<CardGroup cols={2}>
+  <Card
+    title="What is Julep?"
+    icon="circle-question"
+    href="/documentation/what-is-julep"
+  >
+    Learn about Julep's purpose and what makes it different from other AI frameworks
+  </Card>
+  <Card
+    title="Key Features"
+    icon="stars"
+    href="/documentation/key-features"
+  >
+    Discover Julep's main capabilities and how they can benefit your projects
+  </Card>
+  <Card
+    title="Architecture"
+    icon="diagram-project"
+    href="/documentation/architecture-overview"
+  >
+    Understand how Julep's components work together to power your AI applications
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/documentation/quick-start"
+  >
+    Get started with your first Julep agent in just a few minutes
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+The fastest way to get started with Julep is to:
+
+1. Install the SDK for your preferred language:
+   ```bash
+   # Python
+   pip install julep
+
+   # Node.js
+   npm install @julep/sdk
+   ```
+
+2. Get your API key from the [Julep Dashboard](https://dashboard.julep.ai)
+
+3. Create your first agent:
+   ```python
+   from julep import Julep
+
+   client = Julep(api_key="your_api_key")
+   
+   agent = client.agents.create(
+       name="My First Agent",
+       model="claude-3.5-sonnet",
+       about="A helpful AI assistant"
+   )
+   ```
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/documentation/installation"
+  >
+    Detailed setup instructions
+  </Card>
+  <Card
+    title="Core Concepts"
+    icon="book"
+    href="/documentation/core-concepts"
+  >
+    Essential concepts and terminology
+  </Card>
+  <Card
+    title="Examples"
+    icon="code"
+    href="/examples/basic-agent-creation"
+  >
+    Learn from practical examples
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+<CardGroup cols={2}>
+  <Card
+    title="Join our Community"
+    icon="discord"
+    href="https://discord.gg/p4c7ehs4vD"
+  >
+    Get help and share ideas with other Julep developers
+  </Card>
+  <Card
+    title="Contact Support"
+    icon="envelope"
+    href="mailto:developers@julep.ai"
+  >
+    Reach out to our team for assistance
+  </Card>
+</CardGroup>
