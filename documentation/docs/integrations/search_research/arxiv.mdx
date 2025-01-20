@@ -21,6 +21,7 @@ To get started with the ArXiv integration, follow these steps to configure and c
         type: integration
         integration:
           provider: arxiv
+          method: search
     main:
       - tool: arxiv_search
         arguments:
@@ -45,6 +46,7 @@ To get started with the ArXiv integration, follow these steps to configure and c
     - **_type_**: Specifies the type of tool, which is `integration` in this context.
     - **_integration_**: Details the provider and setup for the integration.
       - **_provider_**: Indicates the service provider, which is `arxiv` for ArXiv.
+      - **_method_**: Indicates the method to be used, which is `search` for ArXiv. If not specified, the method will be `search` by default.
   </Accordion>
 
   <Accordion title="Workflow Configuration">
@@ -68,8 +70,6 @@ To get started with the ArXiv integration, follow these steps to configure and c
 With the ArXiv integration, you can easily access a wealth of academic papers and articles. 
 This integration provides a robust solution for accessing scholarly data, enhancing your workflow's research capabilities and user experience.
 
-For further assistance, feel free to reach out to our support team or consult the [ArXiv API documentation](https://arxiv.org/help/api/index).
-
-<Callout type="success" title="Need Help?">
-  If you encounter any issues or have questions, our support team is here to help. Don't hesitate to reach out!
-</Callout> 
+<Tip>
+  For more information, please refer to the [ArXiv API documentation](https://arxiv.org/help/api/index).
+</Tip> 
