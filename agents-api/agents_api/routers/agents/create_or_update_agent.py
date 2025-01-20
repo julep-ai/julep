@@ -12,8 +12,9 @@ from ...dependencies.developer_id import get_developer_id
 from ...queries.agents.create_or_update_agent import (
     create_or_update_agent as create_or_update_agent_query,
 )
-from .router import router
 from ..utils.model_validation import validate_model
+from .router import router
+
 
 @router.post("/agents/{agent_id}", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_or_update_agent(
@@ -21,7 +22,7 @@ async def create_or_update_agent(
     data: CreateOrUpdateAgentRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    
+
     if data.model:
         await validate_model(data.model)
 

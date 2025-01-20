@@ -440,11 +440,13 @@ async def test_tool(
     )
     return tool
 
+
 SAMPLE_MODELS = [
     {"id": "gpt-4"},
     {"id": "gpt-3.5-turbo"},
     {"id": "gpt-4o-mini"},
 ]
+
 
 @fixture(scope="global")
 def client(_dsn=pg_dsn):

@@ -7,8 +7,9 @@ from starlette.status import HTTP_200_OK
 from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
 from ...dependencies.developer_id import get_developer_id
 from ...queries.agents.patch_agent import patch_agent as patch_agent_query
-from .router import router
 from ..utils.model_validation import validate_model
+from .router import router
+
 
 @router.patch(
     "/agents/{agent_id}",
@@ -21,7 +22,7 @@ async def patch_agent(
     agent_id: UUID,
     data: PatchAgentRequest,
 ) -> ResourceUpdatedResponse:
-    
+
     if data.model:
         await validate_model(data.model)
 
