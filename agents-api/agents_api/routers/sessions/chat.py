@@ -25,7 +25,7 @@ from ...queries.entries.create_entries import create_entries
 from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from .metrics import total_tokens_per_user
 from .router import router
-
+from ..utils.model_validation import validate_model
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
@@ -55,6 +55,10 @@ async def chat(
     Returns:
         ChatResponse: The chat response.
     """
+
+    if chat_input.model:
+        await validate_model(chat_input.model)
+
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
