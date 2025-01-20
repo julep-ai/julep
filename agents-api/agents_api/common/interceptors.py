@@ -4,7 +4,6 @@ The main purpose of these interceptors is to handle errors and prevent retrying
 certain types of errors that are known to be non-retryable.
 """
 
-import asyncio
 import sys
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
@@ -19,10 +18,13 @@ from temporalio.worker import (
     ExecuteActivityInput,
     ExecuteWorkflowInput,
     Interceptor,
+    StartChildWorkflowInput,
     WorkflowInboundInterceptor,
     WorkflowInterceptorClassInput,
+    WorkflowOutboundInterceptor,
 )
 from temporalio.workflow import (
+    ChildWorkflowHandle,
     ContinueAsNewError,
     NondeterminismError,
     ReadOnlyContextError,
@@ -32,6 +34,7 @@ with workflow.unsafe.imports_passed_through():
     from ..env import blob_store_cutoff_kb, use_blob_store_for_temporal
     from .exceptions.tasks import is_retryable_error
     from .protocol.remote import RemoteObject
+    from .protocol.tasks import ExecutionInput, StepContext, StepOutcome
 
 # Common exceptions that should be re-raised without modification
 PASSTHROUGH_EXCEPTIONS = (
@@ -46,43 +49,110 @@ PASSTHROUGH_EXCEPTIONS = (
 )
 
 
+def get_deep_size(obj: Any, seen: set | None = None) -> int:
+    """
+    Recursively calculate total size of an object and all its contents in bytes.
+
+    Args:
+        obj: The object to measure
+        seen: Set of object ids already processed to handle circular references
+
+    Returns:
+        Total size in bytes
+    """
+    if seen is None:
+        seen = set()
+
+    obj_id = id(obj)
+    if obj_id in seen:
+        return 0
+    seen.add(obj_id)
+
+    size = sys.getsizeof(obj)
+
+    if isinstance(obj, str | bytes | bytearray):
+        # These types already include their content size in getsizeof
+        pass
+
+    elif isinstance(obj, tuple | list | set | frozenset):
+        size += sum(get_deep_size(item, seen) for item in obj)
+
+    elif isinstance(obj, dict):
+        size += sum(get_deep_size(k, seen) + get_deep_size(v, seen) for k, v in obj.items())
+
+    elif hasattr(obj, "__dict__"):
+        # Handle custom objects
+        size += get_deep_size(obj.__dict__, seen)
+
+    elif hasattr(obj, "__slots__"):
+        # Handle objects using __slots__
+        size += sum(
+            get_deep_size(getattr(obj, attr), seen)
+            for attr in obj.__slots__
+            if hasattr(obj, attr)
+        )
+
+    return size
+
+
 def is_too_large(result: Any) -> bool:
-    return sys.getsizeof(result) > blob_store_cutoff_kb * 1024
+    return get_deep_size(result) > blob_store_cutoff_kb * 1024
 
 
-async def load_if_remote[T](arg: T | RemoteObject[T]) -> T:
-    if use_blob_store_for_temporal and isinstance(arg, RemoteObject):
-        return await arg.load()
+def load_if_remote(arg: Any | RemoteObject) -> Any:
+    if not use_blob_store_for_temporal:
+        return arg
+
+    if isinstance(arg, ChildWorkflowHandle):
+        return arg
+
+    if isinstance(arg, RemoteObject):
+        return arg.load()
+
+    if isinstance(arg, StepContext):
+        arg.load_inputs()
+
+    elif isinstance(arg, StepOutcome):
+        arg.load_transition_to()
+
+    elif isinstance(arg, ExecutionInput):
+        arg.load_arguments()
 
     return arg
 
 
-async def offload_if_large[T](result: T) -> T:
-    if use_blob_store_for_temporal and is_too_large(result):
-        return await RemoteObject.from_value(result)
+def offload_if_large[T](result: T) -> T | RemoteObject:
+    if not use_blob_store_for_temporal:
+        return result
+
+    if isinstance(result, ChildWorkflowHandle):
+        return result
+
+    if is_too_large(result):
+        return RemoteObject.from_value(result)
 
     return result
 
 
 def offload_to_blob_store[S, T](
     func: Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T]],
-) -> Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T | RemoteObject[T]]]:
+) -> Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T | RemoteObject]]:
     @wraps(func)
     async def wrapper(
         self,
         input: ExecuteActivityInput | ExecuteWorkflowInput,
-    ) -> T | RemoteObject[T]:
+    ) -> T | RemoteObject:
         # Load all remote arguments from the blob store
         args: Sequence[Any] = input.args
 
         if use_blob_store_for_temporal:
-            input.args = await asyncio.gather(*[load_if_remote(arg) for arg in args])
+            input.args = [load_if_remote(arg) for arg in args]
 
         # Execute the function
         result = await func(self, input)
 
         # Save the result to the blob store if necessary
-        return await offload_if_large(result)
+        return offload_if_large(result)
 
     return wrapper
 
@@ -146,6 +216,14 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
     Handles workflow execution errors and determines their retry behavior.
     """
 
+    def init(self, outbound: WorkflowOutboundInterceptor) -> None:
+        """Initialize with an outbound interceptor.
+
+        To add a custom outbound interceptor, wrap the given interceptor before
+        sending to the next ``init`` call.
+        """
+        self.next.init(CustomOutboundInterceptor(outbound))
+
     @offload_to_blob_store
     async def execute_workflow(self, input: ExecuteWorkflowInput) -> Any:
         """
@@ -153,6 +231,19 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
         """
         return await handle_execution_with_errors(
             super().execute_workflow,
+            input,
+        )
+
+
+class CustomOutboundInterceptor(WorkflowOutboundInterceptor):
+    """
+    Custom outbound interceptor for Temporal workflows.
+    """
+
+    @offload_to_blob_store
+    async def start_child_workflow(self, input: StartChildWorkflowInput) -> ChildWorkflowHandle:
+        return await handle_execution_with_errors(
+            super().start_child_workflow,
             input,
         )
 

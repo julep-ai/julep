@@ -2,15 +2,18 @@ import os
 from contextlib import asynccontextmanager
 from typing import Protocol
 
-from aiobotocore.client import AioBaseClient
-from aiobotocore.session import get_session
-from asyncpg.pool import Pool
-from fastapi import APIRouter, FastAPI
-from prometheus_fastapi_instrumentator import Instrumentator
-from scalar_fastapi import get_scalar_api_reference
+from temporalio import workflow
 
-from .clients.pg import create_db_pool
-from .env import api_prefix, hostname, pool_max_size, protocol, public_port
+with workflow.unsafe.imports_passed_through():
+    from aiobotocore.client import AioBaseClient
+    from aiobotocore.session import get_session
+    from asyncpg.pool import Pool
+    from fastapi import APIRouter, FastAPI
+    from prometheus_fastapi_instrumentator import Instrumentator
+    from scalar_fastapi import get_scalar_api_reference
+
+    from .clients.pg import create_db_pool
+    from .env import api_prefix, hostname, pool_max_size, protocol, public_port
 
 
 class State(Protocol):
@@ -28,7 +31,7 @@ async def lifespan(container: FastAPI | ObjectWithState):
     # INIT POSTGRES #
     pg_dsn = os.environ.get("PG_DSN")
 
-    pool = await create_db_pool(pg_dsn, max_size=pool_max_size)
+    pool = await create_db_pool(pg_dsn, max_size=pool_max_size, min_size=min(pool_max_size, 10))
 
     if hasattr(container, "state") and not getattr(container.state, "postgres_pool", None):
         container.state.postgres_pool = pool

@@ -32,6 +32,7 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
+    from .remote import RemoteObject
 
 # TODO: Maybe we should use a library for this
 
@@ -151,17 +152,33 @@ class ExecutionInput(BaseModel):
     task: TaskSpecDef | None = None
     agent: Agent
     agent_tools: list[Tool | CreateToolRequest]
-    arguments: dict[str, Any]
+    arguments: dict[str, Any] | RemoteObject
 
     # Not used at the moment
     user: User | None = None
     session: Session | None = None
 
+    def load_arguments(self) -> None:
+        if isinstance(self.arguments, RemoteObject):
+            self.arguments = self.arguments.load()
+
 
 class StepContext(BaseModel):
     execution_input: ExecutionInput
-    inputs: list[Any]
+    inputs: list[Any | RemoteObject]
     cursor: TransitionTarget
+
+    def load_inputs(self) -> None:
+        self.execution_input.load_arguments()
+
+        to_load = [
+            (i, input) for i, input in enumerate(self.inputs) if isinstance(input, RemoteObject)
+        ]
+        indices, inputs = zip(*to_load) if to_load else ([], [])
+        results = [input.load() for input in inputs]
+
+        for i, result in zip(indices, results):
+            self.inputs[i] = result
 
     @computed_field
     @property
@@ -259,7 +276,11 @@ class StepContext(BaseModel):
 class StepOutcome(BaseModel):
     error: str | None = None
     output: Any = None
-    transition_to: tuple[TransitionType, TransitionTarget] | None = None
+    transition_to: tuple[TransitionType, TransitionTarget | RemoteObject] | None = None
+
+    def load_transition_to(self) -> None:
+        if isinstance(self.transition_to[1], RemoteObject):
+            self.transition_to[1] = self.transition_to[1].load()
 
 
 @beartype

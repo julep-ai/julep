@@ -15,7 +15,6 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
-    from ...activities.sync_items_remote import save_inputs_remote
     from ...autogen.openapi_model import (
         ApiCallDef,
         BaseIntegrationDef,
@@ -124,7 +123,7 @@ GenericStep = RootModel[WorkflowStep]
 
 
 # Main workflow definition
-@workflow.defn
+@workflow.defn(sandboxed=False)
 class TaskExecutionWorkflow:
     last_error: BaseException | None = None
 
@@ -664,18 +663,7 @@ class TaskExecutionWorkflow:
             f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
         )
 
-        # Save the final output to the blob store
-        [final_output] = await workflow.execute_activity(
-            save_inputs_remote,
-            args=[[final_state.output]],
-            schedule_to_close_timeout=timedelta(
-                seconds=10 if debug or testing else temporal_schedule_to_close_timeout
-            ),
-            retry_policy=DEFAULT_RETRY_POLICY,
-            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
-        )
-
-        previous_inputs.append(final_output)
+        previous_inputs.append(final_state.output)
 
         # Continue as a child workflow
         return await continue_as_child(

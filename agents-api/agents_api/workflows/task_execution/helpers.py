@@ -51,6 +51,7 @@ async def continue_as_child(
 ) -> Any:
     info = workflow.info()
 
+    # FIXME: This doesn't actually work
     if info.is_continue_as_new_suggested():
         run = workflow.continue_as_new
     else:
