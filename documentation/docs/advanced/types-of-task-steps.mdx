@@ -1,15 +1,429 @@
 ---
 title: 'Types of Task Steps'
-description: 'Learn about different types of task steps and their use cases'
+description: 'Learn about different types of task steps and their use'
 icon: 'stairs'
 ---
 
-Coming soon...
+In Julep broadly speaking there are two types of steps:
 
-## Overview
+<CardGroup cols={2}>
+  <Card title="Control Flow Steps" icon="code-branch" href="#control-flow-steps">
+    <p>These steps control the flow of the task. They are used to create conditional logic, loops, and parallel execution.</p>
+  </Card>
 
-This guide covers:
-- Sequential vs parallel steps
-- Conditional execution paths
-- Integration steps
-- Error handling steps 
+  <Card title="Key-Value Steps" icon="database" href="#key-value-steps">
+    <p>These steps are used to get and set values in the task.</p>
+  </Card>
+
+  <Card title="Iteration Steps" icon="arrows-spin" href="#iteration-steps">
+    <p>These steps are used to iterate over a collection.</p>
+  </Card>
+
+  <Card title="Conditional Steps" icon="code-branch" href="#conditional-steps">
+    <p>These steps are used to create conditional logic.</p>
+  </Card>
+
+  <Card title="Other Control Flow Steps" icon="code-branch" href="#other-control-flow">
+    <p>These steps are used to control the flow of the task.</p>
+  </Card> 
+
+</CardGroup>
+
+<Note>
+  The steps defined out here are in the YAML format. You can learn more about the YAML format [here](https://yaml.org/spec/1.2.2/).
+</Note>
+
+## Control Flow Steps
+
+### Prompt Step
+
+Send messages to the AI model:
+
+```yaml
+# Simple prompt
+- prompt: "What is your name?"
+
+# Multi-message prompt
+- prompt:
+    - role: system
+      content: "You are a helpful assistant"
+    - role: user
+      content: "Hello!"
+
+# Prompt with settings
+- prompt:
+    - role: user
+      content: "Generate a creative story"
+  settings:
+    model: "claude-3.5-sonnet"
+    temperature: 0.8
+```
+<Info>
+In the prompt step we offer a bunch of Python functions to help you manipulate data. Here is a list of the functions you can use:
+
+- Standard library modules:
+  - `re`: Regular expressions (safe against ReDoS)
+  - `json`: JSON encoding/decoding
+  - `yaml`: YAML parsing/dumping
+  - `string`: String constants and operations
+  - `datetime`: Date and time operations
+  - `math`: Mathematical functions
+  - `statistics`: Statistical operations
+  - `base64`: Base64 encoding/decoding
+  - `urllib`: URL parsing operations
+  - `random`: Random number generation
+  - `time`: Time operations
+
+- Constants:
+  - `NEWLINE`: Newline character
+  - `true`: Boolean true
+  - `false`: Boolean false
+  - `null`: None value
+
+</Info>
+
+### Tool Call Step
+
+Execute tools defined in the task:
+
+```yaml
+# Simple tool call
+- tool: web_search
+  arguments:
+    query: "Latest AI news"
+
+# Tool call with complex arguments
+- tool: process_data
+  arguments:
+    input_data: _.previous_result
+    options:
+      format: "json"
+      validate: true
+```
+
+### Evaluate Step
+
+Perform calculations or data manipulation:
+
+```yaml
+# Simple evaluation
+- evaluate:
+    count: "len(_.results)"
+
+# Multiple evaluations
+- evaluate:
+    total: "sum(_.numbers)"
+    average: "_.total / len(_.numbers)"
+    formatted: "f'Average: {_.average:.2f}'"
+```
+
+<Info>
+In the evaluate step we offer a bunch of Python functions to help you manipulate data. Here is a list of the functions you can use:
+
+- Basic Python functions: `abs`, `all`, `any`, `bool`, `dict`, `enumerate`, `float`, `int`, `len`, `list`, `map`, `max`, `min`, `round`, `set`, `str`, `sum`, `tuple`, `zip`, `reduce`
+
+- JSON/YAML handling: `load_json`, `load_yaml`, `dump_json`, `dump_yaml`, `extract_json`
+
+- Text processing:
+  - Regex (safe against ReDoS): `search_regex`, `match_regex`
+  - NLP: `nlp`, `chunk_doc`
+
+- Safe versions of common functions:
+  - `range`: Safe version with size limits
+
+</Info>
+
+### Wait for Input Step
+
+Pause workflow for user input:
+
+```yaml
+# Simple input request
+- wait_for_input:
+    info:
+      message: "Please provide your name"
+
+# Input with validation
+- wait_for_input:
+    info:
+      message: "Enter your age"
+      validation:
+        type: "number"
+        minimum: 0
+        maximum: 150
+```
+
+## Key-Value Steps
+
+### Get Step
+
+Retrieve values from storage:
+
+```yaml
+# Get a single value
+- get: user_preference
+
+# Get multiple values
+- get:
+    - preference1
+    - preference2
+```
+
+### Set Step
+
+Store values for later use:
+
+```yaml
+# Set a single value
+- set:
+    user_name: "John"
+
+# Set multiple values
+- set:
+    count: "len(_.results)"
+    has_data: "_.count > 0"
+```
+
+## Iteration Steps
+
+### Foreach Step
+
+Iterate over a collection:
+
+```yaml
+# Simple foreach
+- foreach:
+    in: _.items
+    do:
+      - log: "Processing {{_}}"
+
+# Foreach with complex processing
+- foreach:
+    in: _.documents
+    do:
+      - tool: analyze
+        arguments:
+          text: _.content
+      - evaluate:
+          results: "_ + [_.analysis]"
+```
+
+### Map-Reduce Step
+
+Process collections in parallel:
+
+```yaml
+# Simple map-reduce
+- map_reduce:
+    over: _.urls
+    map:
+      - tool: fetch_content
+        arguments:
+          url: _
+    reduce: results + [_]
+
+# Map-reduce with parallelism
+- map_reduce:
+    over: _.queries
+    map:
+      - tool: web_search
+        arguments:
+          query: _
+    parallelism: 5
+```
+
+### Parallel Step
+
+Execute steps concurrently:
+
+```yaml
+# Parallel execution
+- parallel:
+    - tool: task1
+      arguments:
+        param: "value1"
+    - tool: task2
+      arguments:
+        param: "value2"
+```
+
+## Conditional Steps
+
+### If-Else Step
+
+Conditional execution:
+
+```yaml
+# Simple if
+- if: _.count > 0
+  then:
+    - log: "Found results"
+
+# If-else
+- if: _.score > 0.8
+  then:
+    - log: "High score"
+  else:
+    - log: "Low score"
+
+# Nested conditions
+- if: _.type == "A"
+  then:
+    - if: _.value > 10
+      then:
+        - log: "High value A"
+      else:
+        - log: "Low value A"
+  else:
+    - log: "Not type A"
+```
+
+### Switch Step
+
+Multiple condition handling:
+
+```yaml
+# Switch statement
+- switch:
+    - case: _.category == "A"
+      then:
+        - log: "Category A"
+    - case: _.category == "B"
+      then:
+        - log: "Category B"
+    - case: _  # Default case
+      then:
+        - log: "Unknown category"
+```
+
+## Other Control Flow
+
+### Sleep Step
+
+Pause execution:
+
+```yaml
+# Sleep for duration
+- sleep:
+    seconds: 30
+
+# Sleep with different units
+- sleep:
+    minutes: 5
+    # hours: 1
+    # days: 1
+```
+
+### Return Step
+
+Return values from workflow:
+
+```yaml
+# Simple return
+- return: _.result
+
+# Structured return
+- return:
+    data: _.processed_data
+    metadata:
+      count: _.count
+      timestamp: "datetime.now().isoformat()"
+```
+
+### Yield Step
+
+Execute subworkflows:
+
+```yaml
+# Yield to subworkflow
+- yield:
+    workflow: process_data
+    arguments:
+      input_data: _.raw_data
+
+# Yield with result handling
+- yield:
+    workflow: analyze
+    arguments:
+      text: _.content
+- evaluate:
+    analysis_result: _
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Step Organization" icon="folder-tree">
+    - Group related steps logically
+    - Use comments to explain complex steps 
+    - Keep step chains focused and manageable
+  </Accordion>
+
+  <Accordion title="Error Handling" icon="shield-exclamation">
+    - Use if-else for error conditions
+    - Provide fallback options
+    - Log important state changes
+  </Accordion>
+
+  <Accordion title="Performance" icon="gauge-high">
+    - Use parallel execution when possible
+    - Optimize data passing between steps
+    - Cache frequently used values
+  </Accordion>
+</AccordionGroup>
+
+## Example: Complex Workflow
+
+Here's an example combining various step types:
+
+```yaml
+main:
+  # Initial setup
+  - evaluate:
+      start_time: "datetime.now().isoformat()"
+  
+  # Get user input
+  - wait_for_input:
+      info:
+        message: "Enter search topics (comma-separated)"
+  
+  # Process input
+  - evaluate:
+      topics: "_.input.split(',')"
+  
+  # Parallel search
+  - map_reduce:
+    over: _.topics
+    map:
+      - parallel:
+          - tool: web_search
+            arguments:
+              query: _
+          - tool: arxiv_search
+            arguments:
+              query: _
+    parallelism: 3
+  
+  # Process results
+  - foreach:
+      in: _
+      do:
+        - evaluate:
+            web_results: _[0]
+            academic_results: _[1]
+        - if: "len(_.web_results) > 0 or len(_.academic_results) > 0"
+          then:
+            - tool: summarize
+              arguments:
+                texts: _.web_results + _.academic_results
+          else:
+            - evaluate:
+                summary: "'No results found'"
+  
+  # Return final results
+  - return:
+      results: _
+      metadata:
+        start_time: _.start_time
+        end_time: "datetime.now().isoformat()"
+```

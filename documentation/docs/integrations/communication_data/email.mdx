@@ -30,6 +30,7 @@ To get started with the Email integration, follow these steps to configure and c
         type: integration
         integration:
           provider: email
+          method: send
           setup:
             host: "smtp.example.com"
             port: 587
@@ -58,7 +59,12 @@ To get started with the Email integration, follow these steps to configure and c
     - **_type_**: Specifies the type of tool, which is `integration` in this context.
     - **_integration_**: Details the provider and setup for the integration.
       - **_provider_**: Indicates the service provider, which is `email` for Email integration.
-      - **_setup_**: Contains configuration details, such as the SMTP server credentials.
+      - **_method_**: Specifies the method to be used. Default is `send` if not specified. If not specified, the method will be `send` by default.
+      - **_setup_**: Contains configuration details.
+          - **_host_**: (Required) The SMTP server host.
+          - **_port_**: (Required) The SMTP server port.
+          - **_user_**: (Required) The SMTP server username.
+          - **_password_**: (Required) The SMTP server password.
   </Accordion>
 
   <Accordion title="Workflow Configuration">
@@ -81,8 +87,6 @@ To get started with the Email integration, follow these steps to configure and c
 With the Email integration, you can efficiently send emails using SMTP. 
 This integration provides a robust solution for email communication, enhancing your workflow's capabilities and user experience.
 
-For further assistance, feel free to reach out to our support team or consult the [SMTP documentation](https://docs.python.org/3/library/smtplib.html).
-
-<Callout type="success" title="Need Help?">
-  If you encounter any issues or have questions, our support team is here to help. Don't hesitate to reach out!
-</Callout> 
+<Tip>
+  For more information, please refer to the [SMTP documentation](https://docs.python.org/3/library/smtplib.html).
+</Tip> 
