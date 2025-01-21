@@ -4,12 +4,121 @@ description: 'Learn about file handling and management in Julep'
 icon: 'file-circle-plus'
 ---
 
-Coming soon...
+# Files in Julep
+
+Julep provides a robust file management system that allows you to upload, store, and manage files that can be used across various endpoints and features. This guide covers everything you need to know about working with files in Julep.
 
 ## Overview
 
-This guide covers:
-- File handling and management
-- File storage and retrieval
-- File processing and transformation
-- File integration with other Julep components
+The Files feature in Julep enables:
+- File upload and storage
+- File retrieval and management
+- Integration with other Julep components
+- Support for various file types and formats
+
+## File Properties
+
+Each file in Julep has the following properties:
+
+```typescript
+id: string; // Unique identifier
+name: string; // Name of the file
+content: string; // Base64 encoded content
+created_at: string; // Creation timestamp
+size: number; // File size in bytes
+hash: string; // File hash for verification
+description?: string; // Optional description
+mime_type?: string; // Optional MIME type
+```
+
+## Basic Operations
+
+### Creating Files
+
+You can create files using either the Python or Node.js SDK:
+
+<CodeGroup>
+    ```python Python
+    from julep import Julep
+
+    client = Julep()
+
+    file = client.files.create(
+        name="example.pdf",
+        content="base64_encoded_content",
+        description="Sample document",
+        mime_type="application/pdf"
+    )
+    ```
+
+    ```javascript Node.js
+    import Julep from '@julep/sdk';
+    const client = new Julep();
+    const file = await client.files.create({
+        name: "example.pdf",
+        content: "base64_encoded_content",
+        description: "Sample document",
+        mime_type: "application/pdf"
+    });
+    ```
+</CodeGroup>
+
+### Retrieving Files
+
+<CodeGroup>
+    ```python Python
+    file = client.files.get("file_id")
+    ```
+
+    ```javascript Node.js
+    const file = await client.files.get("file_id");
+    ```
+</CodeGroup>
+
+### Deleting Files
+
+<CodeGroup>
+    ```python Python
+    client.files.delete("file_id")
+    ```
+
+    ```javascript Node.js
+    await client.files.delete("file_id");
+    ```
+</CodeGroup>
+
+
+## Integration with Other Components
+
+Files in Julep can be integrated with various other components:
+
+### Documents
+Files can be used as sources for document creation, enabling:
+- Text extraction from PDFs
+- Data parsing from structured files
+- Content indexing for retrieval
+
+### Agents
+Agents can work with files to:
+- Process uploaded documents
+- Generate new files
+- Analyze file contents
+- Make decisions based on file data
+
+### Tasks
+Files can be used in tasks for:
+- Document processing workflows
+- File transformation pipelines
+- Content generation tasks
+- Data extraction and analysis
+
+## API Reference
+
+For complete API documentation, see [Files API Reference](https://dev.julep.ai/api/docs#tag/files).
+
+## Support
+
+If you need help with file handling in Julep:
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)
