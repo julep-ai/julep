@@ -6,6 +6,29 @@ icon: 'laptop'
 
 This guide will help you get started with Julep in just 5 minutes. You'll learn how to create your first AI agent and execute a simple task.
 
+### What we'll build
+
+We'll build a simple agent that uses tasks to write a short story.
+
+
+```yaml Agent
+name: Story Generator
+model: claude-3.5-sonnet
+about: A helpful AI assistant that specializes in writing and editing.
+```
+
+```yaml Task
+name: Write a short story
+description: Write a short story about a magical garden
+main:
+- prompt:
+  - role: system
+    content: You are a creative story writer.
+  - role: user
+    content: Write a short story about {{inputs[0].topic}}
+```
+
+
 ### Prerequisites
 
 - Python 3.8+ or Node.js 16+
