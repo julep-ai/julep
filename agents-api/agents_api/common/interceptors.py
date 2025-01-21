@@ -32,8 +32,8 @@ from temporalio.workflow import (
 
 with workflow.unsafe.imports_passed_through():
     from ..env import blob_store_cutoff_kb, use_blob_store_for_temporal
+    from ..worker.codec import RemoteObject
     from .exceptions.tasks import is_retryable_error
-    from .protocol.remote import RemoteObject
     from .protocol.tasks import ExecutionInput, StepContext, StepOutcome
 
 # Common exceptions that should be re-raised without modification
@@ -113,7 +113,7 @@ def load_if_remote(arg: Any | RemoteObject) -> Any:
         arg.load_inputs()
 
     elif isinstance(arg, StepOutcome):
-        arg.load_transition_to()
+        arg.load_remote()
 
     elif isinstance(arg, ExecutionInput):
         arg.load_arguments()

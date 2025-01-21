@@ -8,11 +8,12 @@ import dataclasses
 import logging
 import sys
 import time
-from typing import Any
+from typing import Any, Self
 
 import larch.pickle as pickle
 import temporalio.converter
 from lz4.frame import compress, decompress
+from pydantic import BaseModel
 from temporalio import workflow
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import (
@@ -22,8 +23,29 @@ from temporalio.converter import (
 )
 
 with workflow.unsafe.imports_passed_through():
-    from ..env import debug, testing
+    from ..clients import sync_s3
+    from ..env import blob_store_bucket, debug, testing
     from ..exceptions import FailedDecodingSentinel, FailedEncodingSentinel
+
+
+class RemoteObject(BaseModel):
+    key: str
+    bucket: str
+
+    @classmethod
+    def from_value(cls, x: Any) -> Self:
+        sync_s3.setup()
+
+        serialized = serialize(x)
+
+        key = sync_s3.add_object_with_hash(serialized)
+        return RemoteObject(key=key, bucket=blob_store_bucket)
+
+    def load(self) -> Any:
+        sync_s3.setup()
+
+        fetched = sync_s3.get_object(self.key)
+        return deserialize(fetched)
 
 
 def serialize(x: Any) -> bytes:
@@ -56,6 +78,9 @@ def deserialize(b: bytes) -> Any:
 
 def from_payload_data(data: bytes, type_hint: type | None = None) -> Any:
     decoded = deserialize(data)
+
+    if isinstance(decoded, RemoteObject):
+        decoded = decoded.load()
 
     if type_hint is None:
         return decoded

@@ -4,7 +4,7 @@ from typing import Any
 from beartype import beartype
 from temporalio import activity
 
-from ..common.protocol.remote import RemoteObject
+from ..worker.codec import RemoteObject
 
 
 @beartype

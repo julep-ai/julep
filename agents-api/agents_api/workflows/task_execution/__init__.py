@@ -206,6 +206,10 @@ class TaskExecutionWorkflow:
                 msg = f"Activity {activity} threw error: {e}"
                 raise ApplicationError(msg) from e
 
+        if outcome.error is None and outcome.output is None:
+            msg = "Activity returned None output and None error"
+            raise ApplicationError(msg)
+
         # ---
 
         # 3. Then, based on the outcome and step type, decide what to do next

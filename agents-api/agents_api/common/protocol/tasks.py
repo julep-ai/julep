@@ -32,7 +32,7 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
-    from .remote import RemoteObject
+    from ...worker.codec import RemoteObject
 
 # TODO: Maybe we should use a library for this
 
@@ -147,6 +147,7 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
 
 
 class ExecutionInput(BaseModel):
+    loaded: bool = False
     developer_id: UUID
     execution: Execution | None = None
     task: TaskSpecDef | None = None
@@ -161,9 +162,11 @@ class ExecutionInput(BaseModel):
     def load_arguments(self) -> None:
         if isinstance(self.arguments, RemoteObject):
             self.arguments = self.arguments.load()
+            self.loaded = True
 
 
 class StepContext(BaseModel):
+    loaded: bool = False
     execution_input: ExecutionInput
     inputs: list[Any | RemoteObject]
     cursor: TransitionTarget
@@ -179,6 +182,8 @@ class StepContext(BaseModel):
 
         for i, result in zip(indices, results):
             self.inputs[i] = result
+
+        self.loaded = True
 
     @computed_field
     @property
@@ -275,12 +280,18 @@ class StepContext(BaseModel):
 
 class StepOutcome(BaseModel):
     error: str | None = None
-    output: Any = None
+    output: Any
     transition_to: tuple[TransitionType, TransitionTarget | RemoteObject] | None = None
 
-    def load_transition_to(self) -> None:
+    def load_remote(self) -> None:
         if isinstance(self.transition_to[1], RemoteObject):
             self.transition_to = (self.transition_to[0], self.transition_to[1].load())
+
+        if isinstance(self.output, RemoteObject):
+            self.output = self.output.load()
+
+        if isinstance(self.error, RemoteObject):
+            self.error = self.error.load()
 
 
 @beartype

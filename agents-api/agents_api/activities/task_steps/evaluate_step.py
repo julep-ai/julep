@@ -24,4 +24,4 @@ async def evaluate_step(
 
     except BaseException as e:
         activity.logger.error(f"Error in evaluate_step: {e}")
-        return StepOutcome(error=str(e) or repr(e))
+        return StepOutcome(error=str(e) or repr(e), output=None)
