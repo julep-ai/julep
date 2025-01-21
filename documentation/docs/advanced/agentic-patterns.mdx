@@ -4,13 +4,122 @@ description: 'Learn about common patterns and best practices for building Julep 
 icon: 'sitemap'
 ---
 
+# Agentic Patterns
 
-Coming soon...
+This guide covers common patterns and best practices for building effective Julep agents. Understanding these patterns will help you create more robust and capable AI agents.
 
-## Overview
+## Task Orchestration Patterns
 
-This guide covers:
-- Common agent design patterns
-- Agent communication strategies
-- State management patterns
-- Error handling approaches 
+### Sequential Processing
+The most basic pattern where tasks are executed in a linear sequence. Common in data processing and content generation workflows.
+
+Example from the Research Agent:
+
+```yaml
+
+```
+
+### Parallel Processing
+For tasks that can be executed concurrently to improve performance. Useful for batch operations like multiple API calls or data processing.
+
+Example pattern:
+
+```yaml
+
+
+```
+
+### Iterative Processing
+For tasks that need to process items in a collection one at a time, often used with foreach loops.
+
+Example from the Storytelling Agent:
+
+```yaml
+
+```
+
+## State Management Patterns
+
+### Context Preservation
+Maintaining conversation context and agent state across multiple interactions. Uses Julep's session management capabilities.
+
+Key components:
+- Session situation tracking
+- User context maintenance
+- Conversation history management
+
+Reference implementation:
+
+```yaml
+
+
+```
+
+
+## Communication Patterns
+
+### Multi-Agent Collaboration
+Patterns for agents to work together and share information:
+
+1. **Chain of Responsibility**
+   - Agents pass tasks along a chain
+   - Each agent handles specific aspects
+   - Clear handoff protocols
+
+2. **Hub and Spoke**
+   - Central coordinator agent
+   - Specialist agents for specific tasks
+   - Aggregated results
+
+### Tool Integration
+Patterns for integrating external tools and APIs:
+
+1. **API Wrapper Pattern**
+
+```yaml
+
+```
+
+2. **Function Call Pattern**
+
+```yaml
+
+```
+
+## Error Handling Patterns
+
+### Graceful Degradation
+Implement fallback mechanisms when primary approaches fail:
+
+```yaml
+
+```
+
+## Best Practices
+
+1. **Clear Agent Roles**
+   - Define specific purposes for each agent
+   - Use descriptive names and about sections
+   - Document agent capabilities and limitations
+
+2. **Modular Task Design**
+   - Break complex workflows into smaller tasks
+   - Reuse common patterns across agents
+   - Maintain clear input/output contracts
+
+3. **Effective Prompting**
+   - Use consistent system messages
+   - Provide clear instructions
+   - Include relevant context
+
+4. **Resource Management**
+   - Implement rate limiting
+   - Cache frequently used data
+   - Monitor token usage
+
+5. **Security Considerations**
+   - Validate user inputs
+   - Implement access controls
+   - Handle sensitive data appropriately
+
+These patterns represent common approaches seen across successful Julep implementations. Choose and adapt them based on your specific use case requirements.
