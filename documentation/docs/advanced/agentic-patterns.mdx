@@ -6,120 +6,338 @@ icon: 'sitemap'
 
 # Agentic Patterns
 
-This guide covers common patterns and best practices for building effective Julep agents. Understanding these patterns will help you create more robust and capable AI agents.
+This guide covers common patterns and best practices for building effective Julep agents, based on proven patterns from production implementations.
 
-## Task Orchestration Patterns
+## Core Workflow Patterns
 
-### Sequential Processing
-The most basic pattern where tasks are executed in a linear sequence. Common in data processing and content generation workflows.
+### 1. Prompt Chaining
+A pattern that decomposes tasks into a sequence of steps, where each LLM call processes the output of the previous one. This pattern is particularly effective when:
 
-Example from the Research Agent:
+- Tasks can be broken down into clear, sequential steps
+- Each step's output serves as input for the next step
+- Quality control is needed between transformations
+- The process follows a fixed sequence of operations
 
+**Common applications:**
+- Content generation and refinement
+- Multi-stage data processing
+- Translation and localization workflows
+- Document analysis and summarization
+
+**Key benefits:**
+- Improved control over each step of the process
+- Better error handling and quality control
+- Easier debugging and monitoring
+- More predictable outputs
+
+**Example implementation:**
 ```yaml
+main:
+# Step 1: Generate initial content
+- prompt:
+   role: system
+   content: >-
+      Generate marketing copy for product X based on the following:
+      target_audience: {{_.audience}}
+      product_features: {{_.features}}
+      keywords: {{_.seo_keywords}}
+   unwrap: true
 
+# Step 2: Quality check gate
+- evaluate:
+   quality_check: _.content
+
+# Step 3: Translation
+- prompt:
+   role: system
+   content: Translate the approved content to Spanish
+   unwrap: true
 ```
 
-### Parallel Processing
-For tasks that can be executed concurrently to improve performance. Useful for batch operations like multiple API calls or data processing.
+### 2. Routing Pattern
+This pattern acts as a traffic controller, analyzing incoming requests and directing them to specialized handlers. This pattern is particularly useful when:
 
-Example pattern:
+- Different types of inputs require different handling
+- You need to maintain separation of concerns
+- Specialized expertise is required for different cases
+- You want to optimize resource usage
 
+**Key components:**
+1. **Classifier**: Analyzes input and determines its type/category
+2. **Router**: Directs the input to appropriate handlers
+3. **Specialized Handlers**: Process specific types of requests
+4. **Response Aggregator**: Combines results if needed
+
+**Benefits:**
+- More efficient resource utilization
+- Better specialization and expertise
+- Easier maintenance and updates
+- Improved scalability
+
+**Example implementation:**
 ```yaml
+main:
+# Classification step
+- prompt:
+   role: system
+   content: Classify the input query type
+   unwrap: true
 
-
+# Route based on classification
+- switch:
+   - case: _.classification == "technical_support"
+      then:
+         - tool: handle_technical
+         arguments:
+            ...
+   - case: _.classification == "billing"
+      then:
+         - tool: handle_billing
+         arguments:
+            ...
+   - case: _.classification == "general"
+      then:
+         - tool: handle_general
+         arguments:
+            ...
 ```
 
-### Iterative Processing
-For tasks that need to process items in a collection one at a time, often used with foreach loops.
+### 3. Parallelization Pattern
+This pattern enables concurrent processing through two main approaches:
+1. **Sectioning**: Breaking tasks into independent parts
+2. **Voting**: Running multiple instances for consensus
 
-Example from the Storytelling Agent:
+**Best suited for:**
+- Independent subtasks that can run simultaneously
+- Validation requiring multiple perspectives
+- Performance-critical applications
+- Reliability-focused systems
 
+**Key considerations:**
+- Resource management
+- Result synchronization
+- Error handling across parallel tasks
+- Aggregation strategies
+
+**Example implementations:**
+
+1. Sectioning:
 ```yaml
+tools:
+- name: aggregate_results
+  type: ... # depends on the specific needs
 
+# Custom workflow to run a subtask
+run_subtask:
+- ....
+
+# Main workflow
+main:
+- prompt:
+   role: system
+   content: >
+      Break this task into multiple subtasks.
+      Here is the task: {{_.task}}
+   unwrap: true
+
+- over: _.subtasks
+   do:
+      - workflow: run_subtask
+      arguments:
+         ...
+- tool: aggregate_results
+  arguments:
+    results: _
 ```
 
-## State Management Patterns
-
-### Context Preservation
-Maintaining conversation context and agent state across multiple interactions. Uses Julep's session management capabilities.
-
-Key components:
-- Session situation tracking
-- User context maintenance
-- Conversation history management
-
-Reference implementation:
-
+2. Voting:
 ```yaml
+tools:
+- name: perform_voting
+  description: Perform voting on the results of running the task instances, and return the majority best result.
+  type: ... # depends on the specific needs
 
+# Custom workflow to run a subtask
+run_subtask:
+- ....
 
+# Main workflow
+main:
+- over: _.main_tasks
+   do:
+      - workflow: run_subtask # Run the same task multiple times (given that the `run_subtask` workflow is non-deterministic)
+      arguments:
+         ...
+- tool: perform_voting
+  arguments:
+    results: _
+
+- evaluate:
+   final_result: _
 ```
 
+### 4. Orchestrator-Workers Pattern
+This pattern implements a hierarchical structure where a central orchestrator manages and coordinates multiple worker agents. The orchestrator:
 
-## Communication Patterns
+1. Analyzes the main task
+2. Breaks it into subtasks
+3. Assigns tasks to appropriate workers
+4. Monitors progress
+5. Aggregates results
 
-### Multi-Agent Collaboration
-Patterns for agents to work together and share information:
+Particularly effective for:
+- Complex, multi-step tasks
+- Projects requiring different types of expertise
+- Scalable workflows
+- Dynamic task allocation
 
-1. **Chain of Responsibility**
-   - Agents pass tasks along a chain
-   - Each agent handles specific aspects
-   - Clear handoff protocols
+**Benefits:**
+- Better resource management
+- Improved task specialization
+- Enhanced scalability
+- Flexible task distribution
 
-2. **Hub and Spoke**
-   - Central coordinator agent
-   - Specialist agents for specific tasks
-   - Aggregated results
-
-### Tool Integration
-Patterns for integrating external tools and APIs:
-
-1. **API Wrapper Pattern**
-
+**Example implementation:**
 ```yaml
-
+main:
+# Orchestrator planning
+- prompt:
+   role: system
+   content: Break down the task into subtasks. Here is the task: {{_.task}}
+   unwrap: true
+# Worker delegation
+- foreach:
+   in: _.subtasks
+   do:
+      tool: assign_worker
+      arguments:
+         task: _
 ```
 
-2. **Function Call Pattern**
+### 5. Evaluator-Optimizer Pattern
+This pattern creates a feedback loop for continuous improvement through:
 
+1. **Generation**: Initial content or solution creation
+2. **Evaluation**: Assessment against specific criteria
+3. **Feedback**: Detailed improvement suggestions
+4. **Optimization**: Refinement based on feedback
+5. **Iteration**: Repeat until quality criteria are met
+
+**Ideal for:**
+- Content generation and refinement
+- Code review and improvement
+- Document optimization
+- Quality assurance processes
+
+**Key features:**
+- Objective evaluation criteria
+- Clear feedback mechanisms
+- Iterative improvement
+- Stopping conditions
+
+**Example implementation:**
 ```yaml
+tools:
+- name: score_content
+  description: Score the content based on the criteria. Returns a json object with a score between 0 and 1, and a feedback string.
+  type: function
+  function:
+    parameters:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Content to score
 
+# Subworkflow to evaluate content
+evaluate_content:
+- tool: score_content
+  arguments:
+    content: _.content
+- if: _.score < 0.5 # If the content does not meet the criteria, improve it
+  then:
+    - workflow: improve_content
+      arguments:
+        content: _0.content # _0 is the main input of this workflow
+        feedback: _.feedback # _ is the output of the score_content tool call
+  else:
+    evaluate:
+      final_content: _0.content
+
+# Subworkflow to improve content
+improve_content:
+- prompt:
+    role: system
+    content: Improve the content based on the feedback. Here is the feedback: {{_.feedback}}
+  unwrap: true
+- workflow: evaluate_content
+  arguments:
+    content: _
+
+
+main:
+# Initial generation
+- prompt:
+   role: system
+   content: Generate initial content. Here is the task: {{_.task}}
+   unwrap: true
+   
+# Evaluation loop
+- loop:
+   while: "not _.meets_criteria"
+   do:
+      - tool: evaluate_content
+      - tool: improve_content
 ```
 
-## Error Handling Patterns
+**Explanation:**
 
-### Graceful Degradation
-Implement fallback mechanisms when primary approaches fail:
+1. The `evaluate_content` subworkflow:
+   - Takes content as input and scores it using a scoring tool
+   - If the score is below 0.5, it triggers the improvement workflow
+   - Uses special variables (_0 and _) to manage content and feedback between workflows
+   - Returns the final content once quality criteria are met
 
-```yaml
+2. The `improve_content` subworkflow:
+   - Receives content and feedback from the evaluation
+   - Uses an LLM to improve the content based on specific feedback
+   - Automatically triggers another evaluation cycle by calling evaluate_content
 
-```
+The main workflow ties these together by:
+- Generating initial content from a task description
+- Running a continuous loop that alternates between evaluation and improvement
+- Only completing when content meets the defined quality criteria
+
+This creates a powerful feedback loop where content is repeatedly refined based on specific feedback until it reaches the desired quality level. The pattern is particularly useful for tasks requiring high accuracy or quality, such as content generation, code review, or document analysis.
 
 ## Best Practices
 
-1. **Clear Agent Roles**
-   - Define specific purposes for each agent
-   - Use descriptive names and about sections
-   - Document agent capabilities and limitations
+1. **Start Simple**
+   - Begin with basic prompts
+   - Add complexity only when needed
+   - Measure performance improvements
 
-2. **Modular Task Design**
-   - Break complex workflows into smaller tasks
-   - Reuse common patterns across agents
-   - Maintain clear input/output contracts
+2. **Tool Design**
+   - Write clear tool documentation
+   - Include usage examples
+   - Consider the agent's perspective when designing interfaces
 
-3. **Effective Prompting**
-   - Use consistent system messages
-   - Provide clear instructions
-   - Include relevant context
+3. **Error Handling**
+   - Implement feedback loops
+   - Add appropriate guardrails
+   - Include stopping conditions
 
-4. **Resource Management**
-   - Implement rate limiting
-   - Cache frequently used data
-   - Monitor token usage
+4. **Testing and Validation**
+   - Test extensively in sandboxed environments
+   - Validate outputs against success criteria
+   - Monitor performance metrics
 
-5. **Security Considerations**
-   - Validate user inputs
-   - Implement access controls
-   - Handle sensitive data appropriately
+5. **Human Oversight**
+   - Define clear checkpoints
+   - Implement approval workflows
+   - Maintain transparency in agent decisions
 
-These patterns represent common approaches seen across successful Julep implementations. Choose and adapt them based on your specific use case requirements.
+
+These patterns represent proven approaches from production implementations. Choose and adapt them based on your specific use case requirements and complexity needs.
+
+[Source: Building effective agents - Anthropic](https://www.anthropic.com/research/building-effective-agents)
