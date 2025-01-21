@@ -57,7 +57,7 @@ graph LR
 This is what an agent looks like. You can create an agent using either the Python or Node.js SDK:
 
 <CodeGroup>
-    ```yaml YAML
+    ```yaml
     name: "My Agent"
     model: "claude-3.5-sonnet"
     about: "A helpful AI assistant that specializes in data analysis"
@@ -77,7 +77,14 @@ This is what an agent looks like. You can create an agent using either the Pytho
                   type: "number"
     ```
 
-    ```python Python
+</CodeGroup>
+
+## Creating an Agent
+
+You can create an agent using the `create` method.
+
+<CodeGroup>
+ ```python Python
     from julep import Julep
 
     client = Julep(api_key="your_api_key")
@@ -123,28 +130,6 @@ This is what an agent looks like. You can create an agent using either the Pytho
     });
     ```
 </CodeGroup>
-
-## Managing Agents
-
-Once created, you can manage your agents through various operations:
-
-<CardGroup cols={2}>
-<Card title="Retrieving an Agent" icon="magnifying-glass" href="#retrieving-an-agent">
-  Get agent details using ID or metadata filters
-</Card>
-
-<Card title="Updating an Agent" icon="pen-to-square" href="#updating-an-agent">
-  Modify agent parameters like model, instructions, and tools
-</Card>
-
-<Card title="Creating/Updating an Agent" icon="square-plus" href="#creating-and-updating-an-agent">
-  Create new agents or update existing ones in a single operation
-</Card>
-
-<Card title="Deleting an Agent" icon="trash" href="#deleting-an-agent">
-  Remove agents from your workspace
-</Card>
-</CardGroup>
 ## Retrieving an Agent
 
 You can retrieve an agent in two ways:
@@ -217,52 +202,38 @@ You can retrieve an agent in two ways:
   </Tab>
 </Tabs>
 
-## Updating an Agent
+<Tip>
+    Check out the API reference [here](/docs/api-reference/agents) for more details on different operations you can perform on agents.
+</Tip>
 
-You can update any parameter of an existing agent using its ID. 
+<Tip>
+    Check out the SDK reference [here](/docs/sdk/agents) for more details on different operations you can perform on agents.
+</Tip>
 
-<Note>
-Updating tools or instructions will completely replace the previous values.
-</Note>
+## Relationship of an Agent with other Concepts
 
-```python Python
-agent_id = "9bb48ef4-b6f7-4dd8-a5ea-ab775e2e8d1b"
-client.agents.update(agent_id=agent_id, model="gpt-3.5-turbo")
-```
+In Julep agent can be associated with the following concepts:
 
-## Creating and Updating an Agent
+<CardGroup cols={2}>
+<Card title="Tools" icon="hammer" href="#agents-and-tools">
+    Tools
+</Card>
 
-You can create and update an agent using the `create_or_update` methods. Basically what it does is that it first checks if an agent with the same `agent_id already exists. If it does, it updates the existing agent. If it doesn't, it creates a new one.
+<Card title="Sessions" icon="list-check" href="#agents-and-sessions">
+    Sessions
+</Card>
+</CardGroup>
 
-```python Python
-agent = client.agents.create_or_update(
-    name="My Agent",
-    model="claude-3.5-sonnet",
-    about="A helpful AI assistant that specializes in data analysis",
-    instructions="You are a helpful AI assistant that specializes in data analysis",
-    metadata={"type": "data-analysis"},
-    tools=[
-        {
-            "name": "calculate_total",
-            "description": "Calculate the total of a list of numbers",
-            "function": {
-                "parameters": {"type": "object", "properties": {"numbers": {"type": "array", "items": {"type": "number"}}}}
-            }
-        }
-    ]
-)
-```
+### Agents and Sessions
 
-## Deleting an Agent
+Place an agent in a session to start a conversation with it.
 
-You can delete an agent using its agent ID.
 
-```python Python
-agent_id = "9bb48ef4-b6f7-4dd8-a5ea-ab775e2e8d1b"
-client.agents.delete(id=agent_id)
-```
+### Agents and Tools
 
-## What's Next?
+Place a tool in an agent to enable it to perform tasks.
+
+## Next Steps
 
 - [Agent Tools](/docs/concepts/tools)
 - [Agent Tasks](/docs/concepts/tasks)
