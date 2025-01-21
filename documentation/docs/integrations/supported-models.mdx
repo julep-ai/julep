@@ -101,40 +101,47 @@ Though the models mention above support different embedding dimensions, Julep us
 
 ## Supported Parameters
 
-<Info>
-These parameters let you tweak the model's behavior to suit your needs. Keep in mind, not every parameter is supported by all models.
-</Info>
+These parameters allow fine-tuning of model behavior. Note that not all parameters are supported by every model.
 
 <AccordionGroup>
-  <Accordion title="Generation Parameters" icon="sliders">
-    | Parameter | Range | Default | Description |
-    |-----------|--------|---------|-------------|
-    | temperature | 0.0 - 5.0 | None | Controls randomness in outputs. Higher values (e.g., 0.8) increase randomness, lower values (e.g., 0.2) make output more focused |
-    | max_tokens | ≥ 1 | None | Maximum number of tokens to generate in the response |
-    | top_p | 0.0 - 1.0 | None | Controls nucleus sampling - only tokens with cumulative probability < top_p are considered |
-    | frequency_penalty | -2.0 - 2.0 | None | Penalizes frequent tokens. Positive values reduce repetition |
-    | presence_penalty | -2.0 - 2.0 | None | Penalizes tokens based on presence in text so far |
+  <Accordion title="Core Parameters" icon="sliders">
+    | Parameter | Range | Description |
+    |-----------|--------|-------------|
+    | temperature | 0.0 - 5.0 | Controls randomness in outputs. Higher values (e.g., 0.8) increase randomness, while lower values (e.g., 0.2) make output more focused and deterministic |
+    | top_p | 0.0 - 1.0 | Alternative to temperature for nucleus sampling. Only tokens with cumulative probability < top_p are considered. We recommend adjusting either this or temperature, not both |
+    | max_tokens | ≥ 1 | Maximum number of tokens to generate in the response |
   </Accordion>
 
-  <Accordion title="Advanced Parameters" icon="gear">
-    | Parameter | Range | Default | Description |
-    |-----------|--------|---------|-------------|
-    | repetition_penalty | 0.0 - 2.0 | None | Penalizes repetition (1.0 is neutral) |
-    | length_penalty | 0.0 - 2.0 | None | Penalizes based on generation length (1.0 is neutral) |
-    | min_p | 0.0 - 1.0 | None | Minimum probability threshold for token consideration |
-    | seed | -1 - 1000 | None | For deterministic generation |
-    | stream | boolean | false | Enable streaming of responses |
-    | stop | list[str] (max 4) | [] | Sequences where generation should stop |
+  <Accordion title="Penalty Parameters" icon="gauge">
+    | Parameter | Range | Description |
+    |-----------|--------|-------------|
+    | frequency_penalty | -2.0 - 2.0 | Penalizes tokens based on their frequency in the text. Positive values decrease repetition |
+    | presence_penalty | -2.0 - 2.0 | Penalizes tokens based on their presence in the text. Positive values decrease likelihood of repeating content |
+    | repetition_penalty | 0.0 - 2.0 | Penalizes repetition (1.0 is neutral). Values > 1.0 reduce likelihood of repeating content |
+    | length_penalty | 0.0 - 2.0 | Penalizes based on generation length (1.0 is neutral). Values > 1.0 penalize longer generations |
   </Accordion>
 
-  <Accordion title="Response Formatting" icon="code">
-    You can control how the model outputs its responses using the `response_format` parameter:
-    
-    - `text` (default): Free-form text output
-    - `json_object`: Structured JSON output
-    - `json_schema`: Custom schema-based output
+  <Accordion title="Advanced Controls" icon="gear">
+    | Parameter | Range | Description |
+    |-----------|--------|-------------|
+    | min_p | 0.0 - 1.0 | Minimum probability threshold compared to the highest token probability |
+    | seed | integer | For deterministic generation. Set a specific seed for reproducible results |
+    | stop | list[str] | Up to 4 sequences where generation should stop |
   </Accordion>
+
 </AccordionGroup>
+
+<Note>
+  **Best Practices:**
+  - Start with default values and adjust based on your needs
+  - Use temperature (0.0 - 1.0) for most cases
+  - Avoid setting multiple penalty parameters simultaneously
+  - Test different combinations for optimal results
+</Note>
+
+<Warning>
+  Setting extreme values for multiple parameters may lead to unexpected behavior or poor quality outputs.
+</Warning>
 
 ## Usage Guidelines
 
@@ -144,7 +151,7 @@ These parameters let you tweak the model's behavior to suit your needs. Keep in 
     When picking a model, think about:
     - Your budget and cost constraints
     - How fast you need responses
-    - The quality you’re aiming for
+    - The quality you're aiming for
     - The context window size you require
     </Note>
   </Accordion>

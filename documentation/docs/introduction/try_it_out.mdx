@@ -59,7 +59,7 @@ Choose your preferred language:
   client = Julep(api_key="your_julep_api_key")
   ```
 
-  ```javascript Node.js
+  ```javascript JavaScript
   import { Julep } from '@julep/sdk';
 
   const client = new Julep({
@@ -81,7 +81,7 @@ Let's create a simple AI agent that can help with writing tasks:
   )
   ```
 
-  ```javascript Node.js
+  ```javascript JavaScript
   const agent = await client.agents.create({
     name: "Writing Assistant",
     model: "claude-3.5-sonnet",
@@ -115,7 +115,7 @@ Let's create a task that generates a short story based on a given topic:
   )
   ```
 
-  ```javascript Node.js
+  ```javascript JavaScript
   const yaml = require("yaml");
 
   const task_definition = `
@@ -158,7 +158,7 @@ Now let's run the task with a specific topic:
       print(f"Error: {result.error}")
   ```
 
-  ```javascript Node.js
+  ```javascript JavaScript
   const execution = await client.executions.create(
     task.id,
     {
