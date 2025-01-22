@@ -6,15 +6,11 @@ icon: 'file-circle-plus'
 
 # Files in Julep
 
-Julep provides a robust file management system that allows you to upload, store, and manage files that can be used across various endpoints and features. This guide covers everything you need to know about working with files in Julep.
+Julep’s file management system lets you upload, store, and manage files for various endpoints and features.
 
 ## Overview
 
-The Files feature in Julep enables:
-- File upload and storage
-- File retrieval and management
-- Integration with other Julep components
-- Support for various file types and formats
+Julep’s Files feature supports uploading, storing, retrieving, and integrating files across Julep components. It handles various file types and formats.
 
 ## File Properties
 
@@ -35,7 +31,7 @@ mime_type?: string; // Optional MIME type
 
 ### Creating Files
 
-You can create files using either the Python or Node.js SDK:
+Here's how you can create files using the SDKs:
 
 <CodeGroup>
     ```python Python
@@ -65,6 +61,7 @@ You can create files using either the Python or Node.js SDK:
 
 ### Retrieving Files
 
+Here's how you can retrieve files using the SDKs:
 <CodeGroup>
     ```python Python
     file = client.files.get("file_id")
@@ -86,31 +83,6 @@ You can create files using either the Python or Node.js SDK:
     await client.files.delete("file_id");
     ```
 </CodeGroup>
-
-
-## Integration with Other Components
-
-Files in Julep can be integrated with various other components:
-
-### Documents
-Files can be used as sources for document creation, enabling:
-- Text extraction from PDFs
-- Data parsing from structured files
-- Content indexing for retrieval
-
-### Agents
-Agents can work with files to:
-- Process uploaded documents
-- Generate new files
-- Analyze file contents
-- Make decisions based on file data
-
-### Tasks
-Files can be used in tasks for:
-- Document processing workflows
-- File transformation pipelines
-- Content generation tasks
-- Data extraction and analysis
 
 ## API Reference
 
