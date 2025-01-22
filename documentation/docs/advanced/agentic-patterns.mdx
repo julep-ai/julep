@@ -11,10 +11,13 @@ This guide covers common patterns and best practices for building effective Jule
 ## Core Workflow Patterns
 
 ### 1. Prompt Chaining
-Break tasks into sequential steps, where each step’s output feeds the next. Useful for:
-• Content generation and subsequent checks
-• Translation/localization in multiple stages
-• Ensuring quality between discrete transformations
+
+Break tasks into sequential steps, where each step’s output feeds the next. Can be used for:
+- Content generation and subsequent checks
+- Translation/localization in multiple stages
+- Ensuring quality between discrete transformations
+
+![Prompt Chaining Workflow](../assets/agentic-patterns/prompt-chaining-workflow.png "Prompt Chaining Workflow")
 
 **Example implementation:**
 ```yaml
@@ -41,6 +44,7 @@ main:
 ```
 
 ### 2. Routing Pattern
+
 Act as a “traffic controller” by detecting request types and sending them to the correct handler. Ideal when inputs are diverse or require specialized expertise.
 
 Steps generally include:
@@ -48,6 +52,8 @@ Steps generally include:
 2. Routing to handler modules
 3. Specialized processing
 4. (Optional) Aggregation of results
+
+![Routing Workflow](../assets/agentic-patterns/routing-workflow.png "Routing Workflow")
 
 **Example implementation:**
 ```yaml
@@ -78,12 +84,15 @@ main:
 ```
 
 ### 3. Parallelization Pattern
+
 Execute subtasks concurrently by either dividing the workload (sectioning) or collecting multiple perspectives (voting).
 
 Keys to consider:
 • Parallel processes for performance or redundancy
 • Syncing results and handling errors
 • Aggregating diverse outputs
+
+![Parallelization Workflow](../assets/agentic-patterns/parallelization-workflow.png "Parallelization Workflow")
 
 **Example implementations:**
 
@@ -143,10 +152,13 @@ main:
 ```
 
 ### 4. Orchestrator-Workers Pattern
+
 Use a central “orchestrator” that delegates subtasks to multiple “worker” agents and integrates their outputs. Best for:
-• Large or dynamic multi-step tasks
-• Coordinating various specialized capabilities
-• Flexible task distribution
+- Large or dynamic multi-step tasks
+- Coordinating various specialized capabilities
+- Flexible task distribution
+
+![Orchestrator-Workers Workflow](../assets/agentic-patterns/orchestrator-workers-workflow.png "Orchestrator-Workers Workflow")
 
 **Example implementation:**
 ```yaml
@@ -166,6 +178,7 @@ main:
 ```
 
 ### 5. Evaluator-Optimizer Pattern
+
 Create iterative feedback loops to refine outputs until they meet preset criteria. Suitable for:
 • Content refinement
 • Code reviews
@@ -176,6 +189,8 @@ General flow:
 2. Evaluate against criteria
 3. Provide improvement feedback
 4. Optimize/retry until goals are met
+
+![Evaluator-Optimizer Workflow](../assets/agentic-patterns/evaluator-optimizer-workflow.png "Evaluator-Optimizer Workflow")
 
 **Example implementation:**
 ```yaml
