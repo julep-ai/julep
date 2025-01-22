@@ -1,0 +1,115 @@
+---
+title: 'Chat Features in Julep'
+description: 'Learn about the robust chat system and its various features for dynamic interaction with agents'
+icon: 'message-dots'
+---
+
+## Overview
+
+Julep provides a robust chat system with various features for dynamic interaction with agents. Here's an overview of the key components and functionalities.
+
+## Chat Input
+
+<CardGroup cols={2}>
+  <Card title="Messages" icon="message">
+    An array of input messages representing the conversation so far
+  </Card>
+  <Card title="Tools" icon="wrench">
+    (Advanced) Additional tools provided for this specific interaction
+  </Card>
+  <Card title="Tool Choice" icon="hand-pointer">
+    Specifies which tool the agent should use
+  </Card>
+  <Card title="Memory Access" icon="brain">
+    Controls how the session accesses history and memories
+  </Card>
+  <Card title="Chat Settings" icon="gear">
+    Various settings to control the behavior of the chat
+  </Card>
+</CardGroup>
+
+## Chat Settings
+
+<AccordionGroup>
+  <Accordion title="Basic Settings">
+    - **model**: Identifier of the model to be used
+    - **stream**: Indicates if the server should stream the response as it's generated
+    - **stop**: Up to 4 sequences where the API will stop generating further tokens
+    - **seed**: For deterministic sampling
+  </Accordion>
+
+  <Accordion title="Advanced Settings">
+    - **max_tokens**: The maximum number of tokens to generate
+    - **logit_bias**: Modify the likelihood of specified tokens appearing in the completion
+    - **response_format**: Control the format of the response (e.g., JSON object)
+    - **agent**: Agent ID to use (for multi-agent sessions)
+  </Accordion>
+
+  <Accordion title="Additional Settings">
+    - **temperature**
+    - **top_p**
+    - **frequency_penalty**
+    - **presence_penalty**
+  </Accordion>
+</AccordionGroup>
+
+## Chat Response
+
+<Tabs>
+  <Tab title="Streamed Response">
+    - **Content-Type**: `text/event-stream`
+    - **Body**: A stream of `ChatOutputChunk` objects
+  </Tab>
+  <Tab title="Complete Response">
+    - **Content-Type**: `application/json`
+    - **Body**: A `MessageChatResponse` object containing the full generated message(s)
+  </Tab>
+</Tabs>
+
+<Note>
+  Both response types include:
+  - `usage`: Token usage statistics
+  - `jobs`: Background job IDs spawned from this interaction
+  - `docs`: Documents referenced for this request (for citation purposes)
+</Note>
+
+## Finish Reasons
+
+<CardGroup cols={2}>
+  <Card title="stop" icon="stop">
+    Natural stop point or provided stop sequence reached
+  </Card>
+  <Card title="length" icon="ruler">
+    Maximum number of tokens specified in the request was reached
+  </Card>
+  <Card title="content_filter" icon="filter">
+    Content was omitted due to a flag from content filters
+  </Card>
+  <Card title="tool_calls" icon="wrench">
+    The model called a tool
+  </Card>
+</CardGroup>
+
+## Advanced Features
+
+<Steps>
+  <Step title="Tool Integration">
+    The chat API allows for the use of tools, enabling the agent to perform actions or retrieve information during the conversation.
+  </Step>
+  <Step title="Multi-agent Sessions">
+    You can specify different agents within the same session using the `agent` parameter in the chat settings.
+  </Step>
+  <Step title="Response Formatting">
+    Control the output format, including options for JSON responses with specific schemas.
+  </Step>
+  <Step title="Memory and Recall">
+    Configure how the session accesses and stores conversation history and memories.
+  </Step>
+  <Step title="Document References">
+    The API returns information about documents referenced during the interaction, useful for providing citations or sources.
+  </Step>
+</Steps>
+
+<Tip>
+  These features provide developers with a powerful and flexible system for creating sophisticated, context-aware chat interactions that integrate seamlessly with other Julep components.
+</Tip>

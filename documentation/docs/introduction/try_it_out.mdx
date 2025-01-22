@@ -1,11 +1,34 @@
 ---
-title: 'Quick Start Guide'
-description: '5-minute guide to create your first Julep agent and task'
+title: 'Try it Out'
+description: 'Quick example to get started with Julep'
+icon: 'laptop'
 ---
 
-## Quick Start Guide
-
+## Overview
 This guide will help you get started with Julep in just 5 minutes. You'll learn how to create your first AI agent and execute a simple task.
+
+### What we'll build
+
+We'll build a simple agent that uses tasks to write a short story.
+
+
+```yaml Agent
+name: Story Generator
+model: claude-3.5-sonnet
+about: A helpful AI assistant that specializes in writing and editing.
+```
+
+```yaml Task
+name: Write a short story
+description: Write a short story about a magical garden
+main:
+- prompt:
+  - role: system
+    content: You are a creative story writer.
+  - role: user
+    content: Write a short story about {{inputs[0].topic}}
+```
+
 
 ### Prerequisites
 
@@ -37,7 +60,7 @@ Choose your preferred language:
   client = Julep(api_key="your_julep_api_key")
   ```
 
-  ```javascript Node.js
+  ```javascript JavaScript
   import { Julep } from '@julep/sdk';
 
   const client = new Julep({
@@ -59,7 +82,7 @@ Let's create a simple AI agent that can help with writing tasks:
   )
   ```
 
-  ```javascript Node.js
+  ```javascript JavaScript
   const agent = await client.agents.create({
     name: "Writing Assistant",
     model: "claude-3.5-sonnet",
@@ -74,48 +97,42 @@ Let's create a task that generates a short story based on a given topic:
 
 <CodeGroup>
   ```python Python
+  import yaml 
+
+  task_definition = yaml.safe_load("""
+  name: Story Generator
+  description: Generate a short story based on a given topic
+  main:
+  - prompt:
+    - role: system
+      content: You are a creative story writer.
+    - role: user
+      content: Write a short story about {{inputs.topic}}
+  """)
+
   task = client.tasks.create(
       agent_id=agent.id,
-      name="Story Generator",
-      description="Generate a short story based on a given topic",
-      main=[
-          {
-              "prompt": [
-                  {
-                      "role": "system",
-                      "content": "You are a creative story writer."
-                  },
-                  {
-                      "role": "user",
-                      "content": "Write a short story about {{inputs.topic}}"
-                  }
-              ]
-          }
-      ]
+      **task_definition # Unpack the task definition
   )
   ```
 
-  ```javascript Node.js
+  ```javascript JavaScript
+  const yaml = require("yaml");
+
+  const task_definition = `
+  name: Story Generator
+  description: Generate a short story based on a given topic
+  main:
+  - prompt:
+    - role: system
+      content: You are a creative story writer.
+    - role: user
+      content: Write a short story about {{inputs.topic}}
+  `;
+
   const task = await client.tasks.create(
     agent.id,
-    {
-      name: "Story Generator",
-      description: "Generate a short story based on a given topic",
-      main: [
-        {
-          prompt: [
-            {
-              role: "system",
-              content: "You are a creative story writer."
-            },
-            {
-              role: "user",
-              content: "Write a short story about {{inputs.topic}}"
-            }
-          ]
-        }
-      ]
-    }
+    yaml.parse(task_definition)
   );
   ```
 </CodeGroup>
@@ -142,7 +159,7 @@ Now let's run the task with a specific topic:
       print(f"Error: {result.error}")
   ```
 
-  ```javascript Node.js
+  ```javascript JavaScript
   const execution = await client.executions.create(
     task.id,
     {
@@ -173,17 +190,17 @@ Congratulations! You've created your first Julep agent and executed a task. Here
 
 <CardGroup cols={2}>
   <Card
-    title="Installation Guide"
-    icon="download"
-    href="/documentation/getting-started/installation"
+    title="Understand the Core Concepts"
+    icon="book"
+    href="/docs/concepts"
   >
-    Learn about advanced installation options and configurations
+    Learn about the core concepts of Julep
   </Card>
   <Card
-    title="Core Concepts"
+    title="Explore Tutorials"
     icon="book"
-    href="/documentation/getting-started/core-concepts"
+    href="/docs/tutorials"
   >
-    Understand the fundamental concepts of Julep
+    Explore tutorials to learn how to use Julep
   </Card>
 </CardGroup> 

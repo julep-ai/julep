@@ -4,6 +4,8 @@ description: 'Learn how to use the Wikipedia integration with Julep'
 icon: 'wikipedia-w'
 ---
 
+## Overview
+
 Welcome to the Wikipedia integration guide for Julep! This integration allows you to access a vast repository of information from Wikipedia, enabling you to build workflows that require comprehensive data retrieval capabilities. Whether you're developing a knowledge base or need quick access to encyclopedic information, this guide will walk you through the setup and usage.
 
 ## Prerequisites
@@ -27,6 +29,7 @@ To get started with the Wikipedia integration, follow these steps to configure a
         type: integration
         integration:
           provider: wikipedia
+          method: search
     main:
       - tool: wikipedia_search
         arguments:
@@ -48,6 +51,7 @@ To get started with the Wikipedia integration, follow these steps to configure a
     - **_type_**: Specifies the type of tool, which is `integration` in this context.
     - **_integration_**: Details the provider and setup for the integration.
       - **_provider_**: Indicates the service provider, which is `wikipedia` for Wikipedia.
+      - **_method_**: Indicates the method to be used, which is `search` for Wikipedia. If not specified, the method will be `search` by default.
   </Accordion>
 
   <Accordion title="Workflow Configuration">
@@ -55,7 +59,7 @@ To get started with the Wikipedia integration, follow these steps to configure a
       - **_tool_**: Refers to the tool defined earlier (`wikipedia_search`).
       - **_arguments_**: Specifies the input parameters for the tool:
         - **_query_**: The search query string.
-        - **_load_max_docs_**: (optional) Maximum number of documents to load. Defaults to 2.
+        - **_load_max_docs_**: (optional) Maximum number of documents to load. Defaults to 2. Range 1-10.
   </Accordion>
 </AccordionGroup>
 
@@ -68,8 +72,6 @@ To get started with the Wikipedia integration, follow these steps to configure a
 With the Wikipedia integration, you can easily access a wealth of information from one of the largest online encyclopedias. 
 This integration provides a robust solution for data retrieval, enhancing your workflow's capabilities and user experience.
 
-For further assistance, feel free to reach out to our support team or consult the [Wikipedia API documentation](https://wikipedia.readthedocs.io/en/latest/).
-
-<Callout type="success" title="Need Help?">
-  If you encounter any issues or have questions, our support team is here to help. Don't hesitate to reach out!
-</Callout> 
+<Tip>
+  For more information, please refer to the [Wikipedia API documentation](https://wikipedia.readthedocs.io/en/latest/).
+</Tip> 

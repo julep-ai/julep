@@ -4,6 +4,8 @@ description: 'Learn how to use the Cloudinary integration with Julep'
 icon: 'wand-magic'
 ---
 
+## Overview
+
 Welcome to the Cloudinary integration guide for Julep! This integration allows you to manage and transform media files efficiently, enabling you to build workflows that require robust media processing capabilities. Whether you're uploading images or editing videos, this guide will walk you through the setup and usage.
 
 ## Prerequisites
@@ -36,16 +38,16 @@ To get started with the Cloudinary integration, follow these steps to configure 
             cloudinary_api_key: {cloudinary_api_key}
             cloudinary_api_secret: {cloudinary_api_secret}
             params: # Optional setup parameters
-              key1: value1
-              key2: value2
+              key1: value1 # these are placeholders for the actual parameters
+              key2: value2 # these are placeholders for the actual parameters
     main:
       - tool: cloudinary_tool
         arguments:
           file: "https://example.com/image.jpg"
           public_id: "my_image"
           upload_params: # Optional upload parameters
-            param1: value1
-            param2: value2
+            param1: value1 # these are placeholders for the actual parameters
+            param2: value2 # these are placeholders for the actual parameters
           return_base64: false
     ```
   </Step>
@@ -63,9 +65,12 @@ To get started with the Cloudinary integration, follow these steps to configure 
     - **_type_**: Specifies the type of tool, which is `integration` in this context.
     - **_integration_**: Details the provider and setup for the integration.
       - **_provider_**: Indicates the service provider, which is `cloudinary` for Cloudinary.
-      - **_method_**: Specifies the method to use, either `media_upload` or `media_edit`.
-      - **_setup_**: Contains configuration details, such as the API key, API secret, and cloud name.
-      - **_params_**: Optional setup parameters that can be used to customize the integration.
+      - **_method_**: Specifies the method to use, either `media_upload` or `media_edit`. Defaults to `media_edit` if not specified.
+      - **_setup_**: Contains configuration details
+          - **_cloudinary_cloud_name_**: (Required) The cloud name of the Cloudinary account.
+          - **_cloudinary_api_key_**: (Required) The API key of the Cloudinary account.
+          - **_cloudinary_api_secret_**: (Required) The API secret of the Cloudinary account.
+          - **_params_**: (Optional) Optional parameters for the configuration.
   </Accordion>
 
   <Accordion title="Workflow Configuration">
@@ -98,8 +103,6 @@ To get started with the Cloudinary integration, follow these steps to configure 
 With the Cloudinary integration, you can efficiently manage and transform media files. 
 This integration provides a robust solution for media processing, enhancing your workflow's capabilities and user experience.
 
-For further assistance, feel free to reach out to our support team or consult the [Cloudinary API documentation](https://cloudinary.com/documentation/python_quickstart).
-
-<Callout type="success" title="Need Help?">
-  If you encounter any issues or have questions, our support team is here to help. Don't hesitate to reach out!
-</Callout> 
+<Tip>
+  For more information, please refer to the [Cloudinary documentation](https://cloudinary.com/documentation/python_quickstart).
+</Tip> 

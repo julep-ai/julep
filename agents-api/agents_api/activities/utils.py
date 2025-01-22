@@ -274,6 +274,8 @@ class stdlib_json:
 class stdlib_yaml:
     load = safe_yaml_load
     dump = yaml.dump
+    safe_load = safe_yaml_load
+    safe_dump = yaml.dump
 
 
 # Safe string constants

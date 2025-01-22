@@ -4,6 +4,8 @@ description: 'OpenWeatherMap integration with Julep'
 icon: 'cloud-sun-rain'
 ---
 
+## Overview
+
 Welcome to the OpenWeatherMap integration guide for Julep! This integration allows you to seamlessly access weather data for various locations, enabling you to build workflows that require real-time weather information.
 
 ## Prerequisites
@@ -30,6 +32,7 @@ To get started with the OpenWeatherMap integration, follow these steps to config
         type: integration
         integration:
           provider: weather
+          method: get
           setup:
             openweathermap_api_key: {openweathermap_api_key}
     main:
@@ -55,7 +58,7 @@ To get started with the OpenWeatherMap integration, follow these steps to config
     - **_type_**: Specifies the type of tool, which is `integration` in this context.
     - **_integration_**: Details the provider and setup for the integration.
       - **_provider_**: Indicates the service provider, which is `weather` for OpenWeatherMap.
-      - **_method_**: Specifies the method to be used. Default is `weather` if not specified.
+      - **_method_**: Specifies the method to be used. Default is `get` if not specified. If not specified, the method will be `get` by default.
       - **_setup_**: Contains configuration details, such as the API key (`openweathermap_api_key`) required for authentication.
   </Accordion>
 
@@ -77,8 +80,6 @@ To get started with the OpenWeatherMap integration, follow these steps to config
 With the OpenWeatherMap integration, you can easily incorporate weather data into your workflows. 
 This integration provides a robust solution for accessing real-time weather information, enhancing your workflow's functionality and user experience.
 
-For further assistance, feel free to reach out to our support team or consult the [OpenWeatherMap API documentation](https://openweathermap.org/guide). 
-
-<Callout type="success" title="Need Help?">
-  If you encounter any issues or have questions, our support team is here to help. Don't hesitate to reach out!
-</Callout> 
+<Tip>
+  For more information, please refer to the [OpenWeatherMap documentation](https://openweathermap.org/guide).
+</Tip> 

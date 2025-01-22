@@ -4,12 +4,120 @@ description: 'Understand the core architecture and components of Julep'
 icon: 'brain'
 ---
 
-Coming soon...
-
 ## Overview
 
-This guide covers:
-- Core architectural components
-- System design principles
-- Data flow and processing pipelines
-- Scalability considerations 
+Julep is a powerful backend system for managing agent execution. It provides several key components that work together to create flexible and intelligent applications.
+
+<Frame caption="Julep Architecture Overview">
+  <img
+    src="/images/julep-architecture.png"
+  />
+</Frame>
+
+## Core Components
+
+<CardGroup cols={2}>
+  <Card title="Agent" icon="robot">
+    <p>The main orchestrator of your application, backed by foundation models like GPT4 or Claude.</p>
+  </Card>
+
+  <Card title="User" icon="user">
+    <p>Users can be associated with sessions and are used to scope memories formed by agents.</p>
+  </Card>
+
+  <Card title="Session" icon="messages">
+    <p>The main workhorse for Julep apps.</p>
+  </Card>
+
+  <Card title="Tool" icon="wrench">
+    <p>Programmatic interfaces that foundation models can "call" with inputs.</p>
+  </Card>
+
+  <Card title="Doc" icon="file-lines">
+    <p>Collections of text snippets indexed into a vector database.</p>
+  </Card>
+
+  <Card title="Task & Execution" icon="list-check">
+    <p>Github Actions-style workflows for complex operations.</p>
+  </Card>
+</CardGroup>
+
+## Infrastructure Components
+
+<CardGroup cols={3}>
+  <Card title="Document Store" icon="database">
+    <p>The document store provides a vector database for semantic search along with a document management system. It supports various file types and handles automatic indexing and retrieval of documents.</p>
+  </Card>
+
+  <Card title="Task Execution Engine" icon="gears">
+    <p>The task execution engine handles distributed task processing, state management, error handling with retries, and supports parallel execution of tasks.</p>
+  </Card>
+
+  <Card title="API Layer" icon="code">
+    <p>The API layer provides RESTful API endpoints, SDK support, authentication and authorization capabilities, and handles rate limiting and quotas.</p>
+  </Card>
+</CardGroup>
+
+## Data Flow
+
+<Frame caption="Data Flow Overview">
+  <img
+    src="/images/data-flow.png"
+  />
+</Frame>
+
+<Info>
+  <p>The data flow in Julep is divided into three main components, each handling specific aspects of request processing and response generation.</p>
+</Info>
+
+<Steps>
+  <Step title="Client Interaction" icon="arrow-right-to-bracket">
+    - SDK or API calls initiate requests
+    - Authentication and validation
+    - Request routing
+  </Step>
+
+  <Step title="Task Processing" icon="gears">
+    - Task decomposition
+    - Step execution
+    - State management
+    - Tool integration
+  </Step>
+
+  <Step title="Response Handling" icon="arrow-right-from-bracket">
+    
+    - Result aggregation
+    - Error handling
+    - Client notification
+    - State persistence
+  </Step>
+</Steps>
+
+## Security Architecture
+
+<AccordionGroup>
+  <Accordion title="Authentication" icon="lock">
+    - API key-based access
+    - Role-based permissions
+    - Session management
+    - Token validation
+  </Accordion>
+
+  <Accordion title="Data Protection" icon="shield">
+    - Encryption at rest
+    - Secure communication
+    - Data isolation
+    - Access controls
+  </Accordion>
+
+  <Accordion title="Monitoring" icon="chart-line">
+    - Audit logging
+    - Performance metrics
+    - Error tracking
+    - Usage analytics
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  This architecture is designed to be scalable, secure, and flexible, allowing for easy integration with existing systems while maintaining robust security and performance characteristics.
+</Tip> 

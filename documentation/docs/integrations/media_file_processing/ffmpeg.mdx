@@ -4,6 +4,8 @@ description: 'Learn how to use the FFmpeg integration with Julep'
 icon: 'photo-film'
 ---
 
+## Overview
+
 Welcome to the FFmpeg integration guide for Julep! This integration allows you to process media files using FFmpeg commands, enabling you to build workflows that require advanced media processing capabilities. Whether you're converting video formats or extracting audio, this guide will walk you through the setup and usage.
 
 ## How to Use the Integration
@@ -21,6 +23,7 @@ To get started with the FFmpeg integration, follow these steps to configure and 
         type: integration
         integration:
           provider: ffmpeg
+          method: bash_cmd
     main:
       - tool: ffmpeg_tool
         arguments:
@@ -41,7 +44,8 @@ To get started with the FFmpeg integration, follow these steps to configure and 
   <Accordion title="Tool Configuration">
     - **_type_**: Specifies the type of tool, which is `integration` in this context.
     - **_integration_**: Details the provider and setup for the integration.
-      - **_provider_**: Indicates the service provider, which is `ffmpeg` for FFmpeg.
+      - **_provider_**: Indicates the service provider, which is `ffmpeg` for FFmpeg. 
+      - **_method_**: Indicates the method to be used, which is `bash_cmd` for FFmpeg. If not specified, the method will be `bash_cmd` by default.
   </Accordion>
 
   <Accordion title="Workflow Configuration">
@@ -62,8 +66,6 @@ To get started with the FFmpeg integration, follow these steps to configure and 
 With the FFmpeg integration, you can efficiently process media files using powerful FFmpeg commands. 
 This integration provides a robust solution for media processing, enhancing your workflow's capabilities and user experience.
 
-For further assistance, feel free to reach out to our support team or consult the [FFmpeg documentation](https://ffmpeg.org/documentation.html).
-
-<Callout type="success" title="Need Help?">
-  If you encounter any issues or have questions, our support team is here to help. Don't hesitate to reach out!
-</Callout> 
+<Tip>
+  For more information, please refer to the [FFmpeg documentation](https://ffmpeg.org/documentation.html).
+</Tip> 
