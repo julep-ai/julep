@@ -52,7 +52,6 @@ dependencies = [
   "asyncpg>=0.30.0",
   "unique-namer>=1.6.1",
   "langcodes>=3.5.0",
-  "multipledispatch>=1.0.0",
 ]
 
 [dependency-groups]

@@ -35,7 +35,7 @@ from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
 from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
-from temporalio.client import WorkflowHandle
+from temporalio.client import Client, WorkflowHandle
 from uuid_extensions import uuid7
 from ward import fixture
 
@@ -47,6 +47,12 @@ from .utils import (
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
+
+
+@fixture(scope="global")
+async def temporal_client():
+    # TODO: reimplement this once I figure out how to use temporal client in tests properly
+    return await Client.connect("localhost:7233")
 
 
 @fixture(scope="global")
