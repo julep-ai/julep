@@ -12,39 +12,105 @@ Documents in Julep provide a way to store and retrieve information that can be u
 
 Documents in Julep consist of several key components that enable efficient storage and retrieval of information.
 
-### Title
+- **Title**: The title component helps identify and organize documents.
+- **Content**: The content of the document.
+- **Embeddings** (automatically generated): Embeddings are vector representations of text that enable semantic search capabilities.
+- **Metadata**: Metadata provides additional context and filtering capabilities for documents.
 
-The title component helps identify and organize documents.
+### Docs Configuration Options
 
-### Snippets
+When creating a doc, the following attributes can be specified:
 
-Snippets are chunks of text extracted from documents that can be used for retrieval.
-
-### Embeddings
-
-Embeddings are vector representations of text that enable semantic search capabilities.
-
-### Metadata
-
-Metadata provides additional context and filtering capabilities for documents.
+| **Field**  | **Type** | **Description**                                                    | **Default** |
+|------------|----------|--------------------------------------------------------------------|-------------|
+| `title`    | string   | The title of the document.                                          | Required    |
+| `content` | string    | The content of the document.                                          | Required    |
+| `metadata` | object   | Additional metadata for the document, such as preferences or settings. | `null`      |
 
 ## How to Use Docs
 
 ### Creating a Doc
 
-Learn how to create and manage documents in Julep.
+Documents are attached to either an agent or a user. This is how you can create a doc using Julep's SDKs.
+
+**Create a doc for an agent:**
+
+<CodeGroup>
+    ```python Python
+    # Creating a doc
+    doc = client.agents.docs.create(
+        agent_id="agent_id",
+        title="My Document",
+        content="This is the content of my document.",
+        metadata={"category": "example"}
+    )
+    ```
+
+    ```javascript Node.js
+    # Creating a doc
+    const doc = await client.agents.docs.create({
+        agent_id="agent_id",
+        title: "My Document",
+        content: "This is the content of my document.",
+        metadata: {"category": "example"}
+    });
+    ```
+</CodeGroup>
+
+**Create a doc for a user:**
+
+<CodeGroup>
+    ```python Python
+    # Creating a doc
+    doc = client.users.docs.create(
+        user_id="user_id",
+        title="My Document",
+        content="This is the content of my document.",
+        metadata={"category": "example"}
+    )
+    ```
+
+    ```javascript Node.js
+    # Creating a doc
+    const doc = await client.users.docs.create({
+        user_id="user_id",
+        title: "My Document",
+        content: "This is the content of my document.",
+        metadata: {"category": "example"}
+    });
+    ```
+</CodeGroup>
 
 ### Chunking
 
 Understand how documents are split into manageable pieces.
 
-### Embedding Search
+### Search
+
+#### Full Text Search
+
+<DESCRIPTION>
+
+Example:
+
+<CodeGroup>
+    ```python Python
+    matched_docs = client.agents.docs.search(
+        agent_id="agent_id",
+        query="Medieval times in Europe",
+    )
+    ```
+
+</CodeGroup>
+
+#### Embedding Search
 
 Learn about semantic search using embeddings.
 
-### Hybrid Search
+#### Hybrid Search
 
 Combine different search approaches for better results.
+
 
 ### Using Docs in Tasks
 
