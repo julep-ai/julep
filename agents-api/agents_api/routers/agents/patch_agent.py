@@ -22,7 +22,6 @@ async def patch_agent(
     agent_id: UUID,
     data: PatchAgentRequest,
 ) -> ResourceUpdatedResponse:
-
     if data.model:
         await validate_model(data.model)
 

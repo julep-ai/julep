@@ -15,5 +15,5 @@ async def validate_model(model_name: str) -> None:
     if model_name not in available_models:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail=f"Model {model_name} not available. Available models: {available_models}"
+            detail=f"Model {model_name} not available. Available models: {available_models}",
         )

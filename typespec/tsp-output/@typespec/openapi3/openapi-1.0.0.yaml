@@ -4887,17 +4887,8 @@ components:
           additionalProperties:
             anyOf:
               - $ref: '#/components/schemas/Common.PyExpression'
-              - type: array
-                items:
-                  $ref: '#/components/schemas/Common.PyExpression'
               - type: object
-                additionalProperties:
-                  $ref: '#/components/schemas/Common.PyExpression'
-              - type: array
-                items:
-                  type: object
-                  additionalProperties:
-                    $ref: '#/components/schemas/Common.PyExpression'
+                additionalProperties: {}
           description: The expression to evaluate
       allOf:
         - type: object
@@ -5919,7 +5910,10 @@ components:
         set:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/Common.PyExpression'
+            anyOf:
+              - $ref: '#/components/schemas/Common.PyExpression'
+              - type: object
+                additionalProperties: {}
           description: The value to set
       allOf:
         - type: object
