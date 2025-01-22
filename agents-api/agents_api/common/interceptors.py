@@ -4,6 +4,7 @@ The main purpose of these interceptors is to handle errors and prevent retrying
 certain types of errors that are known to be non-retryable.
 """
 
+import inspect
 import sys
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
@@ -22,12 +23,18 @@ from temporalio.worker import (
     WorkflowInboundInterceptor,
     WorkflowInterceptorClassInput,
     WorkflowOutboundInterceptor,
+    StartActivityInput,
+    ContinueAsNewInput,
+    StartLocalActivityInput,
 )
 from temporalio.workflow import (
+    ActivityHandle,
     ChildWorkflowHandle,
     ContinueAsNewError,
     NondeterminismError,
     ReadOnlyContextError,
+    NoReturn,
+
 )
 
 with workflow.unsafe.imports_passed_through():
@@ -127,6 +134,9 @@ def offload_if_large[T](result: T) -> T | RemoteObject:
 
     if isinstance(result, ChildWorkflowHandle):
         return result
+    
+    if isinstance(result, ActivityHandle):
+        return result
 
     if is_too_large(result):
         return RemoteObject.from_value(result)
@@ -154,7 +164,24 @@ def offload_to_blob_store[S, T](
         # Save the result to the blob store if necessary
         return offload_if_large(result)
 
-    return wrapper
+    @wraps(func)
+    def wrapper_sync(self, input: ExecuteActivityInput | ExecuteWorkflowInput) -> T | RemoteObject:
+                # Load all remote arguments from the blob store
+        args: Sequence[Any] = input.args
+
+        if use_blob_store_for_temporal:
+            input.args = [load_if_remote(arg) for arg in args]
+
+        # Execute the function
+        result = func(self, input)
+
+        # Save the result to the blob store if necessary
+        return offload_if_large(result)
+    
+    if inspect.iscoroutinefunction(func):
+        return wrapper
+    else:
+        return wrapper_sync
 
 
 async def handle_execution_with_errors[I, T](
@@ -177,6 +204,37 @@ async def handle_execution_with_errors[I, T](
     """
     try:
         return await execution_fn(input)
+    except PASSTHROUGH_EXCEPTIONS:
+        raise
+    except BaseException as e:
+        if not is_retryable_error(e):
+            raise ApplicationError(
+                str(e),
+                type=type(e).__name__,
+                non_retryable=True,
+            )
+        raise
+
+def handle_execution_with_errors_sync[I, T](
+    execution_fn: Callable[[I], T],
+    input: I,
+) -> T:
+    """
+    Common error handling logic for both activities and workflows.
+
+    Args:
+        execution_fn: Async function to execute with error handling
+        input: Input to the execution function
+
+    Returns:
+        The result of the execution function
+
+    Raises:
+        ApplicationError: For non-retryable errors
+        Any other exception: For retryable errors
+    """
+    try:
+        return execution_fn(input)
     except PASSTHROUGH_EXCEPTIONS:
         raise
     except BaseException as e:
@@ -239,6 +297,27 @@ class CustomOutboundInterceptor(WorkflowOutboundInterceptor):
     """
     Custom outbound interceptor for Temporal workflows.
     """
+
+    # @offload_to_blob_store
+    # def start_activity(self, input: StartActivityInput) -> ActivityHandle:
+    #     return handle_execution_with_errors_sync(
+    #         super().start_activity,
+    #         input,
+    #     )
+
+    @offload_to_blob_store
+    def continue_as_new(self, input: ContinueAsNewInput) -> NoReturn:
+        return handle_execution_with_errors_sync(
+            super().continue_as_new,
+            input,
+        )
+
+    @offload_to_blob_store
+    def start_local_activity(self, input: StartLocalActivityInput) -> ActivityHandle:
+        return handle_execution_with_errors_sync(
+            super().start_local_activity,
+            input,
+        )
 
     @offload_to_blob_store
     async def start_child_workflow(self, input: StartChildWorkflowInput) -> ChildWorkflowHandle:

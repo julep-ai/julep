@@ -11,14 +11,14 @@ from ..worker.codec import RemoteObject
 async def save_inputs_remote_fn(inputs: list[Any]) -> list[Any | RemoteObject]:
     from ..common.interceptors import offload_if_large
 
-    return await asyncio.gather(*[offload_if_large(input) for input in inputs])
+    return [offload_if_large(input) for input in inputs]
 
 
 @beartype
 async def load_inputs_remote_fn(inputs: list[Any | RemoteObject]) -> list[Any]:
     from ..common.interceptors import load_if_remote
 
-    return await asyncio.gather(*[load_if_remote(input) for input in inputs])
+    return [load_if_remote(input) for input in inputs]
 
 
 save_inputs_remote = activity.defn(name="save_inputs_remote")(save_inputs_remote_fn)

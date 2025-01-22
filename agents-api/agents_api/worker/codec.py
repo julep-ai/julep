@@ -13,7 +13,7 @@ from typing import Any, Self
 import larch.pickle as pickle
 import temporalio.converter
 from lz4.frame import compress, decompress
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from temporalio import workflow
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import (
@@ -31,6 +31,7 @@ with workflow.unsafe.imports_passed_through():
 class RemoteObject(BaseModel):
     key: str
     bucket: str
+    model_config = ConfigDict(frozen=True)
 
     @classmethod
     def from_value(cls, x: Any) -> Self:

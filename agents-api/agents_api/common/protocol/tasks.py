@@ -155,6 +155,8 @@ class ExecutionInput(BaseModel):
     agent_tools: list[Tool | CreateToolRequest]
     arguments: dict[str, Any] | RemoteObject
 
+    # TODO: Convert fields to only arguments (remote object only), exectuion_id, developer_id
+
     # Not used at the moment
     user: User | None = None
     session: Session | None = None
