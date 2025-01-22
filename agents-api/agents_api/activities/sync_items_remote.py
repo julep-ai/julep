@@ -1,4 +1,3 @@
-import asyncio
 from typing import Any
 
 from beartype import beartype

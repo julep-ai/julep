@@ -16,25 +16,23 @@ from temporalio.exceptions import ApplicationError, FailureError, TemporalError
 from temporalio.service import RPCError
 from temporalio.worker import (
     ActivityInboundInterceptor,
+    ContinueAsNewInput,
     ExecuteActivityInput,
     ExecuteWorkflowInput,
     Interceptor,
     StartChildWorkflowInput,
+    StartLocalActivityInput,
     WorkflowInboundInterceptor,
     WorkflowInterceptorClassInput,
     WorkflowOutboundInterceptor,
-    StartActivityInput,
-    ContinueAsNewInput,
-    StartLocalActivityInput,
 )
 from temporalio.workflow import (
     ActivityHandle,
     ChildWorkflowHandle,
     ContinueAsNewError,
     NondeterminismError,
-    ReadOnlyContextError,
     NoReturn,
-
+    ReadOnlyContextError,
 )
 
 with workflow.unsafe.imports_passed_through():
@@ -134,7 +132,7 @@ def offload_if_large[T](result: T) -> T | RemoteObject:
 
     if isinstance(result, ChildWorkflowHandle):
         return result
-    
+
     if isinstance(result, ActivityHandle):
         return result
 
@@ -165,8 +163,10 @@ def offload_to_blob_store[S, T](
         return offload_if_large(result)
 
     @wraps(func)
-    def wrapper_sync(self, input: ExecuteActivityInput | ExecuteWorkflowInput) -> T | RemoteObject:
-                # Load all remote arguments from the blob store
+    def wrapper_sync(
+        self, input: ExecuteActivityInput | ExecuteWorkflowInput
+    ) -> T | RemoteObject:
+        # Load all remote arguments from the blob store
         args: Sequence[Any] = input.args
 
         if use_blob_store_for_temporal:
@@ -177,11 +177,10 @@ def offload_to_blob_store[S, T](
 
         # Save the result to the blob store if necessary
         return offload_if_large(result)
-    
+
     if inspect.iscoroutinefunction(func):
         return wrapper
-    else:
-        return wrapper_sync
+    return wrapper_sync
 
 
 async def handle_execution_with_errors[I, T](
@@ -214,6 +213,7 @@ async def handle_execution_with_errors[I, T](
                 non_retryable=True,
             )
         raise
+
 
 def handle_execution_with_errors_sync[I, T](
     execution_fn: Callable[[I], T],

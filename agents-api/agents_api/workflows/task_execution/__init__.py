@@ -681,7 +681,6 @@ class TaskExecutionWorkflow:
 
         previous_inputs.append(final_output)
 
-
         # Continue as a child workflow
         return await continue_as_child(
             context.execution_input,
