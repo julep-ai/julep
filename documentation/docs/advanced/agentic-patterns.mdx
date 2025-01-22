@@ -6,29 +6,15 @@ icon: 'sitemap'
 
 # Agentic Patterns
 
-This guide covers common patterns and best practices for building effective Julep agents, based on proven patterns from production implementations.
+This guide covers common patterns and best practices for building effective Julep agents, inspired by a blog written by Anthropic on [Building effective agents](https://www.anthropic.com/research/building-effective-agents).
 
 ## Core Workflow Patterns
 
 ### 1. Prompt Chaining
-A pattern that decomposes tasks into a sequence of steps, where each LLM call processes the output of the previous one. This pattern is particularly effective when:
-
-- Tasks can be broken down into clear, sequential steps
-- Each step's output serves as input for the next step
-- Quality control is needed between transformations
-- The process follows a fixed sequence of operations
-
-**Common applications:**
-- Content generation and refinement
-- Multi-stage data processing
-- Translation and localization workflows
-- Document analysis and summarization
-
-**Key benefits:**
-- Improved control over each step of the process
-- Better error handling and quality control
-- Easier debugging and monitoring
-- More predictable outputs
+Break tasks into sequential steps, where each step’s output feeds the next. Useful for:
+• Content generation and subsequent checks
+• Translation/localization in multiple stages
+• Ensuring quality between discrete transformations
 
 **Example implementation:**
 ```yaml
@@ -55,24 +41,13 @@ main:
 ```
 
 ### 2. Routing Pattern
-This pattern acts as a traffic controller, analyzing incoming requests and directing them to specialized handlers. This pattern is particularly useful when:
+Act as a “traffic controller” by detecting request types and sending them to the correct handler. Ideal when inputs are diverse or require specialized expertise.
 
-- Different types of inputs require different handling
-- You need to maintain separation of concerns
-- Specialized expertise is required for different cases
-- You want to optimize resource usage
-
-**Key components:**
-1. **Classifier**: Analyzes input and determines its type/category
-2. **Router**: Directs the input to appropriate handlers
-3. **Specialized Handlers**: Process specific types of requests
-4. **Response Aggregator**: Combines results if needed
-
-**Benefits:**
-- More efficient resource utilization
-- Better specialization and expertise
-- Easier maintenance and updates
-- Improved scalability
+Steps generally include:
+1. Classification of incoming data
+2. Routing to handler modules
+3. Specialized processing
+4. (Optional) Aggregation of results
 
 **Example implementation:**
 ```yaml
@@ -103,21 +78,12 @@ main:
 ```
 
 ### 3. Parallelization Pattern
-This pattern enables concurrent processing through two main approaches:
-1. **Sectioning**: Breaking tasks into independent parts
-2. **Voting**: Running multiple instances for consensus
+Execute subtasks concurrently by either dividing the workload (sectioning) or collecting multiple perspectives (voting).
 
-**Best suited for:**
-- Independent subtasks that can run simultaneously
-- Validation requiring multiple perspectives
-- Performance-critical applications
-- Reliability-focused systems
-
-**Key considerations:**
-- Resource management
-- Result synchronization
-- Error handling across parallel tasks
-- Aggregation strategies
+Keys to consider:
+• Parallel processes for performance or redundancy
+• Syncing results and handling errors
+• Aggregating diverse outputs
 
 **Example implementations:**
 
@@ -177,25 +143,10 @@ main:
 ```
 
 ### 4. Orchestrator-Workers Pattern
-This pattern implements a hierarchical structure where a central orchestrator manages and coordinates multiple worker agents. The orchestrator:
-
-1. Analyzes the main task
-2. Breaks it into subtasks
-3. Assigns tasks to appropriate workers
-4. Monitors progress
-5. Aggregates results
-
-Particularly effective for:
-- Complex, multi-step tasks
-- Projects requiring different types of expertise
-- Scalable workflows
-- Dynamic task allocation
-
-**Benefits:**
-- Better resource management
-- Improved task specialization
-- Enhanced scalability
-- Flexible task distribution
+Use a central “orchestrator” that delegates subtasks to multiple “worker” agents and integrates their outputs. Best for:
+• Large or dynamic multi-step tasks
+• Coordinating various specialized capabilities
+• Flexible task distribution
 
 **Example implementation:**
 ```yaml
@@ -215,25 +166,16 @@ main:
 ```
 
 ### 5. Evaluator-Optimizer Pattern
-This pattern creates a feedback loop for continuous improvement through:
+Create iterative feedback loops to refine outputs until they meet preset criteria. Suitable for:
+• Content refinement
+• Code reviews
+• Detailed document enhancements
 
-1. **Generation**: Initial content or solution creation
-2. **Evaluation**: Assessment against specific criteria
-3. **Feedback**: Detailed improvement suggestions
-4. **Optimization**: Refinement based on feedback
-5. **Iteration**: Repeat until quality criteria are met
-
-**Ideal for:**
-- Content generation and refinement
-- Code review and improvement
-- Document optimization
-- Quality assurance processes
-
-**Key features:**
-- Objective evaluation criteria
-- Clear feedback mechanisms
-- Iterative improvement
-- Stopping conditions
+General flow:
+1. Generate an initial result
+2. Evaluate against criteria
+3. Provide improvement feedback
+4. Optimize/retry until goals are met
 
 **Example implementation:**
 ```yaml
@@ -281,7 +223,7 @@ main:
    role: system
    content: Generate initial content. Here is the task: {{_.task}}
    unwrap: true
-   
+
 # Evaluation loop
 - loop:
    while: "not _.meets_criteria"
@@ -295,7 +237,7 @@ main:
 1. The `evaluate_content` subworkflow:
    - Takes content as input and scores it using a scoring tool
    - If the score is below 0.5, it triggers the improvement workflow
-   - Uses special variables (_0 and _) to manage content and feedback between workflows
+   - Uses special variables (`_0` and `_`) to manage content and feedback between workflows
    - Returns the final content once quality criteria are met
 
 2. The `improve_content` subworkflow:
@@ -312,32 +254,12 @@ This creates a powerful feedback loop where content is repeatedly refined based 
 
 ## Best Practices
 
-1. **Start Simple**
-   - Begin with basic prompts
-   - Add complexity only when needed
-   - Measure performance improvements
+1. **Start Simple:** Use minimal steps and only add complexity when it clearly improves results.  
+2. **Thoughtful Tool Design:** Provide clear documentation, examples, and usage guidelines for each tool.  
+3. **Error Handling & Guardrails:** Include feedback loops, define stopping conditions, and surface potential issues.  
+4. **Testing & Validation:** Thoroughly test in controlled environments and measure against success criteria.  
+5. **Human Oversight:** Establish checkpoints for approval, ensure transparency, and maintain easy-to-audit workflows.
 
-2. **Tool Design**
-   - Write clear tool documentation
-   - Include usage examples
-   - Consider the agent's perspective when designing interfaces
-
-3. **Error Handling**
-   - Implement feedback loops
-   - Add appropriate guardrails
-   - Include stopping conditions
-
-4. **Testing and Validation**
-   - Test extensively in sandboxed environments
-   - Validate outputs against success criteria
-   - Monitor performance metrics
-
-5. **Human Oversight**
-   - Define clear checkpoints
-   - Implement approval workflows
-   - Maintain transparency in agent decisions
-
+---
 
 These patterns represent proven approaches from production implementations. Choose and adapt them based on your specific use case requirements and complexity needs.
-
-[Source: Building effective agents - Anthropic](https://www.anthropic.com/research/building-effective-agents)
