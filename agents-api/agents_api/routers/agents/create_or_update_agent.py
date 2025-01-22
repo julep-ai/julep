@@ -22,7 +22,6 @@ async def create_or_update_agent(
     data: CreateOrUpdateAgentRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-
     if data.model:
         await validate_model(data.model)
 

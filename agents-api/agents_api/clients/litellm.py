@@ -121,15 +121,14 @@ async def get_model_list(*, custom_api_key: str | None = None) -> list[dict]:
         list[dict]: A list of model information dictionaries
     """
 
-    headers = {
-        "accept": "application/json",
-        "x-api-key": custom_api_key or litellm_master_key
-    }
+    headers = {"accept": "application/json", "x-api-key": custom_api_key or litellm_master_key}
 
-    async with aiohttp.ClientSession() as session, session.get(
-        url=f"{litellm_url}/models" if not custom_api_key else "/models",
-        headers=headers
-    ) as response:
+    async with (
+        aiohttp.ClientSession() as session,
+        session.get(
+            url=f"{litellm_url}/models" if not custom_api_key else "/models", headers=headers
+        ) as response,
+    ):
         response.raise_for_status()
         data = await response.json()
         return data["data"]

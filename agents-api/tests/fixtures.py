@@ -450,9 +450,14 @@ SAMPLE_MODELS = [
 
 @fixture(scope="global")
 def client(_dsn=pg_dsn):
-    with TestClient(app=app) as client:
-        with patch("agents_api.routers.utils.model_validation.get_model_list", return_value=SAMPLE_MODELS):
-            yield client
+    with (
+        TestClient(app=app) as client,
+        patch(
+            "agents_api.routers.utils.model_validation.get_model_list",
+            return_value=SAMPLE_MODELS,
+        ),
+    ):
+        yield client
 
 
 @fixture(scope="global")
