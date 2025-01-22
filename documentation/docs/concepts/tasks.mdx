@@ -12,27 +12,29 @@ Tasks are GitHub Actions-style workflows that define multi-step actions in Julep
   Watch our [video walkthrough](https://www.loom.com/embed/c5cda67936254465aaff4548245b3e13?hideEmbedTopBar=true) to see tasks in action.
 </Note>
 
-<CardGroup cols={2}>
-  <Card title="Chain Multiple AI Interactions" icon="link">
+<AccordionGroup>
+  <Accordion title="Chain Multiple AI Interactions" icon="link" defaultOpen={true}>
     Connect multiple AI operations seamlessly
-  </Card>
-  <Card title="Decision Making" icon="code-branch">
+  </Accordion>
+  <Accordion title="Decision Making" icon="code-branch" defaultOpen={true}>
     Make decisions based on intermediate results
-  </Card>
-  <Card title="Parallel Operations" icon="arrows-split-up-and-left">
+  </Accordion>
+  <Accordion title="Parallel Operations" icon="arrows-split-up-and-left" defaultOpen={true}>
     Run operations in parallel for efficiency
-  </Card>
-  <Card title="External Integration" icon="plug">
+  </Accordion>
+  <Accordion title="External Integration" icon="plug" defaultOpen={true}>
     Integrate with external tools and APIs
-  </Card>
-  <Card title="State Management" icon="database">
+  </Accordion>
+  <Accordion title="State Management" icon="database" defaultOpen={true} >
     Maintain state throughout execution
-  </Card>
-</CardGroup>
+  </Accordion>
+</AccordionGroup>
 
-## Example Task
+## Components
 
-Here's a simple task that summarizes a document:
+A task consists of several key components which can be broadly classified into:
+
+### Input Schema
 
 ```yaml
 name: Summarize Document
@@ -43,41 +45,99 @@ input_schema:
     document_text:
       type: string
       description: The text to summarize
-
-main:
-  - prompt: |-
-        Analyze the following text and create a summary:
-        {{inputs.document_text}}
-    unwrap: true
-  - evaluate:
-      too_long: len(_.summary) > 500
-  - if: _.too_long
-    then:
-      prompt: |-
-        Make the summary more concise:
-        {{_1.content}}
-    else: 
-      evaluate:
-        content: _1.content
 ```
 
-## Anatomy of a Task
+### Tools
 
-A task consists of several key components which can be broadly classified into:
+Tools are functions that can be used by an agent to perform tasks. Julep supports a wide range of tools from Integrations to external API calls to custom deinfed functions.
+More information on tools can be found [here](/docs/concepts/tools).
 
-<AccordionGroup>
-  <Accordion title="Required Components" icon="check-double">
-    - **Name**: A unique identifier for the task
-    - **Description**: A clear explanation of the task's purpose
-    - **Main Workflow**: The primary sequence of steps to execute
-  </Accordion>
+```yaml
+tools:
+  - name: internet_search
+    description: Performs an internet search using Brave
+    type: integration
+    integration:
+      provider: brave
+      method: search
+      setup:
+        api_key: <BRAVE_API_KEY>
+```
 
-<Accordion title="Optional Components" icon="plus">
-  - **Input Schema**: JSON Schema to validate input parameters
-  - **Tools**: External integrations and functions the task can use
-    - **Subworkflows**: Additional named workflows for complex operations
-  </Accordion>
-</AccordionGroup>
+### Sub-Workflows
+
+A task can be made up of multiple sub-workflows. These sub-workflows can be named and can be used to break down complex tasks into smaller, more manageable pieces.
+
+```yaml
+name: Summarize Document
+description: Create a concise summary of any document
+sub_workflows:
+  - prompt: |-
+      Tell me a joke on a {{inputs.topic}}:
+main:
+- workflow: sub_workflows
+  arguments:
+    topic: "AI"
+```
+
+### Steps
+
+<Info>
+  We use tasks and workflows interchangeably. They are the same except Julep's branding reflects tasks.
+</Info>
+
+#### Basic Steps
+
+1. **Tool Call**: Runs a specified tool with given arguments
+2. **Prompt**: Runs a prompt using a model
+3. **Evaluate**: Runs Python expressions and uses the result as output
+4. **Wait for Input**: Suspends execution and waits for user input
+5. **Log**: Logs information during workflow execution
+
+
+#### Data Operations
+
+1. **Embed**: Embeds text for semantic operations
+2. **Search**: Searches for documents in the agent's doc store
+3. **Set**: Sets a value in the workflow's key-value store
+4. **Get**: Retrieves a value from the workflow's key-value store
+
+#### Control Flow
+
+1. **Foreach**: Runs a step for every value from a list in serial order
+2. **Map-reduce**: Runs a step for every value of the input list in parallel
+3. **Parallel**: Executes multiple steps in parallel
+4. **Switch**: Executes different steps based on a condition
+5. **If-else**: Conditional step with then and else branches
+6. **Sleep**: Pauses the workflow execution for a specified time
+7. **Return**: Ends the current workflow and optionally returns a value
+8. **Yield**: Switches to another named workflow
+9. **Error**: Throws an error and exits the workflow
+
+> You can learn more about workflow steps in the [Workflow Steps](/docs/advanced/types-of-task-steps) section.
+
+### Context Variables
+
+Tasks have access to three types of context:
+
+#### Input Variables
+Access input parameters:
+```yaml
+- prompt: "Hello {{inputs.user_name}}"
+```
+
+#### Step Results
+Use outputs from previous steps:
+```yaml
+- evaluate: len(_.search_results)
+- if: _.count > 0
+```
+
+#### Environment Context
+Access agent and session data:
+```yaml
+- prompt: "Agent {{agent.name}} is helping you"
+```
 
 <Info>
   Input schemas help catch errors early by validating all inputs before execution starts.
@@ -113,7 +173,92 @@ main:
 
 > Learn more about tools [here](/docs/concepts/tools).
 
-## Relationship to Agents
+### Metadata
+
+Metadata is a key-value pair that can be used to categorize and filter tasks.
+
+## How to Use Tasks ?
+
+### Creating a Task
+
+Here's a simple task that summarizes a document and checks if the summary is too long. We first define the task in a YAML file and then create it using the Julep SDK.
+
+<CodeGroup>
+
+
+```yaml YAML
+name: Summarize Document
+description: Create a concise summary of any document
+input_schema:
+  type: object
+  properties:
+    document_text:
+      type: string
+      description: The text to summarize
+
+main:
+  - prompt: |-
+        Analyze the following text and create a summary:
+        {{inputs.document_text}}
+    unwrap: true
+  - evaluate:
+      too_long: len(_) > 500
+  - if: _.too_long
+    then:
+      prompt: |-
+        Make the summary more concise:
+        {{_1.content}}
+    else: 
+      evaluate:
+        content: _1.content
+```
+
+```python Python
+# Create a task
+import yaml
+task_def = yaml.safe_load(task_yaml)
+task = client.tasks.create(
+    agent_id="agent_id",
+    **task_def
+)
+```
+</CodeGroup>
+
+<Tip>
+    Check out the API reference [here](/api-reference/tasks) or SDK reference (Python [here](/sdks/python/tasks) or JavaScript [here](/sdks/nodejs/tasks) for more details on different operations you can perform on tasks.
+</Tip>
+
+
+### Executing a Task
+
+Here's how to execute a task:
+
+```python
+# Execute a task
+execution = client.executions.create(
+    task_id=task.id,
+    input={
+        "document_text": "This is a sample document"
+    }
+)
+
+# Monitor progress
+while True:
+    result = client.executions.get(execution.id)
+    if result.status in ["succeeded", "failed"]:
+        break
+    time.sleep(1)
+```
+
+<Tip>
+    Check out the API reference [here](/api-reference/executions) or SDK reference (Python [here](/sdks/python/executions) or JavaScript [here](/sdks/nodejs/executions) for more details on different operations you can perform on tasks.
+</Tip>
+
+## Relationship to Other Concepts
+
+This section will help you understand how tasks relate to other concepts in Julep.
+
+### Agents
 
 Julep agents can power tasks by providing memory, context, or tools. Tasks are multi-step workflows designed for complex, automated execution. Whenever you create a task, you can associate it with an agent if you want to leverage that agent's capabilities. Unlike sessions, tasks are not meant for real-time interaction; they run through a defined workflow to achieve a goal.
 
@@ -136,93 +281,10 @@ task = client.tasks.create(
 )
 ```
 
-## Relationship to Sessions
+### Tools
 
-While sessions also use agents, they serve a different purpose. Sessions allow real-time, stateful chats with an agent. This format is ideal when continuous user interaction is required. In contrast, tasks automate multi-step workflows—without requiring a session. You can still reference the same agent in both a session and a task, but each approach is distinct.
-
-## Execution Flow
-
-<Steps>
-  1. **Input Validation**: Checks all inputs against the defined schema
-  2. **Initialization**: Sets up the execution context and required tools
-  3. **Step Execution**: Runs the workflow steps in sequence or parallel
-</Steps>
-
-Here's how to execute a task:
-
-```python
-# Execute a task
-execution = client.executions.create(
-    task_id=task.id,
-    input={
-        "query": "AI developments",
-        "limit": 5
-    }
-)
-
-# Monitor progress
-while True:
-    result = client.executions.get(execution.id)
-    if result.status in ["succeeded", "failed"]:
-        break
-    time.sleep(1)
-```
-
-## Context Variables
-
-Tasks have access to three types of context:
-
-### Input Variables
-Access input parameters:
-```yaml
-- prompt: "Hello {{inputs.user_name}}"
-```
-
-### Step Results
-Use outputs from previous steps:
-```yaml
-- evaluate: len(_.search_results)
-- if: _.count > 0
-```
-
-### Environment Context
-Access agent and session data:
-```yaml
-- prompt: "Agent {{agent.name}} is helping you"
-```
-
-## Common Workflow Steps
-
-<AccordionGroup>
-  <Accordion title="Basic Steps" icon="circle-1">
-    1. **Tool Call**: Runs a specified tool with given arguments
-    2. **Prompt**: Runs a prompt using a model
-    3. **Evaluate**: Runs Python expressions and uses the result as output
-    4. **Wait for Input**: Suspends execution and waits for user input
-    5. **Log**: Logs information during workflow execution
-  </Accordion>
-
-  <Accordion title="Data Operations" icon="circle-2">
-    6. **Embed**: Embeds text for semantic operations
-    7. **Search**: Searches for documents in the agent's doc store
-    8. **Set**: Sets a value in the workflow's key-value store
-    9. **Get**: Retrieves a value from the workflow's key-value store
-  </Accordion>
-
-  <Accordion title="Control Flow" icon="circle-3">
-    10. **Foreach**: Runs a step for every value from a list in serial order
-    11. **Map-reduce**: Runs a step for every value of the input list in parallel
-    12. **Parallel**: Executes multiple steps in parallel
-    13. **Switch**: Executes different steps based on a condition
-    14. **If-else**: Conditional step with then and else branches
-    15. **Sleep**: Pauses the workflow execution for a specified time
-    16. **Return**: Ends the current workflow and optionally returns a value
-    17. **Yield**: Switches to another named workflow
-    18. **Error**: Throws an error and exits the workflow
-  </Accordion>
-</AccordionGroup>
-
-> You can learn more about workflow steps in the [Workflow Steps](/docs/advanced/types-of-task-steps) section.
+Task can leverage tools to perform complex operations. Tools can be defined in the task definition or can be associated with an agent. 
+When you define a tool in the task definition, it is available to all steps in that task only. On the other hand, when you associate a tool with an agent, it is available to all the Tasks associated with that agent.
 
 ## Best Practices
 

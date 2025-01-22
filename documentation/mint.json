@@ -93,9 +93,9 @@
     {
       "group": "Get Started",
       "pages": [
-        "docs/introduction/what_is_julep",
+        "docs/introduction/julep",
         "docs/introduction/install",
-        "docs/introduction/try_it_out"
+        "docs/introduction/quickstart"
       ]
     },
     {

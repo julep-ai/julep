@@ -7,10 +7,11 @@ icon: 'brain'
 ## Overview
 
 Julep is a powerful backend system for managing agent execution. It provides several key components that work together to create flexible and intelligent applications.
-
 <Frame caption="Julep Architecture Overview">
   <img
-    src="/images/julep-architecture.png"
+    src="/images/architecture.svg"
+    width={1000}
+    height={1000}
   />
 </Frame>
 
@@ -62,7 +63,9 @@ Julep is a powerful backend system for managing agent execution. It provides sev
 
 <Frame caption="Data Flow Overview">
   <img
-    src="/images/data-flow.png"
+    src="/images/flow.svg"
+    width={1000}
+    height={1000}
   />
 </Frame>
 
@@ -96,25 +99,31 @@ Julep is a powerful backend system for managing agent execution. It provides sev
 ## Security Architecture
 
 <AccordionGroup>
-  <Accordion title="Authentication" icon="lock">
-    - API key-based access
-    - Role-based permissions
-    - Session management
-    - Token validation
+  <Accordion title="Authentication" icon="lock" defaultOpen={true}>
+    <ol>
+      <li>API key-based access</li>
+      <li>Role-based permissions</li>
+      <li>Session management</li>
+      <li>Token validation</li>
+    </ol>
   </Accordion>
 
-  <Accordion title="Data Protection" icon="shield">
-    - Encryption at rest
-    - Secure communication
-    - Data isolation
-    - Access controls
+  <Accordion title="Data Protection" icon="shield" defaultOpen={true}>
+    <ol>
+      <li>Encryption at rest</li>
+      <li>Secure communication</li>
+      <li>Data isolation</li>
+      <li>Access controls</li>
+    </ol>
   </Accordion>
 
-  <Accordion title="Monitoring" icon="chart-line">
-    - Audit logging
-    - Performance metrics
-    - Error tracking
-    - Usage analytics
+  <Accordion title="Monitoring" icon="chart-line" defaultOpen={true}>
+    <ol>
+      <li>Audit logging</li>
+      <li>Performance metrics</li>
+      <li>Error tracking</li>
+      <li>Usage analytics</li>
+    </ol>
   </Accordion>
 </AccordionGroup>
 

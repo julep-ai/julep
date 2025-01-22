@@ -12,14 +12,18 @@ Julep supports different types of sessions based on the number of agents and use
 
 <CardGroup cols={2}>
   <Card title="Single Agent" icon="user">
-    1. No user
-    2. Single user
-    3. Multiple users
+    <ol>
+      <li>No user</li>
+      <li>Single user</li>
+      <li>Multiple users</li>
+    </ol>
   </Card>
   <Card title="Multiple Agents" icon="users">
-    1. No user
-    2. Single user
-    3. Multiple users
+    <ol>
+      <li>No user</li>
+      <li>Single user</li>
+      <li>Multiple users</li>
+    </ol>
   </Card>
 </CardGroup>
 
@@ -28,28 +32,36 @@ Julep supports different types of sessions based on the number of agents and use
 ### User Behavior
 
 <AccordionGroup>
-  <Accordion title="No User">
-    - No user data is retrieved
-    - (Upcoming) Memories are not mined from the session
+  <Accordion title="No User" icon="user" defaultOpen={true}>
+    <ol>
+      <li>No user data is retrieved</li>
+      <li>(Upcoming) Memories are not mined from the session</li>
+    </ol>
   </Accordion>
 
-  <Accordion title="One or More Users">
-    - Docs, metadata, memories, etc. are retrieved for all users in the session
-    - Messages can be added for each user by referencing them by name in the `ChatML` messages
-    - (Upcoming) Memories mined in the background are added to the corresponding user's scope
+  <Accordion title="One or More Users" icon="users" defaultOpen={true}>
+    <ol>
+      <li>Docs, metadata, memories, etc. are retrieved for all users in the session</li>
+      <li>Messages can be added for each user by referencing them by name in the `ChatML` messages</li>
+      <li>(Upcoming) Memories mined in the background are added to the corresponding user's scope</li>
+    </ol>
   </Accordion>
 </AccordionGroup>
 
 ### Agent Behavior
 
 <AccordionGroup>
-  <Accordion title="One Agent">
-    - Works as expected
+  <Accordion title="One Agent" icon="lightbulb" defaultOpen={true}>
+    <ol>
+      <li>Works as expected</li>
+    </ol>
   </Accordion>
 
-  <Accordion title="Multiple Agents">
-    - When a message is received by the session, each agent is called one after another in the order they were defined in the session
-    - You can specify which `agent` to use in a request, in which case, only that agent will be used
+  <Accordion title="Multiple Agents" icon="lightbulb" defaultOpen={true}>
+    <ol>
+      <li>When a message is received by the session, each agent is called one after another in the order they were defined in the session</li>
+      <li>You can specify which `agent` to use in a request, in which case, only that agent will be used</li>
+    </ol>
   </Accordion>
 </AccordionGroup>
 
