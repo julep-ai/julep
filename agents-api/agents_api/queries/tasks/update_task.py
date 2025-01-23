@@ -4,7 +4,7 @@ from uuid import UUID
 from beartype import beartype
 
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateTaskRequest
-from ...common.protocol.tasks import task_to_spec
+from ...common.protocol.models import task_to_spec
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
