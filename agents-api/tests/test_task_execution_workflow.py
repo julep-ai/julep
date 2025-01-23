@@ -3,11 +3,17 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from agents_api.activities import task_steps
+from agents_api.activities.execute_api_call import execute_api_call
+from agents_api.activities.execute_integration import execute_integration
+from agents_api.activities.execute_system import execute_system
 from agents_api.autogen.openapi_model import (
     Agent,
+    ApiCallDef,
+    BaseIntegrationDef,
     CaseThen,
     GetStep,
     SwitchStep,
+    SystemDef,
     TaskSpecDef,
     TaskToolDef,
     ToolCallStep,
@@ -22,7 +28,12 @@ from agents_api.common.protocol.tasks import (
 )
 from agents_api.common.retry_policies import DEFAULT_RETRY_POLICY
 from agents_api.common.utils.datetime import utcnow
-from agents_api.env import temporal_heartbeat_timeout
+from agents_api.env import (
+    debug,
+    temporal_heartbeat_timeout,
+    temporal_schedule_to_close_timeout,
+    testing,
+)
 from agents_api.workflows.task_execution import TaskExecutionWorkflow
 from temporalio.exceptions import ApplicationError
 from ward import raises, test
@@ -109,8 +120,13 @@ async def _():
             step=0,
         ),
     )
+    tool_name = "tool1"
+    arguments = {}
     outcome = StepOutcome(
-        output={"type": "integration", "integration": {"name": "tool1", "arguments": {}}}
+        output={
+            "type": "integration",
+            "integration": {"name": tool_name, "arguments": arguments},
+        }
     )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
@@ -120,6 +136,23 @@ async def _():
             outcome=outcome,
         )
         assert result == PartialTransition(output="integration_tool_call_response")
+        provider = "dummy"
+        method = None
+        integration = BaseIntegrationDef(
+            provider=provider,
+            setup=None,
+            method=method,
+            arguments=arguments,
+        )
+        workflow.execute_activity.assert_called_once_with(
+            execute_integration,
+            args=[context, tool_name, integration, arguments],
+            schedule_to_close_timeout=timedelta(
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+            ),
+            retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+        )
 
 
 @test("task execution workflow: handle integration tool call step, integration tools not found")
@@ -170,8 +203,16 @@ async def _():
         return "api_call_tool_call_response"
 
     wf = TaskExecutionWorkflow()
-    step = ToolCallStep(tool="tool1")
+    arguments = {
+        "method": "GET",
+        "url": "http://url1.com",
+    }
+    step = ToolCallStep(
+        tool="tool1",
+        arguments=arguments,
+    )
     execution_input = ExecutionInput(
+        arguments=arguments,
         developer_id=uuid.uuid4(),
         agent=Agent(
             id=uuid.uuid4(),
@@ -180,10 +221,16 @@ async def _():
             name="agent1",
         ),
         agent_tools=[],
-        arguments={},
         task=TaskSpecDef(
             name="task1",
-            tools=[],
+            tools=[
+                TaskToolDef(
+                    type="api_call",
+                    name="tool1",
+                    spec=arguments,
+                    inherited=False,
+                ),
+            ],
             workflows=[Workflow(name="main", steps=[step])],
         ),
     )
@@ -195,7 +242,15 @@ async def _():
             step=0,
         ),
     )
-    outcome = StepOutcome(output={"type": "function"})
+    outcome = StepOutcome(
+        output={
+            "type": "api_call",
+            "api_call": {
+                "arguments": arguments,
+                "name": "tool1",
+            },
+        }
+    )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
         result = await wf.handle_step(
@@ -203,7 +258,102 @@ async def _():
             step=step,
             outcome=outcome,
         )
-        assert result == PartialTransition(type="resume", output="api_call_tool_call_response")
+        assert result == PartialTransition(output="api_call_tool_call_response")
+        api_call = ApiCallDef(
+            method="GET",
+            url="http://url1.com",
+            headers=None,
+            follow_redirects=None,
+        )
+        workflow.execute_activity.assert_called_once_with(
+            execute_api_call,
+            args=[
+                api_call,
+                arguments,
+            ],
+            schedule_to_close_timeout=timedelta(
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+            ),
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+        )
+
+
+@test("task execution workflow: handle system tool call step")
+async def _():
+    async def _resp():
+        return "system_tool_call_response"
+
+    wf = TaskExecutionWorkflow()
+    arguments = {
+        "resource": "agent",
+        "operation": "create",
+        "subresource": "doc",
+    }
+    step = ToolCallStep(
+        tool="tool1",
+        arguments=arguments,
+    )
+    execution_input = ExecutionInput(
+        arguments=arguments,
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        task=TaskSpecDef(
+            name="task1",
+            tools=[
+                TaskToolDef(
+                    type="system",
+                    name="tool1",
+                    spec=arguments,
+                    inherited=False,
+                ),
+            ],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+    )
+    context = StepContext(
+        execution_input=execution_input,
+        inputs=["value 1"],
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    outcome = StepOutcome(
+        output={
+            "type": "system",
+            "system": {
+                **arguments,
+                "name": "tool1",
+            },
+        }
+    )
+    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+        workflow.execute_activity.return_value = _resp()
+        result = await wf.handle_step(
+            context=context,
+            step=step,
+            outcome=outcome,
+        )
+        assert result == PartialTransition(output="system_tool_call_response")
+        system_call = SystemDef(
+            resource="agent",
+            operation="create",
+            subresource="doc",
+        )
+        workflow.execute_activity.assert_called_once_with(
+            execute_system,
+            args=[context, system_call],
+            schedule_to_close_timeout=timedelta(
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+            ),
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+        )
 
 
 @test("task execution workflow: handle switch step, index is positive")
