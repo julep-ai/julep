@@ -145,8 +145,8 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
 
 class StepContext(BaseModel):
     execution_input: ExecutionInput
-    inputs: list[Any]
     cursor: TransitionTarget
+    current_input: Any
 
     @computed_field
     @property
@@ -184,16 +184,6 @@ class StepContext(BaseModel):
 
     @computed_field
     @property
-    def outputs(self) -> list[dict[str, Any]]:  # included in dump
-        return self.inputs[1:]
-
-    @computed_field
-    @property
-    def current_input(self) -> dict[str, Any]:  # included in dump
-        return self.inputs[-1]
-
-    @computed_field
-    @property
     def current_workflow(self) -> Annotated[Workflow, Field(exclude=True)]:
         workflows: list[Workflow] = self.execution_input.task.workflows
         return next(wf for wf in workflows if wf.name == self.cursor.workflow)
@@ -227,7 +217,7 @@ class StepContext(BaseModel):
     async def get_inputs(self) -> list[Any]:
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
-            limit=100,
+            limit=1000,
             direction="asc",
         )
         return [t.output for t in transitions]
@@ -239,6 +229,7 @@ class StepContext(BaseModel):
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
         dump["inputs"] = inputs
+        dump["outputs"] = inputs[1:]
         prepared = dump | {"_": current_input}
 
         for i, input in enumerate(inputs):
