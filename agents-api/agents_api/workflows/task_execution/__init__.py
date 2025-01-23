@@ -39,12 +39,6 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
         YieldStep,
     )
-    from ...autogen.openapi_model import (
-        ForeachDo as ForeachDo,
-    )
-    from ...autogen.openapi_model import (
-        SleepFor as SleepFor,
-    )
     from ...common.protocol.tasks import (
         ExecutionInput,
         PartialTransition,
