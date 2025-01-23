@@ -15,7 +15,6 @@ Users are comprised of several key components that facilitate their interaction 
 - **Name**: The identifier for the user.
 - **About**: Additional information describing the user.
 - **Metadata**: Customizable key-value pairs that store user-specific data, preferences, and other relevant information.
-- **Sessions**: The interactions between the user and agents are managed through sessions, which maintain the context and history of conversations.
 
 ### Users configuration options
 
@@ -155,6 +154,10 @@ Remove users from your system when they are no longer needed.
     ```
 </CodeGroup>
 
+<Tip>
+    Check out the API reference [here](/api-reference/users) or SDK reference (Python [here](/sdks/python/reference#users) or JavaScript [here](/sdks/nodejs/reference#users) for more details on different operations you can perform on users.
+</Tip>
+
 ## Relationship to Other Concepts
 
 ### Sessions
@@ -254,10 +257,3 @@ While users represent the entities interacting with your system, **agents** are 
 - [Sessions](/docs/concepts/sessions) - Learn how to manage sessions and maintain conversation context.
 - [Agents](/docs/concepts/agents) - Learn how to manage agents and create personalized interactions.
 - [Tasks](/docs/concepts/tasks) - Learn how to manage tasks and create automated workflows.
-
-## Additional Resources
-
-- [Julep API Documentation](https://dev.julep.ai/api/docs#tag/users)
-- [Python SDK](https://github.com/julep-ai/python-sdk/blob/main/README.md)
-- [JavaScript SDK](https://github.com/julep-ai/node-sdk/blob/main/README.md)
-- [Discord Community](https://discord.com/invite/JTSBGRZrzj)

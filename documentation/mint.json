@@ -284,7 +284,6 @@
         {
           "group": "Sessions",
           "pages": [
-            "api-reference/sessions/chat",
             "api-reference/sessions/create",
             "api-reference/sessions/create-or-update",
             "api-reference/sessions/delete",
@@ -292,6 +291,7 @@
             "api-reference/sessions/list",
             "api-reference/sessions/patch",
             "api-reference/sessions/update",
+            "api-reference/sessions/chat",
             {
               "group": "Session History",
               "pages": [
