@@ -28,7 +28,7 @@ When creating a session, you can leverage the following configuration options to
 |----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------|----------------|
 | `agent_id`           | string                                   | The ID of the agent to associate with the session                                                | **Required**   |
 | `user_id`            | string                                   | The ID of the user interacting with the agent                                                    | **Required**   |
-| `context_overflow`   | `truncate` \| `adaptive`                  | Strategy for handling context overflow: `truncate` cuts off the oldest context; `adaptive` adjusts dynamically | `adaptive`     |
+| `context_overflow`   | `truncate` \| `adaptive`                 | Strategy for handling context overflow: `truncate` cuts off the oldest context; `adaptive` adjusts dynamically | `adaptive`     |
 | `metadata`           | object                                   | Additional metadata for the session (e.g., user preferences)                                      | `null`         |
 | `situation`          | string \| null                           | Description of the current situation for the session                                              | `null`         |
 | `system_template`    | string                                   | A specific system prompt template that sets the background for this session                        | Default template provided by Julep |
@@ -492,23 +492,23 @@ This chunk provides an overview of resources and support options offered by Jule
 <CardGroup cols={3}>
   <Card title="Session Management" icon="recycle">
     <ul>
-      <li><strong>Reuse Sessions</strong>: Reuse existing sessions for returning users to maintain continuity in interactions.</li>
-      <li><strong>Session Cleanup</strong>: Regularly clean up inactive sessions to manage resources efficiently.</li>
-      <li><strong>Context Overflow Strategy</strong>: Choose an appropriate context overflow strategy (e.g., "adaptive") to handle long conversations without losing important information.</li>
+      <li>**1. Reuse Sessions**: Reuse existing sessions for returning users to maintain continuity in interactions.</li>
+      <li>**2. Session Cleanup**: Regularly clean up inactive sessions to manage resources efficiently.</li>
+      <li>**3. Context Overflow Strategy**: Choose an appropriate context overflow strategy (e.g., "adaptive") to handle long conversations without losing important information.</li>
     </ul>
   </Card>
 
   <Card title="Personalization" icon="user">
     <ul>
-      <li><strong>Leverage Metadata</strong>: Use session metadata to store and retrieve user preferences, enhancing personalized interactions.</li>
-      <li><strong>Maintain Context</strong>: Ensure that the context within sessions is updated and relevant to provide coherent and context-aware responses.</li>
+      <li>**1. Leverage Metadata**: Use session metadata to store and retrieve user preferences, enhancing personalized interactions.</li>
+      <li>**2. Maintain Context**: Ensure that the context within sessions is updated and relevant to provide coherent and context-aware responses.</li>
     </ul>
   </Card>
 
   <Card title="Performance Optimization" icon="gauge">
     <ul>
-      <li><strong>Efficient Searches</strong>: Optimize search queries within sessions to retrieve relevant documents quickly.</li>
-      <li><strong>Manage Token Usage</strong>: Monitor and manage token usage to ensure efficient use of resources, especially in long sessions.</li>
+      <li>**1. Efficient Searches**: Optimize search queries within sessions to retrieve relevant documents quickly.</li>
+      <li>**2. Manage Token Usage**: Monitor and manage token usage to ensure efficient use of resources, especially in long sessions.</li>
     </ul>
   </Card>
 </CardGroup>
