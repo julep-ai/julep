@@ -596,7 +596,7 @@ class TaskExecutionWorkflow:
         self,
         execution_input: ExecutionInput,
         start: TransitionTarget,
-        previous_inputs: list,
+        current_input: Any,
     ) -> Any:
         if not execution_input.task:
             msg = "execution_input.task cannot be None"
@@ -610,9 +610,11 @@ class TaskExecutionWorkflow:
         # 0. Prepare context
         context = StepContext(
             execution_input=execution_input,
-            inputs=previous_inputs,
+            current_input=current_input,
             cursor=start,
         )
+
+        previous_inputs = [current_input]
 
         step_type = type(context.current_step)
         continued_as_new = workflow.info().continued_run_id is not None

@@ -120,7 +120,7 @@ async def run_task_execution_workflow(
 
     return await client.start_workflow(
         TaskExecutionWorkflow.run,
-        args=[execution_input, start, previous_inputs],
+        args=[execution_input, start, previous_inputs[-1]],
         task_queue=temporal_task_queue,
         id=str(job_id),
         run_timeout=timedelta(days=31),

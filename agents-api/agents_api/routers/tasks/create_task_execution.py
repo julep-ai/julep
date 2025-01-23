@@ -19,7 +19,7 @@ from ...autogen.openapi_model import (
 )
 from ...clients.temporal import run_task_execution_workflow
 from ...common.protocol.developers import Developer
-from ...common.protocol.tasks import task_to_spec
+from ...common.protocol.models import task_to_spec
 from ...dependencies.developer_id import get_developer_id
 from ...env import max_free_executions
 from ...queries.developers.get_developer import get_developer

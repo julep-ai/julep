@@ -5,7 +5,7 @@ from beartype import beartype
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateTaskRequest, ResourceCreatedResponse
-from ...common.protocol.tasks import task_to_spec
+from ...common.protocol.models import task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import (

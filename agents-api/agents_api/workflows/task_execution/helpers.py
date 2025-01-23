@@ -62,7 +62,7 @@ async def continue_as_child(
         args=[
             execution_input,
             start,
-            previous_inputs,
+            previous_inputs[-1],
         ],
         retry_policy=DEFAULT_RETRY_POLICY,
         memo=workflow.memo() | user_state,

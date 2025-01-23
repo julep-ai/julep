@@ -44,12 +44,11 @@ model_list:
     api_key: os.environ/OPENAI_API_KEY
     tags: ["paid"]
 
-# TODO: Uncomment o1 when we get access to it
-# - model_name: o1
-#   litellm_params:
-#     model: openai/o1
-#     api_key: os.environ/OPENAI_API_KEY
-#     tags: ["paid"]
+- model_name: o1
+  litellm_params:
+    model: openai/o1
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["paid"]
 
 # Anthropic models
 - model_name: "claude-3.5-sonnet-20240620"
