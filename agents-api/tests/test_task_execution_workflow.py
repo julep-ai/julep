@@ -64,7 +64,7 @@ async def _():
     )
     context = StepContext(
         execution_input=execution_input,
-        inputs=["value 1"],
+        current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
@@ -114,7 +114,7 @@ async def _():
     )
     context = StepContext(
         execution_input=execution_input,
-        inputs=["value 1"],
+        current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
@@ -177,7 +177,7 @@ async def _():
     )
     context = StepContext(
         execution_input=execution_input,
-        inputs=["value 1"],
+        current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
@@ -236,7 +236,7 @@ async def _():
     )
     context = StepContext(
         execution_input=execution_input,
-        inputs=["value 1"],
+        current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
@@ -318,7 +318,7 @@ async def _():
     )
     context = StepContext(
         execution_input=execution_input,
-        inputs=["value 1"],
+        current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
@@ -378,7 +378,7 @@ async def _():
     )
     context = StepContext(
         execution_input=execution_input,
-        inputs=["value 1"],
+        current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
@@ -419,7 +419,7 @@ async def _():
     )
     context = StepContext(
         execution_input=execution_input,
-        inputs=["value 1"],
+        current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
@@ -458,7 +458,7 @@ async def _():
     )
     context = StepContext(
         execution_input=execution_input,
-        inputs=["value 1"],
+        current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,

@@ -182,7 +182,7 @@ class TaskExecutionWorkflow:
                 execution_input=context.execution_input,
                 switch=step.switch,
                 index=index,
-                previous_inputs=context.inputs,
+                previous_inputs=[context.current_input],
             )
             return PartialTransition(output=result)
         if index < 0:
@@ -203,7 +203,7 @@ class TaskExecutionWorkflow:
             then_branch=step.then,
             else_branch=step.else_,
             condition=outcome.output,
-            previous_inputs=context.inputs,
+            previous_inputs=[context.current_input],
         )
 
         return PartialTransition(output=result)
@@ -219,7 +219,7 @@ class TaskExecutionWorkflow:
             execution_input=context.execution_input,
             do_step=step.foreach.do,
             items=outcome.output,
-            previous_inputs=context.inputs,
+            previous_inputs=[context.current_input],
         )
         return PartialTransition(output=result)
 
@@ -238,7 +238,7 @@ class TaskExecutionWorkflow:
                 items=outcome.output,
                 reduce=step.reduce,
                 initial=step.initial,
-                previous_inputs=context.inputs,
+                previous_inputs=[context.current_input],
             )
         else:
             result = await execute_map_reduce_step_parallel(
@@ -246,7 +246,7 @@ class TaskExecutionWorkflow:
                 execution_input=context.execution_input,
                 map_defn=step.map,
                 items=outcome.output,
-                previous_inputs=context.inputs,
+                previous_inputs=[context.current_input],
                 initial=step.initial,
                 reduce=step.reduce,
                 parallelism=parallelism,
