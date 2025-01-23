@@ -50,12 +50,6 @@ from .utils import (
 
 
 @fixture(scope="global")
-async def temporal_client():
-    # TODO: reimplement this once I figure out how to use temporal client in tests properly
-    return await Client.connect("localhost:7233")
-
-
-@fixture(scope="global")
 def pg_dsn():
     with get_pg_dsn() as pg_dsn:
         os.environ["PG_DSN"] = pg_dsn
