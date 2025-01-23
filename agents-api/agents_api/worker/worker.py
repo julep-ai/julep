@@ -21,7 +21,7 @@ def create_worker(client: Client) -> Any:
 
     from ..activities import task_steps
     from ..activities.demo import demo_activity
-    from ..activities.excecute_api_call import execute_api_call
+    from ..activities.execute_api_call import execute_api_call
     from ..activities.execute_integration import execute_integration
     from ..activities.execute_system import execute_system
     from ..activities.sync_items_remote import load_inputs_remote, save_inputs_remote
