@@ -35,7 +35,7 @@ from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
 from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
-from temporalio.client import Client, WorkflowHandle
+from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
 from ward import fixture
 
