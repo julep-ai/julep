@@ -12,7 +12,7 @@ with workflow.unsafe.imports_passed_through():
     from pydantic import RootModel
 
     from ...activities import task_steps
-    from ...activities.excecute_api_call import execute_api_call
+    from ...activities.execute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
     from ...activities.sync_items_remote import save_inputs_remote
