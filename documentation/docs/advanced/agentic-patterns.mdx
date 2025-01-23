@@ -1,0 +1,280 @@
+---
+title: 'Agentic Patterns'
+description: 'Learn about common patterns and best practices for building Julep agents'
+icon: 'sitemap'
+---
+
+# Agentic Patterns
+
+This guide covers common patterns and best practices for building effective Julep agents, inspired by a blog written by Anthropic on [Building effective agents](https://www.anthropic.com/research/building-effective-agents).
+
+## Core Workflow Patterns
+
+### 1. Prompt Chaining
+
+Break tasks into sequential steps, where each step’s output feeds the next. Can be used for:
+- Content generation and subsequent checks
+- Translation/localization in multiple stages
+- Ensuring quality between discrete transformations
+
+![Prompt Chaining Workflow](../assets/agentic-patterns/prompt-chaining-workflow.png "Prompt Chaining Workflow")
+
+**Example implementation:**
+```yaml
+main:
+# Step 1: Generate initial content
+- prompt:
+   role: system
+   content: >-
+      Generate marketing copy for product X based on the following:
+      target_audience: {{_.audience}}
+      product_features: {{_.features}}
+      keywords: {{_.seo_keywords}}
+   unwrap: true
+
+# Step 2: Quality check gate
+- evaluate:
+   quality_check: _.content
+
+# Step 3: Translation
+- prompt:
+   role: system
+   content: Translate the approved content to Spanish
+   unwrap: true
+```
+
+### 2. Routing Pattern
+
+Act as a “traffic controller” by detecting request types and sending them to the correct handler. Ideal when inputs are diverse or require specialized expertise.
+
+Steps generally include:
+1. Classification of incoming data
+2. Routing to handler modules
+3. Specialized processing
+4. (Optional) Aggregation of results
+
+![Routing Workflow](../assets/agentic-patterns/routing-workflow.png "Routing Workflow")
+
+**Example implementation:**
+```yaml
+main:
+# Classification step
+- prompt:
+   role: system
+   content: Classify the input query type
+   unwrap: true
+
+# Route based on classification
+- switch:
+   - case: _.classification == "technical_support"
+      then:
+         - tool: handle_technical
+         arguments:
+            ...
+   - case: _.classification == "billing"
+      then:
+         - tool: handle_billing
+         arguments:
+            ...
+   - case: _.classification == "general"
+      then:
+         - tool: handle_general
+         arguments:
+            ...
+```
+
+### 3. Parallelization Pattern
+
+Execute subtasks concurrently by either dividing the workload (sectioning) or collecting multiple perspectives (voting).
+
+Keys to consider:
+• Parallel processes for performance or redundancy
+• Syncing results and handling errors
+• Aggregating diverse outputs
+
+![Parallelization Workflow](../assets/agentic-patterns/parallelization-workflow.png "Parallelization Workflow")
+
+**Example implementations:**
+
+1. Sectioning:
+```yaml
+tools:
+- name: aggregate_results
+  type: ... # depends on the specific needs
+
+# Custom workflow to run a subtask
+run_subtask:
+- ....
+
+# Main workflow
+main:
+- prompt:
+   role: system
+   content: >
+      Break this task into multiple subtasks.
+      Here is the task: {{_.task}}
+   unwrap: true
+
+- over: _.subtasks
+   do:
+      - workflow: run_subtask
+      arguments:
+         ...
+- tool: aggregate_results
+  arguments:
+    results: _
+```
+
+2. Voting:
+```yaml
+tools:
+- name: perform_voting
+  description: Perform voting on the results of running the task instances, and return the majority best result.
+  type: ... # depends on the specific needs
+
+# Custom workflow to run a subtask
+run_subtask:
+- ....
+
+# Main workflow
+main:
+- over: _.main_tasks
+   do:
+      - workflow: run_subtask # Run the same task multiple times (given that the `run_subtask` workflow is non-deterministic)
+      arguments:
+         ...
+- tool: perform_voting
+  arguments:
+    results: _
+
+- evaluate:
+   final_result: _
+```
+
+### 4. Orchestrator-Workers Pattern
+
+Use a central “orchestrator” that delegates subtasks to multiple “worker” agents and integrates their outputs. Best for:
+- Large or dynamic multi-step tasks
+- Coordinating various specialized capabilities
+- Flexible task distribution
+
+![Orchestrator-Workers Workflow](../assets/agentic-patterns/orchestrator-workers-workflow.png "Orchestrator-Workers Workflow")
+
+**Example implementation:**
+```yaml
+main:
+# Orchestrator planning
+- prompt:
+   role: system
+   content: Break down the task into subtasks. Here is the task: {{_.task}}
+   unwrap: true
+# Worker delegation
+- foreach:
+   in: _.subtasks
+   do:
+      tool: assign_worker
+      arguments:
+         task: _
+```
+
+### 5. Evaluator-Optimizer Pattern
+
+Create iterative feedback loops to refine outputs until they meet preset criteria. Suitable for:
+• Content refinement
+• Code reviews
+• Detailed document enhancements
+
+General flow:
+1. Generate an initial result
+2. Evaluate against criteria
+3. Provide improvement feedback
+4. Optimize/retry until goals are met
+
+![Evaluator-Optimizer Workflow](../assets/agentic-patterns/evaluator-optimizer-workflow.png "Evaluator-Optimizer Workflow")
+
+**Example implementation:**
+```yaml
+tools:
+- name: score_content
+  description: Score the content based on the criteria. Returns a json object with a score between 0 and 1, and a feedback string.
+  type: function
+  function:
+    parameters:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Content to score
+
+# Subworkflow to evaluate content
+evaluate_content:
+- tool: score_content
+  arguments:
+    content: _.content
+- if: _.score < 0.5 # If the content does not meet the criteria, improve it
+  then:
+    - workflow: improve_content
+      arguments:
+        content: _0.content # _0 is the main input of this workflow
+        feedback: _.feedback # _ is the output of the score_content tool call
+  else:
+    evaluate:
+      final_content: _0.content
+
+# Subworkflow to improve content
+improve_content:
+- prompt:
+    role: system
+    content: Improve the content based on the feedback. Here is the feedback: {{_.feedback}}
+  unwrap: true
+- workflow: evaluate_content
+  arguments:
+    content: _
+
+
+main:
+# Initial generation
+- prompt:
+   role: system
+   content: Generate initial content. Here is the task: {{_.task}}
+   unwrap: true
+
+# Evaluation loop
+- loop:
+   while: "not _.meets_criteria"
+   do:
+      - tool: evaluate_content
+      - tool: improve_content
+```
+
+**Explanation:**
+
+1. The `evaluate_content` subworkflow:
+   - Takes content as input and scores it using a scoring tool
+   - If the score is below 0.5, it triggers the improvement workflow
+   - Uses special variables (`_0` and `_`) to manage content and feedback between workflows
+   - Returns the final content once quality criteria are met
+
+2. The `improve_content` subworkflow:
+   - Receives content and feedback from the evaluation
+   - Uses an LLM to improve the content based on specific feedback
+   - Automatically triggers another evaluation cycle by calling evaluate_content
+
+The main workflow ties these together by:
+- Generating initial content from a task description
+- Running a continuous loop that alternates between evaluation and improvement
+- Only completing when content meets the defined quality criteria
+
+This creates a powerful feedback loop where content is repeatedly refined based on specific feedback until it reaches the desired quality level. The pattern is particularly useful for tasks requiring high accuracy or quality, such as content generation, code review, or document analysis.
+
+## Best Practices
+
+1. **Start Simple:** Use minimal steps and only add complexity when it clearly improves results.  
+2. **Thoughtful Tool Design:** Provide clear documentation, examples, and usage guidelines for each tool.  
+3. **Error Handling & Guardrails:** Include feedback loops, define stopping conditions, and surface potential issues.  
+4. **Testing & Validation:** Thoroughly test in controlled environments and measure against success criteria.  
+5. **Human Oversight:** Establish checkpoints for approval, ensure transparency, and maintain easy-to-audit workflows.
+
+---
+
+These patterns represent proven approaches from production implementations. Choose and adapt them based on your specific use case requirements and complexity needs.

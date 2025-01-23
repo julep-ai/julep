@@ -1,0 +1,206 @@
+---
+title: 'Quick Start'
+description: 'Quick example to get started with Julep'
+icon: 'rocket'
+---
+
+## Overview
+This guide will help you get started with Julep in just 5 minutes. You'll learn how to create your first AI agent and execute a simple task.
+
+### What we'll build
+
+We'll build a simple agent that uses tasks to write a short story.
+
+
+```yaml Agent
+name: Story Generator
+model: claude-3.5-sonnet
+about: A helpful AI assistant that specializes in writing and editing.
+```
+
+```yaml Task
+name: Write a short story
+description: Write a short story about a magical garden
+main:
+- prompt:
+  - role: system
+    content: You are a creative story writer.
+  - role: user
+    content: Write a short story about {{inputs[0].topic}}
+```
+
+
+### Prerequisites
+
+- Python 3.8+ or Node.js 16+
+- A Julep API key ([Get one here](https://dashboard.julep.ai))
+
+### Step 1: Install Julep
+
+Choose your preferred language:
+
+<CodeGroup>
+  ```bash Python
+  pip install julep
+  ```
+
+  ```bash Node.js
+  npm install @julep/sdk
+  # or
+  bun add @julep/sdk
+  ```
+</CodeGroup>
+
+### Step 2: Initialize the Client
+
+<CodeGroup>
+  ```python Python
+  from julep import Julep
+
+  client = Julep(api_key="your_julep_api_key")
+  ```
+
+  ```javascript JavaScript
+  import { Julep } from '@julep/sdk';
+
+  const client = new Julep({
+    apiKey: 'your_julep_api_key'
+  });
+  ```
+</CodeGroup>
+
+### Step 3: Create Your First Agent
+
+Let's create a simple AI agent that can help with writing tasks:
+
+<CodeGroup>
+  ```python Python
+  agent = client.agents.create(
+      name="Writing Assistant",
+      model="claude-3.5-sonnet",
+      about="A helpful AI assistant that specializes in writing and editing."
+  )
+  ```
+
+  ```javascript JavaScript
+  const agent = await client.agents.create({
+    name: "Writing Assistant",
+    model: "claude-3.5-sonnet",
+    about: "A helpful AI assistant that specializes in writing and editing."
+  });
+  ```
+</CodeGroup>
+
+### Step 4: Create a Simple Task
+
+Let's create a task that generates a short story based on a given topic:
+
+<CodeGroup>
+  ```python Python
+  import yaml 
+
+  task_definition = yaml.safe_load("""
+  name: Story Generator
+  description: Generate a short story based on a given topic
+  main:
+  - prompt:
+    - role: system
+      content: You are a creative story writer.
+    - role: user
+      content: Write a short story about {{inputs.topic}}
+  """)
+
+  task = client.tasks.create(
+      agent_id=agent.id,
+      **task_definition # Unpack the task definition
+  )
+  ```
+
+  ```javascript JavaScript
+  const yaml = require("yaml");
+
+  const task_definition = `
+  name: Story Generator
+  description: Generate a short story based on a given topic
+  main:
+  - prompt:
+    - role: system
+      content: You are a creative story writer.
+    - role: user
+      content: Write a short story about {{inputs.topic}}
+  `;
+
+  const task = await client.tasks.create(
+    agent.id,
+    yaml.parse(task_definition)
+  );
+  ```
+</CodeGroup>
+
+### Step 5: Execute the Task
+
+Now let's run the task with a specific topic:
+
+<CodeGroup>
+  ```python Python
+  execution = client.executions.create(
+      task_id=task.id,
+      input={"topic": "a magical garden"}
+  )
+
+  # Wait for the execution to complete
+  while (result := client.executions.get(execution.id)).status not in ['succeeded', 'failed']:
+      print(result.status)
+      time.sleep(1)
+
+  if result.status == "succeeded":
+      print(result.output)
+  else:
+      print(f"Error: {result.error}")
+  ```
+
+  ```javascript JavaScript
+  const execution = await client.executions.create(
+    task.id,
+    {
+      input: { topic: "a magical garden" }
+    }
+  );
+
+  // Wait for the execution to complete
+  let result;
+  while (true) {
+    result = await client.executions.get(execution.id);
+    if (result.status === 'succeeded' || result.status === 'failed') break;
+    console.log(result.status);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  if (result.status === 'succeeded') {
+    console.log(result.output);
+  } else {
+    console.error(`Error: ${result.error}`);
+  }
+  ```
+</CodeGroup>
+
+### Next Steps
+
+Congratulations! You've created your first Julep agent and executed a task. Here's what you can explore next:
+
+<CardGroup cols={2}>
+  <Card
+    title="Understand the Core Concepts"
+    icon="book"
+    href="/docs/concepts"
+  >
+    Learn about the core concepts of Julep
+  </Card>
+  <Card
+    title="Explore Tutorials"
+    icon="book"
+    href="/docs/tutorials"
+  >
+    Explore tutorials to learn how to use Julep
+  </Card>
+</CardGroup> 

@@ -1,0 +1,339 @@
+---
+title: 'Advanced Usage'
+description: 'Advanced patterns and best practices for the Node.js SDK'
+---
+
+This guide covers advanced usage patterns and best practices for the Julep Node.js SDK.
+
+## Parallel Task Execution
+
+Execute multiple tasks in parallel for better performance:
+
+```javascript
+// Create multiple tasks
+const tasks = await Promise.all([
+  client.tasks.create(agentId, {
+    name: 'Task 1',
+    main: [/* ... */]
+  }),
+  client.tasks.create(agentId, {
+    name: 'Task 2',
+    main: [/* ... */]
+  })
+]);
+
+// Execute tasks in parallel
+const executions = await Promise.all(
+  tasks.map(task => client.executions.create(task.id))
+);
+
+// Wait for all executions to complete
+const results = await Promise.all(
+  executions.map(async execution => {
+    let status;
+    do {
+      status = await client.executions.get(execution.id);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } while (status.status !== 'succeeded' && status.status !== 'failed');
+    return status;
+  })
+);
+```
+
+## Custom Error Handling
+
+Implement robust error handling with retries:
+
+```javascript
+class RetryableError extends Error {
+  constructor(message, retryAfter = 1000) {
+    super(message);
+    this.name = 'RetryableError';
+    this.retryAfter = retryAfter;
+  }
+}
+
+async function withRetry(fn, maxRetries = 3, initialDelay = 1000) {
+  let lastError;
+  let delay = initialDelay;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      
+      if (error.name === 'ValidationError') {
+        throw error; // Don't retry validation errors
+      }
+      
+      if (error.status === 429) { // Rate limit
+        delay = error.retryAfter || delay * 2;
+      } else if (error.status >= 500) { // Server error
+        delay = delay * 2;
+      } else {
+        throw error; // Don't retry other errors
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+
+// Usage example
+const createAgentWithRetry = async () => {
+  return await withRetry(async () => {
+    return await client.agents.create({
+      name: 'Resilient Agent',
+      model: 'claude-3.5-sonnet'
+    });
+  });
+};
+```
+
+## Event Streaming
+
+Handle real-time updates from task executions:
+
+```javascript
+const { EventEmitter } = require('events');
+
+class ExecutionStream extends EventEmitter {
+  constructor(client, executionId, pollInterval = 1000) {
+    super();
+    this.client = client;
+    this.executionId = executionId;
+    this.pollInterval = pollInterval;
+    this.isRunning = false;
+  }
+
+  async start() {
+    this.isRunning = true;
+    while (this.isRunning) {
+      try {
+        const status = await this.client.executions.get(this.executionId);
+        this.emit('update', status);
+        
+        if (status.status === 'succeeded' || status.status === 'failed') {
+          this.isRunning = false;
+          this.emit('end', status);
+          break;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, this.pollInterval));
+      } catch (error) {
+        this.emit('error', error);
+        this.isRunning = false;
+        break;
+      }
+    }
+  }
+
+  stop() {
+    this.isRunning = false;
+  }
+}
+
+// Usage example
+const stream = new ExecutionStream(client, executionId);
+
+stream.on('update', status => {
+  console.log('Execution status:', status.status);
+});
+
+stream.on('end', status => {
+  console.log('Execution completed:', status);
+});
+
+stream.on('error', error => {
+  console.error('Execution error:', error);
+});
+
+stream.start();
+```
+
+## Batch Processing
+
+Process large amounts of data efficiently:
+
+```javascript
+async function processBatch(items, batchSize = 10) {
+  const batches = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    batches.push(items.slice(i, i + batchSize));
+  }
+
+  const results = [];
+  for (const batch of batches) {
+    const batchResults = await Promise.all(
+      batch.map(async item => {
+        try {
+          const execution = await client.executions.create(taskId, {
+            input: { item }
+          });
+          return { item, execution };
+        } catch (error) {
+          return { item, error };
+        }
+      })
+    );
+    results.push(...batchResults);
+    
+    // Optional: Add delay between batches
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  
+  return results;
+}
+
+// Usage example
+const items = ['item1', 'item2', 'item3', /* ... */];
+const results = await processBatch(items, 5);
+```
+
+## Custom Task Middleware
+
+Add custom middleware to task executions:
+
+```javascript
+class TaskMiddleware {
+  constructor(client) {
+    this.client = client;
+    this.middlewares = [];
+  }
+
+  use(fn) {
+    this.middlewares.push(fn);
+    return this;
+  }
+
+  async execute(taskId, input) {
+    let execution = await this.client.executions.create(taskId, { input });
+    
+    for (const middleware of this.middlewares) {
+      execution = await middleware(execution, this.client);
+    }
+    
+    return execution;
+  }
+}
+
+// Usage example
+const middleware = new TaskMiddleware(client);
+
+// Add logging middleware
+middleware.use(async (execution, client) => {
+  console.log(`Execution ${execution.id} started`);
+  const result = await client.executions.get(execution.id);
+  console.log(`Execution ${execution.id} completed:`, result.status);
+  return result;
+});
+
+// Add error handling middleware
+middleware.use(async (execution, client) => {
+  try {
+    return await client.executions.get(execution.id);
+  } catch (error) {
+    console.error(`Execution ${execution.id} failed:`, error);
+    throw error;
+  }
+});
+
+// Execute task with middleware
+const result = await middleware.execute(taskId, { data: 'test' });
+```
+
+## Advanced Session Management
+
+Implement sophisticated session management:
+
+```javascript
+class SessionManager {
+  constructor(client) {
+    this.client = client;
+    this.sessions = new Map();
+  }
+
+  async getOrCreateSession(userId, agentId) {
+    if (this.sessions.has(userId)) {
+      const session = this.sessions.get(userId);
+      try {
+        await this.client.sessions.get(session.id);
+        return session;
+      } catch (error) {
+        this.sessions.delete(userId);
+      }
+    }
+
+    const session = await this.client.sessions.create({
+      user_id: userId,
+      agent_id: agentId,
+      context_overflow: 'adaptive'
+    });
+    
+    this.sessions.set(userId, session);
+    return session;
+  }
+
+  async chat(userId, message) {
+    const session = await this.getOrCreateSession(userId);
+    return await this.client.sessions.chat(session.id, {
+      messages: [{ role: 'user', content: message }]
+    });
+  }
+
+  async cleanup(maxAge = 24 * 60 * 60 * 1000) {
+    const now = Date.now();
+    for (const [userId, session] of this.sessions) {
+      if (now - new Date(session.created_at).getTime() > maxAge) {
+        await this.client.sessions.delete(session.id);
+        this.sessions.delete(userId);
+      }
+    }
+  }
+}
+
+// Usage example
+const sessionManager = new SessionManager(client);
+
+// Chat with automatic session management
+const response = await sessionManager.chat(userId, 'Hello!');
+
+// Cleanup old sessions
+await sessionManager.cleanup();
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference"
+  >
+    Complete API documentation
+  </Card>
+  <Card
+    title="Examples"
+    icon="lightbulb"
+    href="/examples"
+  >
+    Real-world examples
+  </Card>
+  <Card
+    title="Error Handling"
+    icon="shield"
+    href="/sdks/common/error-handling"
+  >
+    Common error patterns
+  </Card>
+  <Card
+    title="Testing"
+    icon="vial"
+    href="/sdks/common/testing"
+  >
+    Testing strategies
+  </Card>
+</CardGroup> 

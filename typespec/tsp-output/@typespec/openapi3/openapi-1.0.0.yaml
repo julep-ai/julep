@@ -9,7 +9,6 @@ info:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
-  summary: A backend for creating stateful AI apps
   description: Julep is a backend for creating stateful AI apps with background tasks and long-term memory easily.
   version: 1.0.0
 externalDocs:
@@ -9270,8 +9269,8 @@ servers:
     description: The julep cloud service endpoint
     variables:
       serverEnv:
-        default: api-alpha
+        default: api
         description: The environment to use
         enum:
           - api
-          - api-alpha
+          - dev
