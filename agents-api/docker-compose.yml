@@ -51,6 +51,8 @@ x--base-agents-api: &base-agents-api
   environment:
     <<: *shared-environment
   build:
+    platforms:
+      - linux/amd64
     context: .
     dockerfile: Dockerfile
 
@@ -98,6 +100,8 @@ services:
     environment:
       <<: *shared-environment
     build:
+      platforms:
+        - linux/amd64
       context: .
       dockerfile: Dockerfile.worker
 

@@ -23,6 +23,7 @@ from ...queries.chat.gather_messages import gather_messages
 from ...queries.chat.prepare_chat_context import prepare_chat_context
 from ...queries.entries.create_entries import create_entries
 from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
+from ..utils.model_validation import validate_model
 from .metrics import total_tokens_per_user
 from .router import router
 
@@ -55,6 +56,10 @@ async def chat(
     Returns:
         ChatResponse: The chat response.
     """
+
+    if chat_input.model:
+        await validate_model(chat_input.model)
+
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length

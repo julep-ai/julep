@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import math
 import os
 import subprocess
 from contextlib import asynccontextmanager, contextmanager
@@ -17,6 +18,52 @@ from testcontainers.postgres import PostgresContainer
 
 # Replicated here to prevent circular import
 EMBEDDING_SIZE: int = 1024
+
+
+def make_vector_with_similarity(n: int = EMBEDDING_SIZE, d: float = 0.5):
+    """
+    Returns a list `v` of length `n` such that the cosine similarity
+    between `v` and the all-ones vector of length `n` is approximately d.
+    """
+    if not -1.0 <= d <= 1.0:
+        msg = "d must lie in [-1, 1]."
+        raise ValueError(msg)
+
+    # Handle special cases exactly:
+    if abs(d - 1.0) < 1e-12:  # d ~ +1
+        return [1.0] * n
+    if abs(d + 1.0) < 1e-12:  # d ~ -1
+        return [-1.0] * n
+    if abs(d) < 1e-12:  # d ~ 0
+        v = [0.0] * n
+        if n >= 2:
+            v[0] = 1.0
+            v[1] = -1.0
+        return v
+
+    sign_d = 1.0 if d >= 0 else -1.0
+
+    # Base part: sign(d)*[1,1,...,1]
+    base = [sign_d] * n
+
+    # Orthogonal unit vector u with sum(u)=0; for simplicity:
+    #   u = [1/sqrt(2), -1/sqrt(2), 0, 0, ..., 0]
+    u = [0.0] * n
+    if n >= 2:
+        u[0] = 1.0 / math.sqrt(2)
+        u[1] = -1.0 / math.sqrt(2)
+    # (if n=1, there's no truly orthogonal vector to [1], so skip)
+
+    # Solve for alpha:
+    # alpha^2 = n*(1 - d^2)/d^2
+    alpha = math.sqrt(n * (1 - d * d)) / abs(d)
+
+    # Construct v
+    v = [0.0] * n
+    for i in range(n):
+        v[i] = base[i] + alpha * u[i]
+
+    return v
 
 
 @asynccontextmanager

@@ -27,8 +27,7 @@ alias BrowserbaseSessionIntegrationDef =
     | BrowserbaseCreateSessionIntegrationDef
     | BrowserbaseGetSessionIntegrationDef
     | BrowserbaseCompleteSessionIntegrationDef
-    | BrowserbaseGetSessionLiveUrlsIntegrationDef
-    | BrowserbaseGetSessionConnectUrlIntegrationDef;
+    | BrowserbaseGetSessionLiveUrlsIntegrationDef;
 //
 // TODO: Implement these
 // | BrowserbaseCreateSessionUploadsIntegrationDef
@@ -41,8 +40,7 @@ alias BrowserbaseSessionArguments =
     | BrowserbaseCreateSessionArguments
     | BrowserbaseGetSessionArguments
     | BrowserbaseCompleteSessionArguments
-    | BrowserbaseGetSessionLiveUrlsArguments
-    | BrowserbaseGetSessionConnectUrlArguments;
+    | BrowserbaseGetSessionLiveUrlsArguments;
 //
 // TODO: Implement these
 // | BrowserbaseCreateSessionUploadsArguments
@@ -55,8 +53,7 @@ alias BrowserbaseSessionOutput =
     | BrowserbaseCreateSessionOutput
     | BrowserbaseGetSessionOutput
     | BrowserbaseCompleteSessionOutput
-    | BrowserbaseGetSessionLiveUrlsOutput
-    | BrowserbaseGetSessionConnectUrlOutput;
+    | BrowserbaseGetSessionLiveUrlsOutput;
 //
 // TODO: Implement these
 // | BrowserbaseGetSessionDownloadsOutput
@@ -125,6 +122,7 @@ model BrowserbaseCreateSessionArguments {
 
 model BrowserbaseCreateSessionOutput {
     id: string;
+    connectionUrl?: string;
     createdAt?: string;
     projectId?: string;
     startedAt?: string;
@@ -151,6 +149,7 @@ model BrowserbaseGetSessionArguments {
 
 model BrowserbaseGetSessionOutput {
     id: string;
+    connectionUrl?: string;
     createdAt?: string;
     projectId?: string;
     startedAt?: string;
@@ -203,19 +202,4 @@ model BrowserbaseGetSessionLiveUrlsOutput {
         debuggerUrl?: url;
         debuggerFullscreenUrl?: url;
     }[] = #[];
-}
-
-/** browserbase get session connect url integration definition */
-model BrowserbaseGetSessionConnectUrlIntegrationDef
-    extends BaseBrowserbaseIntegrationDef {
-    method: "get_connect_url" = "get_connect_url";
-    arguments?: BrowserbaseGetSessionConnectUrlArguments;
-}
-
-model BrowserbaseGetSessionConnectUrlArguments {
-    id: string;
-}
-
-model BrowserbaseGetSessionConnectUrlOutput {
-    url: url;
 }

@@ -424,7 +424,9 @@ def get_evaluator(
 
 
 @beartype
-def simple_eval_dict(exprs: dict[str, str], values: dict[str, Any]) -> dict[str, Any]:
+def simple_eval_dict(
+    exprs: dict[str, str | dict[str, Any]], values: dict[str, Any]
+) -> dict[str, Any]:
     if len(exprs) > MAX_COLLECTION_SIZE:
         msg = f"Too many expressions (max {MAX_COLLECTION_SIZE})"
         raise ValueError(msg)
@@ -435,7 +437,10 @@ def simple_eval_dict(exprs: dict[str, str], values: dict[str, Any]) -> dict[str,
             raise ValueError(msg)
 
     evaluator = get_evaluator(names=values)
-    return {k: evaluator.eval(v) for k, v in exprs.items()}
+    return {
+        k: evaluator.eval(v) if isinstance(v, str) else simple_eval_dict(v, values)
+        for k, v in exprs.items()
+    }
 
 
 def get_handler_with_filtered_params(system: SystemDef) -> Callable:

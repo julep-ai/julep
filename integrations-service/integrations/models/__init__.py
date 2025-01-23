@@ -32,9 +32,6 @@ from .browserbase import (
     BrowserbaseExtensionOutput as BrowserbaseExtensionOutput,
 )
 from .browserbase import (
-    BrowserbaseGetSessionConnectUrlOutput as BrowserbaseGetSessionConnectUrlOutput,
-)
-from .browserbase import (
     BrowserbaseGetSessionLiveUrlsOutput as BrowserbaseGetSessionLiveUrlsOutput,
 )
 from .browserbase import (

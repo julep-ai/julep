@@ -51,7 +51,7 @@ SELECT * FROM
             agents.metadata,
             agents.default_settings
         FROM session_lookup
-        INNER JOIN agents ON session_lookup.participant_id = agents.agent_id
+        INNER JOIN agents ON session_lookup.participant_id = agents.agent_id AND agents.developer_id = session_lookup.developer_id
         WHERE
             session_lookup.developer_id = $1 AND
             session_id = $2 AND
@@ -95,7 +95,7 @@ SELECT * FROM
             tools.updated_at,
             tools.created_at
         FROM session_lookup
-        INNER JOIN tools ON session_lookup.participant_id = tools.agent_id
+        INNER JOIN tools ON session_lookup.participant_id = tools.agent_id AND tools.developer_id = session_lookup.developer_id
         WHERE
             session_lookup.developer_id = $1 AND
             session_id = $2 AND

@@ -247,7 +247,7 @@ class EvaluateStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    evaluate: dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
+    evaluate: dict[str, dict[str, Any] | str]
     """
     The expression to evaluate
     """
@@ -861,7 +861,7 @@ class SetStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    set: dict[str, str]
+    set: dict[str, dict[str, Any] | str]
     """
     The value to set
     """

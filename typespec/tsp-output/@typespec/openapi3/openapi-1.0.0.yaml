@@ -4208,7 +4208,7 @@ components:
           default: 0.7
         confidence:
           type: number
-          minimum: 0
+          minimum: -1
           maximum: 1
           description: The confidence cutoff level
           default: 0.6
@@ -4263,7 +4263,7 @@ components:
           default: 0.7
         confidence:
           type: number
-          minimum: 0
+          minimum: -1
           maximum: 1
           description: The confidence cutoff level
           default: 0.6
@@ -4886,17 +4886,8 @@ components:
           additionalProperties:
             anyOf:
               - $ref: '#/components/schemas/Common.PyExpression'
-              - type: array
-                items:
-                  $ref: '#/components/schemas/Common.PyExpression'
               - type: object
-                additionalProperties:
-                  $ref: '#/components/schemas/Common.PyExpression'
-              - type: array
-                items:
-                  type: object
-                  additionalProperties:
-                    $ref: '#/components/schemas/Common.PyExpression'
+                additionalProperties: {}
           description: The expression to evaluate
       allOf:
         - type: object
@@ -5918,7 +5909,10 @@ components:
         set:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/Common.PyExpression'
+            anyOf:
+              - $ref: '#/components/schemas/Common.PyExpression'
+              - type: object
+                additionalProperties: {}
           description: The value to set
       allOf:
         - type: object
@@ -7526,46 +7520,6 @@ components:
       properties:
         id:
           type: string
-    Tools.BrowserbaseGetSessionConnectUrlArguments:
-      type: object
-      required:
-        - id
-      properties:
-        id:
-          type: string
-    Tools.BrowserbaseGetSessionConnectUrlArgumentsUpdate:
-      type: object
-      properties:
-        id:
-          type: string
-    Tools.BrowserbaseGetSessionConnectUrlIntegrationDef:
-      type: object
-      required:
-        - method
-      properties:
-        method:
-          type: string
-          enum:
-            - get_connect_url
-          default: get_connect_url
-        arguments:
-          $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlArguments'
-      allOf:
-        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
-      description: browserbase get session connect url integration definition
-    Tools.BrowserbaseGetSessionConnectUrlIntegrationDefUpdate:
-      type: object
-      properties:
-        method:
-          type: string
-          enum:
-            - get_connect_url
-          default: get_connect_url
-        arguments:
-          $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlArgumentsUpdate'
-      allOf:
-        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
-      description: browserbase get session connect url integration definition
     Tools.BrowserbaseGetSessionIntegrationDef:
       type: object
       required:
@@ -8079,7 +8033,6 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
-            - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
@@ -8503,7 +8456,6 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate'
-            - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
@@ -8927,7 +8879,6 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
-            - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'
@@ -9023,7 +8974,6 @@ components:
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
-            - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
             - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
             - $ref: '#/components/schemas/Tools.LlamaParseIntegrationDef'
             - $ref: '#/components/schemas/Tools.FfmpegIntegrationDef'

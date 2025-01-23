@@ -46,7 +46,7 @@ model_list:
 
 - model_name: o1
   litellm_params:
-    model: openai/o1-mini
+    model: openai/o1
     api_key: os.environ/OPENAI_API_KEY
     tags: ["paid"]
 

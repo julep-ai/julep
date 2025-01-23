@@ -163,16 +163,19 @@ wheels = [
 
 [[package]]
 name = "browserbase"
-version = "0.3.6"
+version = "1.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
     { name = "httpx" },
-    { name = "playwright" },
     { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/9d/5542bddca6924f1511f64835dca823b6bb3f943f9f90708885027340ad1c/browserbase-0.3.6.tar.gz", hash = "sha256:1d20d9490304e27c4cf84a9c119b0bce98d87ceaec298acac4a29c47058d367e", size = 5057 }
+sdist = { url = "https://files.pythonhosted.org/packages/17/67/683a5f67d01aff89ebb0d0c11141dd21d3c5d9d7513793f74e65cdf45fb3/browserbase-1.0.5.tar.gz", hash = "sha256:1c8256cb8f6d94838067b2f3cc173a3118c102746c68565b8d2fa4cb10a3e4a9", size = 114527 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/f6/6abb69ca84f327f455dcd9a455334d1224c196bd5ab3246c72da63b3a6af/browserbase-0.3.6-py3-none-any.whl", hash = "sha256:da3338302c34ecb6abda0534bc16663c7049a8bef2694db5a93ef05d2ba1d3c3", size = 5373 },
+    { url = "https://files.pythonhosted.org/packages/02/92/71db66c57076c067e2c0e5fcc71000e64e80e4e4d5166ad409377ac142ac/browserbase-1.0.5-py3-none-any.whl", hash = "sha256:72c4d8269bd830bedde539de894bc372db46d912b7f832952c6bdd77ae5e2387", size = 94218 },
 ]
 
 [[package]]
@@ -226,7 +229,7 @@ name = "click"
 version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/d3/f04c7bfcf5c1862a2a5b845c6b2b360488cf47af55dfa79c98f6a6bf98b5/click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de", size = 336121 }
 wheels = [
@@ -669,7 +672,7 @@ dev = [
 requires-dist = [
     { name = "arxiv", specifier = "~=2.1.3" },
     { name = "beartype", specifier = "~=0.19.0" },
-    { name = "browserbase", specifier = "~=0.3.0" },
+    { name = "browserbase", specifier = ">=1.0.5" },
     { name = "cloudinary", specifier = "~=1.41.0" },
     { name = "duckduckgo-search", specifier = "~=6.2.13" },
     { name = "environs", specifier = "~=11.2.1" },
@@ -2086,7 +2089,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
 wheels = [

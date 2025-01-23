@@ -4,13 +4,11 @@ import tempfile
 
 import httpx
 from beartype import beartype
-from browserbase import (
-    Browserbase,
-    BrowserSettings,
-    CreateSessionOptions,
-    DebugConnectionURLs,
-    Session,
-)
+from browserbase import Browserbase
+from browserbase.types.session import Session
+from browserbase.types.session_create_params import BrowserSettings
+from browserbase.types.session_live_urls import SessionLiveURLs
+from pydantic import TypeAdapter
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import (
@@ -18,7 +16,6 @@ from ...autogen.Tools import (
     BrowserbaseCreateSessionArguments,
     BrowserbaseExtensionArguments,
     BrowserbaseGetSessionArguments,
-    BrowserbaseGetSessionConnectUrlArguments,
     BrowserbaseGetSessionLiveUrlsArguments,
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
@@ -30,7 +27,6 @@ from ...env import (
 from ...models import (
     BrowserbaseCompleteSessionOutput,
     BrowserbaseCreateSessionOutput,
-    BrowserbaseGetSessionConnectUrlOutput,
     BrowserbaseGetSessionLiveUrlsOutput,
     BrowserbaseGetSessionOutput,
     BrowserbaseListSessionsOutput,
@@ -46,9 +42,6 @@ def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
 
     return Browserbase(
         api_key=setup.api_key,
-        project_id=setup.project_id,
-        api_url=setup.api_url,
-        connect_url=setup.connect_url,
     )
 
 
@@ -63,11 +56,17 @@ async def list_sessions(
 ) -> BrowserbaseListSessionsOutput:
     client = get_browserbase_client(setup)
 
-    # FIXME: Implement status filter
-    # Run the list_sessions method
-    sessions: list[Session] = client.list_sessions()
+    try:
+        # Add status filter if provided
+        params = {}
+        if hasattr(arguments, "status") and arguments.status:
+            params["status"] = arguments.status
 
-    return BrowserbaseListSessionsOutput(sessions=sessions)
+        sessions: list[Session] = client.sessions.list(**params)
+        return BrowserbaseListSessionsOutput(sessions=sessions)
+    except Exception as e:
+        print(f"Error listing sessions: {e}")
+        raise
 
 
 @beartype
@@ -84,18 +83,38 @@ async def create_session(
     if arguments.project_id == "DEMO_PROJECT_ID":
         arguments.project_id = browserbase_project_id
 
-    if arguments.project_id == "DEMO_PROJECT_ID":
-        arguments.project_id = browserbase_project_id
+    # Convert browser settings using TypeAdapter
+    browser_settings = TypeAdapter(BrowserSettings).validate_python(arguments.browser_settings)
 
-    options = CreateSessionOptions(
-        projectId=arguments.project_id or setup.project_id,
-        extensionId=arguments.extension_id,
-        browserSettings=BrowserSettings(**arguments.browser_settings),
+    # Create session parameters
+    create_params = {
+        "project_id": arguments.project_id or setup.project_id,
+        "browser_settings": browser_settings,
+    }
+
+    # Only add extension_id if it's provided and not None/empty
+    if arguments.extension_id:
+        create_params["extension_id"] = arguments.extension_id
+
+    # Changed to use sessions.create() with direct parameters
+    session = client.sessions.create(**create_params)
+
+    # Convert datetime fields to ISO format strings
+    return BrowserbaseCreateSessionOutput(
+        id=session.id,
+        connect_url=session.connect_url,
+        createdAt=session.created_at.isoformat() if session.created_at else None,
+        projectId=session.project_id,
+        startedAt=session.started_at.isoformat() if session.started_at else None,
+        endedAt=session.ended_at.isoformat() if session.ended_at else None,
+        expiresAt=session.expires_at.isoformat() if session.expires_at else None,
+        status=session.status,
+        proxyBytes=session.proxy_bytes,
+        avgCpuUsage=session.avg_cpu_usage,
+        memoryUsage=session.memory_usage,
+        keepAlive=session.keep_alive,
+        contextId=session.context_id,
     )
-
-    session = client.create_session(options)
-
-    return BrowserbaseCreateSessionOutput(**session.model_dump())
 
 
 @beartype
@@ -109,9 +128,23 @@ async def get_session(
 ) -> BrowserbaseGetSessionOutput:
     client = get_browserbase_client(setup)
 
-    session = client.get_session(arguments.id)
+    # Changed from get_session() to sessions.retrieve()
+    session = client.sessions.retrieve(id=arguments.id)
 
-    return BrowserbaseGetSessionOutput(**session.model_dump())
+    return BrowserbaseGetSessionOutput(
+        id=session.id,
+        createdAt=session.created_at.isoformat() if session.created_at else None,
+        projectId=session.project_id,
+        startedAt=session.started_at.isoformat() if session.started_at else None,
+        endedAt=session.ended_at.isoformat() if session.ended_at else None,
+        expiresAt=session.expires_at.isoformat() if session.expires_at else None,
+        status=session.status,
+        proxyBytes=session.proxy_bytes,
+        avgCpuUsage=session.avg_cpu_usage,
+        memoryUsage=session.memory_usage,
+        keepAlive=session.keep_alive,
+        contextId=session.context_id,
+    )
 
 
 @beartype
@@ -126,7 +159,10 @@ async def complete_session(
     client = get_browserbase_client(setup)
 
     try:
-        client.complete_session(arguments.id)
+        # Changed to use sessions.update() with REQUEST_RELEASE status
+        client.sessions.update(
+            id=arguments.id, status="REQUEST_RELEASE", project_id=setup.project_id
+        )
     except Exception:
         return BrowserbaseCompleteSessionOutput(success=False)
 
@@ -144,24 +180,13 @@ async def get_live_urls(
 ) -> BrowserbaseGetSessionLiveUrlsOutput:
     """Get the live URLs for a session."""
     client = get_browserbase_client(setup)
-    urls: DebugConnectionURLs = client.get_debug_connection_urls(arguments.id)
-    return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
-
-
-@beartype
-@retry(
-    wait=wait_exponential(multiplier=1, min=4, max=10),
-    reraise=True,
-    stop=stop_after_attempt(4),
-)
-async def get_connect_url(
-    setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionConnectUrlArguments
-) -> BrowserbaseGetSessionConnectUrlOutput:
-    client = get_browserbase_client(setup)
-
-    url = client.get_connect_url(arguments.id)
-
-    return BrowserbaseGetSessionConnectUrlOutput(url=url)
+    try:
+        # Use the debug() method to get live URLs
+        urls: SessionLiveURLs = client.sessions.debug(id=arguments.id)
+        return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
+    except Exception as e:
+        print(f"Error getting debug URLs: {e}")
+        raise
 
 
 @beartype
@@ -174,42 +199,47 @@ async def install_extension_from_github(
     setup: BrowserbaseSetup, arguments: BrowserbaseExtensionArguments
 ) -> BrowserbaseExtensionOutput:
     """Download and install an extension from GitHub to the user's Browserbase account."""
+    try:
+        github_url = f"https://github.com/{arguments.repository_name}/archive/refs/tags/{arguments.ref}.zip"
 
-    github_url = (
-        f"https://github.com/{arguments.repository_name}/archive/refs/tags/{arguments.ref}.zip"
-    )
-
-    async with httpx.AsyncClient(timeout=600) as client:
-        # Download the extension zip
-        response = await client.get(github_url, follow_redirects=True)
-        response.raise_for_status()
-
-        with tempfile.NamedTemporaryFile(
-            delete=True, delete_on_close=False, suffix=".zip"
-        ) as tmp_file:
-            tmp_file.write(response.content)
-            tmp_file_path = tmp_file.name
-
-            # Upload the extension to Browserbase
-            upload_url = "https://www.browserbase.com/v1/extensions"
-            headers = {
-                # NOTE: httpx won't add a boundary if Content-Type header is set when you pass files=
-                # "Content-Type": "multipart/form-data",
-                "X-BB-API-Key": setup.api_key,
-            }
-
-            with open(tmp_file_path, "rb") as f:
-                files = {"file": f}
-                upload_response = await client.post(upload_url, headers=headers, files=files)
-
+        async with httpx.AsyncClient(timeout=600) as client:
+            # Download the extension zip
             try:
-                upload_response.raise_for_status()
-            except httpx.HTTPStatusError:
-                print(upload_response.text)
+                response = await client.get(github_url, follow_redirects=True)
+                response.raise_for_status()
+            except httpx.HTTPError as e:
+                print(f"Error downloading extension from GitHub: {e}")
                 raise
 
-        # Delete the temporary file
-        with contextlib.suppress(FileNotFoundError):
-            os.remove(tmp_file_path)
+            with tempfile.NamedTemporaryFile(
+                delete=True, delete_on_close=False, suffix=".zip"
+            ) as tmp_file:
+                tmp_file.write(response.content)
+                tmp_file_path = tmp_file.name
 
-        return BrowserbaseExtensionOutput(id=upload_response.json()["id"])
+                upload_url = "https://api.browserbase.com/v1/extensions"
+                headers = {
+                    "X-BB-API-Key": setup.api_key,
+                }
+
+                try:
+                    with open(tmp_file_path, "rb") as f:
+                        files = {"file": f}
+                        upload_response = await client.post(
+                            upload_url, headers=headers, files=files
+                        )
+                        upload_response.raise_for_status()
+                except httpx.HTTPError as e:
+                    print(f"Error uploading extension to Browserbase: {e}")
+                    if hasattr(e, "response") and e.response is not None:
+                        print(f"Response content: {e.response.text}")
+                    raise
+
+                # Delete the temporary file
+                with contextlib.suppress(FileNotFoundError):
+                    os.remove(tmp_file_path)
+
+                return BrowserbaseExtensionOutput(id=upload_response.json()["id"])
+    except Exception as e:
+        print(f"Unexpected error in install_extension_from_github: {e}")
+        raise

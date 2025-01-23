@@ -557,14 +557,6 @@ class BrowserbaseGetSessionArgumentsUpdate(BaseModel):
     id: str | None = None
 
 
-class BrowserbaseGetSessionConnectUrlArguments(BrowserbaseGetSessionArguments):
-    pass
-
-
-class BrowserbaseGetSessionConnectUrlArgumentsUpdate(BrowserbaseGetSessionArgumentsUpdate):
-    pass
-
-
 class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
     pass
 
@@ -946,7 +938,6 @@ class CreateToolRequest(BaseModel):
         | BrowserbaseGetSessionIntegrationDef
         | BrowserbaseCompleteSessionIntegrationDef
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
-        | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
         | FfmpegIntegrationDef
@@ -1464,7 +1455,6 @@ class PatchToolRequest(BaseModel):
         | BrowserbaseGetSessionIntegrationDefUpdate
         | BrowserbaseCompleteSessionIntegrationDefUpdate
         | BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate
-        | BrowserbaseGetSessionConnectUrlIntegrationDefUpdate
         | RemoteBrowserIntegrationDefUpdate
         | LlamaParseIntegrationDefUpdate
         | FfmpegIntegrationDefUpdate
@@ -1896,7 +1886,6 @@ class Tool(BaseModel):
         | BrowserbaseGetSessionIntegrationDef
         | BrowserbaseCompleteSessionIntegrationDef
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
-        | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
         | FfmpegIntegrationDef
@@ -1990,7 +1979,6 @@ class UpdateToolRequest(BaseModel):
         | BrowserbaseGetSessionIntegrationDef
         | BrowserbaseCompleteSessionIntegrationDef
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
-        | BrowserbaseGetSessionConnectUrlIntegrationDef
         | RemoteBrowserIntegrationDef
         | LlamaParseIntegrationDef
         | FfmpegIntegrationDef
@@ -2474,30 +2462,6 @@ class BrowserbaseExtensionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpda
     """
     The arguments for the method
     """
-
-
-class BrowserbaseGetSessionConnectUrlIntegrationDef(BaseBrowserbaseIntegrationDef):
-    """
-    browserbase get session connect url integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    method: Literal["get_connect_url"] = "get_connect_url"
-    arguments: BrowserbaseGetSessionConnectUrlArguments | None = None
-
-
-class BrowserbaseGetSessionConnectUrlIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
-    """
-    browserbase get session connect url integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    method: Literal["get_connect_url"] = "get_connect_url"
-    arguments: BrowserbaseGetSessionConnectUrlArgumentsUpdate | None = None
 
 
 class BrowserbaseGetSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
