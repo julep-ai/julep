@@ -1,6 +1,8 @@
 import uuid
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
+from agents_api.activities import task_steps
 from agents_api.autogen.openapi_model import (
     Agent,
     CaseThen,
@@ -18,47 +20,12 @@ from agents_api.common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
+from agents_api.common.retry_policies import DEFAULT_RETRY_POLICY
 from agents_api.common.utils.datetime import utcnow
+from agents_api.env import temporal_heartbeat_timeout
 from agents_api.workflows.task_execution import TaskExecutionWorkflow
-from temporalio import activity
-from temporalio.client import Client
 from temporalio.exceptions import ApplicationError
-from temporalio.worker import Worker
-from ward import skip, test
-
-from .fixtures import temporal_client
-
-
-@activity.defn(name="return_step")
-async def return_step_mocked(context: StepContext) -> str:
-    return "finish"
-
-
-@skip
-@test("task execution workflow: return step")
-async def _(client: Client = temporal_client):
-    task_queue_name = str(uuid.uuid4())
-    async with Worker(
-        client,
-        task_queue=task_queue_name,
-        workflows=[TaskExecutionWorkflow],
-        activities=[
-            return_step_mocked,
-        ],
-    ):
-        # TODO: set correct values
-        execution_input = ExecutionInput()
-        start = 0
-        previous_inputs = []
-        assert (
-            await client.execute_workflow(
-                TaskExecutionWorkflow.run,
-                args=[execution_input, start, previous_inputs],
-                id=str(uuid.uuid4()),
-                task_queue=task_queue_name,
-            )
-            == "finish"
-        )
+from ward import raises, test
 
 
 @test("task execution workflow: handle function tool call step")
@@ -67,6 +34,7 @@ async def _():
         return "function_tool_call_response"
 
     wf = TaskExecutionWorkflow()
+    step = ToolCallStep(tool="tool1")
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
@@ -80,7 +48,7 @@ async def _():
         task=TaskSpecDef(
             name="task1",
             tools=[],
-            workflows=[Workflow(name="main", steps=[ToolCallStep(tool="tool1")])],
+            workflows=[Workflow(name="main", steps=[step])],
         ),
     )
     context = StepContext(
@@ -91,8 +59,8 @@ async def _():
             step=0,
         ),
     )
-    step = ToolCallStep(tool="tool1")
-    outcome = StepOutcome(output={"type": "function"})
+    output = {"type": "function"}
+    outcome = StepOutcome(output=output)
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
         result = await wf.handle_step(
@@ -101,6 +69,13 @@ async def _():
             outcome=outcome,
         )
         assert result == PartialTransition(type="resume", output="function_tool_call_response")
+        workflow.execute_activity.assert_called_once_with(
+            task_steps.raise_complete_async,
+            args=[context, output],
+            schedule_to_close_timeout=timedelta(days=31),
+            retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+        )
 
 
 @test("task execution workflow: handle integration tool call step")
@@ -109,6 +84,7 @@ async def _():
         return "integration_tool_call_response"
 
     wf = TaskExecutionWorkflow()
+    step = ToolCallStep(tool="tool1")
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
@@ -122,7 +98,7 @@ async def _():
         task=TaskSpecDef(
             name="task1",
             tools=[TaskToolDef(type="integration", name="tool1", spec={})],
-            workflows=[Workflow(name="main", steps=[ToolCallStep(tool="tool1")])],
+            workflows=[Workflow(name="main", steps=[step])],
         ),
     )
     context = StepContext(
@@ -133,7 +109,6 @@ async def _():
             step=0,
         ),
     )
-    step = ToolCallStep(tool="tool1")
     outcome = StepOutcome(
         output={"type": "integration", "integration": {"name": "tool1", "arguments": {}}}
     )
@@ -147,12 +122,55 @@ async def _():
         assert result == PartialTransition(output="integration_tool_call_response")
 
 
+@test("task execution workflow: handle integration tool call step, integration tools not found")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = ToolCallStep(tool="tool1")
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[TaskToolDef(type="integration", name="tool2", spec={})],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+    )
+    context = StepContext(
+        execution_input=execution_input,
+        inputs=["value 1"],
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    outcome = StepOutcome(
+        output={"type": "integration", "integration": {"name": "tool1", "arguments": {}}}
+    )
+    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+        workflow.execute_activity.return_value = "integration_tool_call_response"
+        with raises(ApplicationError) as exc:
+            await wf.handle_step(
+                context=context,
+                step=step,
+                outcome=outcome,
+            )
+        assert str(exc.raised) == "Integration tool1 not found"
+
+
 @test("task execution workflow: handle api_call tool call step")
 async def _():
     async def _resp():
         return "api_call_tool_call_response"
 
     wf = TaskExecutionWorkflow()
+    step = ToolCallStep(tool="tool1")
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
@@ -166,7 +184,7 @@ async def _():
         task=TaskSpecDef(
             name="task1",
             tools=[],
-            workflows=[Workflow(name="main", steps=[ToolCallStep(tool="tool1")])],
+            workflows=[Workflow(name="main", steps=[step])],
         ),
     )
     context = StepContext(
@@ -177,7 +195,6 @@ async def _():
             step=0,
         ),
     )
-    step = ToolCallStep(tool="tool1")
     outcome = StepOutcome(output={"type": "function"})
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
@@ -261,14 +278,51 @@ async def _():
     outcome = StepOutcome(output=-1)
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.logger = Mock()
-        try:
+        with raises(ApplicationError):
             await wf.handle_step(
                 context=context,
                 step=step,
                 outcome=outcome,
             )
-        except Exception as e:
-            print("-->", type(e))
-            assert isinstance(e, ApplicationError)
-        else:
-            assert False
+
+
+@test("task execution workflow: handle switch step, index is zero")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = SwitchStep(switch=[CaseThen(case="_", then=GetStep(get="key1"))])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+    )
+    context = StepContext(
+        execution_input=execution_input,
+        inputs=["value 1"],
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    outcome = StepOutcome(output=0)
+    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+        workflow.logger = Mock()
+
+        assert (
+            await wf.handle_step(
+                context=context,
+                step=step,
+                outcome=outcome,
+            )
+            is None
+        )
