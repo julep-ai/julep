@@ -6,7 +6,21 @@ icon: 'brain'
 
 ## Overview
 
-Julep is a powerful backend system for managing agent execution. It provides several key components that work together to create flexible and intelligent applications.
+Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's a mental model to help you understand it:
+
+1. Your Application Code
+   - Use the Julep SDK in your application to define agents, tasks, and workflows
+   - SDK provides functions and classes for easy setup and management of components
+
+2. Julep Backend Service
+   - SDK communicates with Julep backend over the network
+   - Backend handles task execution, session state, document storage, and workflow orchestration
+
+3. Integration with Tools and APIs
+   - Integrate external tools and services within your workflows
+   - Backend facilitates integrations for web searches, database access, third-party API calls, and more
+
+To help you visualize this, here's a diagram:
 <Frame caption="Julep Architecture Overview">
   <img
     src="/images/architecture.svg"
@@ -96,7 +110,7 @@ Julep is a powerful backend system for managing agent execution. It provides sev
   </Step>
 </Steps>
 
-## Security Architecture
+## Security
 
 <AccordionGroup>
   <Accordion title="Authentication" icon="lock" defaultOpen={true}>
@@ -127,6 +141,14 @@ Julep is a powerful backend system for managing agent execution. It provides sev
   </Accordion>
 </AccordionGroup>
 
-<Tip>
-  This architecture is designed to be scalable, secure, and flexible, allowing for easy integration with existing systems while maintaining robust security and performance characteristics.
-</Tip> 
+## Conclusion
+
+The modular design enables you to customize and extend functionality as needed, while the security-first approach ensures your data and operations remain protected. Whether you're building a simple chatbot or a complex AI workflow, this architecture provides the foundation you need.
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)

@@ -4,7 +4,7 @@ description: 'Learn about common patterns and best practices for building Julep 
 icon: 'sitemap'
 ---
 
-# Agentic Patterns
+## Overview
 
 This guide covers common patterns and best practices for building effective Julep agents, inspired by a blog written by Anthropic on [Building effective agents](https://www.anthropic.com/research/building-effective-agents).
 
@@ -269,12 +269,42 @@ This creates a powerful feedback loop where content is repeatedly refined based 
 
 ## Best Practices
 
-1. **Start Simple:** Use minimal steps and only add complexity when it clearly improves results.  
-2. **Thoughtful Tool Design:** Provide clear documentation, examples, and usage guidelines for each tool.  
-3. **Error Handling & Guardrails:** Include feedback loops, define stopping conditions, and surface potential issues.  
-4. **Testing & Validation:** Thoroughly test in controlled environments and measure against success criteria.  
-5. **Human Oversight:** Establish checkpoints for approval, ensure transparency, and maintain easy-to-audit workflows.
+<CardGroup cols={3}>
+    <Card title="Start Simple" icon="minimize">
+        <ul>
+            <li>**1. Minimal Steps**: Use minimal steps and only add complexity when it clearly improves results.</li>
+        </ul>
+    </Card>
+    <Card title="Thoughtful Tool Design" icon="wrench">
+        <ul>
+            <li>**1. Documentation**: Provide clear documentation, examples, and usage guidelines for each tool.</li>
+        </ul>
+    </Card>
+    <Card title="Error Handling" icon="shield-check">
+        <ul>
+            <li>**1. Guardrails**: Include feedback loops, define stopping conditions, and surface potential issues.</li>
+        </ul>
+    </Card>
+    <Card title="Testing" icon="vial">
+        <ul>
+            <li>**1. Validation**: Thoroughly test in controlled environments and measure against success criteria.</li>
+        </ul>
+    </Card>
+    <Card title="Human Oversight" icon="user-check">
+        <ul>
+            <li>**1. Checkpoints**: Establish checkpoints for approval, ensure transparency, and maintain easy-to-audit workflows.</li>
+        </ul>
+    </Card>
+</CardGroup>
 
----
+## Conclusion
 
 These patterns represent proven approaches from production implementations. Choose and adapt them based on your specific use case requirements and complexity needs.
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)

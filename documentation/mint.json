@@ -415,7 +415,7 @@
   },
   "openapi": ["https://dev.julep.ai/api/openapi.json"],
   "feedback": {
-    "suggestEdit": true,
-    "raiseIssue": true
+    "thumbsRating": true,
+    "suggestEdit": true
   }
 }

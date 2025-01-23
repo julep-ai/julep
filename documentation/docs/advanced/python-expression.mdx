@@ -4,7 +4,7 @@ description: 'Learn how to use Python expressions in Julep task definitions'
 icon: 'python'
 ---
 
-# Python Expressions in Tasks
+## Overview
 
 Julep tasks support Python expressions for dynamic value computation and data manipulation. This guide explains how to use them effectively.
 
@@ -148,12 +148,34 @@ main:
             query: "'Latest news about ' + _"  # _ is each topic
 ```
 
-## Security Note
+## Security
 
 All Python expressions are executed in a sandboxed environment with:
-- Limited available functions
-- Maximum string length restrictions
-- Collection size limits
-- Execution time limits
+
+<CardGroup cols={2}>
+  <Card title="Function Limits" icon="function">
+    <p>Limited available functions to prevent unsafe operations</p>
+  </Card>
+  
+  <Card title="String Limits" icon="text-size">
+    <p>Maximum string length restrictions to prevent memory issues</p>
+  </Card>
+
+  <Card title="Collection Limits" icon="layer-group">
+    <p>Collection size limits to prevent resource exhaustion</p>
+  </Card>
+
+  <Card title="Time Limits" icon="clock">
+    <p>Execution time limits to prevent infinite loops</p>
+  </Card>
+</CardGroup>
 
 This ensures safe execution while providing necessary functionality for task workflows.
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)

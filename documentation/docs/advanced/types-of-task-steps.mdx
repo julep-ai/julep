@@ -340,28 +340,6 @@ Execute subworkflows:
     analysis_result: _
 ```
 
-## Best Practices
-
-<AccordionGroup>
-  <Accordion title="Step Organization" icon="folder-tree">
-    - Group related steps logically
-    - Use comments to explain complex steps 
-    - Keep step chains focused and manageable
-  </Accordion>
-
-  <Accordion title="Error Handling" icon="shield-exclamation">
-    - Use if-else for error conditions
-    - Provide fallback options
-    - Log important state changes
-  </Accordion>
-
-  <Accordion title="Performance" icon="gauge-high">
-    - Use parallel execution when possible
-    - Optimize data passing between steps
-    - Cache frequently used values
-  </Accordion>
-</AccordionGroup>
-
 ## Example: Complex Workflow
 
 Here's an example combining various step types:
@@ -417,3 +395,39 @@ main:
         start_time: _.start_time
         end_time: "datetime.now().isoformat()"
 ```
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Step Organization" icon="folder-tree">
+    <ul>
+      <li>Group related steps logically</li>
+      <li>Use comments to explain complex steps</li>
+      <li>Keep step chains focused and manageable</li>
+    </ul>
+  </Card>
+
+  <Card title="Error Handling" icon="shield-exclamation">
+    <ul>
+      <li>Use if-else for error conditions</li>
+      <li>Provide fallback options</li>
+      <li>Log important state changes</li>
+    </ul>
+  </Card>
+
+  <Card title="Performance" icon="gauge-high">
+    <ul>
+      <li>Use parallel execution when possible</li>
+      <li>Optimize data passing between steps</li>
+      <li>Cache frequently used values</li>
+    </ul>
+  </Card>
+</CardGroup>
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)

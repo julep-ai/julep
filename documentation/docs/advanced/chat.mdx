@@ -31,21 +31,21 @@ Julep provides a robust chat system with various features for dynamic interactio
 ## Chat Settings
 
 <AccordionGroup>
-  <Accordion title="Basic Settings">
+  <Accordion title="Basic Settings" icon="gear" defaultOpen={true}>
     - **model**: Identifier of the model to be used
     - **stream**: Indicates if the server should stream the response as it's generated
     - **stop**: Up to 4 sequences where the API will stop generating further tokens
     - **seed**: For deterministic sampling
   </Accordion>
 
-  <Accordion title="Advanced Settings">
+  <Accordion title="Advanced Settings" icon="gears" defaultOpen={true}>
     - **max_tokens**: The maximum number of tokens to generate
     - **logit_bias**: Modify the likelihood of specified tokens appearing in the completion
     - **response_format**: Control the format of the response (e.g., JSON object)
     - **agent**: Agent ID to use (for multi-agent sessions)
   </Accordion>
 
-  <Accordion title="Additional Settings">
+  <Accordion title="Additional Settings" icon="plus" defaultOpen={true}>
     - **temperature**
     - **top_p**
     - **frequency_penalty**
@@ -113,3 +113,11 @@ Julep provides a robust chat system with various features for dynamic interactio
 <Tip>
   These features provide developers with a powerful and flexible system for creating sophisticated, context-aware chat interactions that integrate seamlessly with other Julep components.
 </Tip>
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)
