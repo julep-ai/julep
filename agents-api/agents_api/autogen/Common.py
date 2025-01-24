@@ -36,6 +36,22 @@ class LogitBias(RootModel[float]):
     root: Annotated[float, Field(ge=-100.0, le=100.0)]
 
 
+class MimeType(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[
+        str,
+        Field(
+            max_length=120,
+            pattern="^(application|audio|font|example|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)$",
+        ),
+    ]
+    """
+    Valid mime types
+    """
+
+
 class Offset(RootModel[int]):
     model_config = ConfigDict(
         populate_by_name=True,
