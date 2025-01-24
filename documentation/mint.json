@@ -122,6 +122,7 @@
     {
       "group": "Integrations",
       "pages": [
+        "docs/integrations/supported-integrations",
         "docs/integrations/supported-models",
         {
           "group": "Communication & Data",

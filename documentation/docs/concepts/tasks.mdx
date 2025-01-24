@@ -71,13 +71,15 @@ A task can be made up of multiple sub-workflows. These sub-workflows can be name
 ```yaml
 name: Summarize Document
 description: Create a concise summary of any document
-sub_workflows:
+
+sample_sub_workflow:
   - prompt: |-
-      Tell me a joke on a {{inputs.topic}}:
+      Tell me a joke about {{inputs[0].topic}}:
+
 main:
-- workflow: sub_workflows
+- workflow: sample_sub_workflow
   arguments:
-    topic: "AI"
+    topic: "'AI'"
 ```
 
 ### Steps
@@ -123,7 +125,7 @@ Tasks have access to three types of context:
 #### Input Variables
 Access input parameters:
 ```yaml
-- prompt: "Hello {{inputs.user_name}}"
+- prompt: "Hello {{inputs[0].user_name}}"
 ```
 
 #### Step Results
@@ -168,7 +170,7 @@ main:
   - prompt: Analyze customer sentiment
   - tool: categorize
     arguments:
-      text: inputs.feedback_text
+      text: inputs[0].feedback_text
 ```
 
 > Learn more about tools [here](/docs/concepts/tools).
@@ -199,7 +201,7 @@ input_schema:
 main:
   - prompt: |-
         Analyze the following text and create a summary:
-        {{inputs.document_text}}
+        {{inputs[0].document_text}}
     unwrap: true
   - evaluate:
       too_long: len(_) > 500
@@ -207,10 +209,10 @@ main:
     then:
       prompt: |-
         Make the summary more concise:
-        {{_1.content}}
+        {{outputs[0]}}
     else: 
       evaluate:
-        content: _1.content
+        content: outputs[0]
 ```
 
 ```python Python
