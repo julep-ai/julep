@@ -74,10 +74,10 @@ async def _():
     outcome = StepOutcome(output=output)
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
+        wf.context = context
+        wf.outcome = outcome
         result = await wf.handle_step(
-            context=context,
             step=step,
-            outcome=outcome,
         )
         assert result == PartialTransition(type="resume", output="function_tool_call_response")
         workflow.execute_activity.assert_called_once_with(
@@ -130,10 +130,10 @@ async def _():
     )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
+        wf.context = context
+        wf.outcome = outcome
         result = await wf.handle_step(
-            context=context,
             step=step,
-            outcome=outcome,
         )
         assert result == PartialTransition(output="integration_tool_call_response")
         provider = "dummy"
@@ -189,10 +189,10 @@ async def _():
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = "integration_tool_call_response"
         with raises(ApplicationError) as exc:
+            wf.context = context
+            wf.outcome = outcome
             await wf.handle_step(
-                context=context,
                 step=step,
-                outcome=outcome,
             )
         assert str(exc.raised) == "Integration tool1 not found"
 
@@ -253,10 +253,10 @@ async def _():
     )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
+        wf.context = context
+        wf.outcome = outcome
         result = await wf.handle_step(
-            context=context,
             step=step,
-            outcome=outcome,
         )
         assert result == PartialTransition(output="api_call_tool_call_response")
         api_call = ApiCallDef(
@@ -335,10 +335,10 @@ async def _():
     )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
+        wf.context = context
+        wf.outcome = outcome
         result = await wf.handle_step(
-            context=context,
             step=step,
-            outcome=outcome,
         )
         assert result == PartialTransition(output="system_tool_call_response")
         system_call = SystemDef(
@@ -389,10 +389,10 @@ async def _():
         "agents_api.workflows.task_execution.execute_switch_branch"
     ) as execute_switch_branch:
         execute_switch_branch.return_value = "switch_response"
+        wf.context = context
+        wf.outcome = outcome
         result = await wf.handle_step(
-            context=context,
             step=step,
-            outcome=outcome,
         )
         assert result == PartialTransition(output="switch_response")
 
@@ -429,10 +429,10 @@ async def _():
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.logger = Mock()
         with raises(ApplicationError):
+            wf.context = context
+            wf.outcome = outcome
             await wf.handle_step(
-                context=context,
                 step=step,
-                outcome=outcome,
             )
 
 
@@ -467,12 +467,11 @@ async def _():
     outcome = StepOutcome(output=0)
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.logger = Mock()
-
+        wf.context = context
+        wf.outcome = outcome
         assert (
             await wf.handle_step(
-                context=context,
                 step=step,
-                outcome=outcome,
             )
             is None
         )

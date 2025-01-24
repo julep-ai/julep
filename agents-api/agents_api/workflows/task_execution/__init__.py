@@ -125,7 +125,10 @@ GenericStep = RootModel[WorkflowStep]
 @workflow.defn
 class TaskExecutionWorkflow:
     last_error: BaseException | None = None
+    context: StepContext | None = None
+    outcome: StepOutcome | None = None
 
+    
     def __init__(self):
         self.last_error = None
 
@@ -135,35 +138,31 @@ class TaskExecutionWorkflow:
 
     async def _handle_LogStep(
         self,
-        context: StepContext,
         step: LogStep,
-        outcome: StepOutcome,
     ):
         workflow.logger.info(f"Log step: {step.log}")
 
         # Set the output to the current input
         # Add the logged message to metadata
         return PartialTransition(
-            output=context.current_input,
+            output=self.context.current_input,
             metadata={
-                "step_type": type(context.current_step).__name__,
+                "step_type": type(self.context.current_step).__name__,
                 "log": step.log,
             },
         )
 
     async def _handle_ReturnStep(
         self,
-        context: StepContext,
         step: ReturnStep,
-        outcome: StepOutcome,
     ):
-        output = outcome.output
+        output = self.outcome.output
         workflow.logger.info("Return step: Finishing workflow with output")
         workflow.logger.debug(f"Return step: {output}")
         await transition(
-            context,
+            self.context,
             output=output,
-            type="finish" if context.is_main else "finish_branch",
+            type="finish" if self.context.is_main else "finish_branch",
             next=None,
             last_error=self.last_error,
         )
@@ -171,18 +170,16 @@ class TaskExecutionWorkflow:
 
     async def _handle_SwitchStep(
         self,
-        context: StepContext,
         step: SwitchStep,
-        outcome: StepOutcome,
     ):
-        index = outcome.output
+        index = self.outcome.output
         if index > 0:
             result = await execute_switch_branch(
-                context=context,
-                execution_input=context.execution_input,
+                context=self.context,
+                execution_input=self.context.execution_input,
                 switch=step.switch,
                 index=index,
-                previous_inputs=[context.current_input],
+                current_input=self.context.current_input,
             )
             return PartialTransition(output=result)
         if index < 0:
@@ -193,60 +190,54 @@ class TaskExecutionWorkflow:
 
     async def _handle_IfElseWorkflowStep(
         self,
-        context: StepContext,
         step: IfElseWorkflowStep,
-        outcome: StepOutcome,
     ):
         result = await execute_if_else_branch(
-            context=context,
-            execution_input=context.execution_input,
+            context=self.context,
+            execution_input=self.context.execution_input,
             then_branch=step.then,
             else_branch=step.else_,
-            condition=outcome.output,
-            previous_inputs=[context.current_input],
+            condition=self.outcome.output,
+            current_input=self.context.current_input,
         )
 
         return PartialTransition(output=result)
 
     async def _handle_ForeachStep(
         self,
-        context: StepContext,
         step: ForeachStep,
-        outcome: StepOutcome,
     ):
         result = await execute_foreach_step(
-            context=context,
-            execution_input=context.execution_input,
+            context=self.context,
+            execution_input=self.context.execution_input,
             do_step=step.foreach.do,
-            items=outcome.output,
-            previous_inputs=[context.current_input],
+            items=self.outcome.output,
+            current_input=self.context.current_input,
         )
         return PartialTransition(output=result)
 
     async def _handle_MapReduceStep(
         self,
-        context: StepContext,
         step: MapReduceStep,
-        outcome: StepOutcome,
     ):
         parallelism = step.parallelism
         if parallelism is None or parallelism == 1:
             result = await execute_map_reduce_step(
-                context=context,
-                execution_input=context.execution_input,
+                context=self.context,
+                execution_input=self.context.execution_input,
                 map_defn=step.map,
-                items=outcome.output,
+                items=self.outcome.output,
                 reduce=step.reduce,
                 initial=step.initial,
-                previous_inputs=[context.current_input],
+                current_input=self.context.current_input,
             )
         else:
             result = await execute_map_reduce_step_parallel(
-                context=context,
-                execution_input=context.execution_input,
+                context=self.context,
+                execution_input=self.context.execution_input,
                 map_defn=step.map,
-                items=outcome.output,
-                previous_inputs=[context.current_input],
+                items=self.outcome.output,
+                current_input=self.context.current_input,
                 initial=step.initial,
                 reduce=step.reduce,
                 parallelism=parallelism,
@@ -256,9 +247,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_SleepStep(
         self,
-        context: StepContext,
         step: SleepStep,
-        outcome: StepOutcome,
     ):
         sleep = step.sleep
         total_seconds = (
@@ -270,32 +259,28 @@ class TaskExecutionWorkflow:
         workflow.logger.info(f"Sleep step: Sleeping for {total_seconds} seconds")
         assert total_seconds > 0, "Sleep duration must be greater than 0"
 
-        result = await asyncio.sleep(total_seconds, result=context.current_input)
+        result = await asyncio.sleep(total_seconds, result=self.context.current_input)
 
         return PartialTransition(output=result)
 
     async def _handle_EvaluateStep(
         self,
-        context: StepContext,
         step: EvaluateStep,
-        outcome: StepOutcome,
     ):
-        output = outcome.output
+        output = self.outcome.output
         workflow.logger.debug(f"Evaluate step: Completed evaluation with output: {output}")
         return PartialTransition(output=output)
 
     async def _handle_ErrorWorkflowStep(
         self,
-        context: StepContext,
         step: ErrorWorkflowStep,
-        outcome: StepOutcome,
     ):
         error = step.error
         workflow.logger.error(f"Error step: {error}")
 
         state = PartialTransition(type="error", output=error)
         await transition(
-            context,
+            self.context,
             state,
             last_error=self.last_error,
         )
@@ -305,15 +290,13 @@ class TaskExecutionWorkflow:
 
     async def _handle_YieldStep(
         self,
-        context: StepContext,
         step: YieldStep,
-        outcome: StepOutcome,
     ):
-        output = outcome.output
-        yield_transition_type, yield_next_target = outcome.transition_to
+        output = self.outcome.output
+        yield_transition_type, yield_next_target = self.outcome.transition_to
         workflow.logger.info(f"Yield step: Transitioning to {yield_transition_type}")
         await transition(
-            context,
+            self.context,
             output=output,
             type=yield_transition_type,
             next=yield_next_target,
@@ -321,24 +304,22 @@ class TaskExecutionWorkflow:
         )
 
         result = await continue_as_child(
-            context,
+            self.context,
             start=yield_next_target,
-            previous_inputs=[output],
+            current_input=output,
         )
 
         return PartialTransition(output=result)
 
     async def _handle_WaitForInputStep(
         self,
-        context: StepContext,
         step: WaitForInputStep,
-        outcome: StepOutcome,
     ):
         workflow.logger.info("Wait for input step: Waiting for external input")
 
         result = await workflow.execute_activity(
             task_steps.raise_complete_async,
-            args=[context, outcome.output],
+            args=[self.context, self.outcome.output],
             schedule_to_close_timeout=timedelta(days=31),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -348,11 +329,9 @@ class TaskExecutionWorkflow:
 
     async def _handle_PromptStep(
         self,
-        context: StepContext,
         step: PromptStep,
-        outcome: StepOutcome,
     ):
-        message = outcome.output
+        message = self.outcome.output
         if (
             step.unwrap
             or (not step.unwrap and not step.auto_run_tools)
@@ -376,18 +355,18 @@ class TaskExecutionWorkflow:
             # Enter a wait-for-input step to ask the developer to run the tool calls
             tool_calls_results = await workflow.execute_activity(
                 task_steps.raise_complete_async,
-                args=[context, tool_calls_input],
+                args=[self.context, tool_calls_input],
                 schedule_to_close_timeout=timedelta(days=31),
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
 
             # Feed the tool call results back to the model
-            context.current_step.prompt.append(message)
-            context.current_step.prompt.append(tool_calls_results)
+            self.context.current_step.prompt.append(message)
+            self.context.current_step.prompt.append(tool_calls_results)
             new_response = await workflow.execute_activity(
                 task_steps.prompt_step,
-                context,
+                self.context,
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout
                 ),
@@ -428,20 +407,16 @@ class TaskExecutionWorkflow:
 
     async def _handle_SetStep(
         self,
-        context: StepContext,
         step: SetStep,
-        outcome: StepOutcome,
     ):
         workflow.logger.info("Set step: Updating user state")
 
         # Pass along the previous output unchanged
-        return PartialTransition(output=context.current_input, user_state=outcome.output)
+        return PartialTransition(output=self.context.current_input, user_state=self.outcome.output)
 
     async def _handle_GetStep(
         self,
-        context: StepContext,
         step: GetStep,
-        outcome: StepOutcome,
     ):
         key = step.get
         workflow.logger.info(f"Get step: Fetching '{key}' from user state")
@@ -452,9 +427,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_ParallelStep(
         self,
-        context: StepContext,
         step: ParallelStep,
-        outcome: StepOutcome,
     ):
         # FIXME: Implement ParallelStep
         # SCRUM-17
@@ -464,15 +437,14 @@ class TaskExecutionWorkflow:
 
     async def _handle_ToolCallStep(
         self,
-        context: StepContext,
         step: ToolCallStep,
-        outcome: StepOutcome,
     ):
-        tool_call = outcome.output
+
+        tool_call = self.outcome.output
         if tool_call["type"] == "function":
             tool_call_response = await workflow.execute_activity(
                 task_steps.raise_complete_async,
-                args=[context, tool_call],
+                args=[self.context, tool_call],
                 schedule_to_close_timeout=timedelta(days=31),
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -486,7 +458,7 @@ class TaskExecutionWorkflow:
             call = tool_call["integration"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            integration_tool = next((t for t in context.tools if t.name == tool_name), None)
+            integration_tool = next((t for t in self.context.tools if t.name == tool_name), None)
 
             if integration_tool is None:
                 msg = f"Integration {tool_name} not found"
@@ -508,7 +480,7 @@ class TaskExecutionWorkflow:
 
             tool_call_response = await workflow.execute_activity(
                 execute_integration,
-                args=[context, tool_name, integration, arguments],
+                args=[self.context, tool_name, integration, arguments],
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout
                 ),
@@ -524,7 +496,7 @@ class TaskExecutionWorkflow:
             call = tool_call["api_call"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            apicall_tool = next((t for t in context.tools if t.name == tool_name), None)
+            apicall_tool = next((t for t in self.context.tools if t.name == tool_name), None)
 
             if apicall_tool is None:
                 msg = f"Integration {tool_name} not found"
@@ -564,7 +536,7 @@ class TaskExecutionWorkflow:
             system_call = SystemDef(**call)
             tool_call_response = await workflow.execute_activity(
                 execute_system,
-                args=[context, system_call],
+                args=[self.context, system_call],
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout
                 ),
@@ -574,21 +546,21 @@ class TaskExecutionWorkflow:
             return PartialTransition(output=tool_call_response)
         return None
 
-    async def handle_step(self, context: StepContext, step: WorkflowStep, outcome: StepOutcome):
+    async def handle_step(self, step: WorkflowStep):
         meth = getattr(self, f"_handle_{type(step).__name__}", None)
         if not meth:
-            workflow.logger.error(f"Unhandled step type: {type(context.current_step).__name__}")
+            workflow.logger.error(f"Unhandled step type: {type(self.context.current_step).__name__}")
             msg = "Not implemented"
             state = PartialTransition(type="error", output=msg)
             await transition(
-                context,
+                self.context,
                 state,
                 last_error=self.last_error,
             )
 
             raise ApplicationError(msg)
 
-        return await meth(context, step, outcome)
+        return await meth(step)
 
     # Main workflow run method
     @workflow.run
@@ -613,8 +585,6 @@ class TaskExecutionWorkflow:
             current_input=current_input,
             cursor=start,
         )
-
-        previous_inputs = [current_input]
 
         step_type = type(context.current_step)
         continued_as_new = workflow.info().continued_run_id is not None
@@ -669,10 +639,12 @@ class TaskExecutionWorkflow:
             msg = f"Step {type(context.current_step).__name__} threw error: {error}"
             raise ApplicationError(msg)
 
+
+        self.context = context
+        self.outcome = outcome
+
         state = await self.handle_step(
-            context=context,
             step=context.current_step,
-            outcome=outcome,
         )
         if isinstance(context.current_step, ReturnStep):
             return state
@@ -713,12 +685,11 @@ class TaskExecutionWorkflow:
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
 
-        previous_inputs.append(final_output)
 
         # Continue as a child workflow
         return await continue_as_child(
             context.execution_input,
             start=final_state.next,
-            previous_inputs=previous_inputs,
+            current_input=final_output,
             user_state=state.user_state,
         )
