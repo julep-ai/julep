@@ -1,0 +1,108 @@
+---
+title: 'Cloudinary'
+description: 'Learn how to use the Cloudinary integration with Julep'
+icon: 'wand-magic'
+---
+
+## Overview
+
+Welcome to the Cloudinary integration guide for Julep! This integration allows you to manage and transform media files efficiently, enabling you to build workflows that require robust media processing capabilities. Whether you're uploading images or editing videos, this guide will walk you through the setup and usage.
+
+## Prerequisites
+
+<Info type="info" title="API Key Required">
+  To use the Cloudinary integration, you need an API key, API secret, and cloud name. You can obtain these by signing up at [Cloudinary](https://cloudinary.com/signup).
+</Info>
+
+## How to Use the Integration
+
+To get started with the Cloudinary integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Configure Your API Key">
+    Add your API key, API secret, and cloud name to the tools section of your task. This will allow Julep to authenticate requests to Cloudinary on your behalf.
+  </Step>
+  <Step title="Create Task Definition">
+    Use the following YAML configuration to define your media processing task:
+
+    ```yaml Cloudinary Example
+    name: Cloudinary Task
+    tools:
+      - name: cloudinary_tool
+        type: integration
+        integration:
+          provider: cloudinary
+          method: media_upload
+          setup:
+            cloudinary_cloud_name: {cloudinary_cloud_name}
+            cloudinary_api_key: {cloudinary_api_key}
+            cloudinary_api_secret: {cloudinary_api_secret}
+            params: # Optional setup parameters
+              key1: value1 # these are placeholders for the actual parameters
+              key2: value2 # these are placeholders for the actual parameters
+    main:
+      - tool: cloudinary_tool
+        arguments:
+          file: "https://example.com/image.jpg"
+          public_id: "my_image"
+          upload_params: # Optional upload parameters
+            param1: value1 # these are placeholders for the actual parameters
+            param2: value2 # these are placeholders for the actual parameters
+          return_base64: false
+    ```
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "Cloudinary Task".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `cloudinary_tool` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `cloudinary` for Cloudinary.
+      - **_method_**: Specifies the method to use, either `media_upload` or `media_edit`. Defaults to `media_edit` if not specified.
+      - **_setup_**: Contains configuration details
+          - **_cloudinary_cloud_name_**: (Required) The cloud name of the Cloudinary account.
+          - **_cloudinary_api_key_**: (Required) The API key of the Cloudinary account.
+          - **_cloudinary_api_secret_**: (Required) The API secret of the Cloudinary account.
+          - **_params_**: (Optional) Optional parameters for the configuration.
+  </Accordion>
+
+  <Accordion title="Workflow Configuration">
+    - **_main_**: Defines the main execution steps.
+      - **_tool_**: Refers to the tool defined earlier (`cloudinary_tool`).
+      - **_arguments_**: Specifies the input parameters for the tool:
+        <Accordion title="media_upload">
+          - **_file_**: The URL of the file to upload.
+          - **_public_id_**: (optional) Optional public ID for the uploaded file. Defaults to None.
+          - **_upload_params_**: (optional) Optional transformations for the upload. Defaults to None.
+          - **_return_base64_**: (optional) Whether to return the file in base64 encoding. Defaults to False.
+        </Accordion>
+        <Accordion title="media_edit">
+          - **_public_id_**: The public ID of the file to edit.
+          - **_transformation_**: The transformations to apply to the file.
+          - **_return_base64_**: Whether to return the transformed file in base64 encoding.
+        </Accordion>
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Remember to replace `{cloudinary_cloud_name}`, `{cloudinary_api_key}`, and `{cloudinary_api_secret}` with your actual credentials.
+</Note>
+<Note>
+  The different parameters available for the Cloudinary integration can be found in the [Cloudinary API documentation](https://cloudinary.com/documentation/cloudinary_sdks#configuration_parameters).
+</Note>
+
+## Conclusion
+
+With the Cloudinary integration, you can efficiently manage and transform media files. 
+This integration provides a robust solution for media processing, enhancing your workflow's capabilities and user experience.
+
+<Tip>
+  For more information, please refer to the [Cloudinary documentation](https://cloudinary.com/documentation/python_quickstart).
+</Tip> 

@@ -1,0 +1,243 @@
+---
+title: 'Crawling Web Pages with RAG'
+description: 'Learn how to crawl web pages and implement RAG (Retrieval Augmented Generation) with Julep'
+icon: 'display'
+---
+
+## Overview
+
+This tutorial demonstrates how to:
+- Set up a web crawler using Julep's Spider integration
+- Process and store crawled content in a document store
+- Implement RAG for enhanced AI responses
+- Create an intelligent agent that can answer questions about crawled content
+
+## Task Structure
+
+Let's break down the task into its core components:
+
+### 1. Input Schema
+
+First, we define what inputs our task expects:
+
+```yaml
+input_schema:
+    type: object
+    properties:
+        url:
+            type: string
+        pages_limit:
+            type: integer
+```
+
+This schema specifies that our task expects:
+- A URL string (e.g., "https://julep.ai/")
+- Number of pages to crawl (e.g., 5)
+
+### 2. Tools Configuration
+
+Next, we define the external tools our task will use:
+
+```yaml
+- name: spider_crawler
+  type: integration
+  integration:
+    provider: spider
+    method: crawl
+    setup:
+      spider_api_key: YOUR_SPIDER_API_KEY
+
+- name: create_agent_doc
+  type: system
+  system:
+    resource: agent
+    subresource: doc
+    operation: create
+```
+
+We're using two tools:
+- The `spider_crawler` integration for web crawling
+- The `create_agent_doc` system tool for storing processed content
+
+### 3. Main Workflow Steps
+
+<Steps>
+  <Step title="Crawl Website">
+    ```yaml
+    - tool: spider_crawler
+      arguments:
+        url: "_['url']"
+        params:
+          request: "'smart_mode'"
+          limit: _['pages_limit']
+          return_format: "'markdown'"
+          proxy_enabled: "True"
+          filter_output_images: "True"
+          filter_output_svg: "True"
+          readability: "True"
+          sitemap: "True"
+          chunking_alg:
+            type: "'bysentence'"
+            value: "15"
+    ```
+
+    <Accordion title="Understanding the use of the _ variable">
+      The `_` variable refers to the current context object. When accessing properties like `_['url']`, it's retrieving values from the input parameters passed to the task.
+    </Accordion>
+
+    This step:
+    - Takes the input URL and crawls the website
+    - Processes content into readable markdown format
+    - Chunks content into manageable segments
+    - Filters out unnecessary elements like images and SVGs
+  </Step>
+
+  <Step title="Process and Index Content">
+    ```yaml
+    - evaluate:
+        documents: _['content']
+
+    - over: "[(_0.content, chunk) for chunk in _['documents']]"
+      parallelism: 3
+      map:
+        prompt:
+        - role: user
+          content: >-
+            <document>
+            {{_[0]}}
+            </document>
+
+            <chunk>
+            {{_[1]}}
+            </chunk>
+
+            Please give a short succinct context to situate this chunk within the overall document.
+    ```
+
+    This step:
+    - Processes each content chunk in parallel
+    - Generates contextual metadata for improved retrieval
+    - Prepares content for storage
+  </Step>
+
+  <Step title="Store Documents">
+    ```yaml
+    - over: _['final_chunks']
+      parallelism: 3
+      map:
+        tool: create_agent_doc
+        arguments:
+          agent_id: "'{agent.id}'"
+          data:
+            metadata:
+              source: "'spider_crawler'"
+            title: "'Website Document'"
+            content: _
+    ```
+
+    This step:
+    - Stores processed content in the document store
+    - Adds metadata for source tracking
+    - Creates searchable documents for RAG
+  </Step>
+</Steps>
+
+## Example Usage
+
+Start by creating an execution for the task. This execution will make the agent crawl the website and store the content in the document store.
+
+```python
+execution = client.executions.create(
+  task_id=TASK_UUID,
+  input={"url": "https://julep.ai/", "pages_limit": 5}
+)
+```
+
+Next, create a session for the agent. This session will be used to chat with the agent.
+
+```python
+session = client.sessions.create(
+  agent_id=AGENT_ID
+)
+```
+
+Finally, chat with the agent.
+
+```python
+response = client.sessions.chat(
+  session_id=session.id,
+  messages=[
+    {
+      "role": "user",
+      "content": "What is Julep?"
+    }
+  ]
+)
+
+print(response)
+```
+
+<Accordion title="Output">
+Julep is a comprehensive platform designed for creating production-ready AI systems and agents. Here are the key aspects of Julep:
+
+Core Features:
+1. Complete Infrastructure Layer
+- Provides infrastructure between LLMs and software
+- Built-in support for long-term memory
+- Multi-step process management
+- State management capabilities
+
+2. AI Agent Development
+- Creates persistent AI agents that remember past interactions
+- Supports complex task execution
+- Enables multi-step workflows
+- Includes built-in tools and integrations
+
+3. Production-Ready Features
+- Automatic retries for failed steps
+- Message resending capabilities
+- Task recovery systems
+- Real-time monitoring
+- Error handling
+- Automatic scaling and load balancing
+
+4. Development Approach
+- Uses 8-Factor Agent methodology
+- Treats prompts as code with proper versioning
+- Provides clear tool interfaces
+- Offers model independence to avoid vendor lock-in
+- Includes structured reasoning capabilities
+- Maintains ground truth examples for validation
+
+Available Resources:
+- Documentation: https://docs.julep.ai/
+- API Playground: https://dev.julep.ai/api/docs
+- Python SDK: https://github.com/julep-ai/python-sdk/blob/main/README.md
+- JavaScript SDK: https://github.com/julep-ai/node-sdk/blob/main/README.md
+- Various use case examples and cookbooks
+
+You can explore different use cases through their cookbooks, including:
+- User Profiling
+- Email Assistant
+- Trip Planner
+- Document Management
+- Website Crawler
+- Multi-step Tasks
+- Advanced Chat Interactions
+
+For additional support or to learn more:
+- Discord Community: https://discord.gg/2EUJzJU2Yt
+- Book a Demo: https://calendly.com/ishita-julep
+- Dev Support: hey@julep.ai
+</Accordion>
+
+
+## Next Steps
+
+To try this task yourself:
+1. Get your API keys for Spider integration
+2. Create a new agent using the Julep SDK
+3. Create and execute the task with your desired website URL
+4. Start chatting with your RAG-enabled agent
+
+For more examples and task patterns, check out our other [cookbooks](https://github.com/julep-ai/julep/tree/dev/cookbooks).

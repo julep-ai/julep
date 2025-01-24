@@ -1,0 +1,528 @@
+---
+title: 'Sessions'
+description: 'Understanding Julep Sessions and state management'
+icon: 'memory'
+---
+
+## Overview
+
+Sessions in Julep are the backbone of stateful interactions between users and agents. They maintain the context and history of conversations, enabling personalized and coherent interactions over extended periods. Whether it's handling ongoing customer support inquiries or having a conversation with a user, sessions ensure that the agent retains necessary information to provide meaningful responses.
+
+## Components
+
+Sessions are comprised of several key components that work together to manage state and context:
+
+- **Session ID**: A unique identifier (`uuid7`) for each session.
+- **User**: The individual or entity interacting with the agent, represented by its id.
+- **Agent**: The AI entity interacting with the user within the session, represented by its id.
+- **History**: The history of the conversation, which the agent uses to generate relevant responses.
+- **System Template**: A specific system prompt template that sets the background for this session.
+- **Situation**: A description of the current situation for the session.
+- **Metadata**: Additional data associated with the session, such as user preferences, session preferences, and other relevant information.
+
+### Session Configuration Options
+
+When creating a session, you can leverage the following configuration options to tailor the experience:
+
+| Option               | Type                                     | Description                                                                                       | Default        |
+|----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------|----------------|
+| `agent_id`           | string                                   | The ID of the agent to associate with the session                                                | **Required**   |
+| `user_id`            | string                                   | The ID of the user interacting with the agent                                                    | **Required**   |
+| `context_overflow`   | `truncate` \| `adaptive`                 | Strategy for handling context overflow: `truncate` cuts off the oldest context; `adaptive` adjusts dynamically | `adaptive`     |
+| `metadata`           | object                                   | Additional metadata for the session (e.g., user preferences)                                      | `null`         |
+| `situation`          | string \| null                           | Description of the current situation for the session                                              | `null`         |
+| `system_template`    | string                                   | A specific system prompt template that sets the background for this session                        | Default template provided by Julep |
+| `render_templates`   | boolean                                  | Whether to render system and assistant messages as Jinja templates                                 | `true`         |
+| `token_budget`       | integer \| null                          | Threshold value for the adaptive context functionality                                           | `null`         |
+| `auto_run_tools`     | boolean                                  | Whether to auto-run tools and send the tool results to the model when available                   | `false`        |
+| `forward_tool_calls` | boolean                                  | Whether to forward tool calls directly to the model                                               | `false`        |
+| `recall_options`     | [RecallOptions](#recall-options)         | Options for recalling context or certain data during the session                                  | `null`         |
+
+<Info>
+The **System Template** is a specific system prompt written as a Jinja template that sets the foundational context and instructions for the agent within a session. It defines the background, directives, and any relevant information that the agent should consider when interacting with the user. For more details on Jinja templates, refer to the [Jinja documentation](https://jinja.palletsprojects.com/).
+<Accordion title="Default System Template" icon="template">
+```python
+{%- if agent.name -%}
+You are {{agent.name}}.{{" "}}
+{%- endif -%}
+
+{%- if agent.about -%}
+About you: {{agent.about}}.{{" "}}
+{%- endif -%}
+
+{%- if user -%}
+You are talking to a user
+  {%- if user.name -%}{{" "}} and their name is {{user.name}}
+    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+
+{{NEWLINE}}
+
+{%- if session.situation -%}
+Situation: {{session.situation}}
+{%- endif -%}
+
+{{NEWLINE+NEWLINE}}
+
+{%- if agent.instructions -%}
+Instructions:{{NEWLINE}}
+  {%- if agent.instructions is string -%}
+    {{agent.instructions}}{{NEWLINE}}
+  {%- else -%}
+    {%- for instruction in agent.instructions -%}
+      - {{instruction}}{{NEWLINE}}
+    {%- endfor -%}
+  {%- endif -%}
+  {{NEWLINE}}
+{%- endif -%}
+
+{%- if docs -%}
+Relevant documents:{{NEWLINE}}
+  {%- for doc in docs -%}
+    {{doc.title}}{{NEWLINE}}
+    {%- if doc.content is string -%}
+      {{doc.content}}{{NEWLINE}}
+    {%- else -%}
+      {%- for snippet in doc.content -%}
+        {{snippet}}{{NEWLINE}}
+      {%- endfor -%}
+    {%- endif -%}
+    ---
+  {%- endfor -%}
+{%- endif -%}
+```
+</Accordion>
+</Info>
+
+
+## How to Use Sessions
+
+Sessions are integral to maintaining a continuous and coherent interaction between users and agents. Here's how to create and manage sessions using Julep's SDKs.
+
+### Creating a Session
+
+Here are examples of how to create a session using the SDKs:
+
+<CodeGroup>
+    ```python Python
+    client = Julep(api_key="YOUR_API_KEY")
+    session = client.sessions.create(
+        agent_id="agent_id",
+        user_id="user_id",
+        context_overflow="adaptive",
+    )
+    ```
+
+    ```javascript Node.js
+    const client = new Julep({ apiKey: 'YOUR_API_KEY' });
+    const session = await client.sessions.create({
+        agent_id: "agent_id",
+        user_id: "user_id",
+        context_overflow: "adaptive",
+    });
+    ```
+</CodeGroup>
+
+<Tip>
+    Check out the API reference [here](/api-reference/sessions) or SDK reference (Python [here](/sdks/python/reference#sessions) or JavaScript [here](/sdks/nodejs/reference#sessions) for more details on different operations you can perform on sessions.
+</Tip>
+
+### Chatting in a Session
+
+Once a session is created, you can engage in a conversation by sending messages to the agent within that session.
+
+<CodeGroup>
+    ```python Python
+    client = Julep(api_key="YOUR_API_KEY")
+    response = client.sessions.chat(
+        session_id="SESSION_ID",
+        messages=[
+            {
+                "role": "user", # or "system"
+                "content": "YOUR_MESSAGE"
+            }
+        ]
+    )
+    print("Agent's response:", response.choices[0].message.content)
+    ```
+
+    ```javascript Node.js
+    const client = new Julep({ apiKey: 'YOUR_API_KEY' });
+    const response = await client.sessions.chat({
+        session_id: "SESSION_ID",
+        messages: [
+            {
+                role: "user",
+                content: "YOUR_MESSAGE"
+            }
+        ]
+    });
+    console.log("Agent:", response.choices[0].message.content);
+    ```
+</CodeGroup>
+
+<Tip>
+    Check out the API reference [here](/api-reference/sessions/chat) or SDK reference (Python [here](/sdks/python/reference#sessions) or JavaScript [here](/sdks/nodejs/reference#sessions) for more details on different operations you can perform on sessions.
+</Tip>
+
+## Relationship to Other Concepts
+
+This section will help you understand how sessions relate to other concepts in Julep.
+
+### Agents
+
+Agents operate within sessions to provide personalized and context-aware interactions. While an agent defines the behavior and capabilities, a session maintains the state and context of interactions between the agent and the user. In other words, the history of a conversation is tied to a session, rather than an agent.
+
+Example:
+
+```python
+agent = client.agents.create(
+    name="David",
+    about="A news reporter",
+    model="gpt-4o-mini",
+    instructions=["Keep your responses concise and to the point.", "If you don't know the answer, say 'I don't know'"],
+    metadata={"channel": "FOX News"},
+)
+
+session1 = client.sessions.create(agent=agent.id, user="user_id", situation="The user is interested in the latest news about the stock market.")
+session2 = client.sessions.create(agent=agent.id, user="user_id", situation="The user is interested in political news in the United States.")
+```
+
+<Info>
+In this example, the agent David is used in two different sessions, each with a different situation. The agent's behavior and responses are tailored to the specific situation of each session, and the history of messages in `session1` and `session2` are separate.
+</Info>
+
+### Users
+
+When a user (or more) is added to a session, the session will be able to access information about the user such as `name`, and `about` in order to personalize the interaction. Check out the `system_template` to see how the user's info is being accessed.
+
+This is how you can create a user and associate it with a session:
+
+<CodeGroup>
+    ```python Python
+    client = Julep(api_key="YOUR_API_KEY")
+    user = client.users.create(name="John Doe", about="A 21 year old man who is a student at MIT.")
+    agent = client.agents.create(name="Mark Lee", about="A 49 year old man who is a retired software engineer.")
+    session = client.sessions.create(agent_id=agent.id, user_id=user.id)
+    ```
+
+    ```javascript Node.js
+    const client = new Julep({ apiKey: 'YOUR_API_KEY' });
+    const user = await client.users.create({
+        name: "John Doe",
+        about: "A 21 year old man who is a student at MIT."
+    });
+    const agent = await client.agents.create({
+        name: "Mark Lee",
+        about: "A 49 year old man who is a retired software engineer."
+    });
+    const session = await client.sessions.create({
+        agent_id: agent.id,
+        user_id: user.id
+    });
+    ```
+</CodeGroup>
+
+<Info>
+In this example, the user John Doe is associated with the agent Mark Lee in the session. The session will use the user's information to personalize the interaction, such as using the user's name in the system prompt.
+</Info>
+
+### Tools
+
+Sessions have the ability to use [Tools](/docs/concepts/tools). If an agent has a tool, and the LLM decides to use it, the tool will be run and the result will be automatically sent to the LLM for further processing.
+
+Example:
+
+If the agent that's associated with the session has a tool called `fetch_weather`, and the LLM decides to use it, the tool will be run and the result will be automatically sent to the LLM for further processing.
+
+<CodeGroup>
+    ```python Python
+    response = client.sessions.chat(
+        session_id="session_id",
+        messages=[
+            {
+                "role": "user",
+                "content": "What is the weather in San Francisco?"
+            }
+        ],
+        auto_run_tools=True
+    )
+
+    print("Agent's response:", response.choices[0].message.content)
+    # Agent's response: The weather in San Francisco is 70 degrees and it's sunny. Humidity is 50%, and the wind speed is around 10 mph.
+    ```
+
+    ```javascript Node.js
+    const response = await client.sessions.chat({
+        session_id: "session_id",
+        messages: [
+            {
+                role: "user",
+                content: "What is the weather in San Francisco?"
+            }
+        ],
+        auto_run_tools=True
+    });
+    console.log("Agent:", response.choices[0].message.content);
+    // Agent's response: The weather in San Francisco is 70 degrees and it's sunny. Humidity is 50%, and the wind speed is around 10 mph.
+    ```
+</CodeGroup>
+
+### Documents
+
+When chatting in a session, the session can automatically search for documents that are associated with any of the agents and/or users that participate in the session. You can control whether the session should search for documents when chatting using the `recall` option of the `chat` method, which is set to `True` by default. You can also set the session's `recall_options` when creating the session to control how the session should search for documents.
+
+<CodeGroup>
+    ```python Python
+    # Create a session with custom recall options
+    client.sessions.create(
+        agent=agent.id,
+        user=user.id,
+        recall=True,
+        recall_options={
+            "mode": "vector", # or "hybrid", "text"
+            "num_search_messages": 4, # number of messages to search for documents
+            "max_query_length": 1000, # maximum query length
+            "alpha": 0.7, # weight to apply to BM25 vs Vector search results (ranges from 0 to 1)
+            "confidence": 0.6, # confidence cutoff level (ranges from -1 to 1)
+            "limit": 10, # limit of documents to return
+            "lang": "en-US", # language to be used for text-only search
+            "metadata_filter": {}, # metadata filter to apply to the search
+            "mmr_strength": 0, # MMR Strength (ranges from 0 to 1)
+        }
+    )
+
+    # Chat in the session
+    response = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "Tell me about Julep"
+            }
+        ],
+        recall=True
+    )
+    print("Agent's response:", response.choices[0].message.content)
+    print("Searched Documents:", response.docs)
+    ```
+
+    ```javascript Node.js
+    client.sessions.create({
+        agent: agent.id,
+        user: user.id,
+        recall=True,
+        recall_options: {
+            mode: "vector", // or "hybrid", "text"
+            num_search_messages: 4, // number of messages to search for documents
+            max_query_length: 1000, // maximum query length
+            alpha: 0.7, // weight to apply to BM25 vs Vector search results (ranges from 0 to 1)
+            confidence: 0.6, // confidence cutoff level (ranges from -1 to 1)
+            limit: 10, // limit of documents to return
+            lang: "en-US", // language to be used for text-only search
+            metadata_filter: {}, // metadata filter to apply to the search
+            mmr_strength: 0, // MMR Strength (ranges from 0 to 1)
+        }
+    });
+
+    // Chat in the session
+    const response = await client.sessions.chat({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "Tell me about Julep"
+            }
+        ],
+        recall: true
+    });
+    ```
+</CodeGroup>
+
+<Info>
+    When running the above code with an agent that has documents about Julep, the session will search for documents that are relevant to the conversation and return them in the `response.docs` field.
+    <Accordion title="Output" icon="search">
+        ```
+        Agent's response: Julep is a comprehensive platform designed for creating production-ready AI systems and agents. Here are the key aspects of Julep:
+
+Core Features:
+1. Complete Infrastructure Layer
+- Provides infrastructure between LLMs and software
+- Built-in support for long-term memory
+- Multi-step process management
+- State management capabilities
+
+2. AI Agent Development
+- Creates persistent AI agents that remember past interactions
+- Supports complex task execution
+- Enables multi-step workflows
+- Includes built-in tools and integrations
+
+3. Production-Ready Features
+- Automatic retries for failed steps
+- Message resending capabilities
+- Task recovery systems
+- Real-time monitoring
+- Error handling
+- Automatic scaling and load balancing
+
+4. Development Approach
+- Uses 8-Factor Agent methodology
+- Treats prompts as code with proper versioning
+- Provides clear tool interfaces
+- Offers model independence to avoid vendor lock-in
+- Includes structured reasoning capabilities
+- Maintains ground truth examples for validation
+
+Available Resources:
+- Documentation: https://docs.julep.ai/
+- API Playground: https://dev.julep.ai/api/docs
+- Python SDK: https://github.com/julep-ai/python-sdk/blob/main/README.md
+- JavaScript SDK: https://github.com/julep-ai/node-sdk/blob/main/README.md
+- Various use case examples and cookbooks
+
+You can explore different use cases through their cookbooks, including:
+- User Profiling
+- Email Assistant
+- Trip Planner
+- Document Management
+- Website Crawler
+- Multi-step Tasks
+- Advanced Chat Interactions
+
+For additional support or to learn more:
+- Discord Community: https://discord.gg/2EUJzJU2Yt
+- Book a Demo: https://calendly.com/ishita-julep
+- Dev Support: hey@julep.ai
+
+        Searched Documents: 
+        ### Build faster using Julep API
+### Deploy multi-step workflows easily with
+### built-in tools and
+### State management that is
+### production ready from day one Keep me informed
+### Build faster using Julep API
+### Deploy multi-step workflows easily with built-in tools and State management that is production ready from day one Keep me informed
+Keep me informed
+Dev Resources
+[Docs](https://docs.julep.ai/)
+[Get API Key](https://dashboard-dev.julep.ai/)
+[API Playground](https://dev.julep.ai/api/docs)
+[Python SDK](https://github.com/julep-ai/python-sdk/blob/main/README.md)
+[Javascript SDK](https://github.com/julep-ai/node-sdk/blob/main/README.md)
+[Integration List](https://github.com/julep-ai/julep/tree/dev?tab=readme-ov-file#integrations)
+Usecases
+[User Profiling](https://github.com/julep-ai/julep/blob/dev/cookbooks/09-User_Management_and_Personalization.py)
+[Email Assistant (Mailgun)](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+[Trip Planner (Weather + Wiki)](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+[Doc Management](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+[Website Crawler (Spider)](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+[Multi-step Tasks](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-Designing_Multi-Step_Tasks.py)
+[Advanced Chat](https://github.com/julep-ai/julep/blob/dev/cookbooks/11-Advanced_Chat_Interactions.py)
+Company
+[About](./about)
+[Contact Us](./contact)
+[Book Demo](https://calendly.com/ishita-julep)
+Socials
+[Github](https://github.com/julep-ai/julep)
+[LinkedIn](https://www.linkedin.com/company/julep-ai)
+[Twitter](https://x.com/julep_ai)
+[Dev.to](https://dev.to/julep)
+[Hugging Face](https://huggingface.co/julep-ai)
+[Youtube](https://www.youtube.com/@julep_ai)
+Built by Engineers, for Engineers
+©Julep AI Inc 2024
+Dev Resources
+[Docs](https://docs.julep.ai/)
+[Get API Key](https://dashboard-dev.julep.ai/)
+[API Playground](https://dev.julep.ai/api/docs)
+[Python SDK](https://github.com/julep-ai/python-sdk/blob/main/README.md)
+[Javascript SDK](https://github.com/julep-ai/node-sdk/blob/main/README.md)
+[Integration List](https://github.com/julep-ai/julep/tree/dev?tab=readme-ov-file#integrations)
+Usecases
+[User Profiling](https://github.com/julep-ai/julep/blob/dev/cookbooks/09-User_Management_and_Personalization.py)
+[Email Assistant (Mailgun)](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+[Trip Planner (Weather + Wiki)](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+[Doc Management](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+[Website Crawler (Spider)](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+[Multi-step Tasks](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-Designing_Multi-Step_Tasks.py)
+[Advanced Chat](https://github.com/julep-ai/julep/blob/dev/cookbooks/11-Advanced_Chat_Interactions.py)
+Company
+[About](./about)
+[Contact Us](./contact)
+[Book Demo](https://calendly.com/ishita-julep)
+Socials
+[Github](https://github.com/julep-ai/julep)
+[LinkedIn](https://www.linkedin.com/company/julep-ai)
+[Twitter](https://x.com/julep_ai)
+[Dev.to](https://dev.to/julep)
+[Hugging Face](https://huggingface.co/julep-ai)
+[Youtube](https://www.youtube.com/@julep_ai)
+Built by Engineers, for Engineers
+©Julep AI Inc 2024
+Dev Resources
+[Docs](https://docs.julep.ai/)
+[Get API Key](https://dashboard-dev.julep.ai/)
+[API Playground](https://dev.julep.ai/api/docs)
+[Python SDK](https://github.com/julep-ai/python-sdk/blob/main/README.md)
+[Javascript SDK](https://github.com/julep-ai/node-sdk/blob/main/README.md)
+[Integration List](https://github.com/julep-ai/julep/tree/dev?tab=readme-ov-file#integrations)
+Usecases
+[User Profiling](https://github.com/julep-ai/julep/blob/dev/cookbooks/09-User_Management_and_Personalization.py)
+[Email Assistant (Mailgun)](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+[Trip Planner (Weather + Wiki)](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+[Doc Management](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+[Website Crawler (Spider)](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+[Multi-step Tasks](https://github.com/julep-ai/julep/blob/dev/cookbooks/06-Designing_Multi-Step_Tasks.py)
+[Advanced Chat](https://github.com/julep-ai/julep/blob/dev/cookbooks/11-Advanced_Chat_Interactions.py)
+Company
+[About](./about)
+[Contact Us](./contact)
+[Book Demo](https://calendly.com/ishita-julep)
+Socials
+[Github](https://github.com/julep-ai/julep)
+[LinkedIn](https://www.linkedin.com/company/julep-ai)
+[Twitter](https://x.com/julep_ai)
+[Dev.to](https://dev.to/julep)
+[Hugging Face](https://huggingface.co/julep-ai)
+[Youtube](https://www.youtube.com/@julep_ai)
+Built by Engineers, for Engineers
+©Julep AI Inc 2024
+This chunk provides an overview of resources and support options offered by Julep AI, including documentation, development tools, community links, and contact information for booking demos or reaching out for support. It highlights features such as the Julep API, multi-step workflow deployment, and various use cases relevant for developers.
+        ```
+    </Accordion>
+    This example is taken from the `crawling-and-rag` cookbook. Check it out [here](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-crawling-and-rag.ipynb).
+</Info>
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Session Management" icon="recycle">
+    <ul>
+      <li>**1. Reuse Sessions**: Reuse existing sessions for returning users to maintain continuity in interactions.</li>
+      <li>**2. Session Cleanup**: Regularly clean up inactive sessions to manage resources efficiently.</li>
+      <li>**3. Context Overflow Strategy**: Choose an appropriate context overflow strategy (e.g., "adaptive") to handle long conversations without losing important information.</li>
+    </ul>
+  </Card>
+
+  <Card title="Personalization" icon="user">
+    <ul>
+      <li>**1. Leverage Metadata**: Use session metadata to store and retrieve user preferences, enhancing personalized interactions.</li>
+      <li>**2. Maintain Context**: Ensure that the context within sessions is updated and relevant to provide coherent and context-aware responses.</li>
+    </ul>
+  </Card>
+
+  <Card title="Performance Optimization" icon="gauge">
+    <ul>
+      <li>**1. Efficient Searches**: Optimize search queries within sessions to retrieve relevant documents quickly.</li>
+      <li>**2. Manage Token Usage**: Monitor and manage token usage to ensure efficient use of resources, especially in long sessions.</li>
+    </ul>
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Agent Tools](/docs/concepts/tools) - Learn about tools and how to use them with agents
+- [Agent Tasks](/docs/concepts/tasks) - Learn about tasks and how to use them with agents  
+- [Agent Docs](/docs/concepts/docs) - Learn about docs and how to use them with agents

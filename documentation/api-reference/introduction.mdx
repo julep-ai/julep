@@ -1,0 +1,51 @@
+---
+title: Introduction
+description: 'Introduction to the Julep REST API'
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Agent Endpoints"
+    icon="robot"
+    href="/api-reference/agents/create"
+  >
+    Create, update, and manage AI agents
+  </Card>
+  <Card
+    title="Task Endpoints"
+    icon="list-check"
+    href="/api-reference/tasks/create"
+  >
+    Create and execute AI tasks and workflows
+  </Card>
+  <Card
+    title="Session Endpoints"
+    icon="comments"
+    href="/api-reference/sessions/create"
+  >
+    Manage conversation sessions and state
+  </Card>
+  <Card
+    title="User Endpoints"
+    icon="plug"
+    href="/api-reference/users/create"
+  >
+    Register and manage users
+  </Card>
+</CardGroup>
+
+## Authentication
+
+<Note>
+  Authentication is done via API keys.
+</Note>
+
+API keys are used to authenticate requests to the Julep API. They can be created in the [Julep dashboard](https://dashboard.julep.ai).
+
+To create an API key, go to the Julep dashboard and navigate to the "API Keys" section.
+
+To use an API key, include it in the `Authorization` header of your request.
+
+```
+Authorization: Bearer YOUR_API_KEY
+```

@@ -1,0 +1,94 @@
+---
+title: 'Files (Multimedia)'
+description: 'Learn about file handling and management in Julep'
+icon: 'file-circle-plus'
+---
+
+## Overview
+
+Julep’s Files feature supports uploading, storing, retrieving, and integrating files across Julep components. It handles various file types and formats.
+
+## File Properties
+
+Each file in Julep has the following properties:
+
+```typescript
+id: string; // Unique identifier
+name: string; // Name of the file
+content: string; // Base64 encoded content
+created_at: string; // Creation timestamp
+size: number; // File size in bytes
+hash: string; // File hash for verification
+description?: string; // Optional description
+mime_type?: string; // Optional MIME type
+```
+
+## Basic Operations
+
+### Creating Files
+
+Here's how you can create files using the SDKs:
+
+<CodeGroup>
+    ```python Python
+    from julep import Julep
+
+    client = Julep()
+
+    file = client.files.create(
+        name="example.pdf",
+        content="base64_encoded_content",
+        description="Sample document",
+        mime_type="application/pdf"
+    )
+    ```
+
+    ```javascript Node.js
+    import Julep from '@julep/sdk';
+    const client = new Julep();
+    const file = await client.files.create({
+        name: "example.pdf",
+        content: "base64_encoded_content",
+        description: "Sample document",
+        mime_type: "application/pdf"
+    });
+    ```
+</CodeGroup>
+
+### Retrieving Files
+
+Here's how you can retrieve files using the SDKs:
+
+<CodeGroup>
+    ```python Python
+    file = client.files.get("file_id")
+    ```
+
+    ```javascript Node.js
+    const file = await client.files.get("file_id");
+    ```
+</CodeGroup>
+
+### Deleting Files
+
+<CodeGroup>
+    ```python Python
+    client.files.delete("file_id")
+    ```
+
+    ```javascript Node.js
+    await client.files.delete("file_id");
+    ```
+</CodeGroup>
+
+## API Reference
+
+For complete API documentation, see [Files API Reference](https://dev.julep.ai/api/docs#tag/files).
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)
