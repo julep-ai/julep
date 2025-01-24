@@ -673,8 +673,6 @@ class TaskExecutionWorkflow:
             context=context,
             step=context.current_step,
             outcome=outcome,
-            execution_input=execution_input,
-            previous_inputs=previous_inputs,
         )
         if isinstance(context.current_step, ReturnStep):
             return state
