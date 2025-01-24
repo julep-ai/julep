@@ -1,7 +1,5 @@
 from typing import Annotated, Any, Literal
-from uuid import UUID
 
-from beartype import beartype
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
@@ -10,27 +8,19 @@ with workflow.unsafe.imports_passed_through():
     from pydantic_partial import create_partial_model
 
     from ...autogen.openapi_model import (
-        CreateTaskRequest,
         CreateToolRequest,
         CreateTransitionRequest,
         ExecutionStatus,
-        PartialTaskSpecDef,
-        PatchTaskRequest,
-        Task,
-        TaskSpec,
-        TaskSpecDef,
-        TaskToolDef,
         Tool,
         ToolRef,
         TransitionTarget,
         TransitionType,
-        UpdateTaskRequest,
         Workflow,
         WorkflowStep,
     )
 
-from .models import ExecutionInput
 from ...queries.executions import list_execution_transitions
+from .models import ExecutionInput
 
 # TODO: Maybe we should use a library for this
 
@@ -142,6 +132,7 @@ transition_to_execution_status: dict[TransitionType | None, ExecutionStatus] = {
 
 class PartialTransition(create_partial_model(CreateTransitionRequest)):
     user_state: dict[str, Any] = Field(default_factory=dict)
+
 
 class StepContext(BaseModel):
     execution_input: ExecutionInput
