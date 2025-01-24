@@ -12,6 +12,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    RootModel,
     StrictBool,
 )
 
@@ -287,45 +288,9 @@ class BaseIntegrationDef(BaseModel):
     """
 
 
-class BaseIntegrationDefUpdate(BaseModel):
+class BaseIntegrationDefUpdate(BaseIntegrationDef):
     """
     Integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    provider: (
-        Literal[
-            "dummy",
-            "weather",
-            "wikipedia",
-            "spider",
-            "brave",
-            "browserbase",
-            "email",
-            "remote_browser",
-            "llama_parse",
-            "ffmpeg",
-            "cloudinary",
-            "arxiv",
-        ]
-        | None
-    ) = None
-    """
-    The provider of the integration
-    """
-    method: str | None = None
-    """
-    The specific method of the integration to call
-    """
-    setup: Any | None = None
-    """
-    The setup parameters the integration accepts
-    """
-    arguments: Any | None = None
-    """
-    The arguments to pre-apply to the integration call
     """
 
 
@@ -1151,7 +1116,7 @@ class FfmpegIntegrationDef(BaseIntegrationDef):
     """
     The specific method of the integration to call
     """
-    setup: Any | None = None
+    setup: None = None
     """
     The setup parameters for Ffmpeg
     """
@@ -1177,7 +1142,7 @@ class FfmpegIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The specific method of the integration to call
     """
-    setup: Any | None = None
+    setup: None = None
     """
     The setup parameters for Ffmpeg
     """
@@ -1245,11 +1210,11 @@ class FunctionDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    name: Any | None = None
+    name: None = None
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
-    description: Any | None = None
+    description: None = None
     """
     DO NOT USE: This will be overriden by the tool description. Here only for compatibility reasons.
     """
@@ -1515,7 +1480,17 @@ class RemoteBrowserArguments(BaseModel):
     """
     The text
     """
-    coordinate: list | None = None
+    coordinate: Annotated[
+        list | None,
+        Field(
+            json_schema_extra={
+                "prefixItems": [
+                    {"type": "integer", "format": "uint16"},
+                    {"type": "integer", "format": "uint16"},
+                ]
+            }
+        ),
+    ] = None
     """
     The coordinate to move the mouse to
     """
@@ -1557,7 +1532,17 @@ class RemoteBrowserArgumentsUpdate(BaseModel):
     """
     The text
     """
-    coordinate: list | None = None
+    coordinate: Annotated[
+        list | None,
+        Field(
+            json_schema_extra={
+                "prefixItems": [
+                    {"type": "integer", "format": "uint16"},
+                    {"type": "integer", "format": "uint16"},
+                ]
+            }
+        ),
+    ] = None
     """
     The coordinate to move the mouse to
     """
@@ -2130,7 +2115,7 @@ class WikipediaIntegrationDef(BaseIntegrationDef):
     """
     The specific method of the integration to call
     """
-    setup: Any | None = None
+    setup: None = None
     """
     The setup parameters for Wikipedia
     """
@@ -2156,7 +2141,7 @@ class WikipediaIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The specific method of the integration to call
     """
-    setup: Any | None = None
+    setup: None = None
     """
     The setup parameters for Wikipedia
     """
@@ -2218,7 +2203,7 @@ class ArxivIntegrationDef(BaseIntegrationDef):
     """
     The specific method of the integration to call
     """
-    setup: Any | None = None
+    setup: None = None
     """
     The setup parameters for Arxiv
     """
@@ -2244,7 +2229,7 @@ class ArxivIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The specific method of the integration to call
     """
-    setup: Any | None = None
+    setup: None = None
     """
     The setup parameters for Arxiv
     """

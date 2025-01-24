@@ -26,6 +26,7 @@ interface LimitOffsetPagination<
 
 interface CreateEndpoint<
     CreateType,
+    Type,
     DocString extends valueof string = "Create a new resource"
 > {
     @post
@@ -35,12 +36,13 @@ interface CreateEndpoint<
 
         @body
         @doc("Details of the resource created along with ID")
-        body: ResourceCreatedResponse;
+        body: Type;
     };
 }
 
 interface CreateOrUpdateEndpoint<
     CreateOrUpdateType,
+    Type,
     DocString extends valueof string = "Create or update a resource (ID is required in payload; existing resource will be overwritten)"
 > {
     @post
@@ -50,12 +52,13 @@ interface CreateOrUpdateEndpoint<
 
         @body
         @doc("Details of the resource updated along with ID")
-        body: ResourceUpdatedResponse;
+        body: Type;
     };
 }
 
 interface UpdateEndpoint<
     UpdateType,
+    Type,
     DocString extends valueof string = "Update resource by id (overwrite existing values)"
 > {
     @put
@@ -71,12 +74,13 @@ interface UpdateEndpoint<
 
         @body
         @doc("Details of the resource updated along with ID")
-        body: ResourceUpdatedResponse;
+        body: Type;
     };
 }
 
 interface PatchEndpoint<
     PatchType,
+    Type,
     DocString extends valueof string = "Patch resource by its id (merge changes with existing values)"
 > {
     @patch
@@ -92,7 +96,7 @@ interface PatchEndpoint<
 
         @body
         @doc("Details of the resource patched along with ID")
-        body: ResourceUpdatedResponse;
+        body: Type;
     };
 }
 
@@ -145,6 +149,7 @@ interface ChildLimitOffsetPagination<
 
 interface ChildCreateEndpoint<
     CreateType,
+    Type,
     DocString extends valueof string = "Create a new resource owned by the given parent"
 > {
     @post
@@ -160,12 +165,13 @@ interface ChildCreateEndpoint<
 
         @body
         @doc("Details of the resource created along with ID")
-        body: ResourceCreatedResponse;
+        body: Type;
     };
 }
 
 interface ChildCreateOrUpdateEndpoint<
     CreateOrUpdateType,
+    Type,
     DocString extends valueof string = "Create or update a resource owned by the given parent"
 > {
     @post
@@ -181,7 +187,7 @@ interface ChildCreateOrUpdateEndpoint<
 
         @body
         @doc("Details of the resource updated along with ID")
-        body: ResourceUpdatedResponse;
+        body: Type;
     };
 }
 
@@ -207,6 +213,7 @@ interface ChildDeleteEndpoint<DocString extends valueof string = "Delete a resou
 
 interface ChildUpdateEndpoint<
     UpdateType,
+    Type,
     DocString extends valueof string = "Update a resource owned by the given parent using its id"
 > {
     @put
@@ -226,12 +233,13 @@ interface ChildUpdateEndpoint<
 
         @body
         @doc("Details of the resource updated along with ID")
-        body: ResourceUpdatedResponse;
+        body: Type;
     };
 }
 
 interface ChildPatchEndpoint<
     PatchType,
+    Type,
     DocString extends valueof string = "Patch a resource owned by the given parent using its id"
 > {
     @patch
@@ -251,7 +259,7 @@ interface ChildPatchEndpoint<
 
         @body
         @doc("Details of the resource patched along with ID")
-        body: ResourceUpdatedResponse;
+        body: Type;
     };
 }
 

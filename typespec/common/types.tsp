@@ -15,20 +15,6 @@ namespace Common;
 alias Metadata = Record<unknown>;
 alias MetadataFilter = Record<unknown>;
 
-model ResourceCreatedResponse {
-    @doc("ID of created resource")
-    id: uuid;
-    ...HasCreatedAt;
-    ...HasJobs;
-}
-
-model ResourceUpdatedResponse {
-    @doc("ID of updated resource")
-    id: uuid;
-    ...HasUpdatedAt;
-    ...HasJobs;
-}
-
 model ResourceDeletedResponse {
     @doc("ID of deleted resource")
     id: uuid;

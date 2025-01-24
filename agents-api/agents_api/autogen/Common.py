@@ -36,6 +36,22 @@ class LogitBias(RootModel[float]):
     root: Annotated[float, Field(ge=-100.0, le=100.0)]
 
 
+class MimeType(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[
+        str,
+        Field(
+            max_length=120,
+            pattern="^(application|audio|font|example|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)$",
+        ),
+    ]
+    """
+    Valid mime types
+    """
+
+
 class Offset(RootModel[int]):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -43,34 +59,6 @@ class Offset(RootModel[int]):
     root: Annotated[int, Field(ge=0)]
     """
     Offset to apply to the results
-    """
-
-
-class PyExpression(RootModel[str]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: str
-    """
-    A simple python expression compatible with SimpleEval.
-    """
-
-
-class ResourceCreatedResponse(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: UUID
-    """
-    ID of created resource
-    """
-    created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
-    """
-    When this resource was created as UTC date-time
-    """
-    jobs: Annotated[list[UUID], Field(json_schema_extra={"readOnly": True})] = []
-    """
-    IDs (if any) of jobs created as part of this request
     """
 
 
@@ -85,24 +73,6 @@ class ResourceDeletedResponse(BaseModel):
     deleted_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was deleted as UTC date-time
-    """
-    jobs: Annotated[list[UUID], Field(json_schema_extra={"readOnly": True})] = []
-    """
-    IDs (if any) of jobs created as part of this request
-    """
-
-
-class ResourceUpdatedResponse(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: UUID
-    """
-    ID of updated resource
-    """
-    updated_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
-    """
-    When this resource was updated as UTC date-time
     """
     jobs: Annotated[list[UUID], Field(json_schema_extra={"readOnly": True})] = []
     """
