@@ -128,7 +128,6 @@ class TaskExecutionWorkflow:
     context: StepContext | None = None
     outcome: StepOutcome | None = None
 
-    
     def __init__(self):
         self.last_error = None
 
@@ -412,7 +411,9 @@ class TaskExecutionWorkflow:
         workflow.logger.info("Set step: Updating user state")
 
         # Pass along the previous output unchanged
-        return PartialTransition(output=self.context.current_input, user_state=self.outcome.output)
+        return PartialTransition(
+            output=self.context.current_input, user_state=self.outcome.output
+        )
 
     async def _handle_GetStep(
         self,
@@ -439,7 +440,6 @@ class TaskExecutionWorkflow:
         self,
         step: ToolCallStep,
     ):
-
         tool_call = self.outcome.output
         if tool_call["type"] == "function":
             tool_call_response = await workflow.execute_activity(
@@ -458,7 +458,9 @@ class TaskExecutionWorkflow:
             call = tool_call["integration"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            integration_tool = next((t for t in self.context.tools if t.name == tool_name), None)
+            integration_tool = next(
+                (t for t in self.context.tools if t.name == tool_name), None
+            )
 
             if integration_tool is None:
                 msg = f"Integration {tool_name} not found"
@@ -549,7 +551,9 @@ class TaskExecutionWorkflow:
     async def handle_step(self, step: WorkflowStep):
         meth = getattr(self, f"_handle_{type(step).__name__}", None)
         if not meth:
-            workflow.logger.error(f"Unhandled step type: {type(self.context.current_step).__name__}")
+            workflow.logger.error(
+                f"Unhandled step type: {type(self.context.current_step).__name__}"
+            )
             msg = "Not implemented"
             state = PartialTransition(type="error", output=msg)
             await transition(
@@ -639,7 +643,6 @@ class TaskExecutionWorkflow:
             msg = f"Step {type(context.current_step).__name__} threw error: {error}"
             raise ApplicationError(msg)
 
-
         self.context = context
         self.outcome = outcome
 
@@ -684,7 +687,6 @@ class TaskExecutionWorkflow:
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
-
 
         # Continue as a child workflow
         return await continue_as_child(
