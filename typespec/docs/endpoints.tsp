@@ -20,12 +20,12 @@ namespace Docs;
 interface UserEndpoints
     extends ChildLimitOffsetPagination<Doc, "List Docs owned by a User">,
         ChildDeleteEndpoint<"Delete a Doc for this User">,
-        ChildCreateEndpoint<CreateDocRequest, "Create a Doc for this User"> {}
+        ChildCreateEndpoint<CreateDocRequest, Doc, "Create a Doc for this User"> {}
 
 interface AgentEndpoints
     extends ChildLimitOffsetPagination<Doc, "List Docs owned by an Agent">,
         ChildDeleteEndpoint<"Delete a Doc for this Agent">,
-        ChildCreateEndpoint<CreateDocRequest, "Create a Doc for this Agent"> {}
+        ChildCreateEndpoint<CreateDocRequest, Doc, "Create a Doc for this Agent"> {}
 
 interface IndividualDocEndpoints
     extends GetEndpoint<Doc, "Get Doc by id"> {}

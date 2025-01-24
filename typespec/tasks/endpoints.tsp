@@ -33,17 +33,19 @@ interface CreateOrUpdateEndpoints {
 
         @body
         @doc("Details of the task updated along with ID")
-        body: ResourceUpdatedResponse;
+        body: Task;
     };
 }
 
 interface Endpoints
     extends ChildUpdateEndpoint<
             UpdateTaskRequest,
+            Task,
             "Update an existing task (overwrite existing values)"
         >,
         ChildPatchEndpoint<
             PatchTaskRequest,
+            Task,
             "Update an existing task (merges with existing values)"
         >,
         ChildDeleteEndpoint<"Delete a task by its id">,
@@ -59,10 +61,10 @@ interface Endpoints
 
         ...CreateTaskRequest,
     ): {
-        @statusCode _: "200";
+        @statusCode _: "201";
 
         @body
         @doc("Details of the task created")
-        body: ResourceCreatedResponse;
+        body: Task;
     };
 }

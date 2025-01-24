@@ -11,9 +11,9 @@ namespace Sessions;
 
 interface Endpoints
     extends LimitOffsetPagination<Session, "List sessions (paginated)">,
-        CreateEndpoint<CreateSessionRequest, "Create a new session">,
-        CreateOrUpdateEndpoint<CreateOrUpdateSessionRequest, "Create or update a session">,
-        UpdateEndpoint<UpdateSessionRequest, "Update an existing session by its id (overwrites all existing values)">,
-        PatchEndpoint<PatchSessionRequest, "Update an existing session by its id (merges with existing values)">,
+        CreateEndpoint<CreateSessionRequest, Session, "Create a new session">,
+        CreateOrUpdateEndpoint<CreateOrUpdateSessionRequest, Session, "Create or update a session">,
+        UpdateEndpoint<UpdateSessionRequest, Session, "Update an existing session by its id (overwrites all existing values)">,
+        PatchEndpoint<PatchSessionRequest, Session, "Update an existing session by its id (merges with existing values)">,
         DeleteEndpoint<"Delete a session by its id">,
         GetEndpoint<Session, "Get a session by id"> {}
