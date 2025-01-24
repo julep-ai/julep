@@ -2,7 +2,7 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ...common.protocol.tasks import ExecutionInput
+from ...common.protocol.models import ExecutionInput
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
