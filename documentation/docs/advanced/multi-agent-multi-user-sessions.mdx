@@ -1,0 +1,85 @@
+---
+title: 'Multi-Agent Multi-User Sessions'
+description: 'Learn how to manage complex multi-agent systems with multiple users'
+icon: 'sitemap'
+---
+
+## Overview
+
+Julep supports different types of sessions based on the number of agents and users involved. This flexibility allows for complex interactions and use cases.
+
+## Types of Sessions
+
+<CardGroup cols={2}>
+  <Card title="Single Agent" icon="user">
+    <ol>
+      <li>No user</li>
+      <li>Single user</li>
+      <li>Multiple users</li>
+    </ol>
+  </Card>
+  <Card title="Multiple Agents" icon="users">
+    <ol>
+      <li>No user</li>
+      <li>Single user</li>
+      <li>Multiple users</li>
+    </ol>
+  </Card>
+</CardGroup>
+
+## Behavior in Multi-Agent/User Sessions
+
+### User Behavior
+
+<AccordionGroup>
+  <Accordion title="No User" icon="user" defaultOpen={true}>
+    <ol>
+      <li>No user data is retrieved</li>
+      <li>(Upcoming) Memories are not mined from the session</li>
+    </ol>
+  </Accordion>
+
+  <Accordion title="One or More Users" icon="users" defaultOpen={true}>
+    <ol>
+      <li>Docs, metadata, memories, etc. are retrieved for all users in the session</li>
+      <li>Messages can be added for each user by referencing them by name in the `ChatML` messages</li>
+      <li>(Upcoming) Memories mined in the background are added to the corresponding user's scope</li>
+    </ol>
+  </Accordion>
+</AccordionGroup>
+
+### Agent Behavior
+
+<AccordionGroup>
+  <Accordion title="One Agent" icon="lightbulb" defaultOpen={true}>
+    <ol>
+      <li>Works as expected</li>
+    </ol>
+  </Accordion>
+
+  <Accordion title="Multiple Agents" icon="lightbulb" defaultOpen={true}>
+    <ol>
+      <li>When a message is received by the session, each agent is called one after another in the order they were defined in the session</li>
+      <li>You can specify which `agent` to use in a request, in which case, only that agent will be used</li>
+    </ol>
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  This multi-agent/user capability allows for sophisticated scenarios such as:
+  - Collaborative problem-solving with multiple AI agents
+  - Group conversations with multiple users and agents
+  - Specialized agents working together on complex tasks
+</Note>
+
+## Conclusion
+
+By supporting these various configurations, Julep provides a flexible framework for building diverse and powerful AI applications.
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)

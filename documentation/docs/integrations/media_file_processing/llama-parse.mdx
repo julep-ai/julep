@@ -1,0 +1,103 @@
+---
+title: 'Llama Parse'
+description: 'Learn how to use the Llama Parse integration with Julep'
+icon: 'file-pdf'
+---
+
+## Overview
+
+Welcome to the Llama Parse integration guide for Julep! This integration allows you to parse documents efficiently, enabling you to build workflows that require document processing capabilities. Whether you're developing a document management system or need to extract information from files, this guide will walk you through the setup and usage.
+
+## Prerequisites
+
+<Info type="info" title="API Key Required">
+  To use the Llama Parse integration, you need an API key. You can obtain this key by signing up at [Llama Parse](https://docs.cloud.llamaindex.ai/llamaparse/getting_started/web_ui).
+</Info>
+
+## How to Use the Integration
+
+To get started with the Llama Parse integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Configure Your API Key">
+    Add your API key to the tools section of your task. This will allow Julep to authenticate requests to Llama Parse on your behalf.
+  </Step>
+  <Step title="Create Task Definition">
+    Use the following YAML configuration to define your document parsing task:
+
+    ```yaml Llama Parse Example
+    name: Llama Parse Task
+    tools:
+      - name: llama_parse
+        type: integration
+        integration:
+          provider: llama-parse
+          setup:
+            llamaparse_api_key: {llamaparse_api_key}
+            method: parse
+            params: # Optional setup parameters
+              key1: value1 # these are placeholders for the actual parameters
+              key2: value2 # these are placeholders for the actual parameters
+    main:
+      - tool: llama_parse
+        arguments:
+          file: "base64_encoded_file"
+          filename: "document.pdf"
+          base64: true
+          params: # Optional arguments parameters
+            key3: value3 # these are placeholders for the actual parameters
+            key4: value4 # these are placeholders for the actual parameters
+    ```
+  </Step>
+  <Step title="Run Task">
+    Deploy your task by creating a new execution.
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "Llama Parse Task".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `llama_parse` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `llama-parse` for Llama Parse.
+      - **_method_**: Indicates the method to be used, which is `parse` for Llama Parse. If not specified, the method will be `parse` by default.
+      - **_setup_**: Contains configuration Details
+          - **_llamaparse_api_key_**: (Required) The API key of the Llama Parse account.
+          - **_params_**: (Optional) Optional parameters for the configuration.
+  </Accordion>
+
+  <Accordion title="Execution Configuration">
+    - **_main_**: Defines the main execution steps.
+      - **_tool_**: Refers to the tool defined earlier (`llama_parse`).
+      - **_arguments_**: Specifies the input parameters for the tool:
+        - **_file_**: Can be either a base64 encoded file string or an array of http/https URLs to load
+        - **_filename_**: (optional) The name of the file (only used with base64 encoded files). Defaults to None.
+        - **_base64_**: (optional) Whether the input file is base64 encoded. Defaults to false.
+        - **_params_**: (optional) Optional arguments parameters that can override setup parameters for specific tasks. Defaults to None.
+  </Accordion>
+</AccordionGroup>
+
+<Callout type="info" title="Additional Parameters">
+  The different parameters available for the Llama Parse integration can be found in the [Llama Parse API documentation](https://github.com/run-llama/llama_parse/blob/main/README.md).
+</Callout>
+
+<Note>
+  Remember to replace `{llamaparse_api_key}` with your actual API key and ensure your file is base64 encoded if `base64` is set to true. Use the `params` field to pass any additional parameters required by your specific use case.
+</Note>
+<Note>
+  Llama Parse supports a wide range of different file types. For a full list of supported file types, please refer to the [Llama Parse documentation](https://github.com/run-llama/llama_parse/blob/main/llama_parse/utils.py).
+</Note>
+## Conclusion
+
+With the Llama Parse integration, you can efficiently process documents and extract valuable information. 
+This integration provides a robust solution for document processing, enhancing your workflow's capabilities and user experience.
+
+<Tip>
+  For more information, please refer to the [Llama Parse documentation](https://docs.cloud.llamaindex.ai/llamaparse/getting_started/python).
+</Tip> 

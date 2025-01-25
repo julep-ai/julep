@@ -1,0 +1,157 @@
+---
+title: 'Installation'
+description: 'Step-by-step installation instructions for different environments'
+icon: 'download'
+---
+
+## Overview
+This guide covers the installation of Julep in various environments and configurations.
+
+### Prerequisites
+
+Before installing Julep, ensure you have:
+
+- Python 3.8+ or Node.js 16+ installed
+- pip (for Python) or npm/bun (for Node.js) package manager
+- A Julep API key ([Get one here](https://dashboard.julep.ai))
+
+### Package Installation
+
+#### Python Installation
+
+1. Using pip:
+```bash
+pip install julep
+```
+
+2. Using poetry:
+```bash
+poetry add julep
+```
+
+3. Using pipenv:
+```bash
+pipenv install julep
+```
+
+#### Node.js Installation
+
+1. Using npm:
+```bash
+npm install @julep/sdk
+```
+
+2. Using yarn:
+```bash
+yarn add @julep/sdk
+```
+
+3. Using bun:
+```bash
+bun add @julep/sdk
+```
+
+### Environment Setup
+
+#### Setting up Environment Variables
+
+It's recommended to use environment variables for sensitive information like API keys:
+
+1. Create a `.env` file in your project root:
+```bash
+JULEP_API_KEY=your_api_key_here
+JULEP_ENVIRONMENT=production  # or development
+```
+
+2. Load the environment variables in your code:
+
+<CodeGroup>
+  ```python Python
+  import os
+  from dotenv import load_dotenv
+  from julep import Julep
+
+  load_dotenv()
+
+  client = Julep(
+      api_key=os.getenv('JULEP_API_KEY'),
+      environment=os.getenv('JULEP_ENVIRONMENT', 'production')
+  )
+  ```
+
+  ```javascript Node.js
+  import dotenv from 'dotenv';
+  import { Julep } from '@julep/sdk';
+
+  dotenv.config();
+
+  const client = new Julep({
+    apiKey: process.env.JULEP_API_KEY,
+    environment: process.env.JULEP_ENVIRONMENT || 'production'
+  });
+  ```
+</CodeGroup>
+
+### Verification
+
+To verify your installation:
+
+<CodeGroup>
+  ```python Python
+  from julep import Julep
+
+  client = Julep(api_key="your_api_key")
+  
+  # Test connection
+  agent = client.agents.create(
+      name="Test Agent",
+      model="claude-3.5-sonnet",
+      about="A test agent"
+  )
+  print(f"Successfully created agent: {agent.id}")
+  ```
+
+  ```javascript Node.js
+  import { Julep } from '@julep/sdk';
+
+  const client = new Julep({
+    apiKey: 'your_api_key'
+  });
+
+  // Test connection
+  const agent = await client.agents.create({
+    name: "Test Agent",
+    model: "claude-3.5-sonnet",
+    about: "A test agent"
+  });
+  console.log(`Successfully created agent: ${agent.id}`);
+  ```
+</CodeGroup>
+
+### Troubleshooting
+
+Common installation issues and solutions:
+
+1. **API Key Issues**
+   - Ensure your API key is valid and properly set in environment variables
+   - Check if you're using the correct environment (production/development)
+
+2. **Version Compatibility**
+   - Make sure you're using compatible versions of Python/Node.js
+   - Update to the latest SDK version if you encounter issues
+
+3. **Docker Issues**
+   - Verify Docker is running and has sufficient resources
+   - Check if required ports are available and not blocked
+
+### Next Steps
+
+Now that you have Julep installed, you can:
+
+<Card
+  title="Quick Start"
+  icon="rocket"
+  href="/docs/introduction/quickstart"
+>
+  Create your first Julep agent and task
+</Card>

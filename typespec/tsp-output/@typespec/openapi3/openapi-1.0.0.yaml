@@ -9,7 +9,6 @@ info:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
-  summary: A backend for creating stateful AI apps
   description: Julep is a backend for creating stateful AI apps with background tasks and long-term memory easily.
   version: 1.0.0
 externalDocs:
@@ -4887,17 +4886,8 @@ components:
           additionalProperties:
             anyOf:
               - $ref: '#/components/schemas/Common.PyExpression'
-              - type: array
-                items:
-                  $ref: '#/components/schemas/Common.PyExpression'
               - type: object
-                additionalProperties:
-                  $ref: '#/components/schemas/Common.PyExpression'
-              - type: array
-                items:
-                  type: object
-                  additionalProperties:
-                    $ref: '#/components/schemas/Common.PyExpression'
+                additionalProperties: {}
           description: The expression to evaluate
       allOf:
         - type: object
@@ -5919,7 +5909,10 @@ components:
         set:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/Common.PyExpression'
+            anyOf:
+              - $ref: '#/components/schemas/Common.PyExpression'
+              - type: object
+                additionalProperties: {}
           description: The value to set
       allOf:
         - type: object
@@ -9276,8 +9269,8 @@ servers:
     description: The julep cloud service endpoint
     variables:
       serverEnv:
-        default: api-alpha
+        default: api
         description: The environment to use
         enum:
           - api
-          - api-alpha
+          - dev

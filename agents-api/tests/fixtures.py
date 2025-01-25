@@ -2,6 +2,7 @@ import os
 import random
 import string
 import sys
+from unittest.mock import patch
 from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
@@ -440,9 +441,22 @@ async def test_tool(
     return tool
 
 
+SAMPLE_MODELS = [
+    {"id": "gpt-4"},
+    {"id": "gpt-3.5-turbo"},
+    {"id": "gpt-4o-mini"},
+]
+
+
 @fixture(scope="global")
 def client(_dsn=pg_dsn):
-    with TestClient(app=app) as client:
+    with (
+        TestClient(app=app) as client,
+        patch(
+            "agents_api.routers.utils.model_validation.get_model_list",
+            return_value=SAMPLE_MODELS,
+        ),
+    ):
         yield client
 
 

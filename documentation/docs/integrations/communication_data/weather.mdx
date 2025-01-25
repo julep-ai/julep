@@ -1,0 +1,85 @@
+---
+title: 'OpenWeatherMap'
+description: 'OpenWeatherMap integration with Julep'
+icon: 'cloud-sun-rain'
+---
+
+## Overview
+
+Welcome to the OpenWeatherMap integration guide for Julep! This integration allows you to seamlessly access weather data for various locations, enabling you to build workflows that require real-time weather information.
+
+## Prerequisites
+
+<Info type="info" title="API Key Required">
+  To use the OpenWeatherMap integration, you need an API key. You can obtain this key by signing up at [OpenWeatherMap](https://home.openweathermap.org/users/sign_up).
+</Info>
+
+## How to Use the Integration
+
+To get started with the OpenWeatherMap integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Configure Your API key">
+    Add your API key to the tools section of your task. This will allow Julep to authenticate requests to OpenWeatherMap on your behalf.
+  </Step>
+  <Step title="Create Task Definition">
+    Use the following YAML configuration to request weather data service in your task definition:
+
+    ```yaml Weather Request Example
+    name: Weather Request
+    tools:
+      - name: weather_call
+        type: integration
+        integration:
+          provider: weather
+          method: get
+          setup:
+            openweathermap_api_key: {openweathermap_api_key}
+    main:
+      - tool: weather_call
+        arguments:
+          location: "London"
+    ```
+  </Step>
+  <Step title="Run Task">
+    Deploy your task by creating a new execution.
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "Weather Request".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `weather_call` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `weather` for OpenWeatherMap.
+      - **_method_**: Specifies the method to be used. Default is `get` if not specified. If not specified, the method will be `get` by default.
+      - **_setup_**: Contains configuration details, such as the API key (`openweathermap_api_key`) required for authentication.
+  </Accordion>
+
+  <Accordion title="Workflow Configuration">
+    - **_main_**: Defines the main execution steps.
+        - **_tool_**: Refers to the tool defined earlier (`weather_call`).
+        - **_arguments_**: Specifies the input parameters for the tool:
+          - **_location_**: The location for which weather data is needed.
+
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Remember to replace `{openweathermap_api_key}` with your actual API key.
+</Note>
+
+## Conclusion
+
+With the OpenWeatherMap integration, you can easily incorporate weather data into your workflows. 
+This integration provides a robust solution for accessing real-time weather information, enhancing your workflow's functionality and user experience.
+
+<Tip>
+  For more information, please refer to the [OpenWeatherMap documentation](https://openweathermap.org/guide).
+</Tip> 

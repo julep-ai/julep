@@ -46,7 +46,7 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
 async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
-    previous_inputs: list[Any],
+    current_input: Any,
     user_state: dict[str, Any] = {},
 ) -> Any:
     info = workflow.info()
@@ -63,7 +63,7 @@ async def continue_as_child(
         args=[
             execution_input,
             start,
-            previous_inputs,
+            current_input,
         ],
         retry_policy=DEFAULT_RETRY_POLICY,
         memo=workflow.memo() | user_state,
@@ -76,7 +76,7 @@ async def execute_switch_branch(
     execution_input: ExecutionInput,
     switch: list,
     index: int,
-    previous_inputs: list[Any],
+    current_input: Any,
     user_state: dict[str, Any] = {},
 ) -> Any:
     task = validate_execution_input(execution_input)
@@ -99,7 +99,7 @@ async def execute_switch_branch(
     return await continue_as_child(
         case_execution_input,
         case_next_target,
-        previous_inputs,
+        current_input,
         user_state=user_state,
     )
 
@@ -111,7 +111,7 @@ async def execute_if_else_branch(
     then_branch: WorkflowStep,
     else_branch: WorkflowStep | None,
     condition: bool,
-    previous_inputs: list[Any],
+    current_input: Any,
     user_state: dict[str, Any] = {},
 ) -> Any:
     task = validate_execution_input(execution_input)
@@ -138,7 +138,7 @@ async def execute_if_else_branch(
     return await continue_as_child(
         if_else_execution_input,
         if_else_next_target,
-        previous_inputs,
+        current_input,
         user_state=user_state,
     )
 
@@ -149,7 +149,7 @@ async def execute_foreach_step(
     execution_input: ExecutionInput,
     do_step: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
+    current_input: Any,
     user_state: dict[str, Any] = {},
 ) -> Any:
     task = validate_execution_input(execution_input)
@@ -171,7 +171,7 @@ async def execute_foreach_step(
         result = await continue_as_child(
             foreach_execution_input,
             foreach_next_target,
-            [*previous_inputs, item],
+            item,
             user_state=user_state,
         )
         results.append(result)
@@ -185,7 +185,7 @@ async def execute_map_reduce_step(
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
+    current_input: Any,
     user_state: dict[str, Any] = {},
     reduce: str | None = None,
     initial: Any = [],
@@ -210,7 +210,7 @@ async def execute_map_reduce_step(
         output = await continue_as_child(
             map_reduce_execution_input,
             map_reduce_next_target,
-            [*previous_inputs, item],
+            item,
             user_state=user_state,
         )
 
@@ -231,7 +231,7 @@ async def execute_map_reduce_step_parallel(
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
+    current_input: Any,
     user_state: dict[str, Any] = {},
     initial: Any = [],
     reduce: str | None = None,
@@ -282,7 +282,7 @@ async def execute_map_reduce_step_parallel(
                     continue_as_child(
                         map_reduce_execution_input,
                         map_reduce_next_target,
-                        [*previous_inputs, item],
+                        item,
                         user_state=user_state,
                     )
                 )

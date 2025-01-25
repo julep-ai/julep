@@ -1,0 +1,66 @@
+---
+title: 'Testing'
+description: 'Testing patterns and best practices for Julep SDK implementations'
+---
+
+# Testing
+
+Learn how to effectively test your Julep SDK implementations.
+
+## Unit Testing
+
+### Mocking API Responses
+```python
+from unittest.mock import patch
+
+def test_agent_creation():
+    with patch('julep.Client') as MockClient:
+        mock_client = MockClient()
+        mock_client.agents.create.return_value = {
+            "id": "test_id",
+            "name": "Test Agent"
+        }
+        
+        agent = mock_client.agents.create(name="Test Agent")
+        assert agent["name"] == "Test Agent"
+```
+
+### Testing Error Handling
+```python
+def test_api_error_handling():
+    with patch('julep.Client') as MockClient:
+        mock_client = MockClient()
+        mock_client.agents.get.side_effect = julep.APIError(
+            message="Not found",
+            status_code=404
+        )
+        
+        with pytest.raises(julep.APIError):
+            mock_client.agents.get("nonexistent_id")
+```
+
+## Integration Testing
+
+### Test Client Setup
+```python
+import pytest
+
+@pytest.fixture
+def test_client():
+    return Client(
+        api_key="test_key",
+        base_url="https://test-api.julep.ai"
+    )
+
+def test_end_to_end(test_client):
+    agent = test_client.agents.create(name="Test Agent")
+    assert agent.id is not None
+```
+
+## Best Practices
+
+1. Use test fixtures for common setup
+2. Mock external API calls in unit tests
+3. Use integration tests for end-to-end validation
+4. Test error cases and edge conditions
+5. Maintain a comprehensive test suite 

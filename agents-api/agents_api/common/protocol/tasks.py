@@ -1,7 +1,5 @@
 from typing import Annotated, Any, Literal
-from uuid import UUID
 
-from beartype import beartype
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
@@ -10,29 +8,20 @@ with workflow.unsafe.imports_passed_through():
     from pydantic_partial import create_partial_model
 
     from ...autogen.openapi_model import (
-        Agent,
-        CreateTaskRequest,
         CreateToolRequest,
         CreateTransitionRequest,
-        Execution,
         ExecutionStatus,
-        PartialTaskSpecDef,
-        PatchTaskRequest,
-        Session,
-        Task,
-        TaskSpec,
-        TaskSpecDef,
-        TaskToolDef,
         Tool,
         ToolRef,
         TransitionTarget,
         TransitionType,
-        UpdateTaskRequest,
-        User,
         Workflow,
         WorkflowStep,
     )
     from ...worker.codec import RemoteObject
+
+from ...queries.executions import list_execution_transitions
+from .models import ExecutionInput
 
 # TODO: Maybe we should use a library for this
 
@@ -146,44 +135,18 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
     user_state: dict[str, Any] = Field(default_factory=dict)
 
 
-class ExecutionInput(BaseModel):
-    loaded: bool = False
-    developer_id: UUID
-    execution: Execution | None = None
-    task: TaskSpecDef | None = None
-    agent: Agent
-    agent_tools: list[Tool | CreateToolRequest]
-    arguments: dict[str, Any] | RemoteObject
-
-    # TODO: Convert fields to only arguments (remote object only), exectuion_id, developer_id
-
-    # Not used at the moment
-    user: User | None = None
-    session: Session | None = None
-
-    def load_arguments(self) -> None:
-        if isinstance(self.arguments, RemoteObject):
-            self.arguments = self.arguments.load()
-            self.loaded = True
-
 
 class StepContext(BaseModel):
     loaded: bool = False
     execution_input: ExecutionInput
-    inputs: list[Any | RemoteObject]
     cursor: TransitionTarget
+    current_input: Any | RemoteObject
 
     def load_inputs(self) -> None:
         self.execution_input.load_arguments()
 
-        to_load = [
-            (i, input) for i, input in enumerate(self.inputs) if isinstance(input, RemoteObject)
-        ]
-        indices, inputs = zip(*to_load) if to_load else ([], [])
-        results = [input.load() for input in inputs]
-
-        for i, result in zip(indices, results):
-            self.inputs[i] = result
+        if isinstance(self.current_input, RemoteObject):
+            self.current_input = self.current_input.load()
 
         self.loaded = True
 
@@ -223,16 +186,6 @@ class StepContext(BaseModel):
 
     @computed_field
     @property
-    def outputs(self) -> list[dict[str, Any]]:  # included in dump
-        return self.inputs[1:]
-
-    @computed_field
-    @property
-    def current_input(self) -> dict[str, Any]:  # included in dump
-        return self.inputs[-1]
-
-    @computed_field
-    @property
     def current_workflow(self) -> Annotated[Workflow, Field(exclude=True)]:
         workflows: list[Workflow] = self.execution_input.task.workflows
         return next(wf for wf in workflows if wf.name == self.cursor.workflow)
@@ -263,13 +216,22 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
+    async def get_inputs(self) -> list[Any]:
+        transitions = await list_execution_transitions(
+            execution_id=self.execution_input.execution.id,
+            limit=1000,
+            direction="asc",
+        )
+        return [t.output for t in transitions]
+
     async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
-        inputs = self.inputs
+        inputs = await self.get_inputs()
 
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
         dump["inputs"] = inputs
+        dump["outputs"] = inputs[1:]
         prepared = dump | {"_": current_input}
 
         for i, input in enumerate(inputs):
@@ -294,70 +256,3 @@ class StepOutcome(BaseModel):
 
         if isinstance(self.error, RemoteObject):
             self.error = self.error.load()
-
-
-@beartype
-def task_to_spec(
-    task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest, **model_opts
-) -> TaskSpecDef | PartialTaskSpecDef:
-    task_data = task.model_dump(
-        **model_opts, exclude={"version", "developer_id", "task_id", "id", "agent_id"}
-    )
-
-    if "tools" in task_data:
-        del task_data["tools"]
-
-    tools = []
-    for tool in task.tools:
-        tool_spec = getattr(tool, tool.type)
-
-        tool_obj = dict(
-            type=tool.type,
-            spec=tool_spec.model_dump(),
-            **tool.model_dump(exclude={"type"}),
-        )
-        tools.append(TaskToolDef(**tool_obj))
-
-    workflows = [Workflow(name="main", steps=task_data.pop("main"))]
-
-    for key, steps in list(task_data.items()):
-        if key not in TaskSpec.model_fields:
-            workflows.append(Workflow(name=key, steps=steps))
-            del task_data[key]
-
-    cls = PartialTaskSpecDef if isinstance(task, PatchTaskRequest) else TaskSpecDef
-
-    return cls(
-        workflows=workflows,
-        tools=tools,
-        **task_data,
-    )
-
-
-def spec_to_task_data(spec: dict) -> dict:
-    task_id = spec.pop("task_id", None)
-
-    workflows = spec.pop("workflows")
-    workflows_dict = {workflow["name"]: workflow["steps"] for workflow in workflows}
-
-    tools = spec.pop("tools", []) or []
-    tools = [{tool["type"]: tool.pop("spec"), **tool} for tool in tools if tool]
-
-    return {
-        "id": task_id,
-        "tools": tools,
-        **spec,
-        **workflows_dict,
-    }
-
-
-def spec_to_task(**spec) -> Task | CreateTaskRequest:
-    if not spec.get("id"):
-        spec["id"] = spec.pop("task_id", None)
-
-    if not spec.get("updated_at"):
-        [updated_at_ms, _] = spec.pop("updated_at_ms", None)
-        spec["updated_at"] = updated_at_ms and (updated_at_ms / 1000)
-
-    cls = Task if spec["id"] else CreateTaskRequest
-    return cls(**spec_to_task_data(spec))

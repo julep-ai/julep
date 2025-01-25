@@ -1,0 +1,154 @@
+---
+title: 'Architecture Deep Dive'
+description: 'Understand the core architecture and components of Julep'
+icon: 'brain'
+---
+
+## Overview
+
+Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's a mental model to help you understand it:
+
+1. Your Application Code
+   - Use the Julep SDK in your application to define agents, tasks, and workflows
+   - SDK provides functions and classes for easy setup and management of components
+
+2. Julep Backend Service
+   - SDK communicates with Julep backend over the network
+   - Backend handles task execution, session state, document storage, and workflow orchestration
+
+3. Integration with Tools and APIs
+   - Integrate external tools and services within your workflows
+   - Backend facilitates integrations for web searches, database access, third-party API calls, and more
+
+To help you visualize this, here's a diagram:
+<Frame caption="Julep Architecture Overview">
+  <img
+    src="/images/architecture.svg"
+    width={1000}
+    height={1000}
+  />
+</Frame>
+
+## Core Components
+
+<CardGroup cols={2}>
+  <Card title="Agent" icon="robot">
+    <p>The main orchestrator of your application, backed by foundation models like GPT4 or Claude.</p>
+  </Card>
+
+  <Card title="User" icon="user">
+    <p>Users can be associated with sessions and are used to scope memories formed by agents.</p>
+  </Card>
+
+  <Card title="Session" icon="messages">
+    <p>The main workhorse for Julep apps.</p>
+  </Card>
+
+  <Card title="Tool" icon="wrench">
+    <p>Programmatic interfaces that foundation models can "call" with inputs.</p>
+  </Card>
+
+  <Card title="Doc" icon="file-lines">
+    <p>Collections of text snippets indexed into a vector database.</p>
+  </Card>
+
+  <Card title="Task & Execution" icon="list-check">
+    <p>Github Actions-style workflows for complex operations.</p>
+  </Card>
+</CardGroup>
+
+## Infrastructure Components
+
+<CardGroup cols={3}>
+  <Card title="Document Store" icon="database">
+    <p>The document store provides a vector database for semantic search along with a document management system. It supports various file types and handles automatic indexing and retrieval of documents.</p>
+  </Card>
+
+  <Card title="Task Execution Engine" icon="gears">
+    <p>The task execution engine handles distributed task processing, state management, error handling with retries, and supports parallel execution of tasks.</p>
+  </Card>
+
+  <Card title="API Layer" icon="code">
+    <p>The API layer provides RESTful API endpoints, SDK support, authentication and authorization capabilities, and handles rate limiting and quotas.</p>
+  </Card>
+</CardGroup>
+
+## Data Flow
+
+<Frame caption="Data Flow Overview">
+  <img
+    src="/images/flow.svg"
+    width={1000}
+    height={1000}
+  />
+</Frame>
+
+<Info>
+  <p>The data flow in Julep is divided into three main components, each handling specific aspects of request processing and response generation.</p>
+</Info>
+
+<Steps>
+  <Step title="Client Interaction" icon="arrow-right-to-bracket">
+    - SDK or API calls initiate requests
+    - Authentication and validation
+    - Request routing
+  </Step>
+
+  <Step title="Task Processing" icon="gears">
+    - Task decomposition
+    - Step execution
+    - State management
+    - Tool integration
+  </Step>
+
+  <Step title="Response Handling" icon="arrow-right-from-bracket">
+    
+    - Result aggregation
+    - Error handling
+    - Client notification
+    - State persistence
+  </Step>
+</Steps>
+
+## Security
+
+<AccordionGroup>
+  <Accordion title="Authentication" icon="lock" defaultOpen={true}>
+    <ol>
+      <li>API key-based access</li>
+      <li>Role-based permissions</li>
+      <li>Session management</li>
+      <li>Token validation</li>
+    </ol>
+  </Accordion>
+
+  <Accordion title="Data Protection" icon="shield" defaultOpen={true}>
+    <ol>
+      <li>Encryption at rest</li>
+      <li>Secure communication</li>
+      <li>Data isolation</li>
+      <li>Access controls</li>
+    </ol>
+  </Accordion>
+
+  <Accordion title="Monitoring" icon="chart-line" defaultOpen={true}>
+    <ol>
+      <li>Audit logging</li>
+      <li>Performance metrics</li>
+      <li>Error tracking</li>
+      <li>Usage analytics</li>
+    </ol>
+  </Accordion>
+</AccordionGroup>
+
+## Conclusion
+
+The modular design enables you to customize and extend functionality as needed, while the security-first approach ensures your data and operations remain protected. Whether you're building a simple chatbot or a complex AI workflow, this architecture provides the foundation you need.
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)

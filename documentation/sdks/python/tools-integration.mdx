@@ -1,0 +1,192 @@
+---
+title: 'Tools & Integration'
+description: 'Learn how to use tools and integrations with the Python SDK'
+---
+
+## Overview
+
+Julep supports various types of tools and integrations that can be used in your tasks:
+
+1. Built-in integrations (e.g., web search, email)
+2. User-defined functions
+3. System tools
+4. Direct API calls
+
+## Built-in Integrations
+
+### Web Search Integration
+
+```python
+# Add web search capability to an agent
+client.agents.tools.create(
+    agent_id=agent.id,
+    name="web_search",
+    type="integration",
+    integration={
+        "provider": "brave",
+        "method": "search",
+        "setup": {
+            "api_key": "your_brave_api_key"
+        }
+    }
+)
+```
+
+### Email Integration
+
+```python
+# Add email capability
+client.agents.tools.create(
+    agent_id=agent.id,
+    name="send_email",
+    type="integration",
+    integration={
+        "provider": "email",
+        "setup": {
+            "host": "smtp.gmail.com",
+            "port": 587,
+            "user": "your_email@gmail.com",
+            "password": "your_app_password"
+        }
+    }
+)
+```
+
+## User-defined Functions
+
+Create custom tools using function definitions:
+
+```python
+# Define a custom tool
+client.agents.tools.create(
+    agent_id=agent.id,
+    name="calculate_price",
+    type="function",
+    function={
+        "description": "Calculate total price including tax",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "base_price": {
+                    "type": "number",
+                    "description": "Base price before tax"
+                },
+                "tax_rate": {
+                    "type": "number",
+                    "description": "Tax rate as a decimal"
+                }
+            },
+            "required": ["base_price", "tax_rate"]
+        }
+    }
+)
+```
+
+## System Tools
+
+Use built-in system operations:
+
+```python
+# Add document management capability
+client.agents.tools.create(
+    agent_id=agent.id,
+    name="manage_docs",
+    type="system",
+    system={
+        "resource": "agent",
+        "subresource": "doc",
+        "operation": "create"
+    }
+)
+```
+
+## Direct API Calls
+
+Make direct API calls from your tasks:
+
+```python
+# Add external API integration
+client.agents.tools.create(
+    agent_id=agent.id,
+    name="weather_api",
+    type="api_call",
+    api_call={
+        "method": "GET",
+        "url": "https://api.weather.com/v1/current",
+        "headers": {
+            "Authorization": "Bearer {{env.WEATHER_API_KEY}}"
+        }
+    }
+)
+```
+
+## Using Tools in Tasks
+
+Example of using tools in a task:
+
+```yaml
+name: Research Assistant
+description: Research and summarize topics
+
+tools:
+  - name: web_search
+    type: integration
+    integration:
+      provider: brave
+      method: search
+
+  - name: send_email
+    type: integration
+    integration:
+      provider: email
+
+  - name: calculate_price
+    type: function
+    function:
+      parameters:
+        type: object
+        properties:
+          base_price:
+            type: number
+          tax_rate:
+            type: number
+
+main:
+  - tool: web_search
+    arguments:
+      query: _.topic
+
+  - tool: calculate_price
+    arguments:
+      base_price: 100
+      tax_rate: 0.1
+
+  - tool: send_email
+    arguments:
+      to: _.email
+      subject: "Research Results"
+      body: _.summary
+```
+
+## Error Handling
+
+Handle tool-specific errors:
+
+```python
+from julep.exceptions import ToolError, IntegrationError
+
+try:
+    result = client.executions.create(task_id=task.id)
+except ToolError as e:
+    print(f"Tool execution failed: {e}")
+except IntegrationError as e:
+    print(f"Integration error: {e}")
+```
+
+## Best Practices
+
+1. **Security**: Store sensitive credentials in environment variables or secure storage
+2. **Rate Limiting**: Be aware of API rate limits for external services
+3. **Error Handling**: Implement proper error handling for each tool
+4. **Testing**: Test tools with sample data before using in production
+5. **Documentation**: Document tool usage and requirements for team reference 

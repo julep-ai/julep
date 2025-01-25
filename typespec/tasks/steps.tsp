@@ -134,7 +134,7 @@ model EvaluateStep extends BaseWorkflowStep<"evaluate"> {
 
 model EvaluateStepDef {
     /** The expression to evaluate */
-    evaluate: ExpressionObject<unknown>;
+    evaluate: Record<TypedExpression<unknown> | Record<unknown>>;
 }
 
 model WaitForInputStep extends BaseWorkflowStep<"wait_for_input"> {
@@ -191,7 +191,7 @@ model SetStep extends BaseWorkflowStep<"set"> {
 
 model SetStepDef {
     /** The value to set */
-    set: Record<TypedExpression<unknown>>;
+    set: Record<TypedExpression<unknown> | Record<unknown>>;
 }
 
 ///////////////////////

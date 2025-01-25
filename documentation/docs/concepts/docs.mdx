@@ -1,0 +1,374 @@
+---
+title: 'Documents (RAG)'
+description: 'Working with documents in Julep'
+icon: 'database'
+---
+
+## Overview
+
+Documents in Julep provide a way to store and retrieve information that can be used by agents. This section covers how to work with documents effectively.
+
+## Components
+
+Documents in Julep consist of several key components that enable efficient storage and retrieval of information.
+
+- **Title**: The title component helps identify and organize documents.
+- **Content**: The textual content of the document.
+- **Embeddings** (automatically generated): The vector representations of text that enable semantic search capabilities. Generated using the `text-embedding-3-large` model from OpenAI.
+- **Metadata**: Metadata provides additional context and filtering capabilities for documents.
+
+### Docs Configuration Options
+
+When creating a doc, the following attributes can be specified:
+
+| **Field**  | **Type** | **Description**                                                           | **Default** |
+|------------|----------|---------------------------------------------------------------------------|-------------|
+| `title`    | string   | The title of the document.                                                | Required    |
+| `content`  | string   | The content of the document.                                              | Required    |
+| `metadata` | object   | Additional metadata for the document, such as preferences or settings.    | `null`      |
+
+## How to Use Docs
+
+### Creating a Doc
+
+Documents are attached to either an agent or a user. This is how you can create a doc using Julep's SDKs.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Creating a doc
+    client.agents.docs.create(
+        agent_id=agent.id,
+        title="Old World",
+        content="The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.",
+        metadata={"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+    )
+    ```
+
+    ```javascript Node.js
+    // Creating a doc
+    const doc = await client.agents.docs.create({
+        agent_id: "agent_id",
+        title: "Old World",
+        content: "The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.",
+        metadata: {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+    });
+    ```
+</CodeGroup>
+
+<Info>
+    To create a user doc, replace `client.agents.docs.create` with `client.users.docs.create`, and the `agent_id` argument with `user_id`.
+</Info>
+
+### Chunking
+
+In Julep, documents are not automatically chunked. We recommend that developers handle chunking based on their specific use case requirements, as different applications may have unique needs for how documents should be divided. 
+
+For those who need assistance with chunking, we provide a utility function `chunk_doc` that can be used directly in task steps. For implementation details, you can check the source code for this method in [this file](https://github.com/julep-ai/julep/blob/main/agents-api/agents_api/activities/utils.py).
+
+### Search
+
+#### Full Text Search
+
+Our full-text search functionality leverages Timescale's powerful indexing to efficiently match user-provided keywords and phrases against document content, delivering relevant results even with variations in text. Key features include prefix and infix searching, morphology processing (stemming and lemmatization), fuzzy searching to handle typos, and exact result counts.
+
+**Parameters:**
+
+- **text** (`str`): The textual query to search within documents.
+- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
+- **lang** (`str`, default `'en-US'`): The language to use for full-text search processing.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Define the query
+    text_query = "Medieval times in Europe"
+
+    # Search for docs
+    matched_docs = client.agents.docs.search(
+        agent_id="agent_id",
+        text=text_query,
+        limit=10, # the maximum number of docs to return
+    )
+
+    print(matched_docs.model_dump())
+    ```
+
+    ```javascript Node.js
+    // Define the query
+    const text_query = "Medieval times in Europe";
+
+    // Search for docs
+    const matched_docs = await client.agents.docs.search({
+        agent_id: "agent_id",
+        text: text_query,
+        limit: 10, // the maximum number of docs to return
+    });
+
+    console.log(matched_docs);
+    ```
+</CodeGroup>
+
+<Accordion title="Sample Output">
+    ```
+    {'docs': [{'id': '06791e86-6dcf-7816-8000-e4c3b781d05b',
+   'owner': {'id': '06791e82-46b7-739c-8000-3428f9d4e40f', 'role': 'agent'},
+   'snippet': {'content': 'The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.',
+    'index': 0,
+    'embedding': [
+     -0.036940154,
+     0.021077264,
+     -0.03274468,
+     0.016222501,
+     -0.05038565,
+     0.012776218,
+     ...
+     ...]},
+   'distance': 0.6666666865348816,
+   'metadata': {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+   'title': 'Old World'}],
+   'time': 0.0522150993347168}
+    ```
+</Accordion>
+
+#### Embedding Search
+
+Our embedding search functionality leverages machine learning to convert search queries and documents into numerical vectors, enabling semantic matching based on vector similarity. It utilizes an embedding space where similar vectors indicate related content and employs algorithms like k-nearest neighbors (KNN) to retrieve the most relevant documents. Key features include context awareness, flexibility for natural language queries, multi-modal search across various content types, and effective handling of synonyms.
+
+**Parameters:**
+
+- **vector** (`List[float]`): The embedding vector representing the semantic meaning of the query.
+- **alpha** (`float`, default `0.7`): The weight assigned to embedding-based results versus text-based results.
+- **confidence** (`float`, default `0.5`): The confidence threshold for embedding similarity.
+- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
+- **k** (`int`, default `3`): The number of top results to return.
+
+<CodeGroup>
+    ```python Python
+    # Define the vector query
+    vector_query = client.docs.embed(text="Medieval times in Europe").vectors[0]
+
+    # Search for docs
+    matched_docs = client.agents.docs.search(
+        agent_id="agent_id",
+        vector=vector_query,
+        limit=10, # the maximum number of docs to return
+        confidence=-0.3, # confidence range is -1 to 1
+    )
+
+    print(matched_docs.model_dump())
+    ```
+
+    ```javascript Node.js
+    // Define the vector query
+    const embedding_result = client.docs.embed({ text: "Medieval times in Europe" });
+    const vector_query = embedding_result.vectors[0];
+
+    // Search for docs
+    const matched_docs = await client.agents.docs.search({
+        agent_id: "agent_id",
+        vector: vector_query,
+        limit: 10, // the maximum number of docs to return
+        confidence: -0.3, // confidence range is -1 to 1
+    });
+
+    console.log(matched_docs);
+    ```
+</CodeGroup>
+
+<Accordion title="Sample Output">
+    ```
+    {'docs': [{'id': '06791e86-6dcf-7816-8000-e4c3b781d05b',
+   'owner': {'id': '06791e82-46b7-739c-8000-3428f9d4e40f', 'role': 'agent'},
+   'snippet': {'content': 'The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.',
+    'index': 0,
+    'embedding': [
+     -0.036940154,
+     0.021077264,
+     -0.03274468,
+     0.016222501,
+     -0.05038565,
+     0.012776218,
+     -0.034123193,
+     -0.005039564,
+     ...
+     ...]},
+   'distance': 0.9322964182738759,
+   'metadata': {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+   'title': 'Old World'}],
+   'time': 0.04166412353515625}
+    ```
+</Accordion>
+
+#### Hybrid Search
+
+Our hybrid search functionality combines the strengths of full-text search and embedding-based search to deliver highly relevant and accurate search results. By leveraging both keyword matching and semantic vector analysis, hybrid search ensures that queries are not only matched based on exact terms but also understood in context, providing more nuanced and precise results. This dual approach enhances search performance, improves result relevance, and accommodates a wider range of search queries.
+
+**Parameters:**
+
+- **text** (`str`): The textual query to search within documents.
+- **vector** (`List[float]`): The embedding vector representing the semantic meaning of the query.
+- **alpha** (`float`, default `0.7`): The weight assigned to embedding-based results versus text-based results.
+- **confidence** (`float`, default `0.5`): The confidence threshold for embedding similarity.
+- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
+- **k** (`int`, default `3`): The number of top results to return.
+- **lang** (`str`, default `'en-US'`): The language to use for full-text search processing.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Define the query
+    text_query = "Medieval times in Europe"
+    # Embed the query using the `docs.embed` method
+    embedded_query = client.docs.embed(text=text_query).vectors[0]
+
+    # Search for docs
+    matched_docs = client.agents.docs.search(
+        agent_id="agent_id",
+        text=text_query,
+        alpha=0.5, # the weight of the embedding query
+        vector=embedded_query,
+        confidence=-0.3, # confidence range is -1 to 1
+    )
+
+    print(matched_docs.model_dump())
+    ```
+
+    ```javascript Node.js
+    // Define the query
+    const text_query = "Medieval times in Europe";
+    // Embed the query using the `docs.embed` method
+    const embedding_result = await client.docs.embed({ text: text_query });
+    const embedded_query = embedding_result.vectors[0];
+
+    // Search for docs
+    const matched_docs = await client.agents.docs.search({
+        agent_id: "agent_id",
+        text: text_query,
+        vector: embedded_query,
+        confidence: -0.3, // confidence range is -1 to 1
+        alpha: 0.5, // the weight of the embedding query
+    });
+
+    console.log(matched_docs);
+    ```
+</CodeGroup>
+
+<Accordion title="Sample Output">
+```
+    {'docs': [{'id': '06791e86-6dcf-7816-8000-e4c3b781d05b',
+    'owner': {'id': '06791e82-46b7-739c-8000-3428f9d4e40f', 'role': 'agent'},
+    'snippet': {'content': 'The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.',
+        'index': 0,
+        'embedding': [
+        -0.036940154,
+        0.021077264,
+        -0.03274468,
+        0.016222501,
+        -0.05038565,
+        0.012776218,
+        -0.034123193,
+        -0.005039564,
+        ...
+        ...]},
+    'distance': 0.13411101466087272,
+    'metadata': {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+    'title': 'Old World'}],
+    'time': 0.0514223575592041}
+    ```
+</Accordion>
+
+## Filtering
+
+While search is carried on based on the textual and/or semantic content of the documents, you can also filter the documents based on their metadata.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Filter docs based on metadata
+    dev_client.agents.docs.list(
+        agent_id="agent_id",
+        metadata_filter={"source": "wikipedia"},
+    )
+    ```
+</CodeGroup>
+
+## Relationship to Other Concepts
+
+### Sessions
+
+Sessions have access to search, retrieve and reference agents and users documents inside chat conversations. Read more about it [here](/docs/concepts/sessions#documents).
+
+### Tasks
+
+By leveraging [System Tools](/docs/concepts/tools#system-tools), Julep [Tasks](/docs/concepts/tasks) have the ability to create, search, filter and read documents.
+
+**Example:**
+
+<CodeGroup>
+    ```yaml
+    tools:
+    - name: "list_user_docs"
+      description: "List all documents for the current user"
+      type: "system"
+      system:
+        resource: user
+        subresource: doc
+        operation: list
+    
+    main:
+    # Step that lists all documents for the current user
+    - tool: "list_user_docs"
+      arguments:
+        user_id: "'USER_ID'"
+
+    # Step that evaluates the textual contents of all documents for the current user
+    - evaluate:
+        all_user_docs_contents: [doc.content for doc in _.items]
+    ```
+</CodeGroup>
+
+<Info>
+    Checkout [this cookbook](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/11-generate-user-personas.ipynb) that leverages Julep's docs, system tools and tasks to create content-rich user personas. 
+</Info>
+
+## Best Practices
+
+<CardGroup cols={3}>
+    <Card title="Organize Metadata" icon="tags">
+        <ul>
+            <li>**1. Metadata**: Use consistent and descriptive metadata to enhance document retrieval and filtering.</li>
+        </ul>
+    </Card>
+    <Card title="Version Control" icon="timer">
+        <ul>
+            <li>**1. Version Control**: Maintain version control for documents to track changes and updates over time.</li>
+        </ul>
+    </Card>
+    <Card title="Security and Privacy" icon="lock">
+        <ul>
+            <li>**1. Access Control**: Ensure sensitive information is protected and access to documents is properly managed.</li>
+        </ul>
+    </Card>
+    <Card title="Efficient Chunking" icon="grid-dividers">
+        <ul>
+            <li>**1. Chunking Strategies**: Implement efficient chunking strategies to optimize document processing and retrieval.</li>
+        </ul>
+    </Card>
+    <Card title="Regular Updates" icon="sparkles">
+        <ul>
+            <li>**1. Update**: Regularly update document content and metadata to keep information current and relevant.</li>
+        </ul>
+    </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Sessions](/docs/concepts/sessions) - Learn about sessions and how documents are used in chat conversations.
+- [Tools](/docs/concepts/tools) - Learn about tools and how they can be used to fill documents with content.
+- [Tasks](/docs/concepts/tasks) - Learn about tasks and how to use documents inside tasks.
+- [Cookbooks](https://github.com/julep-ai/julep/tree/main/cookbooks) - Check out cookbooks to see how Julep can be used in real-world scenarios.
