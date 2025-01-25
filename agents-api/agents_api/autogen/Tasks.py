@@ -45,58 +45,6 @@ class CaseThen(BaseModel):
     """
 
 
-class CaseThenCreateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    case: Literal["_"] | str
-    """
-    The condition to evaluate
-    """
-    then: (
-        EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | WaitForInputStep
-    )
-    """
-    The steps to run if the condition is true
-    """
-
-
-class CaseThenCreateOrUpdateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    case: Literal["_"] | str
-    """
-    The condition to evaluate
-    """
-    then: (
-        EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateOrUpdateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | WaitForInputStep
-    )
-    """
-    The steps to run if the condition is true
-    """
-
-
 class CaseThenUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -157,22 +105,6 @@ class ContentItemModel2(ContentItemModel):
     pass
 
 
-class ContentItemModel3(Content):
-    pass
-
-
-class ContentItemModel4(ContentItemModel):
-    pass
-
-
-class ContentItemModel5(Content):
-    pass
-
-
-class ContentItemModel6(ContentItemModel):
-    pass
-
-
 class ContentModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -200,19 +132,6 @@ class ContentModel1(BaseModel):
     content: list[ContentItem] | list[ContentItemModel]
 
 
-class ContentModel10(BaseModel):
-    """
-    Anthropic image content part
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    tool_use_id: str
-    type: Literal["tool_result"] = "tool_result"
-    content: list[ContentItemModel5] | list[ContentItemModel6]
-
-
 class ContentModel2(Content):
     pass
 
@@ -232,35 +151,6 @@ class ContentModel4(BaseModel):
     tool_use_id: str
     type: Literal["tool_result"] = "tool_result"
     content: list[ContentItemModel1] | list[ContentItemModel2]
-
-
-class ContentModel5(Content):
-    pass
-
-
-class ContentModel6(ContentModel):
-    pass
-
-
-class ContentModel7(BaseModel):
-    """
-    Anthropic image content part
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    tool_use_id: str
-    type: Literal["tool_result"] = "tool_result"
-    content: list[ContentItemModel3] | list[ContentItemModel4]
-
-
-class ContentModel8(Content):
-    pass
-
-
-class ContentModel9(ContentModel):
-    pass
 
 
 class CreateTaskRequest(BaseModel):
@@ -290,7 +180,7 @@ class CreateTaskRequest(BaseModel):
         list[
             EvaluateStep
             | ToolCallStep
-            | PromptStepCreateItem
+            | PromptStep
             | GetStep
             | SetStep
             | LogStep
@@ -299,11 +189,11 @@ class CreateTaskRequest(BaseModel):
             | SleepStep
             | ErrorWorkflowStep
             | WaitForInputStep
-            | IfElseWorkflowStepCreateItem
-            | SwitchStepCreateItem
-            | ForeachStepCreateItem
-            | ParallelStepCreateItem
-            | MainModel1
+            | IfElseWorkflowStep
+            | SwitchStep
+            | ForeachStep
+            | ParallelStep
+            | Main
         ],
         Field(min_length=1),
     ]
@@ -387,54 +277,6 @@ class ForeachDo(BaseModel):
     """
 
 
-class ForeachDoCreateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    in_: Annotated[str, Field(alias="in")]
-    """
-    The variable to iterate over.
-    VALIDATION: Should NOT return more than 1000 elements.
-    """
-    do: (
-        WaitForInputStep
-        | EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-    )
-    """
-    The steps to run for each iteration
-    """
-
-
-class ForeachDoCreateOrUpdateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    in_: Annotated[str, Field(alias="in")]
-    """
-    The variable to iterate over.
-    VALIDATION: Should NOT return more than 1000 elements.
-    """
-    do: (
-        WaitForInputStep
-        | EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateOrUpdateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-    )
-    """
-    The steps to run for each iteration
-    """
-
-
 class ForeachDoUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -479,42 +321,6 @@ class ForeachStep(BaseModel):
     """
 
 
-class ForeachStepCreateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    foreach: ForeachDoCreateItem
-    """
-    The steps to run for each iteration
-    """
-
-
-class ForeachStepCreateOrUpdateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    foreach: ForeachDoCreateOrUpdateItem
-    """
-    The steps to run for each iteration
-    """
-
-
 class ForeachStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -523,7 +329,7 @@ class ForeachStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str
+    kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -605,110 +411,6 @@ class IfElseWorkflowStep(BaseModel):
     """
 
 
-class IfElseWorkflowStepCreateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    if_: Annotated[str, Field(alias="if")]
-    """
-    The condition to evaluate
-    """
-    then: (
-        EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | WaitForInputStep
-    )
-    """
-    The steps to run if the condition is true
-    """
-    else_: Annotated[
-        EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | WaitForInputStep
-        | None,
-        Field(alias="else"),
-    ] = None
-    """
-    The steps to run if the condition is false
-    """
-
-
-class IfElseWorkflowStepCreateOrUpdateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    if_: Annotated[str, Field(alias="if")]
-    """
-    The condition to evaluate
-    """
-    then: (
-        EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateOrUpdateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | WaitForInputStep
-    )
-    """
-    The steps to run if the condition is true
-    """
-    else_: Annotated[
-        EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateOrUpdateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | WaitForInputStep
-        | None,
-        Field(alias="else"),
-    ] = None
-    """
-    The steps to run if the condition is false
-    """
-
-
 class IfElseWorkflowStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -717,7 +419,7 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str
+    kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -843,95 +545,7 @@ class MainModel(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    over: str
-    """
-    The variable to iterate over
-    """
-    map: (
-        EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateOrUpdateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-    )
-    """
-    The steps to run for each iteration
-    """
-    reduce: str | None = None
-    """
-    The expression to reduce the results.
-    If not provided, the results are collected and returned as a list.
-    A special parameter named `results` is the accumulator and `_` is the current value.
-    """
-    initial: Any = []
-    """
-    The initial value of the reduce expression
-    """
-    parallelism: Annotated[int | None, Field(ge=1, le=100)] = None
-    """
-    Whether to run the reduce expression in parallel and how many items to run in each batch
-    """
-
-
-class MainModel1(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    over: str
-    """
-    The variable to iterate over
-    """
-    map: (
-        EvaluateStep
-        | ToolCallStep
-        | PromptStepCreateItem
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-    )
-    """
-    The steps to run for each iteration
-    """
-    reduce: str | None = None
-    """
-    The expression to reduce the results.
-    If not provided, the results are collected and returned as a list.
-    A special parameter named `results` is the accumulator and `_` is the current value.
-    """
-    initial: Any = []
-    """
-    The initial value of the reduce expression
-    """
-    parallelism: Annotated[int | None, Field(ge=1, le=100)] = None
-    """
-    Whether to run the reduce expression in parallel and how many items to run in each batch
-    """
-
-
-class MainModel2(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
+    kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -992,64 +606,6 @@ class ParallelStep(BaseModel):
     """
 
 
-class ParallelStepCreateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    parallel: Annotated[
-        list[
-            EvaluateStep
-            | ToolCallStep
-            | PromptStepCreateItem
-            | GetStep
-            | SetStep
-            | LogStep
-            | YieldStep
-        ],
-        Field(max_length=100),
-    ]
-    """
-    The steps to run in parallel. Max concurrency will depend on the platform.
-    """
-
-
-class ParallelStepCreateOrUpdateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    parallel: Annotated[
-        list[
-            EvaluateStep
-            | ToolCallStep
-            | PromptStepCreateOrUpdateItem
-            | GetStep
-            | SetStep
-            | LogStep
-            | YieldStep
-        ],
-        Field(max_length=100),
-    ]
-    """
-    The steps to run in parallel. Max concurrency will depend on the platform.
-    """
-
-
 class ParallelStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1058,7 +614,7 @@ class ParallelStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str
+    kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -1119,7 +675,7 @@ class PatchTaskRequest(BaseModel):
             | SwitchStepUpdateItem
             | ForeachStepUpdateItem
             | ParallelStepUpdateItem
-            | MainModel2
+            | MainModel
         ]
         | None,
         Field(min_length=1),
@@ -1151,38 +707,10 @@ class PromptItem(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: list[str] | list[Content | ContentModel | ContentModel1] | str | None = None
-    """
-    The content parts of the message
-    """
-    name: str | None = None
-    """
-    Name
-    """
-    tool_calls: (
-        list[
-            ChosenFunctionCall
-            | ChosenComputer20241022
-            | ChosenTextEditor20241022
-            | ChosenBash20241022
-        ]
-        | None
-    ) = []
-    """
-    Tool calls generated by the model.
-    """
-
-
-class PromptItemModel(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    role: Literal["user", "assistant", "system", "tool"]
-    """
-    The role of the message
-    """
-    tool_call_id: str | None = None
-    content: list[str] | list[ContentModel2 | ContentModel3 | ContentModel4] | str | None = None
+    content: Annotated[
+        list[str] | list[Content | ContentModel | ContentModel1] | str | None,
+        Field(...),
+    ]
     """
     The content parts of the message
     """
@@ -1193,39 +721,6 @@ class PromptItemModel(BaseModel):
     continue_: Annotated[StrictBool | None, Field(alias="continue")] = None
     """
     Whether to continue this message or return a new one
-    """
-    tool_calls: (
-        list[
-            ChosenFunctionCall
-            | ChosenComputer20241022
-            | ChosenTextEditor20241022
-            | ChosenBash20241022
-        ]
-        | None
-    ) = []
-    """
-    Tool calls generated by the model.
-    """
-
-
-class PromptItemModel1(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    role: Literal["user", "assistant", "system", "tool"]
-    """
-    The role of the message
-    """
-    tool_call_id: str | None = None
-    content: list[str] | list[ContentModel8 | ContentModel9 | ContentModel10] | str | None = (
-        None
-    )
-    """
-    The content parts of the message
-    """
-    name: str | None = None
-    """
-    Name
     """
     tool_calls: (
         list[
@@ -1287,56 +782,6 @@ class PromptStep(BaseModel):
     """
 
 
-class PromptStepCreateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    prompt: list[PromptItemModel] | str
-    """
-    The prompt to run
-    """
-    tools: Literal["all"] | list[ToolRef | CreateToolRequest] = "all"
-    """
-    The tools to use for the prompt
-    """
-    tool_choice: Literal["auto", "none"] | NamedToolChoice | None = None
-    """
-    The tool choice for the prompt
-    """
-    settings: ChatSettings | None = None
-    """
-    Settings for the prompt
-    """
-    unwrap: StrictBool = False
-    """
-    Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
-    """
-    auto_run_tools: StrictBool = True
-    """
-    Whether to auto-run the tool and send the tool results to the model when available.
-    (default: true for prompt steps, false for sessions)
-
-    If a tool call is made, the tool's output will be used as the model's input.
-    If a tool call is not made, the model's output will be used as the next step's input.
-    """
-    disable_cache: StrictBool = False
-    """
-    Whether to disable caching for the prompt step
-    """
-
-
-class PromptStepCreateOrUpdateItem(PromptStepCreateItem):
-    pass
-
-
 class PromptStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1345,11 +790,11 @@ class PromptStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str
+    kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
     """
-    prompt: list[PromptItemModel1] | str
+    prompt: list[PromptItem] | str
     """
     The prompt to run
     """
@@ -1492,42 +937,6 @@ class SwitchStep(BaseModel):
     """
 
 
-class SwitchStepCreateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    switch: Annotated[list[CaseThenCreateItem], Field(min_length=1)]
-    """
-    The cond tree
-    """
-
-
-class SwitchStepCreateOrUpdateItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    label: str | None = None
-    """
-    The label of this step for referencing it from other steps
-    """
-    kind_: str
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    switch: Annotated[list[CaseThenCreateOrUpdateItem], Field(min_length=1)]
-    """
-    The cond tree
-    """
-
-
 class SwitchStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1536,7 +945,7 @@ class SwitchStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str
+    kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -1740,7 +1149,7 @@ class UpdateTaskRequest(BaseModel):
         list[
             EvaluateStep
             | ToolCallStep
-            | PromptStepCreateOrUpdateItem
+            | PromptStep
             | GetStep
             | SetStep
             | LogStep
@@ -1749,11 +1158,11 @@ class UpdateTaskRequest(BaseModel):
             | SleepStep
             | ErrorWorkflowStep
             | WaitForInputStep
-            | IfElseWorkflowStepCreateOrUpdateItem
-            | SwitchStepCreateOrUpdateItem
-            | ForeachStepCreateOrUpdateItem
-            | ParallelStepCreateOrUpdateItem
-            | MainModel
+            | IfElseWorkflowStep
+            | SwitchStep
+            | ForeachStep
+            | ParallelStep
+            | Main
         ],
         Field(min_length=1),
     ]

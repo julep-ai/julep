@@ -2,10 +2,7 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ...autogen.openapi_model import (
-    ResourceUpdatedResponse,
-    UpdateToolRequest,
-)
+from ...autogen.openapi_model import Tool, UpdateToolRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
@@ -28,7 +25,7 @@ RETURNING *;
 
 @rewrap_exceptions(common_db_exceptions("tool", ["update"]))
 @wrap_in_class(
-    ResourceUpdatedResponse,
+    Tool,
     one=True,
     transform=lambda d: {"id": d["tool_id"], "jobs": [], **d},
 )

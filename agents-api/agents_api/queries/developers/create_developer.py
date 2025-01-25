@@ -3,7 +3,7 @@ from uuid import UUID
 from beartype import beartype
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import ResourceCreatedResponse
+from ...common.protocol.developers import Developer
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
@@ -29,9 +29,9 @@ RETURNING *;
 
 @rewrap_exceptions(common_db_exceptions("developer", ["create"]))
 @wrap_in_class(
-    ResourceCreatedResponse,
+    Developer,
     one=True,
-    transform=lambda d: {**d, "id": d["developer_id"], "created_at": d["created_at"]},
+    transform=lambda d: {**d, "id": d["developer_id"]},
 )
 @pg_query
 @beartype

@@ -211,7 +211,7 @@ class Session(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
-    kind: str
+    kind: str | None = None
     """
     Discriminator property for Session.
     """
@@ -288,6 +288,7 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    id: UUID
     user: UUID | None = None
     """
     User ID of user associated with this session

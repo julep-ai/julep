@@ -6,10 +6,7 @@ from jsonschema import validate
 from jsonschema.exceptions import SchemaError, ValidationError
 from starlette.status import HTTP_201_CREATED
 
-from ...autogen.openapi_model import (
-    CreateOrUpdateTaskRequest,
-    ResourceUpdatedResponse,
-)
+from ...autogen.openapi_model import CreateOrUpdateTaskRequest, Task
 from ...dependencies.developer_id import get_developer_id
 from ...queries.tasks.create_or_update_task import (
     create_or_update_task as create_or_update_task_query,
@@ -23,7 +20,7 @@ async def create_or_update_task(
     agent_id: UUID,
     task_id: UUID,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
-) -> ResourceUpdatedResponse:
+) -> Task:
     # TODO: Do thorough validation of the task spec
     # SCRUM-10
 

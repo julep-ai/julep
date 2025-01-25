@@ -3,7 +3,6 @@ This module contains the functionality for listing documents from the PostgreSQL
 It constructs and executes SQL queries to fetch document details based on various filters.
 """
 
-import json
 from typing import Any, Literal
 from uuid import UUID
 
@@ -13,6 +12,7 @@ from fastapi import HTTPException
 from ...autogen.openapi_model import Doc
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from .utils import transform_doc
 
 # Base query for listing docs with aggregated content and embeddings
 base_docs_query = """
@@ -51,32 +51,11 @@ GROUP BY
 """
 
 
-def transform_list_docs(d: dict) -> dict:
-    content = d["content"]
-
-    embeddings = d["embeddings"]
-
-    if isinstance(embeddings, str):
-        embeddings = json.loads(embeddings)
-    elif isinstance(embeddings, list) and all(isinstance(e, str) for e in embeddings):
-        embeddings = [json.loads(e) for e in embeddings]
-
-    if embeddings and all((e is None) for e in embeddings):
-        embeddings = None
-
-    return {
-        **d,
-        "id": d["doc_id"],
-        "content": content,
-        "embeddings": embeddings,
-    }
-
-
 @rewrap_exceptions(common_db_exceptions("doc", ["list"]))
 @wrap_in_class(
     Doc,
     one=False,
-    transform=transform_list_docs,
+    transform=transform_doc,
 )
 @pg_query
 @beartype

@@ -4,8 +4,7 @@ from uuid import UUID
 from beartype import beartype
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateDocRequest, ResourceCreatedResponse
-from ...common.utils.datetime import utcnow
+from ...autogen.openapi_model import CreateDocRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
@@ -49,17 +48,15 @@ RETURNING *;
 
 @rewrap_exceptions(common_db_exceptions("doc", ["create"]))
 @wrap_in_class(
-    ResourceCreatedResponse,
+    dict,
     one=True,
     transform=lambda d: {
-        "id": d["doc_id"],
-        "jobs": [],
-        "created_at": utcnow(),
         **d,
+        "id": d["doc_id"],
     },
 )
 @increase_counter("create_doc")
-@pg_query
+@pg_query()
 @beartype
 async def create_doc(
     *,

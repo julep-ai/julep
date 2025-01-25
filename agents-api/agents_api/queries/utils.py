@@ -81,7 +81,7 @@ def prepare_pg_query_args(
 
 
 @beartype
-def pg_query(
+def pg_query[**P](
     func: Callable[P, PGQueryArgs | list[PGQueryArgs]] | None = None,
     debug: bool | None = None,
     only_on_error: bool = False,

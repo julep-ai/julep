@@ -5,11 +5,7 @@ from beartype import beartype
 from litellm.utils import _select_tokenizer as select_tokenizer
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import (
-    CreateEntryRequest,
-    Relation,
-    ResourceCreatedResponse,
-)
+from ...autogen.openapi_model import CreateEntryRequest, Relation, Entry
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...common.utils.messages import content_to_json
@@ -59,15 +55,15 @@ RETURNING *;
 
 @rewrap_exceptions(common_db_exceptions("entry", ["create"]))
 @wrap_in_class(
-    ResourceCreatedResponse,
+    Entry,
     transform=lambda d: {
+        **d,
         "id": d.pop("entry_id"),
         "created_at": d.pop("created_at"),
-        **d,
     },
 )
 @increase_counter("create_entries")
-@pg_query
+@pg_query(debug=True)
 @beartype
 async def create_entries(
     *,

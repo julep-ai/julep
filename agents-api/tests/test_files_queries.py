@@ -1,5 +1,4 @@
-# # Tests for entry queries
-
+# Tests for entry queries
 
 from agents_api.autogen.openapi_model import CreateFileRequest
 from agents_api.clients.pg import create_db_pool

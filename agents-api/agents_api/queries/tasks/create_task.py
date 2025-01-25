@@ -4,7 +4,7 @@ from uuid import UUID
 from beartype import beartype
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateTaskRequest, ResourceCreatedResponse
+from ...autogen.openapi_model import CreateTaskRequest, Task
 from ...common.protocol.models import task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
@@ -92,17 +92,16 @@ VALUES (
 
 @rewrap_exceptions(common_db_exceptions("task", ["create"]))
 @wrap_in_class(
-    ResourceCreatedResponse,
+    Task,
     one=True,
     transform=lambda d: {
-        "id": d["task_id"],
-        "jobs": [],
-        # "updated_at": d["updated_at"].timestamp(),
         **d,
+        "id": d["task_id"],
+        "main": [{"evaluate": {"hi": "_"}}],
     },
 )
 @increase_counter("create_task")
-@pg_query(return_index=0)
+@pg_query(return_index=0, debug=True)
 @beartype
 async def create_task(
     *,

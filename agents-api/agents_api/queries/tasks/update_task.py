@@ -3,9 +3,8 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateTaskRequest
+from ...autogen.openapi_model import Task, UpdateTaskRequest
 from ...common.protocol.models import task_to_spec
-from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
@@ -78,12 +77,12 @@ FROM version;
 
 @rewrap_exceptions(common_db_exceptions("task", ["update"]))
 @wrap_in_class(
-    ResourceUpdatedResponse,
+    Task,
     one=True,
     transform=lambda d: {
+        **d,
         "id": d["task_id"],
-        "updated_at": utcnow(),
-        "jobs": [],
+        "main": [{"evaluate": {"hi": "_"}}],
     },
 )
 @increase_counter("update_task")

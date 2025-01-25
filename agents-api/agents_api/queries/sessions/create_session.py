@@ -4,7 +4,7 @@ from beartype import beartype
 from fastapi import HTTPException
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateSessionRequest, ResourceCreatedResponse
+from ...autogen.openapi_model import CreateSessionRequest, Session
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
@@ -51,12 +51,11 @@ VALUES ($1, $2, $3, $4);
 
 @rewrap_exceptions(common_db_exceptions("session", ["create"]))
 @wrap_in_class(
-    ResourceCreatedResponse,
+    Session,
     one=True,
     transform=lambda d: {
         **d,
         "id": d["session_id"],
-        "created_at": d["created_at"],
     },
 )
 @increase_counter("create_session")

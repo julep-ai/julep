@@ -7,7 +7,7 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
+from ...autogen.openapi_model import Agent, UpdateAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
@@ -28,9 +28,9 @@ RETURNING *;
 
 @rewrap_exceptions(common_db_exceptions("agent", ["update"]))
 @wrap_in_class(
-    ResourceUpdatedResponse,
+    Agent,
     one=True,
-    transform=lambda d: {"id": d["agent_id"], **d},
+    transform=lambda d: {**d, "id": d["agent_id"]},
 )
 @increase_counter("update_agent")
 @pg_query

@@ -14,7 +14,6 @@ from ...autogen.openapi_model import (
     CreateExecutionRequest,
     CreateTransitionRequest,
     Execution,
-    ResourceCreatedResponse,
     TransitionTarget,
 )
 from ...clients.temporal import run_task_execution_workflow
@@ -119,7 +118,7 @@ async def create_task_execution(
     data: CreateExecutionRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
-) -> ResourceCreatedResponse:
+) -> dict:
     try:
         task = await get_task_query(task_id=task_id, developer_id=x_developer_id)
         validate(data.input, task.input_schema)
@@ -156,8 +155,8 @@ async def create_task_execution(
         workflow_handle=handle,
     )
 
-    return ResourceCreatedResponse(
-        id=execution.id,
-        created_at=execution.created_at,
-        jobs=[handle.id],
-    )
+    return {
+        "id": execution.id,
+        "created_at": execution.created_at,
+        "jobs": [handle.id],
+    }

@@ -181,6 +181,6 @@ class Transition(TransitionEvent):
     )
     execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     current: Annotated[TransitionTarget, Field(json_schema_extra={"readOnly": True})]
-    next: Annotated[TransitionTarget | None, Field(json_schema_extra={"readOnly": True})] = None
+    next: Annotated[TransitionTarget | None, Field(json_schema_extra={"readOnly": True})]
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None

@@ -34,7 +34,7 @@ from .Users import *
 DataT = TypeVar("DataT", bound=BaseModel)
 
 
-class ListResponse(BaseModel, Generic[DataT]):
+class ListResponse[DataT: BaseModel](BaseModel):
     items: list[DataT]
 
 

@@ -8,8 +8,6 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from .Common import MimeType
-
 
 class CreateFileRequest(BaseModel):
     """
@@ -33,7 +31,7 @@ class CreateFileRequest(BaseModel):
     """
     Description of the file
     """
-    mime_type: MimeType | None = None
+    mime_type: str | None = None
     """
     MIME type of the file
     """
@@ -66,7 +64,7 @@ class File(BaseModel):
     """
     Description of the file
     """
-    mime_type: MimeType | None = None
+    mime_type: str | None = None
     """
     MIME type of the file
     """

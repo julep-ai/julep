@@ -5,8 +5,8 @@ from fastapi import Depends
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
+    Agent,
     CreateOrUpdateAgentRequest,
-    ResourceCreatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
 from ...queries.agents.create_or_update_agent import (
@@ -21,14 +21,12 @@ async def create_or_update_agent(
     agent_id: UUID,
     data: CreateOrUpdateAgentRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
-) -> ResourceCreatedResponse:
+) -> Agent:
     if data.model:
         await validate_model(data.model)
 
-    agent = await create_or_update_agent_query(
+    return await create_or_update_agent_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=data,
     )
-
-    return ResourceCreatedResponse(id=agent.id, created_at=agent.created_at, jobs=[])

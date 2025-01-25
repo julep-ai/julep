@@ -7,9 +7,7 @@ from agents_api.autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
     CreateSessionRequest,
     PatchSessionRequest,
-    ResourceCreatedResponse,
     ResourceDeletedResponse,
-    ResourceUpdatedResponse,
     Session,
     UpdateSessionRequest,
 )
@@ -55,7 +53,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=t
     )
 
     assert result is not None
-    assert isinstance(result, ResourceCreatedResponse), f"Result is not a Session, {result}"
+    assert isinstance(result, Session), f"Result is not a Session, {result}"
     assert result.id == session_id
 
 
@@ -78,7 +76,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=t
     )
 
     assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
+    assert isinstance(result, Session)
     assert result.id == session_id
     assert result.updated_at is not None
 
@@ -187,7 +185,7 @@ async def _(
     )
 
     assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
+    assert isinstance(result, Session)
     assert result.updated_at > session.created_at
 
     updated_session = await get_session(
@@ -214,7 +212,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, ag
     )
 
     assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
+    assert isinstance(result, Session)
     assert result.updated_at > session.created_at
 
     patched_session = await get_session(

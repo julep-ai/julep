@@ -4,7 +4,7 @@ from uuid import UUID
 from beartype import beartype
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateOrUpdateTaskRequest, ResourceUpdatedResponse
+from ...autogen.openapi_model import CreateOrUpdateTaskRequest, Task
 from ...common.protocol.models import task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
@@ -124,12 +124,12 @@ FROM version;
 
 @rewrap_exceptions(common_db_exceptions("task", ["create_or_update"]))
 @wrap_in_class(
-    ResourceUpdatedResponse,
+    Task,
     one=True,
     transform=lambda d: {
-        "id": d["task_id"],
-        "updated_at": d["updated_at"].timestamp(),
         **d,
+        "id": d["task_id"],
+        "main": [{"evaluate": {"hi": "_"}}],
     },
 )
 @increase_counter("create_or_update_task")
