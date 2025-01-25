@@ -3,6 +3,7 @@ from uuid import UUID
 
 from beartype import beartype
 from pydantic import BaseModel
+from temporalio import workflow
 
 from ...autogen.openapi_model import (
     Agent,
@@ -21,7 +22,6 @@ from ...autogen.openapi_model import (
     User,
     Workflow,
 )
-from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from ...worker.codec import RemoteObject

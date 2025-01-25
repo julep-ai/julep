@@ -135,7 +135,6 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
     user_state: dict[str, Any] = Field(default_factory=dict)
 
 
-
 class StepContext(BaseModel):
     loaded: bool = False
     execution_input: ExecutionInput
