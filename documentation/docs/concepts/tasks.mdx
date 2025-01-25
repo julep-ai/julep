@@ -8,27 +8,24 @@ icon: 'list-check'
 
 Tasks are GitHub Actions-style workflows that define multi-step actions in Julep. Think of them as recipes that tell an agent exactly how to accomplish a goal. For example, a task might outline the steps to "Summarize a Research Paper" or "Debug a Code Issue".
 
-<Note>
-  Watch our [video walkthrough](https://www.loom.com/embed/c5cda67936254465aaff4548245b3e13?hideEmbedTopBar=true) to see tasks in action.
-</Note>
+<Frame>
+  <iframe 
+  src="https://www.loom.com/embed/c5cda67936254465aaff4548245b3e13?hideEmbedTopBar=true" 
+  alt="Tasks in action" 
+  width="720" 
+  height="480"  
+  allow="autoplay; encrypted-media" 
+  allowfullscreen
+  />
+</Frame>
 
-<AccordionGroup>
-  <Accordion title="Chain Multiple AI Interactions" icon="link" defaultOpen={true}>
-    Connect multiple AI operations seamlessly
-  </Accordion>
-  <Accordion title="Decision Making" icon="code-branch" defaultOpen={true}>
-    Make decisions based on intermediate results
-  </Accordion>
-  <Accordion title="Parallel Operations" icon="arrows-split-up-and-left" defaultOpen={true}>
-    Run operations in parallel for efficiency
-  </Accordion>
-  <Accordion title="External Integration" icon="plug" defaultOpen={true}>
-    Integrate with external tools and APIs
-  </Accordion>
-  <Accordion title="State Management" icon="database" defaultOpen={true} >
-    Maintain state throughout execution
-  </Accordion>
-</AccordionGroup>
+Here are some of the key features of tasks:
+
+- Connect multiple AI operations seamlessly
+- Make decisions based on intermediate results
+- Run operations in parallel for efficiency
+- Integrate with external tools and APIs
+- Maintain state throughout execution
 
 ## Components
 
@@ -49,8 +46,14 @@ input_schema:
 
 ### Tools
 
-Tools are functions that can be used by an agent to perform tasks. Julep supports a wide range of tools from Integrations to external API calls to custom deinfed functions.
-More information on tools can be found [here](/docs/concepts/tools).
+Tools are functions that can be used by an agent to perform tasks. Julep supports:
+
+- [User-defined functions](/docs/concepts/tools#user-defined-functions)
+- [System tools](/docs/concepts/tools#system-tools)
+- [Integrations](/docs/concepts/tools#integration-tools)
+- [API calls](/docs/concepts/tools#api-call-tools)
+
+Learn more about tools [here](/docs/concepts/tools).
 
 ```yaml
 tools:
@@ -84,39 +87,30 @@ main:
 
 ### Steps
 
-<Info>
+<Note>
   We use tasks and workflows interchangeably. They are the same except Julep's branding reflects tasks.
-</Info>
+</Note>
 
-#### Basic Steps
+Below is a table of all the steps that can be used in a task.
 
-1. **Tool Call**: Runs a specified tool with given arguments
-2. **Prompt**: Runs a prompt using a model
-3. **Evaluate**: Runs Python expressions and uses the result as output
-4. **Wait for Input**: Suspends execution and waits for user input
-5. **Log**: Logs information during workflow execution
+| Name          | Description                                                                 |
+|---------------|-----------------------------------------------------------------------------|
+| [Tool Call](/docs/advanced/types-of-task-steps#tool-call-step) | Execute tools defined in the task |
+| [Prompt](/docs/advanced/types-of-task-steps#prompt-step) | Send messages to the AI model |
+| [Evaluate](/docs/advanced/types-of-task-steps#evaluate-step) | Perform calculations or data manipulation |
+| [Wait for Input](/docs/advanced/types-of-task-steps#wait-for-input-step) | Pause workflow for user input |
+| [Set](/docs/advanced/types-of-task-steps#set-step) | Store values for later use |
+| [Get](/docs/advanced/types-of-task-steps#get-step) | Retrieve values from storage |
+| [Foreach](/docs/advanced/types-of-task-steps#foreach-step) | Iterate over a collection |
+| [Map-reduce](/docs/advanced/types-of-task-steps#map-reduce-step) | Process collections in parallel |
+| [Parallel](/docs/advanced/types-of-task-steps#parallel-step) | Execute steps concurrently |
+| [Switch](/docs/advanced/types-of-task-steps#switch-step) | Multiple condition handling |
+| [If-else](/docs/advanced/types-of-task-steps#if-else-step) | Conditional execution |
+| [Sleep](/docs/advanced/types-of-task-steps#sleep-step) | Pause execution |
+| [Return](/docs/advanced/types-of-task-steps#return-step) | Return values from workflow |
+| [Yield](/docs/advanced/types-of-task-steps#yield-step) | Execute subworkflows |
 
-
-#### Data Operations
-
-1. **Embed**: Embeds text for semantic operations
-2. **Search**: Searches for documents in the agent's doc store
-3. **Set**: Sets a value in the workflow's key-value store
-4. **Get**: Retrieves a value from the workflow's key-value store
-
-#### Control Flow
-
-1. **Foreach**: Runs a step for every value from a list in serial order
-2. **Map-reduce**: Runs a step for every value of the input list in parallel
-3. **Parallel**: Executes multiple steps in parallel
-4. **Switch**: Executes different steps based on a condition
-5. **If-else**: Conditional step with then and else branches
-6. **Sleep**: Pauses the workflow execution for a specified time
-7. **Return**: Ends the current workflow and optionally returns a value
-8. **Yield**: Switches to another named workflow
-9. **Error**: Throws an error and exits the workflow
-
-> You can learn more about workflow steps in the [Workflow Steps](/docs/advanced/types-of-task-steps) section.
+> You can learn more about workflow steps as to how they work in the [Workflow Steps](/docs/advanced/types-of-task-steps) section.
 
 ### Context Variables
 

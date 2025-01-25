@@ -1,0 +1,96 @@
+---
+title: 'Local Setup'
+description: 'Learn how to run Julep locally'
+icon: 'code'
+---
+## Overview
+
+This guide will help you set up Julep locally. Before we setup any of the components, we would you to install Docker.
+
+You can find the installation instructions [here](https://docs.docker.com/get-docker/).
+
+## Setup Instructions
+
+### 1. Clone the Repository
+Clone the repository from your preferred source:
+
+```bash
+git clone <repository_url>
+```
+
+### 2. Navigate to the Root Directory
+Change to the root directory of the project:
+
+```bash
+cd <repository_root>
+```
+
+### 3. Set Up Environment Variables
+- Create a `.env` file in the root directory.
+- Refer to the [`.env.example`](https://github.com/julep-ai/julep/blob/dev/.env.example) file for a list of required variables.
+- Ensure that all necessary variables are set in the `.env` file.
+
+### 4. Create a Docker Volume for Backup
+Create a Docker volume named `grafana_data`, `memory_store_data`, `temporal-db-data`, `prometheus_data` and `seadweedfs_data`:
+
+```bash
+docker volume create grafana_data
+docker volume create memory_store_data
+docker volume create temporal-db-data
+docker volume create prometheus_data
+docker volume create seadweedfs_data
+docker volume create memories
+```
+<Info>
+The volumes are used to store the data for the Grafana, Memory Store (Timescale DB), Temporal DB, Prometheus, and SeadweedFS, and Memories respectively.
+</Info>
+
+### 5. Run the Project using Docker Compose
+You can run the project in two different modes: **Single Tenant** or **Multi-Tenant**. Choose one of the following commands based on your requirement:
+
+#### Single-Tenant Mode
+Run the project in single-tenant mode:
+
+```bash
+docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile embedding-cpu --profile self-hosted-db up --force-recreate --build --watch
+```
+
+> **Note:** In single-tenant mode, you can interact with the SDK directly without the need for the API KEY.
+
+#### Multi-Tenant Mode
+Run the project in multi-tenant mode:
+
+```bash
+docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile embedding-cpu --profile self-hosted-db up --force-recreate --build --watch
+```
+
+> **Note:** In multi-tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK.
+
+### 6. Generate a JWT Token (Only for Multi-Tenant Mode)
+
+To generate a JWT token, `jwt-cli` is required. Kindly install the same before proceeding with the next steps.
+
+Use the following command and replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token:
+
+```bash
+jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
+```
+
+This command generates a JWT token that will be valid for 10 days.
+
+### 7. Access and Interact
+- **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.
+- **API Interactions**: Depending on the chosen mode, interact with the setup using the provided endpoints.
+
+### Troubleshooting
+- Ensure that all required Docker images are available.
+- Check for missing environment variables in the `.env` file.
+- Use the `docker compose logs` command to view detailed logs for debugging.
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)
