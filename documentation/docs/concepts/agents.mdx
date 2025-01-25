@@ -39,28 +39,26 @@ You can find supported models [here](/docs/integrations/supported-models#availab
 
 In Julep, how you use agents is very important. The YAML below shows the anatomy of an agent.
 
-<CodeGroup>
-    ```yaml
-    name: "My Agent"
-    model: "claude-3.5-sonnet"
-    about: "A helpful AI assistant that specializes in data analysis"
-    instructions: "You are a helpful AI assistant that specializes in data analysis"
-    metadata:
-      type: "data-analysis"
-    tools:
-      - name: "calculate_total"
-        description: "Calculate the total of a list of numbers"
-        function:
-          parameters:
-            type: "object"
-            properties:
-              numbers:
-                type: "array"
-                items:
-                  type: "number"
-    ```
 
-</CodeGroup>
+```yaml YAML
+name: "My Agent"
+model: "claude-3.5-sonnet"
+about: "A helpful AI assistant that specializes in data analysis"
+instructions: "You are a helpful AI assistant that specializes in data analysis"
+metadata:
+  type: "data-analysis"
+tools:
+  - name: "calculate_total"
+    description: "Calculate the total of a list of numbers"
+    function:
+      parameters:
+        type: "object"
+        properties:
+          numbers:
+            type: "array"
+            items:
+              type: "number"
+```
 
 ### Creating an Agent
 
@@ -90,7 +88,7 @@ To create an agent, you can use the `create` method in the Python or Node.js SDK
   )
   ```
 
-  ```javascript JavaScript
+  ```javascript Node.js
   import { Julep } from '@julep/sdk';
 
   const client = new Julep({ apiKey: 'your_api_key' });
@@ -127,7 +125,7 @@ Agents can be associated with different types of tools available in Julep to ena
 
 For example:
 
-```python
+```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
 
@@ -152,7 +150,7 @@ Agents can be used in sessions to enable real-time, interactive conversations. W
 
 For example:
 
-```python
+```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
 
