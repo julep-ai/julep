@@ -20,12 +20,12 @@ from temporalio.worker import (
     ExecuteActivityInput,
     ExecuteWorkflowInput,
     Interceptor,
+    StartActivityInput,
     StartChildWorkflowInput,
     StartLocalActivityInput,
     WorkflowInboundInterceptor,
     WorkflowInterceptorClassInput,
     WorkflowOutboundInterceptor,
-    StartActivityInput,
 )
 from temporalio.workflow import (
     ActivityHandle,
