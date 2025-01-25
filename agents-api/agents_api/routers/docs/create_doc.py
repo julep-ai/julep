@@ -29,7 +29,7 @@ async def create_user_doc(
         Doc: The created document.
     """
 
-    doc: Doc = await create_doc_query(
+    doc: dict = await create_doc_query(
         developer_id=x_developer_id,
         owner_type="user",
         owner_id=user_id,

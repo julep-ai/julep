@@ -151,7 +151,7 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     # This can be achieved by executing a REINDEX command
     await pool.execute("REINDEX DATABASE")
 
-    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
+    yield await get_doc(developer_id=developer.id, doc_id=resp["id"], connection_pool=pool)
 
     # TODO: Delete the doc
     # await delete_doc(
@@ -234,7 +234,7 @@ async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
     # This can be achieved by executing a REINDEX command
     await pool.execute("REINDEX DATABASE")
 
-    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
+    yield await get_doc(developer_id=developer.id, doc_id=resp["id"], connection_pool=pool)
 
     # TODO: Delete the doc
     # await delete_doc(

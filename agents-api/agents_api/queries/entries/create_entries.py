@@ -63,7 +63,7 @@ RETURNING *;
     },
 )
 @increase_counter("create_entries")
-@pg_query
+@pg_query(debug=True)
 @beartype
 async def create_entries(
     *,
