@@ -25,6 +25,7 @@ from temporalio.worker import (
     WorkflowInboundInterceptor,
     WorkflowInterceptorClassInput,
     WorkflowOutboundInterceptor,
+    StartActivityInput,
 )
 from temporalio.workflow import (
     ActivityHandle,
@@ -298,12 +299,12 @@ class CustomOutboundInterceptor(WorkflowOutboundInterceptor):
     Custom outbound interceptor for Temporal workflows.
     """
 
-    # @offload_to_blob_store
-    # def start_activity(self, input: StartActivityInput) -> ActivityHandle:
-    #     return handle_execution_with_errors_sync(
-    #         super().start_activity,
-    #         input,
-    #     )
+    @offload_to_blob_store
+    def start_activity(self, input: StartActivityInput) -> ActivityHandle:
+        return handle_execution_with_errors_sync(
+            super().start_activity,
+            input,
+        )
 
     @offload_to_blob_store
     def continue_as_new(self, input: ContinueAsNewInput) -> NoReturn:
