@@ -9,7 +9,6 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 from .Chat import ChatSettings
-from .Common import JinjaTemplate
 from .Tools import (
     ChosenBash20241022,
     ChosenComputer20241022,
@@ -330,9 +329,7 @@ class ErrorWorkflowStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["error"], Field(json_schema_extra={"readOnly": True})] = (
-        "error"
-    )
+    kind_: Annotated[Literal["error"], Field(json_schema_extra={"readOnly": True})] = "error"
     """
     The kind of step
     """
@@ -350,9 +347,9 @@ class EvaluateStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[
-        Literal["evaluate"], Field(json_schema_extra={"readOnly": True})
-    ] = "evaluate"
+    kind_: Annotated[Literal["evaluate"], Field(json_schema_extra={"readOnly": True})] = (
+        "evaluate"
+    )
     """
     The kind of step
     """
@@ -466,9 +463,9 @@ class ForeachStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[
-        Literal["foreach"], Field(json_schema_extra={"readOnly": True})
-    ] = "foreach"
+    kind_: Annotated[Literal["foreach"], Field(json_schema_extra={"readOnly": True})] = (
+        "foreach"
+    )
     """
     The kind of step
     """
@@ -540,9 +537,7 @@ class GetStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["get"], Field(json_schema_extra={"readOnly": True})] = (
-        "get"
-    )
+    kind_: Annotated[Literal["get"], Field(json_schema_extra={"readOnly": True})] = "get"
     """
     The kind of step
     """
@@ -560,9 +555,9 @@ class IfElseWorkflowStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[
-        Literal["if_else"], Field(json_schema_extra={"readOnly": True})
-    ] = "if_else"
+    kind_: Annotated[Literal["if_else"], Field(json_schema_extra={"readOnly": True})] = (
+        "if_else"
+    )
     """
     The kind of step
     """
@@ -788,9 +783,7 @@ class LogStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["log"], Field(json_schema_extra={"readOnly": True})] = (
-        "log"
-    )
+    kind_: Annotated[Literal["log"], Field(json_schema_extra={"readOnly": True})] = "log"
     """
     The kind of step
     """
@@ -808,9 +801,9 @@ class Main(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[
-        Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})
-    ] = "map_reduce"
+    kind_: Annotated[Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})] = (
+        "map_reduce"
+    )
     """
     The kind of step
     """
@@ -822,15 +815,7 @@ class Main(BaseModel):
     """
     The variable to iterate over
     """
-    map: (
-        EvaluateStep
-        | ToolCallStep
-        | PromptStep
-        | GetStep
-        | SetStep
-        | LogStep
-        | YieldStep
-    )
+    map: EvaluateStep | ToolCallStep | PromptStep | GetStep | SetStep | LogStep | YieldStep
     """
     The steps to run for each iteration
     """
@@ -986,9 +971,9 @@ class ParallelStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[
-        Literal["parallel"], Field(json_schema_extra={"readOnly": True})
-    ] = "parallel"
+    kind_: Annotated[Literal["parallel"], Field(json_schema_extra={"readOnly": True})] = (
+        "parallel"
+    )
     """
     The kind of step
     """
@@ -998,13 +983,7 @@ class ParallelStep(BaseModel):
     """
     parallel: Annotated[
         list[
-            EvaluateStep
-            | ToolCallStep
-            | PromptStep
-            | GetStep
-            | SetStep
-            | LogStep
-            | YieldStep
+            EvaluateStep | ToolCallStep | PromptStep | GetStep | SetStep | LogStep | YieldStep
         ],
         Field(max_length=100),
     ]
@@ -1172,9 +1151,7 @@ class PromptItem(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: list[str] | list[Content | ContentModel | ContentModel1] | str | None = (
-        None
-    )
+    content: list[str] | list[Content | ContentModel | ContentModel1] | str | None = None
     """
     The content parts of the message
     """
@@ -1205,9 +1182,7 @@ class PromptItemModel(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: (
-        list[str] | list[ContentModel2 | ContentModel3 | ContentModel4] | str | None
-    ) = None
+    content: list[str] | list[ContentModel2 | ContentModel3 | ContentModel4] | str | None = None
     """
     The content parts of the message
     """
@@ -1242,9 +1217,9 @@ class PromptItemModel1(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: (
-        list[str] | list[ContentModel8 | ContentModel9 | ContentModel10] | str | None
-    ) = None
+    content: list[str] | list[ContentModel8 | ContentModel9 | ContentModel10] | str | None = (
+        None
+    )
     """
     The content parts of the message
     """
@@ -1270,9 +1245,7 @@ class PromptStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["prompt"], Field(json_schema_extra={"readOnly": True})] = (
-        "prompt"
-    )
+    kind_: Annotated[Literal["prompt"], Field(json_schema_extra={"readOnly": True})] = "prompt"
     """
     The kind of step
     """
@@ -1414,9 +1387,7 @@ class ReturnStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["return"], Field(json_schema_extra={"readOnly": True})] = (
-        "return"
-    )
+    kind_: Annotated[Literal["return"], Field(json_schema_extra={"readOnly": True})] = "return"
     """
     The kind of step
     """
@@ -1437,9 +1408,7 @@ class SetStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["set"], Field(json_schema_extra={"readOnly": True})] = (
-        "set"
-    )
+    kind_: Annotated[Literal["set"], Field(json_schema_extra={"readOnly": True})] = "set"
     """
     The kind of step
     """
@@ -1479,9 +1448,7 @@ class SleepStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["sleep"], Field(json_schema_extra={"readOnly": True})] = (
-        "sleep"
-    )
+    kind_: Annotated[Literal["sleep"], Field(json_schema_extra={"readOnly": True})] = "sleep"
     """
     The kind of step
     """
@@ -1511,9 +1478,7 @@ class SwitchStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["switch"], Field(json_schema_extra={"readOnly": True})] = (
-        "switch"
-    )
+    kind_: Annotated[Literal["switch"], Field(json_schema_extra={"readOnly": True})] = "switch"
     """
     The kind of step
     """
@@ -1656,9 +1621,7 @@ class TaskTool(CreateToolRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    inherited: Annotated[StrictBool, Field(json_schema_extra={"readOnly": True})] = (
-        False
-    )
+    inherited: Annotated[StrictBool, Field(json_schema_extra={"readOnly": True})] = False
     """
     Read-only: Whether the tool was inherited or not. Only applies within tasks.
     """
@@ -1668,9 +1631,9 @@ class ToolCallStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[
-        Literal["tool_call"], Field(json_schema_extra={"readOnly": True})
-    ] = "tool_call"
+    kind_: Annotated[Literal["tool_call"], Field(json_schema_extra={"readOnly": True})] = (
+        "tool_call"
+    )
     """
     The kind of step
     """
@@ -1693,9 +1656,7 @@ class ToolCallStep(BaseModel):
             dict[
                 str,
                 dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-                | list[
-                    dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-                ]
+                | list[dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]]
                 | str,
             ]
         ]
@@ -1828,9 +1789,9 @@ class WaitForInputStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[
-        Literal["wait_for_input"], Field(json_schema_extra={"readOnly": True})
-    ] = "wait_for_input"
+    kind_: Annotated[Literal["wait_for_input"], Field(json_schema_extra={"readOnly": True})] = (
+        "wait_for_input"
+    )
     """
     The kind of step
     """
@@ -1848,9 +1809,7 @@ class YieldStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["yield"], Field(json_schema_extra={"readOnly": True})] = (
-        "yield"
-    )
+    kind_: Annotated[Literal["yield"], Field(json_schema_extra={"readOnly": True})] = "yield"
     """
     The kind of step
     """
@@ -1864,8 +1823,7 @@ class YieldStep(BaseModel):
     VALIDATION: Should resolve to a defined subworkflow.
     """
     arguments: (
-        dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-        | Literal["_"]
+        dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str] | Literal["_"]
     ) = "_"
     """
     The input parameters for the subworkflow (defaults to last step output)
