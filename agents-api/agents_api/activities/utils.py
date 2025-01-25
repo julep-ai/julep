@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import reduce
 from threading import Lock as ThreadLock
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, Callable, ParamSpec, TypeVar
 
 import re2
 from beartype import beartype
