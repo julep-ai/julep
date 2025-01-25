@@ -26,7 +26,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that a task can be successfully created."""
 
     pool = await create_db_pool(dsn=dsn)
-    task = await create_task(
+    await create_task(
         developer_id=developer_id,
         agent_id=agent.id,
         task_id=uuid7(),
@@ -38,6 +38,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
         ),
         connection_pool=pool,
     )
+
 
 @test("query: create or update task sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):

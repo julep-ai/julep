@@ -5,7 +5,7 @@ from beartype import beartype
 from litellm.utils import _select_tokenizer as select_tokenizer
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateEntryRequest, Relation, Entry
+from ...autogen.openapi_model import CreateEntryRequest, Entry, Relation
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...common.utils.messages import content_to_json
