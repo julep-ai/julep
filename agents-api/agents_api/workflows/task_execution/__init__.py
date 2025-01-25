@@ -173,7 +173,8 @@ class TaskExecutionWorkflow:
                 tool = next((t for t in tools if t.name == tool_name), None)
 
                 if tool is None:
-                    raise ApplicationError(f"Tool {tool_name} not found in the toolset")
+                    msg = f"Tool {tool_name} not found in the toolset"
+                    raise ApplicationError(msg)
 
                 arguments = await base_evaluate(arguments, self.context.prepare_for_step())
 
@@ -184,9 +185,9 @@ class TaskExecutionWorkflow:
 
                 all_workflows = self.context.execution_input.task.workflows
 
-                assert workflow in [
-                    wf.name for wf in all_workflows
-                ], f"Workflow {workflow} not found in task"
+                assert workflow in [wf.name for wf in all_workflows], (
+                    f"Workflow {workflow} not found in task"
+                )
 
                 # Evaluate the expressions in the arguments
                 output = await base_evaluate(arguments, self.context.prepare_for_step())
