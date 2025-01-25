@@ -162,8 +162,9 @@
       "pages": [
         "docs/advanced/architecture-deep-dive",
         "docs/advanced/agentic-patterns",
+        "docs/advanced/localsetup",
+        "docs/advanced/lifecycle",
         "docs/advanced/chat",
-        "docs/advanced/execution-lifecycle",
         "docs/advanced/python-expression",
         "docs/advanced/types-of-task-steps",
         "docs/advanced/multi-agent-multi-user-sessions",

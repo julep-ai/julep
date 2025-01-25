@@ -114,7 +114,7 @@ async def run_task_execution_workflow(
     execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
 
     old_args = execution_input.arguments
-    execution_input.arguments = await offload_if_large(old_args)
+    execution_input.arguments = offload_if_large(old_args)
 
     current_input: dict = current_input or execution_input.arguments
 

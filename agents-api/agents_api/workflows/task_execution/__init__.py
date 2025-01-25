@@ -15,7 +15,7 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.execute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
-    from ...activities.sync_items_remote import save_inputs_remote
+    from ...activities.sync_items_remote import save_inputs_remote_fn as save_inputs_remote
     from ...autogen.openapi_model import (
         ApiCallDef,
         BaseIntegrationDef,
@@ -122,7 +122,7 @@ GenericStep = RootModel[WorkflowStep]
 
 
 # Main workflow definition
-@workflow.defn
+@workflow.defn(sandboxed=False)
 class TaskExecutionWorkflow:
     last_error: BaseException | None = None
     context: StepContext | None = None
@@ -331,20 +331,16 @@ class TaskExecutionWorkflow:
         step: PromptStep,
     ):
         message = self.outcome.output
+
         if (
             step.unwrap
-            or (not step.unwrap and not step.auto_run_tools)
-            or (not step.unwrap and message["choices"][0]["finish_reason"] != "tool_calls")
+            or not step.auto_run_tools
+            or message["choices"][0]["finish_reason"] != "tool_calls"
         ):
             workflow.logger.debug(f"Prompt step: Received response: {message}")
             return PartialTransition(output=message)
 
         choice = message["choices"][0]
-        finish_reason = choice["finish_reason"]
-
-        if not (step.auto_run_tools and not step.unwrap and finish_reason == "tool_calls"):
-            return None
-
         tool_calls_input = choice["message"]["tool_calls"]
         input_type = tool_calls_input[0]["type"]
 

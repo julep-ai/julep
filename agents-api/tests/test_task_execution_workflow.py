@@ -1,6 +1,6 @@
 import uuid
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from agents_api.activities import task_steps
 from agents_api.activities.execute_api_call import execute_api_call
@@ -12,6 +12,8 @@ from agents_api.autogen.openapi_model import (
     BaseIntegrationDef,
     CaseThen,
     GetStep,
+    PromptItem,
+    PromptStep,
     SwitchStep,
     SystemDef,
     TaskSpecDef,
@@ -475,3 +477,191 @@ async def _():
             )
             is None
         )
+
+
+@test("task execution workflow: handle prompt step, unwrap is True")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt="hi there", unwrap=True)
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+    )
+    context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    message = "Hello there"
+    outcome = StepOutcome(output=message)
+    wf.context = context
+    wf.outcome = outcome
+    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+        workflow.logger = Mock()
+        workflow.execute_activity.return_value = "activity"
+
+        assert await wf.handle_step(step=step) == PartialTransition(output=message)
+        workflow.execute_activity.assert_not_called()
+
+
+@test("task execution workflow: handle prompt step, unwrap is False, autorun tools is False")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt="hi there", unwrap=False, auto_run_tools=False)
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+    )
+    context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    message = {"choices": [{"finish_reason": "stop"}]}
+    outcome = StepOutcome(output=message)
+    wf.context = context
+    wf.outcome = outcome
+    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+        workflow.logger = Mock()
+        workflow.execute_activity.return_value = "activity"
+
+        assert await wf.handle_step(step=step) == PartialTransition(output=message)
+        workflow.execute_activity.assert_not_called()
+
+
+@test(
+    "task execution workflow: handle prompt step, unwrap is False, finish reason is not tool_calls"
+)
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt="hi there", unwrap=False)
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+    )
+    context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    message = {"choices": [{"finish_reason": "stop"}]}
+    outcome = StepOutcome(output=message)
+    wf.context = context
+    wf.outcome = outcome
+    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+        workflow.logger = Mock()
+        workflow.execute_activity.return_value = "activity"
+
+        assert await wf.handle_step(step=step) == PartialTransition(output=message)
+        workflow.execute_activity.assert_not_called()
+
+
+@test("task execution workflow: handle prompt step, function call")
+async def _():
+    async def _resp():
+        return StepOutcome(output="function_call")
+
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+    )
+    context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    message = {
+        "choices": [
+            {"finish_reason": "tool_calls", "message": {"tool_calls": [{"type": "function"}]}}
+        ]
+    }
+    outcome = StepOutcome(output=message)
+    wf.context = context
+    wf.outcome = outcome
+    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+        workflow.logger = Mock()
+        workflow.execute_activity.side_effect = [_resp(), _resp()]
+
+        assert await wf.handle_step(step=step) == PartialTransition(
+            output="function_call", type="resume"
+        )
+        workflow.execute_activity.assert_has_calls([
+            call(
+                task_steps.raise_complete_async,
+                args=[context, [{"type": "function"}]],
+                schedule_to_close_timeout=timedelta(days=31),
+                retry_policy=DEFAULT_RETRY_POLICY,
+                heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+            ),
+            call(
+                task_steps.prompt_step,
+                context,
+                schedule_to_close_timeout=timedelta(
+                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                ),
+                retry_policy=DEFAULT_RETRY_POLICY,
+                heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+            ),
+        ])

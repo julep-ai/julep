@@ -3,24 +3,21 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     import botocore
+    from aiobotocore.client import AioBaseClient
     from async_lru import alru_cache
     from xxhash import xxh3_64_hexdigest as xxhash_key
 
-    from ..env import (
-        blob_store_bucket,
-        blob_store_cutoff_kb,
-    )
+    from ..env import blob_store_bucket
 
 
 @alru_cache(maxsize=1)
-async def setup():
+async def setup() -> AioBaseClient:
     from ..app import app
 
-    if not app.state.s3_client:
+    client: AioBaseClient | None = getattr(app.state, "s3_client", None)
+    if client is None:
         msg = "S3 client not initialized"
         raise RuntimeError(msg)
-
-    client = app.state.s3_client
 
     try:
         await client.head_bucket(Bucket=blob_store_bucket)
@@ -68,7 +65,6 @@ async def add_object(key: str, body: bytes, replace: bool = False) -> None:
     await client.put_object(Bucket=blob_store_bucket, Key=key, Body=body)
 
 
-@alru_cache(maxsize=256 * 1024 // max(1, blob_store_cutoff_kb))  # 256mb in cache
 @beartype
 async def get_object(key: str) -> bytes:
     client = await setup()

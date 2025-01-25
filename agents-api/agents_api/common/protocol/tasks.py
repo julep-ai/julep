@@ -18,6 +18,7 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
+    from ...worker.codec import RemoteObject
 
 from ...queries.executions import list_execution_transitions
 from .models import ExecutionInput
@@ -135,9 +136,18 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
 
 
 class StepContext(BaseModel):
+    loaded: bool = False
     execution_input: ExecutionInput
     cursor: TransitionTarget
-    current_input: Any
+    current_input: Any | RemoteObject
+
+    def load_inputs(self) -> None:
+        self.execution_input.load_arguments()
+
+        if isinstance(self.current_input, RemoteObject):
+            self.current_input = self.current_input.load()
+
+        self.loaded = True
 
     @computed_field
     @property
@@ -233,5 +243,15 @@ class StepContext(BaseModel):
 
 class StepOutcome(BaseModel):
     error: str | None = None
-    output: Any = None
-    transition_to: tuple[TransitionType, TransitionTarget] | None = None
+    output: Any
+    transition_to: tuple[TransitionType, TransitionTarget | RemoteObject] | None = None
+
+    def load_remote(self) -> None:
+        if isinstance(self.transition_to[1], RemoteObject):
+            self.transition_to = (self.transition_to[0], self.transition_to[1].load())
+
+        if isinstance(self.output, RemoteObject):
+            self.output = self.output.load()
+
+        if isinstance(self.error, RemoteObject):
+            self.error = self.error.load()

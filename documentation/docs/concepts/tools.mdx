@@ -16,17 +16,17 @@ Tools in Julep consist of three main components:
 
 1. **Name**: A unique identifier for the tool.
 2. **Type**: The category of the tool. In Julep, there are four types of tools:
-   - **User-defined `functions`**: Function signatures provided to the model, similar to OpenAI's function-calling. These require client handling, and the workflow pauses until the client executes the function and returns the results to Julep.
-   - **`system` tools**: Built-in tools for calling Julep APIs, such as triggering task execution or appending to a metadata field.
-   - **`integrations`**: Built-in third-party tools that enhance the capabilities of your agents.
-   - **`api_calls`**: Direct API calls executed during workflow processes as tool calls.
+   - **User-defined `functions`**: Function signatures provided to the model, similar to OpenAI's function-calling. These require client handling, and the workflow pauses until the client executes the function and returns the results to Julep. [Learn more](#user-defined-functions)
+   - **`system` tools**: Built-in tools for calling Julep APIs, such as triggering task execution or appending to a metadata field. [Learn more](#system-tools)
+   - **`integrations`**: Built-in third-party tools that enhance the capabilities of your agents. [Learn more](#integration-tools)
+   - **`api_calls`**: Direct API calls executed during workflow processes as tool calls. [Learn more](#api-call-tools)
 3. **Arguments**: The inputs required by the tool.
 
-### Tool Types Definitions: 
+#### User-defined `functions`
 
-1. **User-defined `functions`**: These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
+These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
 
-```yaml Task YAML
+```yaml YAML
 name: Example system tool task
 description: List agents using system call
 
@@ -52,11 +52,13 @@ main:
 Whenever julep encounters a user-defined function, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 </Note>
 
-2. **`system` tools**: Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
+#### `System` Tools
+
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 
 `System` tools are built into the backend. They get executed automatically when needed. They do not require any action from the client-side. For example,
 
-```yaml Task YAML
+```yaml YAML
 name: Example system tool task
 description: List agents using system call
 
@@ -75,7 +77,7 @@ main:
       limit: 10 # <-- python expression
 ```
 
-<Accordion title="Available `system` resources and operations">
+<Accordion title="Available system resources and operations">
   <Accordion title="Agent">
     <ul>
       <li><strong>list</strong>: List all agents.</li>
@@ -133,11 +135,13 @@ main:
   </Accordion>
 </Accordion>
 
-3. **`integrations`**: Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+#### `Integration` Tools
+
+Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
 
 An example of how to create a `integration` tool for an agent using the `wikipedia` integration:
 
-```yaml Task YAML
+```yaml YAML
 name: Example integration tool task
 description: Search wikipedia for a query
 
@@ -158,9 +162,11 @@ main:
 Checkout the list of integrations that Julep supports [here](/docs/integrations).
 </Info>
 
-4. **Direct `api_calls`**: Julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from metadata fields. For example,
+#### `API Call` Tools
 
-```yaml Task YAML
+Julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from metadata fields. For example,
+
+```yaml YAML
 name: Example api_call task
 tools:
   - type: api_call
@@ -183,7 +189,9 @@ main:
 A tool can be created for an agent using the `client.agents.tools.create` method.
 
 An example of how to create a `integration` tool for an agent using the `wikipedia` integration:
-```python
+
+<CodeGroup>
+```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
 
@@ -199,6 +207,23 @@ client.agents.tools.create(
           },
     )
 ```
+```javascript Node.js
+async function createAgent() {
+  const agent = await client.agents.create({
+    name: "My Agent",
+  });
+
+  const tool = await client.agents.tools.create(agent.id, {
+    name: "wikipedia_search",
+    type: "integration",
+    integration: {
+      provider: "wikipedia",
+    },
+  });
+  return agent;
+}
+```
+</CodeGroup>
 
 <Tip>
     Check out the API reference [here](api-reference/agents/tools/create) or SDK reference (Python [here](/sdks/python/reference#Tools) or JavaScript [here](/sdks/nodejs/reference#Tools) for more details on different operations you can perform on agents.
@@ -209,7 +234,7 @@ client.agents.tools.create(
 To create a tool for a task, you can use the `client.tasks.create` method and define the tool in that `task` definitions.
 
 <CodeGroup>
-  ```yaml TAML
+  ```yaml YAML
 name: Example integration tool task
 description: Search wikipedia for a query
 
@@ -228,6 +253,9 @@ main:
   ```python Python
   # Create a task
   import yaml
+  task_yaml = """
+  // ... task yaml here ...
+  """
   task_def = yaml.safe_load(task_yaml)
   task = client.tasks.create(
       agent_id="agent_id",
@@ -241,6 +269,26 @@ main:
     }
   )
   ```
+
+  ```javascript Node.js
+  // Create a task
+  const taskYaml = `
+  // ... task yaml here ...
+  `
+  async function createTask(agentId) {
+    const task = await client.tasks.create(agentId, yaml.parse(taskYaml));
+    return task;
+  }
+  // Execute a task
+  async function executeTask(taskId) {
+    const execution = await client.executions.create(taskId, {
+      input: {
+        document_text: "This is a sample document"
+      }
+    });
+    return execution;
+  }
+  ``` 
 </CodeGroup>
 <Tip>
     Check out the API reference [here](api-reference/agents/tools/create) or SDK reference (Python [here](/sdks/python/reference#Tools) or JavaScript [here](/sdks/nodejs/reference#Tools) for more details on different operations you can perform on agents.
