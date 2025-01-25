@@ -10,7 +10,6 @@ from agents_api.autogen.openapi_model import (
     CreateUserRequest,
     PatchUserRequest,
     ResourceDeletedResponse,
-    ResourceUpdatedResponse,
     UpdateUserRequest,
     User,
 )
@@ -81,7 +80,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     )
 
     assert update_result is not None
-    assert isinstance(update_result, ResourceUpdatedResponse)
+    assert isinstance(update_result, User)
     assert update_result.updated_at > user.created_at
 
 
@@ -146,9 +145,8 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
         ),
         connection_pool=pool,
     )
-
     assert patch_result is not None
-    assert isinstance(patch_result, ResourceUpdatedResponse)
+    assert isinstance(patch_result, User)
     assert patch_result.updated_at > user.created_at
 
 

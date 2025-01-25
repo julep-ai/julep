@@ -45,7 +45,7 @@ RETURNING *;
 @wrap_in_class(
     Agent,
     one=True,
-    transform=lambda d: {"id": d["agent_id"]},
+    transform=lambda d: {**d, "id": d["agent_id"]},
 )
 @increase_counter("create_agent")
 @pg_query

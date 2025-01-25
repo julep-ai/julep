@@ -6,7 +6,6 @@ from agents_api.autogen.openapi_model import (
     CreateOrUpdateAgentRequest,
     PatchAgentRequest,
     ResourceDeletedResponse,
-    ResourceUpdatedResponse,
     UpdateAgentRequest,
 )
 from agents_api.clients.pg import create_db_pool
@@ -79,7 +78,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     )
 
     assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
+    assert isinstance(result, Agent)
 
 
 @test("query: get agent not exists sql")
@@ -137,7 +136,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     )
 
     assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
+    assert isinstance(result, Agent)
 
 
 @test("query: delete agent sql")

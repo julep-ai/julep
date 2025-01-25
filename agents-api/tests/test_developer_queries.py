@@ -1,6 +1,5 @@
 # Tests for agent queries
 
-from agents_api.autogen.openapi_model import ResourceCreatedResponse
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.developers import Developer
 from agents_api.queries.developers.create_developer import create_developer
@@ -54,7 +53,7 @@ async def _(dsn=pg_dsn):
         connection_pool=pool,
     )
 
-    assert type(developer) is ResourceCreatedResponse
+    assert type(developer) is Developer
     assert developer.id == dev_id
     assert developer.created_at is not None
 

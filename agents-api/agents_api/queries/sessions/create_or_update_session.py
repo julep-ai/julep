@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from ...autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
-    ResourceUpdatedResponse,
+    Session,
 )
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
@@ -64,9 +64,12 @@ ON CONFLICT (developer_id, session_id, participant_type, participant_id) DO NOTH
 
 @rewrap_exceptions(common_db_exceptions("session", ["create", "update"]))
 @wrap_in_class(
-    ResourceUpdatedResponse,
+    Session,
     one=True,
-    transform=lambda d: {"id": d["session_id"], "updated_at": d["updated_at"]},
+    transform=lambda d: {
+        **d,
+        "id": d["session_id"],
+    },
 )
 @increase_counter("create_or_update_session")
 @pg_query(return_index=0)

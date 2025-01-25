@@ -1,4 +1,3 @@
-import json
 from uuid import UUID
 
 from beartype import beartype
@@ -6,6 +5,7 @@ from beartype import beartype
 from ...autogen.openapi_model import Doc
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from .utils import transform_doc
 
 # Update the query to use DISTINCT ON to prevent duplicates
 doc_with_embedding_query = """
@@ -43,32 +43,11 @@ LIMIT 1;
 """
 
 
-def transform_get_doc(d: dict) -> dict:
-    content = d["content"]
-
-    embeddings = d["embeddings"]
-
-    if isinstance(embeddings, str):
-        embeddings = json.loads(embeddings)
-    elif isinstance(embeddings, list) and all(isinstance(e, str) for e in embeddings):
-        embeddings = [json.loads(e) for e in embeddings]
-
-    if embeddings and all((e is None) for e in embeddings):
-        embeddings = None
-
-    return {
-        **d,
-        "id": d["doc_id"],
-        "content": content,
-        "embeddings": embeddings,
-    }
-
-
 @rewrap_exceptions(common_db_exceptions("doc", ["get"]))
 @wrap_in_class(
     Doc,
     one=True,
-    transform=transform_get_doc,
+    transform=transform_doc,
 )
 @pg_query
 @beartype

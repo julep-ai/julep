@@ -37,15 +37,16 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         connection_pool=pool,
     )
 
-    assert doc_created.id is not None
+    assert isinstance(doc_created, dict)
+    assert doc_created["id"] is not None
 
     # Verify doc appears in user's docs
     found = await get_doc(
         developer_id=developer.id,
-        doc_id=doc_created.id,
+        doc_id=doc_created["id"],
         connection_pool=pool,
     )
-    assert found.id == doc_created.id
+    assert found.id == doc_created["id"]
 
 
 @test("query: create agent doc")
@@ -63,7 +64,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
-    assert doc.id is not None
+    assert doc["id"] is not None
 
     # Verify doc appears in agent's docs
     docs_list = await list_docs(
@@ -72,7 +73,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
-    assert any(d.id == doc.id for d in docs_list)
+    assert any(d.id == doc["id"] for d in docs_list)
 
 
 @test("query: get doc")
@@ -114,7 +115,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         connection_pool=pool,
     )
     assert len(docs_list) >= 1
-    assert any(d.id == doc_user.id for d in docs_list)
+    assert any(d.id == doc_user["id"] for d in docs_list)
 
 
 @test("query: list agent docs")
@@ -143,7 +144,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         connection_pool=pool,
     )
     assert len(docs_list) >= 1
-    assert any(d.id == doc_agent.id for d in docs_list)
+    assert any(d.id == doc_agent["id"] for d in docs_list)
 
 
 @test("query: delete user doc")
@@ -167,7 +168,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     # Delete the doc
     await delete_doc(
         developer_id=developer.id,
-        doc_id=doc_user.id,
+        doc_id=doc_user["id"],
         owner_type="user",
         owner_id=user.id,
         connection_pool=pool,
@@ -180,7 +181,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         owner_id=user.id,
         connection_pool=pool,
     )
-    assert not any(d.id == doc_user.id for d in docs_list)
+    assert not any(d.id == doc_user["id"] for d in docs_list)
 
 
 @test("query: delete agent doc")
@@ -204,7 +205,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     # Delete the doc
     await delete_doc(
         developer_id=developer.id,
-        doc_id=doc_agent.id,
+        doc_id=doc_agent["id"],
         owner_type="agent",
         owner_id=agent.id,
         connection_pool=pool,
@@ -217,7 +218,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
-    assert not any(d.id == doc_agent.id for d in docs_list)
+    assert not any(d.id == doc_agent["id"] for d in docs_list)
 
 
 @test("query: search docs by text")
@@ -253,7 +254,7 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
 
     # More specific assertions
     assert len(result) >= 1, "Should find at least one document"
-    assert any(d.id == doc.id for d in result), f"Should find document {doc.id}"
+    assert any(d.id == doc["id"] for d in result), f"Should find document {doc['id']}"
     assert result[0].metadata == {"test": "test"}, "Metadata should match"
 
 
@@ -310,11 +311,11 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 
         # Verify appropriate document is found based on query
         if "API" in query or "REST" in query:
-            assert any(doc.id == doc1.id for doc in results), (
+            assert any(doc.id == doc1["id"] for doc in results), (
                 f"Doc1 should be found with query '{query}'"
             )
         if "database" in query.lower() or "indexing" in query:
-            assert any(doc.id == doc2.id for doc in results), (
+            assert any(doc.id == doc2["id"] for doc in results), (
                 f"Doc2 should be found with query '{query}'"
             )
 

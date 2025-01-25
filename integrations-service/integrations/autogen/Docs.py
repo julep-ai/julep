@@ -87,13 +87,15 @@ class Doc(BaseModel):
     """
     Language of the document
     """
-    embedding_model: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
+    embedding_model: Annotated[
+        str | None, Field(json_schema_extra={"readOnly": True})
+    ] = None
     """
     Embedding model used for the document
     """
-    embedding_dimensions: Annotated[int | None, Field(json_schema_extra={"readOnly": True})] = (
-        None
-    )
+    embedding_dimensions: Annotated[
+        int | None, Field(json_schema_extra={"readOnly": True})
+    ] = None
     """
     Dimensions of the embedding model
     """

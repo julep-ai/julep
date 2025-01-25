@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generic, Self, TypeVar, cast
+from typing import Self, TypeVar, cast
 
 from temporalio import workflow
 
@@ -13,7 +13,7 @@ T = TypeVar("T")
 
 
 @dataclass
-class RemoteObject(Generic[T]):
+class RemoteObject[T]:
     _type: type[T]
     key: str
     bucket: str

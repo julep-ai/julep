@@ -7,4 +7,4 @@ options:
     output-file: "openapi-{version}.yaml"
     new-line: lf
     omit-unreachable-types: true
-    openapi-versions: ["3.1.0"]
+    # openapi-versions: ["3.1.0"]
