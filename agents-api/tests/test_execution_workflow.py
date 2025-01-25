@@ -1399,13 +1399,13 @@ async def _(
 
     with (
         patch("agents_api.clients.litellm.acompletion") as acompletion,
-        open("./tests/sample_tasks/find_selector.yaml", "r") as task_file,
+        open("./tests/sample_tasks/find_selector.yaml") as task_file,
     ):
-        input = dict(
-            screenshot_base64="iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA",
-            network_requests=[{"request": {}, "response": {"body": "Lady Gaga"}}],
-            parameters=["name"],
-        )
+        input = {
+            "screenshot_base64": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA",
+            "network_requests": [{"request": {}, "response": {"body": "Lady Gaga"}}],
+            "parameters": ["name"],
+        }
         task_definition = yaml.safe_load(task_file)
         acompletion.return_value = mock_model_response
         data = CreateExecutionRequest(input=input)

@@ -15,7 +15,8 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.execute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
-    from ...activities.sync_items_remote import load_inputs_remote, save_inputs_remote
+    from ...activities.sync_items_remote import load_inputs_remote as load_inputs_remote
+    from ...activities.sync_items_remote import save_inputs_remote
     from ...activities.task_steps.base_evaluate import base_evaluate
     from ...activities.task_steps.tool_call_step import (
         construct_tool_call,
@@ -26,6 +27,7 @@ with workflow.unsafe.imports_passed_through():
         BaseIntegrationDef,
         ErrorWorkflowStep,
         EvaluateStep,
+        ForeachDo,
         ForeachStep,
         GetStep,
         IfElseWorkflowStep,
@@ -45,7 +47,6 @@ with workflow.unsafe.imports_passed_through():
         WaitForInputStep,
         WorkflowStep,
         YieldStep,
-        ForeachDo,
     )
     from ...common.protocol.tasks import (
         ExecutionInput,
@@ -53,10 +54,15 @@ with workflow.unsafe.imports_passed_through():
         StepContext,
         StepOutcome,
     )
-    from ...exceptions import LastErrorInput
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
     from ...common.utils.template import render_template
-    from ...env import debug, temporal_schedule_to_close_timeout, testing, temporal_heartbeat_timeout
+    from ...env import (
+        debug,
+        temporal_heartbeat_timeout,
+        temporal_schedule_to_close_timeout,
+        testing,
+    )
+    from ...exceptions import LastErrorInput
     from .helpers import (
         continue_as_child,
         execute_foreach_step,
@@ -153,7 +159,8 @@ async def _eval_step_exprs(context: StepContext, step_type: WorkflowStep):
             tool = next((t for t in tools if t.name == tool_name), None)
 
             if tool is None:
-                raise ApplicationError(f"Tool {tool_name} not found in the toolset")
+                msg = f"Tool {tool_name} not found in the toolset"
+                raise ApplicationError(msg)
 
             arguments = await base_evaluate(arguments, context.prepare_for_step())
 
@@ -164,9 +171,9 @@ async def _eval_step_exprs(context: StepContext, step_type: WorkflowStep):
 
             all_workflows = context.execution_input.task.workflows
 
-            assert workflow in [
-                wf.name for wf in all_workflows
-            ], f"Workflow {workflow} not found in task"
+            assert workflow in [wf.name for wf in all_workflows], (
+                f"Workflow {workflow} not found in task"
+            )
 
             # Evaluate the expressions in the arguments
             output = await base_evaluate(arguments, context.prepare_for_step())
@@ -684,13 +691,11 @@ class TaskExecutionWorkflow:
                     retry_policy=DEFAULT_RETRY_POLICY,
                     heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
-                workflow.logger.debug(
-                    f"Step {context.cursor.step} completed successfully"
-                )
+                workflow.logger.debug(f"Step {context.cursor.step} completed successfully")
             else:
                 outcome = await _eval_step_exprs(context, step_type)
         except Exception as e:
-            workflow.logger.error(f"Error in step {context.cursor.step}: {str(e)}")
+            workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
             await transition(context, type="error", output=str(e))
             err_msg = (
                 f"Activity {activity} threw error: {e}"
