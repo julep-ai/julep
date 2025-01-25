@@ -509,15 +509,13 @@ async def _():
     )
     message = {"choices": [{"finish_reason": "stop"}]}
     outcome = StepOutcome(output=message)
+    wf.context = context
+    wf.outcome = outcome
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.logger = Mock()
         workflow.execute_activity.return_value = "activity"
 
-        assert await wf.handle_step(
-            context=context,
-            step=step,
-            outcome=outcome,
-        ) == PartialTransition(output=message)
+        assert await wf.handle_step(step=step) == PartialTransition(output=message)
         workflow.execute_activity.assert_not_called()
 
 
@@ -551,15 +549,13 @@ async def _():
     )
     message = {"choices": [{"finish_reason": "stop"}]}
     outcome = StepOutcome(output=message)
+    wf.context = context
+    wf.outcome = outcome
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.logger = Mock()
         workflow.execute_activity.return_value = "activity"
 
-        assert await wf.handle_step(
-            context=context,
-            step=step,
-            outcome=outcome,
-        ) == PartialTransition(output=message)
+        assert await wf.handle_step(step=step) == PartialTransition(output=message)
         workflow.execute_activity.assert_not_called()
 
 
@@ -595,15 +591,13 @@ async def _():
     )
     message = {"choices": [{"finish_reason": "stop"}]}
     outcome = StepOutcome(output=message)
+    wf.context = context
+    wf.outcome = outcome
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.logger = Mock()
         workflow.execute_activity.return_value = "activity"
 
-        assert await wf.handle_step(
-            context=context,
-            step=step,
-            outcome=outcome,
-        ) == PartialTransition(output=message)
+        assert await wf.handle_step(step=step) == PartialTransition(output=message)
         workflow.execute_activity.assert_not_called()
 
 
@@ -644,15 +638,15 @@ async def _():
         ]
     }
     outcome = StepOutcome(output=message)
+    wf.context = context
+    wf.outcome = outcome
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.logger = Mock()
         workflow.execute_activity.side_effect = [_resp(), _resp()]
 
-        assert await wf.handle_step(
-            context=context,
-            step=step,
-            outcome=outcome,
-        ) == PartialTransition(output="function_call", type="resume")
+        assert await wf.handle_step(step=step) == PartialTransition(
+            output="function_call", type="resume"
+        )
         workflow.execute_activity.assert_has_calls([
             call(
                 task_steps.raise_complete_async,
