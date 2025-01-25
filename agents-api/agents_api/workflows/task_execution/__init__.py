@@ -331,11 +331,7 @@ class TaskExecutionWorkflow:
         step: PromptStep,
     ):
         message = self.outcome.output
-        # print("*" * 100)
-        # print(message)
-        # print("*" * 100)
-        # print(self.outcome)
-        # print("*" * 100)
+
         if (
             step.unwrap
             or not step.auto_run_tools
