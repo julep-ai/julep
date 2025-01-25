@@ -331,19 +331,11 @@ class TaskExecutionWorkflow:
         step: PromptStep,
     ):
         message = self.outcome.output
-        if (
-            step.unwrap
-            or (not step.unwrap and not step.auto_run_tools)
-            or (not step.unwrap and message["choices"][0]["finish_reason"] != "tool_calls")
-        ):
-            workflow.logger.debug(f"Prompt step: Received response: {message}")
-            return PartialTransition(output=message)
-
         choice = message["choices"][0]
         finish_reason = choice["finish_reason"]
-
-        if not (step.auto_run_tools and not step.unwrap and finish_reason == "tool_calls"):
-            return None
+        if step.unwrap or not step.auto_run_tools or finish_reason != "tool_calls":
+            workflow.logger.debug(f"Prompt step: Received response: {message}")
+            return PartialTransition(output=message)
 
         tool_calls_input = choice["message"]["tool_calls"]
         input_type = tool_calls_input[0]["type"]
