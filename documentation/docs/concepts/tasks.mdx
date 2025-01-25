@@ -33,7 +33,7 @@ A task consists of several key components which can be broadly classified into:
 
 ### Input Schema
 
-```yaml
+```yaml YAML
 name: Summarize Document
 description: Create a concise summary of any document
 input_schema:
@@ -55,7 +55,7 @@ Tools are functions that can be used by an agent to perform tasks. Julep support
 
 Learn more about tools [here](/docs/concepts/tools).
 
-```yaml
+```yaml YAML
 tools:
   - name: internet_search
     description: Performs an internet search using Brave
@@ -71,7 +71,7 @@ tools:
 
 A task can be made up of multiple sub-workflows. These sub-workflows can be named and can be used to break down complex tasks into smaller, more manageable pieces.
 
-```yaml
+```yaml YAML
 name: Summarize Document
 description: Create a concise summary of any document
 
@@ -110,6 +110,7 @@ Below is a table of all the steps that can be used in a task.
 | [Return](/docs/advanced/types-of-task-steps#return-step) | Return values from workflow |
 | [Yield](/docs/advanced/types-of-task-steps#yield-step) | Execute subworkflows |
 | [Log](/docs/advanced/types-of-task-steps#log-step) | Log messages or specific values |
+| [Error](/docs/advanced/types-of-task-steps#error-step) | Handle errors by specifying an error message |
 
 > You can learn more about workflow steps as to how they work in the [Workflow Steps](/docs/advanced/types-of-task-steps) section.
 
@@ -119,20 +120,20 @@ Tasks have access to three types of context:
 
 #### Input Variables
 Access input parameters:
-```yaml
+```yaml YAML
 - prompt: "Hello {{inputs[0].user_name}}"
 ```
 
 #### Step Results
 Use outputs from previous steps:
-```yaml
+```yaml YAML
 - evaluate: len(_.search_results)
 - if: _.count > 0
 ```
 
 #### Environment Context
 Access agent and session data:
-```yaml
+```yaml YAML
 - prompt: "Agent {{agent.name}} is helping you"
 ```
 
@@ -142,7 +143,7 @@ Access agent and session data:
 
 Here's how these components work together:
 
-```yaml
+```yaml YAML
 name: Process Customer Feedback
 description: Analyze and categorize customer feedback
 input_schema:
@@ -182,7 +183,6 @@ Here's a simple task that summarizes a document and checks if the summary is too
 
 <CodeGroup>
 
-
 ```yaml YAML
 name: Summarize Document
 description: Create a concise summary of any document
@@ -213,11 +213,25 @@ main:
 ```python Python
 # Create a task
 import yaml
+task_yaml = """
+// ... task yaml here ...
+"""
 task_def = yaml.safe_load(task_yaml)
 task = client.tasks.create(
     agent_id="agent_id",
     **task_def
 )
+```
+
+```javascript Node.js
+// Create a task
+const taskYaml = `
+// ... task yaml here ...
+`
+async function createTask(agentId) {
+  const task = await client.tasks.create(agentId, yaml.parse(taskYaml));
+  return task;
+}
 ```
 </CodeGroup>
 
@@ -230,7 +244,8 @@ task = client.tasks.create(
 
 Here's how to execute a task:
 
-```python
+<CodeGroup>
+```python Python
 # Execute a task
 execution = client.executions.create(
     task_id=task.id,
@@ -247,6 +262,33 @@ while True:
     time.sleep(1)
 ```
 
+```javascript Node.js
+// Execute a task
+async function executeTask(taskId) {
+  const execution = await client.executions.create(taskId, {
+    input: { idea: "A cat who learns to fly" },
+  });
+
+  while (true) {
+    const result = await client.executions.get(execution.id);
+    console.log(result.status, result.output);
+
+    if (result.status === "succeeded" || result.status === "failed") {
+      // 📦 Once the execution is finished, retrieve the results
+      if (result.status === "succeeded") {
+        console.log(result.output);
+      } else {
+        throw new Error(result.error);
+      }
+      break;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+}
+```
+</CodeGroup>
+
 <Tip>
     Check out the API reference [here](/api-reference/executions) or SDK reference (Python [here](/sdks/python/reference#executions) or JavaScript [here](/sdks/nodejs/reference#executions) for more details on different operations you can perform on tasks.
 </Tip>
@@ -261,7 +303,7 @@ Julep agents can power tasks by providing memory, context, or tools. Tasks are m
 
 For example:
 
-```python
+```python Python
 # Create an agent with specific tools
 agent = client.agents.create(
     name="Customer Support Agent",
