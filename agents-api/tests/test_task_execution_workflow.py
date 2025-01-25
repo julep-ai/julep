@@ -507,7 +507,7 @@ async def _():
             step=0,
         ),
     )
-    message = {"choices": [{"finish_reason": "stop"}]}
+    message = "Hello there"
     outcome = StepOutcome(output=message)
     wf.context = context
     wf.outcome = outcome
