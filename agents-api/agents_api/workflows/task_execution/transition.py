@@ -7,7 +7,6 @@ with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
         CreateTransitionRequest,
-        Transition,
         TransitionTarget,
     )
     from ...common.protocol.tasks import PartialTransition, StepContext
@@ -22,7 +21,7 @@ with workflow.unsafe.imports_passed_through():
 
 async def transition(
     context: StepContext, state: PartialTransition | None = None, **kwargs
-) -> Transition:
+) -> CreateTransitionRequest:
     if state is None:
         state = PartialTransition()
 
@@ -50,7 +49,7 @@ async def transition(
     )
 
     try:
-        return await workflow.execute_activity(
+        await workflow.execute_activity(
             task_steps.transition_step,
             args=[context, transition_request],
             schedule_to_close_timeout=timedelta(
@@ -59,6 +58,7 @@ async def transition(
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
+        return transition_request
 
     except Exception as e:
         workflow.logger.error(f"Error in transition: {e!s}")

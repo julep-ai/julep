@@ -3,6 +3,7 @@ from uuid import UUID
 
 from beartype import beartype
 from pydantic import BaseModel
+from temporalio import workflow
 
 from ...autogen.openapi_model import (
     Agent,
@@ -22,18 +23,29 @@ from ...autogen.openapi_model import (
     Workflow,
 )
 
+with workflow.unsafe.imports_passed_through():
+    from ...worker.codec import RemoteObject
+
 
 class ExecutionInput(BaseModel):
+    loaded: bool = False
     developer_id: UUID
     execution: Execution | None = None
     task: TaskSpecDef | None = None
     agent: Agent
     agent_tools: list[Tool | CreateToolRequest]
-    arguments: dict[str, Any]
+    arguments: dict[str, Any] | RemoteObject
+
+    # TODO: Convert fields to only arguments (remote object only), exectuion_id, developer_id
 
     # Not used at the moment
     user: User | None = None
     session: Session | None = None
+
+    def load_arguments(self) -> None:
+        if isinstance(self.arguments, RemoteObject):
+            self.arguments = self.arguments.load()
+            self.loaded = True
 
 
 @beartype
