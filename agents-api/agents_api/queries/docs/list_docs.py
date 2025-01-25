@@ -35,6 +35,7 @@ JOIN doc_owners doc_own
     AND d.doc_id = doc_own.doc_id
 LEFT JOIN docs_embeddings e
     ON d.doc_id = e.doc_id
+    AND d.index = e.index
 WHERE d.developer_id = $1
     AND doc_own.owner_type = $3
     AND doc_own.owner_id = $4
