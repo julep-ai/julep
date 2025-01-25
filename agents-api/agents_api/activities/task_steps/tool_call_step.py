@@ -1,16 +1,7 @@
 import base64
 import secrets
 
-from beartype import beartype
-from temporalio import activity
-from temporalio.exceptions import ApplicationError
-
-from ...activities.task_steps.base_evaluate import base_evaluate
-from ...autogen.openapi_model import CreateToolRequest, Tool, ToolCallStep
-from ...common.protocol.tasks import (
-    StepContext,
-    StepOutcome,
-)
+from ...autogen.openapi_model import CreateToolRequest, Tool
 
 
 # FIXME: This shouldn't be here.
