@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "julep-cli"
 version = "0.1.0a1"
@@ -15,7 +19,11 @@ dependencies = [
   "uvloop~=0.21.0",
   "xxhash~=3.5.0",
   "unique-namer>=1.6.1",
+  "typer>=0.15.1",
 ]
+
+[project.scripts]
+julep-cli = "julep_cli:app"
 
 [dependency-groups]
 dev = [
