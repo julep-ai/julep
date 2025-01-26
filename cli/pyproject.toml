@@ -1,0 +1,37 @@
+[project]
+name = "julep-cli"
+version = "0.1.0a1"
+description = "Julep CLI"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "anyio~=4.4.0",
+  "beartype~=0.18.5",
+  "environs~=10.3.0",
+  "jsonschema~=4.22.0",
+  "openai~=1.55.0",
+  "pandas~=2.2.2",
+  "pydantic[email]~=2.10.2",
+  "uvloop~=0.21.0",
+  "xxhash~=3.5.0",
+  "unique-namer>=1.6.1",
+]
+
+[dependency-groups]
+dev = [
+    "ipython>=8.30.0",
+    "ipywidgets>=8.1.5",
+    "julep>=1.43.1",
+    "jupyterlab>=4.3.1",
+    "pip>=24.3.1",
+    "poethepoet>=0.31.1",
+    "pyright>=1.1.391",
+    "ruff>=0.8.4",
+    "ward>=0.68.0b0",
+]
+
+[tool.setuptools]
+py-modules = [
+    "julep_cli",
+]
+
