@@ -55,7 +55,7 @@ RETURNING *;
     transform=transform_doc,
 )
 @increase_counter("create_doc")
-@pg_query()
+@pg_query
 @beartype
 async def create_doc(
     *,

@@ -26,7 +26,7 @@ async def create_user_doc(
         x_developer_id (UUID): The unique identifier of the developer associated with the document.
 
     Returns:
-        Doc: The created document.
+        dict: The created document.
     """
 
     doc: dict = await create_doc_query(
