@@ -26,6 +26,7 @@ FROM docs d
 LEFT JOIN docs_embeddings e
     ON d.doc_id = e.doc_id
     AND e.embedding IS NOT NULL
+    AND d.index = e.index
 WHERE d.developer_id = $1
     AND d.doc_id = $2
 GROUP BY
