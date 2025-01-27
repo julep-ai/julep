@@ -129,7 +129,11 @@ async def create_doc(
         queries.append((doc_owner_query, final_params_owner, "fetchmany"))
 
         # get the doc with embedding
-        queries.append((doc_without_embedding_query, [developer_id, current_doc_id], "fetchrow"))
+        queries.append((
+            doc_without_embedding_query,
+            [developer_id, current_doc_id],
+            "fetchrow",
+        ))
 
     else:
         # Create the doc record
@@ -160,6 +164,10 @@ async def create_doc(
         queries.append((doc_owner_query, owner_params, "fetch"))
 
         # get the doc with embedding
-        queries.append((doc_without_embedding_query, [developer_id, current_doc_id], "fetchrow"))
+        queries.append((
+            doc_without_embedding_query,
+            [developer_id, current_doc_id],
+            "fetchrow",
+        ))
 
     return queries
