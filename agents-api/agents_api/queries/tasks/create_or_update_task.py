@@ -4,11 +4,12 @@ from uuid import UUID
 from beartype import beartype
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateOrUpdateTaskRequest, ResourceUpdatedResponse
-from ...common.protocol.models import task_to_spec
+from ...autogen.openapi_model import CreateOrUpdateTaskRequest
+from ...common.protocol.models import spec_to_task, task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
+from .get_task import get_task_query
 
 # Define the raw SQL query for creating or updating a task
 tools_query = """
@@ -124,16 +125,11 @@ FROM version;
 
 @rewrap_exceptions(common_db_exceptions("task", ["create_or_update"]))
 @wrap_in_class(
-    ResourceUpdatedResponse,
+    spec_to_task,
     one=True,
-    transform=lambda d: {
-        "id": d["task_id"],
-        "updated_at": d["updated_at"].timestamp(),
-        **d,
-    },
 )
 @increase_counter("create_or_update_task")
-@pg_query(return_index=0)
+@pg_query
 @beartype
 async def create_or_update_task(
     *,
@@ -141,7 +137,7 @@ async def create_or_update_task(
     agent_id: UUID,
     task_id: UUID,
     data: CreateOrUpdateTaskRequest,
-) -> list[tuple[str, list, Literal["fetch", "fetchmany"]]]:
+) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
     """
     Constructs an SQL query to create or update a task.
 
@@ -221,5 +217,10 @@ async def create_or_update_task(
             workflows_query,
             workflow_params,
             "fetchmany",
+        ),
+        (
+            get_task_query,
+            [developer_id, task_id],
+            "fetchrow",
         ),
     ]

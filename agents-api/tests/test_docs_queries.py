@@ -1,4 +1,4 @@
-from agents_api.autogen.openapi_model import CreateDocRequest
+from agents_api.autogen.openapi_model import CreateDocRequest, Doc
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.docs.create_doc import create_doc
 from agents_api.queries.docs.delete_doc import delete_doc
@@ -37,6 +37,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         connection_pool=pool,
     )
 
+    assert isinstance(doc_created, Doc)
     assert doc_created.id is not None
 
     # Verify doc appears in user's docs
@@ -63,6 +64,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
+    assert isinstance(doc, Doc)
     assert doc.id is not None
 
     # Verify doc appears in agent's docs
@@ -83,6 +85,7 @@ async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
         doc_id=doc.id,
         connection_pool=pool,
     )
+    assert isinstance(doc_test, Doc)
     assert doc_test.id == doc.id
     assert doc_test.title is not None
     assert doc_test.content is not None

@@ -17,6 +17,7 @@ interface Endpoints
     extends GetEndpoint<Execution, "Get an Execution by id">,
         UpdateEndpoint<
             UpdateExecutionRequest,
+            Execution,
             "Update an existing Execution"
         > {}
 
@@ -38,13 +39,14 @@ interface PublicEndpoints {
 
         @body
         @doc("Response of resuming the execution with the ID found")
-        body: ResourceUpdatedResponse;
+        body: Execution;
     };
 }
 
 interface TaskEndpoints
     extends ChildCreateEndpoint<
             CreateExecutionRequest,
+            Execution,
             "Create an execution for the given task"
         >,
         ChildLimitOffsetPagination<

@@ -7,7 +7,7 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
+from ...autogen.openapi_model import Agent, PatchAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
@@ -51,15 +51,18 @@ RETURNING *;
 
 @rewrap_exceptions(common_db_exceptions("agent", ["patch"]))
 @wrap_in_class(
-    ResourceUpdatedResponse,
+    Agent,
     one=True,
-    transform=lambda d: {"id": d["agent_id"], **d},
+    transform=lambda d: {**d, "id": d["agent_id"]},
 )
 @increase_counter("patch_agent")
 @pg_query
 @beartype
 async def patch_agent(
-    *, agent_id: UUID, developer_id: UUID, data: PatchAgentRequest
+    *,
+    agent_id: UUID,
+    developer_id: UUID,
+    data: PatchAgentRequest,
 ) -> tuple[str, list]:
     """
     Constructs the SQL query to partially update an agent's details.

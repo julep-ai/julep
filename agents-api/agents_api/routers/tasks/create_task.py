@@ -6,10 +6,7 @@ from jsonschema import validate
 from jsonschema.exceptions import SchemaError, ValidationError
 from starlette.status import HTTP_201_CREATED
 
-from ...autogen.openapi_model import (
-    CreateTaskRequest,
-    ResourceCreatedResponse,
-)
+from ...autogen.openapi_model import CreateTaskRequest, Task
 from ...dependencies.developer_id import get_developer_id
 from ...queries.tasks.create_task import create_task as create_task_query
 from .router import router
@@ -20,7 +17,7 @@ async def create_task(
     data: CreateTaskRequest,
     agent_id: UUID,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
-) -> ResourceCreatedResponse:
+) -> Task:
     # TODO: Do thorough validation of the task spec
     # SCRUM-10
 

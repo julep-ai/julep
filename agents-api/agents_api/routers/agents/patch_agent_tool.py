@@ -3,10 +3,7 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from ...autogen.openapi_model import (
-    PatchToolRequest,
-    ResourceUpdatedResponse,
-)
+from ...autogen.openapi_model import PatchToolRequest, Tool
 from ...dependencies.developer_id import get_developer_id
 from ...queries.tools.patch_tool import patch_tool as patch_tool_query
 from .router import router
@@ -18,7 +15,7 @@ async def patch_agent_tool(
     agent_id: UUID,
     tool_id: UUID,
     data: PatchToolRequest,
-) -> ResourceUpdatedResponse:
+) -> Tool:
     return await patch_tool_query(
         developer_id=x_developer_id,
         agent_id=agent_id,

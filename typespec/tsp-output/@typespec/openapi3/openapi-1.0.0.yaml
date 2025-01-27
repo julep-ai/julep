@@ -50,7 +50,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                $ref: '#/components/schemas/Agents.Agent'
       requestBody:
         required: true
         content:
@@ -69,7 +69,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Agents.Agent'
       requestBody:
         required: true
         content:
@@ -92,7 +92,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Agents.Agent'
       requestBody:
         required: true
         content:
@@ -115,7 +115,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Agents.Agent'
       requestBody:
         required: true
         content:
@@ -202,7 +202,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                $ref: '#/components/schemas/Docs.Doc'
       requestBody:
         required: true
         content:
@@ -306,12 +306,12 @@ paths:
           schema:
             $ref: '#/components/schemas/Common.uuid'
       responses:
-        '200':
-          description: The request has succeeded.
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                $ref: '#/components/schemas/Tasks.Task'
       requestBody:
         required: true
         content:
@@ -350,7 +350,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Tasks.Task'
       requestBody:
         required: true
         content:
@@ -379,7 +379,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Tasks.Task'
       requestBody:
         required: true
         content:
@@ -441,7 +441,7 @@ paths:
                   - items
     post:
       operationId: AgentToolsRoute_create
-      description: Create a new tool for this agent
+      description: Create a new resource owned by the given parent
       parameters:
         - name: id
           in: path
@@ -455,7 +455,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                type: string
+                enum:
+                  - Create a new tool for this agent
       requestBody:
         required: true
         content:
@@ -465,7 +467,7 @@ paths:
   /agents/{id}/tools/{child_id}:
     put:
       operationId: AgentToolsRoute_update
-      description: Update an existing tool (overwrite existing values)
+      description: Update a resource owned by the given parent using its id
       parameters:
         - name: id
           in: path
@@ -485,7 +487,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                type: string
+                enum:
+                  - Update an existing tool (overwrite existing values)
       requestBody:
         required: true
         content:
@@ -494,7 +498,7 @@ paths:
               $ref: '#/components/schemas/Tools.UpdateToolRequest'
     patch:
       operationId: AgentToolsRoute_patch
-      description: Update an existing tool (merges with existing values)
+      description: Patch a resource owned by the given parent using its id
       parameters:
         - name: id
           in: path
@@ -514,7 +518,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                type: string
+                enum:
+                  - Update an existing tool (merges with existing values)
       requestBody:
         required: true
         content:
@@ -562,7 +568,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Tasks.Task'
       requestBody:
         required: true
         content:
@@ -639,7 +645,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Executions.Execution'
       requestBody:
         required: true
         content:
@@ -683,7 +689,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Executions.Execution'
       requestBody:
         required: true
         content:
@@ -765,7 +771,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                $ref: '#/components/schemas/Files.File'
       requestBody:
         required: true
         content:
@@ -842,7 +848,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                $ref: '#/components/schemas/Sessions.Session'
       requestBody:
         required: true
         content:
@@ -861,7 +867,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Sessions.Session'
       requestBody:
         required: true
         content:
@@ -884,7 +890,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Sessions.Session'
       requestBody:
         required: true
         content:
@@ -907,7 +913,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Sessions.Session'
       requestBody:
         required: true
         content:
@@ -1051,7 +1057,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                $ref: '#/components/schemas/Executions.Execution'
       requestBody:
         required: true
         content:
@@ -1121,7 +1127,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                $ref: '#/components/schemas/Users.User'
       requestBody:
         required: true
         content:
@@ -1140,7 +1146,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Users.User'
       requestBody:
         required: true
         content:
@@ -1163,7 +1169,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Users.User'
       requestBody:
         required: true
         content:
@@ -1186,7 +1192,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceUpdatedResponse'
+                $ref: '#/components/schemas/Users.User'
       requestBody:
         required: true
         content:
@@ -1273,7 +1279,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Common.ResourceCreatedResponse'
+                $ref: '#/components/schemas/Docs.Doc'
       requestBody:
         required: true
         content:
@@ -2651,29 +2657,6 @@ components:
     Common.PyExpression:
       type: string
       description: A simple python expression compatible with SimpleEval.
-    Common.ResourceCreatedResponse:
-      type: object
-      required:
-        - id
-        - created_at
-        - jobs
-      properties:
-        id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of created resource
-        created_at:
-          type: string
-          format: date-time
-          description: When this resource was created as UTC date-time
-          readOnly: true
-        jobs:
-          type: array
-          items:
-            $ref: '#/components/schemas/Common.uuid'
-          description: IDs (if any) of jobs created as part of this request
-          default: []
-          readOnly: true
     Common.ResourceDeletedResponse:
       type: object
       required:
@@ -2689,29 +2672,6 @@ components:
           type: string
           format: date-time
           description: When this resource was deleted as UTC date-time
-          readOnly: true
-        jobs:
-          type: array
-          items:
-            $ref: '#/components/schemas/Common.uuid'
-          description: IDs (if any) of jobs created as part of this request
-          default: []
-          readOnly: true
-    Common.ResourceUpdatedResponse:
-      type: object
-      required:
-        - id
-        - updated_at
-        - jobs
-      properties:
-        id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of updated resource
-        updated_at:
-          type: string
-          format: date-time
-          description: When this resource was updated as UTC date-time
           readOnly: true
         jobs:
           type: array

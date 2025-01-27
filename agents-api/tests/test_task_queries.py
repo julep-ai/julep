@@ -3,7 +3,6 @@
 from agents_api.autogen.openapi_model import (
     CreateTaskRequest,
     PatchTaskRequest,
-    ResourceUpdatedResponse,
     Task,
     UpdateTaskRequest,
 )
@@ -27,7 +26,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that a task can be successfully created."""
 
     pool = await create_db_pool(dsn=dsn)
-    await create_task(
+    task = await create_task(
         developer_id=developer_id,
         agent_id=agent.id,
         task_id=uuid7(),
@@ -39,6 +38,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
         ),
         connection_pool=pool,
     )
+
+    assert isinstance(task, Task)
+    assert task.id is not None
+    assert task.main is not None
 
 
 @test("query: create or update task sql")
@@ -46,7 +49,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that a task can be successfully created or updated."""
 
     pool = await create_db_pool(dsn=dsn)
-    await create_or_update_task(
+    task = await create_or_update_task(
         developer_id=developer_id,
         agent_id=agent.id,
         task_id=uuid7(),
@@ -58,6 +61,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
         ),
         connection_pool=pool,
     )
+
+    assert isinstance(task, Task)
+    assert task.id is not None
+    assert task.main is not None
 
 
 @test("query: get task sql - exists")
@@ -213,7 +220,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     )
 
     assert updated is not None
-    assert isinstance(updated, ResourceUpdatedResponse)
+    assert isinstance(updated, Task)
     assert updated.id == task.id
 
     # Verify task was updated
@@ -285,7 +292,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     )
 
     assert updated is not None
-    assert isinstance(updated, ResourceUpdatedResponse)
+    assert isinstance(updated, Task)
     assert updated.id == task.id
 
     # Verify task was patched correctly

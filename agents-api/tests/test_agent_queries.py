@@ -6,7 +6,6 @@ from agents_api.autogen.openapi_model import (
     CreateOrUpdateAgentRequest,
     PatchAgentRequest,
     ResourceDeletedResponse,
-    ResourceUpdatedResponse,
     UpdateAgentRequest,
 )
 from agents_api.clients.pg import create_db_pool
@@ -79,7 +78,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     )
 
     assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
+    assert isinstance(result, Agent)
+    assert result.name == "updated agent"
+    assert result.about == "updated agent about"
+    assert result.model == "gpt-4o-mini"
+    assert result.default_settings.temperature == 1.0
+    assert result.metadata == {"hello": "world"}
 
 
 @test("query: get agent not exists sql")
@@ -106,6 +110,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
     assert result is not None
     assert isinstance(result, Agent)
+    assert result.id == agent.id
+    assert result.name == agent.name
+    assert result.about == agent.about
+    assert result.model == agent.model
+    assert result.default_settings == agent.default_settings
+    assert result.metadata == agent.metadata
 
 
 @test("query: list agents sql")
@@ -137,7 +147,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     )
 
     assert result is not None
-    assert isinstance(result, ResourceUpdatedResponse)
+    assert isinstance(result, Agent)
+    assert result.name == "patched agent"
+    assert result.about == "patched agent about"
+    assert result.default_settings.temperature == 1.0
 
 
 @test("query: delete agent sql")
