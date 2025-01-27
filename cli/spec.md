@@ -31,6 +31,88 @@ The `julep` CLI tool provides a comprehensive command-line interface for interac
 
 The `julep` CLI is designed to streamline interactions with the Julep platform, allowing developers to efficiently manage AI agents, tasks, tools, and projects directly from the terminal. It adheres to industry-standard CLI conventions, ensuring an intuitive and predictable user experience.
 
+### Components
+
+There are 3 main components to the `julep` CLI:
+
+1. The project management stuff (init, sync, etc.)
+2. The static stuff (agents, tasks, tools, etc.)
+3. The dynamic stuff (chat, run, logs, etc.)
+
+Different files that are important:
+- `~/.config/julep/config.yml`: The configuration file for the CLI.
+- `julep.yaml`: The configuration file for the project.
+- `julep-lock.json`: The lock file for the project that tracks server state.
+- `src/*.yaml`: The object definitions for the project (agents, tasks, tools, etc.).
+
+### Schema for the project files
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/julep.schema.json",
+  "title": "Julep Project Configuration Schema",
+  "type": "object",
+  "properties": {
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "definition": {
+            "type": "string",
+            "description": "Path to the file defining the agent."
+          },
+          "canonical_name": {
+            "type": "string",
+            "description": "A unique reference name for the agent."
+          }
+        },
+        "required": ["definition"],
+        "additionalProperties": false
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "description": "Reference to an agent ID or a templated expression (e.g. {agents[0].id})."
+          },
+          "definition": {
+            "type": "string",
+            "description": "Path to the file defining the task workflow."
+          }
+        },
+        "required": ["agent_id", "definition"],
+        "additionalProperties": false
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "description": "Reference to an agent ID or a templated expression (e.g. {agents['awesome-agent'].id})."
+          },
+          "definition": {
+            "type": "string",
+            "description": "Path to the tool configuration or definition file."
+          }
+        },
+        "required": ["agent_id", "definition"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
+```
+
 ---
 
 ## Installation
@@ -43,19 +125,7 @@ There are multiple ways to install the `julep` CLI:
     pipx install julep
     ```
 
-2. **Using npm:**
-
-    Ensure you have [Node.js](https://nodejs.org/) installed. Then, install the `julep` CLI globally using `npm`:
-
-    ```bash
-    npm install -g @julep/cli
-    ```
-
-3. **Using yarn:**
-
-    ```bash
-    yarn global add @julep/cli
-    ```
+2. **Using zipapp** (later)
 
 ---
 
@@ -871,4 +941,8 @@ For further assistance or to contribute to the CLI's development, refer to the [
   - Have a `--skip-verify` flag to skip verification of the API key.
   - Ideally: Have a `/me` endpoint to verify the API key from the Julep backend.
   - Save the `developer_id` in the config file too.
+
+- `julep init` command:
+  - Have `--template` flag to specify the template to use.
+  - for now, the template should be set to `hello-world` by default.
 
