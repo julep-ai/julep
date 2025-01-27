@@ -5,7 +5,7 @@ from beartype import beartype
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateOrUpdateTaskRequest
-from ...common.protocol.models import task_to_spec, spec_to_task
+from ...common.protocol.models import spec_to_task, task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
@@ -127,7 +127,6 @@ FROM version;
 @wrap_in_class(
     spec_to_task,
     one=True,
-
 )
 @increase_counter("create_or_update_task")
 @pg_query

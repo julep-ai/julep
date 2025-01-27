@@ -73,6 +73,7 @@ ORDER BY d.created_at DESC
 LIMIT 1;
 """
 
+
 @rewrap_exceptions(common_db_exceptions("doc", ["get"]))
 @wrap_in_class(
     Doc,
