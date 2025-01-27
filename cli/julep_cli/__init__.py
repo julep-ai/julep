@@ -1,6 +1,10 @@
 import json
 import os
 from pathlib import Path
+import requests
+import zipfile
+import io
+import shutil
 
 import typer
 from environs import Env
@@ -96,27 +100,6 @@ def main(
     """
     Julep CLI - Command line interface for the Julep platform
     """
-
-
-# Init command
-@app.command()
-def init(
-    template: str = typer.Option(
-        ...,
-        "--template",
-        "-t",
-        help="Template name to use",
-    ),
-    destination: Path = typer.Option(
-        Path.cwd(),
-        "--destination",
-        "-d",
-        help="Destination directory",
-    ),
-):
-    """Initialize a new Julep project"""
-    # TODO: Implement template copying logic
-    typer.echo(f"Initializing new project from template '{template}' in {destination}")
 
 
 # Sync command
@@ -363,6 +346,85 @@ def get(
     for key, value in agent.items():
         typer.echo(f"{key}: {value}")
 
+
+################################################################################
+############################### INIT COMMAND ###################################
+
+@app.command()
+def init(
+    template: str = typer.Option(
+        "hello-world",  # Default template is "hello-world"
+        "--template",
+        "-t",
+        help="Template name to use",
+    ),
+    destination: Path = typer.Option(
+        Path.cwd(),  # Default destination is current working directory
+        "--destination",
+        "-d",
+        help="Destination directory",
+    ),
+):
+    """Initialize a new Julep project"""
+    repo_url = "https://github.com/julep-ai/library"
+    branch = "main"
+    template_url = f"{repo_url}/archive/refs/heads/{branch}.zip"
+
+    try:
+        # Download the repository as a zip file
+        response = requests.get(template_url)
+        response.raise_for_status()
+
+        # Extract the zip file
+        with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+            # Construct the path to the template folder within the zip
+                
+            repo_prefix = f"library-{branch}/"
+
+            template_folder = f"{repo_prefix}{template}/"
+            # Extract only the specified template folder
+
+            typer.echo(f"Extracting template '{template}' to {destination}")
+
+            for file_info in z.infolist():
+                if file_info.filename.startswith(template_folder):
+                    # Remove the leading directory path
+                    
+                    z.extract(file_info, destination)
+
+                    library_repo_prefix = destination / f"library-{branch}"
+                    # Move the inner template directory to the destination directory
+                    extracted_template_path = library_repo_prefix / template
+                    final_destination = destination / template
+
+                    # Ensure the final destination directory exists
+                    final_destination.mkdir(parents=True, exist_ok=True)
+
+                    # Move files from the extracted template path to the final destination
+                    for item in extracted_template_path.iterdir():
+                        item.rename(final_destination / item.name)
+
+                    # Remove the extracted template directory and its parent
+                    shutil.rmtree(library_repo_prefix)
+
+                    
+
+    except requests.exceptions.RequestException as e:
+        typer.echo(f"Failed to download template: {e}", err=True)
+        raise typer.Exit(1)
+    except zipfile.BadZipFile as e:
+        typer.echo(f"Failed to extract template: {e}", err=True)
+        raise typer.Exit(1)
+
+    julep_toml = destination / template / "julep.toml"
+    if not julep_toml.exists():
+        typer.echo(
+            "Error: 'julep.toml' not found in the destination directory", err=True)
+        raise typer.Exit(1)
+
+    typer.echo(f"Initialized new Julep project with template '{template}' in {destination}")
+
+################################################################################
 
 if __name__ == "__main__":
     app()
