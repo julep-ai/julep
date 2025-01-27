@@ -1,13 +1,16 @@
+from pydoc import Doc
 from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateDocRequest
+from ...autogen.openapi_model import CreateDocRequest, Doc
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from .get_doc import doc_without_embedding_query
+from .utils import transform_doc
 
 # Base INSERT for docs
 doc_query = """
@@ -48,12 +51,9 @@ RETURNING *;
 
 @rewrap_exceptions(common_db_exceptions("doc", ["create"]))
 @wrap_in_class(
-    dict,
+    Doc,
     one=True,
-    transform=lambda d: {
-        **d,
-        "id": d["doc_id"],
-    },
+    transform=transform_doc,
 )
 @increase_counter("create_doc")
 @pg_query
@@ -128,6 +128,9 @@ async def create_doc(
         # Add the owner query
         queries.append((doc_owner_query, final_params_owner, "fetchmany"))
 
+        # get the doc with embedding
+        queries.append((doc_without_embedding_query, [developer_id, current_doc_id], "fetchrow"))
+
     else:
         # Create the doc record
         doc_params = [
@@ -155,5 +158,8 @@ async def create_doc(
 
         # Add the owner query
         queries.append((doc_owner_query, owner_params, "fetch"))
+
+        # get the doc with embedding
+        queries.append((doc_without_embedding_query, [developer_id, current_doc_id], "fetchrow"))
 
     return queries

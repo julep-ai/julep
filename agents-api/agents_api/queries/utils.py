@@ -126,18 +126,16 @@ def pg_query[**P](
 
                     for method_name, payload in batch:
                         method = getattr(conn, method_name)
-
                         query = payload["query"]
                         args = payload["args"]
                         timeout = payload.get("timeout")
-
                         results: list[Record] = await method(query, *args, timeout=timeout)
                         if method_name == "fetchrow":
                             results = (
                                 [results]
                                 if results is not None
                                 and results.get("bool", False) is not None
-                                and results.get("exists", True) is not False
+                                and results.get("exists", True)
                                 else []
                             )
 
