@@ -891,16 +891,59 @@ julep new
 The CLI configuration is stored in `~/.config/julep/config.yml`. Below is an example configuration file:
 
 ```yaml
-api_key: your_julep_api_key
-environment: production
-default_agent: "Storyteller"
+profiles:
+- name: default
+  api_key: your_julep_api_key
+  environment: production
+```
+
+**Schema:**
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/julep-config.schema.json",
+  "title": "Julep CLI Configuration Schema",
+  "type": "object",
+  "properties": {
+    "profiles": {
+      "type": "array",
+      "description": "List of configuration profiles",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the profile"
+          },
+          "api_key": {
+            "type": "string",
+            "description": "Julep API key for authentication"
+          },
+          "environment": {
+            "type": "string",
+            "description": "Environment to use for this profile",
+            "enum": ["production", "development", "local-multi-tenant", "local"],
+            "default": "production"
+          }
+        },
+        "required": ["name", "api_key"],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["profiles"],
+  "additionalProperties": false
+}
 ```
 
 **Fields:**
 
-- `api_key`: Your Julep API key for authentication.
-- `environment`: Specifies the environment (`production`, `development`, etc.).
-- `default_agent`: Sets a default agent to use for commands that require an agent.
+- `profiles`: Array of configuration profiles
+  - `name`: Name of the profile (e.g. "default")
+  - `api_key`: Your Julep API key for authentication
+  - `environment`: Specifies the environment (`production`, `development`, `local-multi-tenant`, `local`). Defaults to `production`
 
 ---
 
