@@ -133,7 +133,7 @@ class TaskExecutionWorkflow:
     async def set_last_error(self, value: LastErrorInput):
         self.last_error = value.last_error
 
-    async def _eval_step_exprs(self, step_type: WorkflowStep):
+    async def eval_step_exprs(self, step_type: WorkflowStep):
         expr, output, transition_to = None, None, None
 
         match step_type:
@@ -200,7 +200,7 @@ class TaskExecutionWorkflow:
                 transition_to = ("step", transition_target)
 
         if expr is not None:
-            output = await base_evaluate(expr, self.context.prepare_for_step())
+            output = await base_evaluate(expr, await self.context.prepare_for_step())
 
         return StepOutcome(output=output, transition_to=transition_to)
 
@@ -692,7 +692,7 @@ class TaskExecutionWorkflow:
                 )
                 workflow.logger.debug(f"Step {context.cursor.step} completed successfully")
             else:
-                outcome = await self._eval_step_exprs(step_type)
+                outcome = await self.eval_step_exprs(step_type)
         except Exception as e:
             workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
             await transition(context, type="error", output=str(e))
