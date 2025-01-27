@@ -558,25 +558,39 @@ Synchronize the local Julep package with the Julep platform.
 **Usage:**
 
 ```bash
-julep sync --source=<path>
+julep sync --source=<path> [--overwrite=<local|remote>]
 ```
 
 **Options:**
 
 - `--source`, `-s` (required): Source directory containing the Julep package (must include `julep.toml`).
-- `--force`, `-f` (optional): Force synchronization even if discrepancies are detected.
+- `--overwrite`, `-o` (optional): Specify how to handle conflicts:
+  - `local`: Override local changes with remote state
+  - `remote`: Override remote state with local changes
+  - If not specified and remote has newer changes, an error will be raised
 - `--dry-run`, `-d` (optional): Simulate synchronization without making API calls.
 
 **Example:**
 
 ```bash
+# Normal sync
 julep sync --source=./my-julep-project
+
+# Force local to match remote state
+julep sync --source=./my-julep-project --overwrite=local
+
+# Force remote to match local state
+julep sync --source=./my-julep-project --overwrite=remote
 ```
 
 **Behavior:**
 
 1. Validates the presence of `julep.toml` in the source directory.
-2. Synchronizes the package with the Julep backend, uploading any changes.
+2. Compares local and remote states:
+   - If local is newer and no conflicts, updates remote
+   - If remote is newer and no `--overwrite` specified, raises an error with guidance
+   - If `--overwrite=local` specified, updates local to match remote
+   - If `--overwrite=remote` specified, updates remote to match local
 3. Provides feedback on the synchronization status.
 
 ---
@@ -750,242 +764,4 @@ julep CLI version 1.2.3
 
 #### Help
 
-##### `julep help`, `julep --help`, `julep -h`
-
-**Description:**  
-Display help information for the CLI or specific commands.
-
-**Usage:**
-
-```bash
-julep --help
-```
-
-**Behavior:**
-
-- Provides detailed information about commands, subcommands, and options.
-- Shows usage examples and descriptions for each option.
-
----
-
-## Best Practices
-
-The `julep` CLI adheres to the following best practices to ensure a consistent and user-friendly experience:
-
-1. **Default Options:**  
-   Commands that can have default values provide them to simplify usage.
-
-2. **Readable Option Names with Short Aliases:**  
-   Long, descriptive option names are paired with short aliases (e.g., `--agent` and `-a`) for convenience.
-
-3. **Consistent CLI Patterns:**  
-   The CLI follows common command-line conventions, making it intuitive for users familiar with industry standards.
-
-4. **Explicit File Identification:**  
-   Options are available to explicitly specify files or directories to process, reducing ambiguity.
-
-5. **No Positional Options:**  
-   All options are specified using flags, avoiding positional arguments to enhance flexibility.
-
-6. **Comprehensive Help Command:**  
-   Accessible via `help`, `--help`, or `-h`, providing extensive guidance on commands and usage.
-
-7. **Version Command:**  
-   Accessible via `version`, `--version`, or `-v`, allowing users to check the CLI version easily.
-
-8. **Real-Time Feedback:**  
-   The CLI provides immediate feedback for operations, ensuring users are informed about the progress and outcomes.
-
-9. **Dry-Run Options:**  
-   Commands that perform actions with side effects offer `--dry-run` options to simulate actions without making changes.
-
-10. **Error Recovery for Long-Running Operations:**  
-    For operations that may take time, mechanisms are in place to resume from failure points if possible.
-
-11. **Consistent Exit Codes:**  
-    The CLI exits with non-zero status codes only when errors occur, enabling seamless integration with scripts and automation tools.
-
-12. **Proper Output Channels:**  
-    Useful information is written to `stdout`, while warnings and errors are sent to `stderr`, facilitating better logging and debugging.
-
-13. **Minimal CLI Script:**  
-    The CLI script is kept lightweight, delegating tasks to submodules or external processes to maintain simplicity.
-
-14. **Reserved Stack Traces:**  
-    Stack traces are only displayed for truly exceptional cases, keeping regular user output clean and focused.
-
----
-
-## Examples
-
-### Authenticate with API Key
-
-```bash
-julep auth --api-key your_julep_api_key
-```
-
-### Create a New Agent
-
-```bash
-julep agents create --name "Researcher" --model "gpt-4" --about "An agent that conducts research and summarizes findings."
-```
-
-### List All Agents
-
-```bash
-julep agents list
-```
-
-### Update an Existing Agent
-
-```bash
-julep agents update --id abc123 --name "Advanced Researcher" --model "gpt-4.5"
-```
-
-### Delete an Agent
-
-```bash
-julep agents delete --id abc123
-```
-
-### Initialize a New Project from Template
-
-```bash
-julep init --template=hello-world --destination=./my-new-project
-```
-
-### Synchronize Local Project with Julep
-
-```bash
-julep sync --source=./my-new-project
-```
-
-### Interact with an Agent via Chat
-
-```bash
-julep chat --agent "Researcher"
-```
-
-### Execute a Task with Input
-
-```bash
-julep run --task "Generate Report" --input '{"topic": "Climate Change"}'
-```
-
-### Retrieve Logs for an Execution
-
-```bash
-julep logs --execution-id exec789 --tail
-```
-
-### Launch the Project Wizard
-
-```bash
-julep new
-```
-
----
-
-## Configuration File
-
-The CLI configuration is stored in `~/.config/julep/config.yml`. Below is an example configuration file:
-
-```yaml
-profiles:
-- name: default
-  api_key: your_julep_api_key
-  environment: production
-```
-
-**Schema:**
-
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/julep-config.schema.json",
-  "title": "Julep CLI Configuration Schema",
-  "type": "object",
-  "properties": {
-    "profiles": {
-      "type": "array",
-      "description": "List of configuration profiles",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of the profile"
-          },
-          "api_key": {
-            "type": "string",
-            "description": "Julep API key for authentication"
-          },
-          "environment": {
-            "type": "string",
-            "description": "Environment to use for this profile",
-            "enum": ["production", "development", "local-multi-tenant", "local"],
-            "default": "production"
-          }
-        },
-        "required": ["name", "api_key"],
-        "additionalProperties": false
-      },
-      "minItems": 1
-    }
-  },
-  "required": ["profiles"],
-  "additionalProperties": false
-}
-```
-
-**Fields:**
-
-- `profiles`: Array of configuration profiles
-  - `name`: Name of the profile (e.g. "default")
-  - `api_key`: Your Julep API key for authentication
-  - `environment`: Specifies the environment (`production`, `development`, `local-multi-tenant`, `local`). Defaults to `production`
-
----
-
-## Error Handling
-
-The CLI follows robust error handling practices to ensure clarity and reliability:
-
-- **Non-zero Exit Codes:**  
-  The CLI exits with a non-zero status code only when an error occurs, allowing integration with automation tools and scripts.
-
-- **Clear Error Messages:**  
-  Errors are communicated clearly to the user, specifying the issue and potential resolutions.
-
-- **Dry-Run Validation:**  
-  Before performing actions, the CLI validates inputs and configurations, especially when `--dry-run` is used.
-
-- **Recovery Options:**  
-  For long-running operations, the CLI attempts to resume from failure points whenever possible, minimizing disruption.
-
-**Example Error Message:**
-
-```
-Error: Agent with ID abc123 not found.
-```
-
----
-
-## Conclusion
-
-The `julep` CLI is meticulously designed to provide an efficient and intuitive interface for managing AI agents, tasks, tools, and projects within the Julep platform. By adhering to industry best practices, it ensures a seamless user experience, facilitating the development and deployment of advanced AI workflows with ease.
-
-For further assistance or to contribute to the CLI's development, refer to the [Julep Documentation](https://docs.julep.ai/) or join the [Julep Discord Community](https://discord.com/invite/JTSBGRZrzj).
-
-## Notes (Draft):
-- `julep auth` command:
-  - Show the user where to get api key if prompted to enter one (e.g. you can get it from here...).
-  - Verify that the api-key is a valid jwt.
-  - Have a `--skip-verify` flag to skip verification of the API key.
-  - Ideally: Have a `/me` endpoint to verify the API key from the Julep backend.
-  - Save the `developer_id` in the config file too.
-
-- `julep init` command:
-  - Have `--template` flag to specify the template to use.
-  - for now, the template should be set to `hello-world` by default.
-
+##### `julep help`, `
