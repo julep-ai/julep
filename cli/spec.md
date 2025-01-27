@@ -814,7 +814,7 @@ julep sync --source=<path> [--overwrite=<local|remote>] [--watch]
 **Options:**
 
 - `--source`, `-s` (required): Source directory containing the Julep package (must include `julep.yaml`).
-- `--overwrite`, `-o` (optional): Specify how to handle conflicts:
+- `--overwrite`, (optional): Specify how to handle conflicts:
   - `local`: Override local changes with remote state
   - `remote`: Override remote state with local changes
   - If not specified and remote has newer changes, an error will be raised
