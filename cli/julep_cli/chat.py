@@ -1,4 +1,4 @@
-from pathlib import Path
+import json
 from typing import Annotated
 
 import typer
@@ -8,29 +8,30 @@ from .app import app
 
 @app.command()
 def chat(
-    agent: Annotated[str, typer.Option("--agent", "-a", help="Agent ID or name to chat with")],
+    agent: Annotated[
+        str,
+        typer.Option(
+            "--agent",
+            "-a",
+            help="ID or name of the agent to chat with",
+        ),
+    ],
     situation: Annotated[
         str | None, typer.Option("--situation", "-s", help="Situation to chat about")
     ] = None,
-    history: Annotated[
-        Path | None,
-        typer.Option(
-            "--history",
-            "-h",
-            help="Load chat history from file",
-        ),
-    ] = None,
-    save_history: Annotated[
-        Path | None,
-        typer.Option(
-            "--save-history",
-            "-s",
-            help="Save chat history to file",
-        ),
+    settings: Annotated[
+        str | None,
+        typer.Option("--settings", help="Chat settings as a JSON string", parser=json.loads),
     ] = None,
 ):
-    """Start an interactive chat session with an agent"""
+    """
+    Initiate an interactive chat session with a specified AI agent.
+
+    The chat session runs in the terminal, allowing real-time conversation with the agent.
+    """
     # TODO: Implement chat logic
     typer.echo(f"Starting chat with agent '{agent}'")
     if situation:
         typer.echo(f"Context: {situation}")
+    if settings:
+        typer.echo(f"Using custom settings: {settings}")
