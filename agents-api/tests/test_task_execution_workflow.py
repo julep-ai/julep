@@ -11,6 +11,9 @@ from agents_api.autogen.openapi_model import (
     ApiCallDef,
     BaseIntegrationDef,
     CaseThen,
+    Execution,
+    ForeachDo,
+    ForeachStep,
     GetStep,
     PromptItem,
     PromptStep,
@@ -21,6 +24,7 @@ from agents_api.autogen.openapi_model import (
     ToolCallStep,
     TransitionTarget,
     Workflow,
+    YieldStep,
 )
 from agents_api.common.protocol.tasks import (
     ExecutionInput,
@@ -665,3 +669,46 @@ async def _():
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             ),
         ])
+
+
+@test("task execution workflow: evaluate step expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    result = await wf.eval_step_exprs(
+        ForeachStep(foreach=ForeachDo(in_="1 + 1", do=YieldStep(workflow="wf1")))
+    )
+
+    assert result == StepOutcome(output="2")
