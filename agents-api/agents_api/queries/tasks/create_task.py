@@ -8,7 +8,6 @@ from ...autogen.openapi_model import CreateTaskRequest
 from ...common.protocol.models import spec_to_task, task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from .get_task import get_task_query
 from ..utils import (
     generate_canonical_name,
     pg_query,
@@ -16,7 +15,6 @@ from ..utils import (
     wrap_in_class,
 )
 from .get_task import get_task_query
-
 
 # Define the raw SQL query for creating or updating a task
 tools_query = """
@@ -192,4 +190,3 @@ async def create_task(
             "fetchrow",
         ),
     ]
-
