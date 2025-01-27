@@ -4,16 +4,18 @@ from uuid import UUID
 from beartype import beartype
 from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateTaskRequest, Task
-from ...common.protocol.models import task_to_spec
+from ...autogen.openapi_model import CreateTaskRequest
+from ...common.protocol.models import task_to_spec, spec_to_task
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
+from .get_task import get_task_query
 from ..utils import (
     generate_canonical_name,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
+
 
 # Define the raw SQL query for creating or updating a task
 tools_query = """
@@ -64,7 +66,6 @@ VALUES (
     $8::jsonb, -- input_schema
     $9::jsonb -- metadata
 )
-RETURNING *
 """
 
 # Define the raw SQL query for inserting workflows
@@ -92,16 +93,11 @@ VALUES (
 
 @rewrap_exceptions(common_db_exceptions("task", ["create"]))
 @wrap_in_class(
-    Task,
+    spec_to_task,
     one=True,
-    transform=lambda d: {
-        **d,
-        "id": d["task_id"],
-        "main": [{"evaluate": {"hi": "_"}}],
-    },
 )
 @increase_counter("create_task")
-@pg_query(return_index=0, debug=True)
+@pg_query
 @beartype
 async def create_task(
     *,
@@ -109,7 +105,7 @@ async def create_task(
     agent_id: UUID,
     task_id: UUID | None = None,
     data: CreateTaskRequest,
-) -> list[tuple[str, list, Literal["fetch", "fetchmany"]]]:
+) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
     """
     Constructs SQL queries to create or update a task along with its associated tools and workflows.
 
@@ -189,4 +185,10 @@ async def create_task(
             workflow_params,
             "fetchmany",
         ),
+        (
+            get_task_query,
+            [developer_id, task_id],
+            "fetchrow",
+        ),
     ]
+

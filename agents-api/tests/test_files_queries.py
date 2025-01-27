@@ -1,6 +1,6 @@
 # Tests for entry queries
 
-from agents_api.autogen.openapi_model import CreateFileRequest
+from agents_api.autogen.openapi_model import CreateFileRequest, File
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.files.create_file import create_file
 from agents_api.queries.files.delete_file import delete_file
@@ -14,7 +14,7 @@ from tests.fixtures import pg_dsn, test_agent, test_developer, test_file, test_u
 @test("query: create file")
 async def _(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
-    await create_file(
+    file = await create_file(
         developer_id=developer.id,
         data=CreateFileRequest(
             name="Hello",
@@ -24,6 +24,11 @@ async def _(dsn=pg_dsn, developer=test_developer):
         ),
         connection_pool=pool,
     )
+    assert isinstance(file, File)
+    assert file.id is not None
+    assert file.name == "Hello"
+    assert file.description == "World"
+    assert file.mime_type == "text/plain"
 
 
 @test("query: create user file")
@@ -41,6 +46,8 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         owner_id=user.id,
         connection_pool=pool,
     )
+    assert isinstance(file, File)
+    assert file.id is not None
     assert file.name == "User File"
 
     # Verify file appears in user's files

@@ -7,7 +7,7 @@ from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .utils import transform_doc
 
-# Update the query to use DISTINCT ON to prevent duplicates
+# get doc with embedding
 doc_with_embedding_query = """
 SELECT
     d.doc_id,
@@ -42,6 +42,36 @@ ORDER BY d.created_at DESC
 LIMIT 1;
 """
 
+# get doc without embedding
+doc_without_embedding_query = """
+SELECT
+    d.doc_id,
+    d.developer_id,
+    d.title,
+    array_agg(d.content ORDER BY d.index) as content,
+    array_agg(d.index ORDER BY d.index) as indices,
+    d.modality,
+    d.embedding_model,
+    d.embedding_dimensions,
+    d.language,
+    d.metadata,
+    d.created_at
+FROM docs d
+WHERE d.developer_id = $1
+    AND d.doc_id = $2
+GROUP BY
+    d.doc_id,
+    d.developer_id,
+    d.title,
+    d.modality,
+    d.embedding_model,
+    d.embedding_dimensions,
+    d.language,
+    d.metadata,
+    d.created_at
+ORDER BY d.created_at DESC
+LIMIT 1;
+"""
 
 @rewrap_exceptions(common_db_exceptions("doc", ["get"]))
 @wrap_in_class(

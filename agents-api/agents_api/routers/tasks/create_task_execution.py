@@ -118,7 +118,7 @@ async def create_task_execution(
     data: CreateExecutionRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
-) -> dict:
+) -> Execution:
     try:
         task = await get_task_query(task_id=task_id, developer_id=x_developer_id)
         validate(data.input, task.input_schema)
@@ -132,7 +132,7 @@ async def create_task_execution(
     # get developer data
     developer: Developer = await get_developer(developer_id=x_developer_id)
 
-    # # check if the developer is paid
+    # check if the developer is paid
     if "paid" not in developer.tags:
         executions = await count_executions_query(developer_id=x_developer_id, task_id=task_id)
 
@@ -155,8 +155,5 @@ async def create_task_execution(
         workflow_handle=handle,
     )
 
-    return {
-        "id": execution.id,
-        "created_at": execution.created_at,
-        "jobs": [handle.id],
-    }
+    execution.metadata = {"jobs": [handle.id]}
+    return execution
