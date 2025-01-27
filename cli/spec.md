@@ -45,7 +45,7 @@ Different files that are important:
 - `julep-lock.json`: The lock file for the project that tracks server state.
 - `src/*.yaml`: The object definitions for the project (agents, tasks, tools, etc.).
 
-### Schema for the project files
+### Schema for `julep.yaml`
 
 ```json
 {
@@ -113,6 +113,230 @@ Different files that are important:
 }
 ```
 
+### Schema for `julep-lock.json`
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/julep-lock.schema.json",
+  "title": "Julep Lockfile Schema",
+  "type": "object",
+  "properties": {
+    "lockfile_version": {
+      "type": "string",
+      "description": "Version of the lockfile format."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp representing when the lockfile was last updated."
+    },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to the agent definition file."
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the agent from the remote server."
+          },
+          "last_synced": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the last synchronization with the remote server."
+          },
+          "revision_hash": {
+            "type": "string",
+            "description": "Hash of the local file used for change detection."
+          }
+        },
+        "required": ["path", "id", "last_synced", "revision_hash"],
+        "additionalProperties": false
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to the task definition file."
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the task from the remote server."
+          },
+          "last_synced": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the last synchronization with the remote server."
+          },
+          "revision_hash": {
+            "type": "string",
+            "description": "Hash of the local file used for change detection."
+          }
+        },
+        "required": ["path", "id", "last_synced", "revision_hash"],
+        "additionalProperties": false
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to the tool definition file."
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the tool from the remote server."
+          },
+          "last_synced": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the last synchronization with the remote server."
+          },
+          "revision_hash": {
+            "type": "string",
+            "description": "Hash of the local file used for change detection."
+          }
+        },
+        "required": ["path", "id", "last_synced", "revision_hash"],
+        "additionalProperties": false
+      }
+    },
+    "relationships": {
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "description": "Identifier of the task."
+              },
+              "agent_id": {
+                "type": "string",
+                "description": "Identifier of the associated agent."
+              }
+            },
+            "required": ["task_id", "agent_id"],
+            "additionalProperties": false
+          }
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tool_id": {
+                "type": "string",
+                "description": "Identifier of the tool."
+              },
+              "agent_id": {
+                "type": "string",
+                "description": "Identifier of the associated agent."
+              }
+            },
+            "required": ["tool_id", "agent_id"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["tasks", "tools"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["lockfile_version", "agents", "tasks", "tools", "relationships"],
+  "additionalProperties": false
+} 
+```
+
+**Example:**
+
+```json
+{
+  // Minimal versioning for the lock file's structure. 
+  // Bump if you ever change this schema in a backward-incompatible way.
+  "lockfile_version": "0.1.0",
+
+  // (Optional) Timestamp or ISO string representing when this lock was last updated.
+  // "updated_at": "2025-01-27T14:13:52.123Z",
+
+  // Agents, tasks, and tools sections store local definitions alongside remote IDs.
+  "agents": [
+    {
+      "path": "src/agents/awesome-agent.yaml",
+      "id": "agent_123456",               // The remote ID from the server
+      "last_synced": "2025-01-27T14:13:52.123Z",
+      "revision_hash": "abc123def456..."   // Hash of local file for change detection
+    }
+  ],
+  "tasks": [
+    {
+      "path": "src/tasks/generate-story.yaml",
+      "id": "task_789abcd",
+      "last_synced": "2025-01-27T14:13:52.125Z",
+      "revision_hash": "def456abc789..."
+    }
+  ],
+  "tools": [
+    {
+      "path": "src/tools/web_search.yaml",
+      "id": "tool_xyz999",
+      "last_synced": "2025-01-27T14:13:52.130Z",
+      "revision_hash": "ghi678jkl012..."
+    }
+  ],
+
+  // A separate section for relationships/"foreign key" references
+  // so that tasks and tools can specify which agent they relate to.
+  "relationships": {
+    "tasks": [
+      {
+        "task_id": "task_789abcd",
+        "agent_id": "agent_123456"
+      }
+    ],
+    "tools": [
+      {
+        "tool_id": "tool_xyz999",
+        "agent_id": "agent_123456"
+      }
+    ]
+  }
+}
+```
+
+### How the lock file is used
+
+#### `relationships` Details
+
+*   `**tasks**`: An array where each item includes `task_id` and `agent_id`.
+    *   This is the CLI's record that _this remote task is associated with that remote agent._
+*   `**tools**`: Same pattern: a `tool_id` references a remote tool, and `agent_id` references the remote agent.
+*   You could expand the `relationships` object to store other relationships (e.g., task-tool references) if that's a thing in your system. You have the flexibility to break down relationships by type.
+
+#### How the CLI Should Use It
+
+**On** `**julep sync**`:  
+1.  Parse `julep.yaml` plus any local `.yaml` definitions.
+2.  Compare to `julep-lock.json`:
+      *   If you find a definition that's **not** in the lock file, create it on the server. Then save the new `id` to the lock file.
+      *   If you see a definition in the lock file but the `revision_hash` changed, update it on the server.
+      *   If an entry is in the lock file but the file no longer exists locally, prompt the user to delete the remote definition (or do so automatically).
+3.  Do the same logic for tasks and tools.
+4.  Finally, examine or rebuild the `relationships` array by reading each local definition. If a local definition says "this task uses agent X," the CLI sets or updates the corresponding relationship in the lock file.
+
 ---
 
 ## Installation
@@ -125,7 +349,7 @@ There are multiple ways to install the `julep` CLI:
     pipx install julep
     ```
 
-2. **Using zipapp** (later)
+2. **Using zipapp** (create a standalone executable for different platforms and distribute it)
 
 ---
 
@@ -198,7 +422,9 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    - `--name`, `-n` (required): Name of the agent.
    - `--model`, `-m` (required): Model to be used by the agent (e.g., `gpt-4`).
    - `--about`, `-a` (optional): Description of the agent.
-   - `--dry-run`, `-d` (optional): Simulate agent creation without making API calls.
+   - `--default-settings`, (optional): Default settings for the agent. Value is parsed as json.
+   - `--metadata`, (optional): Metadata for the agent. Value is parsed as json.
+   - `--instructions`, (optional): Instructions for the agent, repeat the option to add multiple.
 
    **Example:**
 
@@ -216,16 +442,18 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Usage:**
 
    ```bash
-   julep agents update --id <agent_id> [--name "New Name"] [--model "New Model"] [--about "New Description"]
+   julep agents update --id <agent_id> [--name "New Name"] [--model "New Model"] [--about "New Description"] [--metadata '{"key": "value"}'] [--instructions "Instruction 1"] [--instructions "Instruction 2"]
    ```
 
    **Options:**
 
-   - `--id`, `-i` (required): ID of the agent to update.
+   - `--id`, (required): ID of the agent to update.
    - `--name`, `-n` (optional): New name for the agent.
    - `--model`, `-m` (optional): New model for the agent.
    - `--about`, `-a` (optional): New description for the agent.
-   - `--dry-run`, `-d` (optional): Simulate agent update without making API calls.
+   - `--metadata`, (optional): Metadata for the agent. Value is parsed as json.
+   - `--default-settings`, (optional): Default settings for the agent. Value is parsed as json.
+   - `--instructions`, (optional): Instructions for the agent, repeat the option to add multiple.
 
    **Example:**
 
@@ -243,13 +471,17 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Usage:**
 
    ```bash
-   julep agents delete --id <agent_id>
+   julep agents delete --id <agent_id> [--force]
    ```
+
+   **Behavior:**
+
+   - If `--force` is not provided, the CLI will prompt for confirmation before deleting the agent.
 
    **Options:**
 
-   - `--id`, `-i` (required): ID of the agent to delete.
-   - `--dry-run`, `-d` (optional): Simulate agent deletion without making API calls.
+   - `--id`, (required): ID of the agent to delete.
+   - `--force`, `-f` (optional): Force the deletion without prompting for confirmation.
 
    **Example:**
 
@@ -267,19 +499,43 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Usage:**
 
    ```bash
-   julep agents list [--metadata-filter "criteria"]
+   julep agents list [--metadata-filter "criteria"] [--json]
    ```
 
    **Options:**
 
-   - `--metadata-filter`, `-f` (optional): Filter agents based on specific criteria (e.g., name, model).
-   - `--json`, `-j` (optional): Output the list in JSON format.
+   - `--metadata-filter`, (optional): Filter agents based on specific criteria (e.g., name, model).
+   - `--json`, (optional): Output the list in JSON format.
 
    **Example:**
 
    ```bash
    julep agents list --metadata-filter "model=gpt-4"
    ```
+
+5. **Get an Agent**
+
+   ##### `julep agents get`
+
+   **Description:**  
+   Get an agent by its ID.
+
+   **Usage:**
+
+   ```bash
+   julep agents get --id <agent_id> [--json]
+   ```
+
+   **Options:**
+
+   - `--json`, (optional): Output the agent in JSON format.
+
+   **Example:**
+
+   ```bash
+   julep agents get --id abc123
+   ```
+
 
 ---
 
@@ -304,21 +560,22 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tasks create --name "Task Name" --agent-id <agent_id> --definition "path/to/task.yaml"
+   julep tasks create --name "Task Name" --agent-id <agent_id> --definition "path/to/task.yaml" [--metadata '{"status": "beta"}'] [--inherit-tools]
    ```
 
    **Options:**
 
    - `--name`, `-n` (optional): Name of the task (if not provided, the name will be the file name of the definition).
-   - `--description`, `-d` (optional): Description of the task (if not provided, the description will be the file name of the definition).
+   - `--description`, (optional): Description of the task (if not provided, the description will be the file name of the definition).
    - `--agent-id`, `-a` (required): ID of the agent the task is associated with.
    - `--definition`, `-d` (required): Path to the task definition YAML file.
-   - `--dry-run`, `-r` (optional): Simulate task creation without making API calls.
+   - `--metadata`, (optional): Metadata for the task. Value is parsed as json.
+   - `--inherit-tools`, (optional): Inherit tools from the associated agent. Defaults to false if not specified.
 
    **Example:**
 
    ```bash
-   julep tasks create --name "Generate Story" --agent-id abc123 --definition ./tasks/generate_story.yaml
+   julep tasks create --name "Generate Story" --description "Writes a short story" --agent-id abc123 --definition ./tasks/generate_story.yaml --metadata '{"category":"fiction"}'
    ```
 
 2. **Update a Task**
@@ -331,20 +588,22 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tasks update --id <task_id> [--name "New Name"] [--definition "new/path/to/task.yaml"]
+   julep tasks update --id <task_id> [--name "New Name"] [--description "New Description"] [--definition "new/path/to/task.yaml"] [--metadata '{"status": "published"}'] [--inherit-tools true|false]
    ```
 
    **Options:**
 
-   - `--id`, `-i` (required): ID of the task to update.
+   - `--id`, (required): ID of the task to update.
    - `--name`, `-n` (optional): New name for the task.
+   - `--description`, (optional): New description for the task.
    - `--definition`, `-d` (optional): Path to the updated task definition YAML file.
-   - `--dry-run`, `-r` (optional): Simulate task update without making API calls.
+   - `--metadata`, (optional): Metadata for the task. Value is parsed as json.
+   - `--inherit-tools`, (optional): Inherit tools from the associated agent (true/false).
 
    **Example:**
 
    ```bash
-   julep tasks update --id task456 --name "Advanced Story Generation"
+   julep tasks update --id task456 --name "Advanced Story Generation" --metadata '{"priority":"high"}'
    ```
 
 3. **Delete a Task**
@@ -362,8 +621,7 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
 
    **Options:**
 
-   - `--id`, `-i` (required): ID of the task to delete.
-   - `--dry-run`, `-d` (optional): Simulate task deletion without making API calls.
+   - `--id`, (required): ID of the task to delete.
 
    **Example:**
 
@@ -428,7 +686,6 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    - `--type`, `-t` (required): Type of the tool (`integration`, `api_call`, `function`, `system`).
    - `--agent-id`, `-a` (required): ID of the agent the tool is associated with.
    - `--config`, `-c` (required): Path to the tool configuration YAML file.
-   - `--dry-run`, `-d` (optional): Simulate tool creation without making API calls.
 
    **Example:**
 
@@ -451,10 +708,9 @@ Parent command for managing tools. Includes subcommands to create, update, delet
 
    **Options:**
 
-   - `--id`, `-i` (required): ID of the tool to update.
+   - `--id`, (required): ID of the tool to update.
    - `--name`, `-n` (optional): New name for the tool.
    - `--config`, `-c` (optional): Path to the updated tool configuration YAML file.
-   - `--dry-run`, `-d` (optional): Simulate tool update without making API calls.
 
    **Example:**
 
@@ -477,8 +733,7 @@ Parent command for managing tools. Includes subcommands to create, update, delet
 
    **Options:**
 
-   - `--id`, `-i` (required): ID of the tool to delete.
-   - `--dry-run`, `-d` (optional): Simulate tool deletion without making API calls.
+   - `--id`, (required): ID of the tool to delete.
 
    **Example:**
 
@@ -525,24 +780,19 @@ Initialize a new Julep project by copying a template from the library repository
 **Usage:**
 
 ```bash
-julep init --template=<template_name> [--destination=<path>]
+julep init --template=<template_name> [--destination=<path or -o>]
 ```
 
 **Options:**
 
 - `--template`, `-t` (required): Name of the template to use (e.g., `hello-world`).
-- `--destination`, `-d` (optional): Destination directory for the initialized project (default: current directory).
-
-**Example:**
-
-```bash
-julep init --template=hello-world --destination=./my-julep-project
-```
+- `--destination`, `-o` (optional): Destination directory for the initialized project (default: current directory).
+- `--yes`, `-y` (optional): Skip confirmation prompt.
 
 **Behavior:**
 
 1. Copies the specified template folder from the `/library` repository to the destination directory.
-2. Ensures the destination directory contains a `julep.toml` file, validating it as a valid Julep package.
+2. Ensures the destination directory contains a `julep.yaml` file, validating it as a valid Julep package.
 
 ---
 
@@ -558,34 +808,21 @@ Synchronize the local Julep package with the Julep platform.
 **Usage:**
 
 ```bash
-julep sync --source=<path> [--overwrite=<local|remote>]
+julep sync --source=<path> [--overwrite=<local|remote>] [--watch]
 ```
 
 **Options:**
 
-- `--source`, `-s` (required): Source directory containing the Julep package (must include `julep.toml`).
+- `--source`, `-s` (required): Source directory containing the Julep package (must include `julep.yaml`).
 - `--overwrite`, `-o` (optional): Specify how to handle conflicts:
   - `local`: Override local changes with remote state
   - `remote`: Override remote state with local changes
   - If not specified and remote has newer changes, an error will be raised
-- `--dry-run`, `-d` (optional): Simulate synchronization without making API calls.
-
-**Example:**
-
-```bash
-# Normal sync
-julep sync --source=./my-julep-project
-
-# Force local to match remote state
-julep sync --source=./my-julep-project --overwrite=local
-
-# Force remote to match local state
-julep sync --source=./my-julep-project --overwrite=remote
-```
+- `--watch`, `-w` (optional): Watch the source directory for changes and synchronize automatically.
 
 **Behavior:**
 
-1. Validates the presence of `julep.toml` in the source directory.
+1. Validates the presence of `julep.yaml` in the source directory.
 2. Compares local and remote states:
    - If local is newer and no conflicts, updates remote
    - If remote is newer and no `--overwrite` specified, raises an error with guidance
@@ -613,7 +850,7 @@ julep chat --agent=<agent_id_or_name>
 **Options:**
 
 - `--agent`, `-a` (required): ID or name of the agent to chat with.
-- `--history`, `-h` (optional): Load previous chat history from a file.
+- `--situation`, `-s` (optional): Situation to chat about.
 - `--save-history`, `-s` (optional): Save chat history to a specified file.
 
 **Example:**
@@ -648,8 +885,7 @@ julep run --task=<task_id_or_name> --input='<input_json>'
 **Options:**
 
 - `--task`, `-t` (required): ID or name of the task to execute.
-- `--input`, `-i` (required): JSON string representing the input for the task.
-- `--dry-run`, `-d` (optional): Simulate task execution without making API calls.
+- `--input`, (required): JSON string representing the input for the task.
 - `--output=<path>`, `-o` (optional): Save the task output to a specified file.
 
 **Example:**
@@ -705,7 +941,7 @@ julep logs --execution-id exec123 --tail
 
 Initiate a guided setup for new Julep projects.
 
-#### `julep new` or `julep wizard`
+#### `julep assistant`
 
 **Description:**  
 Launch an interactive wizard to set up a new Julep project with customized configurations.
@@ -713,31 +949,10 @@ Launch an interactive wizard to set up a new Julep project with customized confi
 **Usage:**
 
 ```bash
-julep new
+julep assistant
 ```
 
-or
-
-```bash
-julep wizard
-```
-
-**Options:**
-
-- `--template`, `-t` (optional): Specify a template to base the project on.
-- `--interactive`, `-i` (optional): Force interactive mode even if default options are available.
-
-**Example:**
-
-```bash
-julep new
-```
-
-**Behavior:**
-
-1. Guides the user through a series of prompts to configure the new project.
-2. Allows customization of agent settings, task definitions, and tool integrations.
-3. Generates necessary configuration files and directory structures based on user input.
+**TBD**
 
 ---
 
@@ -745,7 +960,7 @@ julep new
 
 #### Version
 
-##### `julep version`, `julep --version`, `julep -v`
+##### `julep --version`, `julep -v`
 
 **Description:**  
 Display the current version of the Julep CLI.
@@ -760,8 +975,20 @@ julep --version
 
 ```bash
 julep CLI version 1.2.3
+julep SDK version 1.2.3
 ```
 
 #### Help
 
-##### `julep help`, `
+##### `julep`, `julep --help`, `julep -h`
+
+**Description:**  
+Display help information for the Julep CLI.
+
+**Usage:**
+
+```bash
+julep --help
+```
+
+Just plain `julep` will also show the help message.

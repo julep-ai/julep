@@ -19,7 +19,8 @@ dependencies = [
   "uvloop~=0.21.0",
   "xxhash~=3.5.0",
   "unique-namer>=1.6.1",
-  "typer>=0.15.1",
+  "typer[all]>=0.15.1",
+  "textual>=1.0.0",
 ]
 
 [project.scripts]
@@ -35,6 +36,7 @@ dev = [
     "poethepoet>=0.31.1",
     "pyright>=1.1.391",
     "ruff>=0.8.4",
+    "textual-dev>=1.7.0",
     "ward>=0.68.0b0",
 ]
 
