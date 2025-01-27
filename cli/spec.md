@@ -192,23 +192,23 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    ##### `julep agents list`
 
    **Description:**  
-   List all AI agents or filter based on criteria.
+   List all AI agents or filter based on metadata.
 
    **Usage:**
 
    ```bash
-   julep agents list [--filter "criteria"]
+   julep agents list [--metadata-filter "criteria"]
    ```
 
    **Options:**
 
-   - `--filter`, `-f` (optional): Filter agents based on specific criteria (e.g., name, model).
+   - `--metadata-filter`, `-f` (optional): Filter agents based on specific criteria (e.g., name, model).
    - `--json`, `-j` (optional): Output the list in JSON format.
 
    **Example:**
 
    ```bash
-   julep agents list --filter "model=gpt-4"
+   julep agents list --metadata-filter "model=gpt-4"
    ```
 
 ---
@@ -239,7 +239,8 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
 
    **Options:**
 
-   - `--name`, `-n` (required): Name of the task.
+   - `--name`, `-n` (optional): Name of the task (if not provided, the name will be the file name of the definition).
+   - `--description`, `-d` (optional): Description of the task (if not provided, the description will be the file name of the definition).
    - `--agent-id`, `-a` (required): ID of the agent the task is associated with.
    - `--definition`, `-d` (required): Path to the task definition YAML file.
    - `--dry-run`, `-r` (optional): Simulate task creation without making API calls.
@@ -862,3 +863,12 @@ Error: Agent with ID abc123 not found.
 The `julep` CLI is meticulously designed to provide an efficient and intuitive interface for managing AI agents, tasks, tools, and projects within the Julep platform. By adhering to industry best practices, it ensures a seamless user experience, facilitating the development and deployment of advanced AI workflows with ease.
 
 For further assistance or to contribute to the CLI's development, refer to the [Julep Documentation](https://docs.julep.ai/) or join the [Julep Discord Community](https://discord.com/invite/JTSBGRZrzj).
+
+## Notes (Draft):
+- `julep auth` command:
+  - Show the user where to get api key if prompted to enter one (e.g. you can get it from here...).
+  - Verify that the api-key is a valid jwt.
+  - Have a `--skip-verify` flag to skip verification of the API key.
+  - Ideally: Have a `/me` endpoint to verify the API key from the Julep backend.
+  - Save the `developer_id` in the config file too.
+
