@@ -5,6 +5,8 @@ from pathlib import Path
 import typer
 from julep.types.agent import Agent
 
+from cli.julep_cli.models import LockedEntity
+
 from .app import import_app
 from .utils import (
     add_entity_to_lock_file,
@@ -97,14 +99,14 @@ def agent(
         typer.echo(f"Adding agent '{id}' to lock file...")
         add_entity_to_lock_file(
             type="agent",
-            new_entity={
-                "path": str(agent_yaml_path),
-                "id": agent_data.id,
-                "last_synced": datetime.datetime.now().isoformat(timespec="milliseconds") + "Z",
-                "revision_hash": hashlib.sha256(
+            new_entity=LockedEntity(
+                path=str(agent_yaml_path),
+                id=agent_data.id,
+                last_synced=datetime.datetime.now().isoformat(timespec="milliseconds") + "Z",
+                revision_hash=hashlib.sha256(
                     agent_data.model_dump_json().encode()
                 ).hexdigest(),
-            },
+            ),
         )
 
     except Exception as e:

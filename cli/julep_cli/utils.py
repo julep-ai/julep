@@ -5,7 +5,7 @@ import typer
 import yaml
 from julep import Julep
 
-from .models import CreateAgentRequest, LockFileContents
+from .models import CreateAgentRequest, LockFileContents, LockedEntity
 
 CONFIG_DIR = Path.home() / ".config" / "julep"
 CONFIG_FILE_NAME = "config.yml"
@@ -67,7 +67,7 @@ def create_lock_file(source: Path):
     raise typer.Exit(1)
 
 
-def get_lock_file(project_dir: Path = Path.cwd()):
+def get_lock_file(project_dir: Path = Path.cwd()) -> LockFileContents:
     """
     Get the lock file from the project directory.
     If no project directory is provided, it will default to the current working directory.
@@ -82,7 +82,7 @@ def get_lock_file(project_dir: Path = Path.cwd()):
 
     lock_file_contents = lock_file.read_text()
 
-    return json.loads(lock_file_contents)
+    return LockFileContents(**json.loads(lock_file_contents))
 
 
 def fetch_all_remote_agents(client: Julep) -> list[CreateAgentRequest]:
@@ -130,9 +130,9 @@ def get_entity_from_lock_file(type: str, id: str, project_dir: Path = Path.cwd()
     lock_file = get_lock_file(project_dir)
 
     # Adding an s to match the plural form of the key in lock file (agent -> agents)
-    items = lock_file.get(type + "s", [])
+    entities: list[LockedEntity] = getattr(lock_file, type + "s", [])
 
-    matched = [item for item in items if item.get("id") == id]
+    matched = [entity for entity in entities if entity.id == id]
 
     if len(matched) > 1:
         typer.echo(f"Error: Multiple {type}s with id '{id}' found in lock file", err=True)
@@ -147,11 +147,11 @@ def get_entity_from_lock_file(type: str, id: str, project_dir: Path = Path.cwd()
 def update_existing_entity_in_lock_file(type: str, new_entity: dict, project_dir: Path = Path.cwd()):
     found = False
     lock_file = get_lock_file(project_dir)
-    items: list[dict] = lock_file.get(type + "s", [])
+    entities: list[LockedEntity] = getattr(lock_file, type + "s", [])
 
-    for i in range(len(items)):
-        if items[i].get("id") == new_entity.get("id"):
-            items[i] = new_entity
+    for i in range(len(entities)):
+        if entities[i].id == new_entity.id:
+            entities[i] = new_entity
             found = True
             break
 
@@ -159,22 +159,22 @@ def update_existing_entity_in_lock_file(type: str, new_entity: dict, project_dir
         typer.echo(f"Error: Cannot update{type} with id '{new_entity.get('id')}' because it was not found in lock file", err=True)
         raise typer.Exit(1)
 
-    lock_file[type + "s"] = items
+    setattr(lock_file, type + "s", entities)
 
     write_lock_file(project_dir, LockFileContents(**lock_file))
 
 
-def add_entity_to_lock_file(type: str, new_entity: dict, project_dir: Path = Path.cwd()):
+def add_entity_to_lock_file(type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()):
     """
     Add a new entity to the lock file
     """
 
     lock_file = get_lock_file(project_dir)
-    items: list[dict] = lock_file.get(type + "s", [])
+    entities: list[LockedEntity] = getattr(lock_file, type + "s", [])
 
-    items.append(new_entity)
+    entities.append(new_entity)
 
-    lock_file[type + "s"] = items
+    setattr(lock_file, type + "s", entities)
 
     write_lock_file(project_dir, LockFileContents(**lock_file))
 
