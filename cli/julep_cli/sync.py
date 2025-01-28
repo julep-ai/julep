@@ -33,13 +33,11 @@ def sync(
     force_local: bool = typer.Option(
         False,
         "--force-local",
-        "-fl",
         help="Force local state to match remote",
     ),
     force_remote: bool = typer.Option(
         False,
         "--force-remote",
-        "-fr",
         help="Force remote state to match local",
     ),
     dry_run: bool = typer.Option(
