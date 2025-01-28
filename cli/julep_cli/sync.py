@@ -1,3 +1,4 @@
+from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
@@ -20,6 +21,8 @@ from .models import (
 from .utils import (
     get_julep_client,
     get_julep_yaml,
+    get_lock_file,
+    get_related_agent_id,
     write_lock_file,
 )
 
@@ -219,6 +222,190 @@ def sync(
         typer.echo("Lock file created successfully")
 
         return
+    
+    if force_local and lock_file.exists():
+        lock_file = get_lock_file(source)
+        julep_yaml_content = get_julep_yaml(source)
+
+        agents_julep_yaml = julep_yaml_content.get("agents", [])
+        tasks_julep_yaml = julep_yaml_content.get("tasks", [])
+        tools_julep_yaml = julep_yaml_content.get("tools", [])
+
+
+        for agent_julep_yaml in agents_julep_yaml:
+            agent_yaml_def_path: Path = Path(agent_julep_yaml.get("definition"))
+            agent_yaml_content = yaml.safe_load(
+                (source / agent_yaml_def_path).read_text())
+            found_in_lock = False
+
+            for i in range(len(lock_file.agents)):
+                agent_julep_lock = lock_file.agents[i]
+                
+                if agent_julep_lock.path == str(agent_yaml_def_path):
+                    found_in_lock = True
+                    agent_yaml_content_hash = hashlib.sha256(json.dumps(agent_yaml_content).encode()).hexdigest()
+                    agent_julep_lock_hash = agent_julep_lock.revision_hash
+
+                    if agent_yaml_content_hash != agent_julep_lock_hash:
+                        typer.echo(f"Agent {agent_yaml_def_path} has changed, updating on remote...")
+                        
+                        agent_request = CreateAgentRequest(**agent_yaml_content, **agent_julep_yaml)
+                        
+                        client.agents.create_or_update(agent_id=agent_julep_lock.id, **agent_request.model_dump(exclude_unset=True, exclude_none=True))
+                        
+                        updated_at = client.agents.get(agent_julep_lock.id).updated_at
+                        # Update the hash and last synced date in the lock file
+                        lock_file.agents[i] = LockedEntity(
+                            path=agent_julep_lock.path,
+                            id=agent_julep_lock.id,
+                            last_synced=updated_at.isoformat(timespec="milliseconds") + "Z",
+                            revision_hash=agent_yaml_content_hash,
+                        )
+                    break
+
+            if not found_in_lock:
+                typer.echo(f"Agent {agent_yaml_def_path} not found in lock file, creating new agent...")
+
+                agent_request_hash = hashlib.sha256(json.dumps(agent_yaml_content).encode()).hexdigest()
+
+                agent_request = CreateAgentRequest(**agent_yaml_content, **agent_julep_yaml)
+                created_agent = client.agents.create(**agent_request.model_dump(exclude_unset=True, exclude_none=True))
+
+                lock_file.agents.append(LockedEntity(
+                    path=str(agent_yaml_def_path),
+                    id=created_agent.id,
+                    last_synced=created_agent.created_at.isoformat(timespec="milliseconds") + "Z",
+                    revision_hash=agent_request_hash,
+                ))
+
+                typer.echo(f"Agent {agent_yaml_def_path} created successfully on remote")
+
+        for task_julep_yaml in tasks_julep_yaml:
+            task_yaml_def_path: Path = Path(task_julep_yaml.get("definition"))
+            task_yaml_content = yaml.safe_load(
+                (source / task_yaml_def_path).read_text())
+            found_in_lock = False
+            
+            for i in range(len(lock_file.tasks)):
+                task_julep_lock = lock_file.tasks[i]
+
+                if task_julep_lock.path == str(task_yaml_def_path):
+                    found_in_lock = True
+                    task_yaml_content_hash = hashlib.sha256(json.dumps(task_yaml_content).encode()).hexdigest()
+                    task_julep_lock_hash = task_julep_lock.revision_hash
+
+                    if task_yaml_content_hash != task_julep_lock_hash:
+                        typer.echo(f"Task {task_yaml_def_path} has changed, updating on remote...")
+
+                        task_request = CreateTaskRequest(**task_yaml_content, **task_julep_yaml)
+
+                        agent_id = get_related_agent_id(task_julep_lock.id, lock_file.relationships.tasks)
+
+                        if not agent_id:
+                            typer.echo(f"Task {task_yaml_def_path} has no related agent. Please check the lock file and julep.yaml for consistency.")
+                            raise typer.Exit(1)
+
+                        client.tasks.create_or_update(task_id=task_julep_lock.id, agent_id=agent_id, **task_request.model_dump(exclude_unset=True, exclude_none=True))
+
+                        updated_at = client.tasks.get(task_julep_lock.id).updated_at
+                        lock_file.tasks[i] = LockedEntity(
+                            path=task_julep_lock.path,
+                            id=task_julep_lock.id,
+                            last_synced=updated_at.isoformat(timespec="milliseconds") + "Z",
+                            revision_hash=task_yaml_content_hash,
+                        )
+                    break
+
+            if not found_in_lock:
+                typer.echo(f"Task {task_yaml_def_path} not found in lock file, creating new task...")
+
+                task_request_hash = hashlib.sha256(json.dumps(task_yaml_content).encode()).hexdigest()
+
+                # Get the agent id from the julep.yaml file
+                agent_id_expression = task_julep_yaml.pop("agent_id")
+                agent_id = eval(f'f"{agent_id_expression}"', {"agents": lock_file.agents})
+
+
+                task_request = CreateTaskRequest(**task_yaml_content, **task_julep_yaml)
+                created_task = client.tasks.create(agent_id=agent_id, **task_request.model_dump(exclude_unset=True, exclude_none=True))
+
+                lock_file.tasks.append(LockedEntity(
+                    path=str(task_yaml_def_path),
+                    id=created_task.id,
+                    last_synced=created_task.created_at.isoformat(timespec="milliseconds") + "Z",
+                    revision_hash=task_request_hash,
+                ))
+
+
+                # Add the task dependency to the relationships
+                lock_file.relationships.tasks.append(TaskAgentRelationship(id=created_task.id, agent_id=agent_id))
+
+                typer.echo(f"Task {task_yaml_def_path} created successfully on remote")
+
+        for tool_julep_yaml in tools_julep_yaml:
+            tool_yaml_def_path: Path = Path(tool_julep_yaml.get("definition"))
+            tool_yaml_content = yaml.safe_load((source / tool_yaml_def_path).read_text())
+            found_in_lock = False
+
+            for i in range(len(lock_file.tools)):
+                tool_julep_lock = lock_file.tools[i]
+
+                if tool_julep_lock.path == str(tool_yaml_def_path):
+                    found_in_lock = True
+                    tool_yaml_content_hash = hashlib.sha256(json.dumps(tool_yaml_content).encode()).hexdigest()
+                    tool_julep_lock_hash = tool_julep_lock.revision_hash
+
+                    if tool_yaml_content_hash != tool_julep_lock_hash:
+                        typer.echo(f"Tool {tool_yaml_def_path} has changed, updating on remote...") 
+
+                        tool_request = CreateToolRequest(**tool_yaml_content, **tool_julep_yaml)
+
+                        agent_id = get_related_agent_id(tool_julep_lock.id, lock_file.relationships.tools)
+
+                        if not agent_id:
+                            typer.echo(f"Tool {tool_yaml_def_path} has no related agent. Please check the lock file and julep.yaml for consistency.")
+                            raise typer.Exit(1)
+
+                        client.agents.tools.update(tool_id=tool_julep_lock.id, agent_id=agent_id, **tool_request.model_dump(exclude_unset=True, exclude_none=True))
+
+                        # There is no way to get the updated_at date from the API, so we use the current date
+                        # updated_at = client.agents.tools.get(tool_julep_lock.id).updated_at
+
+                        lock_file.tools[i] = LockedEntity(
+                            path=tool_julep_lock.path,
+                            id=tool_julep_lock.id,
+                            last_synced=datetime.now().isoformat(timespec="milliseconds") + "Z",
+                            revision_hash=tool_yaml_content_hash,
+                        )
+                    break
+
+            if not found_in_lock:
+                typer.echo(f"Tool {tool_yaml_def_path} not found in lock file, creating new tool...")
+
+                tool_request_hash = hashlib.sha256(json.dumps(tool_yaml_content).encode()).hexdigest()
+
+                # Get the agent id from the julep.yaml file
+                agent_id_expression = tool_julep_yaml.pop("agent_id")
+                agent_id = eval(f'f"{agent_id_expression}"', {"agents": lock_file.agents})
+
+
+                tool_request = CreateToolRequest(**tool_yaml_content, **tool_julep_yaml)
+                created_tool = client.agents.tools.create(agent_id=agent_id, **tool_request.model_dump(exclude_unset=True, exclude_none=True))
+
+                lock_file.tools.append(LockedEntity(
+                    path=str(tool_yaml_def_path),
+                    id=created_tool.id,
+                    last_synced=created_tool.created_at.isoformat(timespec="milliseconds") + "Z",
+                    revision_hash=tool_request_hash,
+                ))
+
+                # Add the tool dependency to the relationships
+                lock_file.relationships.tools.append(ToolAgentRelationship(id=created_tool.id, agent_id=agent_id))
+
+                typer.echo(f"Tool {tool_yaml_def_path} created successfully on remote")
+
+        write_lock_file(source, lock_file)
+
 
     if force_remote:
         # TODO: Implement force remote here

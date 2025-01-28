@@ -1,11 +1,12 @@
 import json
 from pathlib import Path
+from typing import Literal
 
 import typer
 import yaml
 from julep import Julep
 
-from .models import CreateAgentRequest, LockFileContents, LockedEntity
+from .models import CreateAgentRequest, LockFileContents, LockedEntity, TaskAgentRelationship, ToolAgentRelationship
 
 CONFIG_DIR = Path.home() / ".config" / "julep"
 CONFIG_FILE_NAME = "config.yml"
@@ -183,3 +184,11 @@ def update_yaml_for_existing_entity(path: Path, data: dict):
     """Update the yaml file for an existing entity"""
     with open(path, "w") as f:
         yaml.dump(data, f)
+
+
+def get_related_agent_id(id: str, relationships_list: list[TaskAgentRelationship] | list[ToolAgentRelationship]):
+    for relationship in relationships_list:
+        if relationship.id == id:
+            return relationship.agent_id
+
+    return None
