@@ -4,7 +4,7 @@ from typing import Annotated
 
 import typer
 
-from cli.julep_cli.utils import get_config, save_config
+from .utils import get_config, save_config
 
 from .app import app
 
