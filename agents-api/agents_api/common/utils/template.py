@@ -53,7 +53,7 @@ T = TypeVar("T", str, dict, list[dict | list[dict]], None)
 
 
 @beartype
-async def render_template_nested(
+async def render_template_nested[T: (str, dict, list[dict | list[dict]], None)](
     input: T,
     variables: dict,
     check: bool = False,

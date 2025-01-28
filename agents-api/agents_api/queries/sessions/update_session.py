@@ -2,7 +2,7 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateSessionRequest
+from ...autogen.openapi_model import Session, UpdateSessionRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
@@ -26,11 +26,11 @@ RETURNING *;
 
 @rewrap_exceptions(common_db_exceptions("session", ["update"]))
 @wrap_in_class(
-    ResourceUpdatedResponse,
+    Session,
     one=True,
     transform=lambda d: {
+        **d,
         "id": d["session_id"],
-        "updated_at": d["updated_at"],
     },
 )
 @increase_counter("update_session")

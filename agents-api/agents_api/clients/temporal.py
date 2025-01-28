@@ -98,7 +98,7 @@ async def run_task_execution_workflow(
     execution_input: ExecutionInput,
     job_id: UUID,
     start: TransitionTarget | None = None,
-    previous_inputs: list[dict] | None = None,
+    current_input: dict | None = None,
     client: Client | None = None,
 ):
     from ..workflows.task_execution import TaskExecutionWorkflow
@@ -114,13 +114,13 @@ async def run_task_execution_workflow(
     execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
 
     old_args = execution_input.arguments
-    execution_input.arguments = await offload_if_large(old_args)
+    execution_input.arguments = offload_if_large(old_args)
 
-    previous_inputs: list[dict] = previous_inputs or [execution_input.arguments]
+    current_input: dict = current_input or execution_input.arguments
 
     return await client.start_workflow(
         TaskExecutionWorkflow.run,
-        args=[execution_input, start, previous_inputs],
+        args=[execution_input, start, current_input],
         task_queue=temporal_task_queue,
         id=str(job_id),
         run_timeout=timedelta(days=31),

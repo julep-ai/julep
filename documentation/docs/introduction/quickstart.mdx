@@ -12,13 +12,13 @@ This guide will help you get started with Julep in just 5 minutes. You'll learn 
 We'll build a simple agent that uses tasks to write a short story.
 
 
-```yaml Agent
+```yaml Agent YAML
 name: Story Generator
 model: claude-3.5-sonnet
 about: A helpful AI assistant that specializes in writing and editing.
 ```
 
-```yaml Task
+```yaml Task YAML
 name: Write a short story
 description: Write a short story about a magical garden
 main:
@@ -60,7 +60,7 @@ Choose your preferred language:
   client = Julep(api_key="your_julep_api_key")
   ```
 
-  ```javascript JavaScript
+  ```javascript Node.js
   import { Julep } from '@julep/sdk';
 
   const client = new Julep({
@@ -82,7 +82,7 @@ Let's create a simple AI agent that can help with writing tasks:
   )
   ```
 
-  ```javascript JavaScript
+  ```javascript Node.js
   const agent = await client.agents.create({
     name: "Writing Assistant",
     model: "claude-3.5-sonnet",
@@ -116,7 +116,7 @@ Let's create a task that generates a short story based on a given topic:
   )
   ```
 
-  ```javascript JavaScript
+  ```javascript Node.js
   const yaml = require("yaml");
 
   const task_definition = `
@@ -159,7 +159,7 @@ Now let's run the task with a specific topic:
       print(f"Error: {result.error}")
   ```
 
-  ```javascript JavaScript
+  ```javascript Node.js
   const execution = await client.executions.create(
     task.id,
     {

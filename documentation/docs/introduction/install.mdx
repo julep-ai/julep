@@ -92,61 +92,6 @@ JULEP_ENVIRONMENT=production  # or development
   ```
 </CodeGroup>
 
-### Docker Installation
-
-If you prefer using Docker, you can run Julep in a containerized environment:
-
-1. Create a `Dockerfile`:
-```dockerfile
-# Python
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "your_script.py"]
-
-# Node.js
-FROM node:16-slim
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-CMD ["node", "your_script.js"]
-```
-
-2. Build and run the container:
-```bash
-docker build -t my-julep-app .
-docker run -e JULEP_API_KEY=your_api_key_here my-julep-app
-```
-
-### Local Development Setup
-
-For local development, you can run Julep locally:
-
-1. Clone the repository:
-```bash
-git clone https://github.com/julep-ai/julep.git
-cd julep
-```
-
-2. Create required volumes:
-```bash
-docker volume create cozo_backup
-docker volume create cozo_data
-```
-
-3. Set up environment:
-```bash
-cp .env.example .env  # Edit this file with your settings
-```
-
-4. Start the services:
-```bash
-docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build
-```
-
 ### Verification
 
 To verify your installation:

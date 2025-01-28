@@ -11,4 +11,4 @@ namespace Files;
 
 interface Endpoints
     extends GetEndpoint<File, "Get a File by its id">,
-        CreateEndpoint<CreateFileRequest, "Create a new File"> {}
+        CreateEndpoint<CreateFileRequest, File, "Create a new File"> {}

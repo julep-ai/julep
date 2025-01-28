@@ -3,7 +3,6 @@ This module contains the functionality for listing documents from the PostgreSQL
 It constructs and executes SQL queries to fetch document details based on various filters.
 """
 
-import json
 from typing import Any, Literal
 from uuid import UUID
 
@@ -13,6 +12,7 @@ from fastapi import HTTPException
 from ...autogen.openapi_model import Doc
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from .utils import transform_doc
 
 # Base query for listing docs with aggregated content and embeddings
 base_docs_query = """
@@ -35,48 +35,18 @@ JOIN doc_owners doc_own
     AND d.doc_id = doc_own.doc_id
 LEFT JOIN docs_embeddings e
     ON d.doc_id = e.doc_id
+    AND d.index = e.index
 WHERE d.developer_id = $1
     AND doc_own.owner_type = $3
     AND doc_own.owner_id = $4
-GROUP BY
-    d.doc_id,
-    d.developer_id,
-    d.title,
-    d.modality,
-    d.embedding_model,
-    d.embedding_dimensions,
-    d.language,
-    d.metadata,
-    d.created_at
 """
-
-
-def transform_list_docs(d: dict) -> dict:
-    content = d["content"]
-
-    embeddings = d["embeddings"]
-
-    if isinstance(embeddings, str):
-        embeddings = json.loads(embeddings)
-    elif isinstance(embeddings, list) and all(isinstance(e, str) for e in embeddings):
-        embeddings = [json.loads(e) for e in embeddings]
-
-    if embeddings and all((e is None) for e in embeddings):
-        embeddings = None
-
-    return {
-        **d,
-        "id": d["doc_id"],
-        "content": content,
-        "embeddings": embeddings,
-    }
 
 
 @rewrap_exceptions(common_db_exceptions("doc", ["list"]))
 @wrap_in_class(
     Doc,
     one=False,
-    transform=transform_list_docs,
+    transform=transform_doc,
 )
 @pg_query
 @beartype
@@ -128,11 +98,24 @@ async def list_docs(
     query = base_docs_query
     params = [developer_id, include_without_embeddings, owner_type, owner_id]
 
-    # Add metadata filtering
+    # Add metadata filtering before GROUP BY
     if metadata_filter:
         for key, value in metadata_filter.items():
-            query += f" AND metadata->>'{key}' = ${len(params) + 1}"
-            params.append(value)
+            query += f" AND d.metadata->>${len(params) + 1} = ${len(params) + 2}"
+            params.extend([key, value])
+
+    # Add GROUP BY clause
+    query += """
+    GROUP BY
+        d.doc_id,
+        d.developer_id,
+        d.title,
+        d.modality,
+        d.embedding_model,
+        d.embedding_dimensions,
+        d.language,
+        d.metadata,
+        d.created_at"""
 
     # Add sorting and pagination
     query += (

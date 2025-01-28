@@ -39,79 +39,77 @@ You can find supported models [here](/docs/integrations/supported-models#availab
 
 In Julep, how you use agents is very important. The YAML below shows the anatomy of an agent.
 
-<CodeGroup>
-    ```yaml
-    name: "My Agent"
-    model: "claude-3.5-sonnet"
-    about: "A helpful AI assistant that specializes in data analysis"
-    instructions: "You are a helpful AI assistant that specializes in data analysis"
-    metadata:
-      type: "data-analysis"
-    tools:
-      - name: "calculate_total"
-        description: "Calculate the total of a list of numbers"
-        function:
-          parameters:
-            type: "object"
-            properties:
-              numbers:
-                type: "array"
-                items:
-                  type: "number"
-    ```
 
-</CodeGroup>
+```yaml YAML
+name: "My Agent"
+model: "claude-3.5-sonnet"
+about: "A helpful AI assistant that specializes in data analysis"
+instructions: "You are a helpful AI assistant that specializes in data analysis"
+metadata:
+  type: "data-analysis"
+tools:
+  - name: "calculate_total"
+    description: "Calculate the total of a list of numbers"
+    function:
+      parameters:
+        type: "object"
+        properties:
+          numbers:
+            type: "array"
+            items:
+              type: "number"
+```
 
 ### Creating an Agent
 
 To create an agent, you can use the `create` method in the Python or Node.js SDK.
 
 <CodeGroup>
- ```python Python
-    from julep import Julep
+  ```python Python
+  from julep import Julep
 
-    client = Julep(api_key="your_api_key")
+  client = Julep(api_key="your_api_key")
 
-    agent = client.agents.create(
-        name="My Agent",
-        model="claude-3.5-sonnet",
-        about="A helpful AI assistant that specializes in data analysis",
-        instructions="You are a helpful AI assistant that specializes in data analysis",
-        metadata={"type": "data-analysis"},
-        tools=[
-            {
-                "name": "calculate_total",
-                "description": "Calculate the total of a list of numbers",
-                "function": {
-                    "parameters": {"type": "object", "properties": {"numbers": {"type": "array", "items": {"type": "number"}}}}
-                }
-            }
-        ]
-    )
-    ```
+  agent = client.agents.create(
+    name="My Agent",
+    model="claude-3.5-sonnet",
+    about="A helpful AI assistant that specializes in data analysis",
+    instructions="You are a helpful AI assistant that specializes in data analysis",
+    metadata={"type": "data-analysis"},
+    tools=[
+      {
+        "name": "calculate_total",
+        "description": "Calculate the total of a list of numbers",
+        "function": {
+          "parameters": {"type": "object", "properties": {"numbers": {"type": "array", "items": {"type": "number"}}}}
+        }
+      }
+    ]
+  )
+  ```
 
-    ```javascript JavaScript
-    import { Julep } from '@julep/sdk';
+  ```javascript Node.js
+  import { Julep } from '@julep/sdk';
 
-    const client = new Julep({ apiKey: 'your_api_key' });
+  const client = new Julep({ apiKey: 'your_api_key' });
 
-    const agent = await client.agents.create({
-        name: "My Agent",
-        model: "claude-3.5-sonnet",
-        about: "A helpful AI assistant that specializes in data analysis",
-        instructions: "You are a helpful AI assistant that specializes in data analysis",
-        metadata: {"type": "data-analysis"},
-        tools: [
-            {
-                "name": "calculate_total",
-                "description": "Calculate the total of a list of numbers",
-                "function": {
-                    "parameters": {"type": "object", "properties": {"numbers": {"type": "array", "items": {"type": "number"}}}}
-                }
-            }
-        ]
-    });
-    ```
+  const agent = await client.agents.create({
+    name: "My Agent",
+    model: "claude-3.5-sonnet",
+    about: "A helpful AI assistant that specializes in data analysis",
+    instructions: "You are a helpful AI assistant that specializes in data analysis",
+    metadata: {"type": "data-analysis"},
+    tools: [
+      {
+        "name": "calculate_total",
+        "description": "Calculate the total of a list of numbers",
+        "function": {
+          "parameters": {"type": "object", "properties": {"numbers": {"type": "array", "items": {"type": "number"}}}}
+        }
+      }
+    ]
+  });
+  ```
 </CodeGroup>
 
 <Tip>
@@ -127,23 +125,23 @@ Agents can be associated with different types of tools available in Julep to ena
 
 For example:
 
-```python
+```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
 
 # Associate a tool with the agent
 client.agents.tools.create(
-        agent_id=AGENT_UUID,
-        **{
-            "name": "computer",
-            "type": "computer_20241022",
-            "computer_20241022": {
-                "display_height_px": 768,
-                "display_width_px": 1024,
-                "display_number": 1,
-            },
-        }
-    )
+  agent_id=AGENT_UUID,
+  **{
+    "name": "computer",
+    "type": "computer_20241022",
+    "computer_20241022": {
+        "display_height_px": 768,
+        "display_width_px": 1024,
+        "display_number": 1,
+    },
+  }
+)
 ```
 
 ### Sessions
@@ -152,7 +150,7 @@ Agents can be used in sessions to enable real-time, interactive conversations. W
 
 For example:
 
-```python
+```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
 

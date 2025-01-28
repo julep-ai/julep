@@ -81,7 +81,7 @@ def prepare_pg_query_args(
 
 
 @beartype
-def pg_query(
+def pg_query[**P](
     func: Callable[P, PGQueryArgs | list[PGQueryArgs]] | None = None,
     debug: bool | None = None,
     only_on_error: bool = False,
@@ -126,18 +126,16 @@ def pg_query(
 
                     for method_name, payload in batch:
                         method = getattr(conn, method_name)
-
                         query = payload["query"]
                         args = payload["args"]
                         timeout = payload.get("timeout")
-
                         results: list[Record] = await method(query, *args, timeout=timeout)
                         if method_name == "fetchrow":
                             results = (
                                 [results]
                                 if results is not None
                                 and results.get("bool", False) is not None
-                                and results.get("exists", True) is not False
+                                and results.get("exists", True)
                                 else []
                             )
 
@@ -299,3 +297,22 @@ def run_concurrently(
         ]
 
         return [future.result() for future in concurrent.futures.as_completed(futures)]
+
+
+def serialize_model_data(data: Any) -> Any:
+    """
+    Recursively serialize Pydantic models and their nested structures.
+
+    Args:
+        data: Any data structure that might contain Pydantic models
+
+    Returns:
+        JSON-serializable data structure
+    """
+    if hasattr(data, "model_dump"):
+        return data.model_dump(mode="json")
+    if isinstance(data, dict):
+        return {key: serialize_model_data(value) for key, value in data.items()}
+    if isinstance(data, list | tuple):
+        return [serialize_model_data(item) for item in data]
+    return data

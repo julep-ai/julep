@@ -1,6 +1,5 @@
 # Tests for task queries
 
-
 import asyncio
 import json
 from unittest.mock import patch

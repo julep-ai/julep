@@ -40,7 +40,7 @@ In Julep broadly speaking there are two types of steps:
 
 Send messages to the AI model:
 
-```yaml
+```yaml YAML
 # Simple prompt
 - prompt: "What is your name?"
 
@@ -87,7 +87,7 @@ In the prompt step we offer a bunch of Python functions to help you manipulate d
 
 Execute tools defined in the task:
 
-```yaml
+```yaml YAML
 # Simple tool call
 - tool: web_search
   arguments:
@@ -106,7 +106,7 @@ Execute tools defined in the task:
 
 Perform calculations or data manipulation:
 
-```yaml
+```yaml YAML
 # Simple evaluation
 - evaluate:
     count: "len(_.results)"
@@ -127,7 +127,7 @@ In the evaluate step we offer a bunch of Python functions to help you manipulate
 
 Pause workflow for user input:
 
-```yaml
+```yaml YAML
 # Simple input request
 - wait_for_input:
     info:
@@ -149,7 +149,7 @@ Pause workflow for user input:
 
 Retrieve values from storage:
 
-```yaml
+```yaml YAML
 # Get a single value
 - get: user_preference
 
@@ -163,7 +163,7 @@ Retrieve values from storage:
 
 Store values for later use:
 
-```yaml
+```yaml YAML
 # Set a single value
 - set:
     user_name: "John"
@@ -180,7 +180,7 @@ Store values for later use:
 
 Iterate over a collection:
 
-```yaml
+```yaml YAML
 # Simple foreach
 - foreach:
     in: _.items
@@ -202,7 +202,7 @@ Iterate over a collection:
 
 Process collections in parallel:
 
-```yaml
+```yaml YAML
 # Simple map-reduce
 - map_reduce:
     over: _.urls
@@ -226,7 +226,7 @@ Process collections in parallel:
 
 Execute steps concurrently:
 
-```yaml
+```yaml YAML
 # Parallel execution
 - parallel:
     - tool: task1
@@ -243,7 +243,7 @@ Execute steps concurrently:
 
 Conditional execution:
 
-```yaml
+```yaml YAML
 # Simple if
 - if: _.count > 0
   then:
@@ -272,7 +272,7 @@ Conditional execution:
 
 Multiple condition handling:
 
-```yaml
+```yaml YAML
 # Switch statement
 - switch:
     - case: _.category == "A"
@@ -292,7 +292,7 @@ Multiple condition handling:
 
 Pause execution:
 
-```yaml
+```yaml YAML
 # Sleep for duration
 - sleep:
     seconds: 30
@@ -308,7 +308,7 @@ Pause execution:
 
 Return values from workflow:
 
-```yaml
+```yaml YAML
 # Simple return
 - return: _.result
 
@@ -324,7 +324,7 @@ Return values from workflow:
 
 Execute subworkflows:
 
-```yaml
+```yaml YAML
 # Yield to subworkflow
 - yield:
     workflow: process_data
@@ -340,11 +340,27 @@ Execute subworkflows:
     analysis_result: _
 ```
 
+### Log Step
+
+Log messages or specific values:
+
+```yaml YAML
+- log: "Processing completed for item {{item_id}}"
+```
+
+### Error Step
+
+Handle errors by specifying an error message:
+
+```yaml YAML
+- error: "Invalid input provided"
+```
+
 ## Example: Complex Workflow
 
 Here's an example combining various step types:
 
-```yaml
+```yaml YAML
 main:
   # Initial setup
   - evaluate:
