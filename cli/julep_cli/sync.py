@@ -76,112 +76,122 @@ def sync(
         tasks = julep_yaml_content.get("tasks", [])
         tools = julep_yaml_content.get("tools", [])
 
-        typer.echo("Found the following new entities in julep.yaml:")
-        typer.echo("Agents:")
-        for agent in agents:
-            typer.echo(f"  - {agent.get('definition')}")
-        typer.echo("Tasks:")
-        for task in tasks:
-            typer.echo(f"  - {task.get('definition')}")
-        typer.echo("Tools:")
-        for tool in tools:
-            typer.echo(f"  - {tool.get('definition')}")
+        if agents or tasks or tools:
+            typer.echo("Found the following new entities in julep.yaml:")
+        else:
+            typer.echo("No new entities found in julep.yaml")
+            return
 
-        typer.echo("Creating agents on remote...")
+        if agents:
+            typer.echo("Agents:")
+            for agent in agents:
+                typer.echo(f"  - {agent.get('definition')}")
+        if tasks:
+            typer.echo("Tasks:")
+            for task in tasks:
+                typer.echo(f"  - {task.get('definition')}")
+        if tools:
+            typer.echo("Tools:")
+            for tool in tools:
+                typer.echo(f"  - {tool.get('definition')}")
 
-        # Create agents on remote
-        for agent in agents:
-            agent_yaml_path: Path = source / agent.pop("definition")
-            agent_yaml_content = yaml.safe_load(agent_yaml_path.read_text())
+        if agents:
+            # Create agents on remote
+            typer.echo("Creating agents on remote...")
+            for agent in agents:
+                agent_yaml_path: Path = source / agent.pop("definition")
+                agent_yaml_content = yaml.safe_load(agent_yaml_path.read_text())
 
-            # Create agent request, giving priority to the attributes in julep.yaml
-            agent_request = CreateAgentRequest(**agent_yaml_content, **agent)
+                # Create agent request, giving priority to the attributes in julep.yaml
+                agent_request = CreateAgentRequest(**agent_yaml_content, **agent)
 
-            agent_request_hash = hashlib.sha256(
-                agent_request.model_dump_json().encode()
-            ).hexdigest()
-            created_agent = client.agents.create(
-                **agent_request.model_dump(exclude_unset=True, exclude_none=True)
-            )
-
-            locked_agents.append(
-                LockedEntity(
-                    path=str(agent_yaml_path.relative_to(source)),
-                    id=created_agent.id,
-                    last_synced=created_agent.created_at.isoformat(timespec="milliseconds")
-                    + "Z",
-                    revision_hash=agent_request_hash,
+                agent_request_hash = hashlib.sha256(
+                    agent_request.model_dump_json().encode()
+                ).hexdigest()
+                created_agent = client.agents.create(
+                    **agent_request.model_dump(exclude_unset=True, exclude_none=True)
                 )
-            )
 
-        typer.echo("All agents were successfully created on remote")
-
-        typer.echo("Creating tasks on remote...")
-        # Create tasks on remote
-        for task in tasks:
-            task_yaml_path: Path = source / task.pop("definition")
-            # FIXME: Change this once we have a way to get the agent id from the julep.yaml file when there's no lock file
-            # Currently defaulting to using the index of the agent in the julep.yaml file
-            agent_id = locked_agents[task.pop("agent_id")].id
-            task_yaml_content = yaml.safe_load(task_yaml_path.read_text())
-            task_request = CreateTaskRequest(**task_yaml_content, **task)
-            task_request_hash = hashlib.sha256(
-                task_request.model_dump_json().encode()
-            ).hexdigest()
-            created_task = client.tasks.create(
-                agent_id=agent_id,
-                **task_request.model_dump(exclude_unset=True, exclude_none=True),
-            )
-
-            relationships.tasks.append(
-                TaskAgentRelationship(id=created_task.id, agent_id=agent_id)
-            )
-
-            locked_tasks.append(
-                LockedEntity(
-                    path=str(task_yaml_path.relative_to(source)),
-                    id=created_task.id,
-                    last_synced=created_task.created_at.isoformat(timespec="milliseconds")
-                    + "Z",
-                    revision_hash=task_request_hash,
+                locked_agents.append(
+                    LockedEntity(
+                        path=str(agent_yaml_path.relative_to(source)),
+                        id=created_agent.id,
+                        last_synced=created_agent.created_at.isoformat(timespec="milliseconds")
+                        + "Z",
+                        revision_hash=agent_request_hash,
+                    )
                 )
-            )
+            typer.echo("All agents were successfully created on remote")
 
-        typer.echo("All tasks were successfully created on remote")
+        if tasks:
+            typer.echo("Creating tasks on remote...")
+            # Create tasks on remote
+            for task in tasks:
+                task_yaml_path: Path = source / task.pop("definition")
+                # FIXME: Change this once we have a way to get the agent id from the julep.yaml file when there's no lock file
+                # Currently defaulting to using the index of the agent in the julep.yaml file
 
-        typer.echo("Creating tools on remote...")
-        # Create tools on remote
-        for tool in tools:
-            tool_yaml_path: Path = source / tool.pop("definition")
-            tool_yaml_content = yaml.safe_load(tool_yaml_path.read_text())
-            tool_request = CreateToolRequest(**tool_yaml_content, **tool)
-            tool_request_hash = hashlib.sha256(
-                tool_request.model_dump_json().encode()
-            ).hexdigest()
-            # FIXME: Change this once we have a way to get the agent id from the julep.yaml file when there's no lock file
-            # Currently defaulting to using the index of the agent in the julep.yaml file
-            agent_id = locked_agents[tool.pop("agent_id")].id
+                agent_id_expression = task.pop("agent_id")
+                agent_id = eval(f'f"{agent_id_expression}"', {"agents": locked_agents})
 
-            created_tool = client.agents.tools.create(
-                agent_id=agent_id,
-                **tool_request.model_dump(exclude_unset=True, exclude_none=True),
-            )
-
-            relationships.tools.append(
-                ToolAgentRelationship(id=created_tool.id, agent_id=agent_id)
-            )
-
-            locked_tools.append(
-                LockedEntity(
-                    path=str(tool_yaml_path.relative_to(source)),
-                    id=created_tool.id,
-                    last_synced=created_tool.created_at.isoformat(timespec="milliseconds")
-                    + "Z",
-                    revision_hash=tool_request_hash,
+                task_yaml_content = yaml.safe_load(task_yaml_path.read_text())
+                task_request = CreateTaskRequest(**task_yaml_content, **task)
+                task_request_hash = hashlib.sha256(
+                    task_request.model_dump_json().encode()
+                ).hexdigest()
+                created_task = client.tasks.create(
+                    agent_id=agent_id,
+                    **task_request.model_dump(exclude_unset=True, exclude_none=True),
                 )
-            )
 
-        typer.echo("All tools were successfully created on remote")
+                relationships.tasks.append(
+                    TaskAgentRelationship(id=created_task.id, agent_id=agent_id)
+                )
+
+                locked_tasks.append(
+                    LockedEntity(
+                        path=str(task_yaml_path.relative_to(source)),
+                        id=created_task.id,
+                        last_synced=created_task.created_at.isoformat(timespec="milliseconds")
+                        + "Z",
+                        revision_hash=task_request_hash,
+                    )
+                )
+            typer.echo("All tasks were successfully created on remote")
+        
+        if tools:
+            typer.echo("Creating tools on remote...")
+            # Create tools on remote
+            for tool in tools:
+                tool_yaml_path: Path = source / tool.pop("definition")
+                tool_yaml_content = yaml.safe_load(tool_yaml_path.read_text())
+                tool_request = CreateToolRequest(**tool_yaml_content, **tool)
+                tool_request_hash = hashlib.sha256(
+                    tool_request.model_dump_json().encode()
+                ).hexdigest()
+                # FIXME: Change this once we have a way to get the agent id from the julep.yaml file when there's no lock file
+                # Currently defaulting to using the index of the agent in the julep.yaml file
+                agent_id = locked_agents[tool.pop("agent_id")].id
+
+                created_tool = client.agents.tools.create(
+                    agent_id=agent_id,
+                    **tool_request.model_dump(exclude_unset=True, exclude_none=True),
+                )
+
+                relationships.tools.append(
+                    ToolAgentRelationship(id=created_tool.id, agent_id=agent_id)
+                )
+
+                locked_tools.append(
+                    LockedEntity(
+                        path=str(tool_yaml_path.relative_to(source)),
+                        id=created_tool.id,
+                        last_synced=created_tool.created_at.isoformat(timespec="milliseconds")
+                        + "Z",
+                        revision_hash=tool_request_hash,
+                    )
+                )
+            typer.echo("All tools were successfully created on remote")
 
         typer.echo("Creating lock file...")
         write_lock_file(
