@@ -45,7 +45,7 @@ def save_config(config: dict, config_dir: Path = CONFIG_DIR):
         yaml.dump(config, f)
 
 
-def get_julep_client():
+def get_julep_client() -> Julep:
     """Get a Julep client"""
     # Initialize the Julep client
     api_key = get_config().get("api_key")
