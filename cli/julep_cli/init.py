@@ -51,7 +51,7 @@ def init(
     # If not using --yes flag, confirm before proceeding
     if not yes:
         proceed = typer.confirm(
-            f"This will initialize a new Julep project with template '{template}' in {path}. Proceed?",
+            f"This will initialize a new Julep project with template '{template}' in '{path}'. Proceed?",
             default=True,
         )
         if not proceed:
@@ -84,9 +84,8 @@ def init(
                     # Ensure the final destination directory exists
                     final_destination.mkdir(parents=True, exist_ok=True)
 
-                    # Move files from the extracted template path to the final destination
-                    for item in extracted_template_path.iterdir():
-                        item.rename(final_destination / item.name)
+                    # Copy files from the extracted template path to the final destination
+                    shutil.copytree(extracted_template_path, final_destination, dirs_exist_ok=True)
 
                     # Remove the extracted template directory and its parent
                     shutil.rmtree(library_repo_prefix)
