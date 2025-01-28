@@ -31,7 +31,7 @@ def sync(
         help="Source directory containing julep.yaml",
     ),
     force_local: bool = typer.Option(
-        False,
+        True,
         "--force-local",
         help="Force local state to match remote",
     ),
