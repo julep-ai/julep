@@ -1,12 +1,9 @@
-import os
-from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from .utils import get_config, save_config
-
 from .app import app
+from .utils import get_config, save_config
 
 
 @app.command()

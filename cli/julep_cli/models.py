@@ -1,5 +1,6 @@
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
 from typing import Annotated, Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 
 class CreateAgentRequest(BaseModel):
@@ -39,6 +40,7 @@ class CreateAgentRequest(BaseModel):
     Default settings for all sessions created by this agent
     """
 
+
 class CreateToolRequest(BaseModel):
     """
     Payload for creating a tool
@@ -67,31 +69,32 @@ class CreateToolRequest(BaseModel):
     """
     Description of the tool
     """
-    function: Any | None = None # TODO: Change to FunctionDef
+    function: Any | None = None  # TODO: Change to FunctionDef
     """
     The function to call
     """
-    integration: ( # TODO: Change to available integrations
+    integration: (  # TODO: Change to available integrations
         Any
         | None
     ) = None
     """
     The integration to call
     """
-    system: Any | None = None # TODO: Change to SystemDef
+    system: Any | None = None  # TODO: Change to SystemDef
     """
     The system to call
     """
-    api_call: Any | None = None # TODO: Change to ApiCallDef
+    api_call: Any | None = None  # TODO: Change to ApiCallDef
     """
     The API call to make
     """
-    computer_20241022: Any | None = None # TODO: Change to Computer20241022Def
+    computer_20241022: Any | None = None  # TODO: Change to Computer20241022Def
     """
     (Alpha) Anthropic new tools
     """
-    text_editor_20241022: Any | None = None # TODO: Change to TextEditor20241022Def
-    bash_20241022: Any | None = None # TODO: Change to Bash20241022Def
+    text_editor_20241022: Any | None = None  # TODO: Change to TextEditor20241022Def
+    bash_20241022: Any | None = None  # TODO: Change to Bash20241022Def
+
 
 class CreateTaskRequest(BaseModel):
     """
@@ -118,7 +121,7 @@ class CreateTaskRequest(BaseModel):
     """
     main: Annotated[
         list[
-            Any # TODO: Change to Task steps
+            Any  # TODO: Change to Task steps
         ],
         Field(min_length=1),
     ]
@@ -129,7 +132,7 @@ class CreateTaskRequest(BaseModel):
     """
     The schema for the input to the task. `null` means all inputs are valid.
     """
-    tools: list[CreateToolRequest] = [] # TODO: Change to TaskTool
+    tools: list[CreateToolRequest] = []  # TODO: Change to TaskTool
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
@@ -138,6 +141,7 @@ class CreateTaskRequest(BaseModel):
     Whether to inherit tools from the parent agent or not. Defaults to false.
     """
     metadata: dict[str, Any] | None = None
+
 
 class LockedEntity(BaseModel):
     """
@@ -161,6 +165,7 @@ class LockedEntity(BaseModel):
     The revision hash of the entity (sha256 of the yaml file contents)
     """
 
+
 class TaskAgentRelationship(BaseModel):
     id: str
     """
@@ -171,6 +176,7 @@ class TaskAgentRelationship(BaseModel):
     The ID of the agent
     """
 
+
 class ToolAgentRelationship(BaseModel):
     id: str
     """
@@ -180,6 +186,7 @@ class ToolAgentRelationship(BaseModel):
     """
     The ID of the agent
     """
+
 
 class Relationships(BaseModel):
     """
@@ -194,6 +201,7 @@ class Relationships(BaseModel):
     """
     The tools that have been created on the Julep platform
     """
+
 
 class LockFileContents(BaseModel):
     """
