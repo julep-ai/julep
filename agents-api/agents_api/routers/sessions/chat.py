@@ -41,7 +41,6 @@ async def chat(
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
     x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
-    connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> ChatResponse:
     """
     Initiates a chat session.
