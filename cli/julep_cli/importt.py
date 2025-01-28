@@ -5,9 +5,8 @@ from pathlib import Path
 import typer
 from julep.types.agent import Agent
 
-from .models import LockedEntity
-
 from .app import import_app
+from .models import LockedEntity
 from .utils import (
     add_entity_to_lock_file,
     get_entity_from_lock_file,

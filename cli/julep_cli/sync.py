@@ -1,6 +1,6 @@
-from datetime import datetime
 import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -172,7 +172,7 @@ def sync(
                     )
                 )
             typer.echo("All tasks were successfully created on remote")
-        
+
         if tools:
             typer.echo("Creating tools on remote...")
             # Create tools on remote
@@ -222,7 +222,7 @@ def sync(
         typer.echo("Lock file created successfully")
 
         return
-    
+
     if force_local and lock_file.exists():
         lock_file = get_lock_file(source)
         julep_yaml_content = get_julep_yaml(source)
@@ -230,7 +230,6 @@ def sync(
         agents_julep_yaml = julep_yaml_content.get("agents", [])
         tasks_julep_yaml = julep_yaml_content.get("tasks", [])
         tools_julep_yaml = julep_yaml_content.get("tools", [])
-
 
         for agent_julep_yaml in agents_julep_yaml:
             agent_yaml_def_path: Path = Path(agent_julep_yaml.get("definition"))
@@ -240,7 +239,7 @@ def sync(
 
             for i in range(len(lock_file.agents)):
                 agent_julep_lock = lock_file.agents[i]
-                
+
                 if agent_julep_lock.path == str(agent_yaml_def_path):
                     found_in_lock = True
                     agent_yaml_content_hash = hashlib.sha256(json.dumps(agent_yaml_content).encode()).hexdigest()
@@ -248,11 +247,11 @@ def sync(
 
                     if agent_yaml_content_hash != agent_julep_lock_hash:
                         typer.echo(f"Agent {agent_yaml_def_path} has changed, updating on remote...")
-                        
+
                         agent_request = CreateAgentRequest(**agent_yaml_content, **agent_julep_yaml)
-                        
+
                         client.agents.create_or_update(agent_id=agent_julep_lock.id, **agent_request.model_dump(exclude_unset=True, exclude_none=True))
-                        
+
                         updated_at = client.agents.get(agent_julep_lock.id).updated_at
                         # Update the hash and last synced date in the lock file
                         lock_file.agents[i] = LockedEntity(
@@ -285,7 +284,7 @@ def sync(
             task_yaml_content = yaml.safe_load(
                 (source / task_yaml_def_path).read_text())
             found_in_lock = False
-            
+
             for i in range(len(lock_file.tasks)):
                 task_julep_lock = lock_file.tasks[i]
 
@@ -325,7 +324,6 @@ def sync(
                 agent_id_expression = task_julep_yaml.pop("agent_id")
                 agent_id = eval(f'f"{agent_id_expression}"', {"agents": lock_file.agents})
 
-
                 task_request = CreateTaskRequest(**task_yaml_content, **task_julep_yaml)
                 created_task = client.tasks.create(agent_id=agent_id, **task_request.model_dump(exclude_unset=True, exclude_none=True))
 
@@ -335,7 +333,6 @@ def sync(
                     last_synced=created_task.created_at.isoformat(timespec="milliseconds") + "Z",
                     revision_hash=task_request_hash,
                 ))
-
 
                 # Add the task dependency to the relationships
                 lock_file.relationships.tasks.append(TaskAgentRelationship(id=created_task.id, agent_id=agent_id))
@@ -356,7 +353,7 @@ def sync(
                     tool_julep_lock_hash = tool_julep_lock.revision_hash
 
                     if tool_yaml_content_hash != tool_julep_lock_hash:
-                        typer.echo(f"Tool {tool_yaml_def_path} has changed, updating on remote...") 
+                        typer.echo(f"Tool {tool_yaml_def_path} has changed, updating on remote...")
 
                         tool_request = CreateToolRequest(**tool_yaml_content, **tool_julep_yaml)
 
@@ -388,7 +385,6 @@ def sync(
                 agent_id_expression = tool_julep_yaml.pop("agent_id")
                 agent_id = eval(f'f"{agent_id_expression}"', {"agents": lock_file.agents})
 
-
                 tool_request = CreateToolRequest(**tool_yaml_content, **tool_julep_yaml)
                 created_tool = client.agents.tools.create(agent_id=agent_id, **tool_request.model_dump(exclude_unset=True, exclude_none=True))
 
@@ -405,7 +401,6 @@ def sync(
                 typer.echo(f"Tool {tool_yaml_def_path} created successfully on remote")
 
         write_lock_file(source, lock_file)
-
 
     if force_remote:
         # TODO: Implement force remote here

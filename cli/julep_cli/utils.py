@@ -1,12 +1,17 @@
 import json
 from pathlib import Path
-from typing import Literal
 
 import typer
 import yaml
 from julep import Julep
 
-from .models import CreateAgentRequest, LockFileContents, LockedEntity, TaskAgentRelationship, ToolAgentRelationship
+from .models import (
+    CreateAgentRequest,
+    LockedEntity,
+    LockFileContents,
+    TaskAgentRelationship,
+    ToolAgentRelationship,
+)
 
 CONFIG_DIR = Path.home() / ".config" / "julep"
 CONFIG_FILE_NAME = "config.yml"
