@@ -97,9 +97,9 @@ def init(
         typer.echo(f"Failed to extract template: {e}", err=True)
         raise typer.Exit(1)
 
-    julep_toml = path / template / "julep.toml"
-    if not julep_toml.exists():
-        typer.echo("Error: 'julep.toml' not found in the destination directory", err=True)
+    julep_yaml = path / template / "julep.yaml"
+    if not julep_yaml.exists():
+        typer.echo("Error: 'julep.yaml' not found in the destination directory", err=True)
         raise typer.Exit(1)
 
     typer.echo(
