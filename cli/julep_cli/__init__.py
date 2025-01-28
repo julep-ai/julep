@@ -1,6 +1,7 @@
 from .agents import agents_app as agents_app
 from .app import app
-from .auth import auth, get_config, save_config
+from .auth import auth
+from .utils import get_config, save_config
 from .chat import chat
 from .init import init
 from .run import run

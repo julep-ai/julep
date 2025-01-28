@@ -1,33 +1,12 @@
+import os
 from pathlib import Path
 from typing import Annotated
 
 import typer
-import yaml
-from environs import Env
+
+from cli.julep_cli.utils import get_config, save_config
 
 from .app import app
-
-# Config handling
-env = Env()
-CONFIG_DIR = Path.home() / ".config" / "julep"
-CONFIG_FILE_NAME = "config.yml"
-
-
-def get_config(config_dir: Path = CONFIG_DIR):
-    """Get configuration from config file"""
-    if not (config_dir / CONFIG_FILE_NAME).exists():
-        return {}
-
-    with open(config_dir / CONFIG_FILE_NAME) as f:
-        return yaml.safe_load(f) or {}
-
-
-def save_config(config: dict, config_dir: Path = CONFIG_DIR):
-    """Save configuration to config file"""
-    config_dir.mkdir(parents=True, exist_ok=True)
-
-    with open(config_dir / CONFIG_FILE_NAME, "w") as f:
-        yaml.dump(config, f)
 
 
 @app.command()
