@@ -1,0 +1,46 @@
+import time
+import json
+from typing import Annotated
+
+import typer
+
+from .utils import get_julep_client
+
+from .app import app
+
+
+@app.command()
+def log(
+    execution_id: Annotated[str, typer.Option("--execution-id", help="ID of the execution to log")],
+):
+    """
+    Log the output of an execution.
+    """
+
+    client = get_julep_client()
+
+    transitions = client.executions.transitions.list(execution_id=execution_id).items
+    for transition in reversed(transitions):
+        typer.echo(f"Transition Type: {transition.type}")
+        typer.echo("Transition Output:")
+        typer.echo(json.dumps(transition.output, indent=4))
+        typer.echo("--------------------------------")
+
+    while True:
+        fetched_transitions = client.executions.transitions.list(execution_id=execution_id).items
+        new_transitions = fetched_transitions[:len(fetched_transitions) - len(transitions)]
+
+        for transition in reversed(new_transitions):
+            typer.echo(f"Transition Type: {transition.type}")
+            typer.echo("Transition Output:")
+            typer.echo(json.dumps(transition.output, indent=4))
+            typer.echo("--------------------------------")
+
+        transitions = fetched_transitions
+
+        if transitions[0].type in ["finish", "cancelled", "error"]:
+            break
+
+        time.sleep(1)
+
+

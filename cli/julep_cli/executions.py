@@ -20,8 +20,6 @@ def create(
 
     input = json.loads(input)
 
-    typer.echo(f"type of input: {type(input)}")
-
     try:
         execution = client.executions.create(task_id=task_id, input=input)
     except Exception as e:

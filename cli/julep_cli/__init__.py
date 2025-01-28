@@ -10,16 +10,18 @@ from .tasks import tasks_app as tasks_app
 from .tools import tools_app as tools_app
 from .utils import get_config, save_config
 from .executions import executions_app as executions_app
+from .log import log
 
 __all__ = [
     "app",
     "auth",
     "chat",
+    "executions",
     "get_config",
     "importt",
     "init",
+    "log",
     "run",
     "save_config",
     "sync",
-    "executions",
 ]
