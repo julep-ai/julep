@@ -17,6 +17,7 @@ def get_config(config_dir: Path = CONFIG_DIR) -> dict:
     with open(config_dir / CONFIG_FILE_NAME) as f:
         return yaml.safe_load(f) or {}
 
+
 def get_julep_yaml(source: Path) -> dict:
     """Get the julep.yaml file from the source directory"""
 
@@ -66,8 +67,13 @@ def create_lock_file(source: Path):
         raise typer.Exit(1)
 
 
-def get_lock_file(source: Path):
-    lock_file = source / "julep-lock.json"
+def get_lock_file(project_dir: Path = Path.cwd()):
+    """
+    Get the lock file from the project directory.
+    If no project directory is provided, it will default to the current working directory.
+    """
+
+    lock_file = project_dir / "julep-lock.json"
 
     if not lock_file.exists():
         typer.echo(
@@ -94,6 +100,7 @@ def fetch_all_remote_agents(client: Julep) -> list[CreateAgentRequest]:
 
     return agents
 
+
 def fetch_all_local_agents(source: Path) -> list[tuple[CreateAgentRequest, Path]]:
     """Fetch all agents from the local source directory based on the julep.yaml file"""
     
@@ -109,6 +116,72 @@ def fetch_all_local_agents(source: Path) -> list[tuple[CreateAgentRequest, Path]
 
     return local_agents
 
-def write_lock_file(lock_file: Path, content: LockFileContents):
+
+def write_lock_file(project_dir: Path, content: LockFileContents):
+    lock_file_path = project_dir / "julep-lock.json"
     lock_file_contents = content.model_dump_json(indent=2)
-    lock_file.write_text(lock_file_contents)
+    lock_file_path.write_text(lock_file_contents)
+
+
+def get_entity_from_lock_file(type: str, id: str, project_dir: Path = Path.cwd()) -> dict:
+    """
+    Get the contents of lock file
+    """
+    
+    lock_file = get_lock_file(project_dir)
+    
+    # Adding an s to match the plural form of the key in lock file (agent -> agents)
+    items = lock_file.get(type + "s", [])
+
+    matched = [item for item in items if item.get("id") == id]
+    
+    if len(matched) > 1:
+        typer.echo(f"Error: Multiple {type}s with id '{id}' found in lock file", err=True)
+        raise typer.Exit(1)
+
+    if not matched:
+        return {}
+
+    return matched[0]
+
+
+def update_existing_entity_in_lock_file(type: str, new_entity: dict, project_dir: Path = Path.cwd()):
+    found=False
+    lock_file = get_lock_file(project_dir)
+    items: list[dict] = lock_file.get(type + "s", [])
+    
+    for i in range(len(items)):
+        if items[i].get("id") == new_entity.get("id"):
+            items[i] = new_entity
+            found=True
+            break
+
+    if not found:
+        typer.echo(f"Error: Cannot update{type} with id '{new_entity.get('id')}' because it was not found in lock file", err=True)
+        raise typer.Exit(1)
+    
+    lock_file[type + "s"] = items
+
+    write_lock_file(project_dir, LockFileContents(**lock_file))
+
+
+def add_entity_to_lock_file(type: str, new_entity: dict, project_dir: Path = Path.cwd()):
+    """
+    Add a new entity to the lock file
+    """
+    
+    lock_file = get_lock_file(project_dir)
+    items: list[dict] = lock_file.get(type + "s", [])
+
+    items.append(new_entity)
+
+    lock_file[type + "s"] = items
+
+    write_lock_file(project_dir, LockFileContents(**lock_file))
+
+
+def update_yaml_for_existing_entity(path: Path, data: dict):
+    """Update the yaml file for an existing entity"""
+    with open(path, "w") as f:
+        yaml.dump(data, f)
+

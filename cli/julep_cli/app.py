@@ -12,10 +12,12 @@ app = typer.Typer(
 agents_app = typer.Typer(help="Manage AI agents")
 tasks_app = typer.Typer(help="Manage tasks")
 tools_app = typer.Typer(help="Manage tools")
+import_app = typer.Typer(help="Import entities from the Julep platform")
 
 app.add_typer(agents_app, name="agents")
 app.add_typer(tasks_app, name="tasks")
 app.add_typer(tools_app, name="tools")
+app.add_typer(import_app, name="import")
 
 
 # Version command

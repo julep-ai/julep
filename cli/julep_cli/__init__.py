@@ -8,7 +8,7 @@ from .run import run
 from .sync import sync
 from .tasks import tasks_app as tasks_app
 from .tools import tools_app as tools_app
-
+from .importt import import_app as import_app
 __all__ = [
     "app",
     "auth",
@@ -18,4 +18,5 @@ __all__ = [
     "run",
     "save_config",
     "sync",
+    "importt",
 ]
