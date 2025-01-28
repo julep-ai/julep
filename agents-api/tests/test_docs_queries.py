@@ -145,6 +145,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert any(d.id == doc_user_different_metadata.id for d in docs_list_metadata)
     assert any(d.metadata == {"test": "test2"} for d in docs_list_metadata)
 
+
 @test("query: list agent docs")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)

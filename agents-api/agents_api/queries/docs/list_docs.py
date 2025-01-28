@@ -41,6 +41,7 @@ WHERE d.developer_id = $1
     AND doc_own.owner_id = $4
 """
 
+
 @rewrap_exceptions(common_db_exceptions("doc", ["list"]))
 @wrap_in_class(
     Doc,
@@ -117,7 +118,9 @@ async def list_docs(
         d.created_at"""
 
     # Add sorting and pagination
-    query += f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+    query += (
+        f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+    )
     params.extend([limit, offset])
 
     return query, params
