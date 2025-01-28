@@ -100,8 +100,8 @@ async def list_docs(
     # Add metadata filtering before GROUP BY
     if metadata_filter:
         for key, value in metadata_filter.items():
-            query += f" AND d.metadata->>'{key}' = ${len(params) + 1}"
-            params.append(value)
+            query += f" AND d.metadata->>${len(params) + 1} = ${len(params) + 2}"
+            params.extend([key, value])
 
     # Add GROUP BY clause
     query += """
