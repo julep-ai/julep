@@ -11,18 +11,27 @@ from agents_api.autogen.openapi_model import (
     ApiCallDef,
     BaseIntegrationDef,
     CaseThen,
+    EvaluateStep,
     Execution,
     ForeachDo,
     ForeachStep,
     GetStep,
+    IfElseWorkflowStep,
+    LogStep,
+    MapReduceStep,
     PromptItem,
     PromptStep,
+    ReturnStep,
+    SetStep,
     SwitchStep,
     SystemDef,
     TaskSpecDef,
     TaskToolDef,
     ToolCallStep,
+    Transition,
     TransitionTarget,
+    WaitForInputInfo,
+    WaitForInputStep,
     Workflow,
     YieldStep,
 )
@@ -671,7 +680,7 @@ async def _():
         ])
 
 
-@test("task execution workflow: evaluate step expressions")
+@test("task execution workflow: evaluate foreach step expressions")
 async def _():
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
@@ -707,8 +716,747 @@ async def _():
             step=0,
         ),
     )
-    result = await wf.eval_step_exprs(
-        ForeachStep(foreach=ForeachDo(in_="1 + 1", do=YieldStep(workflow="wf1")))
-    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(
+            ForeachStep(foreach=ForeachDo(in_="1 + 2", do=YieldStep(workflow="wf1")))
+        )
 
-    assert result == StepOutcome(output="2")
+        assert result == StepOutcome(output=3)
+
+
+@test("task execution workflow: evaluate ifelse step expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(
+            IfElseWorkflowStep(if_="1 + 2", then=YieldStep(workflow="wf1")),
+        )
+
+        assert result == StepOutcome(output=3)
+
+
+@test("task execution workflow: evaluate return step expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(
+            ReturnStep(return_={"x": "1 + 2"}),
+        )
+
+        assert result == StepOutcome(output={"x": 3})
+
+
+@test("task execution workflow: evaluate wait for input step expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(
+            WaitForInputStep(wait_for_input=WaitForInputInfo(info={"x": "1 + 2"})),
+        )
+
+        assert result == StepOutcome(output={"x": 3})
+
+
+@test("task execution workflow: evaluate evaluate expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(
+            EvaluateStep(evaluate={"x": "1 + 2"}),
+        )
+
+        assert result == StepOutcome(output={"x": 3})
+
+
+@test("task execution workflow: evaluate map reduce expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(
+            MapReduceStep(over="1 + 2", map=YieldStep(workflow="wf1")),
+        )
+
+        assert result == StepOutcome(output=3)
+
+
+@test("task execution workflow: evaluate set expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(SetStep(set={"x": "1 + 2"}))
+
+        assert result == StepOutcome(output={"x": 3})
+
+
+@test("task execution workflow: evaluate log expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output={"x": "5"},
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(LogStep(log="{{_0['x']}}"))
+
+        assert result == StepOutcome(output="5")
+
+
+@test("task execution workflow: evaluate switch expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(
+            SwitchStep(
+                switch=[
+                    CaseThen(case="None", then=YieldStep(workflow="wf1")),
+                    CaseThen(case="1 + 3", then=YieldStep(workflow="wf2")),
+                ]
+            ),
+        )
+
+        assert result == StepOutcome(output=1)
+
+
+@test("task execution workflow: evaluate tool call expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = ToolCallStep(tool="tool1", arguments={"x": "1 + 2"})
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[
+                TaskToolDef(
+                    name="tool1",
+                    type="function",
+                    spec={},
+                ),
+            ],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_transitions"
+        ) as list_execution_transitions,
+        patch("agents_api.workflows.task_execution.generate_call_id") as generate_call_id,
+    ):
+        generate_call_id.return_value = "XXXX"
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(
+            ToolCallStep(tool="tool1", arguments={"x": "1 + 2"}),
+        )
+
+        assert result == StepOutcome(
+            output={
+                "function": {"arguments": {"x": 3}, "name": "tool1"},
+                "id": "XXXX",
+                "type": "function",
+            }
+        )
+
+
+@test("task execution workflow: evaluate yield expressions")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = YieldStep(arguments={"x": "1 + 2"}, workflow="main")
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        result = await wf.eval_step_exprs(YieldStep(arguments={"x": "1 + 2"}, workflow="main"))
+
+        assert result == StepOutcome(
+            output={"x": 3}, transition_to=("step", TransitionTarget(step=0, workflow="main"))
+        )
+
+
+@test("task execution workflow: evaluate yield expressions assertion")
+async def _():
+    wf = TaskExecutionWorkflow()
+    step = step = ToolCallStep(tool="tool1", arguments={"x": "1 + 2"})
+    execution_input = ExecutionInput(
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        arguments={},
+        task=TaskSpecDef(
+            name="task1",
+            tools=[],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            task_id=uuid.uuid4(),
+            status="running",
+            input={"a": "1"},
+        ),
+    )
+    wf.context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+        ),
+    )
+    with patch(
+        "agents_api.common.protocol.tasks.list_execution_transitions"
+    ) as list_execution_transitions:
+        list_execution_transitions.return_value = (
+            Transition(
+                id=uuid.uuid4(),
+                execution_id=uuid.uuid4(),
+                type="step",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+                output="output",
+                current=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+                next=TransitionTarget(
+                    workflow="main",
+                    step=0,
+                ),
+            ),
+        )
+        with raises(AssertionError):
+            await wf.eval_step_exprs(YieldStep(arguments={"x": "1 + 2"}, workflow="main"))
