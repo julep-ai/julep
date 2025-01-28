@@ -5,7 +5,7 @@ from pathlib import Path
 import typer
 from julep.types.agent import Agent
 
-from cli.julep_cli.models import LockedEntity
+from .models import LockedEntity
 
 from .app import import_app
 from .utils import (
