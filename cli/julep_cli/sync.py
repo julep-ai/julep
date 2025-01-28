@@ -190,6 +190,7 @@ def sync(
                 agents=locked_agents,
                 tasks=locked_tasks,
                 tools=locked_tools,
+                relationships=relationships,
             ),
         )
         typer.echo("Lock file created successfully")
