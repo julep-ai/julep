@@ -3,6 +3,8 @@ from typing import Annotated
 
 import typer
 
+from .utils import get_julep_client
+
 from .app import app
 
 
@@ -29,9 +31,25 @@ def chat(
 
     The chat session runs in the terminal, allowing real-time conversation with the agent.
     """
-    # TODO: Implement chat logic
-    typer.echo(f"Starting chat with agent '{agent}'")
-    if situation:
-        typer.echo(f"Context: {situation}")
-    if settings:
-        typer.echo(f"Using custom settings: {settings}")
+
+
+    client = get_julep_client()
+
+    agent = client.agents.get(agent_id=agent)
+    
+    session = client.sessions.create(agent=agent.id, situation=situation)
+
+    typer.echo(f"Starting chat with agent '{agent.name}'")
+
+    while True:
+        message = typer.prompt("You")
+        response = client.sessions.chat(
+            session_id=session.id,
+            messages=[
+                {
+                    "role": "user",
+                    "content": message,
+                }
+            ],
+        )
+        typer.echo(f"Agent: {response.choices[0].message.content}")
