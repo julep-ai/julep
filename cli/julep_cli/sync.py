@@ -187,7 +187,7 @@ def sync(
 
         typer.echo("Creating lock file...")
         write_lock_file(
-            lock_file,
+            source,
             LockFileContents(
                 agents=locked_agents,
                 tasks=locked_tasks,
