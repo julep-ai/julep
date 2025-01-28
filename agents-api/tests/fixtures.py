@@ -167,8 +167,8 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     pool = await create_db_pool(dsn=dsn)
     embedding_with_confidence_0 = make_vector_with_similarity(d=0.0)
-    embedding_with_confidence_05 = make_vector_with_similarity(d=0.5)
-    embedding_with_confidence_05_neg = make_vector_with_similarity(d=-0.5)
+    make_vector_with_similarity(d=0.5)
+    make_vector_with_similarity(d=-0.5)
     embedding_with_confidence_1_neg = make_vector_with_similarity(d=-1.0)
     await pool.execute(
         """
@@ -192,7 +192,6 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         "Test content 1",
         f"[{', '.join([str(x) for x in embedding_with_confidence_0])}]",
     )
-
 
     # Insert embedding with confidence -1 with respect to unit vector
     await pool.execute(

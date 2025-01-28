@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Any
 from uuid import UUID
 
@@ -58,7 +57,6 @@ async def execute_system(
     try:
         # Partial with connection pool
         handler = get_handler(system)
-        handler = partial(handler, connection_pool=connection_pool)
 
         # Transform arguments for doc-related operations (except create and search
         # as we're calling the endpoint function rather than the model method)
