@@ -118,6 +118,32 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     )
     assert len(docs_list) >= 1
     assert any(d.id == doc_user.id for d in docs_list)
+    assert any(d.id == doc_user.id for d in docs_list)
+
+    # Create a doc with a different metadata
+    doc_user_different_metadata = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="User List Test 2",
+            content="Some user doc content 2",
+            metadata={"test": "test2"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    docs_list_metadata = await list_docs(
+        developer_id=developer.id,
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+        metadata_filter={"test": "test2"},
+    )
+    assert len(docs_list_metadata) >= 1
+    assert any(d.id == doc_user_different_metadata.id for d in docs_list_metadata)
+    assert any(d.metadata == {"test": "test2"} for d in docs_list_metadata)
 
 
 @test("query: list agent docs")
@@ -145,8 +171,35 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
         owner_id=agent.id,
         connection_pool=pool,
     )
+
     assert len(docs_list) >= 1
     assert any(d.id == doc_agent.id for d in docs_list)
+
+    # Create a doc with a different metadata
+    doc_agent_different_metadata = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Agent List Test 2",
+            content="Some agent doc content 2",
+            metadata={"test": "test2"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+
+    # List agent's docs
+    docs_list_metadata = await list_docs(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+        metadata_filter={"test": "test2"},
+    )
+    assert len(docs_list_metadata) >= 1
+    assert any(d.id == doc_agent_different_metadata.id for d in docs_list_metadata)
+    assert any(d.metadata == {"test": "test2"} for d in docs_list_metadata)
 
 
 @test("query: delete user doc")

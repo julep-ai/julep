@@ -297,3 +297,22 @@ def run_concurrently(
         ]
 
         return [future.result() for future in concurrent.futures.as_completed(futures)]
+
+
+def serialize_model_data(data: Any) -> Any:
+    """
+    Recursively serialize Pydantic models and their nested structures.
+
+    Args:
+        data: Any data structure that might contain Pydantic models
+
+    Returns:
+        JSON-serializable data structure
+    """
+    if hasattr(data, "model_dump"):
+        return data.model_dump(mode="json")
+    if isinstance(data, dict):
+        return {key: serialize_model_data(value) for key, value in data.items()}
+    if isinstance(data, list | tuple):
+        return [serialize_model_data(item) for item in data]
+    return data

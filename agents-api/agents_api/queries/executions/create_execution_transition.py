@@ -11,7 +11,7 @@ from ...autogen.openapi_model import (
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import pg_query, rewrap_exceptions, serialize_model_data, wrap_in_class
 
 # Query to create a transition
 create_execution_transition_query = """
@@ -121,14 +121,7 @@ async def create_execution_transition(
     data.execution_id = execution_id
 
     # Dump to json
-    if isinstance(data.output, list):
-        data.output = [
-            item.model_dump(mode="json") if hasattr(item, "model_dump") else item
-            for item in data.output
-        ]
-
-    elif hasattr(data.output, "model_dump"):
-        data.output = data.output.model_dump(mode="json")
+    data.output = serialize_model_data(data.output)
 
     # Prepare the transition data
     transition_data = data.model_dump(exclude_unset=True, exclude={"id"})
