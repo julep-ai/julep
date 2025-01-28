@@ -39,18 +39,7 @@ LEFT JOIN docs_embeddings e
 WHERE d.developer_id = $1
     AND doc_own.owner_type = $3
     AND doc_own.owner_id = $4
-GROUP BY
-    d.doc_id,
-    d.developer_id,
-    d.title,
-    d.modality,
-    d.embedding_model,
-    d.embedding_dimensions,
-    d.language,
-    d.metadata,
-    d.created_at
 """
-
 
 @rewrap_exceptions(common_db_exceptions("doc", ["list"]))
 @wrap_in_class(
@@ -108,16 +97,27 @@ async def list_docs(
     query = base_docs_query
     params = [developer_id, include_without_embeddings, owner_type, owner_id]
 
-    # Add metadata filtering
+    # Add metadata filtering before GROUP BY
     if metadata_filter:
         for key, value in metadata_filter.items():
-            query += f" AND metadata->>'{key}' = ${len(params) + 1}"
+            query += f" AND d.metadata->>'{key}' = ${len(params) + 1}"
             params.append(value)
 
+    # Add GROUP BY clause
+    query += """
+    GROUP BY
+        d.doc_id,
+        d.developer_id,
+        d.title,
+        d.modality,
+        d.embedding_model,
+        d.embedding_dimensions,
+        d.language,
+        d.metadata,
+        d.created_at"""
+
     # Add sorting and pagination
-    query += (
-        f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
-    )
+    query += f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
     params.extend([limit, offset])
 
     return query, params

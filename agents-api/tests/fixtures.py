@@ -229,6 +229,11 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         f"[{', '.join([str(x) for x in embedding_with_confidence_1_neg])}]",
     )
 
+    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
+    # ensuring it's up-to-date before executing queries.
+    # This can be achieved by executing a REINDEX command
+    await pool.execute("REINDEX DATABASE")
+    
     yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
 
 
