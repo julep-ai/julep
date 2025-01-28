@@ -15,6 +15,7 @@ async def create_user_doc(
     user_id: UUID,
     data: CreateDocRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    connection_pool: None = None,
 ) -> Doc:
     """
     Creates a new document for a user.
