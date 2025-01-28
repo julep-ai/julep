@@ -1,5 +1,7 @@
 import hashlib
+import json
 from pathlib import Path
+from typing import Annotated
 
 import typer
 import yaml
@@ -24,28 +26,36 @@ from .utils import (
 
 @app.command()
 def sync(
-    source: Path = typer.Option(
-        Path.cwd(),  # Default source is current working directory
-        "--source",
-        "-s",
-        help="Source directory containing julep.yaml",
-    ),
-    force_local: bool = typer.Option(
-        True,
-        "--force-local",
-        help="Force local state to match remote",
-    ),
-    force_remote: bool = typer.Option(
-        False,
-        "--force-remote",
-        help="Force remote state to match local",
-    ),
-    dry_run: bool = typer.Option(
-        False,
-        "--dry-run",
-        "-d",
-        help="Simulate synchronization without making changes",
-    ),
+    source: Annotated[
+        Path,
+        typer.Option(
+            "--source",
+            "-s",
+            help="Source directory containing julep.yaml",
+        ),
+    ] = Path.cwd(),
+    force_local: Annotated[
+        bool,
+        typer.Option(
+            "--force-local",
+            help="Force local state to match remote",
+        ),
+    ] = False,
+    force_remote: Annotated[
+        bool,
+        typer.Option(
+            "--force-remote",
+            help="Force remote state to match local",
+        ),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            "-d",
+            help="Simulate synchronization without making changes",
+        ),
+    ] = False,
 ):
     """Synchronize local package with Julep platform"""
 
@@ -72,9 +82,9 @@ def sync(
         relationships: Relationships = Relationships()
 
         julep_yaml_content = get_julep_yaml(source)
-        agents = julep_yaml_content.get("agents", [])
-        tasks = julep_yaml_content.get("tasks", [])
-        tools = julep_yaml_content.get("tools", [])
+        agents: list[dict] = julep_yaml_content.get("agents", [])
+        tasks: list[dict] = julep_yaml_content.get("tasks", [])
+        tools: list[dict] = julep_yaml_content.get("tools", [])
 
         if agents or tasks or tools:
             typer.echo("Found the following new entities in julep.yaml:")
@@ -102,12 +112,13 @@ def sync(
                 agent_yaml_path: Path = source / agent.pop("definition")
                 agent_yaml_content = yaml.safe_load(agent_yaml_path.read_text())
 
+                agent_request_hash = hashlib.sha256(
+                    json.dumps(agent_yaml_content).encode()
+                ).hexdigest()
+
                 # Create agent request, giving priority to the attributes in julep.yaml
                 agent_request = CreateAgentRequest(**agent_yaml_content, **agent)
 
-                agent_request_hash = hashlib.sha256(
-                    agent_request.model_dump_json().encode()
-                ).hexdigest()
                 created_agent = client.agents.create(
                     **agent_request.model_dump(exclude_unset=True, exclude_none=True)
                 )
@@ -128,17 +139,17 @@ def sync(
             # Create tasks on remote
             for task in tasks:
                 task_yaml_path: Path = source / task.pop("definition")
-                # FIXME: Change this once we have a way to get the agent id from the julep.yaml file when there's no lock file
-                # Currently defaulting to using the index of the agent in the julep.yaml file
 
                 agent_id_expression = task.pop("agent_id")
                 agent_id = eval(f'f"{agent_id_expression}"', {"agents": locked_agents})
 
                 task_yaml_content = yaml.safe_load(task_yaml_path.read_text())
-                task_request = CreateTaskRequest(**task_yaml_content, **task)
+
                 task_request_hash = hashlib.sha256(
-                    task_request.model_dump_json().encode()
+                    json.dumps(task_yaml_content).encode()
                 ).hexdigest()
+
+                task_request = CreateTaskRequest(**task_yaml_content, **task)
                 created_task = client.tasks.create(
                     agent_id=agent_id,
                     **task_request.model_dump(exclude_unset=True, exclude_none=True),
@@ -165,13 +176,15 @@ def sync(
             for tool in tools:
                 tool_yaml_path: Path = source / tool.pop("definition")
                 tool_yaml_content = yaml.safe_load(tool_yaml_path.read_text())
-                tool_request = CreateToolRequest(**tool_yaml_content, **tool)
+
                 tool_request_hash = hashlib.sha256(
-                    tool_request.model_dump_json().encode()
+                    json.dumps(tool_yaml_content).encode()
                 ).hexdigest()
-                # FIXME: Change this once we have a way to get the agent id from the julep.yaml file when there's no lock file
-                # Currently defaulting to using the index of the agent in the julep.yaml file
-                agent_id = locked_agents[tool.pop("agent_id")].id
+
+                tool_request = CreateToolRequest(**tool_yaml_content, **tool)
+
+                agent_id_expression = tool.pop("agent_id")
+                agent_id = eval(f'f"{agent_id_expression}"', {"agents": locked_agents})
 
                 created_tool = client.agents.tools.create(
                     agent_id=agent_id,
