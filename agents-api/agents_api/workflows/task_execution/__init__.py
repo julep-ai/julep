@@ -153,15 +153,16 @@ class TaskExecutionWorkflow:
                 expr = set
             case LogStep(log=log):
                 output = await render_template(
-                    log,
-                    self.context.prepare_for_step(include_remote=True),
+                    input=log,
+                    variables=await self.context.prepare_for_step(),
                     skip_vars=["developer_id"],
                 )
             case SwitchStep(switch=switch):
                 output: int = -1
                 cases: list[str] = [c.case for c in switch]
                 for i, case in enumerate(cases):
-                    result = await base_evaluate(case, self.context.prepare_for_step())
+                    result = await base_evaluate(case, await self.context.prepare_for_step())
+                    print("--", case, result)
 
                     if result:
                         output = i
@@ -176,7 +177,9 @@ class TaskExecutionWorkflow:
                     msg = f"Tool {tool_name} not found in the toolset"
                     raise ApplicationError(msg)
 
-                arguments = await base_evaluate(arguments, self.context.prepare_for_step())
+                arguments = await base_evaluate(
+                    arguments, await self.context.prepare_for_step()
+                )
 
                 call_id = generate_call_id()
                 output = construct_tool_call(tool, arguments, call_id)
@@ -190,7 +193,7 @@ class TaskExecutionWorkflow:
                 )
 
                 # Evaluate the expressions in the arguments
-                output = await base_evaluate(arguments, self.context.prepare_for_step())
+                output = await base_evaluate(arguments, await self.context.prepare_for_step())
 
                 # Transition to the first step of that workflow
                 transition_target = TransitionTarget(
