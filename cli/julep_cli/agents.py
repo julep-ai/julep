@@ -8,31 +8,77 @@ from .app import agents_app
 
 @agents_app.command()
 def create(
-    name: Annotated[str, typer.Option("--name", "-n", help="Name of the agent")],
-    model: Annotated[str, typer.Option("--model", "-m", help="Model to be used by the agent")],
+    name: Annotated[str | None, typer.Option("--name", "-n", help="Name of the agent")] = None,
+    model: Annotated[
+        str | None, typer.Option("--model", "-m", help="Model to be used by the agent")
+    ] = None,
     about: Annotated[
         str | None, typer.Option("--about", "-a", help="Description of the agent")
     ] = None,
+    default_settings: Annotated[
+        str | None,
+        typer.Option("--default-settings", help="Default settings for the agent (JSON string)"),
+    ] = None,
     metadata: Annotated[
-        str | None, typer.Option("--metadata", help="JSON metadata for the agent")
+        str | None, typer.Option("--metadata", help="Metadata for the agent (JSON string)")
+    ] = None,
+    instructions: Annotated[
+        list[str],
+        typer.Option(
+            "--instructions", help="Instructions for the agent, can be specified multiple times"
+        ),
+    ] = [],
+    definition: Annotated[
+        str | None, typer.Option("--definition", "-d", help="Path to an agent definition file")
+    ] = None,
+):
+    """Create a new AI agent. Either provide a definition file or use the other options."""
+    # Validate that either definition is provided or name/model
+    if not definition and not (name and model):
+        typer.echo("Error: Must provide either a definition file or name and model", err=True)
+        raise typer.Exit(1)
+
+    try:
+        json.loads(metadata) if metadata else {}
+        json.loads(default_settings) if default_settings else {}
+    except json.JSONDecodeError as e:
+        typer.echo(f"Error parsing JSON: {e}", err=True)
+        raise typer.Exit(1)
+
+    # TODO: Implement actual API call
+    if definition:
+        typer.echo(f"Created agent from definition file '{definition}'")
+    else:
+        typer.echo(f"Created agent '{name}' with model '{model}'")
+
+
+@agents_app.command()
+def update(
+    id: Annotated[str, typer.Option("--id", help="ID of the agent to update")],
+    name: Annotated[
+        str | None, typer.Option("--name", "-n", help="New name for the agent")
+    ] = None,
+    model: Annotated[
+        str | None, typer.Option("--model", "-m", help="New model for the agent")
+    ] = None,
+    about: Annotated[
+        str | None, typer.Option("--about", "-a", help="New description for the agent")
+    ] = None,
+    metadata: Annotated[
+        str | None, typer.Option("--metadata", help="Metadata for the agent (JSON string)")
     ] = None,
     default_settings: Annotated[
         str | None,
-        typer.Option("--default-settings", help="JSON default settings for the agent"),
+        typer.Option("--default-settings", help="Default settings for the agent (JSON string)"),
     ] = None,
     instructions: Annotated[
-        list[str], typer.Option("--instructions", help="Instructions for the agent")
-    ] = [],
-    dry_run: Annotated[
-        bool,
+        list[str],
         typer.Option(
-            "--dry-run",
-            "-d",
-            help="Simulate agent creation without making changes",
+            "--instructions", help="Instructions for the agent, can be specified multiple times"
         ),
-    ] = False,
+    ] = [],
 ):
-    """Create a new AI agent"""
+    """Update an existing AI agent's details"""
     try:
         metadata_dict = json.loads(metadata) if metadata else {}
         settings_dict = json.loads(default_settings) if default_settings else {}
@@ -40,70 +86,69 @@ def create(
         typer.echo(f"Error parsing JSON: {e}", err=True)
         raise typer.Exit(1)
 
-    if dry_run:
-        typer.echo("Dry run - would create agent with:")
-        typer.echo(f"  Name: {name}")
-        typer.echo(f"  Model: {model}")
-        typer.echo(f"  About: {about}")
-        typer.echo(f"  Metadata: {metadata_dict}")
-        typer.echo(f"  Default Settings: {settings_dict}")
-        typer.echo(f"  Instructions: {instructions}")
-        return
-
-    # TODO: Implement actual API call
-    typer.echo(f"Created agent '{name}' with model '{model}'")
-
-
-@agents_app.command()
-def update(
-    agent_id: Annotated[str, typer.Option("--id", "-i", help="ID of the agent to update")],
-    name: Annotated[str | None, typer.Option("--name", "-n", help="New name for the agent")] = None,
-    model: Annotated[str | None, typer.Option("--model", "-m", help="New model for the agent")] = None,
-    about: Annotated[
-        str | None, typer.Option("--about", "-a", help="New description for the agent")
-    ] = None,
-    dry_run: Annotated[
-        bool,
-        typer.Option(
-            "--dry-run",
-            "-d",
-            help="Simulate agent update without making changes",
-        ),
-    ] = False,
-):
-    """Update an existing AI agent"""
     updates = {
-        k: v for k, v in {"name": name, "model": model, "about": about}.items() if v is not None
+        k: v
+        for k, v in {
+            "name": name,
+            "model": model,
+            "about": about,
+            "metadata": metadata_dict if metadata else None,
+            "default_settings": settings_dict if default_settings else None,
+            "instructions": instructions if instructions else None,
+        }.items()
+        if v is not None
     }
 
     if not updates:
         typer.echo("No updates provided", err=True)
         raise typer.Exit(1)
 
-    if dry_run:
-        typer.echo("Dry run - would update agent with:")
-        for key, value in updates.items():
-            typer.echo(f"  {key}: {value}")
-        return
+    # TODO: Implement actual API call
+    typer.echo(f"Updated agent '{id}'")
+
+
+@agents_app.command()
+def delete(
+    id: Annotated[str, typer.Option("--id", help="ID of the agent to delete")],
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force",
+            "-f",
+            help="Force deletion without confirmation",
+        ),
+    ] = False,
+):
+    """Delete an existing AI agent"""
+    if not force:
+        confirm = typer.confirm(f"Are you sure you want to delete agent '{id}'?")
+        if not confirm:
+            typer.echo("Operation cancelled")
+            raise typer.Exit
 
     # TODO: Implement actual API call
-    typer.echo(f"Updated agent '{agent_id}'")
+    typer.echo(f"Deleted agent '{id}'")
 
 
 @agents_app.command()
 def list(
-    filter: Annotated[
-        str | None, typer.Option("--filter", "-f", help="Filter agents based on criteria")
-    ] = None,
     metadata_filter: Annotated[
         str | None,
-        typer.Option("--metadata-filter", help="Filter agents based on metadata criteria"),
+        typer.Option(
+            "--metadata-filter", help="Filter agents based on metadata criteria (JSON string)"
+        ),
     ] = None,
     json_output: Annotated[
-        bool, typer.Option("--json", "-j", help="Output the list in JSON format")
+        bool, typer.Option("--json", help="Output the list in JSON format")
     ] = False,
 ):
-    """List all AI agents"""
+    """List all AI agents or filter based on metadata"""
+    try:
+        json.loads(metadata_filter) if metadata_filter else {}
+    except json.JSONDecodeError as e:
+        typer.echo(f"Error parsing metadata filter JSON: {e}", err=True)
+        raise typer.Exit(1)
+
     # TODO: Implement actual API call
     # Mock data for demonstration
     agents = [
@@ -124,63 +169,15 @@ def list(
 
 
 @agents_app.command()
-def delete(
-    agent_id: Annotated[str, typer.Option("--id", "-i", help="ID of the agent to delete")],
-    force: Annotated[
-        bool,
-        typer.Option(
-            "--force",
-            "-f",
-            help="Force deletion without confirmation",
-        ),
-    ] = False,
-):
-    """Delete an AI agent"""
-    if not force:
-        confirm = typer.confirm(f"Are you sure you want to delete agent '{agent_id}'?")
-        if not confirm:
-            typer.echo("Operation cancelled")
-            raise typer.Exit
-
-    # TODO: Implement actual API call
-    typer.echo(f"Deleted agent '{agent_id}'")
-
-
-@agents_app.command()
-def reset(
-    agent_id: Annotated[str, typer.Option("--id", "-i", help="ID of the agent to reset")],
-    force: Annotated[
-        bool,
-        typer.Option(
-            "--force",
-            "-f",
-            help="Force reset without confirmation",
-        ),
-    ] = False,
-):
-    """Reset an AI agent to its initial state"""
-    if not force:
-        confirm = typer.confirm(f"Are you sure you want to reset agent '{agent_id}'?")
-        if not confirm:
-            typer.echo("Operation cancelled")
-            raise typer.Exit
-
-    # TODO: Implement actual API call
-    typer.echo(f"Reset agent '{agent_id}' to initial state")
-
-
-@agents_app.command()
 def get(
-    agent_id: Annotated[str, typer.Option("--id", "-i", help="ID of the agent to retrieve")],
-    json_output: Annotated[
-        bool, typer.Option("--json", "-j", help="Output in JSON format")
-    ] = False,
+    id: Annotated[str, typer.Option("--id", help="ID of the agent to retrieve")],
+    json_output: Annotated[bool, typer.Option("--json", help="Output in JSON format")] = False,
 ):
-    """Get details of a specific AI agent"""
+    """Get an agent by its ID"""
     # TODO: Implement actual API call
     # Mock data for demonstration
     agent = {
-        "id": agent_id,
+        "id": id,
         "name": "Test Agent",
         "model": "gpt-4",
         "about": "A test agent",
