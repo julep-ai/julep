@@ -12,7 +12,7 @@ from .app import app
 @app.command()
 def logs(
     execution_id: Annotated[str, typer.Option("--execution-id", "-e", help="ID of the execution to log")],
-    tailing: Annotated[bool, typer.Option("--tailing", "-t", help="Whether to tail the logs")] = False,
+    tailing: Annotated[bool, typer.Option("--tail", "-t", help="Whether to tail the logs")] = False,
 ):
     """
     Log the output of an execution.
