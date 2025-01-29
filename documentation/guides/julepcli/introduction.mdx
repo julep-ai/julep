@@ -1,0 +1,140 @@
+---
+title: 'Getting Started'
+description: 'Getting started with Julep CLI'
+icon: 'eye'
+---
+
+## Overview
+
+The `julep-cli` provides a comprehensive command-line interface for interacting with the Julep platform. It enables you to manage agents, tasks, tools, and projects directly from your terminal.
+
+## Installation
+
+<CodeGroup>
+```bash pipx
+pipx install julep-cli
+```
+
+```bash pip
+pip install julep-cli
+```
+</CodeGroup>
+
+## Configuration
+
+The CLI stores configuration data in `~/.config/julep/config.yml`. This file is created automatically after authentication.
+
+<CodeGroup>
+```yaml config.yml
+api_key: "your_api_key_here"
+environment: "production"
+```
+</CodeGroup>
+
+## Project Structure
+
+The juelp project directory structure is as follows:
+
+- `julep.yaml`: Project configuration file
+- `julep-lock.json`: Lock file tracking server state
+- `src/*.yaml`: Object definitions (agents, tasks, tools)
+
+```yaml julep.yaml
+agents:
+- definition: path/to/agent.yaml
+- definition: path/to/agent.yaml
+
+tasks:
+- agent_id: "{agents[0].id}"
+  definition: path/to/task.yaml
+- agent_id: "{agents[1].id}"
+  definition: path/to/task.yaml
+
+tools:
+- agent_id: "{agents[0].id}"
+  definition: path/to/tool.yaml
+- agent_id: "{agents[1].id}"
+  definition: path/to/tool.yaml
+```
+
+Objects flow a standard structure to define the different components inside the `src` directory which is as follows:
+
+```plaintext
+workflow-name/
+├── README.md           # Documentation and usage instructions
+├── julep.yaml         # Workflow configuration and entrypoint
+└── src/              # Source directory
+    ├── agents/       # Agent definitions
+        └── agent.yaml
+    └── tasks/        # Task definitions
+        └── task.yaml
+    └── tools/        # Tools definitions
+        └── tool.yaml
+```
+
+## Getting Started
+
+
+To get started with the CLI, you can use the `julep-cli` command to create a new project.
+
+<Steps>
+
+  <Step title="Authenticate">
+  ```bash
+  julep-cli auth --environment production
+  ```
+  The `auth` command is used to authenticate with the Julep platform. You need to provide your API key. You can find your API key [here](https://dashboard.julep.ai/).
+  </Step>
+
+  <Step title="Initialize Project">
+  ```bash
+  julep-cli init --template profiling-recommending
+  ```
+  The `init` command is used to initialize a new Julep project. There are bunch of templates to get you started which you can find [here](https://github.com/julep-ai/library).
+  </Step>
+
+  <Step title="Sync Project">
+  ```bash
+  julep-cli sync
+  ```
+  The `sync` command is used to synchronize the local project with the Julep platform. This creates a `julep-lock.json` file which tracks the state of the project on the Julep platform.
+  </Step>
+
+  <Step title="Edit the project">
+  Once the project is initialized, you can edit the project in the `julep.yaml` file. Add agents, tasks, tools, etc. in the `src` directory.
+  </Step>
+
+  <Step title="Re-Sync Project">
+  ```bash
+  julep-cli sync --source profiling-recommending --force-local
+  ```
+  After editing the project, you can re-sync the project with the Julep platform. This will update the `julep-lock.json` file with the latest state of the project on the Julep platform.
+  </Step>
+
+  <Step title="Run the project">
+  ```bash
+  julep-cli executions create --task-id {task.id} --input '{"input": "input"}'
+  ```
+  The `executions create` command is used to create a new execution for a task. You can find the task ID in the `julep-lock.json` file.
+  </Step>
+
+  <Step title="View the execution">
+  ```bash
+  julep-cli logs --execution-id {execution.id} --tail
+  ```
+  The `logs` command is used to view the logs of an execution. When you run the `executions create` command, it will return the execution ID.
+  </Step>
+
+</Steps>
+
+<Note>
+  You can find more commands in the [Command Reference](/guides/julepcli/commands) section.
+</Note>
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)

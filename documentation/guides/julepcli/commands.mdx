@@ -1,69 +1,13 @@
 ---
-title: 'Julep CLI'
-description: 'Command-line interface for managing Julep projects and resources'
+title: 'Command Reference'
+description: 'Commands for managing Julep projects and resources'
 icon: 'terminal'
 ---
 
 ## Overview
 
-The `julep-cli` provides a comprehensive command-line interface for interacting with the Julep platform. It enables you to manage agents, tasks, tools, and projects directly from your terminal.
-
-## Installation
-
-<CodeGroup>
-```bash pipx
-pipx install julep
-```
-
-```bash pip
-pip install julep
-```
-
-```bash standalone
-# Download the standalone executable for your platform
-curl -L https://get.julep.ai/cli | bash
-```
-</CodeGroup>
-
-## Configuration
-
-The CLI stores configuration data in `~/.config/julep/config.yml`. This file is created automatically after authentication.
-
-<CodeGroup>
-```yaml config.yml
-api_key: "your_api_key_here"
-environment: "production"
-```
-</CodeGroup>
-
-## Project Structure
-
-The juelp project directory structure is as follows:
-    - `julep.yaml`: Project configuration file
-    - `julep-lock.json`: Lock file tracking server state
-    - `src/*.yaml`: Object definitions (agents, tasks, tools)
-
-    ```yaml Julep.yaml
-    agents:
-    - definition: path/to/agent.yaml
-    - definition: path/to/agent.yaml
-
-    tasks:
-    - agent_id: "{agents[0].id}"
-      definition: path/to/task.yaml
-    - agent_id: "{agents[1].id}"
-      definition: path/to/task.yaml
-
-    tools:
-    - agent_id: "{agents[0].id}"
-      definition: path/to/tool.yaml
-    - agent_id: "{agents[1].id}"
-      definition: path/to/tool.yaml
-    ```
-
-## Commands
-
-Julep CLI is a powerful tool that allows you to manage your Julep projects and resources. Below are the commands you can use to interact with the CLI.
+The `julep-cli` is a comprehensive command-line interface for interacting with the Julep platform. 
+Following are the commands that are avaialable in the CLI.
 
 <Warning>
 It is still in development and is not yet stable. Not all commands are implemented yet. Below are the commands that are implemented. 
@@ -73,7 +17,7 @@ It is still in development and is not yet stable. Not all commands are implement
 - [Miscellaneous](#miscellaneous)
 </Warning>
 
-### Authentication
+## Authentication
 
 <Tabs>
   <Tab title="Basic">
@@ -117,7 +61,7 @@ It is still in development and is not yet stable. Not all commands are implement
   You can get your API key from the [Julep Dashboard](https://dashboard.julep.ai/).
 </Info>
 
-### Agent Management
+## Agent Management
 
 The `julep-cli agents` command is used to manage your agents.
 <Tabs>
@@ -211,7 +155,7 @@ The `julep-cli agents` command is used to manage your agents.
   </Tab>
 </Tabs>
 
-### Task Management
+## Task Management
 
 <Tabs>
   <Tab title="Create">
@@ -298,7 +242,7 @@ The `julep-cli agents` command is used to manage your agents.
   </Tab>
 </Tabs>
 
-### Tool Management
+## Tool Management
 
 The `julep-cli tools` command is used to manage your tools.
 
@@ -385,7 +329,7 @@ The `julep-cli tools` command is used to manage your tools.
   </Tab>
 </Tabs>
 
-### Project Management
+## Project Management
 
 The `julep-cli init` command is used to initialize a new Julep project.
 
@@ -451,7 +395,7 @@ The `julep-cli init` command is used to initialize a new Julep project.
   </Tab>
 </Tabs>
 
-### Task Execution
+## Task Execution
 
 Here are the commands for running a task and streaming logs.
 <Tabs>
@@ -496,7 +440,7 @@ Initiate a guided setup for new Julep projects.
   </Tab>
 </Tabs>
 
-### Miscellaneous
+## Miscellaneous
 
 Here are the commands for displaying the version and help information.
 
