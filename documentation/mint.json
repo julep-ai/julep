@@ -419,5 +419,10 @@
   "feedback": {
     "thumbsRating": true,
     "suggestEdit": true
+  },
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_Hh489hJe61eRVjGqFwz8DfzbY2Rla4yXn7PXONt6yQX"
+    }
   }
 }
