@@ -6,6 +6,8 @@ from typing import Annotated
 
 import requests
 import typer
+from rich.markdown import Markdown
+from rich.panel import Panel
 from rich.text import Text
 
 from .app import app, console, error_console
@@ -57,7 +59,8 @@ def init(
         )
         if not proceed:
             console.print(
-                Text("Initialization cancelled.", style="bold red"))
+                Text("Initialization cancelled.", style="bold red")
+            )
             raise typer.Exit
 
     try:
@@ -110,7 +113,7 @@ def init(
         error_console.print(Text(
             "Error: 'julep.yaml' not found in the destination directory", style="bold red"))
         raise typer.Exit(1)
-    
+
     console.print(
         Text(
             f"Successfully initialized new Julep project with template '{template}' in {path}",
@@ -121,5 +124,6 @@ def init(
     # Try to open and display the README if it exists
     readme_path = path / template / "README.md"
     if readme_path.exists():
-        console.print(Text("\nProject README:\n", style="bold blue"))
-        console.print(readme_path.read_text())
+        readme_content = readme_path.read_text()
+        markdown = Markdown(readme_content)
+        console.print(Panel(markdown, title=Text("Project README", style="bold blue")))
