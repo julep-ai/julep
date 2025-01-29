@@ -85,7 +85,9 @@ def init(
                     final_destination.mkdir(parents=True, exist_ok=True)
 
                     # Copy files from the extracted template path to the final destination
-                    shutil.copytree(extracted_template_path, final_destination, dirs_exist_ok=True)
+                    shutil.copytree(
+                        extracted_template_path, final_destination, dirs_exist_ok=True
+                    )
 
                     # Remove the extracted template directory and its parent
                     shutil.rmtree(library_repo_prefix)

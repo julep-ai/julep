@@ -74,8 +74,7 @@ class CreateToolRequest(BaseModel):
     The function to call
     """
     integration: (  # TODO: Change to available integrations
-        Any
-        | None
+        Any | None
     ) = None
     """
     The integration to call

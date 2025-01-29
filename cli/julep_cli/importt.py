@@ -104,13 +104,18 @@ def agent(
 
         agent_yaml_path: Path = output / f"{agent_name}.yaml"
         typer.echo(f"Adding agent '{agent_data.name}' to '{agent_yaml_path}'...")
-        update_yaml_for_existing_entity(agent_yaml_path, agent_data.model_dump(exclude={"id", "created_at", "updated_at"}))
+        update_yaml_for_existing_entity(
+            agent_yaml_path, agent_data.model_dump(exclude={"id", "created_at", "updated_at"})
+        )
 
         typer.echo(f"Agent '{id}' imported successfully to '{agent_yaml_path}'")
 
-        import_agent_to_julep_yaml(source, {
-            "definition": str(agent_yaml_path.relative_to(source)),
-        })
+        import_agent_to_julep_yaml(
+            source,
+            {
+                "definition": str(agent_yaml_path.relative_to(source)),
+            },
+        )
 
         typer.echo(f"Adding agent '{id}' to lock file...")
         add_entity_to_lock_file(
@@ -119,9 +124,7 @@ def agent(
                 path=str(agent_yaml_path.relative_to(source)),
                 id=agent_data.id,
                 last_synced=datetime.datetime.now().isoformat(timespec="milliseconds") + "Z",
-                revision_hash=hashlib.sha256(
-                    agent_data.model_dump_json().encode()
-                ).hexdigest(),
+                revision_hash=hashlib.sha256(agent_data.model_dump_json().encode()).hexdigest(),
             ),
             project_dir=source,
         )

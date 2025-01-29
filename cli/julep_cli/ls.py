@@ -29,7 +29,6 @@ def ls(
     if lock_file.agents:
         typer.echo("Agents:\n")
         for agent in lock_file.agents:
-
             # Read the agent yaml file
             agent_yaml_contents = yaml.safe_load(Path(source / agent.path).read_text())
 

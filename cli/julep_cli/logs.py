@@ -10,8 +10,12 @@ from .utils import get_julep_client
 
 @app.command()
 def logs(
-    execution_id: Annotated[str, typer.Option("--execution-id", "-e", help="ID of the execution to log")],
-    tailing: Annotated[bool, typer.Option("--tail", "-t", help="Whether to tail the logs")] = False,
+    execution_id: Annotated[
+        str, typer.Option("--execution-id", "-e", help="ID of the execution to log")
+    ],
+    tailing: Annotated[
+        bool, typer.Option("--tail", "-t", help="Whether to tail the logs")
+    ] = False,
 ):
     """
     Log the output of an execution.
@@ -28,8 +32,10 @@ def logs(
 
     if tailing:
         while True:
-            fetched_transitions = client.executions.transitions.list(execution_id=execution_id).items
-            new_transitions = fetched_transitions[:len(fetched_transitions) - len(transitions)]
+            fetched_transitions = client.executions.transitions.list(
+                execution_id=execution_id
+            ).items
+            new_transitions = fetched_transitions[: len(fetched_transitions) - len(transitions)]
 
             for transition in reversed(new_transitions):
                 typer.echo(f"Transition Type: {transition.type}")
