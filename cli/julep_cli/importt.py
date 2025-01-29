@@ -56,7 +56,10 @@ def agent(
         agent_yaml_path = locked_agent.get("path")
 
         typer.echo(f"Updating agent '{id}' in '{agent_yaml_path}'...")
-        update_yaml_for_existing_entity(agent_yaml_path, remote_agent.model_dump())
+        update_yaml_for_existing_entity(
+            agent_yaml_path,
+            remote_agent.model_dump(exclude={"id", "created_at", "updated_at"}),
+        )
 
         typer.echo(f"Updating agent '{id}' in lock file...")
         update_existing_entity_in_lock_file(
