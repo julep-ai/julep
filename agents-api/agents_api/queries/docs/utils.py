@@ -40,7 +40,7 @@ def transform_to_doc_reference(d: dict) -> dict:
 def transform_doc(d: dict) -> dict:
     content = d["content"]
 
-    embeddings = d["embeddings"]
+    embeddings = d.get("embeddings") or []
 
     if embeddings:
         if isinstance(embeddings, str):

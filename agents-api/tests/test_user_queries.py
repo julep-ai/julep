@@ -38,7 +38,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that a user can be successfully created."""
 
     pool = await create_db_pool(dsn=dsn)
-    await create_user(
+    user = await create_user(
         developer_id=developer_id,
         data=CreateUserRequest(
             name="test user",
@@ -46,6 +46,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
         ),
         connection_pool=pool,
     )
+    assert isinstance(user, User)
+    assert user.id is not None
+    assert user.name == "test user"
+    assert user.about == "test user about"
 
 
 @test("query: create or update user sql")
@@ -53,7 +57,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that a user can be successfully created or updated."""
 
     pool = await create_db_pool(dsn=dsn)
-    await create_or_update_user(
+    user = await create_or_update_user(
         developer_id=developer_id,
         user_id=uuid7(),
         data=CreateOrUpdateUserRequest(
@@ -62,6 +66,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
         ),
         connection_pool=pool,
     )
+    assert isinstance(user, User)
+    assert user.id is not None
+    assert user.name == "test user"
+    assert user.about == "test user about"
 
 
 @test("query: update user sql")
