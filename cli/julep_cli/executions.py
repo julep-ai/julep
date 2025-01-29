@@ -2,9 +2,15 @@ import json
 from typing import Annotated
 
 import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .app import executions_app
 from .utils import get_julep_client
+
+console = Console()
+error_console = Console(stderr=True)
 
 
 @executions_app.command()
@@ -18,12 +24,29 @@ def create(
 
     client = get_julep_client()
 
-    input = json.loads(input)
-
     try:
-        execution = client.executions.create(task_id=task_id, input=input)
-    except Exception as e:
-        typer.echo(f"Error creating execution: {e}")
+        input_data = json.loads(input)
+    except json.JSONDecodeError as e:
+        error_console.print(f"[bold red]Invalid JSON input: {e}[/bold red]")
         raise typer.Exit(1)
 
-    typer.echo(f"Execution created with ID: {execution.id}")
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+        console=console
+    ) as progress:
+        task = progress.add_task("Creating execution...", start=False)
+        progress.start_task(task)
+
+        try:
+            execution = client.executions.create(
+                task_id=task_id, input=input_data)
+        except Exception as e:
+            error_console.print(
+                f"[bold red]Error creating execution: {e}[/bold red]")
+            raise typer.Exit(1)
+
+    console.print(
+        f"[bold blue]Execution created successfully![/bold blue]\n[green]Execution ID: {execution.id}[/green]"
+    )
