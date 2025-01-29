@@ -111,7 +111,7 @@ def agent(
         add_entity_to_lock_file(
             type="agent",
             new_entity=LockedEntity(
-                path=str(agent_yaml_path),
+                path=str(agent_yaml_path.relative_to(source)),
                 id=agent_data.id,
                 last_synced=datetime.datetime.now().isoformat(timespec="milliseconds") + "Z",
                 revision_hash=hashlib.sha256(
