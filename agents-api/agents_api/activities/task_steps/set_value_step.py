@@ -3,8 +3,8 @@ from typing import Any
 from beartype import beartype
 from temporalio import activity
 
-from ...activities.utils import simple_eval_dict
 from ...common.protocol.tasks import StepContext, StepOutcome
+from .base_evaluate import base_evaluate
 
 # TODO: We should use this step to signal to the parent workflow and set the value on the workflow context
 # SCRUM-2
@@ -21,7 +21,8 @@ async def set_value_step(
         expr = override_expr if override_expr is not None else context.current_step.set
 
         values = await context.prepare_for_step() | additional_values
-        output = simple_eval_dict(expr, values)
+
+        output = await base_evaluate(expr, values)
         return StepOutcome(output=output)
 
     except BaseException as e:

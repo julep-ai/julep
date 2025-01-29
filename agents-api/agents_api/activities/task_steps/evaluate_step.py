@@ -3,9 +3,8 @@ from typing import Any
 from beartype import beartype
 from temporalio import activity
 
-from ...activities.utils import simple_eval_dict
 from ...common.protocol.tasks import StepContext, StepOutcome
-
+from .base_evaluate import base_evaluate
 
 @activity.defn
 @beartype
@@ -19,7 +18,7 @@ async def evaluate_step(
 
         values = await context.prepare_for_step() | additional_values
 
-        output = simple_eval_dict(expr, values)
+        output = await base_evaluate(expr, values)
         return StepOutcome(output=output)
 
     except BaseException as e:
