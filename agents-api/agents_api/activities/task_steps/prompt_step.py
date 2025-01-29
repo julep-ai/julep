@@ -54,9 +54,6 @@ def format_tool(tool: Tool) -> dict:
     #     raise NotImplementedError("API call tools are not supported")
 
 
-EVAL_PROMPT_PREFIX = "$_ "
-
-
 @activity.defn
 @beartype
 async def prompt_step(context: StepContext) -> StepOutcome:
