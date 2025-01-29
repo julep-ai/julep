@@ -19,11 +19,17 @@ from .utils import (
 @import_app.command()
 def agent(
     id: str = typer.Option(..., "--id", "-i", help="ID of the agent to import"),
+    source: Path = typer.Option(
+        Path.cwd(),
+        "--source",
+        "-s",
+        help="Path to the source directory. Defaults to current working directory",
+    ),
     output: Path = typer.Option(
-        Path.cwd() / "src/agents",
+        None,
         "--output",
         "-o",
-        help="Path to save the imported agent. Defaults to cwd/src/agents",
+        help="Path to save the imported agent. Defaults to <project_dir>/src/agents",
     ),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
 ):
@@ -31,13 +37,15 @@ def agent(
     Import an agent from the Julep platform.
     """
 
+    output = output or source / "src/agents"
+
     client = get_julep_client()
 
     # Importing an existing agent
-    if locked_agent := get_entity_from_lock_file(type="agent", id=id):
+    if locked_agent := get_entity_from_lock_file(type="agent", id=id, project_dir=source):
         typer.echo(f"Agent '{id}' already exists in the lock file")
         confirm = typer.confirm(
-            f"Do you want to overwrite the existing agent in the lock file and {locked_agent.get('path')}?"
+            f"Do you want to overwrite the existing agent in the lock file and {locked_agent.path}?"
         )
 
         # User cancelled the operation (doesn't want to overwrite the existing agent)
@@ -53,7 +61,7 @@ def agent(
         remote_agent: Agent = client.agents.get(agent_id=id)
 
         # TODO: Decide where to store (specified --output or current path specified in lock file)
-        agent_yaml_path = locked_agent.get("path")
+        agent_yaml_path = locked_agent.path
 
         typer.echo(f"Updating agent '{id}' in '{agent_yaml_path}'...")
         update_yaml_for_existing_entity(
@@ -72,6 +80,7 @@ def agent(
                     remote_agent.model_dump_json().encode()
                 ).hexdigest(),
             },
+            project_dir=source,
         )
 
         typer.echo(f"Agent '{id}' imported successfully to '{agent_yaml_path}'")
@@ -94,7 +103,7 @@ def agent(
 
         agent_yaml_path = output / f"{agent_name}.yaml"
         typer.echo(f"Adding agent '{agent_data.name}' to '{agent_yaml_path}'...")
-        update_yaml_for_existing_entity(agent_yaml_path, agent_data.model_dump())
+        update_yaml_for_existing_entity(agent_yaml_path, agent_data.model_dump(exclude={"id", "created_at", "updated_at"}))
 
         typer.echo(f"Agent '{id}' imported successfully to '{agent_yaml_path}'")
 
@@ -109,6 +118,7 @@ def agent(
                     agent_data.model_dump_json().encode()
                 ).hexdigest(),
             ),
+            project_dir=source,
         )
 
     except Exception as e:

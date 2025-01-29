@@ -128,7 +128,7 @@ def write_lock_file(project_dir: Path, content: LockFileContents):
     lock_file_path.write_text(lock_file_contents)
 
 
-def get_entity_from_lock_file(type: str, id: str, project_dir: Path = Path.cwd()) -> dict:
+def get_entity_from_lock_file(type: str, id: str, project_dir: Path = Path.cwd()) -> LockedEntity:
     """
     Get the contents of lock file
     """
@@ -145,7 +145,7 @@ def get_entity_from_lock_file(type: str, id: str, project_dir: Path = Path.cwd()
         raise typer.Exit(1)
 
     if not matched:
-        return {}
+        return None
 
     return matched[0]
 
