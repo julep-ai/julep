@@ -157,7 +157,7 @@ def get_entity_from_lock_file(type: str, id: str, project_dir: Path = Path.cwd()
     return matched[0]
 
 
-def update_existing_entity_in_lock_file(type: str, new_entity: dict, project_dir: Path = Path.cwd()):
+def update_existing_entity_in_lock_file(type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()):
     found = False
     lock_file = get_lock_file(project_dir)
     entities: list[LockedEntity] = getattr(lock_file, type + "s", [])
@@ -198,7 +198,7 @@ def update_yaml_for_existing_entity(path: Path, data: dict):
         yaml.dump(data, f)
 
 
-def import_agent_to_julep_yaml(source: Path, agent_data: dict):
+def add_agent_to_julep_yaml(source: Path, agent_data: dict):
     """Add a new entity to the julep.yaml file"""
 
     julep_yaml_contents = get_julep_yaml(source)
