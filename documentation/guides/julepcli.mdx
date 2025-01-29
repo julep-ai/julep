@@ -1,0 +1,582 @@
+---
+title: 'Julep CLI'
+description: 'Command-line interface for managing Julep projects and resources'
+icon: 'terminal'
+---
+
+## Overview
+
+The `julep-cli` provides a comprehensive command-line interface for interacting with the Julep platform. It enables you to manage agents, tasks, tools, and projects directly from your terminal.
+
+## Installation
+
+<CodeGroup>
+```bash pipx
+pipx install julep
+```
+
+```bash pip
+pip install julep
+```
+
+```bash standalone
+# Download the standalone executable for your platform
+curl -L https://get.julep.ai/cli | bash
+```
+</CodeGroup>
+
+## Configuration
+
+The CLI stores configuration data in `~/.config/julep/config.yml`. This file is created automatically after authentication.
+
+<CodeGroup>
+```yaml config.yml
+api_key: "your_api_key_here"
+environment: "production"
+```
+</CodeGroup>
+
+## Project Structure
+
+The juelp project directory structure is as follows:
+    - `julep.yaml`: Project configuration file
+    - `julep-lock.json`: Lock file tracking server state
+    - `src/*.yaml`: Object definitions (agents, tasks, tools)
+
+    ```yaml Julep.yaml
+    agents:
+    - definition: path/to/agent.yaml
+    - definition: path/to/agent.yaml
+
+    tasks:
+    - agent_id: "{agents[0].id}"
+      definition: path/to/task.yaml
+    - agent_id: "{agents[1].id}"
+      definition: path/to/task.yaml
+
+    tools:
+    - agent_id: "{agents[0].id}"
+      definition: path/to/tool.yaml
+    - agent_id: "{agents[1].id}"
+      definition: path/to/tool.yaml
+    ```
+
+## Commands
+
+Julep CLI is a powerful tool that allows you to manage your Julep projects and resources. Below are the commands you can use to interact with the CLI.
+
+<Warning>
+It is still in development and is not yet stable. Not all commands are implemented yet. Below are the commands that are implemented. 
+- [Authentication](#authentication)
+- [Project Management](#project-management)
+- [Task Execution](#task-execution)
+- [Miscellaneous](#miscellaneous)
+</Warning>
+
+### Authentication
+
+<Tabs>
+  <Tab title="Basic">
+    ```bash
+    julep-cli auth
+    ```
+
+    The `julep-cli auth` command is used to authenticate your Julep CLI. This will prompt you to enter your API key and save it to the configuration file.
+  </Tab>
+
+  <Tab title="With API Key">
+    ```bash
+    julep-cli auth --api-key your_julep_api_key
+    ```
+
+    The `julep-cli auth --api-key your_julep_api_key` command is used to authenticate your Julep CLI with a specific API key. Just pass in your API key as an argument.
+
+    <ParamField path="--api-key" type="string" required>
+      Your Julep API key
+    </ParamField>
+  </Tab>
+
+  <Tab title="With Environment">
+    ```bash
+    julep-cli auth --api-key your_key --environment staging
+    ```
+
+    The `julep-cli auth --api-key your_key --environment staging` command is used to authenticate your Julep CLI with a specific API key and environment.
+
+    <ParamField path="--api-key" type="string" required>
+      Your Julep API key
+    </ParamField>
+
+    <ParamField path="--environment" type="string" required>
+      Environment to use (production/staging)
+    </ParamField>
+  </Tab>
+</Tabs>
+
+<Info>
+  You can get your API key from the [Julep Dashboard](https://dashboard.julep.ai/).
+</Info>
+
+### Agent Management
+
+The `julep-cli agents` command is used to manage your agents.
+<Tabs>
+  <Tab title="Create">
+
+    ```bash
+    julep-cli agents create --name "Agent Name" \
+                       --model "Model Name" \
+                       --about "Agent Description" \
+                       --metadata '{"key": "value"}' \
+                       --instructions "Instruction 1" \
+                       --instructions "Instruction 2"
+    ```
+    The `julep-cli agents create` command is used to create a new agent.
+    
+    <ParamField path="--name" type="string" required>
+      Name of the agent
+    </ParamField>
+    
+    <ParamField path="--model" type="string">
+      Model to be used (e.g., gpt-4). You can find the list of models [here](/docs/integrations/supported-models)
+    </ParamField>
+    
+    <ParamField path="--about" type="string">
+      Description of the agent
+    </ParamField>
+    
+    <ParamField path="--metadata" type="json">
+      Additional metadata (JSON format)
+    </ParamField>
+    
+    <ParamField path="--instructions" type="array">
+      Instructions for the agent (can be repeated)
+    </ParamField>
+  </Tab>
+
+  <Tab title="Update">
+    ```bash
+    julep-cli agents update --id agent_id \
+                       --name "New Name" \
+                       --model "New Model"
+    ```
+    
+    The `julep-cli agents update` command is used to update an existing agent.
+
+    <ParamField path="--id" type="string" required>
+      ID of the agent to update
+    </ParamField>
+
+    <ParamField path="--name" type="string">
+      New name for the agent
+    </ParamField>
+
+    <ParamField path="--model" type="string">
+      New model for the agent. You can find the list of models [here](/docs/integrations/supported-models)
+    </ParamField>
+
+  </Tab>
+
+  <Tab title="Delete">
+    ```bash
+    julep-cli agents delete --id agent_id [--force]
+    ```
+    
+    The `julep-cli agents delete` command is used to delete an existing agent.
+
+    <ParamField path="--id" type="string" required>
+      ID of the agent to delete
+    </ParamField>
+
+    <ParamField path="--force" type="boolean">
+      Skip confirmation prompt
+    </ParamField>
+  </Tab>
+
+  <Tab title="List">
+    ```bash
+    julep-cli agents list [--metadata-filter '{"key": "value"}'] [--json]
+    ```
+    
+    The `julep-cli agents list` command is used to list all agents.
+
+    <ParamField path="--metadata-filter" type="json">
+      Filter agents by metadata
+    </ParamField>
+
+    <ParamField path="--json" type="boolean">
+      Output in JSON format
+    </ParamField>
+
+  </Tab>
+</Tabs>
+
+### Task Management
+
+<Tabs>
+  <Tab title="Create">
+    ```bash
+    julep-cli tasks create --name "Task Name" \
+                      --agent-id agent_id \
+                      --definition path/to/task.yaml \
+                      --metadata '{"status": "beta"}' \
+                      --inherit-tools
+    ```
+
+    The `julep-cli tasks create` command is used to create a new task.
+
+    <ParamField path="--agent-id" type="string" required>
+      ID of the associated agent
+    </ParamField>
+
+    <ParamField path="--name" type="string">
+      Name of the task
+    </ParamField>
+    
+    <ParamField path="--definition" type="string">
+      Path to task definition file
+    </ParamField>
+
+    <ParamField path="--metadata" type="json">
+      Additional metadata (JSON format)
+    </ParamField>
+
+    <ParamField path="--inherit-tools" type="boolean">
+      Inherit tools from agent
+    </ParamField>
+  </Tab>
+
+  <Tab title="Update">
+    ```bash
+    julep-cli tasks update --id task_id \
+                      --name "New Name" \
+                      --definition new/path/to/task.yaml
+    ```
+
+    The `julep-cli tasks update` command is used to update an existing task.
+
+    <ParamField path="--id" type="string" required>
+      ID of the task to update
+    </ParamField>
+
+    <ParamField path="--name" type="string">
+      New name for the task
+    </ParamField>
+  </Tab>
+
+  <Tab title="Delete">
+    ```bash
+    julep-cli tasks delete --id task_id [--force]
+    ```
+
+    The `julep-cli tasks delete` command is used to delete an existing task.
+
+    <ParamField path="--id" type="string" required>
+      ID of the task to delete
+    </ParamField>
+
+    <ParamField path="--force" type="boolean">
+      Skip confirmation prompt
+    </ParamField>
+  </Tab>
+
+  <Tab title="List">
+    ```bash
+    julep-cli tasks list [--agent-id agent_id] [--json]
+    ```
+
+    The `julep-cli tasks list` command is used to list all tasks.
+
+    <ParamField path="--agent-id" type="string">
+      ID of the associated agent
+    </ParamField>
+
+    <ParamField path="--json" type="boolean">
+      Output in JSON format
+    </ParamField>
+
+  </Tab>
+</Tabs>
+
+### Tool Management
+
+The `julep-cli tools` command is used to manage your tools.
+
+<Tabs>
+  <Tab title="Create">
+    ```bash
+    julep-cli tools create --name "Tool Name" \
+                      --type tool_type \
+                      --agent-id agent_id \
+                      --definition path/to/config.yaml
+    ```
+
+    The `julep-cli tools create` command is used to create a new tool.
+
+    <ParamField path="--agent-id" type="string" required>
+      ID of the associated agent
+    </ParamField>
+
+    <ParamField path="--name" type="string" required>
+      Name of the tool.
+    </ParamField>
+
+    <ParamField path="--type" type="string" required>
+      Type of the tool. You can find the types of tools [here](/docs/concepts/tools#components)
+    </ParamField>
+
+    <ParamField path="--definition" type="string">
+      Path to tool definition file
+    </ParamField>
+  </Tab>
+
+  <Tab title="Update">
+    ```bash
+    julep-cli tools update --id tool_id \
+                      --name "New Name" \
+                      --definition new/path/to/config.yaml
+    ```
+
+    The `julep-cli tools update` command is used to update an existing tool.
+
+    <ParamField path="--id" type="string" required>
+      ID of the tool to update
+    </ParamField>
+
+    <ParamField path="--name" type="string">
+      New name for the tool
+    </ParamField>
+
+    <ParamField path="--definition" type="string">
+      Path to tool definition file
+    </ParamField>
+  </Tab>
+
+  <Tab title="Delete">
+    ```bash
+    julep-cli tools delete --id tool_id [--force]
+    ```
+
+    The `julep-cli tools delete` command is used to delete an existing tool.
+
+    <ParamField path="--id" type="string" required>
+      ID of the tool to delete
+    </ParamField>
+
+    <ParamField path="--force" type="boolean">
+      Skip confirmation prompt
+    </ParamField>
+  </Tab>
+
+  <Tab title="List">
+    ```bash
+    julep-cli tools list [--agent-id agent_id] [--json]
+    ```
+
+    The `julep-cli tools list` command is used to list all tools.
+
+    <ParamField path="--agent-id" type="string">
+      ID of the associated agent
+    </ParamField>
+
+    <ParamField path="--json" type="boolean">
+      Output in JSON format
+    </ParamField>
+  </Tab>
+</Tabs>
+
+### Project Management
+
+The `julep-cli init` command is used to initialize a new Julep project.
+
+<Tabs>
+  <Tab title="Initialize Project">
+    ```bash
+    julep-cli init --template template_name --path project_path
+    ```
+
+    The `julep-cli init` command is used to initialize a new Julep project.
+
+    <ParamField path="--template" type="string">
+      Name of the template to use. List of templates can be found [here](https://github.com/julep-ai/library)
+    </ParamField>
+    
+    <ParamField path="--path" type="string">
+      Path to create the project
+    </ParamField>
+  </Tab>
+
+  <Tab title="Sync Project">
+    ```bash
+    julep-cli sync --source path [--force-local] [--force-remote] [--watch]
+    ```
+
+    The `julep-cli sync` command is used to synchronize the local project with the Julep platform.
+
+    <ParamField path="--source" type="string">
+      Path to the project directory
+    </ParamField>
+
+    <ParamField path="--force-local" type="boolean">
+      Skip remote sync
+    </ParamField>
+  </Tab>
+
+  <Tab title="Import Agent">
+    ```bash
+    julep-cli import agent --id agent_id --output path
+    ```
+
+    The `julep-cli import agent` command is used to import an agent from the platform.
+
+    <ParamField path="--id" type="string" required>
+      ID of the agent to import
+    </ParamField>
+
+    <ParamField path="--output" type="string">
+      Path to save the agent
+    </ParamField>
+  </Tab>
+
+  <Tab title="Chat">
+    ```bash
+    julep-cli chat --agent agent_id [--situation situation] [--settings '{}']
+    ```
+
+    The `julep-cli chat` command is used to start an interactive chat session.
+
+    <ParamField path="--agent" type="string" required>
+      ID of the agent to chat with
+    </ParamField>
+  </Tab>
+</Tabs>
+
+### Task Execution
+
+Here are the commands for running a task and streaming logs.
+<Tabs>
+  <Tab title="Run Task">
+    ```bash
+    julep-cli run --task task_id --input '{"key": "value"}'
+    ```
+
+    The `julep-cli run` command is used to run a task.
+
+    <ParamField path="--task" type="string" required>
+      ID of the task to run
+    </ParamField>
+  </Tab>
+
+  <Tab title="Stream Logs">
+    ```bash
+    julep-cli logs --execution-id exec_id --tail
+    ```
+
+    The `julep-cli logs` command is used to stream logs for an execution.
+
+    <ParamField path="--execution-id" type="string" required>
+      ID of the execution to stream logs for
+    </ParamField>
+  </Tab>
+</Tabs>
+
+### Project Wizard
+
+Initiate a guided setup for new Julep projects.
+
+<Tabs>
+  <Tab title="Assistant">
+
+    ```bash
+    julep-cli assistant
+    ```
+
+    The `julep-cli assistant` command is used to start an interactive wizard to set up a new Julep project with customized configurations. 
+
+  </Tab>
+</Tabs>
+
+### Miscellaneous
+
+Here are the commands for displaying the version and help information.
+
+<Tabs>
+  <Tab title="Version">
+
+    ```bash
+    julep-cli --version
+    ```
+
+    The `julep-cli --version` or `julep-cli -v` command is used to display the current version of the Julep CLI and SDK.
+
+  </Tab>
+
+  <Tab title="Help">
+
+    ```bash
+    julep-cli --help
+    ```
+
+    The `julep-cli --help` or `julep-cli -h` or `julep-cli` command is used to display help information for the Julep CLI.
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Project Organization" icon="folder-tree">
+    <ul>
+      <li>**1.** Keep agent, task, and tool definitions in separate directories</li>
+      <li>**2.** Use meaningful file names that reflect their purpose</li>
+      <li>**3.** Maintain a clear project structure</li>
+    </ul>
+  </Card>
+
+  <Card title="Version Control" icon="code-branch">
+    <ul>
+      <li>**1.** Include `julep.yaml` in version control</li>
+      <li>**2.** Exclude `julep-lock.json` from version control</li>
+      <li>**3.** Document project dependencies</li>
+    </ul>
+  </Card>
+
+  <Card title="Workflow" icon="arrows-spin">
+    <ul>
+      <li>**1.** Use `julep-cli sync --watch` during development</li>
+      <li>**2.** Test changes locally before pushing</li>
+      <li>**3.** Keep configurations environment-specific</li>
+    </ul>
+  </Card>
+</CardGroup>
+
+<Warning>
+  Always backup your project files before running commands that modify the remote state.
+</Warning>
+
+## Common Issues
+
+<CardGroup>
+  <Card title="Authentication Issues" icon="key">
+    <ul>
+      <li>**1.** Ensure your API key is valid</li>
+      <li>**2.** Check the environment setting</li>
+      <li>**3.** Verify the configuration file permissions</li>
+    </ul>
+  </Card>
+
+  <Card title="Sync Conflicts" icon="triangle-exclamation">
+    <ul>
+      <li>**1.** Use `--force-local` or `--force-remote` to resolve conflicts</li>
+      <li>**2.** Check the lock file for state discrepancies</li>
+      <li>**3.** Ensure all required files are present</li>
+    </ul>
+  </Card>
+</CardGroup>
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)
