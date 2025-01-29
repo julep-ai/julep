@@ -1,12 +1,20 @@
+from typing import Annotated
+
 import typer
+from rich.console import Console
 from trogon.typer import init_tui
+
+# Global state
+console = Console()
+error_console = Console(stderr=True)
+
 
 # Initialize typer app
 app = typer.Typer(
     name="julep",
     help="Command line interface for the Julep platform",
     no_args_is_help=True,
-    pretty_exceptions_short=False,
+    pretty_exceptions_short=True,
 )
 
 init_tui(app)
@@ -32,22 +40,60 @@ def version_callback(value: bool):
 
         try:
             v = version("julep-cli")
-            typer.echo(f"julep CLI version {v}")
+            console.print(f"julep CLI version [green]{v}[/green]")
         except:
-            typer.echo("julep CLI version unknown")
+            error_console.print("[red]julep CLI version unknown[/red]")
+            raise typer.Exit(1)
+
         raise typer.Exit
+
+
+def no_color_callback(value: bool) -> bool:
+    global console, error_console
+    if value:
+        console = Console(color_system=None)
+        error_console = Console(color_system=None, stderr=True)
+
+    return value
+
+
+def quiet_callback(value: bool) -> bool:
+    console.quiet = value
+
+    return value
 
 
 @app.callback()
 def main(
-    version: bool = typer.Option(
-        None,
-        "--version",
-        "-v",
-        help="Show version and exit",
-        callback=version_callback,
-        is_eager=True,
-    ),
+    no_color: Annotated[
+        bool,
+        typer.Option(
+            "--no-color",
+            help="Disable colored output",
+            callback=no_color_callback,
+            is_eager=True,
+        ),
+    ] = not bool(console.color_system),
+    quiet: Annotated[
+        bool,
+        typer.Option(
+            "--quiet",
+            "-q",
+            help="Suppress all output except errors and explicitly requested data",
+            callback=quiet_callback,
+            is_eager=True,
+        ),
+    ] = False,
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            "-v",
+            help="Show version and exit",
+            callback=version_callback,
+            is_eager=True,
+        ),
+    ] = False,
 ):
     """
     Julep CLI - Command line interface for the Julep platform

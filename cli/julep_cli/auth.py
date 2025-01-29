@@ -2,7 +2,7 @@ from typing import Annotated
 
 import typer
 
-from .app import app
+from .app import app, console, error_console
 from .utils import get_config, save_config
 
 
@@ -24,6 +24,7 @@ def auth(
             "--environment",
             "-e",
             help="Environment to use (defaults to production)",
+            prompt="Please enter the environment to use (defaults to production)",
         ),
     ] = "production",
 ):
@@ -35,7 +36,7 @@ def auth(
     """
 
     if not api_key:
-        typer.echo("No API key provided", err=True)
+        error_console.print("[red]No API key provided[/red]", err=True)
         raise typer.Exit(1)
 
     config = get_config()
@@ -43,4 +44,4 @@ def auth(
     config["environment"] = environment
     save_config(config)
 
-    typer.echo(f"Successfully authenticated with {environment} environment!")
+    console.print(f"Successfully authenticated with [green]{environment}[/green] environment!")
