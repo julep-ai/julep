@@ -1,59 +1,75 @@
 # Julep CLI Specification
 
-The `julep` CLI tool provides a comprehensive command-line interface for interacting with the Julep platform. It enables authentication, management of agents, tasks, and tools, project initialization, synchronization, interaction with agents via chat, task execution, log retrieval, and more. This specification outlines the commands, options, and best practices to ensure a consistent and user-friendly experience.
+The `julep-cli` CLI tool provides a comprehensive command-line interface for interacting with the Julep platform. It enables authentication, management of agents, tasks, and tools, project initialization, synchronization, interaction with agents via chat, task execution, log retrieval, and more. This specification outlines the commands, options, and best practices to ensure a consistent and user-friendly experience.
 
 ## Table of Contents
 
-- [Overview](#overview)
-  - [Components](#components)
-  - [Schema for `julep.yaml`](#schema-for-julepyaml)
-  - [Schema for `julep-lock.json`](#schema-for-julep-lockjson)
-  - [How the lock file is used](#how-the-lock-file-is-used)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Commands](#commands)
-  - [Authentication](#authentication)
-  - [Agent Management](#agent-management)
-    - [Create an Agent](#create-an-agent)
-    - [Update an Agent](#update-an-agent)
-    - [Delete an Agent](#delete-an-agent)
-    - [List Agents](#list-agents)
-    - [Get an Agent](#get-an-agent)
-  - [Task Management](#task-management)
-    - [Create a Task](#create-a-task)
-    - [Update a Task](#update-a-task)
-    - [Delete a Task](#delete-a-task)
-    - [List Tasks](#list-tasks)
-  - [Tool Management](#tool-management)
-    - [Create a Tool](#create-a-tool)
-    - [Update a Tool](#update-a-tool)
-    - [Delete a Tool](#delete-a-tool)
-    - [List Tools](#list-tools)
-  - [Project Initialization](#project-initialization)
-  - [Synchronization](#synchronization)
-  - [Chat Interaction](#chat-interaction)
-  - [Task Execution](#task-execution)
-  - [Log Retrieval](#log-retrieval)
-  - [Project Wizard](#project-wizard)
-  - [Common Commands](#common-commands)
-    - [Version](#version)
-    - [Help](#help)
-- [Best Practices](#best-practices)
-- [Examples](#examples)
-- [Configuration File](#configuration-file)
-- [Error Handling](#error-handling)
-- [Conclusion](#conclusion)
-- [TODO](#todo)
+- [Julep CLI Specification](#julep-cli-specification)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+    - [Components](#components)
+    - [Schema for `julep.yaml`](#schema-for-julepyaml)
+    - [Schema for `julep-lock.json`](#schema-for-julep-lockjson)
+    - [How the lock file is used](#how-the-lock-file-is-used)
+      - [`relationships` Details](#relationships-details)
+      - [How the CLI Should Use It](#how-the-cli-should-use-it)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+  - [Commands](#commands)
+    - [Authentication](#authentication)
+      - [`julep-cli auth`](#julep-cli-auth)
+    - [Agent Management](#agent-management)
+      - [`julep-cli agents`](#julep-cli-agents)
+      - [Subcommands](#subcommands)
+        - [`julep-cli agents create`](#julep-cli-agents-create)
+        - [`julep-cli agents update`](#julep-cli-agents-update)
+        - [`julep-cli agents delete`](#julep-cli-agents-delete)
+        - [`julep-cli agents list`](#julep-cli-agents-list)
+        - [`julep-cli agents get`](#julep-cli-agents-get)
+    - [Task Management](#task-management)
+      - [`julep-cli tasks`](#julep-cli-tasks)
+      - [Subcommands](#subcommands-1)
+        - [`julep-cli tasks create`](#julep-cli-tasks-create)
+        - [`julep-cli tasks update`](#julep-cli-tasks-update)
+        - [`julep-cli tasks delete`](#julep-cli-tasks-delete)
+        - [`julep-cli tasks list`](#julep-cli-tasks-list)
+    - [Tool Management](#tool-management)
+      - [`julep-cli tools`](#julep-cli-tools)
+      - [Subcommands](#subcommands-2)
+        - [`julep-cli tools create`](#julep-cli-tools-create)
+        - [`julep-cli tools update`](#julep-cli-tools-update)
+        - [`julep-cli tools delete`](#julep-cli-tools-delete)
+        - [`julep-cli tools list`](#julep-cli-tools-list)
+    - [Project Initialization](#project-initialization)
+      - [`julep-cli init`](#julep-cli-init)
+    - [Synchronization](#synchronization)
+      - [`julep-cli sync`](#julep-cli-sync)
+    - [Importing Agents](#importing-agents)
+      - [`julep-cli import agent`](#julep-cli-import-agent)
+    - [Chat Interaction](#chat-interaction)
+      - [`julep-cli chat`](#julep-cli-chat)
+    - [Task Execution](#task-execution)
+      - [`julep-cli run`](#julep-cli-run)
+    - [Log Retrieval](#log-retrieval)
+      - [`julep-cli logs`](#julep-cli-logs)
+    - [Project Wizard](#project-wizard)
+      - [`julep-cli assistant`](#julep-cli-assistant)
+    - [Common Commands](#common-commands)
+      - [Version](#version)
+        - [`julep-cli --version`, `julep-cli -v`](#julep-cli---version-julep-cli--v)
+      - [Help](#help)
+        - [`julep-cli`, `julep-cli --help`, `julep-cli -h`](#julep-cli-julep-cli---help-julep-cli--h)
+  - [TODO](#todo)
 
 ---
 
 ## Overview
 
-The `julep` CLI is designed to streamline interactions with the Julep platform, allowing developers to efficiently manage AI agents, tasks, tools, and projects directly from the terminal. It adheres to industry-standard CLI conventions, ensuring an intuitive and predictable user experience.
+The `julep-cli` CLI is designed to streamline interactions with the Julep platform, allowing developers to efficiently manage AI agents, tasks, tools, and projects directly from the terminal. It adheres to industry-standard CLI conventions, ensuring an intuitive and predictable user experience.
 
 ### Components
 
-There are 3 main components to the `julep` CLI:
+There are 3 main components to the `julep-cli` CLI:
 
 1. The project management stuff (init, sync, etc.)
 2. The static stuff (agents, tasks, tools, etc.)
@@ -67,70 +83,22 @@ Different files that are important:
 
 ### Schema for `julep.yaml`
 
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/julep.schema.json",
-  "title": "Julep Project Configuration Schema",
-  "type": "object",
-  "properties": {
-    "agents": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "definition": {
-            "type": "string",
-            "description": "Path to the file defining the agent."
-          },
-          "canonical_name": {
-            "type": "string",
-            "description": "A unique reference name for the agent."
-          }
-        },
-        "required": ["definition"],
-        "additionalProperties": false
-      }
-    },
-    "tasks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "agent_id": {
-            "type": "string",
-            "description": "Reference to an agent ID or a templated expression (e.g. {agents[0].id})."
-          },
-          "definition": {
-            "type": "string",
-            "description": "Path to the file defining the task workflow."
-          }
-        },
-        "required": ["agent_id", "definition"],
-        "additionalProperties": false
-      }
-    },
-    "tools": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "agent_id": {
-            "type": "string",
-            "description": "Reference to an agent ID or a templated expression (e.g. {agents['awesome-agent'].id})."
-          },
-          "definition": {
-            "type": "string",
-            "description": "Path to the tool configuration or definition file."
-          }
-        },
-        "required": ["agent_id", "definition"],
-        "additionalProperties": false
-      }
-    }
-  },
-  "additionalProperties": false
-}
+```yaml
+agents:
+- definition: path/to/agent.yaml
+- definition: path/to/agent.yaml
+
+tasks:
+- agent_id: "{agents[0].id}"
+  definition: path/to/task.yaml
+- agent_id: "{agents[1].id}"
+  definition: path/to/task.yaml
+
+tools:
+- agent_id: "{agents[0].id}"
+  definition: path/to/tool.yaml
+- agent_id: "{agents[1].id}"
+  definition: path/to/tool.yaml
 ```
 
 ### Schema for `julep-lock.json`
@@ -348,7 +316,7 @@ Different files that are important:
 
 #### How the CLI Should Use It
 
-**On** `**julep sync**`:  
+**On** `**julep-cli sync**`:  
 1.  Parse `julep.yaml` plus any local `.yaml` definitions.
 2.  Compare to `julep-lock.json`:
       *   If you find a definition that's **not** in the lock file, create it on the server. Then save the new `id` to the lock file.
@@ -385,7 +353,7 @@ The CLI stores configuration data, such as the API key, in `~/.config/julep/conf
 
 Authenticate with the Julep platform by providing your API key.
 
-#### `julep auth`
+#### `julep-cli auth`
 
 **Description:**  
 Prompt the user to enter their API key and save it to the configuration file.
@@ -393,7 +361,7 @@ Prompt the user to enter their API key and save it to the configuration file.
 **Usage:**
 
 ```bash
-julep auth
+julep-cli auth
 ```
 
 **Behavior:**
@@ -409,7 +377,7 @@ julep auth
 **Example:**
 
 ```bash
-julep auth --api-key your_julep_api_key
+julep-CLI auth --api-key your_julep_api_key
 ```
 
 ---
@@ -418,7 +386,7 @@ julep auth --api-key your_julep_api_key
 
 Manage AI agents within the Julep platform.
 
-#### `julep agents`
+#### `julep-cli agents`
 
 **Description:**  
 Parent command for managing agents. Includes subcommands to create, update, delete, and list agents.
@@ -427,7 +395,7 @@ Parent command for managing agents. Includes subcommands to create, update, dele
 
 1. **Create an Agent**
 
-   ##### `julep agents create`
+   ##### `julep-cli agents create`
 
    **Description:**  
    Create a new AI agent.
@@ -435,7 +403,7 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Usage:**
 
    ```bash
-   julep agents create --name "Agent Name" --model "Model Name" --about "Agent Description"
+   julep-cli agents create --name "Agent Name" --model "Model Name" --about "Agent Description"
    ```
 
    **Options:**
@@ -453,12 +421,12 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Example:**
 
    ```bash
-   julep agents create --name "Storyteller" --model "gpt-4" --about "An agent that crafts engaging stories."
+   julep-cli agents create --name "Storyteller" --model "gpt-4" --about "An agent that crafts engaging stories."
    ```
 
 2. **Update an Agent**
 
-   ##### `julep agents update`
+   ##### `julep-cli agents update`
 
    **Description:**  
    Update an existing AI agent's details.
@@ -466,7 +434,7 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Usage:**
 
    ```bash
-   julep agents update --id <agent_id> [--name "New Name"] [--model "New Model"] [--about "New Description"] [--metadata '{"key": "value"}'] [--instructions "Instruction 1"] [--instructions "Instruction 2"]
+   julep-cli agents update --id <agent_id> [--name "New Name"] [--model "New Model"] [--about "New Description"] [--metadata '{"key": "value"}'] [--instructions "Instruction 1"] [--instructions "Instruction 2"]
    ```
 
    **Options:**
@@ -482,12 +450,12 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Example:**
 
    ```bash
-   julep agents update --id abc123 --name "Creative Storyteller" --model "gpt-4.5"
+   julep-cli agents update --id abc123 --name "Creative Storyteller" --model "gpt-4.5"
    ```
 
 3. **Delete an Agent**
 
-   ##### `julep agents delete`
+   ##### `julep-cli agents delete`
 
    **Description:**  
    Delete an existing AI agent.
@@ -495,7 +463,7 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Usage:**
 
    ```bash
-   julep agents delete --id <agent_id> [--force]
+   julep-cli agents delete --id <agent_id> [--force]
    ```
 
    **Behavior:**
@@ -510,12 +478,12 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Example:**
 
    ```bash
-   julep agents delete --id abc123
+   julep-cli agents delete --id abc123
    ```
 
 4. **List Agents**
 
-   ##### `julep agents list`
+   ##### `julep-cli agents list`
 
    **Description:**  
    List all AI agents or filter based on metadata.
@@ -539,7 +507,7 @@ Parent command for managing agents. Includes subcommands to create, update, dele
 
 5. **Get an Agent**
 
-   ##### `julep agents get`
+   ##### `julep-cli agents get`
 
    **Description:**  
    Get an agent by its ID.
@@ -547,7 +515,7 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Usage:**
 
    ```bash
-   julep agents get --id <agent_id> [--json]
+   julep-cli agents get --id <agent_id> [--json]
    ```
 
    **Options:**
@@ -557,7 +525,7 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    **Example:**
 
    ```bash
-   julep agents get --id abc123
+   julep-cli agents get --id abc123
    ```
 
 
@@ -567,7 +535,7 @@ Parent command for managing agents. Includes subcommands to create, update, dele
 
 Manage tasks associated with AI agents.
 
-#### `julep tasks`
+#### `julep-cli tasks`
 
 **Description:**  
 Parent command for managing tasks. Includes subcommands to create, update, delete, and list tasks.
@@ -576,7 +544,7 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
 
 1. **Create a Task**
 
-   ##### `julep tasks create`
+   ##### `julep-cli tasks create`
 
    **Description:**  
    Create a new task for an agent.
@@ -584,7 +552,7 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tasks create --name "Task Name" --agent-id <agent_id> --definition "path/to/task.yaml" [--metadata '{"status": "beta"}'] [--inherit-tools]
+   julep-cli tasks create --name "Task Name" --agent-id <agent_id> --definition "path/to/task.yaml" [--metadata '{"status": "beta"}'] [--inherit-tools]
    ```
 
    **Options:**
@@ -601,12 +569,12 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Example:**
 
    ```bash
-   julep tasks create --name "Generate Story" --description "Writes a short story" --agent-id abc123 --definition ./tasks/generate_story.yaml --metadata '{"category":"fiction"}'
+   julep-cli tasks create --name "Generate Story" --description "Writes a short story" --agent-id abc123 --definition ./tasks/generate_story.yaml --metadata '{"category":"fiction"}'
    ```
 
 2. **Update a Task**
 
-   ##### `julep tasks update`
+   ##### `julep-cli tasks update`
 
    **Description:**  
    Update an existing task's details.
@@ -614,7 +582,7 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tasks update --id <task_id> [--name "New Name"] [--description "New Description"] [--definition "new/path/to/task.yaml"] [--metadata '{"status": "published"}'] [--inherit-tools true|false]
+   julep-cli tasks update --id <task_id> [--name "New Name"] [--description "New Description"] [--definition "new/path/to/task.yaml"] [--metadata '{"status": "published"}'] [--inherit-tools true|false]
    ```
 
    **Options:**
@@ -629,12 +597,12 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Example:**
 
    ```bash
-   julep tasks update --id task456 --name "Advanced Story Generation" --metadata '{"priority":"high"}'
+   julep-cli tasks update --id task456 --name "Advanced Story Generation" --metadata '{"priority":"high"}'
    ```
 
 3. **Delete a Task**
 
-   ##### `julep tasks delete`
+   ##### `julep-cli tasks delete`
 
    **Description:**  
    Delete an existing task.
@@ -642,7 +610,7 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tasks delete --id <task_id> [--force]
+   julep-cli tasks delete --id <task_id> [--force]
    ```
 
    **Options:**
@@ -653,12 +621,12 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Example:**
 
    ```bash
-   julep tasks delete --id task456
+   julep-cli tasks delete --id task456
    ```
 
 4. **List Tasks**
 
-   ##### `julep tasks list`
+   ##### `julep-cli tasks list`
 
    **Description:**  
    List all tasks or filter based on criteria.
@@ -666,7 +634,7 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tasks list [--agent-id <agent_id>] [--json]
+   julep-cli tasks list [--agent-id <agent_id>] [--json]
    ```
 
    **Options:**
@@ -677,7 +645,7 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
    **Example:**
 
    ```bash
-   julep tasks list --agent-id abc123
+   julep-cli tasks list --agent-id abc123
    ```
 
 ---
@@ -686,7 +654,7 @@ Parent command for managing tasks. Includes subcommands to create, update, delet
 
 Manage tools associated with AI agents.
 
-#### `julep tools`
+#### `julep-cli tools`
 
 **Description:**  
 Parent command for managing tools. Includes subcommands to create, update, delete, and list tools.
@@ -695,7 +663,7 @@ Parent command for managing tools. Includes subcommands to create, update, delet
 
 1. **Create a Tool**
 
-   ##### `julep tools create`
+   ##### `julep-cli tools create`
 
    **Description:**  
    Create a new tool for an agent.
@@ -703,7 +671,7 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tools create --name "Tool Name" --type <type> --agent-id <agent_id> --definition "path/to/config.yaml"
+   julep-cli tools create --name "Tool Name" --type <type> --agent-id <agent_id> --definition "path/to/config.yaml"
    ```
 
    **Options:**
@@ -717,12 +685,12 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    **Example:**
 
    ```bash
-   julep tools create --name "Web Search" --agent-id abc123 --definition ./tools/web_search.yaml
+   julep-cli tools create --name "Web Search" --agent-id abc123 --definition ./tools/web_search.yaml
    ```
 
 2. **Update a Tool**
 
-   ##### `julep tools update`
+   ##### `julep-cli tools update`
 
    **Description:**  
    Update an existing tool's details.
@@ -730,7 +698,7 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tools update --id <tool_id> [--name "New Name"] [--definition "new/path/to/config.yaml"]
+   julep-cli tools update --id <tool_id> [--name "New Name"] [--definition "new/path/to/config.yaml"]
    ```
 
    **Options:**
@@ -742,12 +710,12 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    **Example:**
 
    ```bash
-   julep tools update --id tool789 --name "Advanced Web Search"
+   julep-cli tools update --id tool789 --name "Advanced Web Search"
    ```
 
 3. **Delete a Tool**
 
-   ##### `julep tools delete`
+   ##### `julep-cli tools delete`
 
    **Description:**  
    Delete an existing tool.
@@ -755,7 +723,7 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tools delete --id <tool_id> [--force]
+   julep-cli tools delete --id <tool_id> [--force]
    ```
 
    **Options:**
@@ -766,12 +734,12 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    **Example:**
 
    ```bash
-   julep tools delete --id tool789
+   julep-cli tools delete --id tool789
    ```
 
 4. **List Tools**
 
-   ##### `julep tools list`
+   ##### `julep-cli tools list`
 
    **Description:**  
    List all tools or filter based on criteria.
@@ -779,7 +747,7 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    **Usage:**
 
    ```bash
-   julep tools list [--agent-id <agent_id>] [--json]
+   julep-cli tools list [--agent-id <agent_id>] [--json]
    ```
 
    **Options:**
@@ -793,7 +761,7 @@ Parent command for managing tools. Includes subcommands to create, update, delet
    **Example:**
 
    ```bash
-   julep tools list --agent-id abc123
+   julep-cli tools list --agent-id abc123
    ```
 
 ---
@@ -802,7 +770,7 @@ Parent command for managing tools. Includes subcommands to create, update, delet
 
 Initialize a new Julep project using predefined templates.
 
-#### `julep init`
+#### `julep-cli init`
 
 **Description:**  
 Initialize a new Julep project by copying a template from the library repository.
@@ -810,7 +778,7 @@ Initialize a new Julep project by copying a template from the library repository
 **Usage:**
 
 ```bash
-julep init --template=<template_name> [--path=<path>]
+julep-cli init --template=<template_name> [--path=<path>]
 ```
 
 **Options:**
@@ -832,7 +800,7 @@ Confirm before copying the template to the destination directory. Then open the 
 
 Synchronize local directories with Julep packages.
 
-#### `julep sync`
+#### `julep-cli sync`
 
 **Description:**  
 Synchronize the local Julep package with the Julep platform.
@@ -840,7 +808,7 @@ Synchronize the local Julep package with the Julep platform.
 **Usage:**
 
 ```bash
-julep sync --source=<path> [--force-local] [--force-remote] [--watch]
+julep-cli sync --source=<path> [--force-local] [--force-remote] [--watch]
 ```
 
 **Options:**
@@ -866,7 +834,7 @@ julep sync --source=<path> [--force-local] [--force-remote] [--watch]
 
 Import an agent from the Julep platform.
 
-#### `julep import agent`
+#### `julep-cli import agent`
 
 **Description:**  
 Import an agent from the Julep platform.
@@ -874,7 +842,7 @@ Import an agent from the Julep platform.
 **Usage:**
 
 ```bash
-julep import agent --id <agent_id> --output=<path>
+julep-cli import agent --id <agent_id> --output=<path>
 ```
 
 **Options:**
@@ -889,7 +857,7 @@ julep import agent --id <agent_id> --output=<path>
 
 Interact with a specific agent via chat.
 
-#### `julep chat`
+#### `julep-cli chat`
 
 **Description:**  
 Initiate an interactive chat session with a specified AI agent.
@@ -897,7 +865,7 @@ Initiate an interactive chat session with a specified AI agent.
 **Usage:**
 
 ```bash
-julep chat --agent=<agent_id_or_name>
+julep-cli chat --agent=<agent_id_or_name>
 ```
 
 **Options:**
@@ -924,7 +892,7 @@ julep chat --agent "Storyteller"
 
 Execute specific tasks with provided inputs.
 
-#### `julep run`
+#### `julep-cli run`
 
 **Description:**  
 Run a defined task with specified input parameters.
@@ -932,7 +900,7 @@ Run a defined task with specified input parameters.
 **Usage:**
 
 ```bash
-julep run --task=<task_id_or_name> --input='<input_json>'
+julep-cli run --task=<task_id_or_name> --input='<input_json>'
 ```
 
 **Options:**
@@ -945,7 +913,7 @@ julep run --task=<task_id_or_name> --input='<input_json>'
 **Example:**
 
 ```bash
-julep run --task "Generate Story" --input '{"idea": "A cat who learns to fly"}'
+julep-cli run --task "Generate Story" --input '{"idea": "A cat who learns to fly"}'
 ```
 
 **Behavior:**
@@ -959,7 +927,7 @@ julep run --task "Generate Story" --input '{"idea": "A cat who learns to fly"}'
 
 Retrieve logs related to specific task executions.
 
-#### `julep logs`
+#### `julep-cli logs`
 
 **Description:**  
 Fetch and display logs for a particular task execution.
@@ -967,7 +935,7 @@ Fetch and display logs for a particular task execution.
 **Usage:**
 
 ```bash
-julep logs --execution-id=<execution_id>
+julep-cli logs --execution-id=<execution_id>
 ```
 
 **Options:**
@@ -980,7 +948,7 @@ julep logs --execution-id=<execution_id>
 **Example:**
 
 ```bash
-julep logs --execution-id exec123 --tail
+julep-cli logs --execution-id exec123 --tail
 ```
 
 **Behavior:**
@@ -994,7 +962,7 @@ julep logs --execution-id exec123 --tail
 
 Initiate a guided setup for new Julep projects.
 
-#### `julep assistant`
+#### `julep-cli assistant`
 
 **Description:**  
 Launch an interactive wizard to set up a new Julep project with customized configurations.
@@ -1002,7 +970,7 @@ Launch an interactive wizard to set up a new Julep project with customized confi
 **Usage:**
 
 ```bash
-julep assistant
+julep-cli assistant
 ```
 
 **TBD**
@@ -1013,7 +981,7 @@ julep assistant
 
 #### Version
 
-##### `julep --version`, `julep -v`
+##### `julep-cli --version`, `julep-cli -v`
 
 **Description:**  
 Display the current version of the Julep CLI.
@@ -1021,7 +989,7 @@ Display the current version of the Julep CLI.
 **Usage:**
 
 ```bash
-julep --version
+julep-cli --version
 ```
 
 **Output:**
@@ -1033,7 +1001,7 @@ julep SDK version 1.2.3
 
 #### Help
 
-##### `julep`, `julep --help`, `julep -h`
+##### `julep-cli`, `julep-cli --help`, `julep-cli -h`
 
 **Description:**  
 Display help information for the Julep CLI.
@@ -1041,10 +1009,10 @@ Display help information for the Julep CLI.
 **Usage:**
 
 ```bash
-julep --help
+julep-cli --help
 ```
 
-Just plain `julep` will also show the help message.
+Just plain `julep-cli` will also show the help message.
 
 ## TODO
 
