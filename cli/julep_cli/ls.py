@@ -4,10 +4,16 @@ from typing import Annotated
 import typer
 import yaml
 
-from .app import app
+from rich.text import Text
+from rich.box import HEAVY
+from rich.table import Table
+
+from .app import app, console, error_console
 from .models import LockFileContents
 from .utils import get_lock_file
 
+TABLE_WIDTH = 150
+COLUMN_WIDTH = TABLE_WIDTH // 3
 
 @app.command()
 def ls(
@@ -25,40 +31,66 @@ def ls(
     """
 
     lock_file: LockFileContents = get_lock_file(source)
-
     if lock_file.agents:
-        typer.echo("Agents:\n")
+        agents_table = Table(
+            title=Text("Agents:", style="bold underline magenta"),
+            header_style="bold magenta",
+            width=TABLE_WIDTH
+        )
+        agents_table.add_column("Name", style="green", width=COLUMN_WIDTH)
+        agents_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
+        agents_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
+
         for agent in lock_file.agents:
-
-            # Read the agent yaml file
-            agent_yaml_contents = yaml.safe_load(Path(source / agent.path).read_text())
-
-            # Add the id to the agent content
+            agent_yaml_contents = yaml.safe_load(
+                Path(source / agent.path).read_text())
             agent_yaml_contents["id"] = agent.id
+            agents_table.add_row(
+                agent_yaml_contents.get("name", "N/A"),
+                str(agent_yaml_contents["id"]),
+                str(agent.path),
+            )
 
-            # Print the agent content
-            for key, value in agent_yaml_contents.items():
-                typer.echo(f"{key}: {value}")
-
-            typer.echo(f"definition file: {agent.path}")
-
-            typer.echo("------------")
+        console.print(agents_table)
 
     if lock_file.tasks:
-        typer.echo("Tasks:\n")
-        for task in lock_file.tasks:
-            task_yaml_contents = yaml.safe_load(Path(source / task.path).read_text())
+        tasks_table = Table(
+            title=Text("Tasks:", style="bold underline magenta"),
+            header_style="bold magenta",
+            width=TABLE_WIDTH
+        )
+        tasks_table.add_column("Name", style="green", width=COLUMN_WIDTH)
+        tasks_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
+        tasks_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
 
-            typer.echo(f"name: {task_yaml_contents.get('name')}")
-            typer.echo(f"id: {task.id}")
-            typer.echo(f"definition file: {task.path}")
-            typer.echo("------------")
+        for task in lock_file.tasks:
+            task_yaml_contents = yaml.safe_load(
+                Path(source / task.path).read_text())
+            tasks_table.add_row(
+                task_yaml_contents.get("name", "N/A"),
+                str(task.path),
+                str(task.id),
+            )
+
+        console.print(tasks_table)
 
     if lock_file.tools:
-        typer.echo("Tools:\n")
-        for tool in lock_file.tools:
-            tool_yaml_contents = yaml.safe_load(Path(source / tool.path).read_text())
+        tools_table = Table(
+            title=Text("Tools:", style="bold underline magenta"),
+            header_style="bold magenta",
+            width=150
+        )
+        tools_table.add_column("Name", style="green", width=COLUMN_WIDTH)
+        tools_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
+        tools_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
 
-            typer.echo(f"name: {tool_yaml_contents.get('name')}")
-            typer.echo(f"id: {tool.id}")
-            typer.echo(f"definition file: {tool.path}")
+        for tool in lock_file.tools:
+            tool_yaml_contents = yaml.safe_load(
+                Path(source / tool.path).read_text())
+            tools_table.add_row(
+                tool_yaml_contents.get("name", "N/A"),
+                str(tool.path),
+                str(tool.id),
+            )
+
+        console.print(tools_table)
