@@ -6,6 +6,7 @@ from temporalio import activity
 from ...common.protocol.tasks import StepContext, StepOutcome
 from .base_evaluate import base_evaluate
 
+
 @activity.defn
 @beartype
 async def evaluate_step(

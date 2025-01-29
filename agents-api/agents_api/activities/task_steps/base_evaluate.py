@@ -38,7 +38,7 @@ class EvaluateError(Exception):
 def _recursive_evaluate(expr, evaluator: SimpleEval):
     if isinstance(expr, str):
         try:
-            if (isinstance(expr, str) and expr.startswith("$")):
+            if isinstance(expr, str) and expr.startswith("$"):
                 expr = expr[1:].strip()
             else:
                 return expr

@@ -8,7 +8,6 @@ from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
-from ...common.utils.template import render_template
 from ...env import debug
 from .base_evaluate import base_evaluate
 
@@ -65,14 +64,12 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
     context_data: dict = await context.prepare_for_step()
 
-
     if isinstance(prompt, list):
         for i, msg in enumerate(prompt):
             prompt[i]["content"] = await base_evaluate(msg["content"], context_data)
             prompt[i]["role"] = await base_evaluate(msg["role"], context_data)
     else:
         prompt = await base_evaluate(prompt, context_data)
-
 
     # Wrap the prompt in a list if it is not already
     prompt = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
