@@ -11,6 +11,7 @@ from .tools import tools_app as tools_app
 from .utils import get_config, save_config
 from .executions import executions_app as executions_app
 from .logs import logs
+from .ls import ls
 
 __all__ = [
     "app",
@@ -20,6 +21,7 @@ __all__ = [
     "get_config",
     "importt",
     "init",
+    "ls",
     "logs",
     "run",
     "save_config",
