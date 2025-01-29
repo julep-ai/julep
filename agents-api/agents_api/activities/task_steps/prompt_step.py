@@ -71,15 +71,6 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     # Wrap the prompt in a list if it is not already
     prompt = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
 
-    # Render template messages if we didn't evaluate the prompt
-    # if not should_evaluate_prompt:
-    #     # Render template messages
-    #     prompt = await render_template(
-    #         prompt,
-    #         context_data,
-    #         skip_vars=["developer_id"],
-    #     )
-
     if not isinstance(context.execution_input, ExecutionInput):
         msg = "Expected ExecutionInput type for context.execution_input"
         raise TypeError(msg)
