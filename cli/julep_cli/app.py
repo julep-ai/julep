@@ -1,4 +1,5 @@
 import typer
+from trogon.typer import init_tui
 
 # Initialize typer app
 app = typer.Typer(
@@ -7,6 +8,8 @@ app = typer.Typer(
     no_args_is_help=True,
     pretty_exceptions_short=False,
 )
+
+init_tui(app)
 
 # Initialize subcommands
 agents_app = typer.Typer(help="Manage AI agents")

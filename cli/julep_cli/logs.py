@@ -1,12 +1,11 @@
-import time
 import json
+import time
 from typing import Annotated
 
 import typer
 
-from .utils import get_julep_client
-
 from .app import app
+from .utils import get_julep_client
 
 
 @app.command()
@@ -27,7 +26,6 @@ def logs(
         typer.echo(json.dumps(transition.output, indent=4))
         typer.echo("--------------------------------")
 
-
     if tailing:
         while True:
             fetched_transitions = client.executions.transitions.list(execution_id=execution_id).items
@@ -45,5 +43,3 @@ def logs(
                 break
 
             time.sleep(1)
-
-

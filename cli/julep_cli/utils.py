@@ -67,7 +67,7 @@ def get_julep_client() -> Julep:
         typer.echo("ENVIRONMENT not set in config.yml, defaulting to production")
         environment = "production"
 
-    return Julep(api_key=api_key, environment=environment)
+    return Julep(api_key=api_key, environment=environment, max_retries=0)
 
 
 def create_lock_file(source: Path):
@@ -196,6 +196,7 @@ def update_yaml_for_existing_entity(path: Path, data: dict):
     """Update the yaml file for an existing entity"""
     with open(path, "w") as f:
         yaml.dump(data, f)
+
 
 def import_agent_to_julep_yaml(source: Path, agent_data: dict):
     """Add a new entity to the julep.yaml file"""

@@ -3,9 +3,8 @@ from typing import Annotated
 
 import typer
 
-from .utils import get_julep_client
-
 from .app import app
+from .utils import get_julep_client
 
 
 @app.command()
@@ -32,11 +31,10 @@ def chat(
     The chat session runs in the terminal, allowing real-time conversation with the agent.
     """
 
-
     client = get_julep_client()
 
     agent = client.agents.get(agent_id=agent)
-    
+
     session = client.sessions.create(agent=agent.id, situation=situation)
 
     typer.echo(f"Starting chat with agent '{agent.name}'")

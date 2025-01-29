@@ -1,11 +1,13 @@
 from pathlib import Path
 from typing import Annotated
+
 import typer
 import yaml
 
-from .utils import get_lock_file
 from .app import app
 from .models import LockFileContents
+from .utils import get_lock_file
+
 
 @app.command()
 def ls(
@@ -27,7 +29,7 @@ def ls(
     if lock_file.agents:
         typer.echo("Agents:\n")
         for agent in lock_file.agents:
-            
+
             # Read the agent yaml file
             agent_yaml_contents = yaml.safe_load(Path(source / agent.path).read_text())
 
@@ -42,8 +44,6 @@ def ls(
 
             typer.echo("------------")
 
-
-
     if lock_file.tasks:
         typer.echo("Tasks:\n")
         for task in lock_file.tasks:
@@ -54,7 +54,6 @@ def ls(
             typer.echo(f"definition file: {task.path}")
             typer.echo("------------")
 
-
     if lock_file.tools:
         typer.echo("Tools:\n")
         for tool in lock_file.tools:
@@ -63,4 +62,3 @@ def ls(
             typer.echo(f"name: {tool_yaml_contents.get('name')}")
             typer.echo(f"id: {tool.id}")
             typer.echo(f"definition file: {tool.path}")
-
