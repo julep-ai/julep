@@ -10,7 +10,7 @@ from .tasks import tasks_app as tasks_app
 from .tools import tools_app as tools_app
 from .utils import get_config, save_config
 from .executions import executions_app as executions_app
-from .log import log
+from .logs import logs
 
 __all__ = [
     "app",
@@ -20,7 +20,7 @@ __all__ = [
     "get_config",
     "importt",
     "init",
-    "log",
+    "logs",
     "run",
     "save_config",
     "sync",
