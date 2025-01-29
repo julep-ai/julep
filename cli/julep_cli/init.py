@@ -6,8 +6,9 @@ from typing import Annotated
 
 import requests
 import typer
+from rich.text import Text
 
-from .app import app
+from .app import app, console, error_console
 
 
 @app.command()
@@ -55,10 +56,13 @@ def init(
             default=True,
         )
         if not proceed:
+            console.print(
+                Text("Initialization cancelled.", style="bold red"))
             raise typer.Exit
 
     try:
         # Download the repository as a zip file
+        console.print(Text("Downloading template...", style="bold cyan"))
         response = requests.get(template_url)
         response.raise_for_status()
 
@@ -69,7 +73,8 @@ def init(
             template_folder = f"{repo_prefix}{template}/"
 
             # Extract only the specified template folder
-            typer.echo(f"Extracting template '{template}' to {path}")
+            console.print(Text(f"Extracting template '{
+                          template}' to {path}", style="bold green"))
 
             for file_info in z.infolist():
                 if file_info.filename.startswith(template_folder):
@@ -85,29 +90,36 @@ def init(
                     final_destination.mkdir(parents=True, exist_ok=True)
 
                     # Copy files from the extracted template path to the final destination
-                    shutil.copytree(extracted_template_path, final_destination, dirs_exist_ok=True)
+                    shutil.copytree(extracted_template_path,
+                                    final_destination, dirs_exist_ok=True)
 
                     # Remove the extracted template directory and its parent
                     shutil.rmtree(library_repo_prefix)
 
     except requests.exceptions.RequestException as e:
-        typer.echo(f"Failed to download template: {e}", err=True)
+        error_console.print(
+            Text(f"Failed to download template: {e}", style="bold red"))
         raise typer.Exit(1)
     except zipfile.BadZipFile as e:
-        typer.echo(f"Failed to extract template: {e}", err=True)
+        error_console.print(
+            Text(f"Failed to extract template: {e}", style="bold red"))
         raise typer.Exit(1)
 
     julep_yaml = path / template / "julep.yaml"
     if not julep_yaml.exists():
-        typer.echo("Error: 'julep.yaml' not found in the destination directory", err=True)
+        error_console.print(Text(
+            "Error: 'julep.yaml' not found in the destination directory", style="bold red"))
         raise typer.Exit(1)
-
-    typer.echo(
-        f"Successfully initialized new Julep project with template '{template}' in {path}"
+    
+    console.print(
+        Text(
+            f"Successfully initialized new Julep project with template '{template}' in {path}",
+            style="bold green",
+        )
     )
 
     # Try to open and display the README if it exists
     readme_path = path / template / "README.md"
     if readme_path.exists():
-        typer.echo("\nProject README:\n")
-        typer.echo(readme_path.read_text())
+        console.print(Text("\nProject README:\n", style="bold blue"))
+        console.print(readme_path.read_text())
