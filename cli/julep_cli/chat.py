@@ -2,8 +2,11 @@ import json
 from typing import Annotated
 
 import typer
+from rich.text import Text
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from .app import app
+from .app import app, console, error_console
 from .utils import get_julep_client
 
 
@@ -18,11 +21,13 @@ def chat(
         ),
     ],
     situation: Annotated[
-        str | None, typer.Option("--situation", "-s", help="Situation to chat about")
+        str | None, typer.Option(
+            "--situation", "-s", help="Situation to chat about")
     ] = None,
     settings: Annotated[
         str | None,
-        typer.Option("--settings", help="Chat settings as a JSON string", parser=json.loads),
+        typer.Option(
+            "--settings", help="Chat settings as a JSON string", parser=json.loads),
     ] = None,
 ):
     """
@@ -33,21 +38,51 @@ def chat(
 
     client = get_julep_client()
 
-    agent = client.agents.get(agent_id=agent)
+    try:
+        agent = client.agents.get(agent_id=agent)
+    except Exception as e:
+        error_console.print(Text(f"Error: {e}", style="bold red"))
+        raise typer.Exit(1)
 
     session = client.sessions.create(agent=agent.id, situation=situation)
 
-    typer.echo(f"Starting chat with agent '{agent.name}'")
+    console.print(
+        Panel(
+            Text(
+                f"Starting chat with agent '{agent.name}'",
+                style="bold green"
+            ),
+            title="Chat Session"
+        )
+    )
 
     while True:
         message = typer.prompt("You")
-        response = client.sessions.chat(
-            session_id=session.id,
-            messages=[
-                {
-                    "role": "user",
-                    "content": message,
-                }
-            ],
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task(
+                "Waiting for agent response...", start=False)
+            progress.start_task(task)
+
+            response = client.sessions.chat(
+                session_id=session.id,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": message,
+                    }
+                ],
+            )
+
+        console.print(
+            Panel(
+                Text(
+                    response.choices[0].message.content,
+                    style="bold blue"),
+                title="Agent Response"
+            )
         )
-        typer.echo(f"Agent: {response.choices[0].message.content}")
