@@ -167,7 +167,7 @@ def update_existing_entity_in_lock_file(type: str, new_entity: dict, project_dir
 
     setattr(lock_file, type + "s", entities)
 
-    write_lock_file(project_dir, LockFileContents(**lock_file))
+    write_lock_file(project_dir, lock_file)
 
 
 def add_entity_to_lock_file(type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()):
@@ -182,7 +182,7 @@ def add_entity_to_lock_file(type: str, new_entity: LockedEntity, project_dir: Pa
 
     setattr(lock_file, type + "s", entities)
 
-    write_lock_file(project_dir, LockFileContents(**lock_file))
+    write_lock_file(project_dir, lock_file)
 
 
 def update_yaml_for_existing_entity(path: Path, data: dict):
