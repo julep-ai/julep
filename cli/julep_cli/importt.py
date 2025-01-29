@@ -11,6 +11,7 @@ from .utils import (
     add_entity_to_lock_file,
     get_entity_from_lock_file,
     get_julep_client,
+    import_agent_to_julep_yaml,
     update_existing_entity_in_lock_file,
     update_yaml_for_existing_entity,
 )
@@ -101,11 +102,15 @@ def agent(
         # Convert to lowercase and replace spaces with underscores
         agent_name = agent_data.name.lower().replace(" ", "_")
 
-        agent_yaml_path = output / f"{agent_name}.yaml"
+        agent_yaml_path: Path = output / f"{agent_name}.yaml"
         typer.echo(f"Adding agent '{agent_data.name}' to '{agent_yaml_path}'...")
         update_yaml_for_existing_entity(agent_yaml_path, agent_data.model_dump(exclude={"id", "created_at", "updated_at"}))
 
         typer.echo(f"Agent '{id}' imported successfully to '{agent_yaml_path}'")
+
+        import_agent_to_julep_yaml(source, {
+            "definition": str(agent_yaml_path.relative_to(source)),
+        })
 
         typer.echo(f"Adding agent '{id}' to lock file...")
         add_entity_to_lock_file(

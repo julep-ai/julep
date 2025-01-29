@@ -37,6 +37,13 @@ def get_julep_yaml(source: Path) -> dict:
         return yaml.safe_load(f)
 
 
+def write_julep_yaml(source: Path, julep_yaml_contents: dict):
+    """Write the julep.yaml file"""
+
+    with open(source / "julep.yaml", "w") as f:
+        yaml.dump(julep_yaml_contents, f)
+
+
 def save_config(config: dict, config_dir: Path = CONFIG_DIR):
     """Save configuration to config file"""
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -189,6 +196,15 @@ def update_yaml_for_existing_entity(path: Path, data: dict):
     """Update the yaml file for an existing entity"""
     with open(path, "w") as f:
         yaml.dump(data, f)
+
+def import_agent_to_julep_yaml(source: Path, agent_data: dict):
+    """Add a new entity to the julep.yaml file"""
+
+    julep_yaml_contents = get_julep_yaml(source)
+
+    julep_yaml_contents["agents"].append(agent_data)
+
+    write_julep_yaml(source, julep_yaml_contents)
 
 
 def get_related_agent_id(id: str, relationships_list: list[TaskAgentRelationship] | list[ToolAgentRelationship]):
