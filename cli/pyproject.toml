@@ -22,6 +22,7 @@ dependencies = [
   "typer[all]>=0.15.1",
   "textual>=1.0.0",
   "trogon[typer]>=0.6.0",
+  "typer-config[yaml]>=1.4.2",
 ]
 
 [project.scripts]
@@ -35,6 +36,7 @@ dev = [
     "jupyterlab>=4.3.1",
     "pip>=24.3.1",
     "poethepoet>=0.31.1",
+    "pyinstaller>=6.11.1",
     "pyright>=1.1.391",
     "ruff>=0.8.4",
     "textual-dev>=1.7.0",
