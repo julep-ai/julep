@@ -85,8 +85,8 @@ def create(
         console=console
     ) as progress:
         try:
-            sync_task = progress.add_task("Creating task...", start=False)
-            progress.start_task(sync_task)
+            create_task_task = progress.add_task("Creating task...", start=False)
+            progress.start_task(create_task_task)
 
             task = client.tasks.create(
                 agent_id=agent_id,
@@ -94,12 +94,15 @@ def create(
             )
 
         except Exception as e:
-            progress.remove_task(sync_task)
             error_console.print(f"Error creating task: {e}", style="bold red")
             raise typer.Exit(1)
 
-    console.print(Text(f"Task created successfully. Task ID: {
-                  task.id}", style="bold green"))
+    console.print(
+        Text(
+            f"Task created successfully. Task ID: {task.id}",
+            style="bold green"
+        )
+    )
 
 
 @tasks_app.command()
@@ -159,8 +162,8 @@ def update(
         console=console
     ) as progress:
         try:
-            sync_task = progress.add_task("Updating task...", start=False)
-            progress.start_task(sync_task)
+            update_task_task = progress.add_task("Updating task...", start=False)
+            progress.start_task(update_task_task)
 
             client.tasks.create_or_update(agent_id=agent_id, task_id=task_id, **task_yaml_contents)
         except Exception as e:
@@ -190,9 +193,9 @@ def list(
         console=console
     ) as progress:
         try:
-            fetch_tasks = progress.add_task(
+            list_tasks_task = progress.add_task(
                 description="Fetching tasks", total=None)
-            progress.start_task(fetch_tasks)
+            progress.start_task(list_tasks_task)
 
             tasks = client.tasks.list(agent_id=agent_id).items
         except Exception as e:

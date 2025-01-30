@@ -69,8 +69,8 @@ def create(
         console=console
     ) as progress:
         try:
-            sync_task = progress.add_task("Creating agent...", start=False)
-            progress.start_task(sync_task)
+            create_agent_task = progress.add_task("Creating agent...", start=False)
+            progress.start_task(create_agent_task)
 
             agent = client.agents.create(
                 name=name,
@@ -82,7 +82,6 @@ def create(
             )
 
         except Exception as e:
-            progress.remove_task(sync_task)
             error_console.print(f"Error creating agent: {e}", style="bold red")
             raise typer.Exit(1)
 
@@ -153,8 +152,8 @@ def update(
         console=console
     ) as progress:
         try:
-            sync_task = progress.add_task("Updating agent...", start=False)
-            progress.start_task(sync_task)
+            update_agent_task = progress.add_task("Updating agent...", start=False)
+            progress.start_task(update_agent_task)
 
             client.agents.update(agent_id=id, **updates)
         except Exception as e:
@@ -192,8 +191,8 @@ def delete(
         console=console
     ) as progress:
         try:
-            sync_task = progress.add_task("Deleting agent...", start=False)
-            progress.start_task(sync_task)
+            delete_agent_task = progress.add_task("Deleting agent...", start=False)
+            progress.start_task(delete_agent_task)
 
             client.agents.delete(id)
         except Exception as e:
@@ -231,8 +230,8 @@ def list(
         console=console
     ) as progress:
         try:
-            fetch_agents = progress.add_task(description="Fetching agents", total=None)
-            progress.start_task(fetch_agents)
+            list_agents_task = progress.add_task(description="Fetching agents", total=None)
+            progress.start_task(list_agents_task)
 
             agents = client.agents.list(metadata_filter=metadata_filter).items
         except Exception as e:
@@ -289,8 +288,8 @@ def get(
         console=console
     ) as progress:
         try:
-            sync_task = progress.add_task("Retrieving agent...", start=False)
-            progress.start_task(sync_task)
+            get_agent_task = progress.add_task("Retrieving agent...", start=False)
+            progress.start_task(get_agent_task)
 
             agent = client.agents.get(id)
         except Exception as e:
