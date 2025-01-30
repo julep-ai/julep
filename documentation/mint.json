@@ -175,6 +175,13 @@
       "group": "Guides",
       "pages": [
         {
+          "group": "Julep CLI",
+          "pages": [
+            "guides/julepcli/introduction",
+            "guides/julepcli/commands"
+          ]
+        },
+        {
           "group": "Getting Started Examples",
           "pages": [
             "guides/getting-started/basic-agent-creation",
