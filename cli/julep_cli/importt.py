@@ -185,7 +185,7 @@ def agent(
                 path=str(agent_yaml_path.relative_to(source)),
                 id=remote_agent.id,
                 last_synced=datetime.datetime.now().isoformat(timespec="milliseconds") + "Z",
-                revision_hash=hashlib.sha256(agent_data.model_dump_json().encode()).hexdigest(),
+                revision_hash=hashlib.sha256(remote_agent.model_dump_json().encode()).hexdigest(),
             ),
             project_dir=source,
         )
