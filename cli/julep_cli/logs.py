@@ -3,8 +3,13 @@ import time
 from typing import Annotated
 
 import typer
+from julep.resources.executions.transitions import Transition
+from rich.box import HEAVY
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+from rich.text import Text
 
-from .app import app
+from .app import app, console, error_console
 from .utils import get_julep_client
 
 
@@ -21,14 +26,51 @@ def logs(
     Log the output of an execution.
     """
 
+    transitions_table = Table(
+        title="Execution Transitions",
+        box=HEAVY,  # border between cells
+        show_lines=True,  # Adds lines between rows
+        show_header=True,
+        header_style="bold magenta",
+    )
+
+    transitions_table.add_column(
+        "Transition Type",
+        style="bold cyan",
+        no_wrap=True,
+        justify="center",
+        vertical="middle",
+    )
+    transitions_table.add_column(
+        "Transition Output",
+        style="green",
+    )
+
+    def display_transitions(transitions: list[Transition]):
+        for transition in reversed(transitions):
+            transitions_table.add_row(transition.type, json.dumps(
+                transition.output, indent=4))
+
+        console.print(transitions_table)
+
     client = get_julep_client()
 
-    transitions = client.executions.transitions.list(execution_id=execution_id).items
-    for transition in reversed(transitions):
-        typer.echo(f"Transition Type: {transition.type}")
-        typer.echo("Transition Output:")
-        typer.echo(json.dumps(transition.output, indent=4))
-        typer.echo("--------------------------------")
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+        console=console
+    ) as progress:
+        try:
+            fetch_transitions = progress.add_task(description="Fetching transitions", total=None)
+            progress.start_task(fetch_transitions)
+
+            transitions = client.executions.transitions.list(execution_id=execution_id).items
+        except Exception as e:
+            error_console.print(Text(f"Error fetching transitions: {e}", style="bold red"))
+            raise typer.Exit(1)
+
+    display_transitions(transitions)
 
     if tailing:
         while True:
@@ -37,15 +79,13 @@ def logs(
             ).items
             new_transitions = fetched_transitions[: len(fetched_transitions) - len(transitions)]
 
-            for transition in reversed(new_transitions):
-                typer.echo(f"Transition Type: {transition.type}")
-                typer.echo("Transition Output:")
-                typer.echo(json.dumps(transition.output, indent=4))
-                typer.echo("--------------------------------")
+            if new_transitions:
+                # FIXME: This prints the table multiple times
+                display_transitions(new_transitions)
 
             transitions = fetched_transitions
 
-            if transitions[0].type in ["finish", "cancelled", "error"]:
+            if transitions and transitions[0].type in ["finish", "cancelled", "error"]:
                 break
 
             time.sleep(1)
