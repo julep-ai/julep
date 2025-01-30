@@ -13,6 +13,7 @@ from simpleeval import NameNotDefined, SimpleEval
 from temporalio import activity
 from thefuzz import fuzz
 
+from ...common.protocol.tasks import StepContext
 from ..utils import get_evaluator
 
 
@@ -61,9 +62,13 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
 @beartype
 async def base_evaluate(
     exprs: Any,
-    values: dict[str, Any] = {},
+    context: StepContext | None = None,
+    values: dict[str, Any] | None = None,
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
+    if context:
+        values = values or {} | await context.prepare_for_step()
+
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"
 

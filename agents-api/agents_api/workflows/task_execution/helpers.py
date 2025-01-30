@@ -42,6 +42,17 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
         raise ApplicationError(msg)
     return execution_input.task
 
+async def base_evaluate_activity(
+    expr: str, context: StepContext, values: dict[str, Any] | None = None
+) -> Any:
+    return await workflow.execute_activity(
+        task_steps.base_evaluate,
+        args=[expr, context, values],
+        schedule_to_close_timeout=timedelta(seconds=30),
+        retry_policy=DEFAULT_RETRY_POLICY,
+        heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+    )
+
 
 async def continue_as_child(
     execution_input: ExecutionInput,
@@ -216,7 +227,7 @@ async def execute_map_reduce_step(
 
         result = await workflow.execute_activity(
             task_steps.base_evaluate,
-            args=[reduce, {"results": result, "_": output}],
+            args=[reduce, None, {"results": result, "_": output}],
             schedule_to_close_timeout=timedelta(seconds=30),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -297,6 +308,7 @@ async def execute_map_reduce_step_parallel(
                 task_steps.base_evaluate,
                 args=[
                     reduce,
+                    None,
                     {"results": results, "_": batch_results},
                     extra_lambda_strs,
                 ],

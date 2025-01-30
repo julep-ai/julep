@@ -59,14 +59,13 @@ def format_tool(tool: Tool) -> dict:
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
-    context_data: dict = await context.prepare_for_step()
 
     if isinstance(prompt, list):
         for i, msg in enumerate(prompt):
-            prompt[i]["content"] = await base_evaluate(msg["content"], context_data)
-            prompt[i]["role"] = await base_evaluate(msg["role"], context_data)
+            prompt[i]["content"] = await base_evaluate(msg["content"], context)
+            prompt[i]["role"] = await base_evaluate(msg["role"], context)
     else:
-        prompt = await base_evaluate(prompt, context_data)
+        prompt = await base_evaluate(prompt, context)
 
     # Wrap the prompt in a list if it is not already
     prompt = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]

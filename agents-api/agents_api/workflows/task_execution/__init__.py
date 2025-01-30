@@ -17,7 +17,6 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.execute_system import execute_system
     from ...activities.sync_items_remote import load_inputs_remote as load_inputs_remote
     from ...activities.sync_items_remote import save_inputs_remote
-    from ...activities.task_steps.base_evaluate import base_evaluate
     from ...activities.task_steps.tool_call_step import (
         construct_tool_call,
         generate_call_id,
@@ -63,6 +62,7 @@ with workflow.unsafe.imports_passed_through():
     )
     from ...exceptions import LastErrorInput
     from .helpers import (
+        base_evaluate_activity,
         continue_as_child,
         execute_foreach_step,
         execute_if_else_branch,
@@ -156,8 +156,7 @@ class TaskExecutionWorkflow:
                 output: int = -1
                 cases: list[str] = [c.case for c in switch]
                 for i, case in enumerate(cases):
-                    result = await base_evaluate(case, await self.context.prepare_for_step())
-                    print("--", case, result)
+                    result = await base_evaluate_activity(case, self.context)
 
                     if result:
                         output = i
@@ -172,9 +171,7 @@ class TaskExecutionWorkflow:
                     msg = f"Tool {tool_name} not found in the toolset"
                     raise ApplicationError(msg)
 
-                arguments = await base_evaluate(
-                    arguments, await self.context.prepare_for_step()
-                )
+                arguments = await base_evaluate_activity(arguments, self.context)
 
                 call_id = generate_call_id()
                 output = construct_tool_call(tool, arguments, call_id)
@@ -188,7 +185,7 @@ class TaskExecutionWorkflow:
                 )
 
                 # Evaluate the expressions in the arguments
-                output = await base_evaluate(arguments, await self.context.prepare_for_step())
+                output = await base_evaluate_activity(arguments, self.context)
 
                 # Transition to the first step of that workflow
                 transition_target = TransitionTarget(
@@ -198,7 +195,7 @@ class TaskExecutionWorkflow:
                 transition_to = ("step", transition_target)
 
         if expr is not None:
-            output = await base_evaluate(expr, await self.context.prepare_for_step())
+            output = await base_evaluate_activity(expr, self.context)
 
         return StepOutcome(output=output, transition_to=transition_to)
 
@@ -239,7 +236,7 @@ class TaskExecutionWorkflow:
         step: SwitchStep,
     ):
         index = self.outcome.output
-        if index > 0:
+        if index >= 0:
             result = await execute_switch_branch(
                 context=self.context,
                 execution_input=self.context.execution_input,
@@ -674,6 +671,7 @@ class TaskExecutionWorkflow:
 
         activity = STEP_TO_ACTIVITY.get(step_type)
 
+        self.context = context
         outcome = None
 
         try:
@@ -690,7 +688,7 @@ class TaskExecutionWorkflow:
                 )
                 workflow.logger.debug(f"Step {context.cursor.step} completed successfully")
             else:
-                outcome = await self.eval_step_exprs(step_type)
+                outcome = await self.eval_step_exprs(context.current_step)
         except Exception as e:
             workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
             await transition(context, type="error", output=str(e))
@@ -712,7 +710,6 @@ class TaskExecutionWorkflow:
             msg = f"Step {type(context.current_step).__name__} threw error: {error}"
             raise ApplicationError(msg)
 
-        self.context = context
         self.outcome = outcome
 
         state = await self.handle_step(
