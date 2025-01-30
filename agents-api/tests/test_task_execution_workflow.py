@@ -1394,7 +1394,9 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"))
+        result = await wf.eval_step_exprs(
+            YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
+        )
 
         assert result == StepOutcome(
             output={"x": 3}, transition_to=("step", TransitionTarget(step=0, workflow="main"))
