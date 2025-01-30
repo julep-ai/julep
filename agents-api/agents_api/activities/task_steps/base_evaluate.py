@@ -69,7 +69,6 @@ async def base_evaluate(
     if context:
         values = values or {} | (context and await context.prepare_for_step())
 
-
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"
 
