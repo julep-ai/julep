@@ -738,7 +738,7 @@ async def _():
             ),
         )
         result = await wf.eval_step_exprs(
-            ForeachStep(foreach=ForeachDo(in_="1 + 2", do=YieldStep(workflow="wf1")))
+            ForeachStep(foreach=ForeachDo(in_="$ 1 + 2", do=YieldStep(workflow="wf1")))
         )
 
         assert result == StepOutcome(output=3)
@@ -802,7 +802,7 @@ async def _():
             ),
         )
         result = await wf.eval_step_exprs(
-            IfElseWorkflowStep(if_="1 + 2", then=YieldStep(workflow="wf1")),
+            IfElseWorkflowStep(if_="$ 1 + 2", then=YieldStep(workflow="wf1")),
         )
 
         assert result == StepOutcome(output=3)
@@ -866,7 +866,7 @@ async def _():
             ),
         )
         result = await wf.eval_step_exprs(
-            ReturnStep(return_={"x": "1 + 2"}),
+            ReturnStep(return_={"x": "$ 1 + 2"}),
         )
 
         assert result == StepOutcome(output={"x": 3})
@@ -930,7 +930,7 @@ async def _():
             ),
         )
         result = await wf.eval_step_exprs(
-            WaitForInputStep(wait_for_input=WaitForInputInfo(info={"x": "1 + 2"})),
+            WaitForInputStep(wait_for_input=WaitForInputInfo(info={"x": "$ 1 + 2"})),
         )
 
         assert result == StepOutcome(output={"x": 3})
@@ -994,7 +994,7 @@ async def _():
             ),
         )
         result = await wf.eval_step_exprs(
-            EvaluateStep(evaluate={"x": "1 + 2"}),
+            EvaluateStep(evaluate={"x": "$ 1 + 2"}),
         )
 
         assert result == StepOutcome(output={"x": 3})
@@ -1058,7 +1058,7 @@ async def _():
             ),
         )
         result = await wf.eval_step_exprs(
-            MapReduceStep(over="1 + 2", map=YieldStep(workflow="wf1")),
+            MapReduceStep(over="$ 1 + 2", map=YieldStep(workflow="wf1")),
         )
 
         assert result == StepOutcome(output=3)
@@ -1121,7 +1121,7 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(SetStep(set={"x": "1 + 2"}))
+        result = await wf.eval_step_exprs(SetStep(set={"x": "$ 1 + 2"}))
 
         assert result == StepOutcome(output={"x": 3})
 
@@ -1183,7 +1183,7 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(LogStep(log="{{_0['x']}}"))
+        result = await wf.eval_step_exprs(LogStep(log="$ _0['x']"))
 
         assert result == StepOutcome(output="5")
 
@@ -1248,8 +1248,8 @@ async def _():
         result = await wf.eval_step_exprs(
             SwitchStep(
                 switch=[
-                    CaseThen(case="None", then=YieldStep(workflow="wf1")),
-                    CaseThen(case="1 + 3", then=YieldStep(workflow="wf2")),
+                    CaseThen(case="$ None", then=YieldStep(workflow="wf1")),
+                    CaseThen(case="$ 1 + 3", then=YieldStep(workflow="wf2")),
                 ]
             ),
         )
@@ -1260,7 +1260,7 @@ async def _():
 @test("task execution workflow: evaluate tool call expressions")
 async def _():
     wf = TaskExecutionWorkflow()
-    step = ToolCallStep(tool="tool1", arguments={"x": "1 + 2"})
+    step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
@@ -1325,7 +1325,7 @@ async def _():
             ),
         )
         result = await wf.eval_step_exprs(
-            ToolCallStep(tool="tool1", arguments={"x": "1 + 2"}),
+            ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"}),
         )
 
         assert result == StepOutcome(
@@ -1340,7 +1340,7 @@ async def _():
 @test("task execution workflow: evaluate yield expressions")
 async def _():
     wf = TaskExecutionWorkflow()
-    step = YieldStep(arguments={"x": "1 + 2"}, workflow="main")
+    step = YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
@@ -1394,7 +1394,7 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(YieldStep(arguments={"x": "1 + 2"}, workflow="main"))
+        result = await wf.eval_step_exprs(YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"))
 
         assert result == StepOutcome(
             output={"x": 3}, transition_to=("step", TransitionTarget(step=0, workflow="main"))
@@ -1404,7 +1404,7 @@ async def _():
 @test("task execution workflow: evaluate yield expressions assertion")
 async def _():
     wf = TaskExecutionWorkflow()
-    step = step = ToolCallStep(tool="tool1", arguments={"x": "1 + 2"})
+    step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
@@ -1459,4 +1459,4 @@ async def _():
             ),
         )
         with raises(AssertionError):
-            await wf.eval_step_exprs(YieldStep(arguments={"x": "1 + 2"}, workflow="main"))
+            await wf.eval_step_exprs(YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"))

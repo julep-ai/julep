@@ -55,7 +55,6 @@ with workflow.unsafe.imports_passed_through():
         StepOutcome,
     )
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
-    from ...common.utils.template import render_template
     from ...env import (
         debug,
         temporal_heartbeat_timeout,
@@ -152,11 +151,7 @@ class TaskExecutionWorkflow:
             case SetStep(set=set):
                 expr = set
             case LogStep(log=log):
-                output = await render_template(
-                    input=log,
-                    variables=await self.context.prepare_for_step(),
-                    skip_vars=["developer_id"],
-                )
+                expr = log
             case SwitchStep(switch=switch):
                 output: int = -1
                 cases: list[str] = [c.case for c in switch]
