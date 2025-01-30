@@ -3,11 +3,12 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ...autogen.openapi_model import Task, UpdateTaskRequest
-from ...common.protocol.models import task_to_spec
+from ...autogen.openapi_model import UpdateTaskRequest
+from ...common.protocol.models import spec_to_task, task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import increase_counter
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from .get_task import get_task_query
 
 # Update task query using INSERT with version increment
 update_task_query = """
@@ -77,16 +78,11 @@ FROM version;
 
 @rewrap_exceptions(common_db_exceptions("task", ["update"]))
 @wrap_in_class(
-    Task,
+    spec_to_task,
     one=True,
-    transform=lambda d: {
-        **d,
-        "id": d["task_id"],
-        "main": [{"evaluate": {"hi": "_"}}],
-    },
 )
 @increase_counter("update_task")
-@pg_query(return_index=0)
+@pg_query
 @beartype
 async def update_task(
     *,
@@ -145,5 +141,10 @@ async def update_task(
             workflows_query,
             workflow_params,
             "fetchmany",
+        ),
+        (
+            get_task_query,
+            [developer_id, task_id],
+            "fetchrow",
         ),
     ]

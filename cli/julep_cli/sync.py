@@ -380,8 +380,7 @@ def sync(
 
         for task_julep_yaml in tasks_julep_yaml:
             task_yaml_def_path: Path = Path(task_julep_yaml.get("definition"))
-            task_yaml_content = yaml.safe_load(
-                (source / task_yaml_def_path).read_text())
+            task_yaml_content = yaml.safe_load((source / task_yaml_def_path).read_text())
             found_in_lock = False
 
             for i in range(len(lock_file.tasks)):

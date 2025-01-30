@@ -21,6 +21,7 @@ with workflow.unsafe.imports_passed_through():
     from ...worker.codec import RemoteObject
 
 from ...queries.executions import list_execution_transitions
+from ...queries.utils import serialize_model_data
 from .models import ExecutionInput
 
 # TODO: Maybe we should use a library for this
@@ -221,10 +222,20 @@ class StepContext(BaseModel):
             limit=1000,
             direction="asc",
         )
-        return [t.output for t in transitions]
+        inputs = []
+        for transition in transitions:
+            if transition.next and transition.next.step >= len(inputs):
+                inputs.append(transition.output)
+        return inputs
 
     async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
+
+        if isinstance(current_input, RemoteObject):
+            current_input = current_input.load()
+
+        current_input = serialize_model_data(current_input)
+
         inputs = await self.get_inputs()
 
         # Merge execution inputs into the dump dict

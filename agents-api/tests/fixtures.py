@@ -151,7 +151,7 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     # This can be achieved by executing a REINDEX command
     await pool.execute("REINDEX DATABASE")
 
-    yield await get_doc(developer_id=developer.id, doc_id=resp["id"], connection_pool=pool)
+    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
 
     # TODO: Delete the doc
     # await delete_doc(
@@ -167,8 +167,8 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     pool = await create_db_pool(dsn=dsn)
     embedding_with_confidence_0 = make_vector_with_similarity(d=0.0)
-    embedding_with_confidence_05 = make_vector_with_similarity(d=0.5)
-    embedding_with_confidence_05_neg = make_vector_with_similarity(d=-0.5)
+    make_vector_with_similarity(d=0.5)
+    make_vector_with_similarity(d=-0.5)
     embedding_with_confidence_1_neg = make_vector_with_similarity(d=-1.0)
     await pool.execute(
         """
@@ -185,7 +185,7 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
-        VALUES ($1, $2, 0, 1, $3, $4)
+        VALUES ($1, $2, 1, 1, $3, $4)
         """,
         developer.id,
         doc.id,
@@ -193,41 +193,22 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
         f"[{', '.join([str(x) for x in embedding_with_confidence_0])}]",
     )
 
-    # Insert embedding with confidence 0.5 with respect to unit vector
-    await pool.execute(
-        """
-        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
-        VALUES ($1, $2, 0, 2, $3, $4)
-        """,
-        developer.id,
-        doc.id,
-        "Test content 2",
-        f"[{', '.join([str(x) for x in embedding_with_confidence_05])}]",
-    )
-
-    # Insert embedding with confidence -0.5 with respect to unit vector
-    await pool.execute(
-        """
-        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
-        VALUES ($1, $2, 0, 3, $3, $4)
-        """,
-        developer.id,
-        doc.id,
-        "Test content 3",
-        f"[{', '.join([str(x) for x in embedding_with_confidence_05_neg])}]",
-    )
-
     # Insert embedding with confidence -1 with respect to unit vector
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
-        VALUES ($1, $2, 0, 4, $3, $4)
+        VALUES ($1, $2, 2, 2, $3, $4)
         """,
         developer.id,
         doc.id,
-        "Test content 4",
+        "Test content 2",
         f"[{', '.join([str(x) for x in embedding_with_confidence_1_neg])}]",
     )
+
+    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
+    # ensuring it's up-to-date before executing queries.
+    # This can be achieved by executing a REINDEX command
+    await pool.execute("REINDEX DATABASE")
 
     yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
 
@@ -253,7 +234,7 @@ async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
     # This can be achieved by executing a REINDEX command
     await pool.execute("REINDEX DATABASE")
 
-    yield await get_doc(developer_id=developer.id, doc_id=resp["id"], connection_pool=pool)
+    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
 
     # TODO: Delete the doc
     # await delete_doc(

@@ -89,8 +89,7 @@ def get_lock_file(project_dir: Path = Path.cwd()) -> LockFileContents:
     lock_file = project_dir / "julep-lock.json"
 
     if not lock_file.exists():
-        typer.echo(
-            "Error: julep-lock.json not found in source directory", err=True)
+        typer.echo("Error: julep-lock.json not found in source directory", err=True)
         raise typer.Exit(1)
 
     lock_file_contents = lock_file.read_text()
@@ -107,7 +106,10 @@ def fetch_all_remote_agents(client: Julep) -> list[CreateAgentRequest]:
         if len(new_agents) == 0:
             break
 
-        agents.extend(CreateAgentRequest(**agent.model_dump(exclude_none=True, exclude_unset=True)) for agent in new_agents)
+        agents.extend(
+            CreateAgentRequest(**agent.model_dump(exclude_none=True, exclude_unset=True))
+            for agent in new_agents
+        )
         i += 100
 
     return agents
@@ -123,8 +125,10 @@ def fetch_all_local_agents(source: Path) -> list[tuple[CreateAgentRequest, Path]
 
     for agent in agents:
         agent_path = source / agent.pop("definition")
-        local_agents.append((CreateAgentRequest(
-            **yaml.safe_load(agent_path.read_text()), **agent), agent_path))
+        local_agents.append((
+            CreateAgentRequest(**yaml.safe_load(agent_path.read_text()), **agent),
+            agent_path,
+        ))
 
     return local_agents
 
@@ -135,7 +139,9 @@ def write_lock_file(project_dir: Path, content: LockFileContents):
     lock_file_path.write_text(lock_file_contents)
 
 
-def get_entity_from_lock_file(type: str, id: str, project_dir: Path = Path.cwd()) -> LockedEntity:
+def get_entity_from_lock_file(
+    type: str, id: str, project_dir: Path = Path.cwd()
+) -> LockedEntity:
     """
     Get the contents of lock file
     """
@@ -169,7 +175,10 @@ def update_existing_entity_in_lock_file(type: str, new_entity: LockedEntity, pro
             break
 
     if not found:
-        typer.echo(f"Error: Cannot update{type} with id '{new_entity.get('id')}' because it was not found in lock file", err=True)
+        typer.echo(
+            f"Error: Cannot update{type} with id '{new_entity.get('id')}' because it was not found in lock file",
+            err=True,
+        )
         raise typer.Exit(1)
 
     setattr(lock_file, type + "s", entities)
@@ -177,7 +186,9 @@ def update_existing_entity_in_lock_file(type: str, new_entity: LockedEntity, pro
     write_lock_file(project_dir, lock_file)
 
 
-def add_entity_to_lock_file(type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()):
+def add_entity_to_lock_file(
+    type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()
+):
     """
     Add a new entity to the lock file
     """
@@ -208,7 +219,9 @@ def add_agent_to_julep_yaml(source: Path, agent_data: dict):
     write_julep_yaml(source, julep_yaml_contents)
 
 
-def get_related_agent_id(id: str, relationships_list: list[TaskAgentRelationship] | list[ToolAgentRelationship]):
+def get_related_agent_id(
+    id: str, relationships_list: list[TaskAgentRelationship] | list[ToolAgentRelationship]
+):
     for relationship in relationships_list:
         if relationship.id == id:
             return relationship.agent_id
