@@ -42,6 +42,7 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
         raise ApplicationError(msg)
     return execution_input.task
 
+
 async def base_evaluate_activity(
     expr: str, context: StepContext, values: dict[str, Any] | None = None
 ) -> Any:
