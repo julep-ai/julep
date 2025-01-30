@@ -205,7 +205,7 @@ async def execute_map_reduce_step(
     task = validate_execution_input(execution_input)
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     result = initial
-    reduce = "results + [_]" if reduce is None else reduce
+    reduce = "$ results + [_]" if reduce is None else reduce
 
     for i, item in enumerate(items):
         workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
@@ -265,7 +265,7 @@ async def execute_map_reduce_step_parallel(
     # - reducer_lambda is the lambda function that will be used to reduce the results
     extra_lambda_strs = {"reducer_lambda": f"lambda _result, _item: ({reduce})"}
 
-    reduce = "reduce(reducer_lambda, _, results)"
+    reduce = "$ reduce(reducer_lambda, _, results)"
 
     # First create batches of items to run in parallel
     batches = [items[i : i + parallelism] for i in range(0, len(items), parallelism)]
