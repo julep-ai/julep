@@ -67,7 +67,8 @@ async def base_evaluate(
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
     if context:
-        values = values or {} | await context.prepare_for_step()
+        values = values or {} | (context and await context.prepare_for_step())
+
 
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"

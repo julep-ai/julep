@@ -6,6 +6,7 @@ from agents_api.activities import task_steps
 from agents_api.activities.execute_api_call import execute_api_call
 from agents_api.activities.execute_integration import execute_integration
 from agents_api.activities.execute_system import execute_system
+from agents_api.activities.task_steps.base_evaluate import base_evaluate
 from agents_api.autogen.openapi_model import (
     Agent,
     ApiCallDef,
@@ -480,16 +481,16 @@ async def _():
         ),
     )
     outcome = StepOutcome(output=0)
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
-        workflow.logger = Mock()
+    with patch(
+        "agents_api.workflows.task_execution.execute_switch_branch"
+    ) as execute_switch_branch:
+        execute_switch_branch.return_value = "switch_response"
         wf.context = context
         wf.outcome = outcome
-        assert (
-            await wf.handle_step(
-                step=step,
-            )
-            is None
+        result = await wf.handle_step(
+            step=step,
         )
+        assert result == PartialTransition(output="switch_response")
 
 
 @test("task execution workflow: handle prompt step, unwrap is True")
@@ -737,9 +738,13 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            ForeachStep(foreach=ForeachDo(in_="$ 1 + 2", do=YieldStep(workflow="wf1")))
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                ForeachStep(foreach=ForeachDo(in_="$ 1 + 2", do=YieldStep(workflow="wf1")))
+            )
 
         assert result == StepOutcome(output=3)
 
@@ -801,9 +806,13 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            IfElseWorkflowStep(if_="$ 1 + 2", then=YieldStep(workflow="wf1")),
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                IfElseWorkflowStep(if_="$ 1 + 2", then=YieldStep(workflow="wf1")),
+            )
 
         assert result == StepOutcome(output=3)
 
@@ -865,9 +874,13 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            ReturnStep(return_={"x": "$ 1 + 2"}),
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                ReturnStep(return_={"x": "$ 1 + 2"}),
+            )
 
         assert result == StepOutcome(output={"x": 3})
 
@@ -929,9 +942,13 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            WaitForInputStep(wait_for_input=WaitForInputInfo(info={"x": "$ 1 + 2"})),
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                WaitForInputStep(wait_for_input=WaitForInputInfo(info={"x": "$ 1 + 2"})),
+            )
 
         assert result == StepOutcome(output={"x": 3})
 
@@ -993,9 +1010,13 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            EvaluateStep(evaluate={"x": "$ 1 + 2"}),
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                EvaluateStep(evaluate={"x": "$ 1 + 2"}),
+            )
 
         assert result == StepOutcome(output={"x": 3})
 
@@ -1057,9 +1078,13 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            MapReduceStep(over="$ 1 + 2", map=YieldStep(workflow="wf1")),
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                MapReduceStep(over="$ 1 + 2", map=YieldStep(workflow="wf1")),
+            )
 
         assert result == StepOutcome(output=3)
 
@@ -1121,7 +1146,11 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(SetStep(set={"x": "$ 1 + 2"}))
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(SetStep(set={"x": "$ 1 + 2"}))
 
         assert result == StepOutcome(output={"x": 3})
 
@@ -1183,7 +1212,11 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(LogStep(log="$ _0['x']"))
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(LogStep(log="$ _0['x']"))
 
         assert result == StepOutcome(output="5")
 
@@ -1245,14 +1278,18 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            SwitchStep(
-                switch=[
-                    CaseThen(case="$ None", then=YieldStep(workflow="wf1")),
-                    CaseThen(case="$ 1 + 3", then=YieldStep(workflow="wf2")),
-                ]
-            ),
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                SwitchStep(
+                    switch=[
+                        CaseThen(case="$ None", then=YieldStep(workflow="wf1")),
+                        CaseThen(case="$ 1 + 3", then=YieldStep(workflow="wf2")),
+                    ]
+                ),
+            )
 
         assert result == StepOutcome(output=1)
 
@@ -1324,9 +1361,13 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"}),
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"}),
+            )
 
         assert result == StepOutcome(
             output={
@@ -1394,9 +1435,13 @@ async def _():
                 ),
             ),
         )
-        result = await wf.eval_step_exprs(
-            YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
-        )
+        with patch(
+            "agents_api.workflows.task_execution.base_evaluate_activity",
+            new=base_evaluate,
+        ):
+            result = await wf.eval_step_exprs(
+                YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
+            )
 
         assert result == StepOutcome(
             output={"x": 3}, transition_to=("step", TransitionTarget(step=0, workflow="main"))
@@ -1461,4 +1506,10 @@ async def _():
             ),
         )
         with raises(AssertionError):
-            await wf.eval_step_exprs(YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"))
+            with patch(
+                "agents_api.workflows.task_execution.base_evaluate_activity",
+                new=base_evaluate,
+            ):
+                await wf.eval_step_exprs(
+                    YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
+                )
