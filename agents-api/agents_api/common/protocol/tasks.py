@@ -217,11 +217,14 @@ class StepContext(BaseModel):
         return dump | execution_input
 
     async def get_inputs(self) -> list[Any]:
+        if self.execution_input.execution is None:
+            return []
+
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
             limit=1000,
             direction="asc",
-        )
+        )  # type: ignore[not-callable]
         inputs = []
         for transition in transitions:
             if transition.next and transition.next.step >= len(inputs):

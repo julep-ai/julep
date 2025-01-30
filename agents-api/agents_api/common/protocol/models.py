@@ -44,7 +44,7 @@ class ExecutionInput(BaseModel):
 
     def load_arguments(self) -> None:
         if isinstance(self.arguments, RemoteObject):
-            self.arguments = self.arguments.load()
+            self.arguments = self.arguments.load()  # type: ignore
             self.loaded = True
 
 
