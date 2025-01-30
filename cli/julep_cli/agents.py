@@ -3,8 +3,15 @@ from typing import Annotated
 
 import typer
 
-from .app import agents_app
+from .utils import get_julep_client
 
+from .app import agents_app, console, error_console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.text import Text
+from rich.table import Table
+
+SINGLE_AGENT_TABLE_WIDTH = 100
+SINGLE_AGENT_COLUMN_WIDTH = 50
 
 @agents_app.command()
 def create(
@@ -33,23 +40,56 @@ def create(
     ] = None,
 ):
     """Create a new AI agent. Either provide a definition file or use the other options."""
+
+    if definition:
+        # TODO: implement definition file parsing
+        error_console.print("Passing definition file is not implemented yet", err=True)
+        raise typer.Exit(1)
+
     # Validate that either definition is provided or name/model
     if not definition and not (name and model):
-        typer.echo("Error: Must provide either a definition file or name and model", err=True)
+        error_console.print("Error: Must provide either a definition file or name and model", err=True)
         raise typer.Exit(1)
 
     try:
-        json.loads(metadata) if metadata else {}
-        json.loads(default_settings) if default_settings else {}
+        if metadata:
+            json.loads(metadata)
+        if default_settings:
+            json.loads(default_settings)
     except json.JSONDecodeError as e:
-        typer.echo(f"Error parsing JSON: {e}", err=True)
+        error_console.print(f"Error parsing JSON: {e}", err=True)
         raise typer.Exit(1)
 
-    # TODO: Implement actual API call
-    if definition:
-        typer.echo(f"Created agent from definition file '{definition}'")
-    else:
-        typer.echo(f"Created agent '{name}' with model '{model}'")
+    client = get_julep_client()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console
+    ) as progress:
+        try:
+            sync_task = progress.add_task("Creating agent...", start=False)
+            progress.start_task(sync_task)
+
+            agent = client.agents.create(
+                name=name,
+                model=model,
+                about=about,
+                default_settings=default_settings,
+                metadata=metadata,
+                instructions=instructions,
+            )
+
+        except Exception as e:
+            progress.remove_task(sync_task)
+            error_console.print(f"Error creating agent: {e}", style="bold red")
+            raise typer.Exit(1)
+
+    console.print(
+        Text(
+            f"Agent created successfully. Agent ID: {agent.id}", style="bold green"
+        )
+    )
 
 
 @agents_app.command()
@@ -83,7 +123,7 @@ def update(
         metadata_dict = json.loads(metadata) if metadata else {}
         settings_dict = json.loads(default_settings) if default_settings else {}
     except json.JSONDecodeError as e:
-        typer.echo(f"Error parsing JSON: {e}", err=True)
+        error_console.print(f"Error parsing JSON: {e}", err=True)
         raise typer.Exit(1)
 
     updates = {
@@ -100,11 +140,27 @@ def update(
     }
 
     if not updates:
-        typer.echo("No updates provided", err=True)
+        error_console.print("No updates provided", err=True)
         raise typer.Exit(1)
 
-    # TODO: Implement actual API call
-    typer.echo(f"Updated agent '{id}'")
+    client = get_julep_client()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+        console=console
+    ) as progress:
+        try:
+            sync_task = progress.add_task("Updating agent...", start=False)
+            progress.start_task(sync_task)
+
+            client.agents.update(agent_id=id, **updates)
+        except Exception as e:
+            error_console.print(f"Error updating agent: {e}")
+            raise typer.Exit(1)
+    
+    console.print(Text(f"Agent updated successfully.", style="bold green"))
 
 
 @agents_app.command()
@@ -123,11 +179,27 @@ def delete(
     if not force:
         confirm = typer.confirm(f"Are you sure you want to delete agent '{id}'?")
         if not confirm:
-            typer.echo("Operation cancelled")
-            raise typer.Exit
+            error_console.print("Operation cancelled")
+            raise typer.Exit(1)
 
-    # TODO: Implement actual API call
-    typer.echo(f"Deleted agent '{id}'")
+    client = get_julep_client()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+        console=console
+    ) as progress:
+        try:
+            sync_task = progress.add_task("Deleting agent...", start=False)
+            progress.start_task(sync_task)
+
+            client.agents.delete(id)
+        except Exception as e:
+            error_console.print(f"Error deleting agent: {e}")
+            raise typer.Exit(1)
+
+    console.print(Text(f"Agent deleted successfully.", style="bold green"))
 
 
 @agents_app.command()
@@ -149,23 +221,48 @@ def list(
         typer.echo(f"Error parsing metadata filter JSON: {e}", err=True)
         raise typer.Exit(1)
 
-    # TODO: Implement actual API call
-    # Mock data for demonstration
-    agents = [
-        {"id": "agent1", "name": "Test Agent 1", "model": "gpt-4"},
-        {"id": "agent2", "name": "Test Agent 2", "model": "claude-3"},
-    ]
+    client = get_julep_client()
 
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+        console=console
+    ) as progress:
+        try:
+            fetch_agents = progress.add_task(description="Fetching agents", total=None)
+            progress.start_task(fetch_agents)
+
+            agents = client.agents.list(metadata_filter=metadata_filter).items
+        except Exception as e:
+            error_console.print(Text(f"Error fetching agents: {e}", style="bold red"))
+            raise typer.Exit(1)
+    
     if json_output:
-        typer.echo(json.dumps(agents, indent=2))
+        typer.echo([agent.model_dump_json(indent=2) for agent in agents])
         return
-
+    
     # Table format output
-    typer.echo("Available agents:")
-    typer.echo("ID\tName\tModel")
-    typer.echo("-" * 40)
+    agent_table = Table(
+        title=Text("Available Agents:", style="bold underline magenta"),
+        header_style="bold magenta",
+        width=90
+    )
+    agent_table.add_column("Name", style="cyan", width=25)
+    agent_table.add_column("Model", style="yellow", width=25)
+    agent_table.add_column("ID", style="green", width=40)
+
+    
     for agent in agents:
-        typer.echo(f"{agent['id']}\t{agent['name']}\t{agent['model']}")
+        agent_table.add_row(
+            agent.name, 
+            agent.model, 
+            agent.id
+        )
+
+    console.print(agent_table)
+
+
 
 
 @agents_app.command()
@@ -174,21 +271,42 @@ def get(
     json_output: Annotated[bool, typer.Option("--json", help="Output in JSON format")] = False,
 ):
     """Get an agent by its ID"""
-    # TODO: Implement actual API call
-    # Mock data for demonstration
-    agent = {
-        "id": id,
-        "name": "Test Agent",
-        "model": "gpt-4",
-        "about": "A test agent",
-        "created_at": "2024-03-14T12:00:00Z",
-    }
+    client = get_julep_client()
+
+    agent = None
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+        console=console
+    ) as progress:
+        try:
+            sync_task = progress.add_task("Retrieving agent...", start=False)
+            progress.start_task(sync_task)
+
+            agent = client.agents.get(id)
+        except Exception as e:
+            error_console.print(f"Error retrieving agent: {e}")
+            raise typer.Exit(1)
+
+    console.print(Text(f"Agent retrieved successfully.", style="bold green"))
+
 
     if json_output:
-        typer.echo(json.dumps(agent, indent=2))
+        console.print(json.dumps(agent.model_dump(), indent=2))
         return
 
-    # Pretty print output
-    typer.echo("Agent details:")
-    for key, value in agent.items():
-        typer.echo(f"{key}: {value}")
+    # Create a table for agent details
+    agent_table = Table(
+        title=Text("Agent Details:", style="bold underline magenta"),
+        header_style="bold magenta",
+        width=SINGLE_AGENT_TABLE_WIDTH
+    )
+    agent_table.add_column("Key", style="green", width=SINGLE_AGENT_COLUMN_WIDTH)
+    agent_table.add_column("Value", style="cyan", width=SINGLE_AGENT_COLUMN_WIDTH * 2)
+
+    for key, value in agent.model_dump().items():
+        agent_table.add_row(key, str(value))
+
+    console.print(agent_table)
