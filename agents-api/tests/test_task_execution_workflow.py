@@ -1505,8 +1505,11 @@ async def _():
                 ),
             ),
         )
-        with raises(AssertionError), patch(
-            "agents_api.workflows.task_execution.base_evaluate_activity",
-            new=base_evaluate,
+        with (
+            raises(AssertionError),
+            patch(
+                "agents_api.workflows.task_execution.base_evaluate_activity",
+                new=base_evaluate,
+            ),
         ):
             await wf.eval_step_exprs(YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"))
