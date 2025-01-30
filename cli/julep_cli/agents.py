@@ -9,6 +9,7 @@ from .app import agents_app, console, error_console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text
 from rich.table import Table
+from rich.box import HEAVY_HEAD
 
 SINGLE_AGENT_TABLE_WIDTH = 100
 SINGLE_AGENT_COLUMN_WIDTH = 50
@@ -245,18 +246,24 @@ def list(
     # Table format output
     agent_table = Table(
         title=Text("Available Agents:", style="bold underline magenta"),
+        box=HEAVY_HEAD,  # border between cells
+        show_lines=True,  # Adds lines between rows
+        show_header=True,
+
         header_style="bold magenta",
-        width=90
+        width=140
     )
     agent_table.add_column("Name", style="cyan", width=25)
+    agent_table.add_column("About", style="cyan", width=50)
     agent_table.add_column("Model", style="yellow", width=25)
     agent_table.add_column("ID", style="green", width=40)
 
     
     for agent in agents:
         agent_table.add_row(
-            agent.name, 
-            agent.model, 
+            agent.name,
+            agent.about,
+            agent.model,
             agent.id
         )
 
