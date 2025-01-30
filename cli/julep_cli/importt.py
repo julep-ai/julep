@@ -5,16 +5,16 @@ from pathlib import Path
 import typer
 from julep.types.agent import Agent
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.panel import Panel
-from rich.text import Text
 from rich.table import Table
-from .app import import_app, console, error_console
+from rich.text import Text
+
+from .app import console, error_console, import_app
 from .models import LockedEntity
 from .utils import (
+    add_agent_to_julep_yaml,
     add_entity_to_lock_file,
     get_entity_from_lock_file,
     get_julep_client,
-    add_agent_to_julep_yaml,
     update_existing_entity_in_lock_file,
     update_yaml_for_existing_entity,
 )
@@ -78,7 +78,7 @@ def agent(
             except Exception as e:
                 error_console.print(Text(f"Error fetching agent from remote: {e}", style="bold red"))
                 raise typer.Exit(1)
-        
+
         # Create a table to display agent data
         table = Table(title="Agent Data")
         table.add_column("Field", style="cyan", no_wrap=True)
@@ -99,7 +99,7 @@ def agent(
             console=console
         ) as progress:
             try:
-                update_task = progress.add_task("Updating agent in '{agent_yaml_path}'...", start=False)
+                update_task = progress.add_task(f"Updating agent in '{agent_yaml_path}'...", start=False)
                 progress.start_task(update_task)
                 update_yaml_for_existing_entity(
                     agent_yaml_path,
@@ -109,8 +109,7 @@ def agent(
                 error_console.print(Text(f"Error updating agent in '{agent_yaml_path}': {e}", style="bold red"))
                 raise typer.Exit(1)
 
-        console.print(Text(f"Updated successfully.", style="bold green"))
-
+        console.print(Text("Updated successfully.", style="bold green"))
 
         console.print(Text(f"Updating agent '{id}' in lock file...", style="bold blue"))
         update_existing_entity_in_lock_file(
@@ -155,7 +154,7 @@ def agent(
                 error_console.print(
                     Text(f"Error fetching agent from remote: {e}", style="bold red"))
                 raise typer.Exit(1)
-        
+
         # Create a table to display agent data
         table = Table(title="Agent Data")
         table.add_column("Field", style="cyan", no_wrap=True)
@@ -167,48 +166,19 @@ def agent(
 
         console.print(table)
 
-
         agent_name = remote_agent.name.lower().replace(" ", "_")
 
         agent_yaml_path: Path = output / f"{agent_name}.yaml"
-        
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            transient=True,
-            console=console
-        ) as progress:
-            try:
-                update_task = progress.add_task("Updating agent in '{agent_yaml_path}'...", start=False)
-                progress.start_task(update_task)
-                update_yaml_for_existing_entity(agent_yaml_path, remote_agent.model_dump(
-                    exclude={"id", "created_at", "updated_at"}))
-                
-            except Exception as e:
-                error_console.print(Text(f"Error updating agent in '{agent_yaml_path}': {e}", style="bold red"))
-                raise typer.Exit(1)
-        
-        console.print(Text(f"Updated successfully.", style="bold green"))
+        typer.echo(f"Adding agent '{remote_agent.name}' to '{agent_yaml_path}'...")
+        update_yaml_for_existing_entity(agent_yaml_path, remote_agent.model_dump(exclude={"id", "created_at", "updated_at"}))
 
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            transient=True,
-            console=console
-        ) as progress:
-            try:
-                add_task = progress.add_task("Adding agent to julep.yaml...", start=False)
-                progress.start_task(add_task)
-                add_agent_to_julep_yaml(source, {
-                    "definition": str(agent_yaml_path.relative_to(source)),
-                })
-            except Exception as e:
-                error_console.print(Text(f"Error adding agent to julep.yaml: {e}", style="bold red"))
-                raise typer.Exit(1)
-        
-        console.print(Text(f"Added successfully.", style="bold green"))
+        typer.echo(f"Agent '{id}' imported successfully to '{agent_yaml_path}'")
 
-        console.print(Text(f"Adding agent to lock file...", style="bold blue"))
+        add_agent_to_julep_yaml(source, {
+            "definition": str(agent_yaml_path.relative_to(source)),
+        })
+
+        typer.echo(f"Adding agent '{id}' to lock file...")
         add_entity_to_lock_file(
             type="agent",
             new_entity=LockedEntity(
@@ -216,7 +186,7 @@ def agent(
                 id=remote_agent.id,
                 last_synced=datetime.datetime.now().isoformat(timespec="milliseconds") + "Z",
                 revision_hash=hashlib.sha256(
-                    remote_agent.model_dump_json().encode()
+                    agent_data.model_dump_json().encode()
                 ).hexdigest(),
             ),
             project_dir=source,

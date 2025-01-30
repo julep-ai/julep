@@ -3,17 +3,16 @@ from typing import Annotated
 
 import typer
 import yaml
-
-from rich.text import Text
-from rich.box import HEAVY
 from rich.table import Table
+from rich.text import Text
 
-from .app import app, console, error_console
+from .app import app, console
 from .models import LockFileContents
 from .utils import get_lock_file
 
 TABLE_WIDTH = 150
 COLUMN_WIDTH = TABLE_WIDTH // 3
+
 
 @app.command()
 def ls(

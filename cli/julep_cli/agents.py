@@ -2,17 +2,17 @@ import json
 from typing import Annotated
 
 import typer
-
-from .utils import get_julep_client
+from rich.box import HEAVY_HEAD
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+from rich.text import Text
 
 from .app import agents_app, console, error_console
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.text import Text
-from rich.table import Table
-from rich.box import HEAVY_HEAD
+from .utils import get_julep_client
 
 SINGLE_AGENT_TABLE_WIDTH = 100
 SINGLE_AGENT_COLUMN_WIDTH = 50
+
 
 @agents_app.command()
 def create(
@@ -159,8 +159,8 @@ def update(
         except Exception as e:
             error_console.print(f"Error updating agent: {e}")
             raise typer.Exit(1)
-    
-    console.print(Text(f"Agent updated successfully.", style="bold green"))
+
+    console.print(Text("Agent updated successfully.", style="bold green"))
 
 
 @agents_app.command()
@@ -199,7 +199,7 @@ def delete(
             error_console.print(f"Error deleting agent: {e}")
             raise typer.Exit(1)
 
-    console.print(Text(f"Agent deleted successfully.", style="bold green"))
+    console.print(Text("Agent deleted successfully.", style="bold green"))
 
 
 @agents_app.command()
@@ -237,11 +237,11 @@ def list(
         except Exception as e:
             error_console.print(Text(f"Error fetching agents: {e}", style="bold red"))
             raise typer.Exit(1)
-    
+
     if json_output:
         typer.echo([agent.model_dump_json(indent=2) for agent in agents])
         return
-    
+
     # Table format output
     agent_table = Table(
         title=Text("Available Agents:", style="bold underline magenta"),
@@ -257,7 +257,6 @@ def list(
     agent_table.add_column("Model", style="yellow", width=25)
     agent_table.add_column("ID", style="green", width=40)
 
-    
     for agent in agents:
         agent_table.add_row(
             agent.name,
@@ -267,8 +266,6 @@ def list(
         )
 
     console.print(agent_table)
-
-
 
 
 @agents_app.command()
@@ -296,8 +293,7 @@ def get(
             error_console.print(f"Error retrieving agent: {e}")
             raise typer.Exit(1)
 
-    console.print(Text(f"Agent retrieved successfully.", style="bold green"))
-
+    console.print(Text("Agent retrieved successfully.", style="bold green"))
 
     if json_output:
         console.print(json.dumps(agent.model_dump(), indent=2))

@@ -4,15 +4,14 @@ from typing import Annotated
 
 import typer
 import yaml
-
-from .utils import get_julep_client
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.text import Text
-from rich.console import Console
-from rich.table import Table
 from rich.box import HEAVY_HEAD
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+from rich.text import Text
 
 from .app import tasks_app
+from .utils import get_julep_client
 
 console = Console()
 error_console = Console(stderr=True)
@@ -74,9 +73,9 @@ def create(
         task_yaml_contents["description"] = description
     if metadata:
         task_yaml_contents["metadata"] = metadata_dict
-    if inherit_tools == True:
+    if inherit_tools is True:
         task_yaml_contents["inherit_tools"] = True
-    elif inherit_tools == False:
+    elif inherit_tools is False:
         task_yaml_contents["inherit_tools"] = False
 
     with Progress(
@@ -149,9 +148,9 @@ def update(
         task_yaml_contents["description"] = description
     if metadata:
         task_yaml_contents["metadata"] = metadata_dict
-    if inherit_tools == True:
+    if inherit_tools is True:
         task_yaml_contents["inherit_tools"] = True
-    elif inherit_tools == False:
+    elif inherit_tools is False:
         task_yaml_contents["inherit_tools"] = False
 
     client = get_julep_client()
@@ -170,7 +169,7 @@ def update(
             error_console.print(f"Error updating task: {e}", style="bold red")
             raise typer.Exit(1)
 
-    console.print(Text(f"Task updated successfully.", style="bold green"))
+    console.print(Text("Task updated successfully.", style="bold green"))
 
 
 @tasks_app.command()

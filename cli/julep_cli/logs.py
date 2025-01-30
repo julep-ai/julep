@@ -1,16 +1,17 @@
 import json
 import time
 from typing import Annotated
-from julep.resources.executions.transitions import Transition
 
 import typer
+from julep.resources.executions.transitions import Transition
+from rich.box import HEAVY
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+from rich.text import Text
 
 from .app import app, console, error_console
 from .utils import get_julep_client
-from rich.text import Text
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.box import HEAVY
+
 
 @app.command()
 def logs(
@@ -23,7 +24,7 @@ def logs(
 
     transitions_table = Table(
         title="Execution Transitions",
-        box=HEAVY, # border between cells
+        box=HEAVY,  # border between cells
         show_lines=True,  # Adds lines between rows
         show_header=True,
         header_style="bold magenta",
@@ -47,7 +48,6 @@ def logs(
                 transition.output, indent=4))
 
         console.print(transitions_table)
-
 
     client = get_julep_client()
 
@@ -78,7 +78,6 @@ def logs(
                 display_transitions(new_transitions)
 
             transitions = fetched_transitions
-
 
             if transitions and transitions[0].type in ["finish", "cancelled", "error"]:
                 break

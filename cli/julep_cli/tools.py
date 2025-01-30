@@ -4,15 +4,13 @@ from typing import Annotated
 
 import typer
 import yaml
-
-from .utils import get_julep_client
-
-from .app import tools_app, console, error_console
-
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.text import Text
-from rich.table import Table
 from rich.box import HEAVY_HEAD
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+from rich.text import Text
+
+from .app import console, error_console, tools_app
+from .utils import get_julep_client
 
 
 @tools_app.command()
@@ -42,7 +40,7 @@ def create(
     client = get_julep_client()
 
     tool_yaml_contents = yaml.safe_load(Path(definition).read_text())
-    
+
     if name:
         tool_yaml_contents["name"] = name
 
@@ -86,12 +84,8 @@ def update(
 
     client = get_julep_client()
 
+    tool_yaml_contents = yaml.safe_load(Path(definition).read_text()) if definition else {}
 
-    if definition:
-        tool_yaml_contents = yaml.safe_load(Path(definition).read_text())
-    else:
-        tool_yaml_contents = {}
-    
     if name:
         tool_yaml_contents["name"] = name
 
@@ -114,7 +108,8 @@ def update(
             error_console.print(f"Error updating tool: {e}", style="bold red")
             raise typer.Exit(1)
 
-    console.print(Text(f"Tool updated successfully.", style="bold green"))
+    console.print(Text("Tool updated successfully.", style="bold green"))
+
 
 @tools_app.command()
 def delete(
@@ -158,7 +153,7 @@ def delete(
             error_console.print(f"Error deleting tool: {e}", style="bold red")
             raise typer.Exit(1)
 
-    console.print(Text(f"Tool deleted successfully.", style="bold green"))
+    console.print(Text("Tool deleted successfully.", style="bold green"))
 
 
 @tools_app.command()

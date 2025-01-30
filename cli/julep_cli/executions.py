@@ -3,7 +3,6 @@ from typing import Annotated
 
 import typer
 from rich.console import Console
-from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .app import executions_app

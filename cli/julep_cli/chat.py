@@ -2,9 +2,9 @@ import json
 from typing import Annotated
 
 import typer
-from rich.text import Text
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.text import Text
 
 from .app import app, console, error_console
 from .utils import get_julep_client

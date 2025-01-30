@@ -1,6 +1,3 @@
-from rich.text import Text
-from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
 import hashlib
 import json
 from datetime import datetime
@@ -9,6 +6,9 @@ from typing import Annotated
 
 import typer
 import yaml
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.text import Text
 
 from .app import app, console, error_console
 from .models import (
@@ -104,21 +104,21 @@ def sync(
                 table = Table(title="Agents", show_header=False, title_style="bold magenta")
                 table.add_column("Definition", style="dim", width=50)
                 for agent in agents:
-                    table.add_row(agent.get('definition'))
+                    table.add_row(agent.get("definition"))
                 console.print(table)
 
             if tasks:
                 table = Table(title="Tasks", show_header=False, title_style="bold cyan")
                 table.add_column("Definition", style="dim", width=50)
                 for task in tasks:
-                    table.add_row(task.get('definition'))
+                    table.add_row(task.get("definition"))
                 console.print(table)
 
             if tools:
                 table = Table(title="Tools", show_header=False, title_style="bold green")
                 table.add_column("Definition", style="dim", width=50)
                 for tool in tools:
-                    table.add_row(tool.get('definition'))
+                    table.add_row(tool.get("definition"))
                 console.print(table)
 
         else:
@@ -259,7 +259,6 @@ def sync(
                 )
             console.print(
                 Text("All tools were successfully created on remote", style="bold magenta"))
-
 
         with Progress(
             SpinnerColumn(),
@@ -564,7 +563,7 @@ def sync(
                     f"Tool {tool_yaml_def_path} created successfully on remote", style="bold blue"))
 
         if found_changes:
-            with Progress(  
+            with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
                 transient=True,
@@ -574,14 +573,13 @@ def sync(
                 progress.start_task(sync_task)
 
                 write_lock_file(source, lock_file)
-            
+
             console.print(Text("Synchronization complete", style="bold green"))
-            
+
             return
 
-        else:
-            console.print(Text("No changes detected. Everything is up to date.", style="bold green"))
-            return
+        console.print(Text("No changes detected. Everything is up to date.", style="bold green"))
+        return
 
     if force_remote:
         console.print(Text("Force remote - not implemented", style="bold red"))
