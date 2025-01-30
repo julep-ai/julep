@@ -65,9 +65,8 @@ def logs(
         except Exception as e:
             error_console.print(Text(f"Error fetching transitions: {e}", style="bold red"))
             raise typer.Exit(1)
-        finally:
-            progress.remove_task(fetch_transitions)
-            display_transitions(transitions)
+
+    display_transitions(transitions)
 
     if tailing:
         while True:

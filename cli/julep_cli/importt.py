@@ -65,7 +65,6 @@ def agent(
 
         console.print(Text("Overwriting existing agent...", style="bold yellow"))
 
-        console.print(Text(f"Fetching agent from remote...", style="bold blue"))
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -79,25 +78,20 @@ def agent(
             except Exception as e:
                 error_console.print(Text(f"Error fetching agent from remote: {e}", style="bold red"))
                 raise typer.Exit(1)
-            finally:
-                progress.remove_task(fetch_task)
-
-                # Create a table to display agent data
-                table = Table(title="Agent Data")
-                table.add_column("Field", style="cyan", no_wrap=True)
-                table.add_column("Value", style="magenta")
-
-                # Populate the table with agent data
-                for key, value in remote_agent.model_dump().items():
-                    table.add_row(key, str(value))
-
-                console.print(table)
-
         
+        # Create a table to display agent data
+        table = Table(title="Agent Data")
+        table.add_column("Field", style="cyan", no_wrap=True)
+        table.add_column("Value", style="magenta")
+
+        # Populate the table with agent data
+        for key, value in remote_agent.model_dump().items():
+            table.add_row(key, str(value))
+
+        console.print(table)
 
         agent_yaml_path = source / locked_agent.path
 
-        console.print(Text(f"Updating agent in '{agent_yaml_path}'...", style="bold blue"))
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -114,10 +108,8 @@ def agent(
             except Exception as e:
                 error_console.print(Text(f"Error updating agent in '{agent_yaml_path}': {e}", style="bold red"))
                 raise typer.Exit(1)
-            finally:
-                progress.remove_task(update_task)
-                console.print(Text(f"Updated successfully.", style="bold green"))
 
+        console.print(Text(f"Updated successfully.", style="bold green"))
 
 
         console.print(Text(f"Updating agent '{id}' in lock file...", style="bold blue"))
@@ -148,7 +140,6 @@ def agent(
     try:
         client = get_julep_client()
 
-        console.print(Text(f"Fetching agent from remote...", style="bold blue"))
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -164,25 +155,23 @@ def agent(
                 error_console.print(
                     Text(f"Error fetching agent from remote: {e}", style="bold red"))
                 raise typer.Exit(1)
-            finally:
-                progress.remove_task(fetch_task)
-
-                # Create a table to display agent data
-                table = Table(title="Agent Data")
-                table.add_column("Field", style="cyan", no_wrap=True)
-                table.add_column("Value", style="magenta")
-
-                # Populate the table with agent data
-                for key, value in remote_agent.model_dump().items():
-                    table.add_row(key, str(value))
-
-                console.print(table)
-
-                agent_name = remote_agent.name.lower().replace(" ", "_")
-
-                agent_yaml_path: Path = output / f"{agent_name}.yaml"
         
-        console.print(Text(f"Updating agent in '{agent_yaml_path}'...", style="bold blue"))
+        # Create a table to display agent data
+        table = Table(title="Agent Data")
+        table.add_column("Field", style="cyan", no_wrap=True)
+        table.add_column("Value", style="magenta")
+
+        # Populate the table with agent data
+        for key, value in remote_agent.model_dump().items():
+            table.add_row(key, str(value))
+
+        console.print(table)
+
+
+        agent_name = remote_agent.name.lower().replace(" ", "_")
+
+        agent_yaml_path: Path = output / f"{agent_name}.yaml"
+        
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -194,14 +183,13 @@ def agent(
                 progress.start_task(update_task)
                 update_yaml_for_existing_entity(agent_yaml_path, remote_agent.model_dump(
                     exclude={"id", "created_at", "updated_at"}))
+                
             except Exception as e:
                 error_console.print(Text(f"Error updating agent in '{agent_yaml_path}': {e}", style="bold red"))
                 raise typer.Exit(1)
-            finally:
-                progress.remove_task(update_task)
-                console.print(Text(f"Updated successfully.", style="bold green"))
+        
+        console.print(Text(f"Updated successfully.", style="bold green"))
 
-        console.print(Text(f"Adding agent to julep.yaml...", style="bold blue"))
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -217,9 +205,8 @@ def agent(
             except Exception as e:
                 error_console.print(Text(f"Error adding agent to julep.yaml: {e}", style="bold red"))
                 raise typer.Exit(1)
-            finally:
-                progress.remove_task(add_task)
-                console.print(Text(f"Added successfully.", style="bold green"))
+        
+        console.print(Text(f"Added successfully.", style="bold green"))
 
         console.print(Text(f"Adding agent to lock file...", style="bold blue"))
         add_entity_to_lock_file(
