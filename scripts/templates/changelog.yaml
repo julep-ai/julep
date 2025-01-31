@@ -27,10 +27,9 @@ main:
       - **Performance Enhancements** 🚀: Changes that improve speed, efficiency, or scalability.
       - **Breaking Changes** 💥: Changes that could potentially break backward compatibility.
 
-      ### 3. **Detail the Changes** 📝
-      For each section, include:
+      ### 3. **Condense the Changes** 📝
+      For each line, try to include:
       - A **concise but clear description** of what has changed.
-      - The **reason** behind the change (why it was needed).
       - The **benefit** or **impact** on the user experience.
         
       ### 4. **Engage the User** 🗣️
@@ -46,61 +45,36 @@ main:
         
       ### 6. **Output Format** 🗒️
       The final changelog should follow this format:
-      - **Title**: "Julep AI Changelog for 12th December 2024" (Note: Use `datetime.datetime.now().strftime('%d %B %Y')` for auto-generating the date).
-      - **Sections**: Start with a header for each section (e.g., `## Features ✨`) and list items under it in bullet points.
-      - Use **bold** and **italic** where needed to emphasize key points.
-                                  
-      The final changelog should be **engaging**, **well-structured**, and easy to read, making it accessible to both technical and non-technical users.                 
+      - **Title**: "Julep AI Changelog for {{datetime.datetime.now().strftime('%d %B %Y')}}"
+      - **Sections**: Include only the following 10 lines:
+        - Features ✨: Brief overview of major new functionalities
+        - Features ✨: Brief overview of minor new functionalities 
+        - Fixes 🔧: Summary of critical bug fixes
+        - Fixes 🔧: Summary of minor bug fixes
+        - Improvements 📈: Overview of major enhancements
+        - Improvements 📈: Overview of minor enhancements
+        - Performance 🚀: Key performance improvements
+        - Performance 🚀: Secondary performance improvements
+        - Breaking Changes 💥: Critical breaking changes
+        - Breaking Changes 💥: Other breaking changes
 
-      Here are certain notes that you should follow:
-      - The output should be in markdown format as the output will be rendered in a markdown file.
-      - Wherever possible describe the changes in a way that is more engaging and conversational.
-      - Make it as visually appealing as possible. Add emojis to make it more engaging.
-      - Add empty lines between sections and make sure the output is formatted correctly.
-      - Add a footer with the all authors of the changelog at the bottom.
-      - Ensure that the output is formatted correctly.   
-      - No need to add a footer or author list or contributors list.
-
-      Please feel free to make changes to the output as you see fit. You only need to return me the changelog and nothing else.
-      Add markdown formatting to the output wherever needed to make it more visual attractive, readable and engaging.
-                                  
+      The output should be concise, clear and engaging. Use markdown formatting and emojis to make it visually appealing.
+      The output should not have more than 10 pointers in total.
+      The output should not have more than 100 words in total.
       ### Example Output:
 
-      # **Julep AI Changelog for {{datetime.datetime.now().strftime('%d %B %Y')}}** ✨
+      # **Changelog for {{datetime.datetime.now().strftime('%d %B %Y')}}** ✨
 
-      ## **Features** ✨
-      - **Real-Time Analytics Dashboard**: A brand-new dashboard that provides real-time data visualizations of user activity.
-        - **Why**: We needed a way to track live data for quicker decision-making.
-        - **Impact**: Users can now see real-time metrics to improve decision-making on-the-go.
-
-      ## **Fixes** 🔧
-      - **Fixed an Issue with Data Export**: Resolved a bug preventing users from exporting large data sets.
-        - **Why**: Export failures were occurring due to improper handling of large files.
-        - **Impact**: Users can now export data without encountering errors.
-
-      ## **Improvements** 📈
-      - **Improved Search Functionality**: The search engine now returns results 20% faster.
-        - **Why**: To ensure quicker access to information.
-        - **Impact**: Users will notice faster search results, improving overall efficiency.
-
-      ## **Performance Enhancements** 🚀
-      - **Optimized Data Compression**: Reduced the size of stored data by 30%.
-        - **Why**: To make data storage more efficient.
-        - **Impact**: Faster data retrieval times and less storage usage.
-
-      ## **Breaking Changes** 💥
-      - **Deprecated Legacy API**: The old API version (v1) will no longer be supported from next month.
-        - **Why**: We’ve moved to a more secure and feature-rich version.
-        - **Impact**: Developers must upgrade to API v2 to continue using our services.
-
-      ## **Notes** 📝
-      - Please **update your version** to avoid issues with deprecated features.
-      - Known issues: Some users may experience temporary delays due to high traffic on the server.
-
-      ## 🔑 Key Notes:
-      - **Clarity**: Use clear, non-technical language where possible.
-      - **Version Specifics**: Mention if a particular version or update is affected by the changes.
-      - **Known Issues**: Document any known issues, especially those that might impact the user experience.
+      - **Major Feature**: Added real-time analytics dashboard for live data visualization ✨
+      - **Minor Feature**: Introduced new export options for custom reports ✨
+      - **Critical Fix**: Resolved data export failures for large datasets 🔧
+      - **Minor Fix**: Fixed UI alignment issues in the sidebar 🔧
+      - **Major Enhancement**: Search functionality now 20% faster 📈
+      - **Minor Enhancement**: Improved error messages for better clarity 📈
+      - **Key Performance**: Optimized data compression reducing storage by 30% 🚀
+      - **Secondary Performance**: Reduced API response times by 15% 🚀
+      - **Critical Breaking**: Legacy API (v1) deprecation next month 💥
+      - **Other Breaking**: Updated authentication flow requires token refresh 💥
                                   
   - role: user
     content: |
