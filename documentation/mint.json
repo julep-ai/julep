@@ -52,7 +52,7 @@
     "location": "top",
     "prompt": "Search Julep docs"
   },
-  "versions": ["v1", "dev"],
+  "versions": ["v1"],
   "topbarLinks": [
     {
       "name": "Support",
@@ -275,7 +275,7 @@
     "linkedin": "https://www.linkedin.com/company/julep-ai"
   },
   "seo": {
-    "indexHiddenPages": true
+    "indexHiddenPages": false
   },
   "api": {
     "auth": {
