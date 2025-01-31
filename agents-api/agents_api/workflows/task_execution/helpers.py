@@ -44,7 +44,7 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
 
 
 async def base_evaluate_activity(
-    expr: str, context: StepContext, values: dict[str, Any] | None = None
+    expr: str, context: StepContext | None = None, values: dict[str, Any] | None = None
 ) -> Any:
     return await workflow.execute_activity(
         task_steps.base_evaluate,

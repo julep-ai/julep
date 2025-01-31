@@ -66,8 +66,13 @@ async def base_evaluate(
     values: dict[str, Any] | None = None,
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
+
+    if context is None and values is None:
+        raise ValueError("Either context or values must be provided")
+
+    values = values or {}
     if context:
-        values = values or {} | (context and await context.prepare_for_step())
+        values.update(await context.prepare_for_step())
 
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"
