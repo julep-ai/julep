@@ -204,23 +204,26 @@ Process collections in parallel:
 
 ```yaml YAML
 # Simple map-reduce
-- map_reduce:
-    over: _.urls
-    map:
-      - tool: fetch_content
-        arguments:
-          url: _
-    reduce: results + [_]
+- over: _.urls
+  map:
+    tool: fetch_content
+    arguments:
+      url: _
+  reduce: results + [_]
 
 # Map-reduce with parallelism
-- map_reduce:
-    over: _.queries
-    map:
-      - tool: web_search
-        arguments:
-          query: _
-    parallelism: 5
+- over: _.queries
+  map:
+    tool: web_search
+    arguments:
+      query: _
+  parallelism: 5 # Number of parallel steps to execute
 ```
+
+<Note>
+  The `parallel` step is used to execute steps concurrently. The `reduce` step is used to combine the results of the parallel steps.
+  Moreover you can also mention `reduce` and `parallelism` after the `over` step.
+</Note>
 
 ### Parallel Step
 
@@ -229,13 +232,14 @@ Execute steps concurrently:
 ```yaml YAML
 # Parallel execution
 - parallel:
-    - tool: task1
-      arguments:
-        param: "value1"
-    - tool: task2
-      arguments:
-        param: "value2"
+  tool: task1
+  arguments:
+    param: "value1"
 ```
+
+<Note>
+  This step only runs the steps in parallel for a given value. Unlike the `map` step, it does not run the steps in parallel for all the values in the collection.
+</Note>
 
 ## Conditional Steps
 
