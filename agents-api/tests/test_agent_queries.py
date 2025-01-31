@@ -37,7 +37,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             model="gpt-4o-mini",
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
 
 @test("query: create or update agent sql")
@@ -56,7 +56,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             instructions=["test instruction"],
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
 
 @test("query: update agent sql")
@@ -75,7 +75,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
             metadata={"hello": "world"},
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Agent)
@@ -94,7 +94,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     with raises(Exception):
-        await get_agent(agent_id=agent_id, developer_id=developer_id, connection_pool=pool)
+        await get_agent(agent_id=agent_id, developer_id=developer_id, connection_pool=pool)  # type: ignore[not-callable]
 
 
 @test("query: get agent exists sql")
@@ -106,7 +106,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
         agent_id=agent.id,
         developer_id=developer_id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Agent)
@@ -123,7 +123,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that listing agents returns a collection of agent information."""
 
     pool = await create_db_pool(dsn=dsn)
-    result = await list_agents(developer_id=developer_id, connection_pool=pool)
+    result = await list_agents(developer_id=developer_id, connection_pool=pool)  # type: ignore[not-callable]
 
     assert isinstance(result, list)
     assert all(isinstance(agent, Agent) for agent in result)
@@ -144,7 +144,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
             metadata={"something": "else"},
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Agent)
@@ -166,10 +166,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             model="gpt-4o-mini",
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
     delete_result = await delete_agent(
         agent_id=create_result.id, developer_id=developer_id, connection_pool=pool
-    )
+    )  # type: ignore[not-callable]
 
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)
@@ -179,4 +179,4 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             developer_id=developer_id,
             agent_id=create_result.id,
             connection_pool=pool,
-        )
+        )  # type: ignore[not-callable]

@@ -50,7 +50,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=t
         session_id=session_id,
         data=data,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Session), f"Result is not a Session, {result}"
@@ -73,7 +73,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=t
         session_id=session_id,
         data=data,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Session)
@@ -90,7 +90,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Session)
@@ -108,7 +108,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             session_id=session_id,
             developer_id=developer_id,
             connection_pool=pool,
-        )
+        )  # type: ignore[not-callable]
 
 
 @test("query: list sessions")
@@ -121,7 +121,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         limit=10,
         offset=0,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert isinstance(result, list)
     assert len(result) >= 1
@@ -138,7 +138,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         limit=10,
         offset=0,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert isinstance(result, list)
     assert len(result) >= 1
@@ -155,7 +155,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     count = await count_sessions(
         developer_id=developer_id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert isinstance(count, dict)
     assert count["count"] >= 1
@@ -182,7 +182,7 @@ async def _(
         developer_id=developer_id,
         data=data,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Session)
@@ -192,7 +192,7 @@ async def _(
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
     assert updated_session.forward_tool_calls is True
 
 
@@ -209,7 +209,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, ag
         session_id=session.id,
         data=data,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Session)
@@ -219,7 +219,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, ag
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
     assert patched_session.metadata == {"test": "metadata"}
 
 
@@ -232,7 +232,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)
@@ -242,4 +242,4 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
             developer_id=developer_id,
             session_id=session.id,
             connection_pool=pool,
-        )
+        )  # type: ignore[not-callable]
