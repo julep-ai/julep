@@ -63,18 +63,22 @@
     "name": "Get API Key",
     "url": "https://dashboard.julep.ai"
   },
+  "primaryTab": {
+    "name": "Home"
+  },
   "tabs": [
     {
-      "name": "🙋 Guides",
+      "name": "Guides",
       "url": "guides"
     },
     {
-      "name": "🔧 SDKs",
+      "name": "SDKs",
       "url": "sdks"
     },
     {
-      "name": "🔍 API Reference",
-      "url": "api-reference"
+      "name": "API Reference",
+      "url": "api-reference",
+      "openapi": "https://api.julep.ai/api/openapi.json"
     }
   ],
   "anchors": [
@@ -263,133 +267,6 @@
           ]
         }
       ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "api-reference/introduction",
-        {
-          "group": "Agents",
-          "pages": [
-            "api-reference/agents/create",
-            "api-reference/agents/create-or-update", 
-            "api-reference/agents/delete",
-            "api-reference/agents/get",
-            "api-reference/agents/list",
-            "api-reference/agents/patch",
-            "api-reference/agents/update",
-            {
-              "group": "Agent Tools",
-              "pages": [
-                "api-reference/agents/tools/create",
-                "api-reference/agents/tools/delete",
-                "api-reference/agents/tools/list",
-                "api-reference/agents/tools/patch",
-                "api-reference/agents/tools/update"
-              ]
-            }
-          ]
-        },
-        {
-          "group": "Sessions",
-          "pages": [
-            "api-reference/sessions/create",
-            "api-reference/sessions/create-or-update",
-            "api-reference/sessions/delete",
-            "api-reference/sessions/get",
-            "api-reference/sessions/list",
-            "api-reference/sessions/patch",
-            "api-reference/sessions/update",
-            "api-reference/sessions/chat",
-            {
-              "group": "Session History",
-              "pages": [
-                "api-reference/sessions/history/get",
-                "api-reference/sessions/history/delete"
-              ]
-            }
-          ]
-        },
-        {
-          "group": "Users",
-          "pages": [
-            "api-reference/users/create",
-            "api-reference/users/create-or-update",
-            "api-reference/users/delete",
-            "api-reference/users/get",
-            "api-reference/users/list",
-            "api-reference/users/patch",
-            "api-reference/users/update"
-          ]
-        },
-        {
-          "group": "Tasks",
-          "pages": [
-            "api-reference/tasks/create",
-            "api-reference/tasks/create-or-update",
-            "api-reference/tasks/delete", 
-            "api-reference/tasks/get",
-            "api-reference/tasks/list",
-            "api-reference/tasks/patch",
-            "api-reference/tasks/update",
-            {
-              "group": "Task Executions",
-              "pages": [
-                "api-reference/tasks/executions/create",
-                "api-reference/tasks/executions/list"
-              ]
-            }
-          ]
-        },
-        {
-          "group": "Executions",
-          "pages": [
-            "api-reference/executions/create",
-            "api-reference/executions/get",
-            "api-reference/executions/transitions",
-            "api-reference/executions/transitions-stream",
-            "api-reference/executions/update"
-          ]
-        },
-        {
-          "group": "Documents",
-          "pages": [
-            "api-reference/docs/embed",
-            "api-reference/docs/get",
-            {
-              "group": "Agent Documents",
-              "pages": [
-                "api-reference/docs/agents/create",
-                "api-reference/docs/agents/delete",
-                "api-reference/docs/agents/list",
-                "api-reference/docs/agents/search"
-              ]
-            },
-            {
-              "group": "User Documents", 
-              "pages": [
-                "api-reference/docs/users/list",
-                "api-reference/docs/users/create",
-                "api-reference/docs/users/delete",
-                "api-reference/docs/users/search"
-              ]
-            }
-          ]
-        },
-        {
-          "group": "Files",
-          "pages": [
-            "api-reference/files/create",
-            "api-reference/files/get"
-          ]
-        },
-        {
-          "group": "Jobs",
-          "pages": [
-            "api-reference/jobs/get"
-          ]
-        }
-      ]
     }
   ],
   "footerSocials": {
@@ -398,7 +275,7 @@
     "linkedin": "https://www.linkedin.com/company/julep-ai"
   },
   "seo": {
-    "indexHiddenPages": false
+    "indexHiddenPages": true
   },
   "api": {
     "auth": {
@@ -414,7 +291,7 @@
     "request": {
       "example": {
         "showOptionalParams": true,
-        "languages": ["python", "javascript"]
+        "languages": ["bash", "python", "javascript"]
       }
     },
     "playground": {
@@ -422,10 +299,8 @@
       "mode": "show"
     }
   },
-  "openapi": ["https://dev.julep.ai/api/openapi.json"],
   "feedback": {
-    "thumbsRating": true,
-    "suggestEdit": true
+    "thumbsRating": true
   },
   "analytics": {
     "posthog": {
