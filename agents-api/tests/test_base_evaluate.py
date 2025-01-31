@@ -1,16 +1,13 @@
-from agents_api.activities.task_steps.base_evaluate import EvaluateError, base_evaluate
-from ward import raises, test
 import uuid
-from datetime import timedelta
-from unittest.mock import Mock, call, patch
+from unittest.mock import patch
 
-from agents_api.activities.task_steps.base_evaluate import base_evaluate
+from agents_api.activities.task_steps.base_evaluate import EvaluateError, base_evaluate
 from agents_api.autogen.openapi_model import (
     Agent,
     TaskSpecDef,
+    ToolCallStep,
     TransitionTarget,
     Workflow,
-    ToolCallStep
 )
 from agents_api.common.protocol.tasks import (
     ExecutionInput,
@@ -18,6 +15,8 @@ from agents_api.common.protocol.tasks import (
 )
 from agents_api.common.utils.datetime import utcnow
 from ward import raises, test
+
+
 @test("utility: base_evaluate - empty exprs")
 async def _():
     with raises(AssertionError):
@@ -57,6 +56,7 @@ async def _():
     result = await base_evaluate(exprs, values=values)
     assert result == [{"a": 10}, {"b": 11}, {"c": "x + 7"}]
 
+
 @test("utility: base_evaluate - parameters")
 async def _():
     exprs = "$ x + 5"
@@ -94,21 +94,44 @@ async def _():
     reduce = reduce.replace("_", "_item").replace("results", "_result")
     extra_lambda_strs = {"reducer_lambda": f"lambda _result, _item: ({reduce})"}
 
-
-    with patch("agents_api.common.protocol.tasks.StepContext.prepare_for_step", return_value={"x": 10}):
+    with patch(
+        "agents_api.common.protocol.tasks.StepContext.prepare_for_step", return_value={"x": 10}
+    ):
         with raises(ValueError):
-            result = await base_evaluate(exprs, context=context_none, values=values_none, extra_lambda_strs=extra_lambda_strs_none)
+            result = await base_evaluate(
+                exprs,
+                context=context_none,
+                values=values_none,
+                extra_lambda_strs=extra_lambda_strs_none,
+            )
         with raises(ValueError):
-            result = await base_evaluate(exprs, context=context_none, values=values_none, extra_lambda_strs=extra_lambda_strs)
-        result = await base_evaluate(exprs, context=context_none, values=values, extra_lambda_strs=extra_lambda_strs_none)
+            result = await base_evaluate(
+                exprs,
+                context=context_none,
+                values=values_none,
+                extra_lambda_strs=extra_lambda_strs,
+            )
+        result = await base_evaluate(
+            exprs, context=context_none, values=values, extra_lambda_strs=extra_lambda_strs_none
+        )
         assert result == 10
-        result = await base_evaluate(exprs, context=context_none, values=values, extra_lambda_strs=extra_lambda_strs)
+        result = await base_evaluate(
+            exprs, context=context_none, values=values, extra_lambda_strs=extra_lambda_strs
+        )
         assert result == 10
-        result = await base_evaluate(exprs, context=context, values=values_none, extra_lambda_strs=extra_lambda_strs_none)
+        result = await base_evaluate(
+            exprs, context=context, values=values_none, extra_lambda_strs=extra_lambda_strs_none
+        )
         assert result == 15
-        result = await base_evaluate(exprs, context=context, values=values_none, extra_lambda_strs=extra_lambda_strs)
+        result = await base_evaluate(
+            exprs, context=context, values=values_none, extra_lambda_strs=extra_lambda_strs
+        )
         assert result == 15
-        result = await base_evaluate(exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs_none)
+        result = await base_evaluate(
+            exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs_none
+        )
         assert result == 15
-        result = await base_evaluate(exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs)
+        result = await base_evaluate(
+            exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs
+        )
         assert result == 15

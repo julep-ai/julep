@@ -66,9 +66,9 @@ async def base_evaluate(
     values: dict[str, Any] | None = None,
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
-
     if context is None and values is None:
-        raise ValueError("Either context or values must be provided")
+        msg = "Either context or values must be provided"
+        raise ValueError(msg)
 
     values = values or {}
     if context:
