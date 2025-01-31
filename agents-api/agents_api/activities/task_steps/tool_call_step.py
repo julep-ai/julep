@@ -1,16 +1,7 @@
 import base64
 import secrets
 
-from beartype import beartype
-from temporalio import activity
-from temporalio.exceptions import ApplicationError
-
-from ...activities.task_steps.base_evaluate import base_evaluate
-from ...autogen.openapi_model import CreateToolRequest, Tool, ToolCallStep
-from ...common.protocol.tasks import (
-    StepContext,
-    StepOutcome,
-)
+from ...autogen.openapi_model import CreateToolRequest, Tool
 
 
 # FIXME: This shouldn't be here.
@@ -41,27 +32,3 @@ def construct_tool_call(tool: CreateToolRequest | Tool, arguments: dict, call_id
         "id": call_id,
         "type": tool.type,
     }
-
-
-@activity.defn
-@beartype
-async def tool_call_step(context: StepContext) -> StepOutcome:
-    assert isinstance(context.current_step, ToolCallStep)
-
-    tools: list[Tool] = context.tools
-    tool_name = context.current_step.tool
-
-    tool = next((t for t in tools if t.name == tool_name), None)
-
-    if tool is None:
-        msg = f"Tool {tool_name} not found in the toolset"
-        raise ApplicationError(msg)
-
-    arguments = await base_evaluate(
-        context.current_step.arguments, await context.prepare_for_step()
-    )
-
-    call_id = generate_call_id()
-    tool_call = construct_tool_call(tool, arguments, call_id)
-
-    return StepOutcome(output=tool_call)

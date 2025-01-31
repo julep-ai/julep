@@ -43,6 +43,18 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
     return execution_input.task
 
 
+async def base_evaluate_activity(
+    expr: str, context: StepContext | None = None, values: dict[str, Any] | None = None
+) -> Any:
+    return await workflow.execute_activity(
+        task_steps.base_evaluate,
+        args=[expr, context, values],
+        schedule_to_close_timeout=timedelta(seconds=30),
+        retry_policy=DEFAULT_RETRY_POLICY,
+        heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+    )
+
+
 async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
@@ -193,7 +205,7 @@ async def execute_map_reduce_step(
     task = validate_execution_input(execution_input)
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     result = initial
-    reduce = "results + [_]" if reduce is None else reduce
+    reduce = "$ results + [_]" if reduce is None else reduce
 
     for i, item in enumerate(items):
         workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
@@ -216,7 +228,7 @@ async def execute_map_reduce_step(
 
         result = await workflow.execute_activity(
             task_steps.base_evaluate,
-            args=[reduce, {"results": result, "_": output}],
+            args=[reduce, None, {"results": result, "_": output}],
             schedule_to_close_timeout=timedelta(seconds=30),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -253,7 +265,7 @@ async def execute_map_reduce_step_parallel(
     # - reducer_lambda is the lambda function that will be used to reduce the results
     extra_lambda_strs = {"reducer_lambda": f"lambda _result, _item: ({reduce})"}
 
-    reduce = "reduce(reducer_lambda, _, results)"
+    reduce = "$ reduce(reducer_lambda, _, results)"
 
     # First create batches of items to run in parallel
     batches = [items[i : i + parallelism] for i in range(0, len(items), parallelism)]
@@ -297,6 +309,7 @@ async def execute_map_reduce_step_parallel(
                 task_steps.base_evaluate,
                 args=[
                     reduce,
+                    None,
                     {"results": results, "_": batch_results},
                     extra_lambda_strs,
                 ],

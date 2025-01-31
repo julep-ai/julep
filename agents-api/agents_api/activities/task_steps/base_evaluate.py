@@ -13,6 +13,7 @@ from simpleeval import NameNotDefined, SimpleEval
 from temporalio import activity
 from thefuzz import fuzz
 
+from ...common.protocol.tasks import StepContext
 from ..utils import get_evaluator
 
 
@@ -38,10 +39,14 @@ class EvaluateError(Exception):
 def _recursive_evaluate(expr, evaluator: SimpleEval):
     if isinstance(expr, str):
         try:
+            if isinstance(expr, str) and expr.startswith("$ "):
+                expr = expr[2:].strip()
+            else:
+                return expr
             return evaluator.eval(expr)
         except Exception as e:
+            evaluate_error = EvaluateError(e, expr, evaluator.names)
             if activity.in_activity():
-                evaluate_error = EvaluateError(e, expr, evaluator.names)
                 activity.logger.error(f"Error in base_evaluate: {evaluate_error}\n")
             raise evaluate_error from e
     elif isinstance(expr, list):
@@ -57,9 +62,18 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
 @beartype
 async def base_evaluate(
     exprs: Any,
-    values: dict[str, Any] = {},
+    context: StepContext | None = None,
+    values: dict[str, Any] | None = None,
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
+    if context is None and values is None:
+        msg = "Either context or values must be provided"
+        raise ValueError(msg)
+
+    values = values or {}
+    if context:
+        values.update(await context.prepare_for_step())
+
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"
 

@@ -8,7 +8,6 @@ from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
-from ...common.utils.template import render_template
 from ...env import debug
 from .base_evaluate import base_evaluate
 
@@ -55,37 +54,21 @@ def format_tool(tool: Tool) -> dict:
     #     raise NotImplementedError("API call tools are not supported")
 
 
-EVAL_PROMPT_PREFIX = "$_ "
-
-
 @activity.defn
 @beartype
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
-    context_data: dict = await context.prepare_for_step()
 
-    # If the prompt is a string and starts with $_ then we need to evaluate it
-    should_evaluate_prompt = isinstance(prompt, str) and prompt.startswith(EVAL_PROMPT_PREFIX)
-
-    if should_evaluate_prompt:
-        prompt = await base_evaluate(prompt[len(EVAL_PROMPT_PREFIX) :].strip(), context_data)
-
-        if not isinstance(prompt, str | list):
-            msg = "Invalid prompt expression, expected a string or list"
-            raise ApplicationError(msg)
+    if isinstance(prompt, list):
+        for i, msg in enumerate(prompt):
+            prompt[i]["content"] = await base_evaluate(msg["content"], context)
+            prompt[i]["role"] = await base_evaluate(msg["role"], context)
+    else:
+        prompt = await base_evaluate(prompt, context)
 
     # Wrap the prompt in a list if it is not already
     prompt = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
-
-    # Render template messages if we didn't evaluate the prompt
-    if not should_evaluate_prompt:
-        # Render template messages
-        prompt = await render_template(
-            prompt,
-            context_data,
-            skip_vars=["developer_id"],
-        )
 
     if not isinstance(context.execution_input, ExecutionInput):
         msg = "Expected ExecutionInput type for context.execution_input"
