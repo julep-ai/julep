@@ -50,6 +50,12 @@ model_list:
     api_key: os.environ/OPENAI_API_KEY
     tags: ["paid"]
 
+- model_name: o3-mini
+  litellm_params:
+    model: openai/o3-mini
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["paid"]
+
 # Anthropic models
 - model_name: "claude-3.5-sonnet-20240620"
   litellm_params:
