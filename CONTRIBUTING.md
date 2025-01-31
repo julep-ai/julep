@@ -5,16 +5,17 @@ We welcome contributions to this project! There are several ways you can contrib
 ### Reporting Issues
 
 If you find a bug or have a feature request, please submit an issue on the [GitHub Issues](https://github.com/julep-ai/julep/issues) page. When reporting a bug, please include:
+
 - Steps to reproduce the issue
 - Expected behavior
 - Actual behavior
-- Screenshots if applicable 
+- Screenshots if applicable
 
 ### Submitting Pull Requests
 
 To contribute code changes:
 
-1. Fork the repository 
+1. Fork the repository
 2. Create a new branch for your changes
 3. Make your changes and commit them with descriptive messages
 4. Push your changes to your fork
@@ -28,25 +29,36 @@ Please ensure your code follows the existing style and passes all tests.
 
 1. **agents-api**: The core API service for Julep.
 2. **typespec**: API specifications and contracts.
-3. **integrations-service**: Handles external integrations.
-4. **embedding-service**: Manages text embeddings.
-5. **memory-store**: Handles persistent storage.
-6. **llm-proxy**: Proxy for language model interactions.
-7. **scheduler**: Manages task scheduling.
-8. **gateway**: API gateway and routing.
-9. **monitoring**: System monitoring and metrics.
+3. **deploy**: Deployment configurations.
+4. **documentation**: Documentation.
+5. **scripts**: Scripts for generating changelog, etc.
+6. **cookbooks**: Cookbooks for different use cases.
+7. **blob-store**: Blob storage for storing files.
+8. **cli**: CLI for interacting with Julep.
+9. **integrations-service**: Handles external integrations.
+10. **embedding-service**: Manages text embeddings.
+11. **memory-store**: Handles persistent storage.
+12. **llm-proxy**: Proxy for language model interactions.
+13. **scheduler**: Manages task scheduling.
+14. **gateway**: API gateway and routing.
+15. **monitoring**: System monitoring and metrics.
 
 ### Technology Stack
 
 - **FastAPI**: Web framework for building APIs
 - **TypeSpec**: API specification language
-- **Cozo**: Database system
+- **Timescale**: Database system
+- **SeadweedFS**: Blob storage system
+- **Grafana**: Monitoring and observability platform
+- **Prometheus**: Monitoring and observability platform
+- **LiteLLM**: LLM framework
 - **Temporal**: Workflow engine
 - **Docker**: Containerization
 
 ### Relationships Between Components
 
 The `agents-api` serves as the central component, interacting with most other services:
+
 - It uses `typespec` definitions for API contracts.
 - Communicates with `integrations-service` for external tool interactions.
 - Utilizes `embedding-service` for text processing.
@@ -131,7 +143,7 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
 7. **Merge**
    - Once approved, your changes will be merged into the main branch
 
-### Documentation Improvements 
+### Documentation Improvements
 
 Improvements to documentation are always appreciated! If you see areas that could be clarified or expanded, feel free to make the changes and submit a pull request.
 
@@ -141,54 +153,66 @@ We'd love to hear your feedback and ideas for the project! Feel free to submit a
 
 ### Setup Instructions
 
-##### 1. Clone the Repository
+#### 1. Clone the Repository
+
 Clone the repository from your preferred source:
 
 ```bash
 git clone <repository_url>
 ```
 
-##### 2. Navigate to the Root Directory
+#### 2. Navigate to the Root Directory
+
 Change to the root directory of the project:
 
 ```bash
 cd <repository_root>
 ```
 
-##### 3. Set Up Environment Variables
+#### 3. Set Up Environment Variables
+
 - Create a `.env` file in the root directory.
 - Refer to the `.env.example` file for a list of required variables.
 - Ensure that all necessary variables are set in the `.env` file.
 
-##### 4. Create a Docker Volume for Backup
-Create a Docker volume named `cozo_backup`:
+#### 4. Create a Docker Volume for Backup
+
+Create a Docker volume named `grafana_data`, `memory_store_data`, `temporal-db-data`, `prometheus_data`, `seadweedfs_data`:
 
 ```bash
-docker volume create cozo_backup
+docker volume create grafana_data
+docker volume create memory_store_data
+docker volume create temporal-db-data
+docker volume create prometheus_data
+docker volume create seadweedfs_data
+
 ```
 
-##### 5. Run the Project using Docker Compose
+#### 5. Run the Project using Docker Compose
+
 You can run the project in two different modes: **Single Tenant** or **Multi-Tenant**. Choose one of the following commands based on your requirement:
 
-###### Single-Tenant Mode
+#### Single-Tenant Mode
+
 Run the project in single-tenant mode:
 
 ```bash
-docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile embedding-cpu --profile self-hosted-db up --force-recreate --build --watch
+docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --build --force-recreate --watch
 ```
 
 > **Note:** In single-tenant mode, you can interact with the SDK directly without the need for the API KEY.
 
-###### Multi-Tenant Mode
+#### Multi-Tenant Mode
+
 Run the project in multi-tenant mode:
 
 ```bash
-docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile embedding-cpu --profile self-hosted-db up --force-recreate --build --watch
+docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile embedding-cpu --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --force-recreate --build --watch
 ```
 
 > **Note:** In multi-tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK.
 
-##### 6. Generate a JWT Token (Only for Multi-Tenant Mode)
+#### 6. Generate a JWT Token (Only for Multi-Tenant Mode)
 
 To generate a JWT token, `jwt-cli` is required. Kindly install the same before proceeding with the next steps.
 
@@ -200,14 +224,15 @@ jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --su
 
 This command generates a JWT token that will be valid for 10 days.
 
-##### 7. Access and Interact
+#### 7. Access and Interact
+
 - **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.
 - **API Interactions**: Depending on the chosen mode, interact with the setup using the provided endpoints.
 
-##### Troubleshooting
+#### Troubleshooting
+
 - Ensure that all required Docker images are available.
 - Check for missing environment variables in the `.env` file.
 - Use the `docker compose logs` command to view detailed logs for debugging.
-
 
 Remember, contributions aren't limited to code. Documentation improvements, bug reports, and feature suggestions are also valuable contributions to the project.
