@@ -45,7 +45,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             about="test user about",
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
     assert isinstance(user, User)
     assert user.id is not None
     assert user.name == "test user"
@@ -65,7 +65,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             about="test user about",
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
     assert isinstance(user, User)
     assert user.id is not None
     assert user.name == "test user"
@@ -85,7 +85,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
             about="updated user about",
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert update_result is not None
     assert isinstance(update_result, User)
@@ -105,7 +105,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             user_id=user_id,
             developer_id=developer_id,
             connection_pool=pool,
-        )
+        )  # type: ignore[not-callable]
 
 
 @test("query: get user exists sql")
@@ -117,7 +117,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
         user_id=user.id,
         developer_id=developer_id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, User)
@@ -131,7 +131,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     result = await list_users(
         developer_id=developer_id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert isinstance(result, list)
     assert len(result) >= 1
@@ -152,7 +152,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
             metadata={"test": "metadata"},
         ),
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
     assert patch_result is not None
     assert isinstance(patch_result, User)
     assert patch_result.updated_at > user.created_at
@@ -167,7 +167,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
         developer_id=developer_id,
         user_id=user.id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)
@@ -178,7 +178,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
             developer_id=developer_id,
             user_id=user.id,
             connection_pool=pool,
-        )
+        )  # type: ignore[not-callable]
     except Exception:
         pass
     else:

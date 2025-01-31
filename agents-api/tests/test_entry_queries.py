@@ -42,7 +42,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
             session_id=uuid7(),
             data=[test_entry],
             connection_pool=pool,
-        )
+        )  # type: ignore[not-callable]
     assert exc_info.raised.status_code == 404
 
 
@@ -57,7 +57,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
             developer_id=developer.id,
             session_id=uuid7(),
             connection_pool=pool,
-        )
+        )  # type: ignore[not-callable]
     assert exc_info.raised.status_code == 404
 
 
@@ -85,13 +85,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         session_id=session.id,
         data=[test_entry, internal_entry],
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     result = await list_entries(
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     # Assert that only one entry is retrieved, matching the session_id.
     assert len(result) == 1
@@ -123,13 +123,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         session_id=session.id,
         data=[test_entry, internal_entry],
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     result = await get_history(
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     # Assert that entries are retrieved and have valid IDs.
     assert result is not None
@@ -162,7 +162,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         session_id=session.id,
         data=[test_entry, internal_entry],
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     entry_ids = [entry.id for entry in created_entries]
 
@@ -171,13 +171,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
         session_id=session.id,
         entry_ids=entry_ids,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     result = await list_entries(
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
-    )
+    )  # type: ignore[not-callable]
 
     # Assert that no entries are retrieved after deletion.
     assert all(id not in [entry.id for entry in result] for id in entry_ids)
