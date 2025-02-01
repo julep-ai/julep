@@ -28,7 +28,7 @@
 ---
 
 > [!NOTE]
-> Get your API key [here](https://dashboard-dev.julep.ai).
+> Get your API key [here](https://dashboard.julep.ai).
 
 <details>
 <summary><b>Contributions 🌟</b> (Click to expand)</summary>
@@ -287,7 +287,7 @@ pip install julep
 ```
 
 > [!NOTE]
-> Get your API key [here](https://dashboard-dev.julep.ai).
+> Get your API key [here](https://dashboard.julep.ai).
 >
 > While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
 
@@ -1621,9 +1621,9 @@ results = client.agents.docs.search(
 
 Explore our API documentation to learn more about agents, tasks, and executions:
 
-- [Agents API](https://dev.julep.ai/api/docs#tag/agents)
-- [Tasks API](https://dev.julep.ai/api/docs#tag/tasks)
-- [Executions API](https://dev.julep.ai/api/docs#tag/executions)
+- [Agents API](https://api.julep.ai/api/docs#tag/agents)
+- [Tasks API](https://api.julep.ai/api/docs#tag/tasks)
+- [Executions API](https://api.julep.ai/api/docs#tag/executions)
 
 <div align="center">
     <a href="#top">
