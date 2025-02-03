@@ -33,7 +33,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          npm install
+          cd typespec/ && npm install
 
       - name: Generate openapi code
         run: |
