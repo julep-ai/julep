@@ -763,6 +763,8 @@ class TaskExecutionWorkflow:
 
         # The returned value is the transition finally created
         state = state or PartialTransition(type="error", output="Not implemented")
+        if context.current_step.label:
+            state.step_label = context.current_step.label
         final_state = await transition(
             context,
             state,

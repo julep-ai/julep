@@ -284,13 +284,20 @@ class Delta(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: str | list[str] | list[ContentModel1 | ContentModel7 | ContentModel2] | None = None
+    content: Annotated[
+        str | list[str] | list[ContentModel1 | ContentModel7 | ContentModel2] | None,
+        Field(...),
+    ] = None
     """
     The content parts of the message
     """
     name: str | None = None
     """
     Name
+    """
+    continue_: Annotated[StrictBool | None, Field(alias="continue")] = None
+    """
+    Whether to continue this message or return a new one
     """
     tool_calls: (
         list[
@@ -328,7 +335,7 @@ class LogProbResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    content: list[TokenLogProb] | None = None
+    content: Annotated[list[TokenLogProb] | None, Field(...)]
     """
     The log probabilities of the tokens
     """
@@ -343,7 +350,10 @@ class Message(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: str | list[str] | list[Content | ContentModel7 | ContentModel] | None = None
+    content: Annotated[
+        str | list[str] | list[Content | ContentModel7 | ContentModel] | None,
+        Field(...),
+    ] = None
     """
     The content parts of the message
     """
@@ -388,7 +398,10 @@ class MessageModel(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: str | list[str] | list[ContentModel3 | ContentModel7 | ContentModel4] | None = None
+    content: Annotated[
+        str | list[str] | list[ContentModel3 | ContentModel7 | ContentModel4] | None,
+        Field(...),
+    ] = None
     """
     The content parts of the message
     """
@@ -513,6 +526,10 @@ class ChatInput(ChatInputData):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    remember: Annotated[StrictBool, Field(json_schema_extra={"readOnly": True})] = False
+    """
+    DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
+    """
     recall: StrictBool = True
     """
     Whether previous memories and docs should be recalled or not

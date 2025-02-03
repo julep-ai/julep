@@ -226,10 +226,12 @@ class StepContext(BaseModel):
             direction="asc",
         )  # type: ignore[not-callable]
         inputs = []
+        labels = []
         for transition in transitions:
             if transition.next and transition.next.step >= len(inputs):
                 inputs.append(transition.output)
-        return inputs
+                labels.append(transition.step_label)
+        return inputs, labels
 
     async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
@@ -239,16 +241,27 @@ class StepContext(BaseModel):
 
         current_input = serialize_model_data(current_input)
 
-        inputs = await self.get_inputs()
-
+        inputs, labels = await self.get_inputs()
+        labels = labels[1:]
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
-        dump["inputs"] = inputs
-        dump["outputs"] = inputs[1:]
+
+        steps = {}
+        for i, input in enumerate(inputs):
+            step = {}
+            step["input"] = input
+            if i + 1 < len(inputs):
+                step["output"] = inputs[i + 1]
+                if labels[i]:
+                    steps[labels[i]] = step
+
+            steps[i] = step
+
+        dump["steps"] = steps
         prepared = dump | {"_": current_input}
 
         for i, input in enumerate(inputs):
-            prepared = prepared | {f"_{i}": input}
+            prepared = prepared | {f"step{i}": input}
             if i >= 100:
                 break
 

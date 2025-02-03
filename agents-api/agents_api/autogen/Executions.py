@@ -182,5 +182,16 @@ class Transition(TransitionEvent):
     execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     current: Annotated[TransitionTarget, Field(json_schema_extra={"readOnly": True})]
     next: Annotated[TransitionTarget | None, Field(json_schema_extra={"readOnly": True})]
+    step_label: Annotated[
+        str | None,
+        Field(
+            json_schema_extra={"readOnly": True},
+            max_length=120,
+            pattern="^[^0-9]|^[0-9]+[^0-9].*$",
+        ),
+    ] = None
+    """
+    A valid step label
+    """
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
