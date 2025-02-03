@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "julep-cli"
-version = "0.1.0a3"
+version = "0.1.0a4"
 description = "Julep CLI"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -26,6 +26,7 @@ dependencies = [
   "textual>=1.0.0",
   "trogon[typer]>=0.6.0",
   "typer-config[yaml]>=1.4.2",
+  "julep>=1.56.0",
 ]
 
 [project.scripts]
