@@ -216,9 +216,9 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def get_inputs(self) -> list[Any]:
+    async def get_inputs(self) -> tuple[list[Any], list[str | None]]:
         if self.execution_input.execution is None:
-            return []
+            return [], []
 
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
@@ -258,14 +258,7 @@ class StepContext(BaseModel):
             steps[i] = step
 
         dump["steps"] = steps
-        prepared = dump | {"_": current_input}
-
-        for i, input in enumerate(inputs):
-            prepared = prepared | {f"step{i}": input}
-            if i >= 100:
-                break
-
-        return prepared
+        return dump | {"_": current_input}
 
 
 class StepOutcome(BaseModel):
