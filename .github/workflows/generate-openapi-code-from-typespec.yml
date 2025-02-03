@@ -33,7 +33,7 @@ jobs:
       
       - name: Install TypeSpec CLI
         run: |
-          npm i @typespec/compiler@0.61.2
+          npm i -g @typespec/compiler@0.61.2
 
       - name: Generate openapi code
         run: |
