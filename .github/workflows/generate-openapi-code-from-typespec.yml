@@ -31,9 +31,9 @@ jobs:
         with:
           python-version: "3.12"
       
-      - name: Install TypeSpec CLI
+      - name: Install dependencies
         run: |
-          npm i -g @typespec/compiler@0.61.2
+          npm install
 
       - name: Generate openapi code
         run: |
