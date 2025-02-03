@@ -57,7 +57,7 @@ from ward import raises, test
 
 @test("utility: prepare_for_step - underscore")
 async def _():
-    with patch("agents_api.common.protocol.tasks.StepContext.get_inputs", return_value=([{"x": "1"}, {"y": "2"}, {"z": "3"}], ["", "first step", "second step"])):
+    with patch("agents_api.common.protocol.tasks.StepContext.get_inputs", return_value=([{"x": "1"}, {"y": "2"}, {"z": "3"}], [None, "first step", "second step"])):
         
         step = ToolCallStep(tool="tool1")
         context = StepContext(
@@ -83,7 +83,7 @@ async def _():
 
 @test("utility: prepare_for_step - label lookup in step")
 async def _():
-    with patch("agents_api.common.protocol.tasks.StepContext.get_inputs", return_value=([{"x": "1"}, {"y": "2"}, {"z": "3"}], ["", "first step", "second step"])):
+    with patch("agents_api.common.protocol.tasks.StepContext.get_inputs", return_value=([{"x": "1"}, {"y": "2"}, {"z": "3"}], [None, "first step", "second step"])):
         
         step = ToolCallStep(tool="tool1")
         context = StepContext(
@@ -113,7 +113,7 @@ async def _():
 
 @test("utility: prepare_for_step - stepx")
 async def _():
-    with patch("agents_api.common.protocol.tasks.StepContext.get_inputs", return_value=([{"x": "1"}, {"y": "2"}, {"z": "3"}], ["", "first step", "second step"])):
+    with patch("agents_api.common.protocol.tasks.StepContext.get_inputs", return_value=([{"x": "1"}, {"y": "2"}, {"z": "3"}], [None, "first step", "second step"])):
         
         step = ToolCallStep(tool="tool1")
         context = StepContext(
