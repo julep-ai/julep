@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import csv
 import datetime as dt
 import json
 import math
@@ -251,6 +252,30 @@ ALLOWED_FUNCTIONS = {
 }
 
 
+class stdlib_csv:
+    reader = csv.reader
+    writer = csv.writer
+    register_dialect = csv.register_dialect
+    unregister_dialect = csv.unregister_dialect
+    get_dialect = csv.get_dialect
+    list_dialects = csv.list_dialects
+    field_size_limit = csv.field_size_limit
+    DictReader = csv.DictReader
+    DictWriter = csv.DictWriter
+    Dialect = csv.Dialect
+    excel = csv.excel
+    excel_tab = csv.excel_tab
+    unix_dialect = csv.unix_dialect
+    Sniffer = csv.Sniffer
+    QUOTE_ALL = csv.QUOTE_ALL
+    QUOTE_MINIMAL = csv.QUOTE_MINIMAL
+    QUOTE_NONNUMERIC = csv.QUOTE_NONNUMERIC
+    QUOTE_NONE = csv.QUOTE_NONE
+    QUOTE_NOTNULL = csv.QUOTE_NOTNULL
+    QUOTE_STRINGS = csv.QUOTE_STRINGS
+    Error = csv.Error
+
+
 # Safe regex operations (using re2)
 class stdlib_re:
     fullmatch = re2.fullmatch
@@ -394,6 +419,7 @@ stdlib = {
     "urllib": stdlib_urllib,
     "random": stdlib_random,
     "time": stdlib_time,
+    "csv": stdlib_csv,
 }
 
 constants = {
