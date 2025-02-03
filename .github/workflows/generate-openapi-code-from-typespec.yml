@@ -30,17 +30,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      
-      - name: Install dependencies
-        run: |
-          npm install -g @typespec/compiler@0.61.2
-          npm install -g @typespec/events@0.61.0
-          npm install -g @typespec/http@0.61.0
-          npm install -g @typespec/openapi@0.61.0
-          npm install -g @typespec/openapi3@0.61.0
-          npm install -g @typespec/rest@0.61.0
-          npm install -g @typespec/sse@0.61.0
-          npm install -g @typespec/versioning@0.61.0
 
       - name: Generate openapi code
         run: |
