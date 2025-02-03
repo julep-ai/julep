@@ -2725,6 +2725,11 @@ components:
       format: uint32
       minimum: 0
       description: Offset to apply to the results
+    Common.stepLabel:
+      type: string
+      maxLength: 120
+      pattern: ^[^0-9]|^[0-9]+[^0-9].*$
+      description: A valid step label
     Common.uuid:
       type: string
       format: uuid
@@ -3522,6 +3527,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Executions.TransitionTarget'
           nullable: true
+          readOnly: true
+        step_label:
+          allOf:
+            - $ref: '#/components/schemas/Common.stepLabel'
           readOnly: true
         id:
           allOf:
@@ -4694,7 +4703,8 @@ components:
                         description: The kind of step
                         readOnly: true
                       label:
-                        type: string
+                        allOf:
+                          - $ref: '#/components/schemas/Common.stepLabel'
                         description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
@@ -4792,7 +4802,8 @@ components:
                       description: The kind of step
                       readOnly: true
                     label:
-                      type: string
+                      allOf:
+                        - $ref: '#/components/schemas/Common.stepLabel'
                       description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
@@ -4824,7 +4835,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -4861,7 +4873,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -4940,7 +4953,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -4958,7 +4972,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -4993,7 +5008,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5058,7 +5074,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5108,7 +5125,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -5144,7 +5162,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5186,7 +5205,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5213,7 +5233,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -5294,7 +5315,8 @@ components:
                   - type: object
                     properties:
                       label:
-                        type: string
+                        allOf:
+                          - $ref: '#/components/schemas/Common.stepLabel'
                         description: The label of this step for referencing it from other steps
                       kind_:
                         type: string
@@ -5380,7 +5402,8 @@ components:
                 - type: object
                   properties:
                     label:
-                      type: string
+                      allOf:
+                        - $ref: '#/components/schemas/Common.stepLabel'
                       description: The label of this step for referencing it from other steps
                     kind_:
                       type: string
@@ -5599,7 +5622,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5800,7 +5824,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -5849,7 +5874,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5886,7 +5912,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5955,7 +5982,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5990,7 +6018,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -6010,7 +6039,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -6116,7 +6146,8 @@ components:
                         description: The kind of step
                         readOnly: true
                       label:
-                        type: string
+                        allOf:
+                          - $ref: '#/components/schemas/Common.stepLabel'
                         description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
@@ -6228,7 +6259,8 @@ components:
                       description: The kind of step
                       readOnly: true
                     label:
-                      type: string
+                      allOf:
+                        - $ref: '#/components/schemas/Common.stepLabel'
                       description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
@@ -6353,7 +6385,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -6478,7 +6511,8 @@ components:
                         description: The kind of step
                         readOnly: true
                       label:
-                        type: string
+                        allOf:
+                          - $ref: '#/components/schemas/Common.stepLabel'
                         description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
@@ -6576,7 +6610,8 @@ components:
                       description: The kind of step
                       readOnly: true
                     label:
-                      type: string
+                      allOf:
+                        - $ref: '#/components/schemas/Common.stepLabel'
                       description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
@@ -6631,7 +6666,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -6688,7 +6724,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_

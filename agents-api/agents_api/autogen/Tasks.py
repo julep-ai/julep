@@ -223,7 +223,9 @@ class ErrorWorkflowStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -243,7 +245,9 @@ class EvaluateStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -311,7 +315,9 @@ class ForeachStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -325,7 +331,9 @@ class ForeachStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -347,7 +355,9 @@ class GetStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -367,7 +377,9 @@ class IfElseWorkflowStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -415,7 +427,9 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -489,7 +503,9 @@ class LogStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -509,7 +525,9 @@ class Main(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -541,7 +559,9 @@ class MainModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -591,7 +611,9 @@ class ParallelStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -610,7 +632,9 @@ class ParallelStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -744,7 +768,9 @@ class PromptStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -786,7 +812,9 @@ class PromptStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -836,7 +864,9 @@ class ReturnStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -857,7 +887,9 @@ class SetStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -897,7 +929,9 @@ class SleepStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -927,7 +961,9 @@ class SwitchStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -941,7 +977,9 @@ class SwitchStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -1046,7 +1084,9 @@ class ToolCallStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -1204,7 +1244,9 @@ class WaitForInputStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """
@@ -1222,7 +1264,9 @@ class YieldStep(BaseModel):
     """
     The kind of step
     """
-    label: str | None = None
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
     """
     The label of this step for referencing it from other steps
     """

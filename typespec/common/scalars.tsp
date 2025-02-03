@@ -28,6 +28,11 @@ scalar mimeType extends string;
 @maxLength(40)
 scalar validPythonIdentifier extends string;
 
+/** A valid step label */
+@maxLength(120)
+@pattern("^[^0-9]|^[0-9]+[^0-9].*$")
+scalar stepLabel extends string;
+
 /** Limit the number of results */
 @minValue(1)
 @maxValueExclusive(1000)

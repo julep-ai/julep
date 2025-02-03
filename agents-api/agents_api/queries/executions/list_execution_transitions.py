@@ -43,6 +43,7 @@ def _transform(d):
         "next": {"workflow": next_step[0], "step": next_step[1]}
         if next_step is not None
         else None,
+        "step_label": d["step_label"],
         **d,
     }
 
