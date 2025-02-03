@@ -76,8 +76,7 @@ def init(
             template_folder = f"{repo_prefix}{template}/"
 
             # Extract only the specified template folder
-            console.print(Text(f"Extracting template '{
-                          template}' to {path}", style="bold green"))
+            console.print(Text(f"Extracting template '{template}' to {path}", style="bold green"))
 
             for file_info in z.infolist():
                 if file_info.filename.startswith(template_folder):
