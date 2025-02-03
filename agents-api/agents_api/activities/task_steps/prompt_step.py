@@ -75,11 +75,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         raise TypeError(msg)
 
     # Get settings and run llm
-    agent_default_settings: dict = (
-        context.execution_input.agent.default_settings.model_dump()
-        if context.execution_input.agent.default_settings
-        else {}
-    )
+    agent_default_settings: dict = context.execution_input.agent.default_settings or {}
 
     agent_model: str = (
         context.execution_input.agent.model if context.execution_input.agent.model else "gpt-4o"

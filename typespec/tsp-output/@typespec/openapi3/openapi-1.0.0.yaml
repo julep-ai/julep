@@ -1477,8 +1477,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
     Agents.CreateAgentRequest:
       type: object
@@ -1516,8 +1516,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
       description: Payload for creating a agent (and associated documents)
     Agents.CreateOrUpdateAgentRequest:
@@ -1559,8 +1559,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
       allOf:
         - $ref: '#/components/schemas/Agents.CreateAgentRequest'
@@ -1595,8 +1595,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
       description: Payload for patching a agent
     Agents.UpdateAgentRequest:
@@ -1635,8 +1635,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
       description: Payload for updating a agent
     Chat.BaseChatOutput:

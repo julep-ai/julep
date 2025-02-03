@@ -82,7 +82,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert result.name == "updated agent"
     assert result.about == "updated agent about"
     assert result.model == "gpt-4o-mini"
-    assert result.default_settings.temperature == 1.0
+    assert result.default_settings["temperature"] == 1.0
     assert result.metadata == {"hello": "world"}
 
 
@@ -150,7 +150,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert isinstance(result, Agent)
     assert result.name == "patched agent"
     assert result.about == "patched agent about"
-    assert result.default_settings.temperature == 1.0
+    assert result.default_settings["temperature"] == 1.0
 
 
 @test("query: delete agent sql")

@@ -72,8 +72,7 @@ class ChatContext(SessionData):
         request_settings = chat_input.model_dump(exclude_unset=True)
         active_agent = self.get_active_agent()
 
-        default_settings: AgentDefaultSettings | None = active_agent.default_settings
-        default_settings: dict = (default_settings and default_settings.model_dump()) or {}
+        default_settings: dict = active_agent.default_settings or {}
 
         self.settings = settings = ChatSettings(**{
             "model": active_agent.model,

@@ -8,8 +8,6 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from .Chat import DefaultChatSettings
-
 
 class Agent(BaseModel):
     model_config = ConfigDict(
@@ -48,7 +46,7 @@ class Agent(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: DefaultChatSettings | None = None
+    default_settings: dict[str, Any] | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -86,7 +84,7 @@ class CreateAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: DefaultChatSettings | None = None
+    default_settings: dict[str, Any] | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -121,7 +119,7 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     """
     Instructions for the agent
     """
-    default_settings: DefaultChatSettings | None = None
+    default_settings: dict[str, Any] | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -159,7 +157,7 @@ class PatchAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: DefaultChatSettings | None = None
+    default_settings: dict[str, Any] | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -197,7 +195,7 @@ class UpdateAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: DefaultChatSettings | None = None
+    default_settings: dict[str, Any] | None = None
     """
     Default settings for all sessions created by this agent
     """
