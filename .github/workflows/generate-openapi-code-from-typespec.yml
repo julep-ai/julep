@@ -30,6 +30,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      
+      - name: Install TypeSpec CLI
+        run: |
+          npm install -g @typespec/cli
 
       - name: Generate openapi code
         run: |
