@@ -9,6 +9,7 @@ import yaml
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text
+from rich.table import Table
 
 from .app import app, console, error_console
 from .models import (
@@ -98,7 +99,6 @@ def sync(
         if agents or tasks or tools:
             console.print(Panel(
                 Text("Found the following new entities in julep.yaml:", style="bold cyan")))
-            from rich.table import Table
 
             if agents:
                 table = Table(title="Agents", show_header=False, title_style="bold magenta")
@@ -169,9 +169,7 @@ def sync(
             for task in tasks:
                 task_yaml_path: Path = source / task.pop("definition")
 
-                agent_id_expression = task.pop("agent_id")
-                agent_id = eval(f'f"{agent_id_expression}"', {
-                                "agents": locked_agents})
+                agent_id = get_agent_id_from_expression(task.pop("agent_id"), locked_agents)
 
                 task_yaml_content = yaml.safe_load(task_yaml_path.read_text())
 
@@ -224,9 +222,7 @@ def sync(
 
                 tool_request = CreateToolRequest(**tool_yaml_content, **tool)
 
-                agent_id_expression = tool.pop("agent_id")
-                agent_id = eval(f'f"{agent_id_expression}"', {
-                                "agents": locked_agents})
+                agent_id = get_agent_id_from_expression(tool.pop("agent_id"), locked_agents)
 
                 with Progress(
                     SpinnerColumn(),
@@ -437,9 +433,7 @@ def sync(
                 task_request_hash = hashlib.sha256(
                     json.dumps(task_yaml_content).encode()).hexdigest()
 
-                agent_id_expression = task_julep_yaml.pop("agent_id")
-                agent_id = eval(f'f"{agent_id_expression}"', {
-                                "agents": lock_file.agents})
+                agent_id = get_agent_id_from_expression(task_julep_yaml.pop("agent_id"), lock_file.agents)
 
                 task_request = CreateTaskRequest(
                     **task_yaml_content, **task_julep_yaml)
@@ -528,9 +522,7 @@ def sync(
                 tool_request_hash = hashlib.sha256(
                     json.dumps(tool_yaml_content).encode()).hexdigest()
 
-                agent_id_expression = tool_julep_yaml.pop("agent_id")
-                agent_id = eval(f'f"{agent_id_expression}"', {
-                                "agents": lock_file.agents})
+                agent_id = get_agent_id_from_expression(tool_julep_yaml.pop("agent_id"), lock_file.agents)
 
                 tool_request = CreateToolRequest(
                     **tool_yaml_content, **tool_julep_yaml)
@@ -592,3 +584,14 @@ def sync(
         # Compare local and remote states
 
     # TODO: Implement logic when no force flags are provided
+
+
+def get_agent_id_from_expression(expression: str, locked_agents: list[LockedEntity]) -> str:
+    """
+    Get the agent ID from an expression in julep.yaml
+    """
+
+    if not locked_agents:
+        raise ValueError("No locked agents passed to get_agent_id_from_expression")
+
+    return eval(f'f"{expression}"', {"agents": locked_agents})
