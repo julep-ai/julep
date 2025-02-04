@@ -3,6 +3,7 @@ This module defines session-related data structures and settings used across the
 It includes definitions for session settings and session data models.
 """
 
+from typing import cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -10,7 +11,6 @@ from pydantic import BaseModel
 from ...autogen.openapi_model import (
     Agent,
     ChatInput,
-    ChatSettings,
     MultiAgentMultiUserSession,
     Session,
     SingleAgentMultiUserSession,
@@ -37,7 +37,7 @@ class SessionData(BaseModel):
     session: Session
     agents: list[Agent]
     users: list[User] = []
-    settings: ChatSettings | None = None
+    settings: dict | None = None
 
 
 class Toolset(BaseModel):
@@ -56,7 +56,7 @@ class ChatContext(SessionData):
         """
         Get the active agent from the session data.
         """
-        requested_agent: UUID | None = self.settings and self.settings.agent
+        requested_agent: UUID | None = cast(UUID, self.settings and self.settings.get("agent"))
 
         if requested_agent:
             assert requested_agent in [agent.id for agent in self.agents], (
@@ -68,17 +68,17 @@ class ChatContext(SessionData):
 
         return self.agents[0]
 
-    def merge_settings(self, chat_input: ChatInput) -> ChatSettings:
+    def merge_settings(self, chat_input: ChatInput) -> dict:
         request_settings = chat_input.model_dump(exclude_unset=True)
         active_agent = self.get_active_agent()
 
         default_settings: dict = active_agent.default_settings or {}
 
-        self.settings = settings = ChatSettings(**{
+        self.settings = settings = {
             "model": active_agent.model,
             **default_settings,
             **request_settings,
-        })
+        }
 
         return settings
 
@@ -102,8 +102,7 @@ class ChatContext(SessionData):
         """
         current_agent = self.get_active_agent()
         tools = self.get_active_tools()
-        settings: ChatSettings | None = self.settings
-        settings: dict = (settings and settings.model_dump()) or {}
+        settings: dict | None = self.settings or {}
 
         return {
             "session": self.session.model_dump(),
