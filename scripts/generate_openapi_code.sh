@@ -21,9 +21,9 @@ codegen_then_format () {
 
 generate_schemas () {
   # FIXME: This repeated pipe is a crude hack coz I couldn't figure out how to do it in the jq script...
-  cat openapi.yaml | yq -o json | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq > /tmp/combined.json
-  cat /tmp/combined.json | jq '.components.schemas.CreateTaskRequest' > ./schemas/create_task_request.json
-  cat /tmp/combined.json | jq '.components.schemas.CreateAgentRequest' > ./schemas/create_agent_request.json
+  \cat openapi.yaml | yq -o json | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq > /tmp/combined.json
+  \cat /tmp/combined.json | jq '.components.schemas["Tasks.CreateTaskRequest"]' > ./schemas/create_task_request.json
+  \cat /tmp/combined.json | jq '.components.schemas["Agents.CreateAgentRequest"]' > ./schemas/create_agent_request.json
 }
 
 cd typespec/ && \

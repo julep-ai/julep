@@ -1,1 +1,131 @@
-null
+{
+  "description": "Payload for creating a agent (and associated documents)",
+  "properties": {
+    "about": {
+      "default": "",
+      "description": "About the agent",
+      "type": "string"
+    },
+    "canonical_name": {
+      "allOf": [
+        {
+          "description": "For canonical names (machine-friendly identifiers)\nMust start with a letter and can only contain letters, numbers, and underscores",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+          "type": "string"
+        }
+      ],
+      "description": "Canonical name of the agent"
+    },
+    "default_settings": {
+      "allOf": [
+        {
+          "allOf": [
+            {
+              "properties": {
+                "frequency_penalty": {
+                  "description": "Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.",
+                  "format": "float",
+                  "maximum": 2,
+                  "minimum": -2,
+                  "type": "number"
+                },
+                "presence_penalty": {
+                  "description": "Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.",
+                  "format": "float",
+                  "maximum": 2,
+                  "minimum": -2,
+                  "type": "number"
+                },
+                "temperature": {
+                  "description": "What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.",
+                  "format": "float",
+                  "maximum": 5,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "top_p": {
+                  "description": "Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.",
+                  "format": "float",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          ],
+          "description": "Default settings for the chat session (also used by the agent)",
+          "properties": {
+            "length_penalty": {
+              "description": "Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.",
+              "format": "float",
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            "min_p": {
+              "description": "Minimum probability compared to leading token to be considered",
+              "format": "float",
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            "repetition_penalty": {
+              "description": "Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.",
+              "format": "float",
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          "type": "object"
+        }
+      ],
+      "description": "Default settings for all sessions created by this agent"
+    },
+    "instructions": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ],
+      "default": [],
+      "description": "Instructions for the agent"
+    },
+    "metadata": {
+      "additionalProperties": {},
+      "type": "object"
+    },
+    "model": {
+      "default": "",
+      "description": "Model name to use (gpt-4-turbo, gemini-nano etc)",
+      "type": "string"
+    },
+    "name": {
+      "allOf": [
+        {
+          "description": "For display names\nMust be between 1 and 255 characters",
+          "maxLength": 255,
+          "minLength": 1,
+          "type": "string"
+        }
+      ],
+      "description": "Name of the agent"
+    }
+  },
+  "required": [
+    "name",
+    "about",
+    "model",
+    "instructions"
+  ],
+  "type": "object"
+}
