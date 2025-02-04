@@ -20,11 +20,11 @@ app = typer.Typer(
 init_tui(app)
 
 # Initialize subcommands
-agents_app = typer.Typer(help="Manage AI agents")
-tasks_app = typer.Typer(help="Manage tasks")
-tools_app = typer.Typer(help="Manage tools")
-import_app = typer.Typer(help="Import entities from the Julep platform")
-executions_app = typer.Typer(help="Manage executions")
+agents_app = typer.Typer(help="Manage AI agents", no_args_is_help=True)
+tasks_app = typer.Typer(help="Manage tasks", no_args_is_help=True)
+tools_app = typer.Typer(help="Manage tools", no_args_is_help=True)
+import_app = typer.Typer(help="Import entities from the Julep platform", no_args_is_help=True)
+executions_app = typer.Typer(help="Manage executions", no_args_is_help=True)
 
 app.add_typer(agents_app, name="agents")
 app.add_typer(tasks_app, name="tasks")
