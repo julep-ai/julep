@@ -1,3 +1,4 @@
+import io
 import asyncio
 import base64
 import csv
@@ -252,16 +253,108 @@ ALLOWED_FUNCTIONS = {
 }
 
 
+def csv_reader(
+    data: str, 
+    dialect="excel",
+    delimiter: str = ",",
+    quotechar: str | None = '"',
+    escapechar: str | None = None,
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    lineterminator: str = "\r\n",
+    quoting=0,
+    strict: bool = False,
+):
+    return csv.reader(
+        io.StringIO(data),
+        dialect,
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        lineterminator=lineterminator,
+        quoting=quoting,
+        strict=strict,
+    )
+
+
+def csv_writer(
+    data: str, 
+    dialect="excel",
+    delimiter: str = ",",
+    quotechar: str | None = '"',
+    escapechar: str | None = None,
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    lineterminator: str = "\r\n",
+    quoting=0,
+    strict: bool = False,
+):
+    return csv.writer(
+        io.StringIO(data),
+        dialect,
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        lineterminator=lineterminator,
+        quoting=quoting,
+        strict=strict,
+    )
+
+
+def csv_dictreader(
+    data: str, 
+    fieldnames=None, 
+    restkey=None, 
+    restval=None, 
+    dialect="excel", 
+    *args, 
+    **kwds,
+):
+    return csv.DictReader(
+        io.StringIO(data),
+        fieldnames=fieldnames, 
+        restkey=restkey, 
+        restval=restval, 
+        dialect=dialect, 
+        *args, 
+        **kwds,
+    )
+
+
+def csv_dictwriter(
+    data: str,
+    fieldnames, 
+    restval="", 
+    extrasaction="raise",
+    dialect="excel", 
+    *args, 
+    **kwds,
+):
+    return csv.DictWriter(
+        io.StringIO(data),
+        fieldnames,
+        restval=restval,
+        extrasaction=extrasaction,
+        dialect=dialect,
+        *args,
+        **kwds,
+    )
+
+
 class stdlib_csv:
-    reader = csv.reader
-    writer = csv.writer
+    reader = csv_reader
+    writer = csv_writer
     register_dialect = csv.register_dialect
     unregister_dialect = csv.unregister_dialect
     get_dialect = csv.get_dialect
     list_dialects = csv.list_dialects
     field_size_limit = csv.field_size_limit
-    DictReader = csv.DictReader
-    DictWriter = csv.DictWriter
+    DictReader = csv_dictreader
+    DictWriter = csv_dictwriter
     Dialect = csv.Dialect
     excel = csv.excel
     excel_tab = csv.excel_tab
