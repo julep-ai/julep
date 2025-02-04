@@ -346,15 +346,15 @@ def csv_dictwriter(
 
 
 class stdlib_csv:
-    reader = csv_reader
-    writer = csv_writer
+    reader = staticmethod(csv_reader)
+    writer = staticmethod(csv_writer)
     register_dialect = csv.register_dialect
     unregister_dialect = csv.unregister_dialect
     get_dialect = csv.get_dialect
     list_dialects = csv.list_dialects
     field_size_limit = csv.field_size_limit
-    DictReader = csv_dictreader
-    DictWriter = csv_dictwriter
+    DictReader = staticmethod(csv_dictreader)
+    DictWriter = staticmethod(csv_dictwriter)
     Dialect = csv.Dialect
     excel = csv.excel
     excel_tab = csv.excel_tab
