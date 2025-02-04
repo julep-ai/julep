@@ -13,6 +13,7 @@ from typing import Any
 from temporalio import workflow
 from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
 from temporalio.exceptions import ApplicationError, FailureError, TemporalError
+from asyncio.exceptions import CancelledError as AsyncioCancelledError
 from temporalio.service import RPCError
 from temporalio.worker import (
     ActivityInboundInterceptor,
@@ -52,6 +53,7 @@ PASSTHROUGH_EXCEPTIONS = (
     TemporalError,
     FailureError,
     ApplicationError,
+    AsyncioCancelledError,
 )
 
 

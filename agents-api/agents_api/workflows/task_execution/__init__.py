@@ -61,6 +61,8 @@ with workflow.unsafe.imports_passed_through():
         testing,
     )
     from ...exceptions import LastErrorInput
+    from temporalio.exceptions import CancelledError
+    from asyncio.exceptions import CancelledError as AsyncioCancelledError
     from .helpers import (
         base_evaluate_activity,
         continue_as_child,
@@ -732,6 +734,10 @@ class TaskExecutionWorkflow:
         except Exception as e:
             while isinstance(e, ActivityError) and e.__cause__:
                 e = e.__cause__
+            if isinstance(e, CancelledError):
+                workflow.logger.info(f"Step {context.cursor.step} cancelled")
+                await transition(context, type="cancelled", output="Workflow Cancelled")
+                raise
             workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
             await transition(context, type="error", output=str(e))
             err_msg = (
@@ -753,10 +759,22 @@ class TaskExecutionWorkflow:
             raise ApplicationError(msg)
 
         self.outcome = outcome
-
-        state = await self.handle_step(
-            step=context.current_step,
-        )
+        try:
+            state = await self.handle_step(
+                step=context.current_step,
+            )
+        except BaseException as e:
+            while isinstance(e, ActivityError) and e.__cause__:
+                e = e.__cause__
+            if isinstance(e, CancelledError) or isinstance(e, AsyncioCancelledError):
+                workflow.logger.info(f"Step {context.cursor.step} cancelled")
+                await transition(context, type="cancelled", output="Workflow Cancelled")
+                raise
+            workflow.logger.error(f"Error in step {context.cursor.step}: {e}")
+            await transition(context, type="error", output=str(e))
+            msg = f"Step {type(context.current_step).__name__} threw error: {e}"
+            raise ApplicationError(msg) from e
+        
         if isinstance(context.current_step, ReturnStep):
             return state
 
@@ -774,7 +792,7 @@ class TaskExecutionWorkflow:
         )
 
         # 5a. End if the last step
-        if final_state.type in ("finish", "finish_branch", "cancelled"):
+        if final_state.type in ("finish", "finish_branch", "cancelled", "error"):
             workflow.logger.info(f"Workflow finished with state: {final_state.type}")
             return final_state.output
 
