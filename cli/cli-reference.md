@@ -88,6 +88,7 @@ $ julep chat [OPTIONS]
 Initialize a new Julep project by copying a template from the library repository.
 
 This will:
+
 1. Copy the specified template folder from the /library repository
 2. Create a new project in the destination directory
 3. Ensure the destination contains a valid julep.yaml file
@@ -101,7 +102,7 @@ $ julep init [OPTIONS]
 **Options**:
 
 * `-t, --template TEXT`: Name of the template to use from the library repository  [default: hello-world]
-* `-p, --path PATH`: Destination directory for the initialized project (default: current directory)  [default: /Users/hamadasalhab/Documents/repos/julep-ai/julep/cli]
+* `-p, --path PATH`: Destination directory for the initialized project (default: current directory)
 * `-y, --yes`: Skip confirmation prompt
 * `--help`: Show this message and exit.
 
@@ -133,7 +134,7 @@ $ julep ls [OPTIONS]
 
 **Options**:
 
-* `-s, --source PATH`: Path to list  [default: /Users/hamadasalhab/Documents/repos/julep-ai/julep/cli]
+* `-s, --source PATH`: Path to list
 * `--help`: Show this message and exit.
 
 ## `julep run`
@@ -166,7 +167,7 @@ $ julep sync [OPTIONS]
 
 **Options**:
 
-* `-s, --source PATH`: Source directory containing julep.yaml  [default: /Users/hamadasalhab/Documents/repos/julep-ai/julep/cli]
+* `-s, --source PATH`: Source directory containing julep.yaml
 * `--force-local`: Force local state to match remote
 * `--force-remote`: Force remote state to match local
 * `-d, --dry-run`: Simulate synchronization without making changes
@@ -493,7 +494,7 @@ $ julep import agent [OPTIONS]
 **Options**:
 
 * `-i, --id TEXT`: ID of the agent to import  [required]
-* `-s, --source PATH`: Path to the source directory. Defaults to current working directory  [default: /Users/hamadasalhab/Documents/repos/julep-ai/julep/cli]
+* `-s, --source PATH`: Path to the source directory. Defaults to current working directory
 * `-o, --output PATH`: Path to save the imported agent. Defaults to &lt;project_dir&gt;/src/agents
 * `-y, --yes`: Skip confirmation prompt
 * `--help`: Show this message and exit.

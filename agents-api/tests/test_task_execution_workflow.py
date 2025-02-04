@@ -1216,7 +1216,7 @@ async def _():
             "agents_api.workflows.task_execution.base_evaluate_activity",
             new=base_evaluate,
         ):
-            result = await wf.eval_step_exprs(LogStep(log="$ _0['x']"))
+            result = await wf.eval_step_exprs(LogStep(log="$ steps[0].input['x']"))
 
         assert result == StepOutcome(output="5")
 

@@ -143,8 +143,7 @@ async def create_execution_transition(
             execution_id,
             transition_id,
             data.type,
-            # TODO: Add step_label
-            None,
+            transition_data.get("step_label"),
             transition_data["current"],
             transition_data["next"],
             data.output,

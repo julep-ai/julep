@@ -216,9 +216,9 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def get_inputs(self) -> list[Any]:
+    async def get_inputs(self) -> tuple[list[Any], list[str | None]]:
         if self.execution_input.execution is None:
-            return []
+            return [], []
 
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
@@ -226,10 +226,12 @@ class StepContext(BaseModel):
             direction="asc",
         )  # type: ignore[not-callable]
         inputs = []
+        labels = []
         for transition in transitions:
             if transition.next and transition.next.step >= len(inputs):
                 inputs.append(transition.output)
-        return inputs
+                labels.append(transition.step_label)
+        return inputs, labels
 
     async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
@@ -239,20 +241,24 @@ class StepContext(BaseModel):
 
         current_input = serialize_model_data(current_input)
 
-        inputs = await self.get_inputs()
-
+        inputs, labels = await self.get_inputs()
+        labels = labels[1:]
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
-        dump["inputs"] = inputs
-        dump["outputs"] = inputs[1:]
-        prepared = dump | {"_": current_input}
 
+        steps = {}
         for i, input in enumerate(inputs):
-            prepared = prepared | {f"_{i}": input}
-            if i >= 100:
-                break
+            step = {}
+            step["input"] = input
+            if i + 1 < len(inputs):
+                step["output"] = inputs[i + 1]
+                if labels[i]:
+                    steps[labels[i]] = step
 
-        return prepared
+            steps[i] = step
+
+        dump["steps"] = steps
+        return dump | {"_": current_input}
 
 
 class StepOutcome(BaseModel):

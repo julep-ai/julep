@@ -36,22 +36,6 @@ class LogitBias(RootModel[float]):
     root: Annotated[float, Field(ge=-100.0, le=100.0)]
 
 
-class MimeType(RootModel[str]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Annotated[
-        str,
-        Field(
-            max_length=120,
-            pattern="^(application|audio|font|example|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)$",
-        ),
-    ]
-    """
-    Valid mime types
-    """
-
-
 class Offset(RootModel[int]):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -59,6 +43,16 @@ class Offset(RootModel[int]):
     root: Annotated[int, Field(ge=0)]
     """
     Offset to apply to the results
+    """
+
+
+class PyExpression(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: str
+    """
+    A simple python expression compatible with SimpleEval.
     """
 
 
@@ -77,6 +71,16 @@ class ResourceDeletedResponse(BaseModel):
     jobs: Annotated[list[UUID], Field(json_schema_extra={"readOnly": True})] = []
     """
     IDs (if any) of jobs created as part of this request
+    """
+
+
+class StepLabel(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[str, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")]
+    """
+    A valid step label
     """
 
 
