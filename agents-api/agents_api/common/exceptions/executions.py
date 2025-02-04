@@ -1,5 +1,6 @@
-from thefuzz import fuzz
 from simpleeval import NameNotDefined
+from thefuzz import fuzz
+
 
 class EvaluateError(Exception):
     def __init__(self, error, expression, values):

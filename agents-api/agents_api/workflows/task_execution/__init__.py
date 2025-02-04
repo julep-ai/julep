@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError, ActivityError
+from temporalio.exceptions import ActivityError, ApplicationError
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():

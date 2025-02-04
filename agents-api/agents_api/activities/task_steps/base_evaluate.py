@@ -12,9 +12,9 @@ simpleeval.MAX_STRING_LENGTH = 2048000
 from simpleeval import SimpleEval
 from temporalio import activity
 
+from ...common.exceptions.executions import EvaluateError
 from ...common.protocol.tasks import StepContext
 from ..utils import get_evaluator
-from ...common.exceptions.executions import EvaluateError
 
 
 # Recursive evaluation helper function
