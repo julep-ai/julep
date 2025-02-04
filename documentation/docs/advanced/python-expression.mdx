@@ -108,6 +108,92 @@ Example using these functions in an evaluate step:
     extracted_content: extract_json('Here is some JSON: ```json\n{"key": "value"}\n```')
 ```
 
+### CSV Functions
+- `reader`: `def reader(data: str, dialect="excel", delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting=0, strict: bool = False) -> csv._reader`
+
+  Creates a CSV reader.
+
+- `writer`: `def writer(data: str, dialect="excel", delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting=0, strict: bool = False) -> csv._writer`
+
+  Creates a CSV writer.
+
+- `DictReader`: `class DictReader(data: str, fieldnames=None, restkey=None, restval=None, dialect="excel", *args, **kwds)`
+
+  Create an object that operates like a regular reader but maps the information in each row to a dict.
+
+- `DictWriter`: `class DictWriter(data: str, fieldnames, restval="", extrasaction="raise", dialect="excel", *args, **kwds)`
+
+  Create an object which operates like a regular writer but maps dictionaries onto output rows.
+
+- `register_dialect`: `def register_dialect(name: str, dialect: type[Dialect] = ..., *, delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting: _QuotingType = 0, strict: bool = False) -> csv._reader`
+
+  Associate dialect with name.
+
+- `unregister_dialect`: `def unregister_dialect(name: str) -> None`
+
+  Delete the dialect associated with name from the dialect registry.
+
+- `get_dialect`: `def get_dialect(name: str) -> Dialect`
+
+  Return the dialect associated with name.
+
+- `list_dialects`: `def list_dialects() -> list[str]`
+
+  Return the names of all registered dialects.
+
+- `field_size_limit`: `def field_size_limit(new_limit: int = ...) -> int`
+
+  Returns the current maximum field size allowed by the parser.
+
+- `Dialect`: `class Dialect()`
+
+  The Dialect class is a container class whose attributes contain information for how to handle doublequotes, whitespace, delimiters, etc.
+
+- `excel`: `class excel()`
+
+  The excel class defines the usual properties of an Excel-generated CSV file.
+
+- `excel_tab`: `class excel_tab()`
+
+  The excel_tab class defines the usual properties of an Excel-generated TAB-delimited file.
+
+- `unix_dialect`: `class unix_dialect()`
+
+  The unix_dialect class defines the usual properties of a CSV file generated on UNIX systems, i.e. using '\n' as line terminator and quoting all fields.
+
+- `Sniffer`: `class Sniffer`
+
+  The Sniffer class is used to deduce the format of a CSV file.
+
+- `QUOTE_ALL` - Instructs writer objects to quote all fields.
+
+- `QUOTE_MINIMAL` - Instructs writer objects to only quote those fields which contain special characters such as delimiter, quotechar or any of the characters in lineterminator.
+
+- `QUOTE_NONNUMERIC` - Instructs writer objects to quote all non-numeric fields. Instructs reader objects to convert all non-quoted fields to type float.
+
+- `QUOTE_NONE` - Instructs writer objects to never quote fields.
+
+- `QUOTE_NOTNULL` - Instructs writer objects to quote all fields which are not None.
+
+- `QUOTE_STRINGS` - Instructs writer objects to always place quotes around fields which are strings.
+
+- `Error`: `class Error()`
+
+  Raised by any of the functions when an error is detected.
+
+This module tries to mimic `csv` module from the standard Python library. You can find additional information [here](https://docs.python.org/3/library/csv.html)
+
+## Example Usage
+
+```yaml
+name: Data Processing Task
+
+main:
+  # Using _ as input
+  - evaluate:
+      csv_data: [row for row in csv.reader("a,b,c\n1,2,3")]
+```
+
 ### Standard Library Modules
 - `re`: Regular expressions (using re2)
 - `json`: JSON operations
@@ -120,6 +206,7 @@ Example using these functions in an evaluate step:
 - `urllib.parse`: URL parsing operations
 - `random`: Random number generation
 - `time`: Time operations
+- `csv`: CSV operations
 
 For the complete list of available functions and their safe implementations, refer to the [utils.py](https://github.com/julep-ai/julep/blob/main/agents-api/agents_api/activities/utils.py) file in the source code.
 
