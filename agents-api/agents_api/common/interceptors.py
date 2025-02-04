@@ -6,6 +6,7 @@ certain types of errors that are known to be non-retryable.
 
 import inspect
 import sys
+from asyncio.exceptions import CancelledError as AsyncioCancelledError
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
 from typing import Any
@@ -13,7 +14,6 @@ from typing import Any
 from temporalio import workflow
 from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
 from temporalio.exceptions import ApplicationError, FailureError, TemporalError
-from asyncio.exceptions import CancelledError as AsyncioCancelledError
 from temporalio.service import RPCError
 from temporalio.worker import (
     ActivityInboundInterceptor,

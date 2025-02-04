@@ -9,7 +9,10 @@ from temporalio.exceptions import ActivityError, ApplicationError
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
+    from asyncio.exceptions import CancelledError as AsyncioCancelledError
+
     from pydantic import RootModel
+    from temporalio.exceptions import CancelledError
 
     from ...activities import task_steps
     from ...activities.execute_api_call import execute_api_call
@@ -61,8 +64,6 @@ with workflow.unsafe.imports_passed_through():
         testing,
     )
     from ...exceptions import LastErrorInput
-    from temporalio.exceptions import CancelledError
-    from asyncio.exceptions import CancelledError as AsyncioCancelledError
     from .helpers import (
         base_evaluate_activity,
         continue_as_child,
@@ -766,7 +767,7 @@ class TaskExecutionWorkflow:
         except BaseException as e:
             while isinstance(e, ActivityError) and e.__cause__:
                 e = e.__cause__
-            if isinstance(e, CancelledError) or isinstance(e, AsyncioCancelledError):
+            if isinstance(e, CancelledError | AsyncioCancelledError):
                 workflow.logger.info(f"Step {context.cursor.step} cancelled")
                 await transition(context, type="cancelled", output="Workflow Cancelled")
                 raise
@@ -774,7 +775,7 @@ class TaskExecutionWorkflow:
             await transition(context, type="error", output=str(e))
             msg = f"Step {type(context.current_step).__name__} threw error: {e}"
             raise ApplicationError(msg) from e
-        
+
         if isinstance(context.current_step, ReturnStep):
             return state
 
