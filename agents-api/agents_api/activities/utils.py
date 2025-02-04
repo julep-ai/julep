@@ -1,8 +1,8 @@
-import io
 import asyncio
 import base64
 import csv
 import datetime as dt
+import io
 import json
 import math
 import random
@@ -254,7 +254,7 @@ ALLOWED_FUNCTIONS = {
 
 
 def csv_reader(
-    data: str, 
+    data: str,
     dialect="excel",
     delimiter: str = ",",
     quotechar: str | None = '"',
@@ -280,7 +280,7 @@ def csv_reader(
 
 
 def csv_writer(
-    data: str, 
+    data: str,
     dialect="excel",
     delimiter: str = ",",
     quotechar: str | None = '"',
@@ -306,32 +306,32 @@ def csv_writer(
 
 
 def csv_dictreader(
-    data: str, 
-    fieldnames=None, 
-    restkey=None, 
-    restval=None, 
-    dialect="excel", 
-    *args, 
+    data: str,
+    fieldnames=None,
+    restkey=None,
+    restval=None,
+    dialect="excel",
+    *args,
     **kwds,
 ):
     return csv.DictReader(
         io.StringIO(data),
-        fieldnames=fieldnames, 
-        restkey=restkey, 
-        restval=restval, 
-        dialect=dialect, 
-        *args, 
+        fieldnames=fieldnames,
+        restkey=restkey,
+        restval=restval,
+        dialect=dialect,
+        *args,
         **kwds,
     )
 
 
 def csv_dictwriter(
     data: str,
-    fieldnames, 
-    restval="", 
+    fieldnames,
+    restval="",
     extrasaction="raise",
-    dialect="excel", 
-    *args, 
+    dialect="excel",
+    *args,
     **kwds,
 ):
     return csv.DictWriter(
