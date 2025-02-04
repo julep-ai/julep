@@ -193,13 +193,13 @@ async def chat(
         ]
 
     # Use litellm for other models
-    params = dict(
-        messages=messages,
-        tools=formatted_tools or None,
-        user=str(developer.id),
-        tags=developer.tags,
-        custom_api_key=x_custom_api_key,
-    )
+    params = {
+        "messages": messages,
+        "tools": formatted_tools or None,
+        "user": str(developer.id),
+        "tags": developer.tags,
+        "custom_api_key": x_custom_api_key,
+    }
     model_response = await litellm.acompletion(**{**settings, **params})
 
     # Save the input and the response to the session history
