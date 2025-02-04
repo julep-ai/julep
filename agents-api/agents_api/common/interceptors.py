@@ -6,6 +6,7 @@ certain types of errors that are known to be non-retryable.
 
 import inspect
 import sys
+from asyncio.exceptions import CancelledError as AsyncioCancelledError
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
 from typing import Any
@@ -52,6 +53,7 @@ PASSTHROUGH_EXCEPTIONS = (
     TemporalError,
     FailureError,
     ApplicationError,
+    AsyncioCancelledError,
 )
 
 

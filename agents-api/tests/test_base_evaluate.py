@@ -1,7 +1,7 @@
 import uuid
 from unittest.mock import patch
 
-from agents_api.activities.task_steps.base_evaluate import EvaluateError, base_evaluate
+from agents_api.activities.task_steps.base_evaluate import base_evaluate
 from agents_api.autogen.openapi_model import (
     Agent,
     TaskSpecDef,
@@ -9,6 +9,7 @@ from agents_api.autogen.openapi_model import (
     TransitionTarget,
     Workflow,
 )
+from agents_api.common.exceptions.executions import EvaluateError
 from agents_api.common.protocol.tasks import (
     ExecutionInput,
     StepContext,
