@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError
+from temporalio.exceptions import ApplicationError, ActivityError
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
@@ -730,6 +730,8 @@ class TaskExecutionWorkflow:
             else:
                 outcome = await self.eval_step_exprs(context.current_step)
         except Exception as e:
+            while isinstance(e, ActivityError) and e.__cause__:
+                e = e.__cause__
             workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
             await transition(context, type="error", output=str(e))
             err_msg = (

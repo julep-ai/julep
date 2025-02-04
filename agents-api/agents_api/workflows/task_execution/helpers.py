@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Any, TypeVar
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError
+from temporalio.exceptions import ActivityError, ApplicationError
 
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
 
@@ -46,13 +46,18 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
 async def base_evaluate_activity(
     expr: str, context: StepContext | None = None, values: dict[str, Any] | None = None
 ) -> Any:
-    return await workflow.execute_activity(
-        task_steps.base_evaluate,
-        args=[expr, context, values],
-        schedule_to_close_timeout=timedelta(seconds=30),
-        retry_policy=DEFAULT_RETRY_POLICY,
-        heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
-    )
+    try:
+        return await workflow.execute_activity(
+            task_steps.base_evaluate,
+            args=[expr, context, values],
+            schedule_to_close_timeout=timedelta(seconds=30),
+            retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+        )
+    except ActivityError as e:
+        while isinstance(e, ActivityError) and e.__cause__:
+            e = e.__cause__
+        raise e
 
 
 async def continue_as_child(
