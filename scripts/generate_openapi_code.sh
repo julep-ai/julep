@@ -7,30 +7,32 @@ set -x
 set -e
 
 uv_run () {
-    uvx \
-      --with ruff --with datamodel-code-generator \
-      --from ${2:-poethepoet} \
-      $1
+  uvx \
+    --with ruff --with datamodel-code-generator \
+    --from ${2:-poethepoet} \
+    $1
 }
 
 codegen_then_format () {
-    uv_run 'poe codegen' && \
-    uv_run 'poe format'  && \
-    uv_run 'ruff check --fix --unsafe-fixes .' 'ruff' || exit 0
+  uv_run 'poe codegen' && \
+  uv_run 'poe format'  && \
+  uv_run 'ruff check --fix --unsafe-fixes .' 'ruff' || exit 0
 }
 
-generate_schemas () {
-  # FIXME: This repeated pipe is a crude hack coz I couldn't figure out how to do it in the jq script...
-  \cat openapi.yaml | yq -o json | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq | jq -f ./schemas/walk.jq > /tmp/combined.json
-  \cat /tmp/combined.json | jq '.components.schemas["Tasks.CreateTaskRequest"]' > ./schemas/create_task_request.json
-  \cat /tmp/combined.json | jq '.components.schemas["Agents.CreateAgentRequest"]' > ./schemas/create_agent_request.json
+generate_json_schema_local () {
+  \cat openapi.yaml | yq -o json | jq -f ./schemas/walk.jq --arg target "${1}" > $2
+}
+
+generate_json_schema () {
+  curl -sL http://dev.julep.ai/api/openapi.json | jq -f ./schemas/walk.jq --arg target "${1}" > $2
 }
 
 cd typespec/ && \
-    tsp compile .
+  tsp compile .
 cd -
 
-generate_schemas
+generate_json_schema CreateTaskRequest ./schemas/create_task_request.json
+generate_json_schema CreateAgentRequest ./schemas/create_agent_request.json
 
 cd agents-api && \
   codegen_then_format

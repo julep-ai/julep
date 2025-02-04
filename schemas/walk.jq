@@ -12,11 +12,11 @@ def walk(f):
 
 # Save the whole document as $root so we can look up definitions.
 . as $root
+| .components.schemas[$target] + {"$defs": $root.components.schemas}
 | walk(
-    if type=="object" and has("$ref")
+    if type=="string" and startswith("#/components/schema")
     then
-      # Look up the key (the last component of the ref)
-      $root.components.schemas[(.["$ref"] | split("/") | last)]
+      . | sub("components/schemas"; "$defs")
     else
       .
     end
