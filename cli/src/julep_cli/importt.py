@@ -68,7 +68,6 @@ def agent(
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            transient=True,
             console=console
         ) as progress:
             try:
@@ -95,7 +94,6 @@ def agent(
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            transient=True,
             console=console
         ) as progress:
             try:
@@ -142,7 +140,6 @@ def agent(
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            transient=True,
             console=console
         ) as progress:
             try:

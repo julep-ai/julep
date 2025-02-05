@@ -47,7 +47,6 @@ def create(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        transient=True,
     ) as progress:
         try:
             create_tool_task = progress.add_task(description="Creating tool", total=None)
@@ -96,7 +95,6 @@ def update(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        transient=True,
         console=console
     ) as progress:
         try:
@@ -141,7 +139,6 @@ def delete(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        transient=True,
         console=console
     ) as progress:
         try:

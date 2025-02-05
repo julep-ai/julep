@@ -148,7 +148,6 @@ def update(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        transient=True,
         console=console
     ) as progress:
         try:
@@ -187,7 +186,6 @@ def delete(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        transient=True,
         console=console
     ) as progress:
         try:
@@ -226,7 +224,6 @@ def list(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        transient=True,
         console=console
     ) as progress:
         try:
@@ -281,7 +278,6 @@ def get(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        transient=True,
         console=console
     ) as progress:
         try:

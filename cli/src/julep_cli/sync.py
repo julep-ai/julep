@@ -142,7 +142,6 @@ def sync(
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    transient=True,
                     console=console
                 ) as progress:
                     sync_task = progress.add_task("Creating agents on remote...", start=False)
@@ -182,7 +181,6 @@ def sync(
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    transient=True,
                     console=console
                 ) as progress:
                     sync_task = progress.add_task("Creating tasks on remote...", start=False)
@@ -227,7 +225,6 @@ def sync(
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    transient=True,
                     console=console
                 ) as progress:
                     sync_task = progress.add_task("Creating tools on remote...", start=False)
@@ -259,7 +256,6 @@ def sync(
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            transient=True,
             console=console
         ) as progress:
             sync_task = progress.add_task("Writing lock file...", start=False)
@@ -315,7 +311,6 @@ def sync(
                         with Progress(
                             SpinnerColumn(),
                             TextColumn("[progress.description]{task.description}"),
-                            transient=True,
                             console=console
                         ) as progress:
                             sync_task = progress.add_task("Updating agent on remote...", start=False)
@@ -355,7 +350,6 @@ def sync(
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    transient=True,
                     console=console
                 ) as progress:
                     sync_task = progress.add_task("Creating agent on remote...", start=False)
@@ -405,7 +399,6 @@ def sync(
                         with Progress(
                             SpinnerColumn(),
                             TextColumn("[progress.description]{task.description}"),
-                            transient=True,
                             console=console
                         ) as progress:
                             sync_task = progress.add_task("Updating task on remote...", start=False)
@@ -441,7 +434,6 @@ def sync(
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    transient=True,
                     console=console
                 ) as progress:
                     sync_task = progress.add_task("Creating task on remote...", start=False)
@@ -497,7 +489,6 @@ def sync(
                         with Progress(
                             SpinnerColumn(),
                             TextColumn("[progress.description]{task.description}"),
-                            transient=True,
                             console=console
                         ) as progress:
                             sync_task = progress.add_task("Updating tool on remote...", start=False)
@@ -530,7 +521,6 @@ def sync(
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    transient=True,
                     console=console
                 ) as progress:
                     sync_task = progress.add_task("Creating tool on remote...", start=False)
@@ -557,7 +547,6 @@ def sync(
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
-                transient=True,
                 console=console
             ) as progress:
                 sync_task = progress.add_task("Writing lock file...", start=False)
