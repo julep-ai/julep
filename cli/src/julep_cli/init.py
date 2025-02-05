@@ -99,6 +99,23 @@ def init(
         library_repo_prefix = path / f"library-{branch}"
         extracted_template_path = library_repo_prefix / template
         final_destination = path / template
+        # Warn the user if final_destination exists and is not empty (files will be merged)
+        if final_destination.exists() and any(final_destination.iterdir()):
+            if not yes:
+                proceed_existing = typer.confirm(
+                    f"Warning: The directory '{final_destination}' already exists and is not empty. Merging files may cause accidental data loss. Do you want to proceed?",
+                    default=False,
+                )
+                if not proceed_existing:
+                    console.print(Text("Initialization cancelled.", style="bold red"))
+                    raise typer.Exit(1)
+            else:
+                console.print(
+                    Text(
+                        f"Warning: The directory '{final_destination}' already exists and is not empty. Files will be merged.",
+                        style="bold yellow",
+                    )
+                )
         final_destination.mkdir(parents=True, exist_ok=True)
 
         shutil.copytree(extracted_template_path, final_destination, dirs_exist_ok=True)
