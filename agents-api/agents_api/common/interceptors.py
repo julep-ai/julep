@@ -13,7 +13,7 @@ from typing import Any
 
 from temporalio import workflow
 from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
-from temporalio.exceptions import ApplicationError, FailureError, TemporalError, ActivityError
+from temporalio.exceptions import ActivityError, ApplicationError, FailureError, TemporalError
 from temporalio.service import RPCError
 from temporalio.worker import (
     ActivityInboundInterceptor,

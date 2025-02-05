@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError, ActivityError
+from temporalio.exceptions import ActivityError, ApplicationError
 
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps

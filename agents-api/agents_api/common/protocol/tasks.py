@@ -231,8 +231,7 @@ class StepContext(BaseModel):
         transitions = [
             t
             for t in transitions
-            if t.current.workflow == workflow
-            or t.current.workflow.startswith(f"`{workflow}`")
+            if t.current.workflow == workflow or t.current.workflow.startswith(f"`{workflow}`")
         ]
         for transition in transitions:
             if transition.next and transition.next.step >= len(inputs):
