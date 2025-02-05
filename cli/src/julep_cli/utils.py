@@ -1,4 +1,6 @@
+import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 
 import typer
@@ -227,3 +229,29 @@ def get_related_agent_id(
             return relationship.agent_id
 
     return None
+
+def create_locked_entity(relative_path: Path, source: Path, id: str, last_synced: datetime, content_to_hash: dict) -> LockedEntity:
+    return LockedEntity(
+        path=str(relative_path.relative_to(source)),
+        id=id,
+        last_synced=last_synced.isoformat(
+            timespec="milliseconds") + "Z",
+        revision_hash=hashlib.sha256(
+            json.dumps(content_to_hash).encode()
+        ).hexdigest(),
+    )
+
+
+def get_agent_id_from_expression(expression: str, locked_agents: list[LockedEntity]) -> str:
+    """
+    Get the agent ID from an expression in julep.yaml
+
+    Example:
+
+    if `expression` is `{agents[0].id}` then the function will return the id of the first agent in the lock file
+    """
+
+    if not locked_agents:
+        raise ValueError("No locked agents passed to get_agent_id_from_expression")
+
+    return eval(f'f"{expression}"', {"agents": locked_agents})
