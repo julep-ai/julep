@@ -55,7 +55,7 @@ async def base_evaluate_activity(
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
     except ActivityError as e:
-        while isinstance(e, ActivityError) and e.__cause__:
+        while isinstance(e, ActivityError) and getattr(e, '__cause__', None):
             e = e.__cause__
         raise e
 
