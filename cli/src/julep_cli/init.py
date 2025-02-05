@@ -3,7 +3,6 @@ import shutil
 import zipfile
 from pathlib import Path
 from typing import Annotated
-import os
 
 import requests
 import typer
@@ -40,7 +39,7 @@ def init(
             "-y",
             help="Skip confirmation prompt",
         ),
-    ] = False
+    ] = False,
 ):
     """
     Initialize a new Julep project.
@@ -62,7 +61,7 @@ def init(
         )
         if not proceed:
             console.print(Text("Initialization cancelled.", style="bold red"), highlight=True)
-            raise typer.Exit()
+            raise typer.Exit
 
     branch = "main"
     repo_url = "https://github.com/julep-ai/library"
@@ -106,14 +105,10 @@ def init(
         shutil.rmtree(library_repo_prefix)
 
     except requests.exceptions.RequestException as e:
-        error_console.print(
-            Text(f"Failed to download template: {e}", style="bold red")
-        )
+        error_console.print(Text(f"Failed to download template: {e}", style="bold red"))
         raise typer.Exit(1)
     except zipfile.BadZipFile as e:
-        error_console.print(
-            Text(f"Failed to extract template: {e}", style="bold red")
-        )
+        error_console.print(Text(f"Failed to extract template: {e}", style="bold red"))
         raise typer.Exit(1)
 
     julep_yaml = final_destination / "julep.yaml"
@@ -133,6 +128,7 @@ def init(
 
     def print_directory_tree(directory: Path) -> None:
         tree = Tree(f":open_file_folder: [bold]{directory.name}")
+
         def add_tree(branch, path: Path):
             for item in sorted(path.iterdir(), key=lambda x: x.name):
                 if item.is_dir():
@@ -140,18 +136,39 @@ def init(
                     add_tree(subtree, item)
                 else:
                     branch.add(item.name)
+
         add_tree(tree, directory)
         console.print(tree)
 
     print_directory_tree(final_destination)
 
     cd_instruction = f"cd {final_destination.resolve()}"
-    console.print(Text(f"To start working on your project, run: {cd_instruction}", style="bold green"))
+    console.print(
+        Text(f"To start working on your project, run: {cd_instruction}", style="bold green")
+    )
 
-    if typer.confirm("Would you like to change to the project directory?", default=False):
-        os.chdir(final_destination)
-        console.print(Text("Changed to project directory", style="bold green"))
+    # Python runs as a separate process, and any directory changes it makes only apply to that process.
+    # Once the script exits, the original shell remains unchanged.
+    # The only way to persist a directory change is by running cd directly in the shell.
+    # if typer.confirm("Would you like to change to the project directory?", default=False):
+    #     try:
+    #         # Change current working directory to the final destination
+    #         os.chdir(final_destination)
+    #         console.print(
+    #             Text(f"Changed working directory to {final_destination.resolve()}", style="bold green")
+    #         )
 
+    #         # Launch an interactive shell in the project directory.
+    #         # This will spawn a child shell, and when you exit it, you'll return here.
+    #         shell = os.environ.get("SHELL")
+    #         if shell:
+    #             subprocess.run([shell])
+    #         else:
+    #             subprocess.run("/bin/sh")
+    #     except Exception as e:
+    #         error_console.print(
+    #             Text(f"Failed to change directory and launch shell: {e}", style="bold red")
+    #         )
 
     # get the readme file
     readme_path = final_destination / "README.md"

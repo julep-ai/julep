@@ -5,7 +5,15 @@ import typer
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .app import console, error_console, executions_app
-from .utils import get_julep_client
+from .utils import get_julep_client, persist_attribute
+
+
+@persist_attribute("execution_id", extractor=lambda exec_obj: exec_obj.id)
+def create_execution(client, task_id: str, input_data: dict):
+    """
+    Create an execution and persist its execution ID to the state database.
+    """
+    return client.executions.create(task_id=task_id, input=input_data)
 
 
 @executions_app.command()
@@ -35,7 +43,7 @@ def create(
         progress.start_task(task)
 
         try:
-            execution = client.executions.create(task_id=task_id, input=input_data)
+            execution = create_execution(client, task_id, input_data)
         except Exception as e:
             error_console.print(f"[bold red]Error creating execution: {e}[/bold red]")
             raise typer.Exit(1)

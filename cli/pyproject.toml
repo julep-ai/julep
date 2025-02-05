@@ -29,6 +29,7 @@ dependencies = [
   "typer-config[yaml]>=1.4.2",
   "julep>=1.56.0",
   "questionary>=2.1.0",
+  "db-sqlite3>=0.0.1",
 ]
 
 [project.scripts]
