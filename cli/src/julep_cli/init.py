@@ -3,8 +3,7 @@ import shutil
 import zipfile
 from pathlib import Path
 from typing import Annotated
-import os
-import subprocess
+
 import requests
 import typer
 from rich.markdown import Markdown
@@ -40,7 +39,7 @@ def init(
             "-y",
             help="Skip confirmation prompt",
         ),
-    ] = False
+    ] = False,
 ):
     """
     Initialize a new Julep project.
@@ -61,8 +60,8 @@ def init(
             default=True,
         )
         if not proceed:
-            console.print(Text("Initialization cancelled.", style="bold red"))
-            raise typer.Exit(0)
+            console.print(Text("Initialization cancelled.", style="bold red"), highlight=True)
+            raise typer.Exit
 
     branch = "main"
     repo_url = "https://github.com/julep-ai/library"
@@ -80,7 +79,8 @@ def init(
             found = any(info.filename.startswith(template_folder) for info in z.infolist())
             if not found:
                 error_console.print(
-                    Text(f"Template '{template}' not found in repository", style="bold red")
+                    Text(f"Template '{template}' not found in repository", style="bold red"),
+                    highlight=True,
                 )
                 raise typer.Exit(1)
 
@@ -99,14 +99,18 @@ def init(
                     default=False,
                 )
                 if not proceed_existing:
-                    console.print(Text("Initialization cancelled.", style="bold red"))
+                    console.print(
+                        Text("Initialization cancelled.", style="bold red"),
+                        highlight=True,
+                    )
                     raise typer.Exit(1)
             else:
                 console.print(
                     Text(
                         f"Warning: The directory '{final_destination}' already exists and is not empty. Files will be merged.",
                         style="bold yellow",
-                    )
+                    ),
+                    highlight=True,
                 )
         final_destination.mkdir(parents=True, exist_ok=True)
 
@@ -115,19 +119,22 @@ def init(
 
     except requests.exceptions.RequestException as e:
         error_console.print(
-            Text(f"Failed to download template: {e}", style="bold red")
+            Text(f"Failed to download template: {e}", style="bold red"),
+            highlight=True,
         )
         raise typer.Exit(1)
     except zipfile.BadZipFile as e:
         error_console.print(
-            Text(f"Failed to extract template: {e}", style="bold red")
+            Text(f"Failed to extract template: {e}", style="bold red"),
+            highlight=True,
         )
         raise typer.Exit(1)
 
     julep_yaml = final_destination / "julep.yaml"
     if not julep_yaml.exists():
         error_console.print(
-            Text("Error: 'julep.yaml' not found in the project directory", style="bold red")
+            Text("Error: 'julep.yaml' not found in the project directory", style="bold red"),
+            highlight=True,
         )
         raise typer.Exit(1)
 
@@ -135,11 +142,13 @@ def init(
         Text(
             f"Successfully initialized new Julep project with template '{template}' in {path}",
             style="bold green",
-        )
+        ),
+        highlight=True,
     )
 
     def print_directory_tree(directory: Path) -> None:
         tree = Tree(f":open_file_folder: [bold]{directory.name}")
+
         def add_tree(branch, path: Path):
             for item in sorted(path.iterdir(), key=lambda x: x.name):
                 if item.is_dir():
@@ -147,13 +156,17 @@ def init(
                     add_tree(subtree, item)
                 else:
                     branch.add(item.name)
+
         add_tree(tree, directory)
         console.print(tree)
 
     print_directory_tree(final_destination)
 
     cd_instruction = f"cd {final_destination.resolve()}"
-    console.print(Text(f"To start working on your project, run: {cd_instruction}", style="bold green"))
+    console.print(
+        Text(f"To start working on your project, run: {cd_instruction}", style="bold green"),
+        highlight=True,
+    )
 
     # Python runs as a separate process, and any directory changes it makes only apply to that process.
     # Once the script exits, the original shell remains unchanged.
@@ -180,6 +193,7 @@ def init(
 
     # get the readme file
     readme_path = final_destination / "README.md"
+
     if readme_path.exists():
         readme_content = readme_path.read_text()
         markdown = Markdown(readme_content)

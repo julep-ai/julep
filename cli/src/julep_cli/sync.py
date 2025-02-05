@@ -1,11 +1,13 @@
 import hashlib
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
+import julep
 import typer
 import yaml
+from julep.types import Agent, Task
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text
@@ -22,10 +24,12 @@ from .models import (
     ToolAgentRelationship,
 )
 from .utils import (
+    get_agent_id_from_expression,
     get_julep_client,
     get_julep_yaml,
     get_lock_file,
     get_related_agent_id,
+    update_entity_force_remote,
     write_lock_file,
 )
 
@@ -168,8 +172,7 @@ def sync(
             for task in tasks:
                 task_yaml_path: Path = source / task.pop("definition")
 
-                agent_id_expression = task.pop("agent_id")
-                agent_id = eval(f'f"{agent_id_expression}"', {"agents": locked_agents})
+                agent_id = get_agent_id_from_expression(task.pop("agent_id"), locked_agents)
 
                 task_yaml_content = yaml.safe_load(task_yaml_path.read_text())
 
@@ -221,8 +224,7 @@ def sync(
 
                 tool_request = CreateToolRequest(**tool_yaml_content, **tool)
 
-                agent_id_expression = tool.pop("agent_id")
-                agent_id = eval(f'f"{agent_id_expression}"', {"agents": locked_agents})
+                agent_id = get_agent_id_from_expression(tool.pop("agent_id"), locked_agents)
 
                 with Progress(
                     SpinnerColumn(),
@@ -428,7 +430,10 @@ def sync(
                         )
                         found_changes = True
 
-                        task_request = CreateTaskRequest(**task_yaml_content, **task_julep_yaml)
+                        task_request = CreateTaskRequest(**{
+                            **task_yaml_content,
+                            **task_julep_yaml,
+                        })
 
                         agent_id = get_related_agent_id(
                             task_julep_lock.id, lock_file.relationships.tasks
@@ -493,8 +498,9 @@ def sync(
                     json.dumps(task_yaml_content).encode()
                 ).hexdigest()
 
-                agent_id_expression = task_julep_yaml.pop("agent_id")
-                agent_id = eval(f'f"{agent_id_expression}"', {"agents": lock_file.agents})
+                agent_id = get_agent_id_from_expression(
+                    task_julep_yaml.pop("agent_id"), lock_file.agents
+                )
 
                 task_request = CreateTaskRequest(**task_yaml_content, **task_julep_yaml)
 
@@ -626,8 +632,9 @@ def sync(
                     json.dumps(tool_yaml_content).encode()
                 ).hexdigest()
 
-                agent_id_expression = tool_julep_yaml.pop("agent_id")
-                agent_id = eval(f'f"{agent_id_expression}"', {"agents": lock_file.agents})
+                agent_id = get_agent_id_from_expression(
+                    tool_julep_yaml.pop("agent_id"), lock_file.agents
+                )
 
                 tool_request = CreateToolRequest(**tool_yaml_content, **tool_julep_yaml)
 
@@ -691,15 +698,167 @@ def sync(
         )
         return
 
-    if force_remote:
-        console.print(Text("Force remote - not implemented", style="bold red", highlight=True))
-        raise typer.Exit(1)
+    lock_file = get_lock_file(source)
+    detected_changes = False
 
-        # Fetch remote state
-        # remote_agents: list[CreateAgentRequest] = fetch_all_remote_agents(client)
+    with Progress(
+        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+    ) as progress:
+        sync_task = progress.add_task("Syncing agents...", start=False)
+        progress.start_task(sync_task)
 
-        # Fetch local from lock file
+        remote_agents: list[Agent] = []
+        agents_update_happened = False
 
-        # Compare local and remote states
+        for locked_agent in lock_file.agents:
+            try:
+                remote_agent = client.agents.get(locked_agent.id)
+                remote_agents.append(remote_agent)
+            except julep.NotFoundError:
+                error_console.print(
+                    Text(
+                        f"Agent {locked_agent.id} not found on remote. It will be removed from the lock file.",
+                        style="bold red",
+                    )
+                )
+                console.print(
+                    Text(
+                        "- If you wish to create it again, please run `julep sync --force-local`",
+                        style="bold yellow",
+                    )
+                )
+                console.print(
+                    Text(
+                        f"- If this was intentional, please remove it from julep.yaml and delete the corresponding {locked_agent.path} file",
+                        style="bold yellow",
+                    )
+                )
+                lock_file.agents.remove(locked_agent)
 
-    # TODO: Implement logic when no force flags are provided
+        for i in range(len(lock_file.agents)):
+            remote_agent, local_agent = remote_agents[i], lock_file.agents[i]
+            assert remote_agent.id == local_agent.id
+
+            last_synced_dt = datetime.fromisoformat(
+                local_agent.last_synced.rstrip("Z")
+            ).replace(tzinfo=UTC)
+
+            if remote_agent.updated_at > last_synced_dt:
+                detected_changes = True
+
+                # Stop the progress bar to show the confirmation prompt
+                progress.stop()
+
+                # Ask for confirmation if force_remote is not set
+                wants_to_update = force_remote or typer.confirm(
+                    f"Agent {local_agent.path} has changed on remote. Do you want to update it locally?"
+                )
+
+                # Restart the progress bar
+                progress.start()
+
+                if wants_to_update:
+                    lock_file.agents[i] = update_entity_force_remote(
+                        entity=local_agent, remote_entity=remote_agent, source=source
+                    )
+                    agents_update_happened = True
+
+        if agents_update_happened:
+            console.print(Text("Agents updated successfully", style="bold green"))
+        else:
+            console.print(Text("No agents updated", style="bold yellow"))
+
+    with Progress(
+        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+    ) as progress:
+        sync_task = progress.add_task("Syncing tasks...", start=False)
+        progress.start_task(sync_task)
+
+        remote_tasks: list[Task] = []
+        tasks_update_happened = False
+
+        for locked_task in lock_file.tasks:
+            try:
+                remote_task = client.tasks.get(locked_task.id)
+                remote_tasks.append(remote_task)
+            except julep.NotFoundError:
+                error_console.print(
+                    Text(
+                        f"Task {locked_task.id} not found on remote. It will be removed from the lock file.",
+                        style="bold red",
+                    )
+                )
+                console.print(
+                    Text(
+                        "- If you wish to create it again, please run `julep sync --force-local`",
+                        style="bold yellow",
+                    )
+                )
+                console.print(
+                    Text(
+                        f"- If this was intentional, please remove it from julep.yaml and delete the corresponding {locked_task.path} file",
+                        style="bold yellow",
+                    )
+                )
+                lock_file.tasks.remove(locked_task)
+                raise typer.Exit(1)
+
+        for i in range(len(lock_file.tasks)):
+            remote_task, local_task = remote_tasks[i], lock_file.tasks[i]
+            assert remote_task.id == local_task.id
+
+            last_synced_dt = datetime.fromisoformat(local_task.last_synced.rstrip("Z")).replace(
+                tzinfo=UTC
+            )
+
+            if remote_task.updated_at > last_synced_dt:
+                detected_changes = True
+
+                # Stop the progress bar to show the confirmation prompt
+                progress.stop()
+
+                # Ask for confirmation if force_remote is not set
+                wants_to_update = force_remote or typer.confirm(
+                    f"Task {local_task.path} has changed on remote. Do you want to update it locally?"
+                )
+
+                # Restart the progress bar
+                progress.start()
+
+                if wants_to_update:
+                    lock_file.tasks[i] = update_entity_force_remote(
+                        entity=local_task, remote_entity=remote_task, source=source
+                    )
+                    tasks_update_happened = True
+
+        if tasks_update_happened:
+            console.print(Text("Tasks updated successfully", style="bold green"))
+        else:
+            console.print(Text("No tasks updated", style="bold yellow"))
+
+    # We don't have a client.agents.tools.get() method
+    # remote_tools = [client.agents.tools.get(tool.id) for tool in lock_file.tools]
+
+    if agents_update_happened or tasks_update_happened:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            write_lock_task = progress.add_task("Writing lock file...", start=False)
+            progress.start_task(write_lock_task)
+
+            write_lock_file(source, lock_file)
+
+        console.print(Text("Synchronization complete", style="bold green"))
+
+    elif detected_changes:
+        console.print(
+            Text("No updates were made. Synchronization complete.", style="bold green")
+        )
+    else:
+        console.print(
+            Text("No changes detected. Everything is up to date.", style="bold green")
+        )
+
+    return

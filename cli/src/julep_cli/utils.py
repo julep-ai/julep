@@ -1,12 +1,15 @@
+import hashlib
 import json
+import sqlite3
+from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import typer
 import yaml
 from julep import Julep
-
-import sqlite3
-from typing import Callable, Any, Optional
+from julep.types import Agent, Task
 
 from .models import (
     CreateAgentRequest,
@@ -233,10 +236,63 @@ def get_related_agent_id(
 
     return None
 
+
+def create_locked_entity(
+    relative_path: Path, source: Path, id: str, last_synced: datetime, content_to_hash: dict
+) -> LockedEntity:
+    return LockedEntity(
+        path=str(relative_path.relative_to(source)),
+        id=id,
+        last_synced=last_synced.isoformat(timespec="microseconds") + "Z",
+        revision_hash=hashlib.sha256(json.dumps(content_to_hash).encode()).hexdigest(),
+    )
+
+
+def get_agent_id_from_expression(expression: str, locked_agents: list[LockedEntity]) -> str:
+    """
+    Get the agent ID from an expression in julep.yaml
+
+    Example:
+
+    if `expression` is `{agents[0].id}` then the function will return the id of the first agent in the lock file
+    """
+
+    if not locked_agents:
+        msg = "No locked agents passed to get_agent_id_from_expression"
+        raise ValueError(msg)
+
+    return eval(f'f"{expression}"', {"agents": locked_agents})
+
+
+def update_entity_force_remote(
+    entity: LockedEntity, remote_entity: Agent | Task, source: Path
+) -> LockedEntity:
+    """
+    Updates a local entity's yaml file with the remote entity's data and returns an updated `LockedEntity` with synced timestamp and hash
+    """
+
+    local_agent_yaml_path: Path = source / entity.path
+
+    entity_new_yaml_content = remote_entity.model_dump(
+        exclude={"id", "created_at", "updated_at"}, exclude_none=True, exclude_unset=True
+    )
+
+    update_yaml_for_existing_entity(local_agent_yaml_path, entity_new_yaml_content)
+
+    return create_locked_entity(
+        source=source,
+        relative_path=local_agent_yaml_path,
+        id=remote_entity.id,
+        last_synced=remote_entity.updated_at,
+        content_to_hash=entity_new_yaml_content,
+    )
+
+
 # NEW DATABASE FUNCTIONS & DECORATOR FOR PERSISTING ATTRIBUTES
 
 # Path to the SQLite database file in the Julep config directory
 STATE_DB_PATH = CONFIG_DIR / "julep_state.db"
+
 
 def get_state_db_connection() -> sqlite3.Connection:
     """
@@ -244,8 +300,8 @@ def get_state_db_connection() -> sqlite3.Connection:
     This creates the CONFIG_DIR if it doesn't exist.
     """
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(STATE_DB_PATH))
-    return conn
+    return sqlite3.connect(str(STATE_DB_PATH))
+
 
 def init_state_db():
     """
@@ -262,7 +318,8 @@ def init_state_db():
         """)
     conn.close()
 
-def persist_attribute(key: str, extractor: Optional[Callable[[Any], Any]] = None):
+
+def persist_attribute(key: str, extractor: Callable[[Any], Any] | None = None):
     """
     A decorator that persists an attribute from a function's return value
     into a SQLite database located in the ~/.config/julep/ directory.
@@ -278,9 +335,10 @@ def persist_attribute(key: str, extractor: Optional[Callable[[Any], Any]] = None
       @persist_attribute("execution_id", extractor=lambda execution: execution.id)
       def create_execution(client, task_id, input_data):
           return client.executions.create(task_id=task_id, input=input_data)
-    
+
     The attribute is stored as a string in the 'attributes' table.
     """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
@@ -300,15 +358,18 @@ def persist_attribute(key: str, extractor: Optional[Callable[[Any], Any]] = None
                 with conn:
                     conn.execute(
                         "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)",
-                        (key, str(value))
+                        (key, str(value)),
                     )
                 conn.close()
             return result
+
         return wrapper
+
     return decorator
 
+
 # NEW FUNCTION TO FETCH/UPDATE ATTRIBUTE VALUES FROM/TO DATABASE
-def manage_db_attribute(key: str, current_value: Optional[str] = None) -> str:
+def manage_db_attribute(key: str, current_value: str | None = None) -> str:
     """
     If current_value is None, fetch the attribute from the SQLite state database.
     If a value is provided, update the database with that value.
@@ -326,12 +387,17 @@ def manage_db_attribute(key: str, current_value: Optional[str] = None) -> str:
         if row:
             value = row[0]
         else:
-            typer.echo(f"[bold red]Error: No saved value for '{key}' found in the database, please provide one.[/bold red]", err=True)
+            typer.echo(
+                f"[bold red]Error: No saved value for '{key}' found in the database, please provide one.[/bold red]",
+                err=True,
+            )
             conn.close()
             raise typer.Exit(1)
     else:
         # Update the database with the provided value
-        cursor.execute("INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)", (key, current_value))
+        cursor.execute(
+            "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)", (key, current_value)
+        )
         conn.commit()
         value = current_value
     conn.close()

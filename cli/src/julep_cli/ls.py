@@ -45,8 +45,8 @@ def ls(
             agent_yaml_contents["id"] = agent.id
             agents_table.add_row(
                 agent_yaml_contents.get("name", "N/A"),
-                str(agent_yaml_contents["id"]),
                 str(agent.path),
+                str(agent_yaml_contents["id"]),
             )
 
         console.print(agents_table, highlight=True)

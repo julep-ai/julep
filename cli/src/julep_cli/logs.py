@@ -1,5 +1,4 @@
 import json
-import time
 from typing import Annotated
 
 import typer
@@ -9,13 +8,15 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
+# New imports for Textual Log TUI functionality
+from textual.app import App
+from textual.binding import Binding
+from textual.widgets import Header, Static
+from textual.widgets import Log as TextLog
+
 from .app import app, console, error_console
 from .utils import get_julep_client, manage_db_attribute
 
-# New imports for Textual Log TUI functionality
-from textual.app import App
-from textual.widgets import Log as TextLog, Header, Static
-from textual.binding import Binding
 
 # New TUI app using Textual's Log widget to display transitions in tailing mode
 class TransitionLogApp(App):
@@ -31,6 +32,7 @@ class TransitionLogApp(App):
         )
     ]
     TITLE = "Transition Log"
+
     def __init__(self, client, execution_id, initial_transitions, **kwargs):
         # Set the app title so Header() can pick it up
         super().__init__(**kwargs)
@@ -74,16 +76,19 @@ class TransitionLogApp(App):
             self.transitions = fetched_transitions
 
         # If a terminal state is reached, display a final message and keep the app open.
-        if self.transitions and self.transitions[0].type in ["finish", "cancelled", "error"]:
-            if not hasattr(self, '_completion_message_shown'):
-                self.log_widget.write("\nExecution complete.")
-                self._completion_message_shown = True
+        if (
+            self.transitions
+            and self.transitions[0].type in ["finish", "cancelled", "error"]
+            and not hasattr(self, "_completion_message_shown")
+        ):
+            self.log_widget.write("\nExecution complete.")
+            self._completion_message_shown = True
 
 
 @app.command()
 def logs(
     execution_id: Annotated[
-        str, typer.Option("--execution-id", "-e", help="ID of the execution to log")
+        str | None, typer.Option("--execution-id", "-e", help="ID of the execution to log")
     ] = None,
     tailing: Annotated[
         bool, typer.Option("--tail", "-t", help="Whether to tail the logs")
@@ -118,10 +123,8 @@ def logs(
 
     def display_transitions(transitions: list[Transition]):
         for transition in reversed(transitions):
-            transitions_table.add_row(
-                transition.type, json.dumps(transition.output, indent=4)
-            )
-        console.print(transitions_table)
+            transitions_table.add_row(transition.type, json.dumps(transition.output, indent=4))
+        console.print(transitions_table, highlight=True)
 
     client = get_julep_client()
 
@@ -129,7 +132,6 @@ def logs(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         transient=True,
-        console=console,
         console=console,
     ) as progress:
         try:
@@ -141,12 +143,11 @@ def logs(
             )
             progress.start_task(fetch_transitions)
 
-            transitions = client.executions.transitions.list(
-                execution_id=execution_id
-            ).items
+            transitions = client.executions.transitions.list(execution_id=execution_id).items
         except Exception as e:
             error_console.print(
-                Text(f"Error fetching transitions: {e}", style="bold red")
+                Text(f"Error fetching transitions: {e}", style="bold red"),
+                highlight=True,
             )
             raise typer.Exit(1)
 

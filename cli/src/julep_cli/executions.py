@@ -4,11 +4,8 @@ from typing import Annotated
 import typer
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from .app import executions_app
+from .app import console, error_console, executions_app
 from .utils import get_julep_client, persist_attribute
-
-console = Console()
-error_console = Console(stderr=True)
 
 
 @persist_attribute("execution_id", extractor=lambda exec_obj: exec_obj.id)

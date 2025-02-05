@@ -47,7 +47,6 @@ def create(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        transient=True,
     ) as progress:
         try:
             create_tool_task = progress.add_task(description="Creating tool", total=None)
