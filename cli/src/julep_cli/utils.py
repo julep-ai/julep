@@ -6,6 +6,7 @@ from pathlib import Path
 import typer
 import yaml
 from julep import Julep
+from julep.types import Agent, Task
 
 from .models import (
     CreateAgentRequest,
@@ -255,3 +256,24 @@ def get_agent_id_from_expression(expression: str, locked_agents: list[LockedEnti
         raise ValueError("No locked agents passed to get_agent_id_from_expression")
 
     return eval(f'f"{expression}"', {"agents": locked_agents})
+
+def update_entity_force_remote(entity: LockedEntity, remote_entity: Agent | Task, source: Path) -> LockedEntity:
+    """
+    Updates a local entity's yaml file with the remote entity's data and returns an updated `LockedEntity` with synced timestamp and hash
+    """
+
+    local_agent_yaml_path: Path = source / entity.path
+
+    entity_new_yaml_content = remote_entity.model_dump(
+        exclude={"id", "created_at", "updated_at"}, exclude_none=True, exclude_unset=True)
+
+    update_yaml_for_existing_entity(
+        local_agent_yaml_path, entity_new_yaml_content)
+
+    return create_locked_entity(
+        source=source,
+        relative_path=local_agent_yaml_path,
+        id=remote_entity.id,
+        last_synced=remote_entity.updated_at,
+        content_to_hash=entity_new_yaml_content,
+    )
