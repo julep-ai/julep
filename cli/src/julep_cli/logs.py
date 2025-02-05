@@ -130,8 +130,12 @@ def logs(
         TextColumn("[progress.description]{task.description}"),
         transient=True,
         console=console,
+        console=console,
     ) as progress:
         try:
+            fetch_transitions = progress.add_task(
+                description="Fetching transitions", total=None
+            )
             fetch_transitions = progress.add_task(
                 description="Fetching transitions", total=None
             )

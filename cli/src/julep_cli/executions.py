@@ -2,7 +2,6 @@ import json
 from typing import Annotated
 
 import typer
-from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .app import executions_app
@@ -34,14 +33,14 @@ def create(
     try:
         input_data = json.loads(input)
     except json.JSONDecodeError as e:
-        error_console.print(f"[bold red]Invalid JSON input: {e}[/bold red]")
+        error_console.print(f"[bold red]Invalid JSON input: {e}[/bold red]", highlight=True)
         raise typer.Exit(1)
 
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         transient=True,
-        console=console
+        console=console,
     ) as progress:
         task = progress.add_task("Creating execution...", start=False)
         progress.start_task(task)
@@ -49,8 +48,7 @@ def create(
         try:
             execution = create_execution(client, task_id, input_data)
         except Exception as e:
-            error_console.print(
-                f"[bold red]Error creating execution: {e}[/bold red]")
+            error_console.print(f"[bold red]Error creating execution: {e}[/bold red]")
             raise typer.Exit(1)
 
     console.print(

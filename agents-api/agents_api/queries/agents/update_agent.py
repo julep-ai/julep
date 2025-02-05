@@ -56,7 +56,7 @@ async def update_agent(
         data.name,
         data.about,
         data.model,
-        data.default_settings.model_dump() if data.default_settings else {},
+        data.default_settings or {},
     ]
 
     return (

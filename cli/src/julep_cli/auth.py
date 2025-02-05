@@ -36,7 +36,7 @@ def auth(
     """
 
     if not api_key:
-        error_console.print("[red]No API key provided[/red]", err=True)
+        error_console.print("[red]No API key provided[/red]", highlight=True)
         raise typer.Exit(1)
 
     config = get_config()
@@ -44,4 +44,7 @@ def auth(
     config["environment"] = environment
     save_config(config)
 
-    console.print(f"Successfully authenticated with [green]{environment}[/green] environment!")
+    console.print(
+        f"Successfully authenticated with [green]{environment}[/green] environment!",
+        highlight=True,
+    )

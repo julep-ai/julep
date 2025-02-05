@@ -1,16 +1,21 @@
+import time
 from typing import Annotated
 
-import typer
+from dateutil import tz
 from rich.console import Console
 from trogon.typer import init_tui
+from typer import Exit, Option
+
+from .wrapper import WrappedTyper
 
 # Global state
 console = Console()
-error_console = Console(stderr=True)
+error_console = Console(stderr=True, style="bold red")
 
+local_tz = tz.gettz(time.tzname[time.daylight])
 
 # Initialize typer app
-app = typer.Typer(
+app = WrappedTyper(
     name="julep",
     help="Command line interface for the Julep platform",
     no_args_is_help=True,
@@ -20,11 +25,11 @@ app = typer.Typer(
 init_tui(app)
 
 # Initialize subcommands
-agents_app = typer.Typer(help="Manage AI agents")
-tasks_app = typer.Typer(help="Manage tasks")
-tools_app = typer.Typer(help="Manage tools")
-import_app = typer.Typer(help="Import entities from the Julep platform")
-executions_app = typer.Typer(help="Manage executions")
+agents_app = WrappedTyper(help="Manage AI agents")
+tasks_app = WrappedTyper(help="Manage tasks")
+tools_app = WrappedTyper(help="Manage tools")
+import_app = WrappedTyper(help="Import entities from the Julep platform")
+executions_app = WrappedTyper(help="Manage executions")
 
 app.add_typer(agents_app, name="agents")
 app.add_typer(tasks_app, name="tasks")
@@ -40,12 +45,12 @@ def version_callback(value: bool):
 
         try:
             v = version("julep-cli")
-            console.print(f"julep CLI version [green]{v}[/green]")
+            console.print(f"julep CLI version [green]{v}[/green]", highlight=True)
         except:
-            error_console.print("[red]julep CLI version unknown[/red]")
-            raise typer.Exit(1)
+            error_console.print("[red]julep CLI version unknown[/red]", highlight=True)
+            raise Exit(1)
 
-        raise typer.Exit
+        raise Exit(1)
 
 
 def no_color_callback(value: bool) -> bool:
@@ -67,7 +72,7 @@ def quiet_callback(value: bool) -> bool:
 def main(
     no_color: Annotated[
         bool,
-        typer.Option(
+        Option(
             "--no-color",
             help="Disable colored output",
             callback=no_color_callback,
@@ -76,7 +81,7 @@ def main(
     ] = not bool(console.color_system),
     quiet: Annotated[
         bool,
-        typer.Option(
+        Option(
             "--quiet",
             "-q",
             help="Suppress all output except errors and explicitly requested data",
@@ -86,7 +91,7 @@ def main(
     ] = False,
     version: Annotated[
         bool,
-        typer.Option(
+        Option(
             "--version",
             "-v",
             help="Show version and exit",

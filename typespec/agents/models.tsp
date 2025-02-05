@@ -35,7 +35,7 @@ model Agent {
     instructions: string | string[] = #[];
 
     /** Default settings for all sessions created by this agent */
-    default_settings?: DefaultChatSettings;
+    default_settings?: Record<unknown>;
 }
 
 /** Payload for updating a agent */

@@ -183,4 +183,6 @@ def init(
     if readme_path.exists():
         readme_content = readme_path.read_text()
         markdown = Markdown(readme_content)
-        console.print(Panel(markdown, title=Text("Project README", style="bold blue")))
+        console.print(
+            Panel(markdown, title=Text("Project README", style="bold blue", highlight=True))
+        )

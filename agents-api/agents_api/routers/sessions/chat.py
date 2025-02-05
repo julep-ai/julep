@@ -83,7 +83,7 @@ async def chat(
 
     # Merge the settings and prepare environment
     chat_context.merge_settings(chat_input)
-    settings: dict = chat_context.settings.model_dump(mode="json", exclude_none=True)
+    settings: dict = chat_context.settings or {}
 
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(
@@ -127,7 +127,7 @@ async def chat(
     tools = settings.get("tools") or chat_context.get_active_tools()
 
     # Check if using Claude model and has specific tool types
-    is_claude_model = settings["model"].lower().startswith("claude-3.5")
+    is_claude_model = settings.get("model", "").lower().startswith("claude-3.5")
 
     # Format tools for litellm
     # formatted_tools = (
@@ -181,7 +181,7 @@ async def chat(
 
     # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
     # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
-    is_groq_model = settings["model"].lower().startswith("llama-3.1")
+    is_groq_model = settings.get("model", "").lower().startswith("llama-3.1")
     if is_groq_model:
         messages = [
             {
@@ -193,14 +193,14 @@ async def chat(
         ]
 
     # Use litellm for other models
-    model_response = await litellm.acompletion(
-        messages=messages,
-        tools=formatted_tools or None,
-        user=str(developer.id),
-        tags=developer.tags,
-        custom_api_key=x_custom_api_key,
-        **settings,
-    )
+    params = {
+        "messages": messages,
+        "tools": formatted_tools or None,
+        "user": str(developer.id),
+        "tags": developer.tags,
+        "custom_api_key": x_custom_api_key,
+    }
+    model_response = await litellm.acompletion(**{**settings, **params})
 
     # Save the input and the response to the session history
     if chat_input.save:

@@ -129,12 +129,15 @@ model vLLMSettings {
     min_p?: float32;
 }
 
-/** Default settings for the chat session (also used by the agent) */
-model DefaultChatSettings extends OpenAISettings {
+alias DefaultChatSettings = Record<unknown>;
+
+alias ChatSettings = Record<unknown>;
+
+model InputDefaultChatSettings extends OpenAISettings {
     ...vLLMSettings;
 }
 
-model ChatSettings extends DefaultChatSettings {
+model InputChatSettings extends InputDefaultChatSettings {
     ...CommonChatSettings;
 }
 
@@ -167,7 +170,7 @@ model ChatInputData {
 
 model ChatInput extends ChatInputData {
     ...MemoryAccessOptions;
-    ...ChatSettings;
+    ...InputChatSettings;
 }
 
 model BaseTokenLogProb {
