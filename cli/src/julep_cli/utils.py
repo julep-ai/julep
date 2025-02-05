@@ -5,6 +5,9 @@ import typer
 import yaml
 from julep import Julep
 
+import sqlite3
+from typing import Callable, Any, Optional
+
 from .models import (
     CreateAgentRequest,
     LockedEntity,
@@ -229,3 +232,107 @@ def get_related_agent_id(
             return relationship.agent_id
 
     return None
+
+# NEW DATABASE FUNCTIONS & DECORATOR FOR PERSISTING ATTRIBUTES
+
+# Path to the SQLite database file in the Julep config directory
+STATE_DB_PATH = CONFIG_DIR / "julep_state.db"
+
+def get_state_db_connection() -> sqlite3.Connection:
+    """
+    Get a SQLite connection to the state database.
+    This creates the CONFIG_DIR if it doesn't exist.
+    """
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(STATE_DB_PATH))
+    return conn
+
+def init_state_db():
+    """
+    Initialize the state database with the 'attributes' table if it does not exist.
+    The table stores key-value pairs, with the key as a unique identifier.
+    """
+    conn = get_state_db_connection()
+    with conn:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS attributes (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+        """)
+    conn.close()
+
+def persist_attribute(key: str, extractor: Optional[Callable[[Any], Any]] = None):
+    """
+    A decorator that persists an attribute from a function's return value
+    into a SQLite database located in the ~/.config/julep/ directory.
+
+    Parameters:
+      key (str): The name of the attribute to store (e.g., "execution_id").
+      extractor (Callable[[Any], Any], optional): A function that extracts the value from
+          the function's return value. If not provided, the decorator will attempt to extract:
+            - If the return value is a dict and contains 'key', it uses that.
+            - Otherwise, if the return value has an attribute with the name 'key', it uses that.
+
+    Usage Example:
+      @persist_attribute("execution_id", extractor=lambda execution: execution.id)
+      def create_execution(client, task_id, input_data):
+          return client.executions.create(task_id=task_id, input=input_data)
+    
+    The attribute is stored as a string in the 'attributes' table.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            value = None
+            if extractor is not None:
+                value = extractor(result)
+            else:
+                # Attempt default extraction
+                if isinstance(result, dict) and key in result:
+                    value = result[key]
+                elif hasattr(result, key):
+                    value = getattr(result, key)
+
+            if value is not None:
+                init_state_db()  # Ensure the database and table exist
+                conn = get_state_db_connection()
+                with conn:
+                    conn.execute(
+                        "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)",
+                        (key, str(value))
+                    )
+                conn.close()
+            return result
+        return wrapper
+    return decorator
+
+# NEW FUNCTION TO FETCH/UPDATE ATTRIBUTE VALUES FROM/TO DATABASE
+def manage_db_attribute(key: str, current_value: Optional[str] = None) -> str:
+    """
+    If current_value is None, fetch the attribute from the SQLite state database.
+    If a value is provided, update the database with that value.
+
+    Returns the fetched or provided value.
+    """
+    init_state_db()  # Ensure DB and table are initialized
+    conn = get_state_db_connection()
+    cursor = conn.cursor()
+
+    if current_value is None:
+        # Fetch value from the database
+        cursor.execute("SELECT value FROM attributes WHERE key=?", (key,))
+        row = cursor.fetchone()
+        if row:
+            value = row[0]
+        else:
+            typer.echo(f"[bold red]Error: No saved value for '{key}' found in the database, please provide one.[/bold red]", err=True)
+            conn.close()
+            raise typer.Exit(1)
+    else:
+        # Update the database with the provided value
+        cursor.execute("INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)", (key, current_value))
+        conn.commit()
+        value = current_value
+    conn.close()
+    return value
