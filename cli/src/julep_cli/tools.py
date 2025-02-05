@@ -54,16 +54,21 @@ def create(
             progress.start_task(create_tool_task)
             tool = client.agents.tools.create(agent_id=agent_id, **tool_yaml_contents)
         except Exception as e:
-            error_console.print(f"Error creating tool: {e}")
+            error_console.print(f"Error creating tool: {e}", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text(f"Tool created successfully. Tool ID: {tool.id}", style="bold green"))
+    console.print(
+        Text(
+            f"Tool created successfully. Tool ID: {tool.id}", style="bold green", highlight=True
+        )
+    )
 
 
 @tools_app.command()
 def update(
     agent_id: Annotated[
-        str, typer.Option("--agent-id", "-a", help="ID of the agent the tool is associated with")
+        str,
+        typer.Option("--agent-id", "-a", help="ID of the agent the tool is associated with"),
     ],
     tool_id: Annotated[str, typer.Option("--id", help="ID of the tool to update")],
     definition: Annotated[
@@ -90,14 +95,16 @@ def update(
         tool_yaml_contents["name"] = name
 
     if not tool_yaml_contents:
-        error_console.print("Error: No tool name or definition provided", style="bold red")
+        error_console.print(
+            "Error: No tool name or definition provided", style="bold red", highlight=True
+        )
         raise typer.Exit(1)
 
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         transient=True,
-        console=console
+        console=console,
     ) as progress:
         try:
             update_tool_task = progress.add_task("Updating tool...", start=False)
@@ -105,16 +112,17 @@ def update(
 
             client.agents.tools.update(agent_id=agent_id, tool_id=tool_id, **tool_yaml_contents)
         except Exception as e:
-            error_console.print(f"Error updating tool: {e}", style="bold red")
+            error_console.print(f"Error updating tool: {e}", style="bold red", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Tool updated successfully.", style="bold green"))
+    console.print(Text("Tool updated successfully.", style="bold green", highlight=True))
 
 
 @tools_app.command()
 def delete(
     agent_id: Annotated[
-        str, typer.Option("--agent-id", "-a", help="ID of the agent the tool is associated with")
+        str,
+        typer.Option("--agent-id", "-a", help="ID of the agent the tool is associated with"),
     ],
     tool_id: Annotated[str, typer.Option("--id", help="ID of the tool to delete")],
     force: Annotated[
@@ -130,8 +138,7 @@ def delete(
     """
 
     if not force:
-        confirm = typer.confirm(
-            f"Are you sure you want to delete tool '{tool_id}'?")
+        confirm = typer.confirm(f"Are you sure you want to delete tool '{tool_id}'?")
     if not confirm:
         typer.echo("Operation cancelled")
         return
@@ -142,7 +149,7 @@ def delete(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         transient=True,
-        console=console
+        console=console,
     ) as progress:
         try:
             delete_tool_task = progress.add_task("Deleting tool...", start=False)
@@ -150,10 +157,10 @@ def delete(
 
             client.agents.tools.delete(agent_id=agent_id, tool_id=tool_id)
         except Exception as e:
-            error_console.print(f"Error deleting tool: {e}", style="bold red")
+            error_console.print(f"Error deleting tool: {e}", style="bold red", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Tool deleted successfully.", style="bold green"))
+    console.print(Text("Tool deleted successfully.", style="bold green", highlight=True))
 
 
 @tools_app.command()
@@ -170,15 +177,13 @@ def list(
     Either --agent-id or --task-id must be provided to filter the tools list.
     """
     if not agent_id:
-        typer.echo("Error: --agent-id must be provided", err=True)
+        typer.echo("Error: --agent-id must be provided")
         raise typer.Exit(1)
 
     client = get_julep_client()
 
     with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console
+        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
     ) as progress:
         try:
             list_tools_task = progress.add_task("Listing tools...", start=False)
@@ -186,7 +191,7 @@ def list(
 
             tools = client.agents.tools.list(agent_id=agent_id)
         except Exception as e:
-            error_console.print(f"Error listing tools: {e}", style="bold red")
+            error_console.print(f"Error listing tools: {e}", style="bold red", highlight=True)
             raise typer.Exit(1)
 
     if json_output:
@@ -199,7 +204,7 @@ def list(
         show_lines=True,  # Adds lines between rows
         show_header=True,
         header_style="bold magenta",
-        width=130
+        width=130,
     )
 
     tools_table.add_column("ID", style="green")
@@ -208,11 +213,6 @@ def list(
     tools_table.add_column("Description", style="yellow")
 
     for tool in tools:
-        tools_table.add_row(
-            tool.id,
-            tool.name,
-            tool.type,
-            tool.description
-        )
+        tools_table.add_row(tool.id, tool.name, tool.type, tool.description)
 
-    console.print(tools_table)
+    console.print(tools_table, highlight=True)
