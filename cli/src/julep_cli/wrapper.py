@@ -6,6 +6,7 @@ from typing import Annotated, Any, Protocol
 import questionary
 import typer
 from click.exceptions import MissingParameter, UsageError
+from stringcase import titlecase
 from typer import Typer
 
 
@@ -27,7 +28,7 @@ def get_bound_args(sig: inspect.Signature, params: dict) -> inspect.BoundArgumen
 def prepare_question(
     param: typer.Argument, args: tuple[typing.Any, ...], arg_type: type
 ) -> questionary.Question:
-    msg = param.human_readable_name.title()
+    msg = titlecase(param.human_readable_name)
 
     if arg_type is bool:
         msg += " (y/N)"
@@ -37,14 +38,17 @@ def prepare_question(
     kwargs = args[2] if args and len(args) == 3 and isinstance(args[2], dict) else {}
     question_type = questionary.text
 
-    def validate(x: Any) -> bool:
-        try:
-            arg_type(x)
-            return True
-        except Exception:
-            return False
+    if not kwargs.get("validate"):
 
-    kwargs["validate"] = validate
+        def validate(x: Any) -> bool:
+            try:
+                arg_type(x)
+                return True
+            except Exception:
+                return False
+
+        kwargs["validate"] = validate
+
     kwargs["instruction"] = f"({param.help})" if param.help else ""
 
     if kwargs.get("multiline", False):
@@ -57,7 +61,7 @@ def prepare_question(
 
         if len(choices) >= 6:
             question_type = questionary.autocomplete
-            msg += f" [type to search from {len(choices)} options]"
+            msg += f" [search {len(choices)} options]"
 
         del kwargs["instruction"]
         del kwargs["validate"]
@@ -93,22 +97,31 @@ def handle_missing_param(exc: UsageError) -> None:
     annotation = sig_param.annotation
     args = typing.get_args(annotation)
     arg_type = args[0] if len(args) >= 2 and isinstance(args[0], type) else (annotation or str)
-    is_typer_option = isinstance(param, typer.core.TyperOption)
     question = prepare_question(param, args, arg_type)
 
     result = question.ask(patch_stdout=True)
+    bound = get_bound_args(sig, click_ctx.params | {param.name: result})
 
-    extra = {param.name: result} if not is_typer_option else {}
-    bound = get_bound_args(sig, click_ctx.params | extra)
+    cmd_args = []
 
-    cmd_args = list(bound.args)
-    if is_typer_option:
-        if arg_type is bool:
-            prefix = "no-" if not result else ""
-            cmd_args.append(f"--{prefix}{param.name}")
+    for _param in click_ctx.command.params:
+        if _param.name not in bound.arguments:
+            continue
+
+        opt_flag = _param.to_info_dict()["opts"][0]
+        is_typer_option = isinstance(_param, typer.core.TyperOption)
+        value = bound.arguments[_param.name]
+
+        if is_typer_option:
+            if arg_type is bool:
+                prefix = "no-" if not value else ""
+                cmd_args.append(f"--{prefix}{opt_flag[2:]}")
+            else:
+                cmd_args.append(opt_flag)
+                cmd_args.append(value)
+
         else:
-            cmd_args.append(f"--{param.name}")
-            cmd_args.append(result)
+            cmd_args.append(value)
 
     try:
         return cmd.main(map(str, cmd_args), standalone_mode=False)

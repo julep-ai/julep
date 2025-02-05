@@ -91,6 +91,7 @@ def init(
         library_repo_prefix = path / f"library-{branch}"
         extracted_template_path = library_repo_prefix / template
         final_destination = path / template
+
         # Warn the user if final_destination exists and is not empty (files will be merged)
         if final_destination.exists() and any(final_destination.iterdir()):
             if not yes:
@@ -198,9 +199,5 @@ def init(
         readme_content = readme_path.read_text()
         markdown = Markdown(readme_content)
         console.print(
-            Panel(
-                markdown,
-                title=Text("Project README", style="bold blue"),
-                highlight=True,
-            ),
+            Panel(markdown, title=Text("Project README", style="bold blue")), highlight=True
         )

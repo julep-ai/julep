@@ -30,6 +30,8 @@ dependencies = [
   "julep>=1.56.0",
   "questionary>=2.1.0",
   "db-sqlite3>=0.0.1",
+  "stringcase>=1.2.0",
+  "pyjwt>=2.10.1",
 ]
 
 [project.scripts]
