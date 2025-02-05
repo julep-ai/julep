@@ -10,7 +10,7 @@ import typer
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.text import Text
-from rich.tree import Tree 
+from rich.tree import Tree
 
 from .app import app, console, error_console
 
@@ -62,7 +62,7 @@ def init(
         )
         if not proceed:
             console.print(Text("Initialization cancelled.", style="bold red"))
-            raise typer.Exit(1)
+            raise typer.Exit(0)
 
     branch = "main"
     repo_url = "https://github.com/julep-ai/library"
@@ -155,8 +155,8 @@ def init(
     cd_instruction = f"cd {final_destination.resolve()}"
     console.print(Text(f"To start working on your project, run: {cd_instruction}", style="bold green"))
 
-    # Python runs as a separate process, and any directory changes it makes only apply to that process. 
-    # Once the script exits, the original shell remains unchanged. 
+    # Python runs as a separate process, and any directory changes it makes only apply to that process.
+    # Once the script exits, the original shell remains unchanged.
     # The only way to persist a directory change is by running cd directly in the shell.
     # if typer.confirm("Would you like to change to the project directory?", default=False):
     #     try:
