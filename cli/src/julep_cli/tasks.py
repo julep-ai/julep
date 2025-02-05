@@ -152,7 +152,7 @@ def update(
             error_console.print(f"Error updating task: {e}", style="bold red", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Task updated successfully.", style="bold green", highlight=True))
+    console.print(Text("Task updated successfully.", style="bold green"), highlight=True)
 
 
 @tasks_app.command()

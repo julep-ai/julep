@@ -39,7 +39,7 @@ def chat(
     try:
         agent = client.agents.get(agent_id=agent)
     except Exception as e:
-        error_console.print(Text(f"Error: {e}", style="bold red", highlight=True))
+        error_console.print(Text(f"Error: {e}", style="bold red"), highlight=True)
         raise typer.Exit(1)
 
     session = client.sessions.create(agent=agent.id, situation=situation)

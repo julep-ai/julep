@@ -276,7 +276,7 @@ def sync(
                 ),
             )
 
-        console.print(Text("Synchronization complete", style="bold green", highlight=True))
+        console.print(Text("Synchronization complete", style="bold green"))
 
         return
 
@@ -311,7 +311,6 @@ def sync(
                             Text(
                                 f"Agent {agent_yaml_def_path} has changed, updating on remote...",
                                 style="bold yellow",
-                                highlight=True,
                             )
                         )
 
@@ -364,7 +363,6 @@ def sync(
                     Text(
                         f"Agent {agent_yaml_def_path} not found in lock file.",
                         style="bold yellow",
-                        highlight=True,
                     )
                 )
 
@@ -391,7 +389,6 @@ def sync(
                     Text(
                         f"Agent {agent_yaml_def_path} created successfully on remote",
                         style="bold blue",
-                        highlight=True,
                     )
                 )
 
@@ -425,7 +422,6 @@ def sync(
                             Text(
                                 f"Task {task_yaml_def_path} has changed, updating on remote...",
                                 style="bold yellow",
-                                highlight=True,
                             )
                         )
                         found_changes = True
@@ -444,7 +440,6 @@ def sync(
                                 Text(
                                     f"Task {task_yaml_def_path} has no related agent. Please check the lock file and julep.yaml for consistency.",
                                     style="bold red",
-                                    highlight=True,
                                 )
                             )
                             raise typer.Exit(1)
@@ -472,7 +467,6 @@ def sync(
                             Text(
                                 f"Task {task_yaml_def_path} updated successfully",
                                 style="bold blue",
-                                highlight=True,
                             )
                         )
 
@@ -490,7 +484,6 @@ def sync(
                     Text(
                         f"Task {task_yaml_def_path} not found in lock file, creating new task...",
                         style="bold yellow",
-                        highlight=True,
                     )
                 )
 
@@ -561,8 +554,8 @@ def sync(
                             Text(
                                 f"Tool {tool_yaml_def_path} has changed, updating on remote...",
                                 style="bold yellow",
-                                highlight=True,
-                            )
+                            ),
+                            highlight=True,
                         )
 
                         tool_request = CreateToolRequest(**tool_yaml_content, **tool_julep_yaml)
@@ -576,8 +569,8 @@ def sync(
                                 Text(
                                     f"Tool {tool_yaml_def_path} has no related agent. Please check the lock file and julep.yaml for consistency.",
                                     style="bold red",
-                                    highlight=True,
-                                )
+                                ),
+                                highlight=True,
                             )
                             raise typer.Exit(1)
 
@@ -604,8 +597,8 @@ def sync(
                             Text(
                                 f"Tool {tool_yaml_def_path} updated successfully",
                                 style="bold blue",
-                                highlight=True,
-                            )
+                            ),
+                            highlight=True,
                         )
 
                         lock_file.tools[i] = LockedEntity(
@@ -624,8 +617,8 @@ def sync(
                     Text(
                         f"Tool {tool_yaml_def_path} not found in lock file, creating new tool...",
                         style="bold yellow",
-                        highlight=True,
-                    )
+                    ),
+                    highlight=True,
                 )
 
                 tool_request_hash = hashlib.sha256(
@@ -670,7 +663,8 @@ def sync(
                     Text(
                         f"Tool {tool_yaml_def_path} created successfully on remote",
                         style="bold blue",
-                    )
+                    ),
+                    highlight=True,
                 )
 
         if found_changes:
@@ -685,7 +679,7 @@ def sync(
 
                 write_lock_file(source, lock_file)
 
-            console.print(Text("Synchronization complete", style="bold green", highlight=True))
+            console.print(Text("Synchronization complete", style="bold green"), highlight=True)
 
             return
 
@@ -693,7 +687,6 @@ def sync(
             Text(
                 "No changes detected. Everything is up to date.",
                 style="bold green",
-                highlight=True,
             )
         )
         return
@@ -719,19 +712,22 @@ def sync(
                     Text(
                         f"Agent {locked_agent.id} not found on remote. It will be removed from the lock file.",
                         style="bold red",
-                    )
+                    ),
+                    highlight=True,
                 )
                 console.print(
                     Text(
                         "- If you wish to create it again, please run `julep sync --force-local`",
                         style="bold yellow",
-                    )
+                    ),
+                    highlight=True,
                 )
                 console.print(
                     Text(
                         f"- If this was intentional, please remove it from julep.yaml and delete the corresponding {locked_agent.path} file",
                         style="bold yellow",
-                    )
+                    ),
+                    highlight=True,
                 )
                 lock_file.agents.remove(locked_agent)
 
@@ -764,9 +760,9 @@ def sync(
                     agents_update_happened = True
 
         if agents_update_happened:
-            console.print(Text("Agents updated successfully", style="bold green"))
+            console.print(Text("Agents updated successfully", style="bold green"), highlight=True)
         else:
-            console.print(Text("No agents updated", style="bold yellow"))
+            console.print(Text("No agents updated", style="bold yellow"), highlight=True)
 
     with Progress(
         SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
@@ -850,15 +846,17 @@ def sync(
 
             write_lock_file(source, lock_file)
 
-        console.print(Text("Synchronization complete", style="bold green"))
+        console.print(Text("Synchronization complete", style="bold green"), highlight=True)
 
     elif detected_changes:
         console.print(
-            Text("No updates were made. Synchronization complete.", style="bold green")
+            Text("No updates were made. Synchronization complete.", style="bold green"),
+            highlight=True,
         )
     else:
         console.print(
-            Text("No changes detected. Everything is up to date.", style="bold green")
+            Text("No changes detected. Everything is up to date.", style="bold green"),
+            highlight=True,
         )
 
     return

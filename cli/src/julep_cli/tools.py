@@ -56,11 +56,7 @@ def create(
             error_console.print(f"Error creating tool: {e}", highlight=True)
             raise typer.Exit(1)
 
-    console.print(
-        Text(
-            f"Tool created successfully. Tool ID: {tool.id}", style="bold green", highlight=True
-        )
-    )
+    console.print(Text(f"Tool created successfully. Tool ID: {tool.id}", style="bold green"), highlight=True)
 
 
 @tools_app.command()
@@ -114,7 +110,7 @@ def update(
             error_console.print(f"Error updating tool: {e}", style="bold red", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Tool updated successfully.", style="bold green", highlight=True))
+    console.print(Text("Tool updated successfully.", style="bold green"), highlight=True)
 
 
 @tools_app.command()
@@ -159,7 +155,7 @@ def delete(
             error_console.print(f"Error deleting tool: {e}", style="bold red", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Tool deleted successfully.", style="bold green", highlight=True))
+    console.print(Text("Tool deleted successfully.", style="bold green"), highlight=True)
 
 
 @tools_app.command()

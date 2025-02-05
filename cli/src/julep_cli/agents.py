@@ -156,7 +156,7 @@ def update(
             error_console.print(f"Error updating agent: {e}", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Agent updated successfully.", style="bold green", highlight=True))
+    console.print(Text("Agent updated successfully.", style="bold green"), highlight=True)
 
 
 @agents_app.command()
@@ -285,7 +285,7 @@ def get(
             error_console.print(f"Error retrieving agent: {e}", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Agent retrieved successfully.", style="bold green", highlight=True))
+    console.print(Text("Agent retrieved successfully.", style="bold green"), highlight=True)
 
     if json_output:
         console.print(json.dumps(agent.model_dump(), indent=2), highlight=True)

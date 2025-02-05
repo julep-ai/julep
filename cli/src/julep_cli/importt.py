@@ -56,24 +56,16 @@ def agent(
 
     # Importing an existing agent
     if locked_agent := get_entity_from_lock_file(type="agent", id=id, project_dir=source):
-        console.print(
-            Text(
-                f"Agent '{id}' already exists in the lock file",
-                style="bold yellow",
-                highlight=True,
-            )
-        )
+        console.print(Text(f"Agent '{id}' already exists in the lock file", style="bold yellow"), highlight=True)
         confirm = typer.confirm(
             f"Do you want to overwrite the existing agent in the lock file and {locked_agent.path}?"
         )
 
         if not confirm:
-            console.print(Text("Operation cancelled", style="bold red", highlight=True))
+            console.print(Text("Operation cancelled", style="bold red"), highlight=True)
             raise typer.Exit(1)
 
-        console.print(
-            Text("Overwriting existing agent...", style="bold yellow", highlight=True)
-        )
+        console.print(Text("Overwriting existing agent...", style="bold blue"), highlight=True)
 
         with Progress(
             SpinnerColumn(),
@@ -90,8 +82,8 @@ def agent(
                     Text(
                         f"Error fetching agent from remote: {e}",
                         style="bold red",
-                        highlight=True,
-                    )
+                    ),
+                    highlight=True,
                 )
                 raise typer.Exit(1)
 
@@ -128,15 +120,16 @@ def agent(
                     Text(
                         f"Error updating agent in '{agent_yaml_path}': {e}",
                         style="bold red",
-                        highlight=True,
-                    )
+                    ),
+                    highlight=True,
                 )
                 raise typer.Exit(1)
 
-        console.print(Text("Updated successfully.", style="bold green", highlight=True))
+        console.print(Text("Updated successfully.", style="bold green"), highlight=True)
 
         console.print(
-            Text(f"Updating agent '{id}' in lock file...", style="bold blue", highlight=True)
+            Text(f"Updating agent '{id}' in lock file...", style="bold blue"),
+            highlight=True,
         )
         update_existing_entity_in_lock_file(
             type="agent",
@@ -157,8 +150,8 @@ def agent(
             Text(
                 f"Agent '{id}' imported successfully to '{agent_yaml_path}'",
                 style="bold green",
-                highlight=True,
-            )
+            ),
+            highlight=True,
         )
 
         return
@@ -167,7 +160,7 @@ def agent(
     if not yes:
         confirm = typer.confirm(f"Are you sure you want to import agent '{id}' to '{output}'?")
         if not confirm:
-            console.print(Text("Operation cancelled", style="bold red", highlight=True))
+            console.print(Text("Operation cancelled", style="bold red"), highlight=True)
             raise typer.Exit
 
     try:
@@ -237,12 +230,13 @@ def agent(
             Text(
                 f"Agent '{id}' imported successfully to '{agent_yaml_path}' and added to lock file",
                 style="bold green",
-                highlight=True,
-            )
+            ),
+            highlight=True,
         )
 
     except Exception as e:
         error_console.print(
-            Text(f"Error importing agent: {e}", style="bold red", highlight=True)
+            Text(f"Error importing agent: {e}", style="bold red"),
+            highlight=True,
         )
         raise typer.Exit(1)

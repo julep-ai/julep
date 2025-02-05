@@ -10,9 +10,9 @@ import typer
 import yaml
 from julep import Julep
 from julep.types import Agent, Task
-from .app import console, error_console
 from rich.text import Text
 
+from .app import error_console
 from .models import (
     CreateAgentRequest,
     LockedEntity,
@@ -383,7 +383,7 @@ def manage_db_attribute(key: str, current_value: str | None = None) -> str:
     If current_value is None, fetch the attribute from the SQLite state database.
     If a value is provided, update the database with that value.
     The state database file will only be created/initialized when a value is provided for update.
-    
+
     Returns the fetched or provided value.
     """
     if current_value is None:
@@ -427,15 +427,13 @@ def manage_db_attribute(key: str, current_value: str | None = None) -> str:
             raise typer.Exit(1)
         conn.close()
         return value
-    else:
-        # Update scenario: create the DB and table if they don't already exist, then update.
-        init_state_db()
-        conn = get_state_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)",
-            (key, current_value)
-        )
-        conn.commit()
-        conn.close()
-        return current_value
+    # Update scenario: create the DB and table if they don't already exist, then update.
+    init_state_db()
+    conn = get_state_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)", (key, current_value)
+    )
+    conn.commit()
+    conn.close()
+    return current_value
