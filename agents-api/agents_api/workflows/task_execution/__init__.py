@@ -733,7 +733,7 @@ class TaskExecutionWorkflow:
             else:
                 outcome = await self.eval_step_exprs(context.current_step)
         except Exception as e:
-            while isinstance(e, ActivityError) and getattr(e, '__cause__', None):
+            while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
                 e = e.__cause__
             if isinstance(e, CancelledError):
                 workflow.logger.info(f"Step {context.cursor.step} cancelled")
@@ -765,7 +765,7 @@ class TaskExecutionWorkflow:
                 step=context.current_step,
             )
         except BaseException as e:
-            while isinstance(e, ActivityError) and getattr(e, '__cause__', None):
+            while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
                 e = e.__cause__
             if isinstance(e, CancelledError | AsyncioCancelledError):
                 workflow.logger.info(f"Step {context.cursor.step} cancelled")
