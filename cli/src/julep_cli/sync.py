@@ -1,11 +1,11 @@
 import hashlib
 import json
 from datetime import UTC, datetime
-from operator import imod
 from pathlib import Path
 from typing import Annotated
 
 import julep
+import threading
 import typer
 import yaml
 from julep.types import Agent, Task
@@ -87,20 +87,17 @@ def sync(
     Note: When watch mode is enabled, local changes are continuously synced to remote 
     (i.e. the process works as 'force-local' and --force-remote is ignored).
     """
+    # set the lock file path
+    lock_file_path = source / "julep-lock.json"
+
+    # if dry_run is true, we print a dry run message
     if dry_run:
         console.print(Text("Dry run - no changes will be made", style="bold yellow"))
         return
     
-    # if force_local is false and force_remote is false, we set force_local to true
-    if not force_local and not force_remote:
+    # if force_local is false and force_remote is false and lock file does not exist, we set force_local to true
+    if not force_local and not force_remote and not lock_file_path.exists():
         force_local = True
-
-    # Only check for conflicting force options when not in watch mode.
-    if not watch and force_local and force_remote:
-        error_console.print(
-            Text("Error: Cannot use both --force-local and --force-remote", style="bold red")
-        )
-        raise typer.Exit(1)
 
     # if watch is true and force_remote is true, we raise an error
     if watch and force_remote:
@@ -111,11 +108,17 @@ def sync(
     
     # When watch mode is enabled, force a local sync and disable remote forcing.
     if watch:
-        console.print(
-            Text("Watch mode enabled. Forcing local sync and disabling force_remote.", style="bold green")
-        )
-        force_local = True
-        force_remote = False
+        if force_remote:
+            error_console.print(
+                Text("Error: Cannot use both --watch and --force-remote", style="bold red")
+            )
+            raise typer.Exit(1)
+        else:
+            console.print(
+                Text("Watch mode enabled. Forcing local sync and disabling force_remote.", style="bold green")
+            )
+            force_local = True
+            force_remote = False
 
     # Wrap the sync logic in an inner function to allow re-running on file changes.
     def perform_sync_logic():
@@ -126,8 +129,6 @@ def sync(
             if not watch:
                 raise typer.Exit(1)
             return
-
-        lock_file_path = source / "julep-lock.json"
 
         # Branch A: If forcing local sync and no lock file exists
         if force_local and not lock_file_path.exists():
@@ -335,7 +336,7 @@ def sync(
                                         **agent_request.model_dump(exclude_unset=True, exclude_none=True),
                                     )
                                 except Exception as e:
-                                    error_console.print(f"[bold red]Error updating agent: {e}[/bold red]")
+                                    error_console.print(f"\n[bold red]Error updating agent: {e}[/bold red]")
                                     raise typer.Exit(1)
 
                             console.print(
@@ -766,19 +767,42 @@ def sync(
         # Run initial sync
         perform_sync_logic()
 
-        class YamlEventHandler(FileSystemEventHandler):
+        # Debounced event handler to avoid rapid repeat syncs.
+        class DebouncedYamlEventHandler(FileSystemEventHandler):
+            def __init__(self, debounce_interval, callback):
+                super().__init__()
+                self.debounce_interval = debounce_interval
+                self.callback = callback
+                self.timer = None
+
+            def _trigger_sync(self):
+                self.timer = None
+                try:
+                    self.callback()
+                except Exception as e:
+                    # Suppress any exception raised in the thread to avoid printing errors
+                    # error_console.print(f"\n[bold red]Error synchronizing: {e}[/bold red]")
+                    pass
+
             def on_modified(self, event):
                 if event.src_path.endswith((".yaml", ".yml")):
-                    console.print(Text(f"Change detected in {event.src_path}. \nInitiating sync...", style="yellow"))
-                    perform_sync_logic()
+                    console.print(Text(f"Change detected in {event.src_path}.\nSynchronizing...", style="yellow"))
+                    if self.timer:
+                        self.timer.cancel()
+                    self.timer = threading.Timer(self.debounce_interval, self._trigger_sync)
+                    self.timer.start()
 
             def on_created(self, event):
                 if event.src_path.endswith((".yaml", ".yml")):
-                    console.print(Text(f"New file {event.src_path} detected. \nInitiating sync...", style="yellow"))
-                    perform_sync_logic()
+                    console.print(Text(f"New file {event.src_path} detected.\nSynchronizing...", style="yellow"))
+                    if self.timer:
+                        self.timer.cancel()
+                    self.timer = threading.Timer(self.debounce_interval, self._trigger_sync)
+                    self.timer.start()
 
         observer = Observer()
-        observer.schedule(YamlEventHandler(), str(source), recursive=True)
+        # Set debounce_interval in seconds (e.g., 1.0 second)
+        observer.schedule(DebouncedYamlEventHandler(1.0, perform_sync_logic), str(source), recursive=True)
         observer.start()
         try:
             while True:
