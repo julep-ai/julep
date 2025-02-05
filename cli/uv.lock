@@ -796,6 +796,7 @@ dependencies = [
     { name = "openai" },
     { name = "pandas" },
     { name = "pydantic", extra = ["email"] },
+    { name = "questionary" },
     { name = "textual" },
     { name = "trogon", extra = ["typer"] },
     { name = "typer" },
@@ -830,9 +831,10 @@ requires-dist = [
     { name = "openai", specifier = "~=1.55.0" },
     { name = "pandas", specifier = "~=2.2.2" },
     { name = "pydantic", extras = ["email"], specifier = "~=2.10.2" },
+    { name = "questionary", specifier = ">=2.1.0" },
     { name = "textual", specifier = ">=1.0.0" },
     { name = "trogon", extras = ["typer"], specifier = ">=0.6.0" },
-    { name = "typer", extras = ["all"], specifier = ">=0.15.1" },
+    { name = "typer", specifier = ">=0.15.1" },
     { name = "typer-config", extras = ["yaml"], specifier = ">=1.4.2" },
     { name = "unique-namer", specifier = ">=1.6.1" },
     { name = "uvloop", specifier = "~=0.21.0" },
@@ -1842,6 +1844,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/07/18/907134c85c7152f679ed744e73e645b365f3ad571f38bdb62e36f347699a/pyzmq-26.2.0-cp312-cp312-win32.whl", hash = "sha256:989d842dc06dc59feea09e58c74ca3e1678c812a4a8a2a419046d711031f69c7", size = 575533 },
     { url = "https://files.pythonhosted.org/packages/ce/2c/a6f4a20202a4d3c582ad93f95ee78d79bbdc26803495aec2912b17dbbb6c/pyzmq-26.2.0-cp312-cp312-win_amd64.whl", hash = "sha256:2a50625acdc7801bc6f74698c5c583a491c61d73c6b7ea4dee3901bb99adb27a", size = 637768 },
     { url = "https://files.pythonhosted.org/packages/5f/0e/eb16ff731632d30554bf5af4dbba3ffcd04518219d82028aea4ae1b02ca5/pyzmq-26.2.0-cp312-cp312-win_arm64.whl", hash = "sha256:4d29ab8592b6ad12ebbf92ac2ed2bedcfd1cec192d8e559e2e099f648570e19b", size = 540675 },
+]
+
+[[package]]
+name = "questionary"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "prompt-toolkit" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/b8/d16eb579277f3de9e56e5ad25280fab52fc5774117fb70362e8c2e016559/questionary-2.1.0.tar.gz", hash = "sha256:6302cdd645b19667d8f6e6634774e9538bfcd1aad9be287e743d96cacaf95587", size = 26775 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/3f/11dd4cd4f39e05128bfd20138faea57bec56f9ffba6185d276e3107ba5b2/questionary-2.1.0-py3-none-any.whl", hash = "sha256:44174d237b68bc828e4878c763a9ad6790ee61990e0ae72927694ead57bab8ec", size = 36747 },
 ]
 
 [[package]]

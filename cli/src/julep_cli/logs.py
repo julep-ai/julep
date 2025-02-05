@@ -48,10 +48,9 @@ def logs(
 
     def display_transitions(transitions: list[Transition]):
         for transition in reversed(transitions):
-            transitions_table.add_row(transition.type, json.dumps(
-                transition.output, indent=4))
+            transitions_table.add_row(transition.type, json.dumps(transition.output, indent=4))
 
-        console.print(transitions_table)
+        console.print(transitions_table, highlight=True)
 
     client = get_julep_client()
 
@@ -59,15 +58,19 @@ def logs(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         transient=True,
-        console=console
+        console=console,
     ) as progress:
         try:
-            fetch_transitions = progress.add_task(description="Fetching transitions", total=None)
+            fetch_transitions = progress.add_task(
+                description="Fetching transitions", total=None
+            )
             progress.start_task(fetch_transitions)
 
             transitions = client.executions.transitions.list(execution_id=execution_id).items
         except Exception as e:
-            error_console.print(Text(f"Error fetching transitions: {e}", style="bold red"))
+            error_console.print(
+                Text(f"Error fetching transitions: {e}", style="bold red", highlight=True)
+            )
             raise typer.Exit(1)
 
     display_transitions(transitions)

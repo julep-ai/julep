@@ -8,7 +8,6 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
-from .Chat import ChatSettings
 from .Tools import (
     ChosenBash20241022,
     ChosenComputer20241022,
@@ -786,7 +785,7 @@ class PromptStep(BaseModel):
     """
     The tool choice for the prompt
     """
-    settings: ChatSettings | None = None
+    settings: dict[str, Any] | None = None
     """
     Settings for the prompt
     """
@@ -834,7 +833,7 @@ class PromptStepUpdateItem(BaseModel):
     """
     The tool choice for the prompt
     """
-    settings: ChatSettings | None = None
+    settings: dict[str, Any] | None = None
     """
     Settings for the prompt
     """

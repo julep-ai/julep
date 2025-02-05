@@ -33,7 +33,7 @@ def get_julep_yaml(source: Path) -> dict:
     """Get the julep.yaml file from the source directory"""
 
     if not (source / "julep.yaml").exists():
-        typer.echo("Error: julep.yaml not found in source directory", err=True)
+        typer.echo("Error: julep.yaml not found in source directory")
         raise typer.Exit(1)
 
     with open(source / "julep.yaml") as f:
@@ -60,7 +60,7 @@ def get_julep_client() -> Julep:
     # Initialize the Julep client
     api_key = get_config().get("api_key")
     if not api_key:
-        typer.echo("Error: JULEP_API_KEY not set in config.yml", err=True)
+        typer.echo("Error: JULEP_API_KEY not set in config.yml")
         raise typer.Exit(1)
 
     # Get environment from config.yml or default to production
@@ -79,7 +79,7 @@ def create_lock_file(source: Path):
         lock_file.touch()
 
         return lock_file
-    typer.echo("julep-lock.json already exists in source directory", err=True)
+    typer.echo("julep-lock.json already exists in source directory")
     raise typer.Exit(1)
 
 
@@ -92,7 +92,7 @@ def get_lock_file(project_dir: Path = Path.cwd()) -> LockFileContents:
     lock_file = project_dir / "julep-lock.json"
 
     if not lock_file.exists():
-        typer.echo("Error: julep-lock.json not found in source directory", err=True)
+        typer.echo("Error: julep-lock.json not found in source directory")
         raise typer.Exit(1)
 
     lock_file_contents = lock_file.read_text()
@@ -157,7 +157,7 @@ def get_entity_from_lock_file(
     matched = [entity for entity in entities if entity.id == id]
 
     if len(matched) > 1:
-        typer.echo(f"Error: Multiple {type}s with id '{id}' found in lock file", err=True)
+        typer.echo(f"Error: Multiple {type}s with id '{id}' found in lock file")
         raise typer.Exit(1)
 
     if not matched:
@@ -166,7 +166,9 @@ def get_entity_from_lock_file(
     return matched[0]
 
 
-def update_existing_entity_in_lock_file(type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()):
+def update_existing_entity_in_lock_file(
+    type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()
+):
     found = False
     lock_file = get_lock_file(project_dir)
     entities: list[LockedEntity] = getattr(lock_file, type + "s", [])

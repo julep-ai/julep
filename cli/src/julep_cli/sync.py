@@ -13,7 +13,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
-from .app import app, console, error_console
+from .app import app, console, error_console, local_tz
 from .models import (
     CreateAgentRequest,
     CreateTaskRequest,
@@ -71,13 +71,13 @@ def sync(
     """Synchronize local package with Julep platform"""
 
     if dry_run:
-        console.print(
-            Text("Dry run - no changes will be made", style="bold yellow"))
+        console.print(Text("Dry run - no changes will be made", style="bold yellow"))
         return
 
     if force_local and force_remote:
-        error_console.print(Text(
-            "Error: Cannot use both --force-local and --force-remote", style="bold red"))
+        error_console.print(
+            Text("Error: Cannot use both --force-local and --force-remote", style="bold red")
+        )
         raise typer.Exit(1)
 
     lock_file = source / "julep-lock.json"
@@ -85,8 +85,7 @@ def sync(
     try:
         client = get_julep_client()
     except Exception as e:
-        error_console.print(
-            Text(f"Error initializing Julep client: {e}", style="bold red"))
+        error_console.print(Text(f"Error initializing Julep client: {e}", style="bold red"))
         raise typer.Exit(1)
 
     if force_local and not lock_file.exists():
@@ -101,52 +100,54 @@ def sync(
         tools: list[dict] = julep_yaml_content.get("tools", [])
 
         if agents or tasks or tools:
-            console.print(Panel(
-                Text("Found the following new entities in julep.yaml:", style="bold cyan")))
+            console.print(
+                Panel(
+                    Text("Found the following new entities in julep.yaml:", style="bold cyan")
+                )
+            )
+            from rich.table import Table
 
             if agents:
                 table = Table(title="Agents", show_header=False, title_style="bold magenta")
                 table.add_column("Definition", style="dim", width=50)
                 for agent in agents:
                     table.add_row(agent.get("definition"))
-                console.print(table)
+                console.print(table, highlight=True)
 
             if tasks:
                 table = Table(title="Tasks", show_header=False, title_style="bold cyan")
                 table.add_column("Definition", style="dim", width=50)
                 for task in tasks:
                     table.add_row(task.get("definition"))
-                console.print(table)
+                console.print(table, highlight=True)
 
             if tools:
                 table = Table(title="Tools", show_header=False, title_style="bold green")
                 table.add_column("Definition", style="dim", width=50)
                 for tool in tools:
                     table.add_row(tool.get("definition"))
-                console.print(table)
+                console.print(table, highlight=True)
 
         else:
-            console.print(
-                Text("No new entities found in julep.yaml", style="bold yellow"))
+            console.print(Text("No new entities found in julep.yaml", style="bold yellow"))
             return
 
         if agents:
             for agent in agents:
                 agent_yaml_path: Path = source / agent.pop("definition")
-                agent_yaml_content = yaml.safe_load(
-                    agent_yaml_path.read_text())
+                agent_yaml_content = yaml.safe_load(agent_yaml_path.read_text())
 
                 agent_request_hash = hashlib.sha256(
                     json.dumps(agent_yaml_content).encode()
                 ).hexdigest()
 
-                agent_request = CreateAgentRequest(
-                    **agent_yaml_content, **agent)
+                agent_request = CreateAgentRequest(**agent_yaml_content, **agent)
 
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    console=console
+                    transient=True,
+                    console=console,
                 ) as progress:
                     sync_task = progress.add_task("Creating agents on remote...", start=False)
                     progress.start_task(sync_task)
@@ -159,14 +160,14 @@ def sync(
                     LockedEntity(
                         path=str(agent_yaml_path.relative_to(source)),
                         id=created_agent.id,
-                        last_synced=created_agent.created_at.isoformat(
-                            timespec="milliseconds")
+                        last_synced=created_agent.created_at.isoformat(timespec="milliseconds")
                         + "Z",
                         revision_hash=agent_request_hash,
                     )
                 )
             console.print(
-                Text("All agents were successfully created on remote", style="bold green"))
+                Text("All agents were successfully created on remote", style="bold green")
+            )
 
         if tasks:
             for task in tasks:
@@ -185,7 +186,8 @@ def sync(
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    console=console
+                    transient=True,
+                    console=console,
                 ) as progress:
                     sync_task = progress.add_task("Creating tasks on remote...", start=False)
                     progress.start_task(sync_task)
@@ -196,22 +198,21 @@ def sync(
                     )
 
                 relationships.tasks.append(
-                    TaskAgentRelationship(
-                        id=created_task.id, agent_id=agent_id)
+                    TaskAgentRelationship(id=created_task.id, agent_id=agent_id)
                 )
 
                 locked_tasks.append(
                     LockedEntity(
                         path=str(task_yaml_path.relative_to(source)),
                         id=created_task.id,
-                        last_synced=created_task.created_at.isoformat(
-                            timespec="milliseconds")
+                        last_synced=created_task.created_at.isoformat(timespec="milliseconds")
                         + "Z",
                         revision_hash=task_request_hash,
                     )
                 )
             console.print(
-                Text("All tasks were successfully created on remote", style="bold blue"))
+                Text("All tasks were successfully created on remote", style="bold blue")
+            )
 
         if tools:
             for tool in tools:
@@ -229,7 +230,8 @@ def sync(
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    console=console
+                    transient=True,
+                    console=console,
                 ) as progress:
                     sync_task = progress.add_task("Creating tools on remote...", start=False)
                     progress.start_task(sync_task)
@@ -240,27 +242,27 @@ def sync(
                     )
 
                 relationships.tools.append(
-                    ToolAgentRelationship(
-                        id=created_tool.id, agent_id=agent_id)
+                    ToolAgentRelationship(id=created_tool.id, agent_id=agent_id)
                 )
 
                 locked_tools.append(
                     LockedEntity(
                         path=str(tool_yaml_path.relative_to(source)),
                         id=created_tool.id,
-                        last_synced=created_tool.created_at.isoformat(
-                            timespec="milliseconds")
+                        last_synced=created_tool.created_at.isoformat(timespec="milliseconds")
                         + "Z",
                         revision_hash=tool_request_hash,
                     )
                 )
             console.print(
-                Text("All tools were successfully created on remote", style="bold magenta"))
+                Text("All tools were successfully created on remote", style="bold magenta")
+            )
 
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            console=console
+            transient=True,
+            console=console,
         ) as progress:
             sync_task = progress.add_task("Writing lock file...", start=False)
             progress.start_task(sync_task)
@@ -268,14 +270,14 @@ def sync(
             write_lock_file(
                 source,
                 LockFileContents(
-                agents=locked_agents,
-                tasks=locked_tasks,
-                tools=locked_tools,
-                relationships=relationships,
-            ),
-        )
+                    agents=locked_agents,
+                    tasks=locked_tasks,
+                    tools=locked_tools,
+                    relationships=relationships,
+                ),
+            )
 
-        console.print(Text("Synchronization complete", style="bold green"))
+        console.print(Text("Synchronization complete", style="bold green", highlight=True))
 
         return
 
@@ -290,10 +292,8 @@ def sync(
         tools_julep_yaml = julep_yaml_content.get("tools", [])
 
         for agent_julep_yaml in agents_julep_yaml:
-            agent_yaml_def_path: Path = Path(
-                agent_julep_yaml.get("definition"))
-            agent_yaml_content = yaml.safe_load(
-                (source / agent_yaml_def_path).read_text())
+            agent_yaml_def_path: Path = Path(agent_julep_yaml.get("definition"))
+            agent_yaml_content = yaml.safe_load((source / agent_yaml_def_path).read_text())
             found_in_lock = False
 
             for i in range(len(lock_file.agents)):
@@ -302,75 +302,109 @@ def sync(
                 if agent_julep_lock.path == str(agent_yaml_def_path):
                     found_in_lock = True
                     agent_yaml_content_hash = hashlib.sha256(
-                        json.dumps(agent_yaml_content).encode()).hexdigest()
+                        json.dumps(agent_yaml_content).encode()
+                    ).hexdigest()
                     agent_julep_lock_hash = agent_julep_lock.revision_hash
 
                     if agent_yaml_content_hash != agent_julep_lock_hash:
                         found_changes = True
-                        console.print(Text(f"Agent {agent_yaml_def_path} has changed, updating on remote...", style="bold yellow"))
+                        console.print(
+                            Text(
+                                f"Agent {agent_yaml_def_path} has changed, updating on remote...",
+                                style="bold yellow",
+                                highlight=True,
+                            )
+                        )
 
                         agent_request = CreateAgentRequest(
-                            **agent_yaml_content, **agent_julep_yaml)
+                            **agent_yaml_content, **agent_julep_yaml
+                        )
 
                         with Progress(
                             SpinnerColumn(),
                             TextColumn("[progress.description]{task.description}"),
-                            console=console
+                            transient=True,
+                            console=console,
                         ) as progress:
-                            sync_task = progress.add_task("Updating agent on remote...", start=False)
+                            sync_task = progress.add_task(
+                                "Updating agent on remote...", start=False
+                            )
                             progress.start_task(sync_task)
 
                             try:
                                 client.agents.create_or_update(
-                                    agent_id=agent_julep_lock.id, **agent_request.model_dump(exclude_unset=True, exclude_none=True))
+                                    agent_id=agent_julep_lock.id,
+                                    **agent_request.model_dump(
+                                        exclude_unset=True, exclude_none=True
+                                    ),
+                                )
                             except Exception as e:
                                 error_console.print(
-                                    f"[bold red]Error updating agent: {e}[/bold red]")
+                                    f"[bold red]Error updating agent: {e}[/bold red]"
+                                )
                                 raise typer.Exit(1)
 
                         console.print(
-                            Text(f"Agent {agent_yaml_def_path} updated successfully", style="bold blue"))
+                            Text(
+                                f"Agent {agent_yaml_def_path} updated successfully",
+                                style="bold blue",
+                            )
+                        )
 
-                        updated_at = client.agents.get(
-                            agent_julep_lock.id).updated_at
+                        updated_at = client.agents.get(agent_julep_lock.id).updated_at
                         lock_file.agents[i] = LockedEntity(
                             path=agent_julep_lock.path,
                             id=agent_julep_lock.id,
-                            last_synced=updated_at.isoformat(
-                                timespec="milliseconds") + "Z",
+                            last_synced=updated_at.isoformat(timespec="milliseconds") + "Z",
                             revision_hash=agent_yaml_content_hash,
                         )
                     break
 
             if not found_in_lock:
-                console.print(Text(f"Agent {agent_yaml_def_path} not found in lock file.", style="bold yellow"))
+                console.print(
+                    Text(
+                        f"Agent {agent_yaml_def_path} not found in lock file.",
+                        style="bold yellow",
+                        highlight=True,
+                    )
+                )
 
                 agent_request_hash = hashlib.sha256(
-                    json.dumps(agent_yaml_content).encode()).hexdigest()
+                    json.dumps(agent_yaml_content).encode()
+                ).hexdigest()
 
-                agent_request = CreateAgentRequest(
-                    **agent_yaml_content, **agent_julep_yaml)
+                agent_request = CreateAgentRequest(**agent_yaml_content, **agent_julep_yaml)
 
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    console=console
+                    transient=True,
+                    console=console,
                 ) as progress:
                     sync_task = progress.add_task("Creating agent on remote...", start=False)
                     progress.start_task(sync_task)
 
                     created_agent = client.agents.create(
-                        **agent_request.model_dump(exclude_unset=True, exclude_none=True))
+                        **agent_request.model_dump(exclude_unset=True, exclude_none=True)
+                    )
 
-                console.print(Text(f"Agent {agent_yaml_def_path} created successfully on remote", style="bold blue"))
+                console.print(
+                    Text(
+                        f"Agent {agent_yaml_def_path} created successfully on remote",
+                        style="bold blue",
+                        highlight=True,
+                    )
+                )
 
-                lock_file.agents.append(LockedEntity(
-                    path=str(agent_yaml_def_path),
-                    id=created_agent.id,
-                    last_synced=created_agent.created_at.isoformat(
-                        timespec="milliseconds") + "Z",
-                    revision_hash=agent_request_hash,
-                ))
+                lock_file.agents.append(
+                    LockedEntity(
+                        path=str(agent_yaml_def_path),
+                        id=created_agent.id,
+                        last_synced=created_agent.created_at.isoformat(timespec="milliseconds")
+                        + "Z",
+                        revision_hash=agent_request_hash,
+                    )
+                )
 
         for task_julep_yaml in tasks_julep_yaml:
             task_yaml_def_path: Path = Path(task_julep_yaml.get("definition"))
@@ -383,87 +417,128 @@ def sync(
                 if task_julep_lock.path == str(task_yaml_def_path):
                     found_in_lock = True
                     task_yaml_content_hash = hashlib.sha256(
-                        json.dumps(task_yaml_content).encode()).hexdigest()
+                        json.dumps(task_yaml_content).encode()
+                    ).hexdigest()
                     task_julep_lock_hash = task_julep_lock.revision_hash
 
                     if task_yaml_content_hash != task_julep_lock_hash:
-                        console.print(Text(f"Task {task_yaml_def_path} has changed, updating on remote...", style="bold yellow"))
+                        console.print(
+                            Text(
+                                f"Task {task_yaml_def_path} has changed, updating on remote...",
+                                style="bold yellow",
+                                highlight=True,
+                            )
+                        )
                         found_changes = True
 
                         task_request = CreateTaskRequest(
                             **{**task_yaml_content, **task_julep_yaml})
 
                         agent_id = get_related_agent_id(
-                            task_julep_lock.id, lock_file.relationships.tasks)
+                            task_julep_lock.id, lock_file.relationships.tasks
+                        )
 
                         if not agent_id:
-                            error_console.print(Text(f"Task {task_yaml_def_path} has no related agent. Please check the lock file and julep.yaml for consistency.", style="bold red"))
+                            error_console.print(
+                                Text(
+                                    f"Task {task_yaml_def_path} has no related agent. Please check the lock file and julep.yaml for consistency.",
+                                    style="bold red",
+                                    highlight=True,
+                                )
+                            )
                             raise typer.Exit(1)
 
                         with Progress(
                             SpinnerColumn(),
                             TextColumn("[progress.description]{task.description}"),
-                            console=console
+                            transient=True,
+                            console=console,
                         ) as progress:
-                            sync_task = progress.add_task("Updating task on remote...", start=False)
+                            sync_task = progress.add_task(
+                                "Updating task on remote...", start=False
+                            )
                             progress.start_task(sync_task)
 
                             client.tasks.create_or_update(
-                                task_id=task_julep_lock.id, agent_id=agent_id, **task_request.model_dump(exclude_unset=True, exclude_none=True))
+                                task_id=task_julep_lock.id,
+                                agent_id=agent_id,
+                                **task_request.model_dump(
+                                    exclude_unset=True, exclude_none=True
+                                ),
+                            )
 
-                        console.print(Text(f"Task {task_yaml_def_path} updated successfully", style="bold blue"))
+                        console.print(
+                            Text(
+                                f"Task {task_yaml_def_path} updated successfully",
+                                style="bold blue",
+                                highlight=True,
+                            )
+                        )
 
-                        updated_at = client.tasks.get(
-                            task_julep_lock.id).updated_at
+                        updated_at = client.tasks.get(task_julep_lock.id).updated_at
                         lock_file.tasks[i] = LockedEntity(
                             path=task_julep_lock.path,
                             id=task_julep_lock.id,
-                            last_synced=updated_at.isoformat(
-                                timespec="milliseconds") + "Z",
+                            last_synced=updated_at.isoformat(timespec="milliseconds") + "Z",
                             revision_hash=task_yaml_content_hash,
                         )
                     break
 
             if not found_in_lock:
-                console.print(Text(f"Task {task_yaml_def_path} not found in lock file, creating new task...", style="bold yellow"))
+                console.print(
+                    Text(
+                        f"Task {task_yaml_def_path} not found in lock file, creating new task...",
+                        style="bold yellow",
+                        highlight=True,
+                    )
+                )
 
                 task_request_hash = hashlib.sha256(
-                    json.dumps(task_yaml_content).encode()).hexdigest()
+                    json.dumps(task_yaml_content).encode()
+                ).hexdigest()
 
                 agent_id = get_agent_id_from_expression(task_julep_yaml.pop("agent_id"), lock_file.agents)
 
-                task_request = CreateTaskRequest(
-                    **task_yaml_content, **task_julep_yaml)
+                task_request = CreateTaskRequest(**task_yaml_content, **task_julep_yaml)
 
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    console=console
+                    transient=True,
+                    console=console,
                 ) as progress:
                     sync_task = progress.add_task("Creating task on remote...", start=False)
                     progress.start_task(sync_task)
 
                     created_task = client.tasks.create(
-                        agent_id=agent_id, **task_request.model_dump(exclude_unset=True, exclude_none=True))
+                        agent_id=agent_id,
+                        **task_request.model_dump(exclude_unset=True, exclude_none=True),
+                    )
 
-                lock_file.tasks.append(LockedEntity(
-                    path=str(task_yaml_def_path),
-                    id=created_task.id,
-                    last_synced=created_task.created_at.isoformat(
-                        timespec="milliseconds") + "Z",
-                    revision_hash=task_request_hash,
-                ))
+                lock_file.tasks.append(
+                    LockedEntity(
+                        path=str(task_yaml_def_path),
+                        id=created_task.id,
+                        last_synced=created_task.created_at.isoformat(timespec="milliseconds")
+                        + "Z",
+                        revision_hash=task_request_hash,
+                    )
+                )
 
                 lock_file.relationships.tasks.append(
-                    TaskAgentRelationship(id=created_task.id, agent_id=agent_id))
+                    TaskAgentRelationship(id=created_task.id, agent_id=agent_id)
+                )
 
-                console.print(Text(
-                    f"Task {task_yaml_def_path} created successfully on remote", style="bold blue"))
+                console.print(
+                    Text(
+                        f"Task {task_yaml_def_path} created successfully on remote",
+                        style="bold blue",
+                    )
+                )
 
         for tool_julep_yaml in tools_julep_yaml:
             tool_yaml_def_path: Path = Path(tool_julep_yaml.get("definition"))
-            tool_yaml_content = yaml.safe_load(
-                (source / tool_yaml_def_path).read_text())
+            tool_yaml_content = yaml.safe_load((source / tool_yaml_def_path).read_text())
             found_in_lock = False
 
             for i in range(len(lock_file.tools)):
@@ -473,96 +548,149 @@ def sync(
                     found_in_lock = True
 
                     tool_yaml_content_hash = hashlib.sha256(
-                        json.dumps(tool_yaml_content).encode()).hexdigest()
+                        json.dumps(tool_yaml_content).encode()
+                    ).hexdigest()
                     tool_julep_lock_hash = tool_julep_lock.revision_hash
 
                     if tool_yaml_content_hash != tool_julep_lock_hash:
                         found_changes = True
-                        console.print(Text(f"Tool {tool_yaml_def_path} has changed, updating on remote...", style="bold yellow"))
+                        console.print(
+                            Text(
+                                f"Tool {tool_yaml_def_path} has changed, updating on remote...",
+                                style="bold yellow",
+                                highlight=True,
+                            )
+                        )
 
-                        tool_request = CreateToolRequest(
-                            **tool_yaml_content, **tool_julep_yaml)
+                        tool_request = CreateToolRequest(**tool_yaml_content, **tool_julep_yaml)
 
                         agent_id = get_related_agent_id(
-                            tool_julep_lock.id, lock_file.relationships.tools)
+                            tool_julep_lock.id, lock_file.relationships.tools
+                        )
 
                         if not agent_id:
-                            error_console.print(Text(f"Tool {tool_yaml_def_path} has no related agent. Please check the lock file and julep.yaml for consistency.", style="bold red"))
+                            error_console.print(
+                                Text(
+                                    f"Tool {tool_yaml_def_path} has no related agent. Please check the lock file and julep.yaml for consistency.",
+                                    style="bold red",
+                                    highlight=True,
+                                )
+                            )
                             raise typer.Exit(1)
 
                         with Progress(
                             SpinnerColumn(),
                             TextColumn("[progress.description]{task.description}"),
-                            console=console
+                            transient=True,
+                            console=console,
                         ) as progress:
-                            sync_task = progress.add_task("Updating tool on remote...", start=False)
+                            sync_task = progress.add_task(
+                                "Updating tool on remote...", start=False
+                            )
                             progress.start_task(sync_task)
 
-                            client.agents.tools.update(tool_id=tool_julep_lock.id, agent_id=agent_id,
-                                                       **tool_request.model_dump(exclude_unset=True, exclude_none=True))
+                            client.agents.tools.update(
+                                tool_id=tool_julep_lock.id,
+                                agent_id=agent_id,
+                                **tool_request.model_dump(
+                                    exclude_unset=True, exclude_none=True
+                                ),
+                            )
 
-                        console.print(Text(f"Tool {tool_yaml_def_path} updated successfully", style="bold blue"))
+                        console.print(
+                            Text(
+                                f"Tool {tool_yaml_def_path} updated successfully",
+                                style="bold blue",
+                                highlight=True,
+                            )
+                        )
 
                         lock_file.tools[i] = LockedEntity(
                             path=tool_julep_lock.path,
                             id=tool_julep_lock.id,
-                            last_synced=datetime.now().isoformat(timespec="milliseconds") + "Z",
+                            last_synced=datetime.now(tz=local_tz).isoformat(
+                                timespec="milliseconds"
+                            )
+                            + "Z",
                             revision_hash=tool_yaml_content_hash,
                         )
                     break
 
             if not found_in_lock:
-                console.print(Text(f"Tool {tool_yaml_def_path} not found in lock file, creating new tool...", style="bold yellow"))
+                console.print(
+                    Text(
+                        f"Tool {tool_yaml_def_path} not found in lock file, creating new tool...",
+                        style="bold yellow",
+                        highlight=True,
+                    )
+                )
 
                 tool_request_hash = hashlib.sha256(
-                    json.dumps(tool_yaml_content).encode()).hexdigest()
+                    json.dumps(tool_yaml_content).encode()
+                ).hexdigest()
 
                 agent_id = get_agent_id_from_expression(tool_julep_yaml.pop("agent_id"), lock_file.agents)
 
-                tool_request = CreateToolRequest(
-                    **tool_yaml_content, **tool_julep_yaml)
+                tool_request = CreateToolRequest(**tool_yaml_content, **tool_julep_yaml)
 
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
-                    console=console
+                    transient=True,
+                    console=console,
                 ) as progress:
                     sync_task = progress.add_task("Creating tool on remote...", start=False)
                     progress.start_task(sync_task)
 
                     created_tool = client.agents.tools.create(
-                        agent_id=agent_id, **tool_request.model_dump(exclude_unset=True, exclude_none=True))
+                        agent_id=agent_id,
+                        **tool_request.model_dump(exclude_unset=True, exclude_none=True),
+                    )
 
-                lock_file.tools.append(LockedEntity(
-                    path=str(tool_yaml_def_path),
-                    id=created_tool.id,
-                    last_synced=created_tool.created_at.isoformat(
-                        timespec="milliseconds") + "Z",
-                    revision_hash=tool_request_hash,
-                ))
+                lock_file.tools.append(
+                    LockedEntity(
+                        path=str(tool_yaml_def_path),
+                        id=created_tool.id,
+                        last_synced=created_tool.created_at.isoformat(timespec="milliseconds")
+                        + "Z",
+                        revision_hash=tool_request_hash,
+                    )
+                )
 
                 lock_file.relationships.tools.append(
-                    ToolAgentRelationship(id=created_tool.id, agent_id=agent_id))
+                    ToolAgentRelationship(id=created_tool.id, agent_id=agent_id)
+                )
 
-                console.print(Text(
-                    f"Tool {tool_yaml_def_path} created successfully on remote", style="bold blue"))
+                console.print(
+                    Text(
+                        f"Tool {tool_yaml_def_path} created successfully on remote",
+                        style="bold blue",
+                    )
+                )
 
         if found_changes:
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
-                console=console
+                transient=True,
+                console=console,
             ) as progress:
                 sync_task = progress.add_task("Writing lock file...", start=False)
                 progress.start_task(sync_task)
 
                 write_lock_file(source, lock_file)
 
-            console.print(Text("Synchronization complete", style="bold green"))
+            console.print(Text("Synchronization complete", style="bold green", highlight=True))
 
             return
 
-        console.print(Text("No changes detected. Everything is up to date.", style="bold green"))
+        console.print(
+            Text(
+                "No changes detected. Everything is up to date.",
+                style="bold green",
+                highlight=True,
+            )
+        )
         return
 
     lock_file = get_lock_file(source)

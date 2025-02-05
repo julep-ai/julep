@@ -44,12 +44,14 @@ def create(
 
     if definition:
         # TODO: implement definition file parsing
-        error_console.print("Passing definition file is not implemented yet", err=True)
+        error_console.print("Passing definition file is not implemented yet", highlight=True)
         raise typer.Exit(1)
 
     # Validate that either definition is provided or name/model
     if not definition and not (name and model):
-        error_console.print("Error: Must provide either a definition file or name and model", err=True)
+        error_console.print(
+            "Error: Must provide either a definition file or name and model", highlight=True
+        )
         raise typer.Exit(1)
 
     try:
@@ -58,15 +60,13 @@ def create(
         if default_settings:
             json.loads(default_settings)
     except json.JSONDecodeError as e:
-        error_console.print(f"Error parsing JSON: {e}", err=True)
+        error_console.print(f"Error parsing JSON: {e}", highlight=True)
         raise typer.Exit(1)
 
     client = get_julep_client()
 
     with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console
+        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
     ) as progress:
         try:
             create_agent_task = progress.add_task("Creating agent...", start=False)
@@ -82,14 +82,10 @@ def create(
             )
 
         except Exception as e:
-            error_console.print(f"Error creating agent: {e}", style="bold red")
+            error_console.print(f"Error creating agent: {e}", style="bold red", highlight=True)
             raise typer.Exit(1)
 
-    console.print(
-        Text(
-            f"Agent created successfully. Agent ID: {agent.id}", style="bold green"
-        )
-    )
+    console.print(Text(f"Agent created successfully. Agent ID: {agent.id}", style="bold green"))
 
 
 @agents_app.command()
@@ -123,7 +119,7 @@ def update(
         metadata_dict = json.loads(metadata) if metadata else {}
         settings_dict = json.loads(default_settings) if default_settings else {}
     except json.JSONDecodeError as e:
-        error_console.print(f"Error parsing JSON: {e}", err=True)
+        error_console.print(f"Error parsing JSON: {e}", highlight=True)
         raise typer.Exit(1)
 
     updates = {
@@ -140,7 +136,7 @@ def update(
     }
 
     if not updates:
-        error_console.print("No updates provided", err=True)
+        error_console.print("No updates provided", highlight=True)
         raise typer.Exit(1)
 
     client = get_julep_client()
@@ -148,7 +144,8 @@ def update(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        console=console
+        transient=True,
+        console=console,
     ) as progress:
         try:
             update_agent_task = progress.add_task("Updating agent...", start=False)
@@ -156,10 +153,10 @@ def update(
 
             client.agents.update(agent_id=id, **updates)
         except Exception as e:
-            error_console.print(f"Error updating agent: {e}")
+            error_console.print(f"Error updating agent: {e}", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Agent updated successfully.", style="bold green"))
+    console.print(Text("Agent updated successfully.", style="bold green", highlight=True))
 
 
 @agents_app.command()
@@ -178,7 +175,7 @@ def delete(
     if not force:
         confirm = typer.confirm(f"Are you sure you want to delete agent '{id}'?")
         if not confirm:
-            error_console.print("Operation cancelled")
+            error_console.print("Operation cancelled", highlight=True)
             raise typer.Exit(1)
 
     client = get_julep_client()
@@ -186,7 +183,8 @@ def delete(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        console=console
+        transient=True,
+        console=console,
     ) as progress:
         try:
             delete_agent_task = progress.add_task("Deleting agent...", start=False)
@@ -194,10 +192,10 @@ def delete(
 
             client.agents.delete(id)
         except Exception as e:
-            error_console.print(f"Error deleting agent: {e}")
+            error_console.print(f"Error deleting agent: {e}", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Agent deleted successfully.", style="bold green"))
+    console.print(Text("Agent deleted successfully.", style="bold green", highlight=True))
 
 
 @agents_app.command()
@@ -216,7 +214,7 @@ def list(
     try:
         json.loads(metadata_filter) if metadata_filter else {}
     except json.JSONDecodeError as e:
-        typer.echo(f"Error parsing metadata filter JSON: {e}", err=True)
+        typer.echo(f"Error parsing metadata filter JSON: {e}")
         raise typer.Exit(1)
 
     client = get_julep_client()
@@ -224,7 +222,8 @@ def list(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        console=console
+        transient=True,
+        console=console,
     ) as progress:
         try:
             list_agents_task = progress.add_task(description="Fetching agents", total=None)
@@ -232,7 +231,9 @@ def list(
 
             agents = client.agents.list(metadata_filter=metadata_filter).items
         except Exception as e:
-            error_console.print(Text(f"Error fetching agents: {e}", style="bold red"))
+            error_console.print(
+                Text(f"Error fetching agents: {e}", style="bold red", highlight=True)
+            )
             raise typer.Exit(1)
 
     if json_output:
@@ -245,9 +246,8 @@ def list(
         box=HEAVY_HEAD,  # border between cells
         show_lines=True,  # Adds lines between rows
         show_header=True,
-
         header_style="bold magenta",
-        width=140
+        width=140,
     )
     agent_table.add_column("Name", style="cyan", width=25)
     agent_table.add_column("About", style="cyan", width=50)
@@ -255,14 +255,9 @@ def list(
     agent_table.add_column("ID", style="green", width=40)
 
     for agent in agents:
-        agent_table.add_row(
-            agent.name,
-            agent.about,
-            agent.model,
-            agent.id
-        )
+        agent_table.add_row(agent.name, agent.about, agent.model, agent.id)
 
-    console.print(agent_table)
+    console.print(agent_table, highlight=True)
 
 
 @agents_app.command()
@@ -278,7 +273,8 @@ def get(
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
-        console=console
+        transient=True,
+        console=console,
     ) as progress:
         try:
             get_agent_task = progress.add_task("Retrieving agent...", start=False)
@@ -286,20 +282,20 @@ def get(
 
             agent = client.agents.get(id)
         except Exception as e:
-            error_console.print(f"Error retrieving agent: {e}")
+            error_console.print(f"Error retrieving agent: {e}", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text("Agent retrieved successfully.", style="bold green"))
+    console.print(Text("Agent retrieved successfully.", style="bold green", highlight=True))
 
     if json_output:
-        console.print(json.dumps(agent.model_dump(), indent=2))
+        console.print(json.dumps(agent.model_dump(), indent=2), highlight=True)
         return
 
     # Create a table for agent details
     agent_table = Table(
         title=Text("Agent Details:", style="bold underline magenta"),
         header_style="bold magenta",
-        width=SINGLE_AGENT_TABLE_WIDTH
+        width=SINGLE_AGENT_TABLE_WIDTH,
     )
     agent_table.add_column("Key", style="green", width=SINGLE_AGENT_COLUMN_WIDTH)
     agent_table.add_column("Value", style="cyan", width=SINGLE_AGENT_COLUMN_WIDTH * 2)
@@ -307,4 +303,4 @@ def get(
     for key, value in agent.model_dump().items():
         agent_table.add_row(key, str(value))
 
-    console.print(agent_table)
+    console.print(agent_table, highlight=True)

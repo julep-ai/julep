@@ -58,14 +58,12 @@ def init(
             default=True,
         )
         if not proceed:
-            console.print(
-                Text("Initialization cancelled.", style="bold red")
-            )
+            console.print(Text("Initialization cancelled.", style="bold red"))
             raise typer.Exit
 
     try:
         # Download the repository as a zip file
-        console.print(Text("Downloading template...", style="bold cyan"))
+        console.print(Text("Downloading template...", style="bold cyan", highlight=True))
         response = requests.get(template_url)
         response.raise_for_status()
 
@@ -76,7 +74,13 @@ def init(
             template_folder = f"{repo_prefix}{template}/"
 
             # Extract only the specified template folder
-            console.print(Text(f"Extracting template '{template}' to {path}", style="bold green"))
+            console.print(
+                Text(
+                    f"Extracting template '{template}' to {path}",
+                    style="bold green",
+                    highlight=True,
+                )
+            )
 
             for file_info in z.infolist():
                 if file_info.filename.startswith(template_folder):
@@ -92,25 +96,25 @@ def init(
                     final_destination.mkdir(parents=True, exist_ok=True)
 
                     # Copy files from the extracted template path to the final destination
-                    shutil.copytree(extracted_template_path,
-                                    final_destination, dirs_exist_ok=True)
+                    shutil.copytree(
+                        extracted_template_path, final_destination, dirs_exist_ok=True
+                    )
 
                     # Remove the extracted template directory and its parent
                     shutil.rmtree(library_repo_prefix)
 
     except requests.exceptions.RequestException as e:
-        error_console.print(
-            Text(f"Failed to download template: {e}", style="bold red"))
+        error_console.print(Text(f"Failed to download template: {e}", style="bold red"))
         raise typer.Exit(1)
     except zipfile.BadZipFile as e:
-        error_console.print(
-            Text(f"Failed to extract template: {e}", style="bold red"))
+        error_console.print(Text(f"Failed to extract template: {e}", style="bold red"))
         raise typer.Exit(1)
 
     julep_yaml = path / template / "julep.yaml"
     if not julep_yaml.exists():
-        error_console.print(Text(
-            "Error: 'julep.yaml' not found in the destination directory", style="bold red"))
+        error_console.print(
+            Text("Error: 'julep.yaml' not found in the destination directory", style="bold red")
+        )
         raise typer.Exit(1)
 
     console.print(
@@ -125,4 +129,6 @@ def init(
     if readme_path.exists():
         readme_content = readme_path.read_text()
         markdown = Markdown(readme_content)
-        console.print(Panel(markdown, title=Text("Project README", style="bold blue")))
+        console.print(
+            Panel(markdown, title=Text("Project README", style="bold blue", highlight=True))
+        )

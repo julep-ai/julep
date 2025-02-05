@@ -86,7 +86,7 @@ async def create_or_update_agent(
     )
 
     # Convert default_settings to dict if it exists
-    default_settings = data.default_settings.model_dump() if data.default_settings else {}
+    default_settings = data.default_settings or {}
 
     # Set default values
     data.metadata = data.metadata or {}

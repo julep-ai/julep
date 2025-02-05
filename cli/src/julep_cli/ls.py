@@ -34,15 +34,14 @@ def ls(
         agents_table = Table(
             title=Text("Agents:", style="bold underline magenta"),
             header_style="bold magenta",
-            width=TABLE_WIDTH
+            width=TABLE_WIDTH,
         )
         agents_table.add_column("Name", style="green", width=COLUMN_WIDTH)
         agents_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
         agents_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
 
         for agent in lock_file.agents:
-            agent_yaml_contents = yaml.safe_load(
-                Path(source / agent.path).read_text())
+            agent_yaml_contents = yaml.safe_load(Path(source / agent.path).read_text())
             agent_yaml_contents["id"] = agent.id
             agents_table.add_row(
                 agent_yaml_contents.get("name", "N/A"),
@@ -50,46 +49,44 @@ def ls(
                 str(agent_yaml_contents["id"]),
             )
 
-        console.print(agents_table)
+        console.print(agents_table, highlight=True)
 
     if lock_file.tasks:
         tasks_table = Table(
             title=Text("Tasks:", style="bold underline magenta"),
             header_style="bold magenta",
-            width=TABLE_WIDTH
+            width=TABLE_WIDTH,
         )
         tasks_table.add_column("Name", style="green", width=COLUMN_WIDTH)
         tasks_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
         tasks_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
 
         for task in lock_file.tasks:
-            task_yaml_contents = yaml.safe_load(
-                Path(source / task.path).read_text())
+            task_yaml_contents = yaml.safe_load(Path(source / task.path).read_text())
             tasks_table.add_row(
                 task_yaml_contents.get("name", "N/A"),
                 str(task.path),
                 str(task.id),
             )
 
-        console.print(tasks_table)
+        console.print(tasks_table, highlight=True)
 
     if lock_file.tools:
         tools_table = Table(
             title=Text("Tools:", style="bold underline magenta"),
             header_style="bold magenta",
-            width=150
+            width=150,
         )
         tools_table.add_column("Name", style="green", width=COLUMN_WIDTH)
         tools_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
         tools_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
 
         for tool in lock_file.tools:
-            tool_yaml_contents = yaml.safe_load(
-                Path(source / tool.path).read_text())
+            tool_yaml_contents = yaml.safe_load(Path(source / tool.path).read_text())
             tools_table.add_row(
                 tool_yaml_contents.get("name", "N/A"),
                 str(tool.path),
                 str(tool.id),
             )
 
-        console.print(tools_table)
+        console.print(tools_table, highlight=True)

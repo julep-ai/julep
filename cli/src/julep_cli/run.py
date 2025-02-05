@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Annotated
+from uuid import UUID
 
 import typer
 
@@ -10,11 +11,11 @@ from .app import app
 @app.command()
 def run(
     task: Annotated[
-        str,
+        UUID,
         typer.Option(
             "--task",
             "-t",
-            help="ID or name of the task to execute",
+            help="ID of the task to execute",
         ),
     ],
     input: Annotated[

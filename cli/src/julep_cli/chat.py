@@ -21,13 +21,11 @@ def chat(
         ),
     ],
     situation: Annotated[
-        str | None, typer.Option(
-            "--situation", "-s", help="Situation to chat about")
+        str | None, typer.Option("--situation", "-s", help="Situation to chat about")
     ] = None,
     settings: Annotated[
         str | None,
-        typer.Option(
-            "--settings", help="Chat settings as a JSON string", parser=json.loads),
+        typer.Option("--settings", help="Chat settings as a JSON string", parser=json.loads),
     ] = None,
 ):
     """
@@ -41,18 +39,15 @@ def chat(
     try:
         agent = client.agents.get(agent_id=agent)
     except Exception as e:
-        error_console.print(Text(f"Error: {e}", style="bold red"))
+        error_console.print(Text(f"Error: {e}", style="bold red", highlight=True))
         raise typer.Exit(1)
 
     session = client.sessions.create(agent=agent.id, situation=situation)
 
     console.print(
         Panel(
-            Text(
-                f"Starting chat with agent '{agent.name}'",
-                style="bold green"
-            ),
-            title="Chat Session"
+            Text(f"Starting chat with agent '{agent.name}'", style="bold green"),
+            title="Chat Session",
         )
     )
 
@@ -64,8 +59,7 @@ def chat(
             TextColumn("[progress.description]{task.description}"),
             transient=True,
         ) as progress:
-            task = progress.add_task(
-                "Waiting for agent response...", start=False)
+            task = progress.add_task("Waiting for agent response...", start=False)
             progress.start_task(task)
 
             response = client.sessions.chat(
@@ -80,9 +74,7 @@ def chat(
 
         console.print(
             Panel(
-                Text(
-                    response.choices[0].message.content,
-                    style="bold blue"),
-                title="Agent Response"
+                Text(response.choices[0].message.content, style="bold blue"),
+                title="Agent Response",
             )
         )
