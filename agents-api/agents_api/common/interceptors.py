@@ -13,7 +13,7 @@ from typing import Any
 
 from temporalio import workflow
 from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
-from temporalio.exceptions import ApplicationError, FailureError, TemporalError
+from temporalio.exceptions import ApplicationError, FailureError, TemporalError, ActivityError
 from temporalio.service import RPCError
 from temporalio.worker import (
     ActivityInboundInterceptor,
@@ -241,6 +241,8 @@ def handle_execution_with_errors_sync[I, T](
     except PASSTHROUGH_EXCEPTIONS:
         raise
     except BaseException as e:
+        while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
+            e = e.__cause__
         if not is_retryable_error(e):
             raise ApplicationError(
                 str(e),

@@ -227,6 +227,13 @@ class StepContext(BaseModel):
         )  # type: ignore[not-callable]
         inputs = []
         labels = []
+        workflow = transitions[-1].current.workflow
+        transitions = [
+            t
+            for t in transitions
+            if t.current.workflow == workflow
+            or t.current.workflow.startswith(f"`{workflow}`")
+        ]
         for transition in transitions:
             if transition.next and transition.next.step >= len(inputs):
                 inputs.append(transition.output)
