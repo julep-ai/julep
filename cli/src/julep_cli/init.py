@@ -68,8 +68,7 @@ def init(
     template_url = f"{repo_url}/archive/refs/heads/{branch}.zip"
 
     try:
-        # Download the repository as a zip file
-        console.print(Text("Downloading template...", style="bold cyan", highlight=True))
+        console.print(Text("Downloading template...", style="bold cyan"))
         response = requests.get(template_url)
         response.raise_for_status()
 
@@ -77,18 +76,11 @@ def init(
             repo_prefix = f"library-{branch}/"
             template_folder = f"{repo_prefix}{template}/"
 
-            # Extract only the specified template folder
-            console.print(
-                Text(
-                    f"Extracting template '{template}' to {path}",
-                    style="bold green",
-                    highlight=True,
-                )
-            )
             found = any(info.filename.startswith(template_folder) for info in z.infolist())
             if not found:
                 error_console.print(
-                    Text(f"Template '{template}' not found in repository", style="bold red")
+                    Text(f"Template '{template}' not found in repository", style="bold red"),
+                    highlight=True,
                 )
                 raise typer.Exit(1)
 
@@ -107,14 +99,18 @@ def init(
                     default=False,
                 )
                 if not proceed_existing:
-                    console.print(Text("Initialization cancelled.", style="bold red"))
+                    console.print(
+                        Text("Initialization cancelled.", style="bold red"),
+                        highlight=True,
+                    )
                     raise typer.Exit(1)
             else:
                 console.print(
                     Text(
                         f"Warning: The directory '{final_destination}' already exists and is not empty. Files will be merged.",
                         style="bold yellow",
-                    )
+                    ),
+                    highlight=True,
                 )
         final_destination.mkdir(parents=True, exist_ok=True)
 
@@ -122,10 +118,16 @@ def init(
         shutil.rmtree(library_repo_prefix)
 
     except requests.exceptions.RequestException as e:
-        error_console.print(Text(f"Failed to download template: {e}", style="bold red"))
+        error_console.print(
+            Text(f"Failed to download template: {e}", style="bold red"),
+            highlight=True,
+        )
         raise typer.Exit(1)
     except zipfile.BadZipFile as e:
-        error_console.print(Text(f"Failed to extract template: {e}", style="bold red"))
+        error_console.print(
+            Text(f"Failed to extract template: {e}", style="bold red"),
+            highlight=True,
+        )
         raise typer.Exit(1)
 
     julep_yaml = final_destination / "julep.yaml"
@@ -140,7 +142,8 @@ def init(
         Text(
             f"Successfully initialized new Julep project with template '{template}' in {path}",
             style="bold green",
-        )
+        ),
+        highlight=True,
     )
 
     def print_directory_tree(directory: Path) -> None:
@@ -161,7 +164,8 @@ def init(
 
     cd_instruction = f"cd {final_destination.resolve()}"
     console.print(
-        Text(f"To start working on your project, run: {cd_instruction}", style="bold green")
+        Text(f"To start working on your project, run: {cd_instruction}", style="bold green"),
+        highlight=True,
     )
 
     # Python runs as a separate process, and any directory changes it makes only apply to that process.
@@ -189,6 +193,7 @@ def init(
 
     # get the readme file
     readme_path = final_destination / "README.md"
+
     if readme_path.exists():
         readme_content = readme_path.read_text()
         markdown = Markdown(readme_content)

@@ -76,10 +76,13 @@ class TransitionLogApp(App):
             self.transitions = fetched_transitions
 
         # If a terminal state is reached, display a final message and keep the app open.
-        if self.transitions and self.transitions[0].type in ["finish", "cancelled", "error"]:
-            if not hasattr(self, "_completion_message_shown"):
-                self.log_widget.write("\nExecution complete.")
-                self._completion_message_shown = True
+        if (
+            self.transitions
+            and self.transitions[0].type in ["finish", "cancelled", "error"]
+            and not hasattr(self, "_completion_message_shown")
+        ):
+            self.log_widget.write("\nExecution complete.")
+            self._completion_message_shown = True
 
 
 @app.command()
@@ -132,6 +135,9 @@ def logs(
         console=console,
     ) as progress:
         try:
+            fetch_transitions = progress.add_task(
+                description="Fetching transitions", total=None
+            )
             fetch_transitions = progress.add_task(
                 description="Fetching transitions", total=None
             )
