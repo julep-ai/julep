@@ -5,11 +5,14 @@ from datetime import timedelta
 from typing import Any
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError
+from temporalio.exceptions import ActivityError, ApplicationError
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
+    from asyncio.exceptions import CancelledError as AsyncioCancelledError
+
     from pydantic import RootModel
+    from temporalio.exceptions import CancelledError
 
     from ...activities import task_steps
     from ...activities.execute_api_call import execute_api_call
@@ -730,6 +733,12 @@ class TaskExecutionWorkflow:
             else:
                 outcome = await self.eval_step_exprs(context.current_step)
         except Exception as e:
+            while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
+                e = e.__cause__
+            if isinstance(e, CancelledError):
+                workflow.logger.info(f"Step {context.cursor.step} cancelled")
+                await transition(context, type="cancelled", output="Workflow Cancelled")
+                raise
             workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
             await transition(context, type="error", output=str(e))
             err_msg = (
@@ -751,10 +760,22 @@ class TaskExecutionWorkflow:
             raise ApplicationError(msg)
 
         self.outcome = outcome
+        try:
+            state = await self.handle_step(
+                step=context.current_step,
+            )
+        except BaseException as e:
+            while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
+                e = e.__cause__
+            if isinstance(e, CancelledError | AsyncioCancelledError):
+                workflow.logger.info(f"Step {context.cursor.step} cancelled")
+                await transition(context, type="cancelled", output="Workflow Cancelled")
+                raise
+            workflow.logger.error(f"Error in step {context.cursor.step}: {e}")
+            await transition(context, type="error", output=str(e))
+            msg = f"Step {type(context.current_step).__name__} threw error: {e}"
+            raise ApplicationError(msg) from e
 
-        state = await self.handle_step(
-            step=context.current_step,
-        )
         if isinstance(context.current_step, ReturnStep):
             return state
 
@@ -772,7 +793,7 @@ class TaskExecutionWorkflow:
         )
 
         # 5a. End if the last step
-        if final_state.type in ("finish", "finish_branch", "cancelled"):
+        if final_state.type in ("finish", "finish_branch", "cancelled", "error"):
             workflow.logger.info(f"Workflow finished with state: {final_state.type}")
             return final_state.output
 
