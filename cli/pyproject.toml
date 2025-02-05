@@ -27,6 +27,7 @@ dependencies = [
   "trogon[typer]>=0.6.0",
   "typer-config[yaml]>=1.4.2",
   "julep>=1.56.0",
+  "db-sqlite3>=0.0.1",
 ]
 
 [project.scripts]

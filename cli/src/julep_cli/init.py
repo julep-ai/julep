@@ -4,7 +4,7 @@ import zipfile
 from pathlib import Path
 from typing import Annotated
 import os
-
+import subprocess
 import requests
 import typer
 from rich.markdown import Markdown
@@ -138,11 +138,29 @@ def init(
     cd_instruction = f"cd {final_destination.resolve()}"
     console.print(Text(f"To start working on your project, run: {cd_instruction}", style="bold green"))
 
-    if typer.confirm("Would you like to change to the project directory?", default=False):
-        os.chdir(final_destination)
-        console.print(Text("Changed to project directory", style="bold green"))
+    # Python runs as a separate process, and any directory changes it makes only apply to that process. 
+    # Once the script exits, the original shell remains unchanged. 
+    # The only way to persist a directory change is by running cd directly in the shell.
+    # if typer.confirm("Would you like to change to the project directory?", default=False):
+    #     try:
+    #         # Change current working directory to the final destination
+    #         os.chdir(final_destination)
+    #         console.print(
+    #             Text(f"Changed working directory to {final_destination.resolve()}", style="bold green")
+    #         )
 
-        
+    #         # Launch an interactive shell in the project directory.
+    #         # This will spawn a child shell, and when you exit it, you'll return here.
+    #         shell = os.environ.get("SHELL")
+    #         if shell:
+    #             subprocess.run([shell])
+    #         else:
+    #             subprocess.run("/bin/sh")
+    #     except Exception as e:
+    #         error_console.print(
+    #             Text(f"Failed to change directory and launch shell: {e}", style="bold red")
+    #         )
+
     # get the readme file
     readme_path = final_destination / "README.md"
     if readme_path.exists():

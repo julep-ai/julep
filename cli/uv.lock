@@ -105,6 +105,12 @@ wheels = [
 ]
 
 [[package]]
+name = "antiorm"
+version = "1.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/f8/71baa4824d9666c1be51d117119579a97f461ddbded48b2e01a6ad0554b5/antiorm-1.2.1.tar.gz", hash = "sha256:96eb1841ce5163db4cf1dc13f4499ec2d7cffc190cf724b78ffdd3e6b7c4ff93", size = 171953 }
+
+[[package]]
 name = "anyio"
 version = "4.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -386,6 +392,24 @@ name = "cucumber-tag-expressions"
 version = "4.1.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/88/0f/980a044d0592a49460199b117880de1cbbb8e46d9c385c772bf87aa537ef/cucumber-tag-expressions-4.1.0.tar.gz", hash = "sha256:e314d5fed6eebb2f90380271f562248fb15e18636764faf40f4dde4b28b1f960", size = 33630 }
+
+[[package]]
+name = "db"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "antiorm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a9/22/f65d64c83e63790b3273c6adb3bff338ad594f46d84b41bd1f94593b40a6/db-0.1.1.tar.gz", hash = "sha256:980e772f15c1161d3b287ffec4f144e40961b0b3e6d5102809577870bf6c5808", size = 3350 }
+
+[[package]]
+name = "db-sqlite3"
+version = "0.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "db" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ff/00/e1f3d7bf1e0bff7c0574c0d5535c041e139d4ce43db196147e4c62f52ed5/db-sqlite3-0.0.1.tar.gz", hash = "sha256:4dd410aa28a2c5b66de477f9dc62f523133217dd31c7ed7eb085214bea148db9", size = 1390 }
 
 [[package]]
 name = "debugpy"
@@ -790,6 +814,7 @@ source = { editable = "." }
 dependencies = [
     { name = "anyio" },
     { name = "beartype" },
+    { name = "db-sqlite3" },
     { name = "environs" },
     { name = "jsonschema" },
     { name = "julep" },
@@ -824,6 +849,7 @@ dev = [
 requires-dist = [
     { name = "anyio", specifier = "~=4.4.0" },
     { name = "beartype", specifier = "~=0.18.5" },
+    { name = "db-sqlite3", specifier = ">=0.0.1" },
     { name = "environs", specifier = "~=10.3.0" },
     { name = "jsonschema", specifier = "~=4.22.0" },
     { name = "julep", specifier = ">=1.56.0" },
