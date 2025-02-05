@@ -235,7 +235,7 @@ def create_locked_entity(relative_path: Path, source: Path, id: str, last_synced
         path=str(relative_path.relative_to(source)),
         id=id,
         last_synced=last_synced.isoformat(
-            timespec="milliseconds") + "Z",
+            timespec="microseconds") + "Z",
         revision_hash=hashlib.sha256(
             json.dumps(content_to_hash).encode()
         ).hexdigest(),
