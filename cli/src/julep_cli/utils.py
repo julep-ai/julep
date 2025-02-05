@@ -10,6 +10,8 @@ import typer
 import yaml
 from julep import Julep
 from julep.types import Agent, Task
+from .app import console, error_console
+from rich.text import Text
 
 from .models import (
     CreateAgentRequest,
@@ -183,9 +185,16 @@ def update_existing_entity_in_lock_file(
             break
 
     if not found:
-        typer.echo(
-            f"Error: Cannot update{type} with id '{new_entity.get('id')}' because it was not found in lock file",
-            err=True,
+        # typer.echo(
+        #     f"Error: Cannot update{type} with id '{new_entity.get('id')}' because it was not found in lock file",
+        #     err=True,
+        # )
+        error_console.print(
+            Text(
+                f"Error: Cannot update{type} with id '{new_entity.get('id')}' because it was not found in lock file",
+                style="bold red",
+            ),
+            highlight=True,
         )
         raise typer.Exit(1)
 
@@ -373,32 +382,60 @@ def manage_db_attribute(key: str, current_value: str | None = None) -> str:
     """
     If current_value is None, fetch the attribute from the SQLite state database.
     If a value is provided, update the database with that value.
-
+    The state database file will only be created/initialized when a value is provided for update.
+    
     Returns the fetched or provided value.
     """
-    init_state_db()  # Ensure DB and table are initialized
-    conn = get_state_db_connection()
-    cursor = conn.cursor()
-
     if current_value is None:
-        # Fetch value from the database
-        cursor.execute("SELECT value FROM attributes WHERE key=?", (key,))
+        # Fetch scenario: DO NOT create the database if it doesn't exist.
+        if not STATE_DB_PATH.exists():
+            error_console.print(
+                Text(
+                    f"Error: No saved value for '{key}' found because the state database does not exist. Please provide one.",
+                    style="bold red",
+                ),
+                highlight=True,
+            )
+            raise typer.Exit(1)
+
+        conn = get_state_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT value FROM attributes WHERE key=?", (key,))
+        except sqlite3.OperationalError as e:
+            error_console.print(
+                Text(
+                    f"Error: The state database is not properly initialized: {e}",
+                    style="bold red",
+                ),
+                highlight=True,
+            )
+            conn.close()
+            raise typer.Exit(1)
         row = cursor.fetchone()
         if row:
             value = row[0]
         else:
-            typer.echo(
-                f"[bold red]Error: No saved value for '{key}' found in the database, please provide one.[/bold red]",
-                err=True,
+            error_console.print(
+                Text(
+                    f"Error: No saved value for '{key}' found in the database, please provide one.",
+                    style="bold red",
+                ),
+                highlight=True,
             )
             conn.close()
             raise typer.Exit(1)
+        conn.close()
+        return value
     else:
-        # Update the database with the provided value
+        # Update scenario: create the DB and table if they don't already exist, then update.
+        init_state_db()
+        conn = get_state_db_connection()
+        cursor = conn.cursor()
         cursor.execute(
-            "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)", (key, current_value)
+            "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)",
+            (key, current_value)
         )
         conn.commit()
-        value = current_value
-    conn.close()
-    return value
+        conn.close()
+        return current_value

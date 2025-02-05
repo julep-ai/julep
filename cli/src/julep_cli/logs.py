@@ -138,9 +138,6 @@ def logs(
             fetch_transitions = progress.add_task(
                 description="Fetching transitions", total=None
             )
-            fetch_transitions = progress.add_task(
-                description="Fetching transitions", total=None
-            )
             progress.start_task(fetch_transitions)
 
             transitions = client.executions.transitions.list(execution_id=execution_id).items
