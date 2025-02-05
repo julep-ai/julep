@@ -90,6 +90,10 @@ def sync(
     if dry_run:
         console.print(Text("Dry run - no changes will be made", style="bold yellow"))
         return
+    
+    # if force_local is false and force_remote is false, we set force_local to true
+    if not force_local and not force_remote:
+        force_local = True
 
     # Only check for conflicting force options when not in watch mode.
     if not watch and force_local and force_remote:
@@ -98,14 +102,6 @@ def sync(
         )
         raise typer.Exit(1)
 
-    # When watch mode is enabled, force a local sync and disable remote forcing.
-    if watch:
-        console.print(
-            Text("Watch mode enabled. Forcing local sync and disabling force_remote.", style="bold green")
-        )
-        force_local = True
-        force_remote = False
-
     # if watch is true and force_remote is true, we raise an error
     if watch and force_remote:
         error_console.print(
@@ -113,9 +109,13 @@ def sync(
         )
         raise typer.Exit(1)
     
-    # if force_local is false and force_remote is false, we set force_local to true
-    if not force_local and not force_remote:
+    # When watch mode is enabled, force a local sync and disable remote forcing.
+    if watch:
+        console.print(
+            Text("Watch mode enabled. Forcing local sync and disabling force_remote.", style="bold green")
+        )
         force_local = True
+        force_remote = False
 
     # Wrap the sync logic in an inner function to allow re-running on file changes.
     def perform_sync_logic():
