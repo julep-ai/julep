@@ -231,6 +231,7 @@ def get_related_agent_id(
 
     return None
 
+
 def create_locked_entity(relative_path: Path, source: Path, id: str, last_synced: datetime, content_to_hash: dict) -> LockedEntity:
     return LockedEntity(
         path=str(relative_path.relative_to(source)),
@@ -253,9 +254,11 @@ def get_agent_id_from_expression(expression: str, locked_agents: list[LockedEnti
     """
 
     if not locked_agents:
-        raise ValueError("No locked agents passed to get_agent_id_from_expression")
+        msg = "No locked agents passed to get_agent_id_from_expression"
+        raise ValueError(msg)
 
     return eval(f'f"{expression}"', {"agents": locked_agents})
+
 
 def update_entity_force_remote(entity: LockedEntity, remote_entity: Agent | Task, source: Path) -> LockedEntity:
     """

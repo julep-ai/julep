@@ -1,15 +1,17 @@
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
+import julep
 import typer
 import yaml
+from julep.types import Agent, Task
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.text import Text
 from rich.table import Table
+from rich.text import Text
 
 from .app import app, console, error_console
 from .models import (
@@ -23,18 +25,15 @@ from .models import (
     ToolAgentRelationship,
 )
 from .utils import (
-    create_locked_entity,
     get_agent_id_from_expression,
     get_julep_client,
     get_julep_yaml,
     get_lock_file,
     get_related_agent_id,
     update_entity_force_remote,
-    update_yaml_for_existing_entity,
     write_lock_file,
 )
-import julep
-from julep.types import Agent, Task
+
 
 @app.command()
 def sync(
@@ -566,7 +565,6 @@ def sync(
         console.print(Text("No changes detected. Everything is up to date.", style="bold green"))
         return
 
-
     lock_file = get_lock_file(source)
     detected_changes = False
 
@@ -578,7 +576,6 @@ def sync(
         sync_task = progress.add_task("Syncing agents...", start=False)
         progress.start_task(sync_task)
 
-
         remote_agents: list[Agent] = []
         agents_update_happened = False
 
@@ -586,9 +583,9 @@ def sync(
             try:
                 remote_agent = client.agents.get(locked_agent.id)
                 remote_agents.append(remote_agent)
-            except julep.NotFoundError as e:
+            except julep.NotFoundError:
                 error_console.print(Text(f"Agent {locked_agent.id} not found on remote. It will be removed from the lock file.", style="bold red"))
-                console.print(Text(f"- If you wish to create it again, please run `julep sync --force-local`", style="bold yellow"))
+                console.print(Text("- If you wish to create it again, please run `julep sync --force-local`", style="bold yellow"))
                 console.print(Text(f"- If this was intentional, please remove it from julep.yaml and delete the corresponding {locked_agent.path} file", style="bold yellow"))
                 lock_file.agents.remove(locked_agent)
 
@@ -597,9 +594,9 @@ def sync(
             assert remote_agent.id == local_agent.id
 
             last_synced_dt = datetime.fromisoformat(
-                local_agent.last_synced.rstrip('Z')
-            ).replace(tzinfo=timezone.utc)
-            
+                local_agent.last_synced.rstrip("Z")
+            ).replace(tzinfo=UTC)
+
             if remote_agent.updated_at > last_synced_dt:
                 detected_changes = True
 
@@ -608,10 +605,10 @@ def sync(
 
                 # Ask for confirmation if force_remote is not set
                 wants_to_update = force_remote or typer.confirm(f"Agent {local_agent.path} has changed on remote. Do you want to update it locally?")
-                
+
                 # Restart the progress bar
                 progress.start()
-                    
+
                 if wants_to_update:
                     lock_file.agents[i] = update_entity_force_remote(
                         entity=local_agent,
@@ -640,9 +637,9 @@ def sync(
             try:
                 remote_task = client.tasks.get(locked_task.id)
                 remote_tasks.append(remote_task)
-            except julep.NotFoundError as e:
+            except julep.NotFoundError:
                 error_console.print(Text(f"Task {locked_task.id} not found on remote. It will be removed from the lock file.", style="bold red"))
-                console.print(Text(f"- If you wish to create it again, please run `julep sync --force-local`", style="bold yellow"))
+                console.print(Text("- If you wish to create it again, please run `julep sync --force-local`", style="bold yellow"))
                 console.print(Text(f"- If this was intentional, please remove it from julep.yaml and delete the corresponding {locked_task.path} file", style="bold yellow"))
                 lock_file.tasks.remove(locked_task)
                 raise typer.Exit(1)
@@ -652,8 +649,8 @@ def sync(
             assert remote_task.id == local_task.id
 
             last_synced_dt = datetime.fromisoformat(
-                local_task.last_synced.rstrip('Z')
-            ).replace(tzinfo=timezone.utc)
+                local_task.last_synced.rstrip("Z")
+            ).replace(tzinfo=UTC)
 
             if remote_task.updated_at > last_synced_dt:
                 detected_changes = True
@@ -663,7 +660,7 @@ def sync(
 
                 # Ask for confirmation if force_remote is not set
                 wants_to_update = force_remote or typer.confirm(f"Task {local_task.path} has changed on remote. Do you want to update it locally?")
-                
+
                 # Restart the progress bar
                 progress.start()
 
