@@ -14,27 +14,38 @@ error_console = Console(stderr=True, style="bold red")
 
 local_tz = tz.gettz(time.tzname[time.daylight])
 
-# Initialize typer app
+# Initialize typer app with -h as an alias for help
 app = WrappedTyper(
     name="julep",
     help="Command line interface for the Julep platform",
     no_args_is_help=True,
     pretty_exceptions_short=True,
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
 
 init_tui(app)
 
-# Initialize subcommands
-agents_app = WrappedTyper(help="Manage AI agents")
-tasks_app = WrappedTyper(help="Manage tasks")
-tools_app = WrappedTyper(help="Manage tools")
-import_app = WrappedTyper(help="Import entities from the Julep platform")
-executions_app = WrappedTyper(help="Manage executions")
+# Initialize subcommands with help alias too
+agents_app = WrappedTyper(
+    help="Manage AI agents",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+tasks_app = WrappedTyper(
+    help="Manage tasks",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+tools_app = WrappedTyper(
+    help="Manage tools",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+executions_app = WrappedTyper(
+    help="Manage executions",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 
 app.add_typer(agents_app, name="agents")
 app.add_typer(tasks_app, name="tasks")
 app.add_typer(tools_app, name="tools")
-app.add_typer(import_app, name="import")
 app.add_typer(executions_app, name="executions")
 
 

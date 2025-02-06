@@ -3,7 +3,7 @@ from .app import app
 from .auth import auth
 from .chat import chat
 from .executions import executions_app as executions_app
-from .importt import import_app as import_app
+from .importt import importt
 from .init import init
 from .logs import logs
 from .ls import ls
@@ -19,7 +19,7 @@ __all__ = [
     "chat",
     "executions_app",
     "get_config",
-    "import_app",
+    "importt",
     "init",
     "logs",
     "ls",
