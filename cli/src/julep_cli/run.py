@@ -5,6 +5,12 @@ from uuid import UUID
 
 import typer
 
+from .logs import logs
+
+from .utils import get_julep_client
+
+from .executions import create_execution
+
 from .app import app
 
 
@@ -65,6 +71,16 @@ def run(
     # TODO: Implement task execution logic
     typer.echo(f"Running task '{task}' with input: {task_input}")
 
+    client = get_julep_client()
+
+
+    try:
+        execution = create_execution(client, str(task), task_input)
+        typer.echo(f"Execution created successfully! Execution ID: {
+                   execution.id}")
+    except Exception as e:
+        typer.echo(f"Error creating execution: {e}", err=True)
+        raise typer.Exit(1)
+    
     if wait:
-        typer.echo("Waiting for task completion and streaming logs...")
-        # TODO: Implement wait and log streaming logic
+        logs(execution_id=execution.id, tailing=True)
