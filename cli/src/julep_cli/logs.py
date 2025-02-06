@@ -1,5 +1,5 @@
 import json
-from typing import Annotated
+from typing import Annotated, ClassVar
 
 import typer
 from julep.resources.executions.transitions import Transition
@@ -21,7 +21,7 @@ from .utils import get_julep_client, manage_db_attribute
 # New TUI app using Textual's Log widget to display transitions in tailing mode
 class TransitionLogApp(App):
     # Add a binding for Ctrl+C to quit
-    BINDINGS = [
+    BINDINGS: ClassVar[list[Binding]] = [
         Binding(
             "ctrl+c",
             "quit",

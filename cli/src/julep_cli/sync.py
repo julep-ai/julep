@@ -760,7 +760,9 @@ def sync(
                     agents_update_happened = True
 
         if agents_update_happened:
-            console.print(Text("Agents updated successfully", style="bold green"), highlight=True)
+            console.print(
+                Text("Agents updated successfully", style="bold green"), highlight=True
+            )
         else:
             console.print(Text("No agents updated", style="bold yellow"), highlight=True)
 
