@@ -1,14 +1,14 @@
 import datetime
 import hashlib
 from pathlib import Path
-
+from typing import Annotated
 import typer
 from julep.types.agent import Agent
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
-from .app import console, error_console, import_app, local_tz
+from .app import console, error_console, app, local_tz
 from .models import LockedEntity
 from .utils import (
     add_agent_to_julep_yaml,
@@ -20,25 +20,67 @@ from .utils import (
 )
 
 
-@import_app.command()
-def agent(
-    id: str = typer.Option(..., "--id", "-i", help="ID of the agent to import"),
-    source: Path = typer.Option(
-        Path.cwd(),
-        "--source",
-        "-s",
-        help="Path to the source directory. Defaults to current working directory",
-    ),
-    output: Path = typer.Option(
-        None,
-        "--output",
-        "-o",
-        help="Path to save the imported agent. Defaults to <project_dir>/src/agents",
-    ),
-    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
+@app.command(name="import")
+def importt(
+    agent: Annotated[
+        bool,
+        typer.Option(
+            "--agent",
+            "-a",
+            help="Import an agent",
+        ),
+    ] = False,
+    task: Annotated[
+        bool,
+        typer.Option(
+            "--task",
+            "-t",
+            help="Import a task",
+        ),
+    ] = False,
+    tools: Annotated[
+        bool,
+        typer.Option(
+            "--tool",
+            "-l",
+            help="Import a tool",
+        ),
+    ] = False,
+    id: Annotated[
+        str,
+        typer.Option(
+            "--id",
+            "-i",
+            help="ID of the agent to import",
+        ),
+    ] = None,
+    source: Annotated[
+        Path,
+        typer.Option(
+            "--source",
+            "-s",
+            help="Path to the source directory. Defaults to current working directory",
+        ),
+    ] = Path.cwd(),
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save the imported agent. Defaults to <project_dir>/src/agents",
+        ),
+    ] = None,
+    yes: Annotated[
+        bool,
+        typer.Option(
+            "--yes",
+            "-y",
+            help="Skip confirmation prompt",
+        ),
+    ] = False,
 ):
     """
-    Import an agent from the Julep platform.
+    Import an agent from the Julep platform using the --agent option.
     """
 
     output = output or source / "src/agents"
@@ -49,6 +91,22 @@ def agent(
                 "Error: 'julep-lock.json' not found in the source directory. Please run 'julep sync' to sync your project and create a lock file.",
                 style="bold red",
             )
+        )
+        raise typer.Exit(1)
+
+    # if tools or task is provided, we need to import the tool or task
+    if tools or task:
+        error_console.print(
+            Text("Error: Tools and tasks are not supported yet.", style="bold red"),
+            highlight=True,
+        )
+        raise typer.Exit(1)
+
+    # if agent is not provided, we need to print help
+    if not agent:
+        error_console.print(
+            Text("Error: Agent is required.", style="bold red"),
+            highlight=True,
         )
         raise typer.Exit(1)
 
@@ -242,4 +300,9 @@ def agent(
             Text(f"Error importing agent: {e}", style="bold red"),
             highlight=True,
         )
+        raise typer.Exit(1)
+
+    # If no agent ID is provided, print help and exit
+    if not id:
+        typer.echo(app.get_help())
         raise typer.Exit(1)
