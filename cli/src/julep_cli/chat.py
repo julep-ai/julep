@@ -17,7 +17,7 @@ def chat(
         typer.Option(
             "--agent",
             "-a",
-            help="ID or name of the agent to chat with",
+            help="ID the agent to chat with",
         ),
     ],
     situation: Annotated[

@@ -32,6 +32,7 @@ dependencies = [
   "db-sqlite3>=0.0.1",
   "stringcase>=1.2.0",
   "pyjwt>=2.10.1",
+  "watchdog>=6.0.0",
 ]
 
 [project.scripts]
