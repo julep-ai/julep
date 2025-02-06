@@ -11,22 +11,22 @@ The `julep` CLI provides a comprehensive command-line interface for interacting 
 ## Installation
 
 <CodeGroup>
-```bash pip
-pip install julep-cli
-```
+  ```bash pip
+  pip install julep-cli
+  ```
 </CodeGroup>
 
 Note: While the package name is `julep-cli`, the installed command is simply `julep`.
 
 ## Configuration
 
-The CLI stores configuration data in `~/.config/julep/config.yml`. This file is created automatically after authentication.
+The CLI stores configuration data in `~/.config/julep/config.yml`. This file is created automatically after authenticating using `julep auth` (see [Authentication](/guides/julepcli/commands#authentication) section).
 
 <CodeGroup>
-```yaml config.yml
-api_key: "your_api_key_here"
-environment: "production"
-```
+  ```yaml config.yml
+  api_key: "your_api_key_here"
+  environment: "production"
+  ```
 </CodeGroup>
 
 ## Project Structure
@@ -49,23 +49,25 @@ project-name/
 
 The `julep.yaml` file defines your project configuration:
 
-```yaml julep.yaml
-agents:
-- definition: src/agents/agent.yaml
-- definition: src/agents/another-agent.yaml
+<CodeGroup>
+  ```yaml julep.yaml
+  agents:
+  - definition: src/agents/agent.yaml
+  - definition: src/agents/another-agent.yaml
 
-tasks:
-- agent_id: "{agents[0].id}"
-  definition: src/tasks/task.yaml
-- agent_id: "{agents[1].id}"
-  definition: src/tasks/another-task.yaml
+  tasks:
+  - agent_id: "{agents[0].id}"
+    definition: src/tasks/task.yaml
+  - agent_id: "{agents[1].id}"
+    definition: src/tasks/another-task.yaml
 
-tools:
-- agent_id: "{agents[0].id}"
-  definition: src/tools/tool.yaml
-- agent_id: "{agents[1].id}"
-  definition: src/tools/another-tool.yaml
-```
+  tools:
+  - agent_id: "{agents[0].id}"
+    definition: src/tools/tool.yaml
+  - agent_id: "{agents[1].id}"
+    definition: src/tools/another-tool.yaml
+  ```
+</CodeGroup>
 
 The `julep-lock.json` file tracks the state of your project on the Julep platform, mapping local files to their remote counterparts and maintaining relationships between components. This file should be committed to version control to ensure consistent state across team members.
 To know more about the schema and the usage of the `julep-lock.json` file, you can read the [Lockfile](https://github.com/julep-ai/julep/tree/dev/cli/README.md#schema-for-julep-lockjson) section.
@@ -77,49 +79,49 @@ To get started with the CLI, follow these steps:
 <Steps>
 
   <Step title="Authenticate">
-  ```bash
-  julep auth --environment production
-  ```
-  The `auth` command is used to authenticate with the Julep platform. You need to provide your API key. You can find your API key [here](https://dashboard.julep.ai/).
+    ```bash
+    julep auth --environment production
+    ```
+    The `auth` command is used to authenticate with the Julep platform. You need to provide your API key. You can find your API key [here](https://dashboard.julep.ai/).
   </Step>
 
   <Step title="Initialize Project">
-  ```bash
-  julep init --template profiling-recommending
-  ```
-  The `init` command is used to initialize a new Julep project. There are bunch of templates to get you started which you can find [here](https://github.com/julep-ai/library).
+    ```bash
+    julep init --template profiling-recommending
+    ```
+    The `init` command is used to initialize a new Julep project. There are bunch of templates to get you started which you can find [here](https://github.com/julep-ai/library).
   </Step>
 
   <Step title="Sync Project">
-  ```bash
-  julep sync
-  ```
-  The `sync` command is used to synchronize the local project with the Julep platform. This creates a `julep-lock.json` file which tracks the state of the project on the Julep platform.
+    ```bash
+    julep sync
+    ```
+    The `sync` command is used to synchronize the local project with the Julep platform. This creates a `julep-lock.json` file which tracks the state of the project on the Julep platform (see [Sync Command](/guides/julepcli/commands#sync) for more details).
   </Step>
 
   <Step title="Edit the project">
-  Once the project is initialized, you can edit the project in the `julep.yaml` file. Add agents, tasks, tools, etc. in the `src` directory.
+    Once the project is initialized, you can edit the project in the `julep.yaml` file. Add agents, tasks, tools, etc. in the `src` directory.
   </Step>
 
   <Step title="Re-Sync Project">
-  ```bash
-  julep sync --force-local
-  ```
-  After editing the project, you can re-sync the project with the Julep platform. This will update the `julep-lock.json` file with the latest state of the project on the Julep platform.
+    ```bash
+    julep sync --force-local
+    ```
+    After editing the project, you can re-sync the project with the Julep platform. This will update the `julep-lock.json` file with the latest state of the project on the Julep platform.
   </Step>
 
   <Step title="Run the project">
-  ```bash
-  julep executions create --task-id {task.id} --input '{"input": "input"}'
-  ```
-  The `executions create` command is used to create a new execution for a task. You can find the task ID in the `julep-lock.json` file.
+    ```bash
+    julep executions create --task-id {task.id} --input '{"input": "input"}'
+    ```
+    The `executions create` command is used to create a new execution for a task. You can find the task ID in the `julep-lock.json` file.
   </Step>
 
   <Step title="View the execution">
-  ```bash
-  julep logs --execution-id {execution.id} --tail
-  ```
-  The `logs` command is used to view the logs of an execution. When you run the `executions create` command, it will return the execution ID.
+    ```bash
+    julep logs --execution-id {execution.id} --tail
+    ```
+    The `logs` command is used to view the logs of an execution. When you run the `executions create` command, it will return the execution ID.
   </Step>
 
 </Steps>
