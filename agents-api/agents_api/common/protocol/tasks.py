@@ -22,6 +22,7 @@ with workflow.unsafe.imports_passed_through():
 
 from ...queries.executions import list_execution_transitions
 from ...queries.utils import serialize_model_data
+from ...common.utils.workflows import get_workflow_name
 from .models import ExecutionInput
 
 # TODO: Maybe we should use a library for this
@@ -222,7 +223,10 @@ class StepContext(BaseModel):
             limit=1000,
             direction="asc",
         )
+        assert len(transitions) > 0, "No transitions found"
         inputs = []
+        workflow = get_workflow_name(transitions[-1])
+        transitions = [t for t in transitions if get_workflow_name(t) == workflow]
         for transition in transitions:
             if transition.next and transition.next.step >= len(inputs):
                 inputs.append(transition.output)
