@@ -4,6 +4,7 @@ from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
 from ..utils.workflows import get_workflow_name
+
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
     from pydantic_partial import create_partial_model
@@ -230,11 +231,7 @@ class StepContext(BaseModel):
         inputs = []
         labels = []
         workflow = await get_workflow_name(transitions[-1])
-        transitions = [
-            t
-            for t in transitions
-            if await get_workflow_name(t) == workflow
-        ]
+        transitions = [t for t in transitions if await get_workflow_name(t) == workflow]
         for transition in transitions:
             # NOTE: The length hack should be refactored in case we want to implement multi-step control steps
             if transition.next and transition.next.step >= len(inputs):
