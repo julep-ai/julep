@@ -105,16 +105,16 @@ async def _():
 
     transition.current = TransitionTarget(workflow="main", step=0)
     transition.next = TransitionTarget(workflow="main", step=1)
-    assert await get_workflow_name(transition) == "main"
+    assert get_workflow_name(transition) == "main"
 
     transition.current = TransitionTarget(workflow="`main`[0].if_else.then", step=0)
     transition.next = None
-    assert await get_workflow_name(transition) == "main"
+    assert get_workflow_name(transition) == "main"
 
     transition.current = TransitionTarget(workflow="subworkflow", step=0)
     transition.next = TransitionTarget(workflow="subworkflow", step=1)
-    assert await get_workflow_name(transition) == "subworkflow"
+    assert get_workflow_name(transition) == "subworkflow"
 
     transition.current = TransitionTarget(workflow="`subworkflow`[0].if_else.then", step=0)
     transition.next = TransitionTarget(workflow="`subworkflow`[0].if_else.else", step=1)
-    assert await get_workflow_name(transition) == "subworkflow"
+    assert get_workflow_name(transition) == "subworkflow"

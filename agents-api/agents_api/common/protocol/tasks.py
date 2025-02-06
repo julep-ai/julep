@@ -230,8 +230,8 @@ class StepContext(BaseModel):
         assert len(transitions) > 0, "No transitions found"
         inputs = []
         labels = []
-        workflow = await get_workflow_name(transitions[-1])
-        transitions = [t for t in transitions if await get_workflow_name(t) == workflow]
+        workflow = get_workflow_name(transitions[-1])
+        transitions = [t for t in transitions if get_workflow_name(t) == workflow]
         for transition in transitions:
             # NOTE: The length hack should be refactored in case we want to implement multi-step control steps
             if transition.next and transition.next.step >= len(inputs):
