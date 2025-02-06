@@ -222,7 +222,7 @@ def importt(
         confirm = typer.confirm(f"Are you sure you want to import agent '{id}' to '{output}'?")
         if not confirm:
             console.print(Text("Operation cancelled", style="bold red"), highlight=True)
-            raise typer.Exit
+            raise typer.Exit(1)
 
     try:
         client = get_julep_client()
@@ -254,9 +254,23 @@ def importt(
 
         console.print(table, highlight=True)
 
+        # Ensure output is an absolute path relative to source.
+        # If the user provided a relative output value, treat it as subpath of the source.
+        if not output.is_absolute():
+            output = source / output
+
         agent_name = remote_agent.name.lower().replace(" ", "_")
 
-        agent_yaml_path: Path = output / f"{agent_name}.yaml"
+        # If the provided output has a .yaml suffix, treat it as the target file;
+        # otherwise, generate a file name based on the agent name.
+        if output.suffix == ".yaml":
+            agent_yaml_path: Path = output
+        else:
+            agent_yaml_path: Path = output / f"{agent_name}.yaml"
+
+        # Ensure that the parent directory exists
+        agent_yaml_path.parent.mkdir(parents=True, exist_ok=True)
+
         typer.echo(f"Adding agent '{remote_agent.name}' to '{agent_yaml_path}'...")
         update_yaml_for_existing_entity(
             agent_yaml_path, remote_agent.model_dump(exclude={"id", "created_at", "updated_at"})
