@@ -5,13 +5,10 @@ from uuid import UUID
 
 import typer
 
-from .logs import logs
-
-from .utils import get_julep_client
-
+from .app import app, console, error_console
 from .executions import create_execution
-
-from .app import app
+from .logs import logs
+from .utils import get_julep_client
 
 
 @app.command()
@@ -73,14 +70,12 @@ def run(
 
     client = get_julep_client()
 
-
     try:
         execution = create_execution(client, str(task), task_input)
-        typer.echo(f"Execution created successfully! Execution ID: {
-                   execution.id}")
+        console.print(f"Execution created successfully! Execution ID: {execution.id}")
     except Exception as e:
-        typer.echo(f"Error creating execution: {e}", err=True)
+        error_console.print(f"Error creating execution: {e}", highlight=True)
         raise typer.Exit(1)
-    
+
     if wait:
         logs(execution_id=execution.id, tailing=True)
