@@ -1,20 +1,24 @@
 import json
 from pathlib import Path
 from typing import Annotated
+from uuid import UUID
 
 import typer
 
-from .app import app
+from .app import app, console, error_console
+from .executions import create_execution
+from .logs import logs
+from .utils import get_julep_client
 
 
 @app.command()
 def run(
     task: Annotated[
-        str,
+        UUID,
         typer.Option(
             "--task",
             "-t",
-            help="ID or name of the task to execute",
+            help="ID of the task to execute",
         ),
     ],
     input: Annotated[
@@ -64,6 +68,14 @@ def run(
     # TODO: Implement task execution logic
     typer.echo(f"Running task '{task}' with input: {task_input}")
 
+    client = get_julep_client()
+
+    try:
+        execution = create_execution(client, str(task), task_input)
+        console.print(f"Execution created successfully! Execution ID: {execution.id}")
+    except Exception as e:
+        error_console.print(f"Error creating execution: {e}", highlight=True)
+        raise typer.Exit(1)
+
     if wait:
-        typer.echo("Waiting for task completion and streaming logs...")
-        # TODO: Implement wait and log streaming logic
+        logs(execution_id=execution.id, tailing=True)
