@@ -5,6 +5,7 @@ from agents_api.autogen.openapi_model import (
     Agent,
     TaskSpecDef,
     ToolCallStep,
+    Transition,
     TransitionTarget,
     Workflow,
 )
@@ -13,6 +14,7 @@ from agents_api.common.protocol.tasks import (
     StepContext,
 )
 from agents_api.common.utils.datetime import utcnow
+from agents_api.common.utils.workflows import get_workflow_name
 from ward import test
 
 
@@ -86,3 +88,32 @@ async def _():
         assert result["steps"]["first step"]["output"] == {"y": "2"}
         assert result["steps"]["second step"]["input"] == {"y": "2"}
         assert result["steps"]["second step"]["output"] == {"z": "3"}
+
+@test("utility: get_workflow_name")
+async def _():
+    transition = Transition(
+        id=uuid.uuid4(),
+        execution_id=uuid.uuid4(),
+        output=None,
+        created_at=utcnow(),
+        updated_at=utcnow(),
+        type="step",
+        current=TransitionTarget(workflow="main", step=0),
+        next=TransitionTarget(workflow="main", step=1),
+    )
+
+    transition.current = TransitionTarget(workflow="main", step=0)
+    transition.next = TransitionTarget(workflow="main", step=1)
+    assert await get_workflow_name(transition) == "main"
+
+    transition.current = TransitionTarget(workflow="`main`[0].if_else.then", step=0)
+    transition.next = None
+    assert await get_workflow_name(transition) == "main"
+
+    transition.current = TransitionTarget(workflow="subworkflow", step=0)
+    transition.next = TransitionTarget(workflow="subworkflow", step=1)
+    assert await get_workflow_name(transition) == "subworkflow"
+
+    transition.current = TransitionTarget(workflow="`subworkflow`[0].if_else.then", step=0)
+    transition.next = TransitionTarget(workflow="`subworkflow`[0].if_else.else", step=1)
+    assert await get_workflow_name(transition) == "subworkflow"
