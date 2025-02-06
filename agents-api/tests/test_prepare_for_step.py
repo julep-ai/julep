@@ -89,6 +89,7 @@ async def _():
         assert result["steps"]["second step"]["input"] == {"y": "2"}
         assert result["steps"]["second step"]["output"] == {"z": "3"}
 
+
 @test("utility: get_workflow_name")
 async def _():
     transition = Transition(
