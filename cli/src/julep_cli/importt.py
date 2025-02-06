@@ -46,14 +46,7 @@ def importt(
             help="Import a tool",
         ),
     ] = False,
-    id: Annotated[
-        str,
-        typer.Option(
-            "--id",
-            "-i",
-            help="ID of the agent to import",
-        ),
-    ] = None,
+    id: str = typer.Option(..., "--id", "-i", help="ID of the agent to import"),
     source: Annotated[
         Path,
         typer.Option(
