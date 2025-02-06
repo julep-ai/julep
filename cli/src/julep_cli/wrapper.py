@@ -1,5 +1,6 @@
 import inspect
 import typing
+from collections.abc import Callable
 from enum import Enum
 from typing import Annotated, Any, Protocol
 
@@ -14,138 +15,179 @@ class ExceptionWithContext(Protocol):
     __context__: UsageError
 
 
-def get_signature_from_exc(exc: UsageError) -> inspect.Signature:
-    return inspect.signature(exc.cmd.callback)
+def get_command_signature(error: UsageError) -> inspect.Signature:
+    """Extracts the function signature from the callback of a UsageError's command."""
+    return inspect.signature(error.cmd.callback)
 
 
-def get_bound_args(sig: inspect.Signature, params: dict) -> inspect.BoundArguments:
-    bound = sig.bind_partial(**params)
+def bind_arguments(signature: inspect.Signature, params: dict) -> inspect.BoundArguments:
+    """Binds provided parameters to the given signature and applies default values."""
+    bound = signature.bind_partial(**params)
     bound.apply_defaults()
 
     return bound
 
 
-def prepare_question(
-    param: typer.Argument, args: tuple[typing.Any, ...], arg_type: type
+def make_validator(func: Callable[[Any], Any]) -> Callable[[Any], bool]:
+    def validate(value: Any) -> bool:
+        try:
+            func(value)
+            return True
+        except Exception:
+            return False
+
+    return validate
+
+
+def build_prompt(
+    parameter: typer.Argument, meta: tuple[typing.Any, ...], expected_type: type
 ) -> questionary.Question:
-    msg = titlecase(param.human_readable_name)
+    """Prepares a questionary prompt based on the parameter metadata and expected type.
 
-    if arg_type is bool:
-        msg += " (y/N)"
-    elif arg_type is not str:
-        msg += f" [{arg_type.__name__}]"
+    Args:
+        parameter: Typer argument parameter.
+        meta: Tuple of type specifications and additional metadata.
+        expected_type: Expected type for the parameter.
 
-    kwargs = args[2] if args and len(args) == 3 and isinstance(args[2], dict) else {}
+    Returns:
+        A questionary.Question object for prompting the user.
+    """
+    # Section: Build prompt header
+    prompt_message = titlecase(parameter.human_readable_name.lower())
+
+    # Section: Append type indicator to prompt message
+    if expected_type is bool:
+        prompt_message += " (y/N)"
+    elif not issubclass(expected_type, str | StrEnum):
+        prompt_message += f" [{expected_type.__name__}]"
+
+    # Section: Extract additional keyword arguments from metadata
+    kwargs = meta[2] if meta and len(meta) == 3 and isinstance(meta[2], dict) else {}
     question_type = questionary.text
 
-    if not kwargs.get("validate"):
+    # Section: Add instruction based on parameter help
+    kwargs["instruction"] = kwargs.get("instruction") or (
+        f"({parameter.help})" if parameter.help else ""
+    )
 
-        def validate(x: Any) -> bool:
-            try:
-                arg_type(x)
-                return True
-            except Exception:
-                return False
-
-        kwargs["validate"] = validate
-
-    kwargs["instruction"] = f"({param.help})" if param.help else ""
-
+    # Section: Handle multiline input
     if kwargs.get("multiline", False):
         kwargs["instruction"] += "\n(Press Alt+Enter or Esc then Enter to submit)\n"
-        del kwargs["validate"]
 
-    if issubclass(arg_type, Enum):
-        kwargs["choices"] = choices = [e.value for e in arg_type]
+    # Section: Configure prompt for Enum types
+    if issubclass(expected_type, Enum):
         question_type = questionary.select
+        kwargs["choices"] = choices = [e.value for e in expected_type]
+        kwargs["default"] = kwargs.get("default") or choices[0]
 
         if len(choices) >= 6:
             question_type = questionary.autocomplete
-            msg += f" [search {len(choices)} options]"
+            prompt_message += f" [{len(choices)} options]"
+            kwargs["complete_style"] = "MULTI_COLUMN"
 
         del kwargs["instruction"]
-        del kwargs["validate"]
 
-    if arg_type is bool:
+    # Section: Use confirmation prompt for booleans
+    elif expected_type is bool:
         question_type = questionary.confirm
-        kwargs["default"] = False
-        del kwargs["validate"]
+        kwargs["default"] = kwargs.get("default") or False
 
+    else:
+        # Section: Set default validation if not provided
+        kwargs["validate"] = kwargs.get("validate") or make_validator(expected_type)
+
+    # Section: Finalize instruction formatting
     if kwargs.get("instruction"):
         kwargs["instruction"] += " "
 
-    return question_type(
-        msg,
-        **kwargs,
-    )
+    return question_type(prompt_message, **kwargs)
 
 
-def handle_missing_param(exc: UsageError) -> None:
-    if not isinstance(exc, MissingParameter) and hasattr(exc, "__context__"):
-        exc = getattr(exc, "__context__")
+def prompt_for_missing_parameter(error: UsageError) -> None:
+    """Prompts for missing parameters and re-invokes the command after receiving input."""
+    # Section: Unwrap nested error if applicable
+    if not isinstance(error, MissingParameter) and hasattr(error, "__context__"):
+        error = getattr(error, "__context__")
 
-    if not isinstance(exc, MissingParameter):
-        raise exc
+    # Section: Reraise if error is not a MissingParameter
+    if not isinstance(error, MissingParameter):
+        raise error
 
-    sig = get_signature_from_exc(exc)
-    click_ctx = exc.ctx
-    cmd = exc.cmd
+    # Section: Retrieve command signature and context
+    signature = get_command_signature(error)
+    ctx = error.ctx
+    command = error.cmd
 
-    param = exc.param
-    sig_param = sig.parameters[param.name]
+    # Section: Extract missing parameter details
+    missing_param = error.param
+    parameter_details = signature.parameters[missing_param.name]
 
-    annotation = sig_param.annotation
-    args = typing.get_args(annotation)
-    arg_type = args[0] if len(args) >= 2 and isinstance(args[0], type) else (annotation or str)
-    question = prepare_question(param, args, arg_type)
+    param_annotation = parameter_details.annotation
+    type_args = typing.get_args(param_annotation)
 
-    result = question.ask(patch_stdout=True)
-    bound = get_bound_args(sig, click_ctx.params | {param.name: result})
+    # Section: Determine expected type from annotation
+    if len(type_args) >= 2 and isinstance(type_args[0], type):
+        [expected_type, *_] = type_args
+    else:
+        expected_type = param_annotation or str
 
+    # Section: Build and display prompt for missing parameter
+    prompt = build_prompt(missing_param, type_args, expected_type)
+
+    user_input = prompt.ask(patch_stdout=True)
+
+    # Section: Bind user input to parameters
+    bound = bind_arguments(signature, ctx.params | {missing_param.name: user_input})
     cmd_args = []
 
-    for _param in click_ctx.command.params:
-        if _param.name not in bound.arguments:
+    # Section: Construct command arguments from bound parameters
+    for param_item in ctx.command.params:
+        if param_item.name not in bound.arguments:
             continue
+        # Retrieve option flag
+        [option_flag, *_] = param_item.to_info_dict()["opts"]
+        is_option = isinstance(param_item, typer.core.TyperOption)
+        value = bound.arguments[param_item.name]
 
-        opt_flag = _param.to_info_dict()["opts"][0]
-        is_typer_option = isinstance(_param, typer.core.TyperOption)
-        value = bound.arguments[_param.name]
-
-        if is_typer_option:
-            if arg_type is bool:
+        # Section: Process option parameters
+        if is_option:
+            if expected_type is bool:
                 prefix = "no-" if not value else ""
-                cmd_args.append(f"--{prefix}{opt_flag[2:]}")
+                cmd_args.append(f"--{prefix}{option_flag[2:]}")
             else:
-                cmd_args.append(opt_flag)
+                cmd_args.append(option_flag)
                 cmd_args.append(value)
-
         else:
             cmd_args.append(value)
 
+    # Section: Reinvoke the command with updated arguments
     try:
-        return cmd.main(map(str, cmd_args), standalone_mode=False)
-    except BaseException as new_exc:
-        return handle_missing_param(new_exc)
+        return command.main(map(str, cmd_args), standalone_mode=False)
+    except BaseException as new_error:
+        return prompt_for_missing_parameter(new_error)
 
 
 class WrappedTyper(Typer):
+    """Custom Typer subclass that handles missing parameters via interactive prompts."""
+
     def __call__(self, *args, **kwargs):
+        """Invokes the Typer app and handles missing parameters gracefully."""
+        # Section: Attempt to run the Typer app and catch errors
         try:
-            super().__call__(*args, **{**kwargs, "standalone_mode": False})
-        except BaseException as exc:
-            return handle_missing_param(exc)
+            return super().__call__(*args, **{**kwargs, "standalone_mode": False})
+        except BaseException as error:
+            return prompt_for_missing_parameter(error)
 
     def command(self, *args, **kwargs):
-        return super().command(
-            *args,
-            **kwargs,
-        )
+        """Decorator for registering commands with the Typer application."""
+        return super().command(*args, **kwargs)
 
 
 if __name__ == "__main__":
+    # Example usage of WrappedTyper with an example command.
     from enum import StrEnum
 
+    # Define an example enumeration for neural network types
     class NeuralNetwork(StrEnum):
         simple = "simple"
         conv = "conv"
@@ -177,6 +219,8 @@ if __name__ == "__main__":
             typer.Option(help="Wait for the task to complete"),
         ],
     ):
+        """Example command that prints provided input arguments."""
+        # Section: Print provided input arguments
         print(name)
         print(age)
         print(address)

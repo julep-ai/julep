@@ -700,8 +700,10 @@ def sync(
                         Text(
                             f"Task {locked_task.id} not found on remote. It will be removed from the lock file.",
                             style="bold red",
-                        )
+                        ),
+                        highlight=True,
                     )
+                    
                     console.print(
                         Text(
                             "- If you wish to create it again, please run `julep sync --force-local`",

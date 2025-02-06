@@ -56,7 +56,10 @@ def agent(
 
     # Importing an existing agent
     if locked_agent := get_entity_from_lock_file(type="agent", id=id, project_dir=source):
-        console.print(Text(f"Agent '{id}' already exists in the lock file", style="bold yellow"), highlight=True)
+        console.print(
+            Text(f"Agent '{id}' already exists in the lock file", style="bold yellow"),
+            highlight=True,
+        )
         confirm = typer.confirm(
             f"Do you want to overwrite the existing agent in the lock file and {locked_agent.path}?"
         )

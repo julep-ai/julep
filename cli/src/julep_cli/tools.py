@@ -56,7 +56,10 @@ def create(
             error_console.print(f"Error creating tool: {e}", highlight=True)
             raise typer.Exit(1)
 
-    console.print(Text(f"Tool created successfully. Tool ID: {tool.id}", style="bold green"), highlight=True)
+    console.print(
+        Text(f"Tool created successfully. Tool ID: {tool.id}", style="bold green"),
+        highlight=True,
+    )
 
 
 @tools_app.command()
