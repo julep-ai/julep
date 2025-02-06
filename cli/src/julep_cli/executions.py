@@ -2,6 +2,8 @@ import json
 from typing import Annotated
 
 import typer
+from julep import Client, Julep
+from julep.types import ResourceCreated
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .app import console, error_console, executions_app
@@ -9,7 +11,7 @@ from .utils import get_julep_client, persist_attribute
 
 
 @persist_attribute("execution_id", extractor=lambda exec_obj: exec_obj.id)
-def create_execution(client, task_id: str, input_data: dict):
+def create_execution(client: Julep | Client, task_id: str, input_data: dict) -> ResourceCreated:
     """
     Create an execution and persist its execution ID to the state database.
     """
