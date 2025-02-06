@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import sqlite3
 from collections.abc import Callable
 from datetime import datetime
@@ -12,7 +13,7 @@ from julep import Julep
 from julep.types import Agent, Task
 from rich.text import Text
 
-from .app import error_console
+from .app import console, error_console
 from .models import (
     CreateAgentRequest,
     LockedEntity,
@@ -60,22 +61,39 @@ def save_config(config: dict, config_dir: Path = CONFIG_DIR):
         yaml.dump(config, f)
 
 
-def get_julep_client() -> Julep:
+def get_julep_client(*, api_key: str | None = None, environment: str | None = None) -> Julep:
     """Get a Julep client"""
     # Initialize the Julep client
-    api_key = get_config().get("api_key")
+    api_key = api_key or get_config().get("api_key") or os.getenv("JULEP_API_KEY")
+
     if not api_key:
-        typer.echo("Error: JULEP_API_KEY not set in config.yml")
+        error_console.print(
+            Text(
+                "Error: JULEP_API_KEY env var not set.",
+                style="bold red",
+            ),
+        )
+        console.print(
+            Text(
+                "To set the API key, run `julep auth`",
+            ),
+        )
+
         raise typer.Exit(1)
 
     # Get environment from config.yml or default to production
-    environment = get_config().get("environment")
+    environment = (
+        environment or get_config().get("environment") or os.getenv("JULEP_ENVIRONMENT")
+    )
 
     if not environment:
-        typer.echo("ENVIRONMENT not set in config.yml, defaulting to production")
-        environment = "production"
+        console.print(
+            Text(
+                "JULEP_ENVIRONMENT env var not set. Defaulting to production.",
+            ),
+        )
 
-    return Julep(api_key=api_key, environment=environment, max_retries=0)
+    return Julep(api_key=api_key, environment=environment or "production", max_retries=0)
 
 
 def create_lock_file(source: Path):

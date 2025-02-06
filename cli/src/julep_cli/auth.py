@@ -2,10 +2,12 @@ from enum import StrEnum
 from typing import Annotated
 
 import jwt
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.text import Text
 from typer import Exit, Option
 
 from .app import app, console, error_console
-from .utils import get_config, save_config
+from .utils import get_config, get_julep_client, save_config
 
 current_config = get_config()
 current_environment = current_config.get("environment") or "production"
@@ -52,6 +54,10 @@ def auth(
         ),
         {"default": current_environment},  # Used inside the questionary prompt
     ],
+    verify: Annotated[
+        bool,
+        Option(help="Verify the API key"),
+    ] = True,
 ):
     """
     Authenticate with the Julep platform.
@@ -67,9 +73,31 @@ def auth(
     config = get_config()
     config["api_key"] = api_key
     config["environment"] = str(environment)
+
+    if verify:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            verify_task = progress.add_task("Verifying API key...", start=False)
+            progress.start_task(verify_task)
+
+            try:
+                client = get_julep_client(**config)
+                client.agents.list(limit=1)
+            except Exception as e:
+                progress.stop_task(verify_task)
+                progress.stop()
+
+                error_console.print(
+                    Text(f"Error verifying API key: {e}", style="bold red"),
+                    highlight=True,
+                )
+                raise Exit(1)
+
     save_config(config)
 
     console.print(
         f"Successfully authenticated with [green]{environment}[/green] environment!",
-        highlight=True,
     )

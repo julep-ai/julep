@@ -1,7 +1,7 @@
 import inspect
 import typing
 from collections.abc import Callable
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Annotated, Any, Protocol
 
 import questionary
@@ -56,13 +56,12 @@ def build_prompt(
     prompt_message = titlecase(parameter.human_readable_name.lower())
 
     # Section: Append type indicator to prompt message
-    if expected_type is bool:
-        prompt_message += " (y/N)"
-    elif not issubclass(expected_type, str | StrEnum):
+    if not issubclass(expected_type, str | StrEnum | bool):
         prompt_message += f" [{expected_type.__name__}]"
 
     # Section: Extract additional keyword arguments from metadata
     kwargs = meta[2] if meta and len(meta) == 3 and isinstance(meta[2], dict) else {}
+    kwargs["default"] = kwargs.get("default") or parameter.default
     question_type = questionary.text
 
     # Section: Add instruction based on parameter help
@@ -78,7 +77,7 @@ def build_prompt(
     if issubclass(expected_type, Enum):
         question_type = questionary.select
         kwargs["choices"] = choices = [e.value for e in expected_type]
-        kwargs["default"] = kwargs.get("default") or choices[0]
+        kwargs["default"] = kwargs["default"] or choices[0]
 
         if len(choices) >= 6:
             question_type = questionary.autocomplete
@@ -90,7 +89,8 @@ def build_prompt(
     # Section: Use confirmation prompt for booleans
     elif expected_type is bool:
         question_type = questionary.confirm
-        kwargs["default"] = kwargs.get("default") or False
+        kwargs["default"] = kwargs["default"] or False
+        prompt_message += " (Y/n)" if kwargs["default"] else " (y/N)"
 
     else:
         # Section: Set default validation if not provided
@@ -99,6 +99,9 @@ def build_prompt(
     # Section: Finalize instruction formatting
     if kwargs.get("instruction"):
         kwargs["instruction"] += " "
+
+    if kwargs["default"] is None:
+        del kwargs["default"]
 
     return question_type(prompt_message, **kwargs)
 
@@ -144,14 +147,17 @@ def prompt_for_missing_parameter(error: UsageError) -> None:
     for param_item in ctx.command.params:
         if param_item.name not in bound.arguments:
             continue
+
         # Retrieve option flag
         [option_flag, *_] = param_item.to_info_dict()["opts"]
         is_option = isinstance(param_item, typer.core.TyperOption)
         value = bound.arguments[param_item.name]
+        param_type = bound.signature.parameters[param_item.name].annotation
+        param_type = getattr(param_type, "__origin__", param_type)
 
         # Section: Process option parameters
         if is_option:
-            if expected_type is bool:
+            if param_type is bool:
                 prefix = "no-" if not value else ""
                 cmd_args.append(f"--{prefix}{option_flag[2:]}")
             else:
@@ -217,6 +223,7 @@ if __name__ == "__main__":
         wait: Annotated[
             bool,
             typer.Option(help="Wait for the task to complete"),
+            {"default": True},
         ],
     ):
         """Example command that prints provided input arguments."""
