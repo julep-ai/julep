@@ -183,37 +183,247 @@ We're using three main integrations:
   </Step>
 </Steps>
 
+<Accordion title="Complete Task YAML" icon="code">
+  ```yaml YAML
+  # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+  name: Video Processing With Natural Language
 
+  ########################################################
+  ################### INPUT SCHEMA #######################
+  ########################################################
 
-## Example Usage
+  input_schema:
+    type: object
+    properties:
+      video_url:
+        type: string
+        description: The url of the file to upload
+      public_id:
+        type: string
+        description: The public id of the file to upload
+      transformation_prompt:
+        type: string
+        description: The prompt for the transformations to apply to the file
+
+  ########################################################
+  ################### TOOLS ##############################
+  ########################################################
+
+  tools:
+  - name: cloudinary_upload
+    type: integration
+    integration:
+      provider: cloudinary
+      method: media_upload
+      setup:
+        cloudinary_api_key: "YOUR_CLOUDINARY_API_KEY"
+        cloudinary_api_secret: "YOUR_CLOUDINARY_API_SECRET"
+        cloudinary_cloud_name: "YOUR_CLOUDINARY_CLOUD_NAME"
+
+  ########################################################
+  ################### MAIN WORKFLOW ######################
+  ########################################################
+  
+  main:
+  # Step #0 - Upload the video to cloudinary
+  - tool: cloudinary_upload
+    arguments:
+      file: '_0.video_url'
+      public_id: '_0.public_id'
+      upload_params:
+        resource_type: "'video'"
+
+  # Step #1 - Analyze the video content with a prompt
+  - prompt:
+    - role: user
+      content:
+
+        - type: text
+          text: |-
+            You are a Cloudinary expert. You are given a medial url. it might be an image or a video.
+            You need to come up with a json of transformations to apply to the given media.
+            Overall the json could have multiple transformation json objects.
+            Each transformation json object can have the multiple key value pairs.
+            Each key value pair should have the key as the transformation name like "aspect_ratio", "crop", "width" etc and the value as the transformation parameter value.
+            Given below is an example of a transformation json list. Don't provide explanations and/or comments in the json.
+            ``json
+            [
+              {{
+                "aspect_ratio": "1.0",
+                "width": 250,
+              }},
+              {{
+                "fetch_format": "auto"
+              }},
+              {{
+                "overlay":
+                {{
+                  "url": "<image_url>"
+                }}
+              }},
+              {{
+                "flags": "layer_apply"
+              }}
+            ]
+            ``
+        - type: image_url
+          image_url:
+            url: "{{{{_.url}}}}"
+
+        - type: text
+          text: |-
+            Hey, check the video above, I need to apply the following transformations using cloudinary.
+            {{{{_0.transformation_prompt}}}}
+
+    unwrap: true
+    settings:
+      model: gemini/gemini-1.5-pro
+
+  # Step #2 - Extract the json from the model's response
+  - evaluate:
+      model_transformation: load_json(_[_.find("```json")+7:][:_[_.find("```json")+7:].find("```")])
+
+  # Step #3 - Upload the video to cloudinary
+  - tool: cloudinary_upload
+    arguments:
+      file: '_0.video_url'
+      public_id: '_0.public_id'
+      upload_params:
+        transformation: '_.model_transformation'
+        resource_type: "'video'"
+
+  # Step #4 - Evaluate the transformed video url
+  - evaluate:
+      transformed_video_url: '_.url'
+  ```
+</Accordion>
+
+## Usage
 
 Here's how to use this task with the Julep SDK:
 
-```python
+<CodeGroup>
+
+```python Python
+import time
+import yaml
+from julep import Client
+
+# Initialize the client
+client = Client(api_key=JULEP_API_KEY)
+
 transformation_prompt = """
 1- I want to add an overlay an the following image to the video, and apply a layer apply flag also. Here's the image url:
 https://res.cloudinary.com/demo/image/upload/logos/cloudinary_icon_white.png
 
 2- I also want you to to blur the video, and add a fade in and fade out effect to the video with a duration of 3 seconds each.
 """
+# Create the agent
+agent = client.agents.create(
+  name="Julep Video Processing Agent",
+  description="A Julep agent that can process and analyze videos using Cloudinary and FFmpeg.",
+)
 
+# Load the task definition
+with open('video_processing_task.yaml', 'r') as file:
+  task_definition = yaml.safe_load(file)
+
+# Create the task
+task = client.tasks.create(
+  agent_id=agent.id,
+  **task_definition
+)
+
+# Create the execution
 execution = client.executions.create(
-    task_id=TASK_UUID,
+    task_id=task.id,
     input={
         "video_url":  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
         "public_id": "video_test",
         "transformation_prompt": transformation_prompt,
     }
 )
+# Wait for the execution to complete
+while (result := client.executions.get(execution.id)).status not in ['succeeded', 'failed']:
+    print(result.status)
+    time.sleep(1)
+
+# Print the result
+if result.status == "succeeded":
+    print(result.output)
+else:
+    print(f"Error: {result.error}")
 ```
 
-### Sample Video Input
+```js Node.js
+import { Julep } from '@julep/sdk';
+import yaml from 'yaml';
+import fs from 'fs';
+
+const transformation_prompt = `
+1- I want to add an overlay an the following image to the video, and apply a layer apply flag also. Here's the image url:
+https://res.cloudinary.com/demo/image/upload/logos/cloudinary_icon_white.png
+
+2- I also want you to to blur the video, and add a fade in and fade out effect to the video with a duration of 3 seconds each.
+`;
+
+const client = new Julep({
+  apiKey: 'your_julep_api_key'
+});
+
+// Create the agent
+const agent = await client.agents.create({
+  name: "Julep Video Processing Agent",
+  description: "A Julep agent that can process and analyze videos using Cloudinary and FFmpeg.",
+});
+
+// Load the task definition
+const taskDefinition = yaml.parse(fs.readFileSync('video_processing_task.yaml', 'utf8'));
+
+// Create the task
+const task = await client.tasks.create(
+  agent.id,
+  taskDefinition
+);
+
+// Create the execution
+const execution = await client.executions.create(
+  task.id,
+  {
+    input: { 
+      "video_url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+      "public_id": "video_test",
+      "transformation_prompt": transformation_prompt,
+    }
+  }
+);
+
+// Wait for the execution to complete
+let result;
+while (true) {
+  result = await client.executions.get(execution.id);
+  if (result.status === 'succeeded' || result.status === 'failed') break;
+  console.log(result.status);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+}
+
+// Print the result
+if (result.status === 'succeeded') {
+  console.log(result.output);
+} else {
+  console.error(`Error: ${result.error}`);
+}
+```
+
+</CodeGroup>
+
+## Example Output
+
+This is an example output when the task is run over the sample video input.
 
 <Accordion title="Sample Video Input">
   <video src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4" controls />
 </Accordion>
-
-### Sample Video Output
 
 <Accordion title="Sample Video Output">
   <video src="https://res.cloudinary.com/dpnjjk8mb/video/upload/v1737201857/video_test2.mp4" controls />

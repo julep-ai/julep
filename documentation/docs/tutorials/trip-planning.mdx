@@ -183,6 +183,200 @@ We're using two integrations:
 
 </Steps>
 
+<Accordion title="Complete Task YAML" icon="code">
+  ```yaml YAML
+  # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+  name: Tourist Plan With Weather And Attractions
+
+  ########################################################
+  ################### INPUT SCHEMA #######################
+  ########################################################
+
+  input_schema:
+    type: object
+    properties:
+      locations:
+        type: array
+        items:
+          type: string
+        description: The locations to search for.
+
+  ########################################################
+  ################### TOOLS ##############################
+  ########################################################
+
+  tools:
+  - name: wikipedia
+    type: integration
+    integration:
+      provider: wikipedia
+
+  - name: weather
+    type: integration
+    integration:
+      provider: weather
+      setup:
+        openweathermap_api_key: "YOUR_OPENWEATHERMAP_API_KEY"
+
+  - name: internet_search
+    type: integration
+    integration:
+      provider: brave
+      setup:
+        api_key: "YOUR_BRAVE_API_KEY"
+
+  ########################################################
+  ################### MAIN WORKFLOW ######################
+  ########################################################
+
+  main:
+  # Step #0 - Get weather data for each location
+  - over: inputs[0].locations
+    map:
+      tool: weather
+      arguments:
+        location: _
+
+  # Step #1 - Search for tourist attractions for each location
+  - over: inputs[0].locations
+    map:
+      tool: internet_search
+      arguments:
+        query: "'tourist attractions in ' + _"
+
+  # Step #2 - Zip locations, weather, and attractions into a list of tuples [(location, weather, attractions)]
+  - evaluate:
+      zipped: |-
+        list(
+          zip(
+            inputs[0].locations,
+            [output['result'] for output in outputs[0]],
+            outputs[1]
+          )
+        )
+
+  # Step #3 - Generate itineraries for each location
+  - over: _['zipped']
+    parallelism: 3
+    # Inside the map step, each `_` represents the current element in the list
+    # which is a tuple of (location, weather, attractions)
+    map:
+      prompt:
+      - role: system
+        content: >-
+          You are {{agent.name}}. Your task is to create a detailed itinerary
+          for visiting tourist attractions in some locations.
+          The user will give you the following information for each location:
+
+          - The location
+          - The current weather condition
+          - The top tourist attractions
+      - role: user
+        content: >-
+          Location: "{{_[0]}}"
+          Weather: "{{_[1]}}"
+          Attractions: "{{_[2]}}"
+      unwrap: true
+
+  # Step #4 - Format the final output
+  - evaluate:
+      final_plan: |-
+        '\\n---------------\\n'.join(activity for activity in _)
+  ```
+</Accordion>
+
+## Usage
+
+Here's how to use this task with the Julep SDK:
+
+<CodeGroup>
+
+```python Python
+from julep import Client
+import time
+import yaml
+
+# Initialize the client
+client = Client(api_key=JULEP_API_KEY)
+
+# Load the task definition
+with open('trip_planning_task.yaml', 'r') as file:
+  task_definition = yaml.safe_load(file)
+
+# Create the task
+task = client.tasks.create(
+  agent_id=AGENT_ID,
+  **task_definition
+)
+
+# Create the execution
+execution = client.executions.create(
+    task_id=task.id,
+    input={
+        "locations": ["New York", "London", "Paris", "Tokyo", "Sydney"]
+    }
+)
+
+# Wait for the execution to complete
+while (result := client.executions.get(execution.id)).status not in ['succeeded', 'failed']:
+    print(result.status)
+    time.sleep(1)
+
+# Print the result
+if result.status == "succeeded":
+    print(result.output)
+else:
+    print(f"Error: {result.error}")
+```
+
+```js Node.js
+import { Julep } from '@julep/sdk';
+import fs from 'fs';
+import yaml from 'yaml';
+
+// Initialize the client
+const client = new Julep({
+  apiKey: 'your_julep_api_key'
+});
+
+// Load the task definition
+const taskDefinition = yaml.parse(fs.readFileSync('trip_planning_task.yaml', 'utf8'));
+
+// Create the task
+const task = await client.tasks.create(
+  agent.id,
+  taskDefinition
+);
+
+// Create the execution
+const execution = await client.executions.create(
+  task.id,
+  {
+    input: { 
+      "locations": ["New York", "London", "Paris", "Tokyo", "Sydney"]
+    }
+  }
+);
+
+// Wait for the execution to complete
+let result;
+while (true) {
+  result = await client.executions.get(execution.id);
+  if (result.status === 'succeeded' || result.status === 'failed') break;
+  console.log(result.status);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+}
+
+// Print the result
+if (result.status === 'succeeded') {
+  console.log(result.output);
+} else {
+  console.error(`Error: ${result.error}`);
+}
+```
+
+</CodeGroup>
+
 ## Example Output
 
 An example output when running this task with an input of `["New York", "London", "Paris", "Tokyo", "Sydney"]`:
