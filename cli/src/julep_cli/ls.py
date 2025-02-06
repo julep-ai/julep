@@ -10,8 +10,7 @@ from .app import app, console
 from .models import LockFileContents
 from .utils import get_lock_file
 
-TABLE_WIDTH = 150
-COLUMN_WIDTH = TABLE_WIDTH // 3
+MIN_TABLE_WIDTH = 200
 
 
 @app.command()
@@ -34,17 +33,21 @@ def ls(
         agents_table = Table(
             title=Text("Agents:", style="bold underline magenta"),
             header_style="bold magenta",
-            width=TABLE_WIDTH,
+            min_width=MIN_TABLE_WIDTH,
         )
-        agents_table.add_column("Name", style="green", width=COLUMN_WIDTH)
-        agents_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
-        agents_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
+        agents_table.add_column("Name", style="green")
+        agents_table.add_column("About", style="green")
+        agents_table.add_column("Model", style="green")
+        agents_table.add_column("Definition File", style="yellow")
+        agents_table.add_column("ID", style="cyan", no_wrap=True)
 
         for agent in lock_file.agents:
-            agent_yaml_contents = yaml.safe_load(Path(source / agent.path).read_text())
+            agent_yaml_contents: dict = yaml.safe_load(Path(source / agent.path).read_text())
             agent_yaml_contents["id"] = agent.id
             agents_table.add_row(
                 agent_yaml_contents.get("name", "N/A"),
+                agent_yaml_contents.get("about", "N/A"),
+                agent_yaml_contents.get("model", "N/A"),
                 str(agent.path),
                 str(agent_yaml_contents["id"]),
             )
@@ -55,16 +58,18 @@ def ls(
         tasks_table = Table(
             title=Text("Tasks:", style="bold underline magenta"),
             header_style="bold magenta",
-            width=TABLE_WIDTH,
+            min_width=MIN_TABLE_WIDTH,
         )
-        tasks_table.add_column("Name", style="green", width=COLUMN_WIDTH)
-        tasks_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
-        tasks_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
+        tasks_table.add_column("Name", style="green")
+        tasks_table.add_column("Description", style="green")
+        tasks_table.add_column("Definition File", style="yellow")
+        tasks_table.add_column("ID", style="cyan", no_wrap=True)
 
         for task in lock_file.tasks:
-            task_yaml_contents = yaml.safe_load(Path(source / task.path).read_text())
+            task_yaml_contents: dict = yaml.safe_load(Path(source / task.path).read_text())
             tasks_table.add_row(
                 task_yaml_contents.get("name", "N/A"),
+                task_yaml_contents.get("description", "N/A"),
                 str(task.path),
                 str(task.id),
             )
@@ -75,16 +80,19 @@ def ls(
         tools_table = Table(
             title=Text("Tools:", style="bold underline magenta"),
             header_style="bold magenta",
-            width=150,
+            min_width=MIN_TABLE_WIDTH,
         )
-        tools_table.add_column("Name", style="green", width=COLUMN_WIDTH)
-        tools_table.add_column("Definition File", style="yellow", width=COLUMN_WIDTH)
-        tools_table.add_column("ID", style="cyan", no_wrap=True, width=COLUMN_WIDTH)
+
+        tools_table.add_column("Name", style="green")
+        tools_table.add_column("Description", style="green")
+        tools_table.add_column("Definition File", style="yellow")
+        tools_table.add_column("ID", style="cyan", no_wrap=True)
 
         for tool in lock_file.tools:
-            tool_yaml_contents = yaml.safe_load(Path(source / tool.path).read_text())
+            tool_yaml_contents: dict = yaml.safe_load(Path(source / tool.path).read_text())
             tools_table.add_row(
                 tool_yaml_contents.get("name", "N/A"),
+                tool_yaml_contents.get("description", "N/A"),
                 str(tool.path),
                 str(tool.id),
             )
