@@ -225,6 +225,7 @@ class StepContext(BaseModel):
             limit=1000,
             direction="asc",
         )  # type: ignore[not-callable]
+        assert len(transitions) > 0, "No transitions found"
         inputs = []
         labels = []
         workflow = transitions[-1].current.workflow
