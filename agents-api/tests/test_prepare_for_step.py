@@ -123,7 +123,9 @@ async def _():
     transition.next = None
     assert get_workflow_name(transition) == "main"
 
-    transition.current = TransitionTarget(workflow="PAR:`subworkflow`[2].mapreduce[0][3],0", step=0)
+    transition.current = TransitionTarget(
+        workflow="PAR:`subworkflow`[2].mapreduce[0][3],0", step=0
+    )
     transition.next = None
     assert get_workflow_name(transition) == "subworkflow"
 
@@ -154,5 +156,7 @@ async def _():
         get_workflow_name(transition)
 
     with raises(AssertionError):
-        transition.current = TransitionTarget(workflow="PAR:`subworkflow[2].mapreduce[0][3],0", step=0)
+        transition.current = TransitionTarget(
+            workflow="PAR:`subworkflow[2].mapreduce[0][3],0", step=0
+        )
         get_workflow_name(transition)
