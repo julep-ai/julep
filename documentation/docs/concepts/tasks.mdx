@@ -77,12 +77,12 @@ description: Create a concise summary of any document
 
 sample_sub_workflow:
   - prompt: |-
-      Tell me a joke about {{inputs[0].topic}}:
+      $ f'Tell me a joke about {steps[0].input.topic}:'
 
 main:
 - workflow: sample_sub_workflow
   arguments:
-    topic: "'AI'"
+    topic: AI
 ```
 
 ### Steps
@@ -121,20 +121,20 @@ Tasks have access to three types of context:
 #### Input Variables
 Access input parameters:
 ```yaml YAML
-- prompt: "Hello {{inputs[0].user_name}}"
+- prompt: $ f'Hello {steps[0].input.user_name}'
 ```
 
 #### Step Results
 Use outputs from previous steps:
 ```yaml YAML
-- evaluate: len(_.search_results)
-- if: _.count > 0
+- evaluate: $ len(_.search_results)
+- if: $ _.count > 0
 ```
 
 #### Environment Context
 Access agent and session data:
 ```yaml YAML
-- prompt: "Agent {{agent.name}} is helping you"
+- prompt: $ f'Agent {agent.name} is helping you'
 ```
 
 <Info>
@@ -166,7 +166,7 @@ main:
   - prompt: Analyze customer sentiment
   - tool: categorize
     arguments:
-      text: inputs[0].feedback_text
+      text: $ steps[0].input.feedback_text
 ```
 
 > Learn more about tools [here](/docs/concepts/tools).
@@ -195,19 +195,19 @@ input_schema:
 
 main:
   - prompt: |-
-        Analyze the following text and create a summary:
-        {{inputs[0].document_text}}
+        $ f'''Analyze the following text and create a summary:
+        {steps[0].input.document_text}'''
     unwrap: true
   - evaluate:
-      too_long: len(_) > 500
-  - if: _.too_long
+      too_long: $ len(_) > 500
+  - if: $ _.too_long
     then:
       prompt: |-
-        Make the summary more concise:
-        {{outputs[0]}}
+        $ f'''Make the summary more concise:
+        {steps[0].output}'''
     else: 
       evaluate:
-        content: outputs[0]
+        content: $ steps[0].output
 ```
 
 ```python Python

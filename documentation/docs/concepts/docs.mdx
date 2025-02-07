@@ -324,11 +324,11 @@ By leveraging [System Tools](/docs/concepts/tools#system-tools), Julep [Tasks](/
     # Step that lists all documents for the current user
     - tool: "list_user_docs"
       arguments:
-        user_id: "'USER_ID'"
+        user_id: USER_ID
 
     # Step that evaluates the textual contents of all documents for the current user
     - evaluate:
-        all_user_docs_contents: [doc.content for doc in _.items]
+        all_user_docs_contents: $ [doc.content for doc in _.items]
     ```
 </CodeGroup>
 

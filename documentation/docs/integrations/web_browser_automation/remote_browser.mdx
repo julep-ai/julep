@@ -53,14 +53,14 @@ To get started with the Remote Browser integration, follow these steps to config
           project_id: {browserbase_project_id}
 
       - evaluate:
-          browser_session_id: _.id
-          connect_url: _.connect_url
+          browser_session_id: $ _.id
+          connect_url: $ _.connect_url
 
       - tool: browser_tool
         arguments:
-          connect_url: _.connect_url
-          action: "'navigate'"
-          text: "'https://www.google.com'"
+          connect_url: $ _.connect_url
+          action: "navigate"
+          text: "https://www.google.com"
     ```
   </Step>
 </Steps>

@@ -26,15 +26,15 @@ main:
 - prompt:
    role: system
    content: >-
-      Generate marketing copy for product X based on the following:
-      target_audience: {{_.audience}}
-      product_features: {{_.features}}
-      keywords: {{_.seo_keywords}}
+      $ f'''Generate marketing copy for product X based on the following:
+      target_audience: {_.audience}
+      product_features: {_.features}
+      keywords: {_.seo_keywords}'''
    unwrap: true
 
 # Step 2: Quality check gate
 - evaluate:
-   quality_check: _.content
+   quality_check: $ _.content
 
 # Step 3: Translation
 - prompt:
@@ -66,17 +66,17 @@ main:
 
 # Route based on classification
 - switch:
-   - case: _.classification == "technical_support"
+   - case: $ _.classification == "technical_support"
       then:
          - tool: handle_technical
          arguments:
             ...
-   - case: _.classification == "billing"
+   - case: $ _.classification == "billing"
       then:
          - tool: handle_billing
          arguments:
             ...
-   - case: _.classification == "general"
+   - case: $ _.classification == "general"
       then:
          - tool: handle_general
          arguments:
@@ -111,18 +111,18 @@ main:
 - prompt:
    role: system
    content: >
-      Break this task into multiple subtasks.
-      Here is the task: {{_.task}}
+      $ f'''Break this task into multiple subtasks.
+      Here is the task: {_.task}'''
    unwrap: true
 
-- over: _.subtasks
+- over: $ _.subtasks
    do:
       - workflow: run_subtask
       arguments:
          ...
 - tool: aggregate_results
   arguments:
-    results: _
+    results: $ _
 ```
 
 2. Voting:
@@ -138,17 +138,17 @@ run_subtask:
 
 # Main workflow
 main:
-- over: _.main_tasks
+- over: $ _.main_tasks
    do:
       - workflow: run_subtask # Run the same task multiple times (given that the `run_subtask` workflow is non-deterministic)
       arguments:
          ...
 - tool: perform_voting
   arguments:
-    results: _
+    results: $ _
 
 - evaluate:
-   final_result: _
+   final_result: $ _
 ```
 
 ### 4. Orchestrator-Workers Pattern
@@ -166,15 +166,15 @@ main:
 # Orchestrator planning
 - prompt:
    role: system
-   content: Break down the task into subtasks. Here is the task: {{_.task}}
+   content: $ f'''Break down the task into subtasks. Here is the task: {_.task}'''
    unwrap: true
 # Worker delegation
 - foreach:
-   in: _.subtasks
+   in: $ _.subtasks
    do:
       tool: assign_worker
       arguments:
-         task: _
+         task: $ _
 ```
 
 ### 5. Evaluator-Optimizer Pattern
@@ -210,38 +210,38 @@ tools:
 evaluate_content:
 - tool: score_content
   arguments:
-    content: _.content
-- if: _.score < 0.5 # If the content does not meet the criteria, improve it
+    content: $ _.content
+- if: $ _.score < 0.5 # If the content does not meet the criteria, improve it
   then:
     - workflow: improve_content
       arguments:
-        content: _0.content # _0 is the main input of this workflow
-        feedback: _.feedback # _ is the output of the score_content tool call
+        content: $ steps[0].input.content # steps[0].input is the main input of this workflow
+        feedback: $ _.feedback # _ is the output of the score_content tool call
   else:
     evaluate:
-      final_content: _0.content
+      final_content: $ steps[0].input.content
 
 # Subworkflow to improve content
 improve_content:
 - prompt:
     role: system
-    content: Improve the content based on the feedback. Here is the feedback: {{_.feedback}}
+    content: $ f'''Improve the content based on the feedback. Here is the feedback: {_.feedback}'''
   unwrap: true
 - workflow: evaluate_content
   arguments:
-    content: _
+    content: $ _
 
 
 main:
 # Initial generation
 - prompt:
    role: system
-   content: Generate initial content. Here is the task: {{_.task}}
+   content: $ f'''Generate initial content. Here is the task: {_.task}'''
    unwrap: true
 
 # Evaluation loop
 - loop:
-   while: "not _.meets_criteria"
+   while: $ not _.meets_criteria
    do:
       - tool: evaluate_content
       - tool: improve_content
@@ -252,7 +252,7 @@ main:
 1. The `evaluate_content` subworkflow:
    - Takes content as input and scores it using a scoring tool
    - If the score is below 0.5, it triggers the improvement workflow
-   - Uses special variables (`_0` and `_`) to manage content and feedback between workflows
+   - Uses a special variable (`_`) to manage content and feedback between workflows
    - Returns the final content once quality criteria are met
 
 2. The `improve_content` subworkflow:

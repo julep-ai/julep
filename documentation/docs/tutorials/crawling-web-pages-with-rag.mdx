@@ -66,18 +66,18 @@ We're using two tools:
     ```yaml
     - tool: spider_crawler
       arguments:
-        url: "_['url']"
+        url: $ _['url']
         params:
-          request: "'smart_mode'"
-          limit: _['pages_limit']
-          return_format: "'markdown'"
+          request: "smart_mode"
+          limit: $ _['pages_limit']
+          return_format: "markdown"
           proxy_enabled: "True"
           filter_output_images: "True"
           filter_output_svg: "True"
           readability: "True"
           sitemap: "True"
           chunking_alg:
-            type: "'bysentence'"
+            type: "bysentence"
             value: "15"
     ```
 
@@ -95,23 +95,24 @@ We're using two tools:
   <Step title="Process and Index Content">
     ```yaml
     - evaluate:
-        documents: _['content']
+        documents: $ _['content']
 
-    - over: "[(_0.content, chunk) for chunk in _['documents']]"
+    - over: $ "[(steps[0].input.content, chunk) for chunk in _['documents']]"
       parallelism: 3
       map:
         prompt:
         - role: user
           content: >-
+            $ f'''
             <document>
-            {{_[0]}}
+            {_[0]}
             </document>
 
             <chunk>
-            {{_[1]}}
+            {_[1]}
             </chunk>
 
-            Please give a short succinct context to situate this chunk within the overall document.
+            Please give a short succinct context to situate this chunk within the overall document.'''
     ```
 
     This step:
@@ -122,17 +123,17 @@ We're using two tools:
 
   <Step title="Store Documents">
     ```yaml
-    - over: _['final_chunks']
+    - over: $ _['final_chunks']
       parallelism: 3
       map:
         tool: create_agent_doc
         arguments:
-          agent_id: "'{agent.id}'"
+          agent_id: $ agent.id
           data:
             metadata:
-              source: "'spider_crawler'"
-            title: "'Website Document'"
-            content: _
+              source: spider_crawler
+            title: Website Document
+            content: $ _
     ```
 
     This step:
@@ -175,26 +176,27 @@ We're using two tools:
 
   # Step #0 - Evaluate the content
   - evaluate:
-      documents: _['content']
+      documents: $ _['content']
 
   # Step #1 - Process each content chunk in parallel
-  - over: "[(_0.content, chunk) for chunk in _['documents']]"
+  - over: $ "[(steps[0].input.content, chunk) for chunk in _['documents']]"
     parallelism: 3
     map:
       prompt: 
       - role: user
         content: >-
+          $ f'''
           <document>
-          {{_[0]}}
+          {_[0]}
           </document>
 
           Here is the chunk we want to situate within the whole document
           <chunk>
-          {{_[1]}}
+          {_[1]}
           </chunk>
 
           Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. 
-          Answer only with the succinct context and nothing else. 
+          Answer only with the succinct context and nothing else.'''
       
       unwrap: true
       settings:
@@ -203,23 +205,23 @@ We're using two tools:
   # Step #2 - Create a new document and add it to the agent docs store
   - evaluate:
       final_chunks: |
-        [
-          NEWLINE.join([chunk, succint]) for chunk, succint in zip(_1.documents, _)
+        $ [
+          NEWLINE.join([chunk, succint]) for chunk, succint in zip(steps[1].input.documents, _)
         ]
 
   # Step #3 - Create a new document and add it to the agent docs store
-  - over: _['final_chunks']
+  - over: $ _['final_chunks']
     parallelism: 3
     map:
       tool: create_agent_doc
       arguments:
-        agent_id: "'00000000-0000-0000-0000-000000000000'" # <--- This is the agent id of the agent you want to add the document to
+        agent_id: "00000000-0000-0000-0000-000000000000" # <--- This is the agent id of the agent you want to add the document to
         data:
           metadata:
-            source: "'spider_crawler'"
+            source: "spider_crawler"
 
-          title: "'Website Document'"
-          content: _
+          title: "Website Document"
+          content: $ _
 
   ########################################################
   ################### MAIN WORKFLOW ######################
@@ -230,11 +232,11 @@ We're using two tools:
   # Step #0 - Define a tool call step that calls the spider_crawler tool with the url input
   - tool: spider_crawler
     arguments:
-      url: "_['url']" # You can also use 'inputs[0]['url']'
+      url: $ _['url'] # You can also use 'steps[0].input['url']'
       params:
-        request: "'smart_mode'"
-        limit: _['pages_limit'] # <--- This is the number of pages to crawl (taken from the input of the task)
-        return_format: "'markdown'"
+        request: "smart_mode"
+        limit: $ _['pages_limit'] # <--- This is the number of pages to crawl (taken from the input of the task)
+        return_format: "markdown"
         proxy_enabled: "True"
         filter_output_images: "True" # <--- This is to execlude images from the output
         filter_output_svg: "True" # <--- This is to execlude svg from the output
@@ -242,16 +244,16 @@ We're using two tools:
         readability: "True" # <--- This is to make the output more readable
         sitemap: "True" # <--- This is to crawl the sitemap
         chunking_alg: # <--- Using spider's bysentence algorithm to chunk the output
-          type: "'bysentence'"
+          type: "bysentence"
           value: "15" # <--- This is the number of sentences per chunk
 
   # Step #1 - Evaluate step to document chunks
   - foreach:
-      in: _['result']
+      in: $ _['result']
       do:
         workflow: index_page
         arguments:
-          content: _.content
+          content: $ _.content
   ```
 </Accordion>
 

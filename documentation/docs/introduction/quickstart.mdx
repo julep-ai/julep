@@ -26,7 +26,7 @@ main:
   - role: system
     content: You are a creative story writer.
   - role: user
-    content: Write a short story about {{inputs[0].topic}}
+    content: $ f'Write a short story about {steps[0].input.topic}'
 ```
 
 
@@ -107,7 +107,7 @@ Let's create a task that generates a short story based on a given topic:
     - role: system
       content: You are a creative story writer.
     - role: user
-      content: Write a short story about {{inputs.topic}}
+      content: $ f'Write a short story about {steps[0].input.topic}'
   """)
 
   task = client.tasks.create(
@@ -127,7 +127,7 @@ Let's create a task that generates a short story based on a given topic:
     - role: system
       content: You are a creative story writer.
     - role: user
-      content: Write a short story about {{inputs.topic}}
+      content: $ f'Write a short story about {steps[0].input.topic}'
   `;
 
   const task = await client.tasks.create(
