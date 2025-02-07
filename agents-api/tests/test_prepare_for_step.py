@@ -15,7 +15,7 @@ from agents_api.common.protocol.tasks import (
 )
 from agents_api.common.utils.datetime import utcnow
 from agents_api.common.utils.workflows import get_workflow_name
-from ward import test
+from ward import raises, test
 
 
 @test("utility: prepare_for_step - underscore")
@@ -118,3 +118,41 @@ async def _():
     transition.current = TransitionTarget(workflow="`subworkflow`[0].if_else.then", step=0)
     transition.next = TransitionTarget(workflow="`subworkflow`[0].if_else.else", step=1)
     assert get_workflow_name(transition) == "subworkflow"
+
+    transition.current = TransitionTarget(workflow="PAR:`main`[2].mapreduce[0][2],0", step=0)
+    transition.next = None
+    assert get_workflow_name(transition) == "main"
+
+    transition.current = TransitionTarget(workflow="PAR:`subworkflow`[2].mapreduce[0][3],0", step=0)
+    transition.next = None
+    assert get_workflow_name(transition) == "subworkflow"
+
+
+@test("utility: get_workflow_name - raises")
+async def _():
+    transition = Transition(
+        id=uuid.uuid4(),
+        execution_id=uuid.uuid4(),
+        output=None,
+        created_at=utcnow(),
+        updated_at=utcnow(),
+        type="step",
+        current=TransitionTarget(workflow="main", step=0),
+        next=TransitionTarget(workflow="main", step=1),
+    )
+
+    with raises(AssertionError):
+        transition.current = TransitionTarget(workflow="`main[2].mapreduce[0][2],0", step=0)
+        get_workflow_name(transition)
+
+    with raises(AssertionError):
+        transition.current = TransitionTarget(workflow="PAR:`", step=0)
+        get_workflow_name(transition)
+
+    with raises(AssertionError):
+        transition.current = TransitionTarget(workflow="`", step=0)
+        get_workflow_name(transition)
+
+    with raises(AssertionError):
+        transition.current = TransitionTarget(workflow="PAR:`subworkflow[2].mapreduce[0][3],0", step=0)
+        get_workflow_name(transition)
