@@ -4,6 +4,10 @@ import uuid
 import yaml
 from julep import Client
 
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
 openweathermap_api_key = os.getenv("OPENWEATHERMAP_API_KEY")
 brave_api_key = os.getenv("BRAVE_API_KEY")
 
@@ -12,7 +16,7 @@ AGENT_UUID = uuid.uuid4()
 TASK_UUID = uuid.uuid4()
 
 # Creating Julep Client with the API Key
-api_key = ""  # Your API key here
+api_key = os.getenv("JULEP_API_KEY")
 client = Client(api_key=api_key, environment="dev")
 
 # Creating an "agent"
@@ -70,31 +74,31 @@ tools:
       api_key: {brave_api_key}
 
 main:
-- over: inputs[0].locations
+- over: $ steps[0].input.locations
   map:
     tool: weather
     arguments:
-      location: _
+      location: $ _
 
-- over: inputs[0].locations
+- over: $ steps[0].input.locations
   map:
     tool: internet_search
     arguments:
-      query: "'tourist attractions in ' + _"
+      query: $ 'tourist attractions in ' + _
 
 # Zip locations, weather, and attractions into a list of tuples [(location, weather, attractions)]
 - evaluate:
     zipped: |-
-      list(
+      $ list(
         zip(
-          inputs[0].locations,
-          [output['result'] for output in outputs[0]],
-          outputs[1]
+          steps[0].input.locations,
+          [output['result'] for output in steps[0].output],
+          steps[1].output
         )
       )
 
 
-- over: _['zipped']
+- over: $ _['zipped']
   parallelism: 3
   # Inside the map step, each `_` represents the current element in the list
   # which is a tuple of (location, weather, attractions)
@@ -102,23 +106,23 @@ main:
     prompt:
     - role: system
       content: >-
-        You are {{{{agent.name}}}}. Your task is to create a detailed itinerary
+        $ f'''You are {{agent.name}}. Your task is to create a detailed itinerary
         for visiting tourist attractions in some locations.
         The user will give you the following information for each location:
 
         - The location
         - The current weather condition
-        - The top tourist attractions
+        - The top tourist attractions'''
     - role: user
       content: >-
-        Location: "{{{{_[0]}}}}"
-        Weather: "{{{{_[1]}}}}"
-        Attractions: "{{{{_[2]}}}}"
+        $ f'''Location: "{{_[0]}}"
+        Weather: "{{_[1]}}"
+        Attractions: "{{_[2]}}"'''
     unwrap: true
 
 - evaluate:
     final_plan: |-
-      '\\n---------------\\n'.join(activity for activity in _)
+      $ '\\n---------------\\n'.join(activity for activity in _)
 """)
 
 # Creating/Updating a task

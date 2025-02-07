@@ -37,8 +37,10 @@ agent = client.agents.create_or_update(
     model="gpt-4o",
 )
 
+brave_api_key = os.getenv("BRAVE_API_KEY")
+
 # Define the task
-task_def = yaml.safe_load("""
+task_def = yaml.safe_load(f"""
 name: Sarcasm Headline Generator
 
 tools:
@@ -47,18 +49,18 @@ tools:
   integration:
     provider: brave
     setup:
-      api_key: "YOUR_BRAVE_API_KEY"
+      api_key: "{brave_api_key}"
 
 main:
 - tool: brave_search
   arguments:
-    query: "_.topic + ' funny'"
+    query: $ _.topic + ' funny'
 
 - prompt:
   - role: system
     content: >-
-      You are a sarcastic news headline writer. Generate a witty and sarcastic headline
-      for the topic {{inputs[0].topic}}. Use the following information for context: {{_}}
+      $ f'''You are a sarcastic news headline writer. Generate a witty and sarcastic headline
+      for the topic {{steps[0].input.topic}}. Use the following information for context: {{_}}'''
   unwrap: true
 """)
 
