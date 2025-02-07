@@ -20,8 +20,8 @@ with workflow.unsafe.imports_passed_through():
         ExecutionInput,
         StepContext,
     )
-    from ...env import task_max_parallelism, temporal_heartbeat_timeout
     from ...common.utils.workflows import PAR_PREFIX, SEPARATOR
+    from ...env import task_max_parallelism, temporal_heartbeat_timeout
 
 T = TypeVar("T")
 

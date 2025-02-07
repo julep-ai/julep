@@ -3,6 +3,7 @@ from ...autogen.openapi_model import Transition
 PAR_PREFIX = "PAR:"
 SEPARATOR = "`"
 
+
 def get_workflow_name(transition: Transition) -> str:
     workflow_str = transition.current.workflow
     if workflow_str.startswith(PAR_PREFIX):
