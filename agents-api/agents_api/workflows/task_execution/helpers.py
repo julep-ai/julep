@@ -20,6 +20,7 @@ with workflow.unsafe.imports_passed_through():
         ExecutionInput,
         StepContext,
     )
+    from ...common.utils.workflows import PAR_PREFIX, SEPARATOR
     from ...env import task_max_parallelism, temporal_heartbeat_timeout
 
 T = TypeVar("T")
@@ -100,7 +101,9 @@ async def execute_switch_branch(
     workflow.logger.info(f"Switch step: Chose branch {index}")
     chosen_branch = switch[index]
 
-    case_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].case"
+    seprated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+    case_wf_name = f"{seprated_workflow_name}[{context.cursor.step}].case"
 
     case_task = task.model_copy()
     case_task.workflows = [
@@ -138,7 +141,9 @@ async def execute_if_else_branch(
     if chosen_branch is None:
         chosen_branch = EvaluateStep(evaluate={"output": "_"})
 
-    if_else_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].if_else"
+    separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+    if_else_wf_name = f"{separated_workflow_name}[{context.cursor.step}].if_else"
     if_else_wf_name += ".then" if condition else ".else"
 
     if_else_task = task.model_copy()
@@ -174,7 +179,9 @@ async def execute_foreach_step(
     results = []
 
     for i, item in enumerate(items):
-        foreach_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
+        separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+        foreach_wf_name = f"{separated_workflow_name}[{context.cursor.step}].foreach[{i}]"
         foreach_task = task.model_copy()
         foreach_task.workflows = [
             Workflow(name=foreach_wf_name, steps=[do_step]),
@@ -213,7 +220,9 @@ async def execute_map_reduce_step(
     reduce = "$ results + [_]" if reduce is None else reduce
 
     for i, item in enumerate(items):
-        workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
+        separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+        workflow_name = f"{separated_workflow_name}[{context.cursor.step}].mapreduce[{i}]"
         map_reduce_task = task.model_copy()
         map_reduce_task.workflows = [
             Workflow(name=workflow_name, steps=[map_defn]),
@@ -281,9 +290,9 @@ async def execute_map_reduce_step_parallel(
         for j, item in enumerate(batch):
             # Parallel batch workflow name
             # Note: Added PAR: prefix to easily identify parallel batches in logs
-            workflow_name = (
-                f"PAR:`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}][{j}]"
-            )
+            separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+            workflow_name = f"{PAR_PREFIX}{separated_workflow_name}[{context.cursor.step}].mapreduce[{i}][{j}]"
             map_reduce_task = task.model_copy()
             map_reduce_task.workflows = [
                 Workflow(name=workflow_name, steps=[map_defn]),
