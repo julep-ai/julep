@@ -6,7 +6,7 @@ from fastapi import HTTPException
 
 from ...autogen.openapi_model import Entry
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
@@ -47,7 +47,7 @@ OFFSET $4;
 
 @rewrap_exceptions(common_db_exceptions("entry", ["list"]))
 @wrap_in_class(Entry)
-@increase_counter("list_entries")
+@query_metrics("list_entries")
 @pg_query
 @beartype
 async def list_entries(

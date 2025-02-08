@@ -4,7 +4,7 @@ from beartype import beartype
 
 from ...autogen.openapi_model import Tool, UpdateToolRequest
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for updating a tool
@@ -29,7 +29,7 @@ RETURNING *;
     one=True,
     transform=lambda d: {"id": d["tool_id"], "jobs": [], **d},
 )
-@increase_counter("update_tool")
+@query_metrics("update_tool")
 @pg_query
 @beartype
 async def update_tool(

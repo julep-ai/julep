@@ -9,7 +9,7 @@ from ...autogen.openapi_model import CreateEntryRequest, Entry, Relation
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...common.utils.messages import content_to_json
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
@@ -62,7 +62,7 @@ RETURNING *;
         "created_at": d.pop("created_at"),
     },
 )
-@increase_counter("create_entries")
+@query_metrics("create_entries")
 @pg_query
 @beartype
 async def create_entries(
@@ -121,7 +121,7 @@ async def create_entries(
 
 @rewrap_exceptions(common_db_exceptions("entry_relation", ["create"]))
 @wrap_in_class(Relation)
-@increase_counter("add_entry_relations")
+@query_metrics("add_entry_relations")
 @pg_query
 @beartype
 async def add_entry_relations(

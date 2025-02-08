@@ -8,7 +8,7 @@ from ...autogen.openapi_model import (
     Session,
 )
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL queries
@@ -71,7 +71,7 @@ ON CONFLICT (developer_id, session_id, participant_type, participant_id) DO NOTH
         "id": d["session_id"],
     },
 )
-@increase_counter("create_or_update_session")
+@query_metrics("create_or_update_session")
 @pg_query(return_index=0)
 @beartype
 async def create_or_update_session(

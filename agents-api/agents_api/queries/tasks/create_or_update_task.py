@@ -7,7 +7,7 @@ from uuid_extensions import uuid7
 from ...autogen.openapi_model import CreateOrUpdateTaskRequest
 from ...common.protocol.models import spec_to_task, task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 from .get_task import get_task_query
 
@@ -128,7 +128,7 @@ FROM version;
     spec_to_task,
     one=True,
 )
-@increase_counter("create_or_update_task")
+@query_metrics("create_or_update_task")
 @pg_query
 @beartype
 async def create_or_update_task(

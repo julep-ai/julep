@@ -5,7 +5,7 @@ from uuid import UUID
 from beartype import beartype
 
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
@@ -18,7 +18,7 @@ WHERE developer_id = $1;
 
 @rewrap_exceptions(common_db_exceptions("session", ["count"]))
 @wrap_in_class(dict, one=True)
-@increase_counter("count_sessions")
+@query_metrics("count_sessions")
 @pg_query
 @beartype
 async def count_sessions(

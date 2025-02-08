@@ -6,7 +6,7 @@ from beartype import beartype
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for deleting entries with a developer check
@@ -65,7 +65,7 @@ SELECT EXISTS (
         "jobs": [],
     },
 )
-@increase_counter("delete_entries_for_session")
+@query_metrics("delete_entries_for_session")
 @pg_query
 @beartype
 async def delete_entries_for_session(
@@ -90,7 +90,7 @@ async def delete_entries_for_session(
         "jobs": [],
     },
 )
-@increase_counter("delete_entries")
+@query_metrics("delete_entries")
 @pg_query
 @beartype
 async def delete_entries(
