@@ -2,65 +2,121 @@
 
 <div align="center" id="top">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
+
+  <p>
+    <a href="https://docs.julep.ai"><img src="https://img.shields.io/badge/Documentation-000000?style=for-the-badge&logo=github&logoColor=white" alt="Documentation"></a>
+    <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/@julep/sdk?style=for-the-badge&logo=npm" alt="NPM Version"></a>
+    <a href="https://pypi.org/project/julep/"><img src="https://img.shields.io/pypi/v/julep?style=for-the-badge&logo=python" alt="PyPI Version"></a>
+  </p>
+  <p>
+    <a href="https://hub.docker.com/u/julepai"><img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=for-the-badge&logo=docker" alt="Docker Image Version"></a>
+    <a href="https://github.com/julep-ai/julep/blob/main/LICENSE"><img src="https://img.shields.io/github/license/julep-ai/julep?style=for-the-badge" alt="License"></a>
+  </p>
+  
+  <h3>
+    <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discord</a>
+    ·
+    <a href="https://x.com/julep_ai" rel="dofollow">𝕏</a>
+    ·
+    <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow">LinkedIn</a>
+  </h3>
 </div>
+
+<br/>
 
 <div align="center">
-  <a href="https://docs.julep.ai"><img src="https://img.shields.io/badge/Documentation-000000?style=flat-square&logo=github&logoColor=white" alt="Documentation"></a>
-  <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/@julep/sdk?style=flat-square&logo=npm" alt="NPM Version"></a>
-  <a href="https://pypi.org/project/julep/"><img src="https://img.shields.io/pypi/v/julep?style=flat-square&logo=python" alt="PyPI Version"></a>
-  <a href="https://hub.docker.com/u/julepai"><img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=flat-square&logo=docker" alt="Docker Image Version"></a>
-  <a href="https://github.com/julep-ai/julep/blob/main/LICENSE"><img src="https://img.shields.io/github/license/julep-ai/julep?style=flat-square" alt="License"></a>
-  <br />
-  <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discord</a>
-  ·
-  <a href="https://x.com/julep_ai" rel="dofollow">𝕏</a>
-  ·
-  <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow">LinkedIn</a>
+  <h3>🚀 Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes.</h3>
 </div>
-
-Empower your AI projects with persistent agents and multi-step workflows.
-
-## 🚀 Quick Start
-
----
-
-## 📖 Introduction
-
-Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes.
 
 Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs.
 
 While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios which:
 
-- have multiple steps,
-- make decisions based on model outputs,
-- spawn parallel branches,
-- use lots of tools, and
-- run for a long time.
+- Have multiple steps
+- Make decisions based on model outputs
+- Spawn parallel branches
+- Use lots of tools
+- Run for a long time
+
 
 > [!TIP]
-> Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Read [Understanding Tasks](#understanding-tasks) to learn more.
+> 💡 Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Read more about the Julep architecture and how it works in the [Documentation](https://docs.julep.ai/docs/advanced/architecture-deep-dive).
+
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<h3>📖 Table of Contents</h3>
+
+- [✨ Key Features](#-key-features)
+- [🧠 Mental Model](#-mental-model)
+- [📦 Installation](#-installation)
+  - [🛠️ Julep CLI](#️-julep-cli)
+- [🚀 Quick Start](#-quick-start)
+- [🔍 Reference](#-reference)
+  - [📚 SDK Reference](#-sdk-reference)
+  - [🛠️ API Reference](#️-api-reference)
+- [💻 Local Quickstart](#-local-quickstart)
+- [❓ What's the difference between Julep and LangChain etc?](#-whats-the-difference-between-julep-and-langchain-etc)
+  - [Different Use Cases](#different-use-cases)
+  - [Different Form Factor](#different-form-factor)
+  - [In Summary](#in-summary)
+- [👥 Contributors](#-contributors)
+- [📄 License](#-license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+---
 
 ## ✨ Key Features
 
----
+<div align="left">
+  <table>
+    <tr>
+      <td>🧠</td>
+      <td><b>Persistent AI Agents</b></td>
+      <td>Remember context and information over long-term interactions</td>
+    </tr>
+    <tr>
+      <td>💾</td>
+      <td><b>Stateful Sessions</b></td>
+      <td>Keep track of past interactions for personalized responses</td>
+    </tr>
+    <tr>
+      <td>🔄</td>
+      <td><b>Multi-Step Tasks</b></td>
+      <td>Build complex, multi-step processes with loops and decision-making</td>
+    </tr>
+    <tr>
+      <td>⏳</td>
+      <td><b>Task Management</b></td>
+      <td>Handle long-running tasks that can run indefinitely</td>
+    </tr>
+    <tr>
+      <td>🛠️</td>
+      <td><b>Built-in Tools</b></td>
+      <td>Use built-in tools and external APIs in your tasks</td>
+    </tr>
+    <tr>
+      <td>🔧</td>
+      <td><b>Self-Healing</b></td>
+      <td>Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly</td>
+    </tr>
+    <tr>
+      <td>📚</td>
+      <td><b>RAG</b></td>
+      <td>Use Julep's document store to build a system for retrieving and using your own data</td>
+    </tr>
+  </table>
+</div>
 
-1. 🧠 **Persistent AI Agents**: Remember context and information over long-term interactions.
-2. 💾 **Stateful Sessions**: Keep track of past interactions for personalized responses.
-3. 🔄 **Multi-Step Tasks**: Build complex, multi-step processes with loops and decision-making.
-4. ⏳ **Task Management**: Handle long-running tasks that can run indefinitely.
-5. 🛠️ **Built-in Tools**: Use built-in tools and external APIs in your tasks.
-6. 🔧 **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly.
-7. 📚 **RAG**: Use Julep's document store to build a system for retrieving and using your own data.
-
-![features](https://github.com/user-attachments/assets/4355cbae-fcbd-4510-ac0d-f8f77b73af70)
+<br/>
 
 > [!TIP]
-> Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
-
-## 🧠 Mental Model
+> 💡 Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
 
 ---
+
+## 🧠 Mental Model
 
 Julep is made up of the following components:
 
@@ -87,51 +143,334 @@ Think of Julep as a platform that combines both client-side and server-side comp
 3. **Integration with Tools and APIs:**
    - Within your workflows, you can integrate external tools and services.
    - The backend facilitates these integrations, so your agents can, for example, perform web searches, access databases, or call third-party APIs.
-  
-## 🛠️ Julep CLI
 
 ---
+
+## 📦 Installation
+
+<div align="left">
+  <h3>🛠️ Julep SDKs</h3>
+
+  To get started with Julep, install it using [npm](https://www.npmjs.com/package/@julep/sdk) or [pip](https://pypi.org/project/julep/):
+
+  <h4>Node.js</h4>
+
+  ```bash
+  npm install @julep/sdk
+
+  # or
+
+  bun add @julep/sdk
+  ```
+
+  <h4>Python</h4>
+
+  ```bash
+  pip install julep
+  ```
+
+  > [!NOTE]
+  > 🔑 Get your API key [here](https://dashboard.julep.ai).
+  >
+  > While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
+</div>
+
+### 🛠️ Julep CLI
 
 Julep CLI is a command-line tool that allows you to interact with the Julep platform directly from your terminal. It provides a convenient way to manage your AI workflows, tasks, and agents without needing to write code.
 
-### Key Features
-
-- **Task Management**: Easily create, update, and delete tasks.
-- **Agent Management**: Manage your AI agents and their configurations.
-- **Workflow Execution**: Run and monitor workflows directly from the command line.
-
-For more details, check out the [Julep CLI Documentation](https://docs.julep.ai/guides/julepcli/introduction).
-
-## �� Installation
-
----
-
-To get started with Julep, install it using [npm](https://www.npmjs.com/package/@julep/sdk) or [pip](https://pypi.org/project/julep/):
-
-**Node.js**:
-
 ```bash
-npm install @julep/sdk
+pip install julep-cli
 
 # or
 
-bun add @julep/sdk
+pip install julep[cli]
 ```
 
-**Python**:
-
-```bash
-pip install julep
-```
+For more details, check out the [Julep CLI Documentation](https://docs.julep.ai/guides/julepcli/introduction).
 
 > [!NOTE]
-> Get your API key [here](https://dashboard.julep.ai).
->
-> While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
-
-## 🔍 Reference
+> Julep CLI is currently is still in early phase of development. Moreover, it's not yet available for Node.js.
 
 ---
+
+## 🚀 Quick Start
+
+Imagine a Research AI agent that can do the following:
+
+1. **Take a topic**,
+2. **Come up with 30 search queries** for that topic,
+3. Perform those web **searches in parallel**,
+4. **Summarize** the results,
+5. Send the **summary to Discord**.
+
+> [!NOTE]
+> In Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. All of the steps are executed on Julep's own servers and you don't need to lift a finger.
+
+Here's a complete example of a task definition:
+
+```yaml YAML
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Research Agent
+description: A research assistant that can search the web and send the summary to Discord
+########################################################
+####################### INPUT ##########################
+########################################################
+
+# Define the input schema for the task
+input_schema:
+  type: object
+  properties:
+    topic:
+      type: string
+      description: The main topic to research
+    num_questions:
+      type: integer
+      description: The number of search queries to generate
+
+########################################################
+####################### TOOLS ##########################
+########################################################
+
+# Define the tools that the agent can use
+tools:
+  - name: web_search
+    type: integration
+    integration:
+      provider: brave
+      setup:
+        api_key: "<your-brave-api-key>"
+
+  - name: discord_webhook
+    type: api_call
+    api_call:
+      url: https://discord.com/api/webhooks/<your-webhook-id>/<your-webhook-token>
+      method: POST
+      headers:
+        Content-Type: application/json
+
+########################################################
+####################### MAIN WORKFLOW #################
+########################################################
+
+# Special variables:
+# - steps[index].input: for accessing the input to the step at that index
+# - steps[index].output: for accessing the output of the step at that index
+# - _: for accessing the output of the previous step
+
+# Define the main workflow
+main:
+# Step 0: Generate search queries
+- prompt:
+    - role: system
+      content: >-
+        $ f"""
+        You are a research assistant.
+        Generate {{steps[0].input.num_questions|default(30, true)}} diverse search queries related to the topic:
+        {steps[0].input.topic}
+
+        Write one query per line.
+        """
+  unwrap: true
+
+# Step 1: Evaluate the search queries using a simple python expression
+- evaluate:
+    search_queries: $ _.split(NEWLINE)
+
+# Step 2: Run the web search in parallel for each query
+- over: $ _.search_queries
+  map:
+    tool: web_search
+    arguments:
+      query: $ _
+  parallelism: 5
+
+# Step 3: Collect the results from the web search
+- evaluate:
+    search_results: $ _
+
+# Step 4: Summarize the results
+- prompt:
+    - role: system
+      content: >
+        $ f"""
+        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {steps[0].input.topic}.
+        The summary should be well-structured, informative, and highlight key findings and insights. Keep the summary concise and to the point.
+        The length of the summary should be less than 150 words.
+        Here are the search results:
+        {_.search_results}
+        """
+  unwrap: true
+  settings:
+    model: gpt-4o-mini
+
+# Step 5: Send the summary to Discord
+- evaluate:
+    discord_message: |-
+      $ f'''
+      **Research Summary for {steps[0].input.topic}**
+      {_}
+      '''
+
+# Step 6: Send the summary to Discord
+- tool: discord_webhook
+  arguments:
+    json_: 
+      content: $ _.discord_message[:2000] # Discord has a 2000 character limit
+```
+
+Here you can execute the above workflow using the Julep SDK:
+
+In Python:
+```python
+from julep import Client
+import yaml
+import time
+
+# Initialize the client
+client = Client(api_key=JULEP_API_KEY)
+
+# Create the agent
+agent = client.agents.create(
+  name="Julep Browser Use Agent",
+  description="A Julep agent that can use the computer tool to interact with the browser.",
+)
+
+# Load the task definition
+with open('./research_agent.yaml', 'r') as file:
+  task_definition = yaml.safe_load(file)
+
+# Create the task
+task = client.tasks.create(
+  agent_id=agent.id,
+  **task_definition
+)
+
+# Create the execution
+execution = client.executions.create(
+    task_id=task.id,
+    input={
+        "topic": "artificial intelligence",
+        "num_questions": 30
+    }
+)
+
+# Wait for the execution to complete
+while (result := client.executions.get(execution.id)).status not in ['succeeded', 'failed']:
+    print(result.status)
+    time.sleep(1)
+
+# Print the result
+if result.status == "succeeded":
+    print(result.output)
+else:
+    print(f"Error: {result.error}")
+
+```
+
+In Node.js:
+```js
+import { Julep } from '@julep/sdk';
+import yaml from 'yaml';
+import fs from 'fs';
+
+// Initialize the client
+const client = new Julep({
+  apiKey: 'your_julep_api_key'
+});
+
+// Create the agent
+const agent = await client.agents.create({
+  name: "Julep Browser Use Agent",
+  description: "A Julep agent that can use the computer tool to interact with the browser.",
+});
+
+// Parse the task definition
+const taskDefinition = yaml.parse(fs.readFileSync('./research_agent.yaml', 'utf8'));
+
+// Create the task
+const task = await client.tasks.create(
+  agent.id,
+  taskDefinition
+);
+
+// Create the execution
+const execution = await client.executions.create(
+  task.id,
+  {
+    input: { 
+      "topic": "artificial intelligence",
+      "num_questions": 30
+    }
+  }
+);
+
+// Wait for the execution to complete
+let result;
+while (true) {
+  result = await client.executions.get(execution.id);
+  if (result.status === 'succeeded' || result.status === 'failed') break;
+  console.log(result.status);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+}
+
+// Print the result
+if (result.status === 'succeeded') {
+  console.log(result.output);
+} else {
+  console.error(`Error: ${result.error}`);
+}
+```
+
+In this example, Julep will automatically manage parallel executions, retry failed steps, resend API requests, and keep the tasks running reliably until completion.
+
+> This runs in under 30 seconds and returns the following output:
+
+<details>
+<summary><b>Research Summary for AI</b> <i>(Click to expand)</i></summary>
+
+> **Research Summary for AI**
+>
+> ### Summary of Research Results on Artificial Intelligence (AI)
+>
+> #### Introduction
+>
+> The field of Artificial Intelligence (AI) has seen significant advancements in recent years, marked by the development of methods and technologies that enable machines to perceive their environment, learn from data, and make decisions. The primary focus of this summary is on the insights derived from various research findings related to AI.
+>
+> #### Key Findings
+>
+> 1. **Definition and Scope of AI**:
+>
+>    - AI is defined as a branch of computer science focused on creating systems that can perform tasks requiring human-like intelligence, including learning, reasoning, and problem-solving (Wikipedia).
+>    - It encompasses various subfields, including machine learning, natural language processing, robotics, and computer vision.
+>
+> 2. **Impact and Applications**:
+>
+>    - AI technologies are being integrated into numerous sectors, improving efficiency and productivity. Applications range from autonomous vehicles and healthcare diagnostics to customer service automation and financial forecasting (OpenAI).
+>    - Google's commitment to making AI beneficial for everyone highlights its potential to significantly improve daily life by enhancing user experiences across various platforms (Google AI).
+>
+> 3. **Ethical Considerations**:
+>
+>    - There is an ongoing discourse regarding the ethical implications of AI, including concerns about privacy, bias, and accountability in decision-making processes. The need for a framework that ensures the safe and responsible use of AI technologies is emphasized (OpenAI).
+>
+> 4. **Learning Mechanisms**:
+>
+>    - AI systems utilize different learning mechanisms, such as supervised learning, unsupervised learning, and reinforcement learning. These methods allow AI to improve performance over time by learning from past experiences and data (Wikipedia).
+>    - The distinction between supervised and unsupervised learning is critical; supervised learning relies on labeled data, while unsupervised learning identifies patterns without predefined labels (Unsupervised).
+>
+> 5. **Future Directions**:
+>    - Future AI developments are expected to focus on enhancing the interpretability and transparency of AI systems, ensuring that they can provide justifiable decisions and actions (OpenAI).
+>    - There is also a push towards making AI systems more accessible and user-friendly, encouraging broader adoption across different demographics and industries (Google AI).
+>
+> #### Conclusion
+>
+> AI represents a transformative force across multiple domains, promising to reshape industries and improve quality of life. However, as its capabilities expand, it is crucial to address the ethical and societal implications that arise. Continued research and collaboration among technologists, ethicists, and policymakers will be essential in navigating the future landscape of AI.
+
+</details>
+
+---
+
+## 🔍 Reference
 
 ### 📚 SDK Reference
 
@@ -142,15 +481,15 @@ pip install julep
 
 Explore our API documentation to learn more about agents, tasks, tools, and the Julep CLI here: [API Reference](https://docs.julep.ai/api-reference/)
 
-## 💻 Local Quickstart
-
 ---
+
+## 💻 Local Quickstart
 
 For detailed setup instructions, see our [Contributing Guide](CONTRIBUTING.md#setup-instructions).
 
-## ❓ What's the difference between Julep and LangChain etc?
-
 ---
+
+## ❓ What's the difference between Julep and LangChain etc?
 
 ### Different Use Cases
 
@@ -185,29 +524,37 @@ Use LangChain when you need to manage LLM interactions and prompt sequences in a
 
 Choose Julep when you need a robust framework for stateful agents with advanced workflow capabilities, persistent sessions, and complex task orchestration.
 
-## 👥 Contributors
-
 ---
 
-We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started. Here's how you can contribute:
+## 👥 Contributors
 
-1. Check out our [CONTRIBUTING.md](https://github.com/julep-ai/julep/blob/dev/CONTRIBUTING.md) file for guidelines on how to contribute.
-2. Browse our [good first issues](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to find a task that interests you.
-3. If you have any questions or need help, don't hesitate to reach out on our [Discord](https://discord.com/invite/JTSBGRZrzj) channel.
+<h3>Join Our Community! 🌟</h3>
+
+We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started.
+
+<h4>How to Contribute:</h4>
+
+1. 📖 Check out our [CONTRIBUTING.md](https://github.com/julep-ai/julep/blob/dev/CONTRIBUTING.md) file for guidelines
+2. 🔍 Browse our [good first issues](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+3. 💬 Join our [Discord](https://discord.com/invite/JTSBGRZrzj) for help and discussions
+
+<br/>
 
 Your contributions, big or small, are valuable to us. Let's build something amazing together! 🚀
 
-Also thanks goes to these wonderful people who have contributed to the project:
+<h4>Our Amazing Contributors:</h4>
 
 <a href="https://github.com/julep-ai/julep/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=julep-ai/julep" />
 </a>
 
-## 📄 License
-
 ---
 
-Julep is licensed under the [Apache License 2.0](LICENSE). See the LICENSE file for more details.
+## 📄 License
+
+Julep is licensed under the [Apache License 2.0](LICENSE). 
+
+See the LICENSE file for more details.
 
 ---
 
