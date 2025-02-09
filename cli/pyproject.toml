@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "julep-cli"
-version = "0.1.11"
+version = "0.1.13"
 description = "Julep CLI"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -33,6 +33,7 @@ dependencies = [
   "stringcase>=1.2.0",
   "pyjwt>=2.10.1",
   "watchdog>=6.0.0",
+  "requests>=2.32.3",
 ]
 
 [project.scripts]
@@ -43,7 +44,6 @@ julep-cli = "julep_cli:app"  # For backwards compatibility
 dev = [
   "ipython>=8.30.0",
   "ipywidgets>=8.1.5",
-  "julep>=1.43.1",
   "jupyterlab>=4.3.1",
   "pip>=24.3.1",
   "poethepoet>=0.31.1",
