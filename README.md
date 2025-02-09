@@ -23,9 +23,11 @@
 </div>
 
 
+<p align="justify">
 Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes. Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs. While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios which:
 
 Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Read more about the Julep architecture and how it works in the [Documentation](https://docs.julep.ai/docs/advanced/architecture-deep-dive).
+</p>
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -42,9 +44,7 @@ Imagine you want to build an AI agent that can do more than just answer simple q
   - [🛠️ API Reference](#️-api-reference)
 - [💻 Local Setup](#-local-setup)
 - [❓ What's the difference between Julep and LangChain etc?](#-whats-the-difference-between-julep-and-langchain-etc)
-  - [Different Use Cases](#different-use-cases)
   - [Different Form Factor](#different-form-factor)
-  - [In Summary](#in-summary)
 - [👥 Contributors](#-contributors)
 - [📄 License](#-license)
 
@@ -105,16 +105,19 @@ Imagine you want to build an AI agent that can do more than just answer simple q
 
 ## 🧠 Mental Model
 
+<p align="justify">
 Julep is made up of the following components:
 
 - **Julep Platform**: The Julep platform is a cloud service that runs your workflows. It includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform.
 - **Julep SDKs**: Julep SDKs are a set of libraries for building workflows. There are SDKs for Python and JavaScript, with more on the way.
 - **Julep API**: The Julep API is a RESTful API that you can use to interact with the Julep platform.
+</p>
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/38420b5d-9342-4c8d-bae9-b47c28ae45af" height="360" />
 </div>
 
+<p align="justify">
 Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's how to visualize it:
 
 1. **Your Application Code:**
@@ -130,6 +133,7 @@ Think of Julep as a platform that combines both client-side and server-side comp
 3. **Integration with Tools and APIs:**
    - Within your workflows, you can integrate external tools and services.
    - The backend facilitates these integrations, so your agents can, for example, perform web searches, access databases, or call third-party APIs.
+</p>
 
 ---
 
@@ -164,7 +168,9 @@ Think of Julep as a platform that combines both client-side and server-side comp
 
 ### 🛠️ Julep CLI
 
+<p align="justify">
 Julep CLI is a command-line tool that allows you to interact with the Julep platform directly from your terminal. It provides a convenient way to manage your AI workflows, tasks, and agents without needing to write code.
+</p>
 
 ```bash
 pip install julep-cli
@@ -183,6 +189,7 @@ For more details, check out the [Julep CLI Documentation](https://docs.julep.ai/
 
 ## 🚀 Quick Start
 
+<p align="justify">
 Imagine a Research AI agent that can do the following:
 
 1. **Take a topic**,
@@ -190,6 +197,7 @@ Imagine a Research AI agent that can do the following:
 3. Perform those web **searches in parallel**,
 4. **Summarize** the results,
 5. Send the **summary to Discord**.
+</p>
 
 > [!NOTE]
 > In Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. All of the steps are executed on Julep's own servers and you don't need to lift a finger.
@@ -413,6 +421,8 @@ In this example, Julep will automatically manage parallel executions, retry fail
 
 > This runs in under 30 seconds and returns the following output:
 
+<p align="justify">
+
 <details>
 <summary><b>Research Summary for AI</b> <i>(Click to expand)</i></summary>
 
@@ -455,6 +465,8 @@ In this example, Julep will automatically manage parallel executions, retry fail
 
 </details>
 
+</p>
+
 <br/>
 
 > [!TIP]
@@ -488,8 +500,7 @@ For detailed setup instructions, see our [Local Setup Guide](https://docs.julep.
 
 ## ❓ What's the difference between Julep and LangChain etc?
 
-### Different Use Cases
-
+<p align="justify">
 Think of LangChain and Julep as tools with different focuses within the AI development stack.
 
 LangChain is great for creating sequences of prompts and managing interactions with LLMs. It has a large ecosystem with lots of pre-built integrations, which makes it convenient if you want to get something up and running quickly. LangChain fits well with simple use cases that involve a linear chain of prompts and API calls.
@@ -504,22 +515,26 @@ Use Julep if you imagine building a complex AI assistant that needs to:
 - Interact with multiple external services as part of its workflow.
 
 Then Julep provides the infrastructure to support all that without you having to build it from scratch.
+</p>
 
 ### Different Form Factor
 
-Julep is a **platform** that includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform. In order to build something with Julep, you write a description of the workflow in `YAML`, and then run the workflow in the cloud.
+<p align="justify">
+
+Julep is a `platform` that includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform. In order to build something with Julep, you write a description of the workflow in `YAML`, and then run the workflow in the cloud.
 
 Julep is built for heavy-lifting, multi-step, and long-running workflows and there's no limit to how complex the workflow can be.
 
-LangChain is a **library** that includes a few tools and a framework for building linear chains of prompts and tools. In order to build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.
+LangChain is a `library` that includes a few tools and a framework for building linear chains of prompts and tools. In order to build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.
 
 LangChain might be sufficient and quicker to implement for simple use cases that involve a linear chain of prompts and API calls.
+</p>
 
-### In Summary
-
+<p align="justify">
 Use LangChain when you need to manage LLM interactions and prompt sequences in a stateless or short-term context.
 
 Choose Julep when you need a robust framework for stateful agents with advanced workflow capabilities, persistent sessions, and complex task orchestration.
+</p>
 
 ---
 
