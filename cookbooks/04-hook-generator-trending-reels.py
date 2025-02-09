@@ -9,25 +9,27 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
+# Global UUID is generated for agent and task
 AGENT_UUID = uuid.uuid4()
 TASK_UUID = uuid.uuid4()
 RAPID_API_KEY = os.getenv("RAPID_API_KEY")
 RAPID_API_HOST = os.getenv("RAPID_API_HOST")
 JULEP_API_KEY = os.getenv("JULEP_API_KEY") or os.getenv("JULEP_API_KEY_LOCAL")
 
-print(f"AGENT_UUID: {AGENT_UUID}")
-print(f"TASK_UUID: {TASK_UUID}")
 print(f"JULEP_API_KEY: {JULEP_API_KEY}")
 print(f"RAPID_API_KEY: {RAPID_API_KEY}")
 print(f"RAPID_API_HOST: {RAPID_API_HOST}")
 
-
-# ### Creating Julep Client with the API Key
-
 from julep import Client
 
-# # Create a client
-client = Client(api_key=JULEP_API_KEY, environment="dev")
+# Creating Julep Client with the API Key
+api_key = os.getenv("JULEP_API_KEY")
+if not api_key:
+    msg = "JULEP_API_KEY not found in environment variables"
+    raise ValueError(msg)
+
+# Creating Julep Client with the API Key
+client = Client(api_key=JULEP_API_KEY, environment="production")
 
 #  Creating an agent for handling persistent sessions
 agent = client.agents.create_or_update(
