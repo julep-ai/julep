@@ -22,25 +22,10 @@
   </h3>
 </div>
 
-<br/>
 
-<div align="center">
-  <h3>🚀 Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes.</h3>
-</div>
+Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes. Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs. While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios which:
 
-Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs.
-
-While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios which:
-
-- Have multiple steps
-- Make decisions based on model outputs
-- Spawn parallel branches
-- Use lots of tools
-- Run for a long time
-
-
-> [!TIP]
-> 💡 Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Read more about the Julep architecture and how it works in the [Documentation](https://docs.julep.ai/docs/advanced/architecture-deep-dive).
+Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Read more about the Julep architecture and how it works in the [Documentation](https://docs.julep.ai/docs/advanced/architecture-deep-dive).
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -55,7 +40,7 @@ While many AI applications are limited to simple, linear chains of prompts and A
 - [🔍 Reference](#-reference)
   - [📚 SDK Reference](#-sdk-reference)
   - [🛠️ API Reference](#️-api-reference)
-- [💻 Local Quickstart](#-local-quickstart)
+- [💻 Local Setup](#-local-setup)
 - [❓ What's the difference between Julep and LangChain etc?](#-whats-the-difference-between-julep-and-langchain-etc)
   - [Different Use Cases](#different-use-cases)
   - [Different Form Factor](#different-form-factor)
@@ -113,6 +98,8 @@ While many AI applications are limited to simple, linear chains of prompts and A
 
 > [!TIP]
 > 💡 Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
+> 
+> 💡 To learn more about Julep, check out the [Documentation](https://docs.julep.ai/docs/introduction/overview).
 
 ---
 
@@ -172,7 +159,7 @@ Think of Julep as a platform that combines both client-side and server-side comp
   > [!NOTE]
   > 🔑 Get your API key [here](https://dashboard.julep.ai).
   >
-  > While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
+  > Reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get to know more about Julep.
 </div>
 
 ### 🛠️ Julep CLI
@@ -468,6 +455,16 @@ In this example, Julep will automatically manage parallel executions, retry fail
 
 </details>
 
+<br/>
+
+> [!TIP]
+> 💡 Checkout more tutorials in the [Tutorials](https://docs.julep.ai/docs/tutorials/) section of the documentation.
+> 
+> 💡 If you are a beginner, we recommend starting with the [Quickstart Guide](https://docs.julep.ai/docs/introduction/quickstart).
+> 
+> 💡 If you are looking for more ideas, check out the [Ideas](https://github.com/julep-ai/julep/blob/dev/cookbooks/IDEAS.md) section of the repository.
+> 
+> 💡 If you more into cookbook style recipes, check out the [Cookbook](https://github.com/julep-ai/julep/tree/dev/cookbooks) section of the repository.
 ---
 
 ## 🔍 Reference
@@ -483,9 +480,9 @@ Explore our API documentation to learn more about agents, tasks, tools, and the 
 
 ---
 
-## 💻 Local Quickstart
+## 💻 Local Setup
 
-For detailed setup instructions, see our [Contributing Guide](CONTRIBUTING.md#setup-instructions).
+For detailed setup instructions, see our [Local Setup Guide](https://docs.julep.ai/docs/advanced/localsetup).
 
 ---
 
