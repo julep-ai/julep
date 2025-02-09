@@ -8,7 +8,7 @@ from rich.table import Table
 from rich.text import Text
 
 from .app import agents_app, console, error_console
-from .utils import get_julep_client
+from .utils import DateTimeEncoder, get_julep_client
 
 SINGLE_AGENT_TABLE_WIDTH = 100
 SINGLE_AGENT_COLUMN_WIDTH = 50
@@ -263,7 +263,15 @@ def list(
 @agents_app.command()
 def get(
     id: Annotated[str, typer.Option("--id", help="ID of the agent to retrieve")],
-    json_output: Annotated[bool, typer.Option("--json", help="Output in JSON format")] = False,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help="Output in JSON format",
+            is_flag=True,
+            show_default=True,
+        ),
+    ] = False,
 ):
     """Get an agent by its ID"""
     client = get_julep_client()
@@ -288,7 +296,9 @@ def get(
     console.print(Text("Agent retrieved successfully.", style="bold green"), highlight=True)
 
     if json_output:
-        console.print(json.dumps(agent.model_dump(), indent=2), highlight=True)
+        console.print(
+            json.dumps(agent.model_dump(), indent=2, cls=DateTimeEncoder), highlight=True
+        )
         return
 
     # Create a table for agent details

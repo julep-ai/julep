@@ -26,6 +26,13 @@ CONFIG_DIR = Path.home() / ".config" / "julep"
 CONFIG_FILE_NAME = "config.yml"
 
 
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
+
 def get_config(config_dir: Path = CONFIG_DIR) -> dict:
     """Get configuration from config file"""
     if not (config_dir / CONFIG_FILE_NAME).exists():
