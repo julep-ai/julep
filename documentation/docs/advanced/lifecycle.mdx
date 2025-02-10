@@ -84,11 +84,11 @@ We're using two integrations:
 #### Step 1: Fetch Weather Data
 
 ```yaml
-- over: inputs[0].locations
+- over: $ steps[0].input.locations
   map:
     tool: weather
     arguments:
-      location: _
+      location: $ _
 ```
 
 This step:
@@ -99,11 +99,11 @@ This step:
 #### Step 2: Search for Tourist Attractions
 
 ```yaml
-- over: inputs[0].locations
+- over: $ steps[0].input.locations
   map:
     tool: internet_search
     arguments:
-      query: "'tourist attractions in ' + _"
+      query: $ 'tourist attractions in ' + _
 ```
 
 
@@ -117,11 +117,11 @@ This step:
 ```yaml
 - evaluate:
     zipped: |-
-      list(
+      $ list(
         zip(
-          inputs[0].locations,
-          [output['result'] for output in outputs[0]],
-          outputs[1]
+          steps[0].input.locations,
+          [output['result'] for output in steps[0].output],
+          steps[1].output
         )
       )
 ```
@@ -135,7 +135,7 @@ This step:
 #### Step 4: Generate Itineraries
 
 ```yaml
-- over: _['zipped']
+- over: $ _['zipped']
   parallelism: 3
   # Inside the map step, each `_` represents the current element in the list
   # which is a tuple of (location, weather, attractions)
@@ -143,18 +143,18 @@ This step:
     prompt:
     - role: system
       content: >-
-        You are {{{{agent.name}}}}. Your task is to create a detailed itinerary
+        $ f'''You are {agent.name}. Your task is to create a detailed itinerary
         for visiting tourist attractions in some locations.
         The user will give you the following information for each location:
 
         - The location
         - The current weather condition
-        - The top tourist attractions
+        - The top tourist attractions'''
     - role: user
       content: >-
-        Location: "{{{{_[0]}}}}"
-        Weather: "{{{{_[1]}}}}"
-        Attractions: "{{{{_[2]}}}}"
+        $ f'''Location: {_[0]}
+        Weather: {_[1]}
+        Attractions: {_[2]}'''
     unwrap: true
 ```
 
@@ -171,7 +171,7 @@ This step:
 ```yaml
 - evaluate:
     final_plan: |-
-      '\\n---------------\\n'.join(activity for activity in _)
+      $ '\\n---------------\\n'.join(activity for activity in _)
 ```
 
 

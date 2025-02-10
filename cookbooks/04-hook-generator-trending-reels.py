@@ -270,7 +270,7 @@ tools:
   api_call:
     method: GET
     url: "https://instagram-scraper-api2.p.rapidapi.com/v1/hashtag"
-    headers:
+    headers: 
       x-rapidapi-key: "{RAPID_API_KEY}"
       x-rapidapi-host: "{RAPID_API_HOST}"
     follow_redirects: true
@@ -287,85 +287,87 @@ main:
 - tool: api_tool_call
   arguments:
     params:
-      hashtag: "inputs[0].topic"
+      hashtag: $ steps[0].input.topic
 
 - evaluate:
-    summary:  "list({{
-                      'caption': ((response.get('caption') or {{}}).get('text') or 'No Caption Available'),
-                      'code': (response.get('code') or 'No Code Available'),
-                      'play_count': (response.get('play_count') or 0),
-                      'like_count': (response.get('like_count') or 0),
-                      'media_id': ((response.get('caption') or {{}}).get('id') or 0),
-                      'hashtags': ((response.get('caption') or {{}}).get('hashtags') or 'No Hashtag Available'),
-                      'video_duration': (response.get('video_duration') or 0),
-                      'comment_count': (response.get('comment_count') or 0),
-                      'reshare_count': (response.get('reshare_count') or 0),
-                      'has_audio': (response.get('has_audio') or False),
-                      'audio_type': (((response.get('clips_metadata') or {{}}).get('audio_type')) or 'No Audio Type Available'),
-                      'username': (((response.get('user') or {{}}).get('username')) or 'No Username Available'),
-                      'full_name': (((response.get('user') or {{}}).get('full_name')) or 'No Full Name Available'),
-                      'profile_pic_url': (((response.get('user') or {{}}).get('profile_pic_url')) or 'No Profile Pic URL Available'),
-                      'virality_score': (((response.get('reshare_count') or 0) / (response.get('play_count') or 1)) if (response.get('play_count') or 0) > 0 else 0),
-                      'engagement_score': (((response.get('like_count') or 0) / (response.get('play_count') or 1)) if (response.get('play_count') or 0) > 0 else 0),
-                      'video_duration': (response.get('video_duration') or 0)
-                      }} for response in _['json']['data']['items'])"
+    summary: >-
+      $ list({{
+                'caption': ((response.get('caption') or {{}}).get('text') or 'No Caption Available'),
+                'code': (response.get('code') or 'No Code Available'),
+                'play_count': (response.get('play_count') or 0),
+                'like_count': (response.get('like_count') or 0),
+                'media_id': ((response.get('caption') or {{}}).get('id') or 0),
+                'hashtags': ((response.get('caption') or {{}}).get('hashtags') or 'No Hashtag Available'),
+                'video_duration': (response.get('video_duration') or 0),
+                'comment_count': (response.get('comment_count') or 0),
+                'reshare_count': (response.get('reshare_count') or 0),
+                'has_audio': (response.get('has_audio') or False),
+                'audio_type': (((response.get('clips_metadata') or {{}}).get('audio_type')) or 'No Audio Type Available'),
+                'username': (((response.get('user') or {{}}).get('username')) or 'No Username Available'),
+                'full_name': (((response.get('user') or {{}}).get('full_name')) or 'No Full Name Available'),
+                'profile_pic_url': (((response.get('user') or {{}}).get('profile_pic_url')) or 'No Profile Pic URL Available'),
+                'virality_score': (((response.get('reshare_count') or 0) / (response.get('play_count') or 1)) if (response.get('play_count') or 0) > 0 else 0),
+                'engagement_score': (((response.get('like_count') or 0) / (response.get('play_count') or 1)) if (response.get('play_count') or 0) > 0 else 0),
+                'video_duration': (response.get('video_duration') or 0)
+                }} for response in _['json']['data']['items']) 
 
-- over: _['summary']
+- over: $ _['summary']
   parallelism: 4
   map:
     prompt:
       - role: system
         content: >-
-          You are a skilled agent tasked with creating a single description for each trending real estate reel for the given topic: {{{{inputs[0].topic}}}}.
+          $ f'''You are a skilled agent tasked with creating a single description for each trending real estate reel for the given topic: {{steps[0].input.topic}}.
           Use information gathered from the following data sources to gather the most relevant information:
 
-          Search Results: {{{{_['caption']}}}}
-          Virality Score: {{{{_['virality_score']}}}}
-          Engagement Score: {{{{_['engagement_score']}}}}
+          Search Results: {{_['caption']}}
+          Virality Score: {{_['virality_score']}}
+          Engagement Score: {{_['engagement_score']}}
 
-          Provide a json repsonse containing the caption, virality score, enagement score and one-liner description for the reel.
-    unwrap: true
+          Provide a json repsonse containing the caption, virality score, enagement score and one-liner description for the reel.'''
+    unwrap: true   
 
 - evaluate:
-    summary: outputs[1]['summary']
-    description: list(load_json(res.replace("```json", "").replace("```", "")) for res in _)
+    summary: $ steps[1].output['summary']
+    description: $ list(load_json(res.replace("```json", "").replace("```", "")) for res in _)
 
 - tool: get_hooks_doc
   arguments:
-    agent_id: "'{AGENT_UUID}'"
-
+    agent_id: {AGENT_UUID}
+                          
 - evaluate:
-    hooks_doc: _[0]['content']
+    content: $ _[0]['content']
+  label: hooks_doc
 
-- over: outputs[3]['description']
+- over: $ steps[3].output['description']
   parallelism: 4
   map:
     prompt:
       - role: system
         content: >-
-          You are a skilled content creator tasked with generating 3 engaging video hooks for each reel having its description and caption. Use the following document containing hook templates to create effective hooks:
-
-          {{{{_.hooks_doc}}}}
-
+          $ f'''You are a skilled content creator tasked with generating 3 engaging video hooks for each reel having its description and caption. Use the following document containing hook templates to create effective hooks:
+          
+          {{steps["hooks_doc"].output.content}}
+          
           Here are the caption and description to create hooks for:
 
-          Caption: {{{{_['caption']}}}}
-          Description: {{{{_['description']}}}}
-          Virality Score: {{{{_['virality_score']}}}}
-          Engagement Score: {{{{_['engagement_score']}}}}
+          Caption: {{_['caption']}}
+          Description: {{_['description']}}
+          Virality Score: {{_['virality_score']}}
+          Engagement Score: {{_['engagement_score']}}
 
           Your task is to generate 3 hooks (for the reel) by adapting the most suitable templates from the document. Each hook should be no more than 1 sentence long and directly relate to its corresponding idea.
-
-          Basically, all the ideas are taken from a search about this topic, which is {{{{inputs[0].topic}}}}. You should focus on this while writing the hooks.
+          
+          Basically, all the ideas are taken from a search about this topic, which is {{steps[0].input.topic}}. You should focus on this while writing the hooks.
 
           Ensure that each hook is creative, engaging, and relevant to its idea while following the structure of the chosen template.
 
-          Provide a json repsonse containing the caption, virality score, enagement score, description and the list of 3 hooks for the reel.
+          Provide a json repsonse containing the caption, virality score, enagement score, description and the list of 3 hooks for the reel.'''
     unwrap: true
 
 - evaluate:
-    summary: outputs[3]['summary']
-    hooks: list(load_json(res.replace("```json", "").replace("```", "")) for res in _)
+    summary: $ steps[3].output['summary']
+    hooks: $ list(load_json(res.replace("```json", "").replace("```", "")) for res in _)
 """)
 
 # Creating/Updating a task
