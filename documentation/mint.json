@@ -118,7 +118,7 @@
       "group": "Tutorials",
       "pages": [
         "docs/tutorials/browser-use",
-        "docs/tutorials/crawling-web-pages-with-rag",
+        "docs/tutorials/customer-support-rag",
         "docs/tutorials/trip-planning",
         "docs/tutorials/video-processing"
       ]
