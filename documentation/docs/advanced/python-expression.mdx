@@ -36,9 +36,50 @@ The underscore `_` is a special variable that serves three different purposes de
             "message": $ _  # _ is each question
 ```
 
+## The Special `$` Variable
+
+The `$` variable is used to differentiate between a Python expression and a string. When using the `$` variable, the expression is evaluated as a Python expression.
+
+```yaml
+- evaluate:
+    topic: $ _.topic  # Accesses the input "AI"
+```
+
+```yaml
+- prompt:
+    - role: user
+      content: |-
+        f'''
+        Please answer the following question:
+        {_.question} 
+        '''
+```
+<Note>
+In the prompt steps, the we use the `$ f''' '''` to access the python expression within the prompt. Moreover all python expression also need to be enclosed inside that `{ }`.
+Anything outside that will be considered as a string.
+</Note>
+
+## How to access the input and output of a step
+
+In any step, you can access the input and output of a step using the `steps[index].output` or `steps[index].input` variable. For example:
+
+```yaml
+- evaluate:
+    topic: $ steps[0].input.topic
+```
+
+```yaml
+- evaluate:
+    topic: $ steps[0].output.topic
+```
+
+In Julep, the steps are indexed from 0. So the first step is `steps[0]` and the second step is `steps[1]` and so on.
+Furthermore the first step input is nothing but the task input and the last step output is nothing but the output of the task.
+
+
 ## Where Python Expressions Are Used
 
-Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types table in the README](https://github.com/julep-ai/julep#types-of-workflow-steps).
+Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types table in the README](https://docs.julep.ai/docs/advanced/types-of-task-types).
 
 Common places include:
 - `evaluate` steps

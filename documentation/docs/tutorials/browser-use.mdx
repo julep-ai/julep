@@ -267,6 +267,19 @@ This recursive pattern ensures that the browser automation continues until eithe
   ```yaml YAML
   # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
   name: computer-use-task
+  description: A Julep agent that can use the computer tool to interact with the browser.
+
+  ########################################################
+  ################### INPUT SCHEMA #######################
+  ########################################################
+
+  input_schema:
+    type: object
+    properties:
+      goal:
+        type: string
+    required:
+      - goal
 
   ########################################################
   ####################### TOOLS ##########################
@@ -311,18 +324,6 @@ This recursive pattern ensures that the browser automation continues until eithe
     system:
       resource: session
       operation: chat
-
-  ########################################################
-  ################### INPUT SCHEMA #######################
-  ########################################################
-
-  input_schema:
-    type: object
-    properties:
-      goal:
-        type: string
-    required:
-      - goal
 
   ########################################################
   ################### MAIN WORKFLOW ######################
