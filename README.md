@@ -201,7 +201,7 @@ Imagine a Research AI agent that can do the following:
 
 Here's a complete example of a task definition:
 
-```yaml YAML
+```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
 name: Research Agent
 description: A research assistant that can search the web and send the summary to Discord
