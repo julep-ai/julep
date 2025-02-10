@@ -55,27 +55,8 @@ The `$` variable is used to differentiate between a Python expression and a stri
         '''
 ```
 <Note>
-In the prompt steps, the we use the `$ f''' '''` to access the python expression within the prompt. Moreover all python expression also need to be enclosed inside that `{ }`.
-Anything outside that will be considered as a string.
+To learn more about how to use the `$` variable, please refer to the [New Syntax](/docs/advanced/new-syntax) section.
 </Note>
-
-## How to access the input and output of a step
-
-In any step, you can access the input and output of a step using the `steps[index].output` or `steps[index].input` variable. For example:
-
-```yaml
-- evaluate:
-    topic: $ steps[0].input.topic
-```
-
-```yaml
-- evaluate:
-    topic: $ steps[0].output.topic
-```
-
-In Julep, the steps are indexed from 0. So the first step is `steps[0]` and the second step is `steps[1]` and so on.
-Furthermore the first step input is nothing but the task input and the last step output is nothing but the output of the task.
-
 
 ## Where Python Expressions Are Used
 

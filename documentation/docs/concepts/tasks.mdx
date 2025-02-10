@@ -130,6 +130,27 @@ Use outputs from previous steps:
 - evaluate: $ len(_.search_results)
 - if: $ _.count > 0
 ```
+<Accordion title="How to access the input and output of a step">
+
+In any step, you can access the input and output of a step using the `steps[index].output` or `steps[index].input` variable. For example:
+
+```yaml
+- evaluate:
+    topic: $ steps[0].input.topic
+```
+
+```yaml
+- evaluate:
+    topic: $ steps[0].output.topic
+```
+
+In Julep, the steps are indexed from 0. So the first step is `steps[0]` and the second step is `steps[1]` and so on.
+Furthermore the first step input is nothing but the task input and the last step output is nothing but the output of the task.
+</Accordion>
+
+<Note>
+To learn more about how to use the `$` variable and new syntax, please refer to the [New Syntax](/docs/advanced/new-syntax) section.
+</Note>
 
 #### Environment Context
 Access agent and session data:
