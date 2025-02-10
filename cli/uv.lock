@@ -809,7 +809,7 @@ wheels = [
 
 [[package]]
 name = "julep-cli"
-version = "0.1.0"
+version = "0.1.13"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
@@ -823,6 +823,7 @@ dependencies = [
     { name = "pydantic", extra = ["email"] },
     { name = "pyjwt" },
     { name = "questionary" },
+    { name = "requests" },
     { name = "stringcase" },
     { name = "textual" },
     { name = "trogon", extra = ["typer"] },
@@ -838,7 +839,6 @@ dependencies = [
 dev = [
     { name = "ipython" },
     { name = "ipywidgets" },
-    { name = "julep" },
     { name = "jupyterlab" },
     { name = "pip" },
     { name = "poethepoet" },
@@ -862,6 +862,7 @@ requires-dist = [
     { name = "pydantic", extras = ["email"], specifier = "~=2.10.2" },
     { name = "pyjwt", specifier = ">=2.10.1" },
     { name = "questionary", specifier = ">=2.1.0" },
+    { name = "requests", specifier = ">=2.32.3" },
     { name = "stringcase", specifier = ">=1.2.0" },
     { name = "textual", specifier = ">=1.0.0" },
     { name = "trogon", extras = ["typer"], specifier = ">=0.6.0" },
@@ -877,7 +878,6 @@ requires-dist = [
 dev = [
     { name = "ipython", specifier = ">=8.30.0" },
     { name = "ipywidgets", specifier = ">=8.1.5" },
-    { name = "julep", specifier = ">=1.43.1" },
     { name = "jupyterlab", specifier = ">=4.3.1" },
     { name = "pip", specifier = ">=24.3.1" },
     { name = "poethepoet", specifier = ">=0.31.1" },
