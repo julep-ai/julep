@@ -51,24 +51,36 @@ Notice the addition of the `$` prefix in the new syntax. This indicates that the
 - `_0` becomes `steps[0].input`
 - Added `$` prefix to indicate Python expressions
 
-### 2. Template Syntax Changes
+### 2. Template Syntax Changes Inside `prompt` Steps
 
-Another significant change is the removal of Jinja templates (`{{ }}`) in LogSteps and PromptSteps. Instead, we now use Python f-strings with the `$` prefix for dynamic content.
+Another significant change is the removal of Jinja templates (`{{ }}`) in `log` steps and `prompt` steps. Instead, we now use Python f-strings with the `$` prefix for dynamic content.
 
 #### Old Syntax (Using Jinja):
 ```yaml
 - prompt:
     - role: user
-      content: Write me a article about the topic: {{inputs[0].topic}}
+      content: Write me an article about the topic: {{inputs[0].topic}}
 ```
 
 #### New Syntax (Using f-strings):
 ```yaml
 - prompt:
     - role: user
-      content: $ f"Write me a article about the topic: {steps[0].input.topic}"
+      content: $ f"Write me an article about the topic: {steps[0].input.topic}"
     - role: user
       content: this is only text, no need for dollar sign prefix
+```
+
+For multiple lines, you can use a multiline f-string:
+
+```yaml
+- prompt:
+    - role: user
+      content: |-
+        $ f"""
+        Write me an article about the topic: {steps[0].input.topic}.
+        The article should be {steps[0].input.article_length} words long.
+        """
 ```
 
 <Note>
