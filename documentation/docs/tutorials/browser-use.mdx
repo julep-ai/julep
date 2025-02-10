@@ -266,7 +266,20 @@ This recursive pattern ensures that the browser automation continues until eithe
 <Accordion title="Complete Task YAML" icon="code">
   ```yaml YAML
   # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
-  name: computer-use-task
+  name: Julep Browser Use Task
+  description: A Julep agent that can use the computer tool to interact with the browser.
+
+  ########################################################
+  ################### INPUT SCHEMA #######################
+  ########################################################
+
+  input_schema:
+    type: object
+    properties:
+      goal:
+        type: string
+    required:
+      - goal
 
   ########################################################
   ####################### TOOLS ##########################
@@ -311,18 +324,6 @@ This recursive pattern ensures that the browser automation continues until eithe
     system:
       resource: session
       operation: chat
-
-  ########################################################
-  ################### INPUT SCHEMA #######################
-  ########################################################
-
-  input_schema:
-    type: object
-    properties:
-      goal:
-        type: string
-    required:
-      - goal
 
   ########################################################
   ################### MAIN WORKFLOW ######################
@@ -385,7 +386,7 @@ This recursive pattern ensures that the browser automation continues until eithe
           * You are already inside the browser.
           * You can't open new tabs or windows.
           * For now, rely on screenshots as the only way to see the browser.
-          * You can't don't have access to the browser's UI.
+          * You don't have access to the browser's UI.
           * YOU CANNOT WRITE TO THE SEARCH BAR OF THE BROWSER.
           </SYSTEM_CAPABILITY>
           <GOAL>

@@ -146,8 +146,22 @@ We're using two tools:
 
 <Accordion title="Complete Task YAML" icon="code">
   ```yaml YAML
-  name: Crawl a website and create a agent document
+  # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+  name: Julep Customer Support RAG Task
+  description: A Julep agent that can crawl a website and store the content in the document store.
 
+  ########################################################
+  ################### INPUT SCHEMA #######################
+  ########################################################
+
+  input_schema:
+    type: object
+    properties:
+      url:
+        type: string
+      pages_limit:
+        type: integer
+        
   ########################################################
   ################### TOOLS ##############################
   ########################################################

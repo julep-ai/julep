@@ -36,9 +36,31 @@ The underscore `_` is a special variable that serves three different purposes de
             "message": $ _  # _ is each question
 ```
 
+## The Special `$` Variable
+
+The `$` variable is used to differentiate between a Python expression and a string. When using the `$` variable, the expression is evaluated as a Python expression.
+
+```yaml
+- evaluate:
+    topic: $ _.topic  # Accesses the input "AI"
+```
+
+```yaml
+- prompt:
+    - role: user
+      content: |-
+        f'''
+        Please answer the following question:
+        {_.question} 
+        '''
+```
+<Note>
+To learn more about how to use the `$` variable, please refer to the [New Syntax](/docs/advanced/new-syntax) section.
+</Note>
+
 ## Where Python Expressions Are Used
 
-Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types table in the README](https://github.com/julep-ai/julep#types-of-workflow-steps).
+Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types table in the README](/docs/advanced/types-of-task-types).
 
 Common places include:
 - `evaluate` steps
