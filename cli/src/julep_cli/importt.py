@@ -2,13 +2,14 @@ import datetime
 import hashlib
 from pathlib import Path
 from typing import Annotated
+
 import typer
 from julep.types.agent import Agent
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
-from .app import console, error_console, app, local_tz
+from .app import app, console, error_console, local_tz
 from .models import LockedEntity
 from .utils import (
     add_agent_to_julep_yaml,
@@ -22,6 +23,7 @@ from .utils import (
 
 @app.command(name="import")
 def importt(
+    id: Annotated[str, typer.Option("--id", help="ID of the agent to import")],
     agent: Annotated[
         bool,
         typer.Option(
@@ -46,7 +48,6 @@ def importt(
             help="Import a tool",
         ),
     ] = False,
-    id: str = typer.Option(..., "--id", "-i", help="ID of the agent to import"),
     source: Annotated[
         Path,
         typer.Option(
@@ -56,7 +57,7 @@ def importt(
         ),
     ] = Path.cwd(),
     output: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output",
             "-o",

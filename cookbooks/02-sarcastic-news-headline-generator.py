@@ -8,13 +8,14 @@ from julep import Client
 AGENT_UUID = uuid.uuid4()
 TASK_UUID = uuid.uuid4()
 
-# Create Julep Client with the API Key
+# Get your API key from [here](https://dashboard.julep.ai/)
 api_key = os.getenv("JULEP_API_KEY")
 if not api_key:
     msg = "JULEP_API_KEY not found in environment variables"
     raise ValueError(msg)
 
-client = Client(api_key=api_key, environment="dev")
+# Creating Julep Client with the API Key
+client = Client(api_key=api_key, environment="production")
 
 # Define agent properties
 name = "Sarcastic News Bot"

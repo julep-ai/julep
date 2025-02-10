@@ -10,7 +10,7 @@ from rich.table import Table
 from rich.text import Text
 
 from .app import console, error_console, tasks_app
-from .utils import get_julep_client
+from .utils import DateTimeEncoder, get_julep_client
 
 
 @tasks_app.command()
@@ -180,7 +180,10 @@ def list(
             raise typer.Exit(1)
 
     if json_output:
-        typer.echo(json.dumps([task.model_dump() for task in tasks], indent=2))
+        console.print(
+            json.dumps([task.model_dump() for task in tasks], indent=2, cls=DateTimeEncoder),
+            highlight=True,
+        )
         return
 
     # Table format output

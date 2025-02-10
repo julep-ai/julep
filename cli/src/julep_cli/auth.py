@@ -34,16 +34,6 @@ def is_valid_jwt(token: str) -> bool:
 
 @app.command()
 def auth(
-    api_key: Annotated[
-        str,
-        Option(
-            "--api-key",
-            "-k",
-            help=f"See {dashboard_url}",
-            envvar="JULEP_API_KEY",
-        ),
-        {"validate": lambda x: x is not None and is_valid_jwt(x)},
-    ],
     environment: Annotated[
         Environment,
         Option(
@@ -53,6 +43,16 @@ def auth(
             envvar="JULEP_ENVIRONMENT",
         ),
         {"default": current_environment},  # Used inside the questionary prompt
+    ],
+    api_key: Annotated[
+        str,
+        Option(
+            "--api-key",
+            "-k",
+            help=f"See {dashboard_url}",
+            envvar="JULEP_API_KEY",
+        ),
+        {"validate": lambda x: x is not None and is_valid_jwt(x)},
     ],
     verify: Annotated[
         bool,
@@ -71,8 +71,8 @@ def auth(
         raise Exit(1)
 
     config = get_config()
-    config["api_key"] = api_key
     config["environment"] = str(environment)
+    config["api_key"] = api_key
 
     if verify:
         with Progress(

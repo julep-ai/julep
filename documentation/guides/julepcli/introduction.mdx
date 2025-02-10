@@ -80,7 +80,7 @@ To get started with the CLI, follow these steps:
 
   <Step title="Authenticate">
     ```bash
-    julep auth --environment production
+    julep auth
     ```
     The `auth` command is used to authenticate with the Julep platform. You need to provide your API key. You can find your API key [here](https://dashboard.julep.ai/).
   </Step>
@@ -108,20 +108,21 @@ To get started with the CLI, follow these steps:
     julep sync --force-local
     ```
     After editing the project, you can re-sync the project with the Julep platform. This will update the `julep-lock.json` file with the latest state of the project on the Julep platform.
+    You can use the `--watch` flag to watch the project for changes and re-sync automatically.
   </Step>
 
   <Step title="Run the project">
     ```bash
-    julep executions create --task-id {task.id} --input '{"input": "input"}'
+    julep run --task <task_id> --input '{"key": "value"}'
     ```
-    The `executions create` command is used to create a new execution for a task. You can find the task ID in the `julep-lock.json` file.
+    The `run` command is used to run a task. You can find the task ID in the `julep-lock.json` file.
   </Step>
 
   <Step title="View the execution">
     ```bash
-    julep logs --execution-id {execution.id} --tail
+    julep logs --execution-id <execution_id> --tail
     ```
-    The `logs` command is used to view the logs of an execution. When you run the `executions create` command, it will return the execution ID.
+    The `logs` command is used to view the logs of an execution. When you run the `run` command, it will return the execution ID.
   </Step>
 
 </Steps>
