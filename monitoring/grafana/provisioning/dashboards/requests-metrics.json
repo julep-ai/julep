@@ -23,7 +23,7 @@
         "bars": false,
         "dashLength": 10,
         "dashes": false,
-        "datasource": "Prometheus",
+        "datasource": null,
         "fill": 1,
         "gridPos": {
           "h": 9,
@@ -109,7 +109,7 @@
         "bars": false,
         "dashLength": 10,
         "dashes": false,
-        "datasource": "Prometheus",
+        "datasource": null,
         "fill": 1,
         "gridPos": {
           "h": 9,
@@ -195,7 +195,7 @@
         "bars": false,
         "dashLength": 10,
         "dashes": false,
-        "datasource": "Prometheus",
+        "datasource": null,
         "fill": 1,
         "gridPos": {
           "h": 9,
@@ -281,7 +281,7 @@
         "bars": false,
         "dashLength": 10,
         "dashes": false,
-        "datasource": "Prometheus",
+        "datasource": null,
         "fill": 1,
         "gridPos": {
           "h": 9,
@@ -383,6 +383,6 @@
     "timepicker": {},
     "timezone": "",
     "title": "FastAPI Request Latency, Count, and HTTP Errors",
-    "uid": "fastapi-latency-count-http-errors-dashboard",
+    "uid": "fastapi-latency-count",
     "version": 1
   }
