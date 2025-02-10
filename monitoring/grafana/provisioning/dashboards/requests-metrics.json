@@ -57,17 +57,35 @@
         "steppedLine": false,
         "targets": [
           {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{path!=\"/metrics\"}[5m])) by (le))",
+            "interval": "",
+            "legendFormat": "50th Percentile",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket{path!=\"/metrics\"}[5m])) by (le))",
+            "interval": "",
+            "legendFormat": "90th Percentile",
+            "refId": "B"
+          },
+          {
             "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path!=\"/metrics\"}[5m])) by (le))",
             "interval": "",
-            "legendFormat": "{{le}}",
-            "refId": "A"
+            "legendFormat": "95th Percentile",
+            "refId": "C"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{path!=\"/metrics\"}[5m])) by (le))",
+            "interval": "",
+            "legendFormat": "99th Percentile",
+            "refId": "D"
           }
         ],
         "thresholds": [],
         "timeFrom": null,
         "timeRegions": [],
         "timeShift": null,
-        "title": "Request Latency (95th Percentile)",
+        "title": "Request Latency Percentiles",
         "tooltip": {
           "shared": true,
           "sort": 0,
@@ -117,7 +135,7 @@
           "x": 12,
           "y": 0
         },
-        "id": 4,
+        "id": 3,
         "legend": {
           "avg": false,
           "current": false,
@@ -143,9 +161,9 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{path!=\"/metrics\"}[5m])) by (le))",
+            "expr": "sum(rate(http_request_duration_seconds_sum{path!=\"/metrics\"}[5m])) / sum(rate(http_request_duration_seconds_count{path!=\"/metrics\"}[5m]))",
             "interval": "",
-            "legendFormat": "{{le}}",
+            "legendFormat": "Average Latency",
             "refId": "A"
           }
         ],
@@ -153,7 +171,7 @@
         "timeFrom": null,
         "timeRegions": [],
         "timeShift": null,
-        "title": "Request Latency (99th Percentile)",
+        "title": "Request Latency",
         "tooltip": {
           "shared": true,
           "sort": 0,
