@@ -179,23 +179,26 @@ Store values for later use:
 Label a step to make it easier to identify and access those values later in any step:
 
 ```yaml YAML
-# Set a single value
+# Step 0: Set a single value
 - set:
     user_name: John
   label: get_user_name
 
-# Set multiple values
+# Step 1: Set multiple values
 - set:
     count: $ len(_.results)
     has_data: $ _.count > 0
   label: get_count_and_has_data
 ```
-In any steps following the label step, you can access the values set in the label step using the `$ label_name.attribute_name` syntax. For example:
+
+In any steps following the label step, you can access the values set in the label step using the `$ steps['label_name'].input.attribute_name` or `$ steps['label_name'].output.attribute_name` syntax. For example:
 
 ```yaml YAML
-- log: $ get_user_name.user_name
-- log: $ get_count_and_has_data.count
-- log: $ get_count_and_has_data.has_data
+- evaluate:
+    user_name: $ steps['get_user_name'].output.user_name
+- evaluate:
+    count: $ steps['get_count_and_has_data'].output.count
+    has_data: $ steps['get_count_and_has_data'].output.has_data
 ```
 ## Iteration Steps
 
