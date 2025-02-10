@@ -57,6 +57,10 @@
     {
       "name": "Support",
       "url": "mailto:developers@julep.ai"
+    },
+    {
+      "name": "🚨 New Syntax Update",
+      "url": "/docs/advanced/new-syntax"
     }
   ],
   "topbarCtaButton": {
@@ -172,7 +176,8 @@
         "docs/advanced/python-expression",
         "docs/advanced/types-of-task-steps",
         "docs/advanced/multi-agent-multi-user-sessions",
-        "docs/advanced/files"
+        "docs/advanced/files",
+        "docs/advanced/new-syntax"
       ]
     },
     {
