@@ -180,7 +180,7 @@ pip install julep-cli
 For more details, check out the [Julep CLI Documentation](https://docs.julep.ai/guides/julepcli/introduction).
 
 > [!NOTE]
-> Julep CLI is currently is still in early phase of development. Moreover, it's not yet available for Node.js.
+> Julep CLI is currently in an early phase of development. Moreover, it's not yet available for Node.js.
 
 ---
 
