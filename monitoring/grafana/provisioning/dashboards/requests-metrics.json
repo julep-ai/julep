@@ -57,7 +57,7 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"fastapi\", path!=\"/metrics\"}[5m])) by (le))",
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path!=\"/metrics\"}[5m])) by (le))",
             "interval": "",
             "legendFormat": "{{le}}",
             "refId": "A"
@@ -143,7 +143,7 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"fastapi\", path!=\"/metrics\"}[5m])) by (le))",
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{path!=\"/metrics\"}[5m])) by (le))",
             "interval": "",
             "legendFormat": "{{le}}",
             "refId": "A"
@@ -229,7 +229,7 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "sum(rate(http_requests_total{job=\"fastapi\", path!=\"/metrics\"}[5m]))",
+            "expr": "sum(rate(http_requests_total{path!=\"/metrics\"}[5m]))",
             "interval": "",
             "legendFormat": "Total Requests",
             "refId": "A"
@@ -275,6 +275,98 @@
           "align": false,
           "alignLevel": null
         }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": "Prometheus",
+        "fill": 1,
+        "gridPos": {
+          "h": 9,
+          "w": 24,
+          "x": 0,
+          "y": 18
+        },
+        "id": 8,
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "alertThreshold": true
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"4..\", path!=\"/metrics\"}[5m]))",
+            "interval": "",
+            "legendFormat": "4xx Errors",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\", path!=\"/metrics\"}[5m]))",
+            "interval": "",
+            "legendFormat": "5xx Errors",
+            "refId": "B"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "HTTP Errors",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Errors/s",
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        }
       }
     ],
     "refresh": "5s",
@@ -290,7 +382,7 @@
     },
     "timepicker": {},
     "timezone": "",
-    "title": "FastAPI Request Latency and Count",
-    "uid": "fastapi-latency-count-dashboard",
+    "title": "FastAPI Request Latency, Count, and HTTP Errors",
+    "uid": "fastapi-latency-count-http-errors-dashboard",
     "version": 1
   }
