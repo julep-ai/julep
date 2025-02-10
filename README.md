@@ -110,6 +110,7 @@ Julep is made up of the following components:
 
 - **Julep Platform**: The Julep platform is a cloud service that runs your workflows. It includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform.
 - **Julep SDKs**: Julep SDKs are a set of libraries for building workflows. There are SDKs for Python and JavaScript, with more on the way.
+- **Julep CLI**: The Julep CLI is a command-line tool that allows you to interact with the Julep platform directly from your terminal.
 - **Julep API**: The Julep API is a RESTful API that you can use to interact with the Julep platform.
 </p>
 
@@ -124,10 +125,12 @@ Think of Julep as a platform that combines both client-side and server-side comp
 
    - You can use the Julep SDK in your application to define agents, tasks, and workflows.
    - The SDK provides functions and classes that make it easy to set up and manage these components.
+   - You can use the Julep CLI to interact with the Julep platform directly from your terminal.
 
 2. **Julep Backend Service:**
 
    - The SDK communicates with the Julep backend over the network.
+   - The CLI communicates with the Julep backend via the SDK.
    - The backend handles execution of tasks, maintains session state, stores documents, and orchestrates workflows.
 
 3. **Integration with Tools and APIs:**
@@ -174,10 +177,6 @@ Julep CLI is a command-line tool that allows you to interact with the Julep plat
 
 ```bash
 pip install julep-cli
-
-# or
-
-pip install julep[cli]
 ```
 
 For more details, check out the [Julep CLI Documentation](https://docs.julep.ai/guides/julepcli/introduction).
