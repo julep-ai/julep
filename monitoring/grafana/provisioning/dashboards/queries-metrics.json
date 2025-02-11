@@ -54,7 +54,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "agents-api",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -148,7 +148,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "agents-api",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -250,7 +250,7 @@
       }
     },
     {
-      "datasource": null,
+      "datasource": "agents-api",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -299,7 +299,7 @@
       "type": "stat"
     },
     {
-      "datasource": null,
+      "datasource": "agents-api",
       "fieldConfig": {
         "defaults": {
           "custom": {}
