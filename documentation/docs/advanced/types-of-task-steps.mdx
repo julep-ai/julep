@@ -42,19 +42,19 @@ Send messages to the AI model:
 
 ```yaml YAML
 # Simple prompt
-- prompt: "What is your name?"
+- prompt: What is your name?
 
 # Multi-message prompt
 - prompt:
     - role: system
-      content: "You are a helpful assistant"
+      content: You are a helpful assistant
     - role: user
       content: "Hello!"
 
 # Prompt with settings
 - prompt:
     - role: user
-      content: "Generate a creative story"
+      content: Generate a creative story
   settings:
     model: "claude-3.5-sonnet"
     temperature: 0.8
@@ -91,12 +91,12 @@ Execute tools defined in the task:
 # Simple tool call
 - tool: web_search
   arguments:
-    query: "Latest AI news"
+    query: Latest AI news
 
 # Tool call with complex arguments
 - tool: process_data
   arguments:
-    input_data: _.previous_result
+    input_data: $ _.previous_result
     options:
       format: "json"
       validate: true
@@ -109,13 +109,13 @@ Perform calculations or data manipulation:
 ```yaml YAML
 # Simple evaluation
 - evaluate:
-    count: "len(_.results)"
+    count: $ len(_.results)
 
 # Multiple evaluations
 - evaluate:
-    total: "sum(_.numbers)"
-    average: "_.total / len(_.numbers)"
-    formatted: "f'Average: {_.average:.2f}'"
+    total: $ sum(_.numbers)
+    average: $ _.total / len(_.numbers)
+    formatted: $ f'Average: {_.average:.2f}'
 ```
 
 <Info>
@@ -166,14 +166,40 @@ Store values for later use:
 ```yaml YAML
 # Set a single value
 - set:
-    user_name: "John"
+    user_name: John
 
 # Set multiple values
 - set:
-    count: "len(_.results)"
-    has_data: "_.count > 0"
+    count: $ len(_.results)
+    has_data: $ _.count > 0
 ```
 
+### Label Step
+
+Label a step to make it easier to identify and access those values later in any step:
+
+```yaml YAML
+# Step 0: Set a single value
+- set:
+    user_name: John
+  label: get_user_name
+
+# Step 1: Set multiple values
+- set:
+    count: $ len(_.results)
+    has_data: $ _.count > 0
+  label: get_count_and_has_data
+```
+
+In any steps following the label step, you can access the values set in the label step using the `$ steps['label_name'].input.attribute_name` or `$ steps['label_name'].output.attribute_name` syntax. For example:
+
+```yaml YAML
+- evaluate:
+    user_name: $ steps['get_user_name'].output.user_name
+- evaluate:
+    count: $ steps['get_count_and_has_data'].output.count
+    has_data: $ steps['get_count_and_has_data'].output.has_data
+```
 ## Iteration Steps
 
 ### Foreach Step
@@ -183,19 +209,19 @@ Iterate over a collection:
 ```yaml YAML
 # Simple foreach
 - foreach:
-    in: _.items
+    in: $ _.items
     do:
-      - log: "Processing {{_}}"
+      - log: $ f'Processing {_}'
 
 # Foreach with complex processing
 - foreach:
-    in: _.documents
+    in: $ _.documents
     do:
       - tool: analyze
         arguments:
-          text: _.content
+          text: $ _.content
       - evaluate:
-          results: "_ + [_.analysis]"
+          results: $ _ + [_.analysis]
 ```
 
 ### Map-Reduce Step
@@ -204,19 +230,19 @@ Process collections in parallel:
 
 ```yaml YAML
 # Simple map-reduce
-- over: _.urls
+- over: $ _.urls
   map:
     tool: fetch_content
     arguments:
-      url: _
-  reduce: results + [_]
+      url: $ _
+  reduce: $ results + [_]
 
 # Map-reduce with parallelism
-- over: _.queries
+- over: $ _.queries
   map:
     tool: web_search
     arguments:
-      query: _
+      query: $ _
   parallelism: 5 # Number of parallel steps to execute
 ```
 
@@ -234,7 +260,7 @@ Execute steps concurrently:
 - parallel:
   tool: task1
   arguments:
-    param: "value1"
+    param: value1
 ```
 
 <Note>
@@ -249,27 +275,27 @@ Conditional execution:
 
 ```yaml YAML
 # Simple if
-- if: _.count > 0
+- if: $ _.count > 0
   then:
-    - log: "Found results"
+    - log: Found results
 
 # If-else
-- if: _.score > 0.8
+- if: $ _.score > 0.8
   then:
-    - log: "High score"
+    - log: High score
   else:
-    - log: "Low score"
+    - log: Low score
 
 # Nested conditions
-- if: _.type == "A"
+- if: $ _.type == "A"
   then:
-    - if: _.value > 10
+    - if: $ _.value > 10
       then:
-        - log: "High value A"
+        - log: High value A
       else:
-        - log: "Low value A"
+        - log: Low value A
   else:
-    - log: "Not type A"
+    - log: Not type A
 ```
 
 ### Switch Step
@@ -279,15 +305,15 @@ Multiple condition handling:
 ```yaml YAML
 # Switch statement
 - switch:
-    - case: _.category == "A"
+    - case: $ _.category == "A"
       then:
-        - log: "Category A"
-    - case: _.category == "B"
+        - log: Category A
+    - case: $ _.category == "B"
       then:
-        - log: "Category B"
-    - case: _  # Default case
+        - log: Category B
+    - case: $ _  # Default case
       then:
-        - log: "Unknown category"
+        - log: Unknown category
 ```
 
 ## Other Control Flow
@@ -314,14 +340,14 @@ Return values from workflow:
 
 ```yaml YAML
 # Simple return
-- return: _.result
+- return: $ _.result
 
 # Structured return
 - return:
-    data: _.processed_data
+    data: $ _.processed_data
     metadata:
-      count: _.count
-      timestamp: "datetime.now().isoformat()"
+      count: $ _.count
+      timestamp: $ datetime.now().isoformat()
 ```
 
 ### Yield Step
@@ -333,15 +359,15 @@ Execute subworkflows:
 - yield:
     workflow: process_data
     arguments:
-      input_data: _.raw_data
+      input_data: $ _.raw_data
 
 # Yield with result handling
 - yield:
     workflow: analyze
     arguments:
-      text: _.content
+      text: $ _.content
 - evaluate:
-    analysis_result: _
+    analysis_result: $ _
 ```
 
 ### Log Step
@@ -349,7 +375,7 @@ Execute subworkflows:
 Log messages or specific values:
 
 ```yaml YAML
-- log: "Processing completed for item {{item_id}}"
+- log: $ f'Processing completed for item {item_id}'
 ```
 
 ### Error Step
@@ -357,7 +383,7 @@ Log messages or specific values:
 Handle errors by specifying an error message:
 
 ```yaml YAML
-- error: "Invalid input provided"
+- error: Invalid input provided
 ```
 
 ## Example: Complex Workflow
@@ -368,52 +394,52 @@ Here's an example combining various step types:
 main:
   # Initial setup
   - evaluate:
-      start_time: "datetime.now().isoformat()"
+      start_time: $ datetime.now().isoformat()
   
   # Get user input
   - wait_for_input:
       info:
-        message: "Enter search topics (comma-separated)"
+        message: Enter search topics (comma-separated)
   
   # Process input
   - evaluate:
-      topics: "_.input.split(',')"
+      topics: $ _.input.split(',')
   
   # Parallel search
   - map_reduce:
-    over: _.topics
+    over: $ _.topics
     map:
       - parallel:
           - tool: web_search
             arguments:
-              query: _
+              query: $ _
           - tool: arxiv_search
             arguments:
-              query: _
+              query: $ _
     parallelism: 3
   
   # Process results
   - foreach:
-      in: _
+      in: $ _
       do:
         - evaluate:
-            web_results: _[0]
-            academic_results: _[1]
-        - if: "len(_.web_results) > 0 or len(_.academic_results) > 0"
+            web_results: $ _[0]
+            academic_results: $ _[1]
+        - if: $ len(_.web_results) > 0 or len(_.academic_results) > 0
           then:
             - tool: summarize
               arguments:
-                texts: _.web_results + _.academic_results
+                texts: $ _.web_results + _.academic_results
           else:
             - evaluate:
-                summary: "'No results found'"
+                summary: No results found
   
   # Return final results
   - return:
-      results: _
+      results: $ _
       metadata:
-        start_time: _.start_time
-        end_time: "datetime.now().isoformat()"
+        start_time: $ _.start_time
+        end_time: $ datetime.now().isoformat()
 ```
 
 ## Best Practices

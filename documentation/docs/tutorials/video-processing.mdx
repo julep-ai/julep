@@ -80,16 +80,16 @@ We're using three main integrations:
 <Steps>
   <Step title="Initial Video Upload">
     ```yaml
-    - tool: cloudinary_upload
-      arguments:
-        file: '_0.upload_file'
-        public_id: '_0.public_id'
-        upload_params:
-          resource_type: "'video'"
+  - tool: cloudinary_upload
+    arguments:
+      file: $ steps[0].input.video_url
+      public_id: $ steps[0].input.public_id
+      upload_params:
+        resource_type: video
     ```
 
-    <Accordion title="Understanding the use of the _0 variable">
-      The `_0` variable refers to the initial input object passed to the task. It's used to access the input parameters defined in the input schema.
+    <Accordion title="Understanding the use of the steps[0].input variable">
+      The `steps[0].input` variable refers to the initial input object passed to the task. It's used to access the input parameters defined in the input schema.
     </Accordion>
 
     This step:
@@ -102,13 +102,13 @@ We're using three main integrations:
     ```yaml
     - tool: cloudinary_upload
       arguments:
-        file: '_0.upload_file'
-        public_id: '_0.public_id'
+        file: $ steps[0].input.upload_file
+        public_id: $ steps[0].input.public_id
         upload_params:
-          resource_type: "'video'"
+          resource_type: video
           transformation:
-            - start_offset: "0"
-              end_offset: "30"
+            - start_offset: 0
+              end_offset: 30
     ```
 
     This step:
@@ -123,7 +123,7 @@ We're using three main integrations:
         content: 
           - type: image_url
             image_url:
-              url: "{{trimmed_video_url}}"
+              url: trimmed_video_url
           - type: text
             text: |-
               Which speakers are speaking in the video? And where does each of them sit?
@@ -139,7 +139,7 @@ We're using three main integrations:
     ```yaml
     - evaluate:
         speakers_transformations: |-
-          [
+          $ [
           transform
           for speaker in _.speakers_json
             for transform in [
@@ -169,10 +169,10 @@ We're using three main integrations:
     ```yaml
     - tool: cloudinary_upload
       arguments:
-        file: '_0.upload_file'
-        public_id: '_0.public_id'
+        file: $ steps[0].input.upload_file
+        public_id: $ steps[0].input.public_id
         upload_params:
-          resource_type: "'video'"
+          resource_type: video
           transformation: _.speakers_transformations
     ```
 
@@ -186,7 +186,8 @@ We're using three main integrations:
 <Accordion title="Complete Task YAML" icon="code">
   ```yaml YAML
   # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
-  name: Video Processing With Natural Language
+  name: Julep Video Processing Task
+  description: A Julep agent that can process and analyze videos using Cloudinary
 
   ########################################################
   ################### INPUT SCHEMA #######################
@@ -228,10 +229,10 @@ We're using three main integrations:
   # Step #0 - Upload the video to cloudinary
   - tool: cloudinary_upload
     arguments:
-      file: '_0.video_url'
-      public_id: '_0.public_id'
+      file: $ steps[0].input.video_url
+      public_id: $ steps[0].input.public_id
       upload_params:
-        resource_type: "'video'"
+        resource_type: video
 
   # Step #1 - Analyze the video content with a prompt
   - prompt:
@@ -268,12 +269,12 @@ We're using three main integrations:
             ``
         - type: image_url
           image_url:
-            url: "{{{{_.url}}}}"
+            url: $ _.url
 
         - type: text
           text: |-
-            Hey, check the video above, I need to apply the following transformations using cloudinary.
-            {{{{_0.transformation_prompt}}}}
+            $ f'''Hey, check the video above, I need to apply the following transformations using cloudinary.
+            {steps[0].input.transformation_prompt}'''
 
     unwrap: true
     settings:
@@ -281,20 +282,22 @@ We're using three main integrations:
 
   # Step #2 - Extract the json from the model's response
   - evaluate:
-      model_transformation: load_json(_[_.find("```json")+7:][:_[_.find("```json")+7:].find("```")])
+      model_transformation: >-
+        $ load_json(
+          _[_.find("```json")+7:][:_[_.find("```json")+7:].find("```")])
 
   # Step #3 - Upload the video to cloudinary
   - tool: cloudinary_upload
     arguments:
-      file: '_0.video_url'
-      public_id: '_0.public_id'
+      file: $ steps[0].input.video_url
+      public_id: $ steps[0].input.public_id
       upload_params:
-        transformation: '_.model_transformation'
-        resource_type: "'video'"
+        transformation: $ _.model_transformation
+        resource_type: video
 
   # Step #4 - Evaluate the transformed video url
   - evaluate:
-      transformed_video_url: '_.url'
+      transformed_video_url: $ _.url
   ```
 </Accordion>
 

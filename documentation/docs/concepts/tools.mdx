@@ -45,7 +45,7 @@ tools:
 main:
   - tool: send_notification
     arguments:
-      content: '"hi"' # <-- python expression
+      content: "hi"
 ```
 
 <Note>
@@ -74,7 +74,7 @@ tools:
 main:
   - tool: list_agents
     arguments:
-      limit: 10 # <-- python expression
+      limit: $ 10
 ```
 
 <Accordion title="Available system resources and operations">
@@ -155,7 +155,7 @@ tools:
 main:
   - tool: wikipedia_search
     arguments:
-      query: "'Julep'"
+      query: "Julep"
 ```
 
 <Info>
@@ -179,7 +179,7 @@ main:
   - tool: hello
     arguments:
       json:
-        test: _.input # <-- python expression
+        test: $ _.input # <-- python expression
 ```
 
 ## How to Use Tools
@@ -247,7 +247,7 @@ tools:
 main:
   - tool: wikipedia_search
     arguments:
-      query: "'Julep'"
+      query: "Julep"
   ```
 
   ```python Python

@@ -16,29 +16,51 @@ The underscore `_` is a special variable that serves three different purposes de
 ```yaml
 # If task is executed with input `{"topic": "AI"}`
 - evaluate:
-    topic: _.topic  # Accesses the input "AI"
+    topic: $ _.topic  # Accesses the input "AI"
 ```
 
 2. **Previous Step Output**: In any subsequent step, `_` contains the output from the previous step:
 ```yaml
 - evaluate:
-    results: _.split('\n')  # Splits previous step's output into lines
+    results: $ _.split('\n')  # Splits previous step's output into lines
 ```
 
 3. **Iterator Value**: In `foreach` and `map` steps, `_` represents the current item being iterated.
 ```yaml
 # If the task is executed with input `{"questions": ["What is AI?", "What is Julep?"]}`
 - foreach:
-    in: _.questions
+    in: $ _.questions
     do:
       - wait_for_input:
           info:
-            "message": _  # _ is each question
+            "message": $ _  # _ is each question
 ```
+
+## The Special `$` Variable
+
+The `$` variable is used to differentiate between a Python expression and a string. When using the `$` variable, the expression is evaluated as a Python expression.
+
+```yaml
+- evaluate:
+    topic: $ _.topic  # Accesses the input "AI"
+```
+
+```yaml
+- prompt:
+    - role: user
+      content: |-
+        f'''
+        Please answer the following question:
+        {_.question} 
+        '''
+```
+<Note>
+To learn more about how to use the `$` variable, please refer to the [New Syntax](/docs/advanced/new-syntax) section.
+</Note>
 
 ## Where Python Expressions Are Used
 
-Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types table in the README](https://github.com/julep-ai/julep#types-of-workflow-steps).
+Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types table in the README](/docs/advanced/types-of-task-types).
 
 Common places include:
 - `evaluate` steps
@@ -99,13 +121,13 @@ Example using these functions in an evaluate step:
 ```yaml
 - evaluate:
     # Parse JSON string with size limit of 1MB
-    data: json.loads(_.json_string)
+    data: $ json.loads(_.json_string)
     
     # Parse YAML string with size limit of 1MB
-    config: yaml.safe_load(_.yaml_string)
+    config: $ yaml.safe_load(_.yaml_string)
     
     # Extract JSON from text that might contain markdown code blocks
-    extracted_content: extract_json('Here is some JSON: ```json\n{"key": "value"}\n```')
+    extracted_content: $ extract_json('Here is some JSON: ```json\n{"key": "value"}\n```')
 ```
 
 ### CSV Functions
@@ -191,7 +213,7 @@ name: Data Processing Task
 main:
   # Using _ as input
   - evaluate:
-      csv_data: [row for row in csv.reader("a,b,c\n1,2,3")]
+      csv_data: $ [row for row in csv.reader("a,b,c\n1,2,3")]
 ```
 
 ### Standard Library Modules
@@ -220,19 +242,19 @@ name: Data Processing Task
 main:
   # Using _ as input
   - evaluate:
-      topics: _.topics  # Access input topics
+      topics: $ _.topics  # Access input topics
 
   # Using _ as previous output
   - evaluate:
-      filtered_topics: [t for t in _.topics if len(t) > 3]
+      filtered_topics: $ [t for t in _.topics if len(t) > 3]
 
   # Using _ in foreach
   - foreach:
-      in: _.filtered_topics
+      in: $ _.filtered_topics
       do:
         - tool: web_search
           arguments:
-            query: "'Latest news about ' + _"  # _ is each topic
+            query: $ 'Latest news about ' + _ # _ is each topic
 ```
 
 ## Security
