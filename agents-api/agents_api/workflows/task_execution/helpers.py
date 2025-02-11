@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Any, TypeVar
 
 from temporalio import workflow
-from temporalio.exceptions import ActivityError, ApplicationError
+from temporalio.exceptions import ActivityError, ApplicationError, ChildWorkflowError
 
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
 
@@ -77,15 +77,21 @@ async def continue_as_child(
             info.workflow_type, *args, **kwargs
         )
 
-    return await run(
-        args=[
-            execution_input,
-            start,
-            current_input,
-        ],
-        retry_policy=DEFAULT_RETRY_POLICY,
-        memo=workflow.memo() | user_state,
-    )
+    try:
+        return await run(
+            args=[
+                execution_input,
+                start,
+                current_input,
+            ],
+            retry_policy=DEFAULT_RETRY_POLICY,
+            memo=workflow.memo() | user_state,
+        )
+    except Exception as e:
+        while isinstance(e, ChildWorkflowError) and getattr(e, "__cause__", None):
+            e = e.__cause__
+        e.transitioned = True
+        raise e
 
 
 async def execute_switch_branch(
@@ -231,6 +237,7 @@ async def execute_map_reduce_step(
 
         map_reduce_execution_input = execution_input.model_copy()
         map_reduce_execution_input.task = map_reduce_task
+        # NOTE: Step needs to be refactored to support multiple steps
         map_reduce_next_target = TransitionTarget(workflow=workflow_name, step=0)
 
         output = await continue_as_child(
