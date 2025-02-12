@@ -589,7 +589,7 @@ To generate a JWT token, `jwt-cli` is required. Kindly install the same before p
 Use the following command and replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token:
 
 ```bash
-jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
+jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -d '+10 days' +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
 ```
 
 This command generates a JWT token that will be valid for 10 days.
