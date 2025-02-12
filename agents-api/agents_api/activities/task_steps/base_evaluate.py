@@ -18,6 +18,8 @@ from ..utils import get_evaluator
 
 
 def backwards_compatibility(expr: str) -> str:
+    expr = expr.strip()
+
     if expr.startswith("$ "):
         return expr
 

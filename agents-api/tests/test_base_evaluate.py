@@ -227,3 +227,8 @@ async def _():
     exprs = "hello world"
     result = backwards_compatibility(exprs)
     assert result == "hello world"
+
+    # Test spaces at the beginning and end
+    exprs = "  _[0]  "
+    result = backwards_compatibility(exprs)
+    assert result == "$ _[0]"
