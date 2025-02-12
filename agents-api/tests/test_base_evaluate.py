@@ -1,7 +1,7 @@
 import uuid
 from unittest.mock import patch
 
-from agents_api.activities.task_steps.base_evaluate import base_evaluate
+from agents_api.activities.task_steps.base_evaluate import base_evaluate, backwards_compatibility
 from agents_api.autogen.openapi_model import (
     Agent,
     TaskSpecDef,
@@ -136,3 +136,89 @@ async def _():
             exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs
         )
         assert result == 15
+
+@test("utility: base_evaluate - backwards compatibility")
+async def _():
+    exprs = "[[x + 5]]"
+    values = {"x": 5, "inputs": {1: 1}, "outputs": {1: 2}}
+    result = await base_evaluate(exprs, values=values)
+    assert result == [[10]]
+
+    # Test inputs[] and outputs[] access
+    exprs = "inputs[1]"
+    result = await base_evaluate(exprs, values=values)
+    assert result == 1
+
+    exprs = "outputs[1]"
+    result = await base_evaluate(exprs, values=values)
+    assert result == 2
+
+    # Test template expressions
+    exprs = "Value is {{x}}"
+    result = await base_evaluate(exprs, values=values)
+    assert result == "Value is 5"
+
+    # Test underscore expressions
+    exprs = "_"
+    result = await base_evaluate(exprs, values={"_": 42})
+    assert result == 42
+
+    exprs = "_.field[0]"
+    result = await base_evaluate(exprs, values={"_": {"field": [10]}})
+    assert result == 10
+
+    exprs = "_[0]"
+    result = await base_evaluate(exprs, values={"_": [7]})
+    assert result == 7
+
+@test("utility: backwards_compatibility")
+async def _():
+    # Test $ prefix - should return unchanged
+    exprs = "$ x + 5"
+    result = backwards_compatibility(exprs)
+    assert result == "$ x + 5"
+
+    # Test template expressions
+    exprs = "{{x + 5}}"
+    result = backwards_compatibility(exprs)
+    assert result == "$ f'''{x + 5}'''"
+
+    exprs = "Value is {{x}} and {{y}}"
+    result = backwards_compatibility(exprs)
+    assert result == "$ f'''Value is {x} and {y}'''"
+
+    # Test bracket expressions
+    exprs = "[x + 5]"
+    result = backwards_compatibility(exprs)
+    assert result == "$ [x + 5]"
+
+    exprs = "[[nested]]"
+    result = backwards_compatibility(exprs)
+    assert result == "$ [[nested]]"
+
+    # Test underscore expressions
+    exprs = "_[0]"
+    result = backwards_compatibility(exprs)
+    assert result == "$ _[0]"
+
+    exprs = "_.field[0]"
+    result = backwards_compatibility(exprs)
+    assert result == "$ _.field[0]"
+
+    exprs = "_"
+    result = backwards_compatibility(exprs)
+    assert result == "$ _"
+
+    # Test inputs/outputs access
+    exprs = "input for input in inputs[key]"
+    result = backwards_compatibility(exprs)
+    assert result == "$ input for input in inputs[key]"
+
+    exprs = "output for output in outputs[key]"
+    result = backwards_compatibility(exprs)
+    assert result == "$ output for output in outputs[key]"
+
+    # Test plain string - should return unchanged
+    exprs = "hello world"
+    result = backwards_compatibility(exprs)
+    assert result == "hello world"
