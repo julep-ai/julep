@@ -599,7 +599,7 @@ This command generates a JWT token that will be valid for 10 days.
 - **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.
 - **Julep SDK**: The Julep SDK is a Python/Node.js library that allows you to interact with the Julep API.
 
-> **Note:** SDK in Multi-Tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK. Fruthermore while itiatlizng the client you will need set the environment to `local_multi_tenant` and the api key to the JWT token you generated in the previous step. Whereas in Single-Tenant mode you can interact with the SDK directly without the need for the API KEY and set the environment to `local`.
+> **Note:** SDK in Multi-Tenant mode, you need to generate a JWT token locally that acts as an API KEY to interact with the SDK. Furthermore, while initializing the client you will need to set the environment to `local_multi_tenant` and the api key to the JWT token you generated in the previous step. Whereas in Single-Tenant mode you can interact with the SDK directly without the need for the API KEY and set the environment to `local`."
 
 ### 7. Troubleshooting
 
