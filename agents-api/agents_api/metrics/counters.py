@@ -66,13 +66,12 @@ def query_metrics(metric_label: str, id_field_name: str = "developer_id"):
             @wraps(func)
             async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
                 fld_id = kwargs.get(id_field_name, "not_set")
-                labels_dict = {id_field_name: fld_id, "query_name": metric_label}
-                counter.labels(**labels_dict).inc()
+                counter.labels(fld_id, metric_label).inc()
                 start_time = time.time()
                 result = await func(*args, **kwargs)
                 end_time = time.time() - start_time
-                summary.labels(**labels_dict).observe(end_time)
-                hist.labels(**labels_dict).observe(end_time)
+                summary.labels(fld_id, metric_label).observe(end_time)
+                hist.labels(fld_id, metric_label).observe(end_time)
                 return result
 
             return async_wrapper
@@ -80,13 +79,12 @@ def query_metrics(metric_label: str, id_field_name: str = "developer_id"):
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             fld_id = kwargs.get(id_field_name, "not_set")
-            labels_dict = {id_field_name: fld_id, "query_name": metric_label}
-            counter.labels(**labels_dict).inc()
+            counter.labels(fld_id, metric_label).inc()
             start_time = time.time()
             result = func(*args, **kwargs)
             end_time = time.time() - start_time
-            summary.labels(**labels_dict).observe(end_time)
-            hist.labels(**labels_dict).observe(end_time)
+            summary.labels(fld_id, metric_label).observe(end_time)
+            hist.labels(fld_id, metric_label).observe(end_time)
             return result
 
         return wrapper
