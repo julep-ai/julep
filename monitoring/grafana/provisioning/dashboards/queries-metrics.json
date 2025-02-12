@@ -96,7 +96,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(db_query_counter[1m])) by (endpoint, method)",
+          "expr": "sum(rate(db_query_counter_total[$__rate_interval]))",
           "interval": "",
           "legendFormat": "{{endpoint}} {{method}}",
           "refId": "A"
@@ -190,22 +190,10 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "db_query_latency_summary{quantile=\"0.5\"}",
+          "expr": "sum(rate(db_query_latency_summary_sum[$__rate_interval])) / sum(rate(db_query_latency_summary_count[$__rate_interval]))",
           "interval": "",
-          "legendFormat": "P50",
+          "legendFormat": "Avg",
           "refId": "A"
-        },
-        {
-          "expr": "db_query_latency_summary{quantile=\"0.9\"}",
-          "interval": "",
-          "legendFormat": "P90",
-          "refId": "B"
-        },
-        {
-          "expr": "db_query_latency_summary{quantile=\"0.99\"}",
-          "interval": "",
-          "legendFormat": "P99",
-          "refId": "C"
         }
       ],
       "thresholds": [],
@@ -228,7 +216,7 @@
       },
       "yaxes": [
         {
-          "format": "ms",
+          "format": "s",
           "label": "Latency (ms)",
           "logBase": 1,
           "max": null,
@@ -277,26 +265,26 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.5, rate(db_query_latency_hist_bucket[1m]))",
+          "expr": "histogram_quantile(0.5, rate(db_query_latency_hist_bucket[$__rate_interval]))",
           "interval": "",
           "legendFormat": "P50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.9, rate(db_query_latency_hist_bucket[1m]))",
+          "expr": "histogram_quantile(0.9, rate(db_query_latency_hist_bucket[$__rate_interval]))",
           "interval": "",
           "legendFormat": "P90",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, rate(db_query_latency_hist_bucket[1m]))",
+          "expr": "histogram_quantile(0.99, rate(db_query_latency_hist_bucket[$__rate_interval]))",
           "interval": "",
           "legendFormat": "P99",
           "refId": "C"
         }
       ],
       "title": "DB Query Latency Histogram",
-      "type": "stat"
+      "type": "timeseries"
     },
     {
       "datasource": "agents-api",
@@ -326,14 +314,14 @@
       },
       "targets": [
         {
-          "expr": "rate(db_query_latency_hist_sum[1m]) / rate(db_query_latency_hist_count[1m])",
+          "expr": "sum(rate(db_query_latency_hist_sum[$__rate_interval])) / sum(rate(db_query_latency_hist_count[$__rate_interval]))",
           "interval": "",
           "legendFormat": "Avg",
           "refId": "A"
         }
       ],
       "title": "DB Query Average Latency",
-      "type": "stat"
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",

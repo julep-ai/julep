@@ -57,25 +57,25 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[$__rate_interval])) by (le))",
           "interval": "",
           "legendFormat": "50th Percentile",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[$__rate_interval])) by (le))",
           "interval": "",
           "legendFormat": "90th Percentile",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[$__rate_interval])) by (le))",
           "interval": "",
           "legendFormat": "95th Percentile",
           "refId": "C"
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[$__rate_interval])) by (le))",
           "interval": "",
           "legendFormat": "99th Percentile",
           "refId": "D"
@@ -161,7 +161,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(http_request_duration_seconds_sum[5m])) / sum(rate(http_request_duration_seconds_count[5m]))",
+          "expr": "sum(rate(http_request_duration_seconds_sum[$__rate_interval])) / sum(rate(http_request_duration_seconds_count[$__rate_interval]))",
           "interval": "",
           "legendFormat": "Average Latency",
           "refId": "A"
@@ -247,7 +247,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[5m]))",
+          "expr": "sum(rate(http_requests_total[$__rate_interval]))",
           "interval": "",
           "legendFormat": "Total Requests",
           "refId": "A"
@@ -257,7 +257,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Request Count",
+      "title": "Request Frequency",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -419,13 +419,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status=~\"4..\"}[5m]))",
+          "expr": "sum(rate(http_requests_total{status=~\"4..\"}[$__rate_interval]))",
           "interval": "",
           "legendFormat": "4xx Errors",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))",
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[$__rate_interval]))",
           "interval": "",
           "legendFormat": "5xx Errors",
           "refId": "B"
