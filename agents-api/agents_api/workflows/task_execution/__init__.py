@@ -737,10 +737,12 @@ class TaskExecutionWorkflow:
                 e = e.__cause__
             if isinstance(e, CancelledError):
                 workflow.logger.info(f"Step {context.cursor.step} cancelled")
-                await transition(context, type="cancelled", output="Workflow Cancelled")
+                if not getattr(e, "transitioned", False):
+                    await transition(context, type="cancelled", output="Workflow Cancelled")
                 raise
             workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
-            await transition(context, type="error", output=str(e))
+            if not getattr(e, "transitioned", False):
+                await transition(context, type="error", output=str(e))
             err_msg = (
                 f"Activity {activity} threw error: {e}"
                 if activity
@@ -755,7 +757,8 @@ class TaskExecutionWorkflow:
         error = outcome.error
         if error is not None:
             workflow.logger.error(f"Error in step {context.cursor.step}: {error}")
-            await transition(context, type="error", output=error)
+            if not getattr(error, "transitioned", False):
+                await transition(context, type="error", output=error)
             msg = f"Step {type(context.current_step).__name__} threw error: {error}"
             raise ApplicationError(msg)
 
@@ -769,10 +772,12 @@ class TaskExecutionWorkflow:
                 e = e.__cause__
             if isinstance(e, CancelledError | AsyncioCancelledError):
                 workflow.logger.info(f"Step {context.cursor.step} cancelled")
-                await transition(context, type="cancelled", output="Workflow Cancelled")
+                if not getattr(e, "transitioned", False):
+                    await transition(context, type="cancelled", output="Workflow Cancelled")
                 raise
             workflow.logger.error(f"Error in step {context.cursor.step}: {e}")
-            await transition(context, type="error", output=str(e))
+            if not getattr(e, "transitioned", False):
+                await transition(context, type="error", output=str(e))
             msg = f"Step {type(context.current_step).__name__} threw error: {e}"
             raise ApplicationError(msg) from e
 

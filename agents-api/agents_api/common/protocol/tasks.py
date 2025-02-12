@@ -264,6 +264,8 @@ class StepContext(BaseModel):
             steps[i] = step
 
         dump["steps"] = steps
+        dump["inputs"] = {i: step["input"] for i, step in steps.items()}
+        dump["outputs"] = {i: step["output"] for i, step in steps.items() if "output" in step}
         return dump | {"_": current_input}
 
 
