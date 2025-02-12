@@ -1,7 +1,10 @@
 import uuid
 from unittest.mock import patch
 
-from agents_api.activities.task_steps.base_evaluate import base_evaluate, backwards_compatibility
+from agents_api.activities.task_steps.base_evaluate import (
+    backwards_compatibility,
+    base_evaluate,
+)
 from agents_api.autogen.openapi_model import (
     Agent,
     TaskSpecDef,
@@ -137,6 +140,7 @@ async def _():
         )
         assert result == 15
 
+
 @test("utility: base_evaluate - backwards compatibility")
 async def _():
     exprs = "[[x + 5]]"
@@ -170,6 +174,7 @@ async def _():
     exprs = "_[0]"
     result = await base_evaluate(exprs, values={"_": [7]})
     assert result == 7
+
 
 @test("utility: backwards_compatibility")
 async def _():
