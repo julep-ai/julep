@@ -4,13 +4,29 @@
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="320" height="160" />
 
   <p>
-    <a href="https://docs.julep.ai"><img src="https://img.shields.io/badge/Documentation-000000?style=for-the-badge&logo=github&logoColor=white" alt="Documentation"></a>
-    <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/@julep/sdk?style=for-the-badge&logo=npm" alt="NPM Version"></a>
-    <a href="https://pypi.org/project/julep/"><img src="https://img.shields.io/pypi/v/julep?style=for-the-badge&logo=python" alt="PyPI Version"></a>
+    <a href="https://dashboard.julep.ai">
+      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key">
+    </a>
+    <a href="https://docs.julep.ai">
+      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=for-the-badge&logo=gitbook&logoColor=white" alt="Documentation">
+    </a>
   </p>
   <p>
-    <a href="https://hub.docker.com/u/julepai"><img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=for-the-badge&logo=docker" alt="Docker Image Version"></a>
-    <a href="https://github.com/julep-ai/julep/blob/main/LICENSE"><img src="https://img.shields.io/github/license/julep-ai/julep?style=for-the-badge" alt="License"></a>
+    <a href="https://hub.docker.com/u/julepai">
+      <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=for-the-badge&color=2496ED&logo=docker&logoColor=white" alt="Docker Version">
+    </a>
+    <a href="https://www.npmjs.com/package/@julep/sdk">
+      <img src="https://img.shields.io/npm/v/@julep/sdk?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="NPM Version">
+    </a>
+    <a href="https://www.npmjs.com/package/@julep/sdk">
+      <img src="https://img.shields.io/npm/dm/@julep/sdk?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="NPM Downloads">
+    </a>
+    <a href="https://pypi.org/project/julep/">
+      <img src="https://img.shields.io/pypi/v/julep?style=for-the-badge&color=3776AB&logo=python&logoColor=white" alt="PyPI Version">
+    </a>
+    <a href="https://pypi.org/project/julep/">
+      <img src="https://img.shields.io/pypi/dm/julep?style=for-the-badge&color=3776AB&logo=python&logoColor=white" alt="PyPI Downloads">
+    </a>
   </p>
   
   <h3>
@@ -22,18 +38,14 @@
   </h3>
 </div>
 
+<div align="center">
+  <h1>🌟 Welcome to Julep</h1>
+  <p><i>Build powerful AI agents that remember, learn, and get things done.</i></p>
+</div>
 
-<p align="justify">
-Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes. Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs. While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios which:
+Julep is your platform for creating intelligent AI agents that go beyond simple chat interactions. With Julep, you can build agents that can handle complex tasks, remember past interactions, and maybe even use other tools or APIs.
 
 Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Read more about the Julep architecture and how it works in the [Documentation](https://docs.julep.ai/docs/advanced/architecture-deep-dive).
-</p>
-
-<div align="center">
-  <a href="https://dashboard.julep.ai" style="text-decoration:none;">
-    <img src="https://img.shields.io/badge/Get%20Your%20API%20Key-FF5733?style=for-the-badge&logo=key&logoColor=white" alt="Get Your API Key">
-  </a>
-</div>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -44,10 +56,18 @@ Imagine you want to build an AI agent that can do more than just answer simple q
 - [📦 Installation](#-installation)
   - [🛠️ Julep CLI](#️-julep-cli)
 - [🚀 Quick Start](#-quick-start)
+  - [What's Next?](#whats-next)
 - [🔍 Reference](#-reference)
   - [📚 SDK Reference](#-sdk-reference)
   - [🛠️ API Reference](#️-api-reference)
 - [💻 Local Setup](#-local-setup)
+  - [1. Clone the Repository](#1-clone-the-repository)
+  - [2. Navigate to the Root Directory](#2-navigate-to-the-root-directory)
+  - [3. Set Up Environment Variables](#3-set-up-environment-variables)
+  - [4. Create a Docker Volume for Backup](#4-create-a-docker-volume-for-backup)
+  - [5. Run the Project using Docker Compose](#5-run-the-project-using-docker-compose)
+  - [6. Interaction](#6-interaction)
+  - [7. Troubleshooting](#7-troubleshooting)
 - [👥 Contributors](#-contributors)
 - [📄 License](#-license)
 
@@ -61,48 +81,43 @@ Imagine you want to build an AI agent that can do more than just answer simple q
   <table>
     <tr>
       <td>🧠</td>
-      <td><b>Persistent AI Agents</b></td>
-      <td>Remember context and information over long-term interactions</td>
-    </tr>
-    <tr>
-      <td>💾</td>
-      <td><b>Stateful Sessions</b></td>
-      <td>Keep track of past interactions for personalized responses</td>
+      <td><b>Smart Memory</b></td>
+      <td>Agents that remember context and learn from past interactions</td>
     </tr>
     <tr>
       <td>🔄</td>
-      <td><b>Multi-Step Tasks</b></td>
-      <td>Build complex, multi-step processes with loops and decision-making</td>
+      <td><b>Workflow Engine</b></td>
+      <td>Build complex, multi-step processes with branching and loops</td>
     </tr>
     <tr>
-      <td>⏳</td>
-      <td><b>Task Management</b></td>
-      <td>Handle long-running tasks that can run indefinitely</td>
+      <td>⚡</td>
+      <td><b>Parallel Processing</b></td>
+      <td>Run multiple operations simultaneously for maximum efficiency</td>
     </tr>
     <tr>
       <td>🛠️</td>
-      <td><b>Built-in Tools</b></td>
-      <td>Use built-in tools and external APIs in your tasks</td>
+      <td><b>Tool Integration</b></td>
+      <td>Seamlessly connect with external APIs and services</td>
     </tr>
     <tr>
-      <td>🔧</td>
-      <td><b>Self-Healing</b></td>
-      <td>Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly</td>
+      <td>🔌</td>
+      <td><b>Easy Setup</b></td>
+      <td>Get started quickly with Python and Node.js SDKs</td>
     </tr>
     <tr>
-      <td>📚</td>
-      <td><b>RAG</b></td>
-      <td>Use Julep's document store to build a system for retrieving and using your own data</td>
+      <td>🔒</td>
+      <td><b>Reliable & Secure</b></td>
+      <td>Built-in error handling, retries, and security features</td>
+    </tr>
+    <tr>
+      <td>📊</td>
+      <td><b>Monitoring</b></td>
+      <td>Track task progress and performance in real-time</td>
     </tr>
   </table>
 </div>
 
-<br/>
-
-> [!TIP]
-> 💡 Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
-> 
-> 💡 To learn more about Julep, check out the [Documentation](https://docs.julep.ai/docs/introduction/overview).
+💡 To learn more about Julep, check out the [Documentation](https://docs.julep.ai/docs/introduction/overview).
 
 ---
 
@@ -185,7 +200,9 @@ pip install julep-cli
 For more details, check out the [Julep CLI Documentation](https://docs.julep.ai/guides/julepcli/introduction).
 
 > [!NOTE]
-> Julep CLI is currently in an early phase of development. Moreover, it's not yet available for Node.js.
+> The CLI is currently in beta and available for Python only. Node.js support coming soon!
+
+For detailed CLI usage, check out the [CLI Documentation](https://docs.julep.ai/guides/julepcli/introduction).
 
 ---
 
@@ -318,7 +335,9 @@ main:
 
 Here you can execute the above workflow using the Julep SDK:
 
-In Python:
+<details>
+<summary><b>Python</b> <i>(Click to expand)</i></summary>
+
 ```python
 from julep import Client
 import yaml
@@ -364,8 +383,12 @@ else:
     print(f"Error: {result.error}")
 
 ```
+</details>
 
-In Node.js:
+</br>
+<details>
+<summary><b>Node.js</b> <i>(Click to expand)</i></summary>
+
 ```js
 import { Julep } from '@julep/sdk';
 import yaml from 'yaml';
@@ -418,6 +441,8 @@ if (result.status === 'succeeded') {
   console.error(`Error: ${result.error}`);
 }
 ```
+</details>
+</br>
 
 In this example, Julep will automatically manage parallel executions, retry failed steps, resend API requests, and keep the tasks running reliably until completion.
 
@@ -467,9 +492,12 @@ In this example, Julep will automatically manage parallel executions, retry fail
 
 </details>
 
-</p>
+### What's Next?
 
-<br/>
+- 📚 Explore more examples in our [Cookbook](https://github.com/julep-ai/julep/tree/dev/cookbooks)
+- 🔧 Learn about [Tool Integration](https://docs.julep.ai/docs/tools/overview)
+- 🧠 Understand [Agent Memory](https://docs.julep.ai/docs/agents/memory)
+- 🔄 Dive into [Complex Workflows](https://docs.julep.ai/docs/tasks/workflows)
 
 > [!TIP]
 > 💡 Checkout more tutorials in the [Tutorials](https://docs.julep.ai/docs/tutorials/) section of the documentation.
@@ -496,7 +524,88 @@ Explore our API documentation to learn more about agents, tasks, tools, and the 
 
 ## 💻 Local Setup
 
-For detailed setup instructions, see our [Local Setup Guide](https://docs.julep.ai/docs/advanced/localsetup).
+### 1. Clone the Repository
+
+Clone the repository from your preferred source:
+
+```bash
+git clone <repository_url>
+```
+
+### 2. Navigate to the Root Directory
+
+Change to the root directory of the project:
+
+```bash
+cd <repository_root>
+```
+
+### 3. Set Up Environment Variables
+
+- Create a `.env` file in the root directory.
+- Refer to the `.env.example` file for a list of required variables.
+- Ensure that all necessary variables are set in the `.env` file.
+
+### 4. Create a Docker Volume for Backup
+
+Create a Docker volume named `grafana_data`, `memory_store_data`, `temporal-db-data`, `prometheus_data`, `seadweedfs_data`:
+
+```bash
+docker volume create grafana_data
+docker volume create memory_store_data
+docker volume create temporal-db-data
+docker volume create prometheus_data
+docker volume create seadweedfs_data
+```
+
+### 5. Run the Project using Docker Compose
+
+You can run the project in two different modes: **Single Tenant** or **Multi-Tenant**. Choose one of the following commands based on your requirement:
+
+1. Single-Tenant Mode
+
+Run the project in single-tenant mode:
+
+```bash
+docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --build --force-recreate --watch
+```
+
+> **Note:** In single-tenant mode, you can interact with the SDK directly without the need for the API KEY.
+
+2. Multi-Tenant Mode
+
+Run the project in multi-tenant mode:
+
+```bash
+docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile embedding-cpu --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --force-recreate --build --watch
+```
+
+> **Note:** In multi-tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK.
+
+Generate a JWT Token (Only for Multi-Tenant Mode)
+
+To generate a JWT token, `jwt-cli` is required. Kindly install the same before proceeding with the next steps.
+
+Use the following command and replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token:
+
+```bash
+jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
+```
+
+This command generates a JWT token that will be valid for 10 days.
+
+### 6. Interaction
+
+- **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.
+- **Julep SDK**: The Julep SDK is a Python/Node.js library that allows you to interact with the Julep API.
+
+> **Note:** SDK in Multi-Tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK. Fruthermore while itiatlizng the client you will need set the environment to `local_multi_tenant` and the api key to the JWT token you generated in the previous step. Whereas in Single-Tenant mode you can interact with the SDK directly without the need for the API KEY and set the environment to `local`.
+
+### 7. Troubleshooting
+
+- Ensure that all required Docker images are available.
+- Check for missing environment variables in the `.env` file.
+- Use the `docker compose logs` command to view detailed logs for debugging.
 
 ---
 
