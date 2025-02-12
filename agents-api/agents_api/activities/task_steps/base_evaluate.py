@@ -17,10 +17,33 @@ from ...common.protocol.tasks import StepContext
 from ..utils import get_evaluator
 
 
+def backwards_compatibility(expr: str) -> str:
+    expr = expr.strip()
+
+    if expr.startswith("$ "):
+        return expr
+
+    if "{{" in expr:
+        return "$ f'''" + expr.replace("{{", "{").replace("}}", "}") + "'''"
+
+    if (
+        (expr.startswith("[") and expr.endswith("]"))
+        or (expr.startswith("_[") and expr.endswith("]"))
+        or (expr.startswith("_.") and expr.endswith("]"))
+        or "outputs[" in expr
+        or "inputs[" in expr
+        or expr == "_"
+    ):
+        return "$ " + expr
+
+    return expr
+
+
 # Recursive evaluation helper function
 def _recursive_evaluate(expr, evaluator: SimpleEval):
     if isinstance(expr, str):
         try:
+            expr = backwards_compatibility(expr)
             if isinstance(expr, str) and expr.startswith("$ "):
                 expr = expr[2:].strip()
             else:
