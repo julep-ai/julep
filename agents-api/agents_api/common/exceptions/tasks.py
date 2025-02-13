@@ -147,6 +147,7 @@ RETRYABLE_HTTP_STATUS_CODES = (
     429,  # Too Many Requests (slow down, speedster!)
     503,  # Service Unavailable (server is having a moment)
     504,  # Gateway Timeout (the internet took a detour)
+    524,  # Gateway Timeout (the internet took a detour)
 )
 
 
