@@ -107,6 +107,13 @@
       ]
     },
     {
+      "group": "Julep CLI",
+      "pages": [
+        "docs/julepcli/introduction",
+        "docs/julepcli/commands"
+      ]
+    },
+    {
       "group": "Core Concepts",
       "pages": [
         "docs/concepts/agents",
@@ -125,13 +132,6 @@
         "docs/tutorials/customer-support-rag",
         "docs/tutorials/trip-planning",
         "docs/tutorials/video-processing"
-      ]
-    },
-    {
-      "group": "Julep CLI",
-      "pages": [
-        "docs/julepcli/introduction",
-        "docs/julepcli/commands"
       ]
     },
     {
