@@ -193,7 +193,7 @@
         {
           "group": "Getting Started Examples",
           "pages": [
-            "guides/getting-started/basic-agent-creation",
+            "guides/getting-started/chat-with-an-agent",
             "guides/getting-started/task-workflow-basics",
             "guides/getting-started/tool-integration-demo"
           ]
