@@ -18,7 +18,7 @@ Each notebook explores a unique use case, demonstrating different aspects of Jul
 | `05-video-processing-with-natural-language.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb) | Processes videos using natural language commands | Yes |
 | `06-browser-use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb) | Demonstrates browser automation capabilities | Yes |
 | `07-personalized-research-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb) | Demonstrates personalized research assistant capabilities | Yes |
-| `08-rag-customer-support-chatbot.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/08-rag-customer-support-chatbot.ipynb) | Demonstrates customer support chatbot capabilities | Yes |
+| `08-rag-chatbot.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/08-rag-chatbot.ipynb) | Demonstrates RAG chatbot capabilities | Yes |
 | `09-companion-agent.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/09-companion-agent.ipynb) | Demonstrates companion agent capabilities like story generation, user persona management, and more | Yes |
 
 ## Potential Cookbooks for Contributors
