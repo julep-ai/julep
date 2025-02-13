@@ -1,49 +1,106 @@
-## Contributing
+<div align="center" id="top">
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="320" height="160" />
 
-We welcome contributions to this project! There are several ways you can contribute:
+  <p>
+    <a href="https://dashboard.julep.ai">
+      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key">
+    </a>
+    <a href="https://docs.julep.ai">
+      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=for-the-badge&logo=gitbook&logoColor=white" alt="Documentation">
+    </a>
+  </p>
+  <p>
+    <a href="https://hub.docker.com/u/julepai">
+      <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=for-the-badge&color=2496ED&logo=docker&logoColor=white" alt="Docker Version">
+    </a>
+    <a href="https://www.npmjs.com/package/@julep/sdk">
+      <img src="https://img.shields.io/npm/v/@julep/sdk?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="NPM Version">
+    </a>
+    <a href="https://www.npmjs.com/package/@julep/sdk">
+      <img src="https://img.shields.io/npm/dm/@julep/sdk?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="NPM Downloads">
+    </a>
+    <a href="https://pypi.org/project/julep/">
+      <img src="https://img.shields.io/pypi/v/julep?style=for-the-badge&color=3776AB&logo=python&logoColor=white" alt="PyPI Version">
+    </a>
+    <a href="https://pypi.org/project/julep/">
+      <img src="https://img.shields.io/pypi/dm/julep?style=for-the-badge&color=3776AB&logo=python&logoColor=white" alt="PyPI Downloads">
+    </a>
+  </p>
+  
+  <h3>
+    <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discord</a>
+    ·
+    <a href="https://x.com/julep_ai" rel="dofollow">𝕏</a>
+    ·
+    <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow">LinkedIn</a>
+  </h3>
+</div>
 
-### Reporting Issues
+# Contributing to Julep
 
-If you find a bug or have a feature request, please submit an issue on the [GitHub Issues](https://github.com/julep-ai/julep/issues) page. When reporting a bug, please include:
+👋 Welcome! We're excited that you're interested in contributing to Julep. This guide will help you get started.
 
-- Steps to reproduce the issue
-- Expected behavior
-- Actual behavior
-- Screenshots if applicable
+---
 
-### Submitting Pull Requests
-
-To contribute code changes:
+## 🚀 Quick Start
 
 1. Fork the repository
 2. Create a new branch for your changes
-3. Make your changes and commit them with descriptive messages
-4. Push your changes to your fork
-5. Open a pull request to the main repository
+3. Make your changes and test them
+4. Submit a pull request
 
-Please ensure your code follows the existing style and passes all tests.
+---
 
-## Project Overview and Architecture
+## 📝 Ways to Contribute
 
-### Key Components
+### 🐛 Reporting Issues
 
-1. **agents-api**: The core API service for Julep.
-2. **typespec**: API specifications and contracts.
-3. **deploy**: Deployment configurations.
-4. **documentation**: Documentation.
-5. **scripts**: Scripts for generating changelog, etc.
-6. **cookbooks**: Cookbooks for different use cases.
-7. **blob-store**: Blob storage for storing files.
-8. **cli**: CLI for interacting with Julep.
-9. **integrations-service**: Handles external integrations.
-10. **embedding-service**: Manages text embeddings.
-11. **memory-store**: Handles persistent storage.
-12. **llm-proxy**: Proxy for language model interactions.
-13. **scheduler**: Manages task scheduling.
-14. **gateway**: API gateway and routing.
-15. **monitoring**: System monitoring and metrics.
+Found a bug? Have a feature request? [Submit an issue](https://github.com/julep-ai/julep/issues) with:
 
-### Technology Stack
+- [ ] Steps to reproduce
+- [ ] Expected behavior
+- [ ] Actual behavior
+- [ ] Screenshots (if applicable)
+
+### 💻 Contributing Code
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Make your changes
+4. Write/update tests
+5. Push to your fork
+6. Open a pull request
+
+> 💡 **Tip:** Make sure your code follows our style guide and passes all tests.
+
+---
+
+## 🏗 Project Architecture
+
+### Core Services
+
+| Service | Description |
+|---------|-------------|
+| `agents-api` | Core API service |
+| `typespec` | API specifications |
+| `blob-store` | File storage service |
+| `cli` | Command-line interface |
+| `embedding-service` | Text embedding management |
+| `llm-proxy` | Language model proxy |
+| `gateway` | API gateway & routing |
+| `monitoring` | System metrics & monitoring |
+
+### Supporting Services
+
+- `integrations-service`: External integrations
+- `memory-store`: Persistent storage
+- `scheduler`: Task scheduling
+- `deploy`: Deployment configs
+- `documentation`: Project docs
+- `scripts`: Utility scripts
+- `cookbooks`: Usage examples
+
+### Tech Stack
 
 - **FastAPI**: Web framework for building APIs
 - **TypeSpec**: API specification language
@@ -55,18 +112,7 @@ Please ensure your code follows the existing style and passes all tests.
 - **Temporal**: Workflow engine
 - **Docker**: Containerization
 
-### Relationships Between Components
-
-The `agents-api` serves as the central component, interacting with most other services:
-
-- It uses `typespec` definitions for API contracts.
-- Communicates with `integrations-service` for external tool interactions.
-- Utilizes `embedding-service` for text processing.
-- Stores data in `memory-store`.
-- Interacts with language models through `llm-proxy`.
-- Uses `scheduler` for task management.
-- All API requests pass through the `gateway`.
-- `monitoring` observes the entire system.
+> To understand the relationships between the components, please refer to the [System Architecture](https://docs.julep.ai/docs/advanced/architecture-deep-dive) section.
 
 ## Understanding the Codebase
 
@@ -150,89 +196,5 @@ Improvements to documentation are always appreciated! If you see areas that coul
 ### Sharing Feedback and Ideas
 
 We'd love to hear your feedback and ideas for the project! Feel free to submit an issue or contact the maintainers directly to share your thoughts. Your input is very valuable in shaping the future direction of the project.
-
-### Setup Instructions
-
-#### 1. Clone the Repository
-
-Clone the repository from your preferred source:
-
-```bash
-git clone <repository_url>
-```
-
-#### 2. Navigate to the Root Directory
-
-Change to the root directory of the project:
-
-```bash
-cd <repository_root>
-```
-
-#### 3. Set Up Environment Variables
-
-- Create a `.env` file in the root directory.
-- Refer to the `.env.example` file for a list of required variables.
-- Ensure that all necessary variables are set in the `.env` file.
-
-#### 4. Create a Docker Volume for Backup
-
-Create a Docker volume named `grafana_data`, `memory_store_data`, `temporal-db-data`, `prometheus_data`, `seadweedfs_data`:
-
-```bash
-docker volume create grafana_data
-docker volume create memory_store_data
-docker volume create temporal-db-data
-docker volume create prometheus_data
-docker volume create seadweedfs_data
-
-```
-
-#### 5. Run the Project using Docker Compose
-
-You can run the project in two different modes: **Single Tenant** or **Multi-Tenant**. Choose one of the following commands based on your requirement:
-
-#### Single-Tenant Mode
-
-Run the project in single-tenant mode:
-
-```bash
-docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --build --force-recreate --watch
-```
-
-> **Note:** In single-tenant mode, you can interact with the SDK directly without the need for the API KEY.
-
-#### Multi-Tenant Mode
-
-Run the project in multi-tenant mode:
-
-```bash
-docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile embedding-cpu --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --force-recreate --build --watch
-```
-
-> **Note:** In multi-tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK.
-
-#### 6. Generate a JWT Token (Only for Multi-Tenant Mode)
-
-To generate a JWT token, `jwt-cli` is required. Kindly install the same before proceeding with the next steps.
-
-Use the following command and replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token:
-
-```bash
-jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
-```
-
-This command generates a JWT token that will be valid for 10 days.
-
-#### 7. Access and Interact
-
-- **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.
-- **API Interactions**: Depending on the chosen mode, interact with the setup using the provided endpoints.
-
-#### Troubleshooting
-
-- Ensure that all required Docker images are available.
-- Check for missing environment variables in the `.env` file.
-- Use the `docker compose logs` command to view detailed logs for debugging.
 
 Remember, contributions aren't limited to code. Documentation improvements, bug reports, and feature suggestions are also valuable contributions to the project.
