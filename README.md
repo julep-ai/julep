@@ -192,18 +192,19 @@ Julep CLI is a command-line tool that allows you to interact with the Julep plat
 pip install julep-cli
 ```
 
-For more details, check out the [Julep CLI Documentation](https://docs.julep.ai/guides/julepcli/introduction).
+For more details, check out the **[Julep CLI Documentation](https://docs.julep.ai/docs/julepcli/introduction)**.
 
 > [!NOTE]
 > The CLI is currently in beta and available for Python only. Node.js support coming soon!
 
-For detailed CLI usage, check out the [CLI Documentation](https://docs.julep.ai/guides/julepcli/introduction).
+For detailed CLI usage, check out the **[CLI Documentation](https://docs.julep.ai/docs/julepcli/introduction)**.
 
 ---
 
 ## 🚀 Quick Start
 
 <p align="justify">
+
 Imagine a Research AI agent that can do the following:
 
 1. **Take a topic**,
@@ -211,6 +212,7 @@ Imagine a Research AI agent that can do the following:
 3. Perform those web **searches in parallel**,
 4. **Summarize** the results,
 5. Send the **summary to Discord**.
+   
 </p>
 
 > [!NOTE]
