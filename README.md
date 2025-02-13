@@ -197,8 +197,6 @@ For more details, check out the **[Julep CLI Documentation](https://docs.julep.a
 > [!NOTE]
 > The CLI is currently in beta and available for Python only. Node.js support coming soon!
 
-For detailed CLI usage, check out the **[CLI Documentation](https://docs.julep.ai/docs/julepcli/introduction)**.
-
 ---
 
 ## 🚀 Quick Start
