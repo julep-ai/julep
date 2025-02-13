@@ -11,15 +11,15 @@
     <a href="https://docs.julep.ai">
       <img src="https://img.shields.io/badge/Documentation-4B32C3?style=logo=gitbook&logoColor=white" alt="Documentation" height="28">
     </a>
-    <a href="https://hub.docker.com/u/julepai">
-      <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=color=2496ED&logo=docker&logoColor=white" alt="Docker Version" height="28">
-    </a>
-    <a href="https://www.npmjs.com/package/@julep/sdk">
-      <img src="https://img.shields.io/npm/v/@julep/sdk?style=color=CB3837&logo=npm&logoColor=white" alt="NPM Version" height="28">
-    </a>
-    <a href="https://pypi.org/project/julep/">
-      <img src="https://img.shields.io/pypi/v/julep?style=color=3776AB&logo=python&logoColor=white" alt="PyPI Version" height="28">
-    </a>
+  </p>
+  <p>
+   <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&amp;logo=npm&amp;link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk" alt="NPM Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://pypi.org/project/julep"><img src="https://img.shields.io/pypi/v/julep?style=social&amp;logo=python&amp;label=PyPI&amp;link=https%3A%2F%2Fpypi.org%2Fproject%2Fjulep" alt="PyPI - Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://hub.docker.com/u/julepai"><img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&amp;style=social&amp;logo=docker&amp;link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai" alt="Docker Image Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License" height="28"></a>
   </p>
   
   <h3>
