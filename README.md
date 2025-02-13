@@ -35,9 +35,9 @@
   <h3><i>Serverless AI Workflows for Data & ML Teams</i></h3>
 </div>
 
-Julep is your platform for creating intelligent AI agents that go beyond simple chat interactions. With Julep, you can build agents that can handle complex tasks, remember past interactions, and maybe even use other tools or APIs.
+Julep is a serverless platform that helps data and ML teams build sophisticated AI workflows. It provides a robust foundation for orchestrating complex AI operations, managing state across interactions, and integrating with your existing data infrastructure and tools.
 
-Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. 
+Whether you're building data pipelines or creating AI workflows, Julep makes it easy to compose and scale LLM-powered workflows without managing infrastructure. Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Our platform handles the heavy lifting so you can focus on building intelligent solutions for your business.
 
 💡 To learn more about Julep, check out the **[Documentation](https://docs.julep.ai/docs/introduction/overview)**.
 
