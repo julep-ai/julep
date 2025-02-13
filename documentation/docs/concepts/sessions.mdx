@@ -126,8 +126,8 @@ Here are examples of how to create a session using the SDKs:
     ```python Python
     client = Julep(api_key="YOUR_API_KEY")
     session = client.sessions.create(
-        agent_id="agent_id",
-        user_id="user_id",
+        agent="agent_id",
+        user="user_id",
         context_overflow="adaptive",
     )
     ```
@@ -143,7 +143,7 @@ Here are examples of how to create a session using the SDKs:
 </CodeGroup>
 
 <Tip>
-    Check out the API reference [here](/api-reference/sessions) or SDK reference (Python [here](/sdks/python/reference#sessions) or JavaScript [here](/sdks/nodejs/reference#sessions) for more details on different operations you can perform on sessions.
+    Check out the [API reference](/api-reference/sessions) or SDK reference ([Python](/sdks/python/reference#sessions) or [JavaScript](/sdks/nodejs/reference#sessions)) for more details on different operations you can perform on sessions.
 </Tip>
 
 ### Chatting in a Session
@@ -180,9 +180,6 @@ Once a session is created, you can engage in a conversation by sending messages 
     ```
 </CodeGroup>
 
-<Tip>
-    Check out the API reference [here](/api-reference/sessions/chat) or SDK reference (Python [here](/sdks/python/reference#sessions) or JavaScript [here](/sdks/nodejs/reference#sessions) for more details on different operations you can perform on sessions.
-</Tip>
 
 ## Relationship to Other Concepts
 
