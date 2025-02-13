@@ -1,31 +1,24 @@
-<sup><div align="center">[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</div></sup>
+<sup><div align="center">[English](README.md) | [中文翻译](./.github/README-CN.md) | [日本語翻訳](./.github/README-JA.md) | [French](./.github/README-FR.md)</div></sup>
 
 <div align="center" id="top">
- <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="320" height="160" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" />
 
+<br>
   <p>
     <a href="https://dashboard.julep.ai">
-      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key">
+      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key">
     </a>
     <a href="https://docs.julep.ai">
-      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=for-the-badge&logo=gitbook&logoColor=white" alt="Documentation">
+      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=logo=gitbook&logoColor=white" alt="Documentation">
     </a>
-  </p>
-  <p>
     <a href="https://hub.docker.com/u/julepai">
-      <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=for-the-badge&color=2496ED&logo=docker&logoColor=white" alt="Docker Version">
+      <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=color=2496ED&logo=docker&logoColor=white" alt="Docker Version">
     </a>
     <a href="https://www.npmjs.com/package/@julep/sdk">
-      <img src="https://img.shields.io/npm/v/@julep/sdk?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="NPM Version">
-    </a>
-    <a href="https://www.npmjs.com/package/@julep/sdk">
-      <img src="https://img.shields.io/npm/dm/@julep/sdk?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="NPM Downloads">
+      <img src="https://img.shields.io/npm/v/@julep/sdk?style=color=CB3837&logo=npm&logoColor=white" alt="NPM Version">
     </a>
     <a href="https://pypi.org/project/julep/">
-      <img src="https://img.shields.io/pypi/v/julep?style=for-the-badge&color=3776AB&logo=python&logoColor=white" alt="PyPI Version">
-    </a>
-    <a href="https://pypi.org/project/julep/">
-      <img src="https://img.shields.io/pypi/dm/julep?style=for-the-badge&color=3776AB&logo=python&logoColor=white" alt="PyPI Downloads">
+      <img src="https://img.shields.io/pypi/v/julep?style=color=3776AB&logo=python&logoColor=white" alt="PyPI Version">
     </a>
   </p>
   
@@ -39,13 +32,14 @@
 </div>
 
 <div align="center">
-  <h1>🌟 Welcome to Julep</h1>
-  <p><i>Build powerful AI agents that remember, learn, and get things done.</i></p>
+  <h3><i>Serverless AI Workflows for Data & ML Teams</i></h3>
 </div>
 
 Julep is your platform for creating intelligent AI agents that go beyond simple chat interactions. With Julep, you can build agents that can handle complex tasks, remember past interactions, and maybe even use other tools or APIs.
 
-Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Read more about the Julep architecture and how it works in the [Documentation](https://docs.julep.ai/docs/advanced/architecture-deep-dive).
+Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. 
+
+💡 To learn more about Julep, check out the **[Documentation](https://docs.julep.ai/docs/introduction/overview)**.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -117,7 +111,7 @@ Imagine you want to build an AI agent that can do more than just answer simple q
   </table>
 </div>
 
-💡 To learn more about Julep, check out the [Documentation](https://docs.julep.ai/docs/introduction/overview).
+💡 To learn more about Julep, check out the **[Documentation](https://docs.julep.ai/docs/introduction/overview)**.
 
 ---
 
