@@ -6,7 +6,7 @@ from beartype import beartype
 from ...autogen.openapi_model import UpdateTaskRequest
 from ...common.protocol.models import spec_to_task, task_to_spec
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .get_task import get_task_query
 
@@ -81,7 +81,7 @@ FROM version;
     spec_to_task,
     one=True,
 )
-@increase_counter("update_task")
+@query_metrics("update_task")
 @pg_query
 @beartype
 async def update_task(

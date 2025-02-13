@@ -7,7 +7,7 @@ from beartype import beartype
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL queries
@@ -33,7 +33,7 @@ RETURNING session_id AS id;
         "jobs": [],
     },
 )
-@increase_counter("delete_session")
+@query_metrics("delete_session")
 @pg_query
 @beartype
 async def delete_session(

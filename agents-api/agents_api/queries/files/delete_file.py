@@ -11,7 +11,7 @@ from beartype import beartype
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Delete file query with ownership check
@@ -49,7 +49,7 @@ RETURNING file_id;
         "jobs": [],
     },
 )
-@increase_counter("delete_file")
+@query_metrics("delete_file")
 @pg_query
 @beartype
 async def delete_file(

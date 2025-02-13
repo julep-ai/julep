@@ -13,7 +13,7 @@ from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateFileRequest, File
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Create file
@@ -69,7 +69,7 @@ JOIN files f ON f.file_id = io.file_id;
         "content": "DUMMY: NEED TO FETCH CONTENT FROM BLOB STORAGE",
     },
 )
-@increase_counter("create_file")
+@query_metrics("create_file")
 @pg_query
 @beartype
 async def create_file(

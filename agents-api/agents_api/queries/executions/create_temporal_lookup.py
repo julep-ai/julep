@@ -4,7 +4,7 @@ from beartype import beartype
 from temporalio.client import WorkflowHandle
 
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions
 
 # Query to create a temporal lookup
@@ -30,7 +30,7 @@ RETURNING *;
 
 
 @rewrap_exceptions(common_db_exceptions("temporal_execution", ["create"]))
-@increase_counter("create_temporal_lookup")
+@query_metrics("create_temporal_lookup")
 @pg_query
 @beartype
 async def create_temporal_lookup(

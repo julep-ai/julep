@@ -8,7 +8,7 @@ from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...common.utils.types import dict_like
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .constants import OUTPUT_UNNEST_KEY
 
@@ -46,7 +46,7 @@ RETURNING *;
         **d,
     },
 )
-@increase_counter("create_execution")
+@query_metrics("create_execution")
 @pg_query
 @beartype
 async def create_execution(

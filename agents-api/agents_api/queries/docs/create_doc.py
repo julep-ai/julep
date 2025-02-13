@@ -6,7 +6,7 @@ from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateDocRequest, Doc
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .get_doc import doc_without_embedding_query
 from .utils import transform_doc
@@ -54,7 +54,7 @@ RETURNING *;
     one=True,
     transform=transform_doc,
 )
-@increase_counter("create_doc")
+@query_metrics("create_doc")
 @pg_query
 @beartype
 async def create_doc(

@@ -7,7 +7,7 @@ from beartype import beartype
 
 from ...autogen.openapi_model import Session
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
@@ -51,7 +51,7 @@ LIMIT $2 OFFSET $6;
 
 @rewrap_exceptions(common_db_exceptions("session", ["list"]))
 @wrap_in_class(Session)
-@increase_counter("list_sessions")
+@query_metrics("list_sessions")
 @pg_query
 @beartype
 async def list_sessions(
