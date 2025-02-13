@@ -107,6 +107,13 @@
       ]
     },
     {
+      "group": "Julep CLI",
+      "pages": [
+        "docs/julepcli/introduction",
+        "docs/julepcli/commands"
+      ]
+    },
+    {
       "group": "Core Concepts",
       "pages": [
         "docs/concepts/agents",
@@ -183,18 +190,11 @@
     {
       "group": "Guides",
       "pages": [
-        {
-          "group": "Julep CLI",
-          "pages": [
-            "guides/julepcli/introduction",
-            "guides/julepcli/commands"
-          ]
-        },
+        "guides/getting-started/chat-with-an-agent",
+        "guides/getting-started/create-and-execute-julep-task",
         {
           "group": "Getting Started Examples",
           "pages": [
-            "guides/getting-started/basic-agent-creation",
-            "guides/getting-started/task-workflow-basics",
             "guides/getting-started/tool-integration-demo"
           ]
         },
