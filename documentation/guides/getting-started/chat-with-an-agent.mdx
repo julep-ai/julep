@@ -1,0 +1,207 @@
+---
+title: 'Chat with an Agent'
+description: 'Learn how to chat with your agent'
+---
+
+# How to Create a Julep Session and Chat with an Agent
+
+This guide will walk you through the process of creating an agent, setting up a session, and engaging in a conversation using the Julep SDKs.
+
+<Info>
+This guide is minimalistic and designed to quickly set you up to chat with the agent. It does not cover all the features that Julep agents and sessions provide. For more advanced usage, please check out the [Agents](/docs/concepts/agents) and [Sessions](/docs/concepts/sessions) concepts.
+</Info>
+
+## Step 1: Initialize the Julep Client
+
+First, you need to initialize the Julep client with your API key.
+
+<CodeGroup>
+```python Python
+from julep import Julep
+
+# Initialize the Julep client
+julep = Julep(api_key="your_api_key")
+```
+
+```javascript Node.js
+const julep = require('@julep/sdk');
+
+// Initialize the Julep client
+const julep = new Julep({ apiKey: 'your_api_key' });
+```
+</CodeGroup>
+
+## Step 2: Create an Agent
+
+Create an agent with specific `instructions` and a `model`. This agent will be used in the session.
+
+<CodeGroup>
+```python Python
+# Create an agent
+agent = julep.agents.create(
+    name="Chat Buddy",
+    about="A friendly and helpful chatbot",
+    instructions=[
+        "Be friendly and engaging.",
+        "Be helpful and provide useful information.",
+        "Be concise and to the point.",
+        "Do not format your responses. Keep them as plain text.",
+    ],
+    model="gpt-4o-mini",
+)
+```
+
+```javascript Node.js
+// Create an agent
+const agent = await julep.agents.create({
+    name: "Chat Buddy",
+    about: "A friendly and helpful chatbot",
+    instructions: [
+        "Be friendly and engaging.",
+        "Be helpful and provide useful information.",
+        "Be concise and to the point.",
+        "Do not format your responses. Keep them as plain text.",
+    ],
+    model: "gpt-4o-mini",
+});
+```
+</CodeGroup>
+
+## Step 3: Create a Session
+
+Create a session with the agent, specifying a `situation` to provide more context for the session.
+
+<CodeGroup>
+```python Python
+# Create a session
+session = julep.sessions.create(
+    agent=agent.id,
+    situation="User wants to have a casual chat about hobbies.",
+)
+```
+
+```javascript Node.js
+// Create a session
+const session = await julep.sessions.create({
+    agent: agent.id,
+    situation: "User wants to have a casual chat about hobbies.",
+});
+```
+</CodeGroup>
+
+## Step 4: Chat with the Agent
+
+Send a message with a `user` role to the session to trigger the agent to send a response.
+
+<CodeGroup>
+```python Python
+# Chat with the agent
+response = julep.sessions.chat(
+    session_id=session.id,
+    messages=[
+        {
+            "role": "user",
+            "content": "Hi there! What are some fun hobbies to try out?"
+        }
+    ]
+)
+
+print("Agent's Response:")
+print(response.choices[0].message.content)
+```
+
+```javascript Node.js
+// Chat with the agent
+const response = await julep.sessions.chat(
+    sessionId: session.id,
+    messages: [
+        {
+            role: "user",
+            content: "Hi there! What are some fun hobbies to try out?"
+        }
+    ]
+)
+```
+</CodeGroup>
+
+## Full Example
+
+<CodeGroup>
+```python Python
+from julep import Julep
+
+# Initialize the Julep client
+julep = Julep(api_key="your_api_key")
+
+# Create an agent
+agent = julep.agents.create(
+    name="Chat Buddy",
+    about="A friendly and helpful chatbot",
+    instructions=[
+        "Be friendly and engaging.",
+        "Be helpful and provide useful information.",
+        "Be concise and to the point.",
+        "Do not format your responses. Keep them as plain text.",
+    ],
+    model="gpt-4o-mini",
+)
+
+# Create a session
+session = julep.sessions.create(
+    agent=agent.id,
+    situation="User wants to have a casual chat about hobbies.",
+)
+
+# Chat with the agent
+response = julep.sessions.chat(
+    session_id=session.id,
+    messages=[
+        {
+            "role": "user",
+            "content": "Hi there! What are some fun hobbies to try out?"
+        }
+    ]
+)
+```
+
+```javascript Node.js
+const julep = require('@julep/sdk');
+
+// Initialize the Julep client
+const julep = new Julep({ apiKey: 'your_api_key' });
+
+// Create an agent
+const agent = await julep.agents.create({
+    name: "Chat Buddy",
+    about: "A friendly and helpful chatbot",
+    instructions: [
+        "Be friendly and engaging.",
+        "Be helpful and provide useful information.",
+        "Be concise and to the point.",
+        "Do not format your responses. Keep them as plain text.",
+    ],
+    model: "gpt-4o-mini",
+});
+
+// Create a session
+const session = await julep.sessions.create({
+    agent: agent.id,
+    situation: "User wants to have a casual chat about hobbies.",
+});
+
+// Chat with the agent
+const response = await julep.sessions.chat(
+    sessionId: session.id,
+    messages: [
+        {
+            role: "user",
+            content: "Hi there! What are some fun hobbies to try out?"
+        }
+    ]
+)
+```
+</CodeGroup>
+
+## Conclusion
+
+By following these steps, you can create an agent, set up a session, and quickly engage in a conversation using the Julep SDKs. This setup allows for personalized and context-aware interactions with the agent. For more advanced usage, don't forget to check out the [Agents](/docs/concepts/agents) and [Sessions](/docs/concepts/sessions) concepts.
