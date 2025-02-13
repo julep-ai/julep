@@ -194,7 +194,7 @@
           "group": "Getting Started Examples",
           "pages": [
             "guides/getting-started/chat-with-an-agent",
-            "guides/getting-started/task-workflow-basics",
+            "guides/getting-started/create-and-execute-julep-task",
             "guides/getting-started/tool-integration-demo"
           ]
         },
