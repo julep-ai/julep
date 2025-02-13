@@ -6,19 +6,19 @@
 <br>
   <p>
     <a href="https://dashboard.julep.ai">
-      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key">
+      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key" height="28">
     </a>
     <a href="https://docs.julep.ai">
-      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=logo=gitbook&logoColor=white" alt="Documentation">
+      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=logo=gitbook&logoColor=white" alt="Documentation" height="28">
     </a>
     <a href="https://hub.docker.com/u/julepai">
-      <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=color=2496ED&logo=docker&logoColor=white" alt="Docker Version">
+      <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=color=2496ED&logo=docker&logoColor=white" alt="Docker Version" height="28">
     </a>
     <a href="https://www.npmjs.com/package/@julep/sdk">
-      <img src="https://img.shields.io/npm/v/@julep/sdk?style=color=CB3837&logo=npm&logoColor=white" alt="NPM Version">
+      <img src="https://img.shields.io/npm/v/@julep/sdk?style=color=CB3837&logo=npm&logoColor=white" alt="NPM Version" height="28">
     </a>
     <a href="https://pypi.org/project/julep/">
-      <img src="https://img.shields.io/pypi/v/julep?style=color=3776AB&logo=python&logoColor=white" alt="PyPI Version">
+      <img src="https://img.shields.io/pypi/v/julep?style=color=3776AB&logo=python&logoColor=white" alt="PyPI Version" height="28">
     </a>
   </p>
   
@@ -593,7 +593,13 @@ This command generates a JWT token that will be valid for 10 days.
 - **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.
 - **Julep SDK**: The Julep SDK is a Python/Node.js library that allows you to interact with the Julep API.
 
-> **Note:** SDK in Multi-Tenant mode, you need to generate a JWT token locally that acts as an API KEY to interact with the SDK. Furthermore, while initializing the client you will need to set the environment to `local_multi_tenant` and the api key to the JWT token you generated in the previous step. Whereas in Single-Tenant mode you can interact with the SDK directly without the need for the API KEY and set the environment to `local`."
+```python
+from julep import Client
+
+client = Client(api_key="your_jwt_token")
+```
+
+**Note:** SDK in Multi-Tenant mode, you need to generate a JWT token locally that acts as an API KEY to interact with the SDK. Furthermore, while initializing the client you will need to set the environment to `local_multi_tenant` and the api key to the JWT token you generated in the previous step. Whereas in Single-Tenant mode you can interact with the SDK directly without the need for the API KEY and set the environment to `local`.
 
 ### 7. Troubleshooting
 
