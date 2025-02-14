@@ -1,6 +1,7 @@
 # Standard library imports
 import json
 import logging
+from operator import le
 import os
 import re
 import sys
@@ -85,7 +86,6 @@ def run_task(pr_data: str) -> str:
             raise Exception(result.error)
         return result.output
 
-
 def preserve_and_update_changelog(new_changelog: str, source: str = "./CHANGELOG.md") -> None:
     """
     Save the generated changelog while preserving HTML content.
@@ -100,7 +100,10 @@ def preserve_and_update_changelog(new_changelog: str, source: str = "./CHANGELOG
     # Load existing changelog if it exists, otherwise use header template
     if path.exists():
         existing_content = path.read_text(encoding="utf-8")
-        content = f"{existing_content}\n\n{new_changelog}"
+        # Find the end of the div tag
+        div_end = existing_content.find("</div>") + len("</div>")
+        # Insert new changelog after the div
+        content = f"{existing_content[:div_end]}{new_changelog}{existing_content[div_end:]}"
     else:
         html_content = load_template("header.html")
         content = f"{html_content}\n\n{new_changelog}"

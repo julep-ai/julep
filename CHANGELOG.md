@@ -30,19 +30,6 @@
   </h3>
 </div>
 
-# **Changelog for 31 January 2025** ✨
-
-- **Major Feature**: Added experimental CLI with comprehensive management commands for agents and tasks ✨
-- **Minor Feature**: Introduced new import functionality for agents in CLI ✨
-- **Critical Fix**: Replaced `GITHUB_ENV` with `GITHUB_OUTPUT` for environment variable handling 🔧
-- **Minor Fix**: Fixed CLI documentation by removing `pipx` installation 🔧
-- **Major Enhancement**: Refactored task execution workflow for modularity 📈
-- **Minor Enhancement**: Improved documentation with updated quickstart and lifecycle guides 📈
-- **Key Performance**: Enhanced CLI with rich text and progress indicators 🚀
-- **Secondary Performance**: Reduced API response times by 15% 🚀
-- **Critical Breaking**: Removed `previous_inputs` parameter in workflows 💥
-- **Other Breaking**: Deprecated legacy API (v1) to be removed next month 💥
-
 # **Julep AI Changelog for 14 February 2025** ✨
 
 - **Major Feature**: Default `parallelism` in MapReduce now set to `task_max_parallelism` for optimized processing ✨
@@ -55,3 +42,16 @@
 - **Secondary Performance**: Enhanced task evaluation functions with efficient expression handling 🚀
 - **Critical Breaking**: Deprecated legacy API with a migration guide for users 💥
 - **Other Breaking**: Updated agent settings to be untyped, affecting configuration handling 💥
+
+# **Julep AI Changelog for 31 January 2025** ✨
+
+- **Major Feature**: Added experimental CLI with comprehensive management commands for agents and tasks ✨
+- **Minor Feature**: Introduced new import functionality for agents in CLI ✨
+- **Critical Fix**: Replaced `GITHUB_ENV` with `GITHUB_OUTPUT` for environment variable handling 🔧
+- **Minor Fix**: Fixed CLI documentation by removing `pipx` installation 🔧
+- **Major Enhancement**: Refactored task execution workflow for modularity 📈
+- **Minor Enhancement**: Improved documentation with updated quickstart and lifecycle guides 📈
+- **Key Performance**: Enhanced CLI with rich text and progress indicators 🚀
+- **Secondary Performance**: Reduced API response times by 15% 🚀
+- **Critical Breaking**: Removed `previous_inputs` parameter in workflows 💥
+- **Other Breaking**: Deprecated legacy API (v1) to be removed next month 💥
