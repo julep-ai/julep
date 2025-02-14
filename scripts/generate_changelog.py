@@ -1,6 +1,7 @@
 # Standard library imports
 import json
 import logging
+from operator import le
 import os
 import re
 import sys
@@ -100,9 +101,9 @@ def preserve_and_update_changelog(new_changelog: str, source: str = "./CHANGELOG
     if path.exists():
         existing_content = path.read_text(encoding="utf-8")
         # Find the end of the div tag
-        div_end = existing_content.find("</div>") + 6
+        div_end = existing_content.find("</div>") + len("</div>")
         # Insert new changelog after the div
-        content = f"{existing_content[:div_end]}\n\n{new_changelog}{existing_content[div_end:]}"
+        content = f"{existing_content[:div_end]}{new_changelog}{existing_content[div_end:]}"
     else:
         html_content = load_template("header.html")
         content = f"{html_content}\n\n{new_changelog}"
