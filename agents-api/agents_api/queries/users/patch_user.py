@@ -4,7 +4,7 @@ from beartype import beartype
 
 from ...autogen.openapi_model import PatchUserRequest, User
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
@@ -45,7 +45,7 @@ RETURNING
         "id": d["id"],
     },
 )
-@increase_counter("patch_user")
+@query_metrics("patch_user")
 @pg_query
 @beartype
 async def patch_user(

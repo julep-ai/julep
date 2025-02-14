@@ -4,7 +4,7 @@ from beartype import beartype
 
 from ...autogen.openapi_model import PatchToolRequest, Tool
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for patching a tool
@@ -32,7 +32,7 @@ SELECT * FROM updated_tools;
     one=True,
     transform=lambda d: {"id": d["tool_id"], "jobs": [], **d},
 )
-@increase_counter("patch_tool")
+@query_metrics("patch_tool")
 @pg_query
 @beartype
 async def patch_tool(
