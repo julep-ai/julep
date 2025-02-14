@@ -1,6 +1,5 @@
 from ...autogen.openapi_model import Transition
 
-
 PAR_PREFIX = "PAR:"
 SEPARATOR = "`"
 
