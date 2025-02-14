@@ -271,14 +271,14 @@ async def execute_map_reduce_step_parallel(
     reduce: str | None = None,
     parallelism: int = task_max_parallelism,
 ) -> Any:
-
     task = validate_execution_input(execution_input)
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     results = initial
 
     if isinstance(context.current_step.map, YieldStep):
-        raise ValueError("Subworkflow step not supported in parallel map reduce")
-    
+        msg = "Subworkflow step not supported in parallel map reduce"
+        raise ValueError(msg)
+
     parallelism = min(parallelism, task_max_parallelism)
     assert parallelism > 1, "Parallelism must be greater than 1"
 
