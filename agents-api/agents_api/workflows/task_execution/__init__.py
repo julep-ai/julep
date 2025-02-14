@@ -59,6 +59,7 @@ with workflow.unsafe.imports_passed_through():
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
     from ...env import (
         debug,
+        task_max_parallelism,
         temporal_heartbeat_timeout,
         temporal_schedule_to_close_timeout,
         testing,
@@ -304,7 +305,9 @@ class TaskExecutionWorkflow:
             return PartialTransition(output=None)
 
         parallelism = step.parallelism
-        if parallelism is None or parallelism == 1:
+        if parallelism is None:
+            parallelism = task_max_parallelism
+        if parallelism == 1:
             result = await execute_map_reduce_step(
                 context=self.context,
                 execution_input=self.context.execution_input,
