@@ -51,10 +51,12 @@ Here are the OpenAI models supported by Julep:
 | Model Name | Context Window | Best For |
 |------------|---------------|-----------|
 | gpt-4-turbo | 128K tokens | Advanced reasoning |
+| gpt-4o-mini | 128K tokens | Balanced performance |
 | gpt-4o | 128K tokens | Balanced performance |
-| o1-mini | 128K tokens | Quick tasks |
-| o1-preview | 128K tokens | Testing features |
-| o1 | 128K tokens | General tasks |
+| o1-mini | 200K tokens | Quick tasks |
+| o1-preview | 200K tokens | Testing features |
+| o1 | 200K tokens | General tasks |
+| o3-mini | 200K tokens | Quick tasks |
 
 #### Groq
 
@@ -100,10 +102,10 @@ Though the models mention above support different embedding dimensions, Julep us
 
 ## Supported Parameters
 
-These parameters allow fine-tuning of model behavior. Note that not all parameters are supported by every model.
+Following are a list of different paramters that can be used to control the behavior of the models.
 
 <AccordionGroup>
-  <Accordion title="Core Parameters" icon="sliders">
+  <Accordion title="Core Parameters" icon="sliders" defaultOpen={true}>
     | Parameter | Range | Description |
     |-----------|--------|-------------|
     | temperature | 0.0 - 5.0 | Controls randomness in outputs. Higher values (e.g., 0.8) increase randomness, while lower values (e.g., 0.2) make output more focused and deterministic |
@@ -111,7 +113,7 @@ These parameters allow fine-tuning of model behavior. Note that not all paramete
     | max_tokens | ≥ 1 | Maximum number of tokens to generate in the response |
   </Accordion>
 
-  <Accordion title="Penalty Parameters" icon="gauge">
+  <Accordion title="Penalty Parameters" icon="gauge" defaultOpen={true}>
     | Parameter | Range | Description |
     |-----------|--------|-------------|
     | frequency_penalty | -2.0 - 2.0 | Penalizes tokens based on their frequency in the text. Positive values decrease repetition |
@@ -120,7 +122,7 @@ These parameters allow fine-tuning of model behavior. Note that not all paramete
     | length_penalty | 0.0 - 2.0 | Penalizes based on generation length (1.0 is neutral). Values > 1.0 penalize longer generations |
   </Accordion>
 
-  <Accordion title="Advanced Controls" icon="gear">
+  <Accordion title="Advanced Controls" icon="gear" defaultOpen={true}>
     | Parameter | Range | Description |
     |-----------|--------|-------------|
     | min_p | 0.0 - 1.0 | Minimum probability threshold compared to the highest token probability |
@@ -129,6 +131,9 @@ These parameters allow fine-tuning of model behavior. Note that not all paramete
   </Accordion>
 
 </AccordionGroup>
+<Info>
+Not all parameters are supported by every model. Please refer to the [LiteLLM documentation](https://docs.litellm.ai/docs/completion/input) for more details.
+</Info>
 
 <Note>
   **Best Practices:**
@@ -144,23 +149,24 @@ These parameters allow fine-tuning of model behavior. Note that not all paramete
 
 ## Usage Guidelines
 
-<AccordionGroup>
-  <Accordion title="Model Selection Guidelines" icon="magnifying-glass">
-    <Note>
-    When picking a model, think about:
-    - Your budget and cost constraints
-    - How fast you need responses
-    - The quality you're aiming for
-    - The context window size you require
-    </Note>
-  </Accordion>
+<CardGroup cols={2}>
+  <Card title="Consider Model Selection Criteria" icon="chart-line">
+    <ul>
+      <li>**1.** Your budget and cost constraints</li>
+      <li>**2.** How fast you need responses</li>
+      <li>**3.** The quality you're aiming for</li>
+      <li>**4.** The context window size you require</li>
+    </ul>
+  </Card>
 
-  <Accordion title="Best Practices" icon="lightbulb">
-    - Start with smaller models for development and testing
-    - Use larger context windows only when necessary
-    - Keep an eye on token usage to manage costs
-  </Accordion>
-</AccordionGroup>
+  <Card title="Follow Best Practices" icon="check">
+    <ul>
+      <li>**1.** Start with smaller models for development and testing</li>
+      <li>**2.** Use larger context windows only when necessary</li>
+      <li>**3.** Keep an eye on token usage to manage costs</li>
+    </ul>
+  </Card>
+</CardGroup>
   
 <Tip>
   For more information, please refer to the [LiteLLM documentation](https://docs.litellm.ai/docs/providers).

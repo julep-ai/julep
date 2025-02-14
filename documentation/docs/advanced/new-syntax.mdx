@@ -1,0 +1,115 @@
+---
+title: 'New Syntax (Important)'
+description: 'Learn about the new workflow syntax and how to migrate your existing workflows'
+icon: 'code'
+---
+
+## Overview
+We've updated our workflow syntax to make data flow more explicit and consistent. These changes improve readability and make workflows more maintainable. While this update requires modifications to existing workflows, it provides a more robust foundation for workflow development.
+
+## Major Changes
+
+### 1. Input/Output Data References
+
+The most significant change is how we reference input and output data between workflow steps. The new syntax makes the data flow more explicit by using the `steps` keyword.
+
+#### Old Syntax:
+- `inputs[x]` - Referenced input data from step x
+- `outputs[x]` - Referenced output data from step x
+- `_x` - Shorthand for input data from step x
+
+#### New Syntax:
+- `steps[x].input` - References input data from step x
+- `steps[x].output` - References output data from step x
+- `_x` -  Has been removed
+
+### Example
+
+#### Old Syntax
+```yaml
+- evaluate:
+    input_data: inputs[0].a
+    output_data: outputs[0].b
+    shorthand: _0.c
+```
+
+#### New Syntax
+```yaml
+- evaluate:
+    input: $ steps[0].input.a
+    output: $ steps[0].output.b
+    shorthand: $ steps[0].input.c
+```
+
+<Note>
+Notice the addition of the `$` prefix in the new syntax. This indicates that the value should be treated as a Python expression. We'll cover this in detail in the next section.
+</Note>
+
+#### Key Changes:
+- `inputs[0]` becomes `steps[0].input`
+- `outputs[0]` becomes `steps[0].output`
+- `_0` becomes `steps[0].input`
+- Added `$` prefix to indicate Python expressions
+
+### 2. Template Syntax Changes Inside `prompt` Steps
+
+Another significant change is the removal of Jinja templates (`{{ }}`) in `log` steps and `prompt` steps. Instead, we now use Python f-strings with the `$` prefix for dynamic content.
+
+#### Old Syntax (Using Jinja):
+```yaml
+- prompt:
+    - role: user
+      content: Write me an article about the topic: {{inputs[0].topic}}
+```
+
+#### New Syntax (Using f-strings):
+```yaml
+- prompt:
+    - role: user
+      content: $ f"Write me an article about the topic: {steps[0].input.topic}"
+    - role: user
+      content: this is only text, no need for dollar sign prefix
+```
+
+For multiple lines, you can use a multiline f-string:
+
+```yaml
+- prompt:
+    - role: user
+      content: |-
+        $ f"""
+        Write me an article about the topic: {steps[0].input.topic}.
+        The article should be {steps[0].input.article_length} words long.
+        """
+```
+
+<Note>
+The `$` prefix is only needed when the value contains a Python expression or f-string. Plain text content doesn't require the prefix.
+</Note>
+
+### When to Use the $ Prefix
+
+The `$` prefix should be used in two scenarios:
+1. When referencing step data (inputs/outputs)
+2. When using Python expressions or f-strings
+
+#### Examples:
+
+```yaml
+steps:
+  - prompt:
+      # Needs $ because it uses an f-string
+      - role: user
+        content: $ f"The temperature is {steps[0].input.temp}°C"
+      
+      # No $ needed - plain text
+      - role: user
+        content: Tell me about the weather
+
+  - evaluate:
+      # Needs $ because it references step data
+      input: $ steps[0].output
+      
+      # Needs $ because it's a Python expression
+      condition: $ len(steps[0].input.text) > 100
+```

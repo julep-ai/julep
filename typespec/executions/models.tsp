@@ -142,6 +142,9 @@ model Transition extends TransitionEvent {
     @visibility("read")
     next: TransitionTarget | null;
 
+    @visibility("read")
+    step_label?: stepLabel;
+
     ...HasId;
     ...HasMetadata;
 }

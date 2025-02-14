@@ -1477,8 +1477,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
     Agents.CreateAgentRequest:
       type: object
@@ -1516,8 +1516,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
       description: Payload for creating a agent (and associated documents)
     Agents.CreateOrUpdateAgentRequest:
@@ -1559,8 +1559,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
       allOf:
         - $ref: '#/components/schemas/Agents.CreateAgentRequest'
@@ -1595,8 +1595,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
       description: Payload for patching a agent
     Agents.UpdateAgentRequest:
@@ -1635,8 +1635,8 @@ components:
           description: Instructions for the agent
           default: []
         default_settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.DefaultChatSettings'
+          type: object
+          additionalProperties: {}
           description: Default settings for all sessions created by this agent
       description: Payload for updating a agent
     Chat.BaseChatOutput:
@@ -2133,54 +2133,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/Chat.BaseChatOutput'
       description: Streaming chat completion output
-    Chat.ChatSettings:
-      type: object
-      required:
-        - stream
-        - stop
-      properties:
-        model:
-          allOf:
-            - $ref: '#/components/schemas/Common.identifierSafeUnicode'
-          description: Identifier of the model to be used
-        stream:
-          type: boolean
-          description: Indicates if the server should stream the response as it's generated
-          default: false
-        stop:
-          type: array
-          items:
-            type: string
-          maxItems: 4
-          description: Up to 4 sequences where the API will stop generating further tokens.
-          default: []
-        seed:
-          type: integer
-          format: int16
-          minimum: -1
-          maximum: 1000
-          description: If specified, the system will make a best effort to sample deterministically for that particular seed value
-        max_tokens:
-          type: integer
-          format: uint32
-          minimum: 1
-          description: The maximum number of tokens to generate in the chat completion
-        logit_bias:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/Common.logit_bias'
-          description: Modify the likelihood of specified tokens appearing in the completion
-        response_format:
-          anyOf:
-            - $ref: '#/components/schemas/Chat.SimpleCompletionResponseFormat'
-            - $ref: '#/components/schemas/Chat.SchemaCompletionResponseFormat'
-          description: Response format (set to `json_object` to restrict output to JSON)
-        agent:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-      allOf:
-        - $ref: '#/components/schemas/Chat.DefaultChatSettings'
     Chat.ChunkChatResponse:
       type: object
       required:
@@ -2212,30 +2164,6 @@ components:
           description: Total number of tokens used in the request (prompt + completion)
           readOnly: true
       description: Usage statistics for the completion request
-    Chat.DefaultChatSettings:
-      type: object
-      properties:
-        repetition_penalty:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 2
-          description: Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-        length_penalty:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 2
-          description: Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-        min_p:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 1
-          description: Minimum probability compared to leading token to be considered
-      allOf:
-        - $ref: '#/components/schemas/Chat.OpenAISettings'
-      description: Default settings for the chat session (also used by the agent)
     Chat.FinishReason:
       type: string
       enum:
@@ -2430,33 +2358,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/Chat.BaseChatOutput'
       description: The output returned by the model. Note that, depending on the model provider, they might return more than one message.
-    Chat.OpenAISettings:
-      type: object
-      properties:
-        frequency_penalty:
-          type: number
-          format: float
-          minimum: -2
-          maximum: 2
-          description: Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-        presence_penalty:
-          type: number
-          format: float
-          minimum: -2
-          maximum: 2
-          description: Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-        temperature:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 5
-          description: What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-        top_p:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 1
-          description: Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
     Chat.SchemaCompletionResponseFormat:
       type: object
       required:
@@ -2725,6 +2626,11 @@ components:
       format: uint32
       minimum: 0
       description: Offset to apply to the results
+    Common.stepLabel:
+      type: string
+      maxLength: 120
+      pattern: ^[^0-9]|^[0-9]+[^0-9].*$
+      description: A valid step label
     Common.uuid:
       type: string
       format: uuid
@@ -3522,6 +3428,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Executions.TransitionTarget'
           nullable: true
+          readOnly: true
+        step_label:
+          allOf:
+            - $ref: '#/components/schemas/Common.stepLabel'
           readOnly: true
         id:
           allOf:
@@ -4694,7 +4604,8 @@ components:
                         description: The kind of step
                         readOnly: true
                       label:
-                        type: string
+                        allOf:
+                          - $ref: '#/components/schemas/Common.stepLabel'
                         description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
@@ -4792,7 +4703,8 @@ components:
                       description: The kind of step
                       readOnly: true
                     label:
-                      type: string
+                      allOf:
+                        - $ref: '#/components/schemas/Common.stepLabel'
                       description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
@@ -4824,7 +4736,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -4861,7 +4774,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -4940,7 +4854,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -4958,7 +4873,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -4993,7 +4909,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5058,7 +4975,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5108,7 +5026,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -5144,7 +5063,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5186,7 +5106,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5213,7 +5134,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -5294,7 +5216,8 @@ components:
                   - type: object
                     properties:
                       label:
-                        type: string
+                        allOf:
+                          - $ref: '#/components/schemas/Common.stepLabel'
                         description: The label of this step for referencing it from other steps
                       kind_:
                         type: string
@@ -5380,7 +5303,8 @@ components:
                 - type: object
                   properties:
                     label:
-                      type: string
+                      allOf:
+                        - $ref: '#/components/schemas/Common.stepLabel'
                       description: The label of this step for referencing it from other steps
                     kind_:
                       type: string
@@ -5567,8 +5491,8 @@ components:
             - $ref: '#/components/schemas/Tools.NamedToolChoice'
           description: The tool choice for the prompt
         settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.ChatSettings'
+          type: object
+          additionalProperties: {}
           description: Settings for the prompt
         unwrap:
           type: boolean
@@ -5599,7 +5523,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5776,8 +5701,8 @@ components:
             - $ref: '#/components/schemas/Tools.NamedToolChoice'
           description: The tool choice for the prompt
         settings:
-          allOf:
-            - $ref: '#/components/schemas/Chat.ChatSettings'
+          type: object
+          additionalProperties: {}
           description: Settings for the prompt
         unwrap:
           type: boolean
@@ -5800,7 +5725,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -5849,7 +5775,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5886,7 +5813,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5955,7 +5883,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -5990,7 +5919,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -6010,7 +5940,8 @@ components:
         - type: object
           properties:
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
             kind_:
               type: string
@@ -6116,7 +6047,8 @@ components:
                         description: The kind of step
                         readOnly: true
                       label:
-                        type: string
+                        allOf:
+                          - $ref: '#/components/schemas/Common.stepLabel'
                         description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
@@ -6228,7 +6160,8 @@ components:
                       description: The kind of step
                       readOnly: true
                     label:
-                      type: string
+                      allOf:
+                        - $ref: '#/components/schemas/Common.stepLabel'
                       description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
@@ -6353,7 +6286,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -6478,7 +6412,8 @@ components:
                         description: The kind of step
                         readOnly: true
                       label:
-                        type: string
+                        allOf:
+                          - $ref: '#/components/schemas/Common.stepLabel'
                         description: The label of this step for referencing it from other steps
                     discriminator:
                       propertyName: kind_
@@ -6576,7 +6511,8 @@ components:
                       description: The kind of step
                       readOnly: true
                     label:
-                      type: string
+                      allOf:
+                        - $ref: '#/components/schemas/Common.stepLabel'
                       description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
@@ -6631,7 +6567,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_
@@ -6688,7 +6625,8 @@ components:
               description: The kind of step
               readOnly: true
             label:
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/Common.stepLabel'
               description: The label of this step for referencing it from other steps
           discriminator:
             propertyName: kind_

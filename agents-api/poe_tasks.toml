@@ -9,7 +9,7 @@ check = [
     "validate-sql",
     "typecheck",
 ]
-codegen = """
+codegen_openapi = """
 datamodel-codegen \
   --input ../openapi.yaml \
   --input-file-type openapi \
@@ -44,6 +44,11 @@ datamodel-codegen \
   --openapi-scopes schemas \
   --keep-model-order \
   --disable-timestamp"""
+fix_list_response = "python -c \"import base64; exec(base64.b64decode('CmltcG9ydCByZQoKZGVmIGZpeF9nZW5lcmljX2NsYXNzZXMoZmlsZV9wYXRoKToKICAgIHdpdGggb3BlbihmaWxlX3BhdGgsICdyJykgYXMgZmlsZToKICAgICAgICBjb250ZW50ID0gZmlsZS5yZWFkKCkKCiAgICAjIFJlZ3VsYXIgZXhwcmVzc2lvbiB0byBmaW5kIGluY29ycmVjdCBnZW5lcmljIGNsYXNzIGRlZmluaXRpb25zCiAgICBwYXR0ZXJuID0gcmUuY29tcGlsZShyJ2NsYXNzIChcdyspXFsoXHcrKTogQmFzZU1vZGVsXF1cKChCYXNlTW9kZWwpXCk6JykKICAgIHJlcGxhY2VtZW50ID0gcidjbGFzcyBcMShcMywgR2VuZXJpY1tcMl0pOicKCiAgICAjIFJlcGxhY2UgaW5jb3JyZWN0IGdlbmVyaWMgY2xhc3MgZGVmaW5pdGlvbnMKICAgIGZpeGVkX2NvbnRlbnQgPSByZS5zdWIocGF0dGVybiwgcmVwbGFjZW1lbnQsIGNvbnRlbnQpCgogICAgIyBXcml0ZSB0aGUgZml4ZWQgY29udGVudCBiYWNrIHRvIHRoZSBmaWxlCiAgICB3aXRoIG9wZW4oZmlsZV9wYXRoLCAndycpIGFzIGZpbGU6CiAgICAgICAgZmlsZS53cml0ZShmaXhlZF9jb250ZW50KQoKZml4X2dlbmVyaWNfY2xhc3NlcygnYWdlbnRzX2FwaS9hdXRvZ2VuL29wZW5hcGlfbW9kZWwucHknKQo=').decode())\""
+codegen = [
+    "codegen_openapi",
+    "fix_list_response",
+]
 
 [tasks.test]
 env = { AGENTS_API_TESTING = "true", PYTHONPATH = "{PYTHONPATH}:." }

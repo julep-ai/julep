@@ -9,39 +9,49 @@ from openai import BaseModel
 # Increase the max string length to 2048000
 simpleeval.MAX_STRING_LENGTH = 2048000
 
-from simpleeval import NameNotDefined, SimpleEval
+from simpleeval import SimpleEval
 from temporalio import activity
-from thefuzz import fuzz
 
+from ...common.exceptions.executions import EvaluateError
+from ...common.protocol.tasks import StepContext
 from ..utils import get_evaluator
 
 
-class EvaluateError(Exception):
-    def __init__(self, error, expression, values):
-        error_message = error.message if hasattr(error, "message") else str(error)
-        message = error_message
+def backwards_compatibility(expr: str) -> str:
+    expr = expr.strip()
 
-        # Catch a possible jinja template error
-        if "unhashable" in error_message and "{{" in expression:
-            message += "\nSuggestion: It seems like you used a jinja template, did you mean to use a python expression?"
+    if expr.startswith("$ "):
+        return expr
 
-        # Catch a possible misspell in a variable name
-        if isinstance(error, NameNotDefined):
-            misspelledName = error_message.split("'")[1]
-            for variableName in values:
-                if fuzz.ratio(variableName, misspelledName) >= 90.0:
-                    message += f"\nDid you mean '{variableName}' instead of '{misspelledName}'?"
-        super().__init__(message)
+    if "{{" in expr:
+        return "$ f'''" + expr.replace("{{", "{").replace("}}", "}") + "'''"
+
+    if (
+        (expr.startswith("[") and expr.endswith("]"))
+        or (expr.startswith("_[") and expr.endswith("]"))
+        or (expr.startswith("_.") and expr.endswith("]"))
+        or "outputs[" in expr
+        or "inputs[" in expr
+        or expr == "_"
+    ):
+        return "$ " + expr
+
+    return expr
 
 
 # Recursive evaluation helper function
 def _recursive_evaluate(expr, evaluator: SimpleEval):
     if isinstance(expr, str):
         try:
+            expr = backwards_compatibility(expr)
+            if isinstance(expr, str) and expr.startswith("$ "):
+                expr = expr[2:].strip()
+            else:
+                return expr
             return evaluator.eval(expr)
         except Exception as e:
+            evaluate_error = EvaluateError(e, expr, evaluator.names)
             if activity.in_activity():
-                evaluate_error = EvaluateError(e, expr, evaluator.names)
                 activity.logger.error(f"Error in base_evaluate: {evaluate_error}\n")
             raise evaluate_error from e
     elif isinstance(expr, list):
@@ -57,9 +67,18 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
 @beartype
 async def base_evaluate(
     exprs: Any,
-    values: dict[str, Any] = {},
+    context: StepContext | None = None,
+    values: dict[str, Any] | None = None,
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
+    if context is None and values is None:
+        msg = "Either context or values must be provided"
+        raise ValueError(msg)
+
+    values = values or {}
+    if context:
+        values.update(await context.prepare_for_step())
+
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"
 

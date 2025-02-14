@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Any, TypeVar
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError
+from temporalio.exceptions import ActivityError, ApplicationError, ChildWorkflowError
 
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
 
@@ -20,6 +20,7 @@ with workflow.unsafe.imports_passed_through():
         ExecutionInput,
         StepContext,
     )
+    from ...common.utils.workflows import PAR_PREFIX, SEPARATOR
     from ...env import task_max_parallelism, temporal_heartbeat_timeout
 
 T = TypeVar("T")
@@ -43,6 +44,23 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
     return execution_input.task
 
 
+async def base_evaluate_activity(
+    expr: str, context: StepContext | None = None, values: dict[str, Any] | None = None
+) -> Any:
+    try:
+        return await workflow.execute_activity(
+            task_steps.base_evaluate,
+            args=[expr, context, values],
+            schedule_to_close_timeout=timedelta(seconds=30),
+            retry_policy=DEFAULT_RETRY_POLICY,
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+        )
+    except ActivityError as e:
+        while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
+            e = e.__cause__
+        raise e
+
+
 async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
@@ -59,15 +77,21 @@ async def continue_as_child(
             info.workflow_type, *args, **kwargs
         )
 
-    return await run(
-        args=[
-            execution_input,
-            start,
-            current_input,
-        ],
-        retry_policy=DEFAULT_RETRY_POLICY,
-        memo=workflow.memo() | user_state,
-    )
+    try:
+        return await run(
+            args=[
+                execution_input,
+                start,
+                current_input,
+            ],
+            retry_policy=DEFAULT_RETRY_POLICY,
+            memo=workflow.memo() | user_state,
+        )
+    except Exception as e:
+        while isinstance(e, ChildWorkflowError) and getattr(e, "__cause__", None):
+            e = e.__cause__
+        e.transitioned = True
+        raise e
 
 
 async def execute_switch_branch(
@@ -83,7 +107,9 @@ async def execute_switch_branch(
     workflow.logger.info(f"Switch step: Chose branch {index}")
     chosen_branch = switch[index]
 
-    case_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].case"
+    seprated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+    case_wf_name = f"{seprated_workflow_name}[{context.cursor.step}].case"
 
     case_task = task.model_copy()
     case_task.workflows = [
@@ -121,7 +147,9 @@ async def execute_if_else_branch(
     if chosen_branch is None:
         chosen_branch = EvaluateStep(evaluate={"output": "_"})
 
-    if_else_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].if_else"
+    separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+    if_else_wf_name = f"{separated_workflow_name}[{context.cursor.step}].if_else"
     if_else_wf_name += ".then" if condition else ".else"
 
     if_else_task = task.model_copy()
@@ -157,7 +185,9 @@ async def execute_foreach_step(
     results = []
 
     for i, item in enumerate(items):
-        foreach_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
+        separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+        foreach_wf_name = f"{separated_workflow_name}[{context.cursor.step}].foreach[{i}]"
         foreach_task = task.model_copy()
         foreach_task.workflows = [
             Workflow(name=foreach_wf_name, steps=[do_step]),
@@ -193,10 +223,12 @@ async def execute_map_reduce_step(
     task = validate_execution_input(execution_input)
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     result = initial
-    reduce = "results + [_]" if reduce is None else reduce
+    reduce = "$ results + [_]" if reduce is None else reduce
 
     for i, item in enumerate(items):
-        workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
+        separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+        workflow_name = f"{separated_workflow_name}[{context.cursor.step}].mapreduce[{i}]"
         map_reduce_task = task.model_copy()
         map_reduce_task.workflows = [
             Workflow(name=workflow_name, steps=[map_defn]),
@@ -205,6 +237,7 @@ async def execute_map_reduce_step(
 
         map_reduce_execution_input = execution_input.model_copy()
         map_reduce_execution_input.task = map_reduce_task
+        # NOTE: Step needs to be refactored to support multiple steps
         map_reduce_next_target = TransitionTarget(workflow=workflow_name, step=0)
 
         output = await continue_as_child(
@@ -216,7 +249,7 @@ async def execute_map_reduce_step(
 
         result = await workflow.execute_activity(
             task_steps.base_evaluate,
-            args=[reduce, {"results": result, "_": output}],
+            args=[reduce, None, {"results": result, "_": output}],
             schedule_to_close_timeout=timedelta(seconds=30),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -253,7 +286,7 @@ async def execute_map_reduce_step_parallel(
     # - reducer_lambda is the lambda function that will be used to reduce the results
     extra_lambda_strs = {"reducer_lambda": f"lambda _result, _item: ({reduce})"}
 
-    reduce = "reduce(reducer_lambda, _, results)"
+    reduce = "$ reduce(reducer_lambda, _, results)"
 
     # First create batches of items to run in parallel
     batches = [items[i : i + parallelism] for i in range(0, len(items), parallelism)]
@@ -264,9 +297,9 @@ async def execute_map_reduce_step_parallel(
         for j, item in enumerate(batch):
             # Parallel batch workflow name
             # Note: Added PAR: prefix to easily identify parallel batches in logs
-            workflow_name = (
-                f"PAR:`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}][{j}]"
-            )
+            separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
+
+            workflow_name = f"{PAR_PREFIX}{separated_workflow_name}[{context.cursor.step}].mapreduce[{i}][{j}]"
             map_reduce_task = task.model_copy()
             map_reduce_task.workflows = [
                 Workflow(name=workflow_name, steps=[map_defn]),
@@ -297,6 +330,7 @@ async def execute_map_reduce_step_parallel(
                 task_steps.base_evaluate,
                 args=[
                     reduce,
+                    None,
                     {"results": results, "_": batch_results},
                     extra_lambda_strs,
                 ],

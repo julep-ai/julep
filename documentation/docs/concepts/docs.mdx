@@ -311,6 +311,13 @@ By leveraging [System Tools](/docs/concepts/tools#system-tools), Julep [Tasks](/
 
 <CodeGroup>
     ```yaml
+    input_schema:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The id of the user to list documents for
+
     tools:
     - name: "list_user_docs"
       description: "List all documents for the current user"
@@ -324,11 +331,11 @@ By leveraging [System Tools](/docs/concepts/tools#system-tools), Julep [Tasks](/
     # Step that lists all documents for the current user
     - tool: "list_user_docs"
       arguments:
-        user_id: "'USER_ID'"
+        user_id: $ _.user_id
 
     # Step that evaluates the textual contents of all documents for the current user
     - evaluate:
-        all_user_docs_contents: [doc.content for doc in _.items]
+        all_user_docs_contents: $ [doc.content for doc in _.items]
     ```
 </CodeGroup>
 

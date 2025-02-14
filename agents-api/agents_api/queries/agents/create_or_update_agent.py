@@ -9,7 +9,7 @@ from beartype import beartype
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
@@ -62,7 +62,7 @@ RETURNING *;
     one=True,
     transform=lambda d: {**d, "id": d["agent_id"]},
 )
-@increase_counter("create_or_update_agent")
+@query_metrics("create_or_update_agent")
 @pg_query
 @beartype
 async def create_or_update_agent(
@@ -86,7 +86,7 @@ async def create_or_update_agent(
     )
 
     # Convert default_settings to dict if it exists
-    default_settings = data.default_settings.model_dump() if data.default_settings else {}
+    default_settings = data.default_settings or {}
 
     # Set default values
     data.metadata = data.metadata or {}

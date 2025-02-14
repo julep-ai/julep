@@ -38,13 +38,12 @@ jobs:
 
           if [ -z "$merged_prs" ] || [ "$merged_prs" = "null" ]; then
             echo "No merged PRs found in the last two weeks."
-            echo "pr_data=[]" >> $GITHUB_ENV
-            echo '{"pr_data": []}' > pr_data.json
+            echo "has_prs=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          echo "pr_data=$merged_prs" >> $GITHUB_ENV
           echo "$merged_prs" > pr_data.json
+          echo "has_prs=true" >> $GITHUB_OUTPUT
 
       - name: Setup Python v3.10.12
         uses: actions/setup-python@v5
@@ -57,7 +56,7 @@ jobs:
           python -m pip install PyYAML julep
 
       - name: Send PR data to Python script
-        if: steps.collect_prs.outputs.pr_data != '[]'
+        if: steps.collect_prs.outputs.has_prs == 'true'
         id: generate_changelog
         run: |
           if ! python scripts/generate_changelog.py; then
@@ -70,7 +69,7 @@ jobs:
           AGENT_UUID: ${{ secrets.AGENT_UUID }}
 
       - name: Create Pull Request
-        if: success() && steps.collect_prs.outputs.pr_data != '[]'
+        if: success() && steps.collect_prs.outputs.has_prs == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

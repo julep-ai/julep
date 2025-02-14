@@ -43,7 +43,7 @@ model BaseWorkflowStep<T extends valueof WorkflowStepKind> {
     kind_: (typeof T);
 
     /** The label of this step for referencing it from other steps */
-    label?: string;
+    label?: stepLabel;
 }
 
 alias SequentialWorkflowStep =

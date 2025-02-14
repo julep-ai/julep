@@ -16,29 +16,51 @@ The underscore `_` is a special variable that serves three different purposes de
 ```yaml
 # If task is executed with input `{"topic": "AI"}`
 - evaluate:
-    topic: _.topic  # Accesses the input "AI"
+    topic: $ _.topic  # Accesses the input "AI"
 ```
 
 2. **Previous Step Output**: In any subsequent step, `_` contains the output from the previous step:
 ```yaml
 - evaluate:
-    results: _.split('\n')  # Splits previous step's output into lines
+    results: $ _.split('\n')  # Splits previous step's output into lines
 ```
 
 3. **Iterator Value**: In `foreach` and `map` steps, `_` represents the current item being iterated.
 ```yaml
 # If the task is executed with input `{"questions": ["What is AI?", "What is Julep?"]}`
 - foreach:
-    in: _.questions
+    in: $ _.questions
     do:
       - wait_for_input:
           info:
-            "message": _  # _ is each question
+            "message": $ _  # _ is each question
 ```
+
+## The Special `$` Variable
+
+The `$` variable is used to differentiate between a Python expression and a string. When using the `$` variable, the expression is evaluated as a Python expression.
+
+```yaml
+- evaluate:
+    topic: $ _.topic  # Accesses the input "AI"
+```
+
+```yaml
+- prompt:
+    - role: user
+      content: |-
+        f'''
+        Please answer the following question:
+        {_.question} 
+        '''
+```
+<Note>
+To learn more about how to use the `$` variable, please refer to the [New Syntax](/docs/advanced/new-syntax) section.
+</Note>
 
 ## Where Python Expressions Are Used
 
-Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types table in the README](https://github.com/julep-ai/julep#types-of-workflow-steps).
+Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types table in the README](/docs/advanced/types-of-task-types).
 
 Common places include:
 - `evaluate` steps
@@ -72,7 +94,7 @@ The following Python functions and libraries are available for use in expression
   
   Safely serializes an object to a JSON string.
 
-- `dump_yaml`: `def dump_yaml(obj: Any, **kwargs) -> str` (Deprecated in favor of `yaml.dumps`)
+- `dump_yaml`: `def dump_yaml(obj: Any, **kwargs) -> str` (Deprecated in favor of `yaml.dump`)
   
   Safely serializes an object to a YAML string.
 
@@ -99,13 +121,99 @@ Example using these functions in an evaluate step:
 ```yaml
 - evaluate:
     # Parse JSON string with size limit of 1MB
-    data: json.loads(_.json_string)
+    data: $ json.loads(_.json_string)
     
     # Parse YAML string with size limit of 1MB
-    config: yaml.safe_load(_.yaml_string)
+    config: $ yaml.safe_load(_.yaml_string)
     
     # Extract JSON from text that might contain markdown code blocks
-    extracted_content: extract_json('Here is some JSON: ```json\n{"key": "value"}\n```')
+    extracted_content: $ extract_json('Here is some JSON: ```json\n{"key": "value"}\n```')
+```
+
+### CSV Functions
+- `reader`: `def reader(data: str, dialect="excel", delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting=0, strict: bool = False) -> csv._reader`
+
+  Creates a CSV reader.
+
+- `writer`: `def writer(data: str, dialect="excel", delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting=0, strict: bool = False) -> csv._writer`
+
+  Creates a CSV writer.
+
+- `DictReader`: `class DictReader(data: str, fieldnames=None, restkey=None, restval=None, dialect="excel", *args, **kwds)`
+
+  Create an object that operates like a regular reader but maps the information in each row to a dict.
+
+- `DictWriter`: `class DictWriter(data: str, fieldnames, restval="", extrasaction="raise", dialect="excel", *args, **kwds)`
+
+  Create an object which operates like a regular writer but maps dictionaries onto output rows.
+
+- `register_dialect`: `def register_dialect(name: str, dialect: type[Dialect] = ..., *, delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting: _QuotingType = 0, strict: bool = False) -> csv._reader`
+
+  Associate dialect with name.
+
+- `unregister_dialect`: `def unregister_dialect(name: str) -> None`
+
+  Delete the dialect associated with name from the dialect registry.
+
+- `get_dialect`: `def get_dialect(name: str) -> Dialect`
+
+  Return the dialect associated with name.
+
+- `list_dialects`: `def list_dialects() -> list[str]`
+
+  Return the names of all registered dialects.
+
+- `field_size_limit`: `def field_size_limit(new_limit: int = ...) -> int`
+
+  Returns the current maximum field size allowed by the parser.
+
+- `Dialect`: `class Dialect()`
+
+  The Dialect class is a container class whose attributes contain information for how to handle doublequotes, whitespace, delimiters, etc.
+
+- `excel`: `class excel()`
+
+  The excel class defines the usual properties of an Excel-generated CSV file.
+
+- `excel_tab`: `class excel_tab()`
+
+  The excel_tab class defines the usual properties of an Excel-generated TAB-delimited file.
+
+- `unix_dialect`: `class unix_dialect()`
+
+  The unix_dialect class defines the usual properties of a CSV file generated on UNIX systems, i.e. using '\n' as line terminator and quoting all fields.
+
+- `Sniffer`: `class Sniffer`
+
+  The Sniffer class is used to deduce the format of a CSV file.
+
+- `QUOTE_ALL` - Instructs writer objects to quote all fields.
+
+- `QUOTE_MINIMAL` - Instructs writer objects to only quote those fields which contain special characters such as delimiter, quotechar or any of the characters in lineterminator.
+
+- `QUOTE_NONNUMERIC` - Instructs writer objects to quote all non-numeric fields. Instructs reader objects to convert all non-quoted fields to type float.
+
+- `QUOTE_NONE` - Instructs writer objects to never quote fields.
+
+- `QUOTE_NOTNULL` - Instructs writer objects to quote all fields which are not None.
+
+- `QUOTE_STRINGS` - Instructs writer objects to always place quotes around fields which are strings.
+
+- `Error`: `class Error()`
+
+  Raised by any of the functions when an error is detected.
+
+This module tries to mimic `csv` module from the standard Python library. You can find additional information [here](https://docs.python.org/3/library/csv.html)
+
+## Example Usage
+
+```yaml
+name: Data Processing Task
+
+main:
+  # Using _ as input
+  - evaluate:
+      csv_data: $ [row for row in csv.reader("a,b,c\n1,2,3")]
 ```
 
 ### Standard Library Modules
@@ -120,6 +228,7 @@ Example using these functions in an evaluate step:
 - `urllib.parse`: URL parsing operations
 - `random`: Random number generation
 - `time`: Time operations
+- `csv`: CSV operations
 
 For the complete list of available functions and their safe implementations, refer to the [utils.py](https://github.com/julep-ai/julep/blob/main/agents-api/agents_api/activities/utils.py) file in the source code.
 
@@ -133,19 +242,19 @@ name: Data Processing Task
 main:
   # Using _ as input
   - evaluate:
-      topics: _.topics  # Access input topics
+      topics: $ _.topics  # Access input topics
 
   # Using _ as previous output
   - evaluate:
-      filtered_topics: [t for t in _.topics if len(t) > 3]
+      filtered_topics: $ [t for t in _.topics if len(t) > 3]
 
   # Using _ in foreach
   - foreach:
-      in: _.filtered_topics
+      in: $ _.filtered_topics
       do:
         - tool: web_search
           arguments:
-            query: "'Latest news about ' + _"  # _ is each topic
+            query: $ 'Latest news about ' + _ # _ is each topic
 ```
 
 ## Security

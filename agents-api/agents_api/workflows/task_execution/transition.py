@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError
+from temporalio.exceptions import ActivityError, ApplicationError
 
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
@@ -61,6 +61,8 @@ async def transition(
         return transition_request
 
     except Exception as e:
+        while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
+            e = e.__cause__
         workflow.logger.error(f"Error in transition: {e!s}")
         msg = f"Error in transition: {e}"
         raise ApplicationError(msg) from e

@@ -1,0 +1,680 @@
+---
+title: 'Create & Execute a Julep Task'
+description: 'Learn how to create and execute a Julep task'
+---
+
+# Create and Execute a Julep Task
+
+This guide will walk you through the process of creating a Julep task and executing it.
+
+<Info>
+This guide is based on the Trip Planning task. For a detailed explanation of the task's workflow, please check out the corresponding [Trip Planning tutorial](/docs/tutorials/trip-planning).
+</Info>
+
+## Step 1: Initialize the Julep Client
+
+First, you need to initialize the Julep client with your API key.
+
+<CodeGroup>
+```python Python
+from julep import Julep
+
+# Initialize the Julep client
+julep = Julep(api_key="your_api_key")
+```
+
+```javascript Node.js
+const julep = require('@julep/sdk');
+
+// Initialize the Julep client
+const julep = new Julep({ apiKey: 'your_api_key' });
+```
+</CodeGroup>
+
+## Step 2: Create a Julep Agent
+
+Create an agent to associate the task with. In Julep, tasks are scoped to agents, and agents take on the responsibility of executing tasks.
+
+<CodeGroup>
+```python Python
+# Create an agent
+agent = julep.agents.create(
+    name="Task Agent",
+    model="gpt-4o"
+)
+```
+
+```javascript Node.js
+// Create an agent
+const agent = await julep.agents.create({
+    name: "Task Agent",
+    model: "gpt-4o"
+});
+```
+</CodeGroup>
+
+## Step 3: Create a Julep Task
+
+In this step, you will define the task that the Julep agent will execute. This involves specifying the task's name, description, input schema, tools, and the main workflow. The task definition is written in YAML format and includes details about the integrations and the logic for processing the input data.
+
+<CodeGroup>
+```python Python
+import yaml
+
+task_def = yaml.safe_load("""
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Julep Trip Planning Task
+description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
+
+########################################################
+################### INPUT SCHEMA #######################
+########################################################
+
+input_schema:
+  type: object
+  properties:
+    locations:
+      type: array
+      items:
+        type: string
+      description: The locations to search for.
+
+########################################################
+################### TOOLS ##############################
+########################################################
+
+tools:
+- name: wikipedia
+  type: integration
+  integration:
+    provider: wikipedia
+
+- name: weather
+  type: integration
+  integration:
+    provider: weather
+    setup:
+      openweathermap_api_key: "YOUR_OPENWEATHERMAP_API_KEY"
+
+- name: internet_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: "YOUR_BRAVE_API_KEY"
+
+########################################################
+################### MAIN WORKFLOW ######################
+########################################################
+
+main:
+- over: $ steps[0].input.locations
+map:
+  tool: weather
+  arguments:
+    location: $ _
+
+- over: $ steps[0].input.locations
+map:
+  tool: internet_search
+  arguments:
+    query: $ 'tourist attractions in ' + _
+
+# Zip locations, weather, and attractions into a list of tuples [(location, weather, attractions)]
+- evaluate:
+  zipped: |-
+    $ list(
+      zip(
+        steps[0].input.locations,
+        [output['result'] for output in steps[0].output],
+        steps[1].output
+      )
+    )
+
+
+- over: $ _['zipped']
+parallelism: 3
+# Inside the map step, each `_` represents the current element in the list
+# which is a tuple of (location, weather, attractions)
+map:
+  prompt:
+  - role: system
+    content: >-
+      $ f'''You are {agent.name}. Your task is to create a detailed itinerary
+      for visiting tourist attractions in some locations.
+      The user will give you the following information for each location:
+
+      - The location
+      - The current weather condition
+      - The top tourist attractions'''
+  - role: user
+    content: >-
+      $ f'''Location: "{_[0]}"
+      Weather: "{_[1]}"
+      Attractions: "{_[2]}"'''
+  unwrap: true
+
+- evaluate:
+  final_plan: |-
+    $ '\\n---------------\\n'.join(activity for activity in _)
+""")
+
+
+# Create a task
+task = julep.tasks.create(
+    agent_id=agent.id,
+    **task_def
+)
+```
+
+```javascript Node.js
+const yaml = require("yaml");
+
+const task_def = yaml.safeLoad("""
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Julep Trip Planning Task
+description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
+
+########################################################
+################### INPUT SCHEMA #######################
+########################################################
+
+input_schema:
+  type: object
+  properties:
+    locations:
+      type: array
+      items:
+        type: string
+      description: The locations to search for.
+
+########################################################
+################### TOOLS ##############################
+########################################################
+
+tools:
+- name: wikipedia
+  type: integration
+  integration:
+    provider: wikipedia
+
+- name: weather
+  type: integration
+  integration:
+    provider: weather
+    setup:
+      openweathermap_api_key: "YOUR_OPENWEATHERMAP_API_KEY"
+
+- name: internet_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: "YOUR_BRAVE_API_KEY"
+
+########################################################
+################### MAIN WORKFLOW ######################
+########################################################
+
+main:
+- over: $ steps[0].input.locations
+map:
+  tool: weather
+  arguments:
+    location: $ _
+
+- over: $ steps[0].input.locations
+map:
+  tool: internet_search
+  arguments:
+    query: $ 'tourist attractions in ' + _
+
+# Zip locations, weather, and attractions into a list of tuples [(location, weather, attractions)]
+- evaluate:
+  zipped: |-
+    $ list(
+      zip(
+        steps[0].input.locations,
+        [output['result'] for output in steps[0].output],
+        steps[1].output
+      )
+    )
+
+
+- over: $ _['zipped']
+parallelism: 3
+# Inside the map step, each `_` represents the current element in the list
+# which is a tuple of (location, weather, attractions)
+map:
+  prompt:
+  - role: system
+    content: >-
+      $ f'''You are {agent.name}. Your task is to create a detailed itinerary
+      for visiting tourist attractions in some locations.
+      The user will give you the following information for each location:
+
+      - The location
+      - The current weather condition
+      - The top tourist attractions'''
+  - role: user
+    content: >-
+      $ f'''Location: "{_[0]}"
+      Weather: "{_[1]}"
+      Attractions: "{_[2]}"'''
+  unwrap: true
+
+- evaluate:
+  final_plan: |-
+    $ '\\n---------------\\n'.join(activity for activity in _)
+
+""")
+
+// Create a task
+const task = await julep.tasks.create({
+    name: "Trip Planning",
+    agentId: agent.id
+});
+```
+</CodeGroup>
+
+# Step 4: Execute the Julep Task
+
+Once the task is created, you can execute it by providing the necessary input that matches the task's input schema. This step involves calling the execute method on the task, which will start the task execution process.
+
+<CodeGroup>
+```python Python
+# Execute the task with specific input that matches the task's input schema
+execution = julep.tasks.execute(
+    task_id=task.id,
+    input={"locations": ["New York", "Paris", "Tokyo"]}
+)
+
+```
+
+```javascript Node.js
+// Execute the task with specific input that matches the task's input schema
+const execution = await julep.tasks.execute(
+    taskId: task.id,
+    input: {"locations": ["New York", "Paris", "Tokyo"]}
+)
+```
+</CodeGroup>
+
+
+## Step 5: Get the Task Execution Result
+
+After executing the task, you can retrieve the results by checking the execution status and output. This step involves polling the execution status until it reaches a terminal state (succeeded, failed, or cancelled) and printing the current output. Alternatively, you can fetch the execution transitions for a more detailed view of the task's progress, which is useful for debugging.
+
+
+### Fetching the Execution Status & Current Output
+
+<CodeGroup>
+```python Python
+import time
+
+# Fetch the execution status & current output
+execution = julep.executions.get(execution_id=execution.id)
+
+while execution.status not in ["succeeded", "failed", "cancelled"]:
+    execution = julep.executions.get(execution_id=execution.id)
+    print(f"Execution status: {execution.status}")
+    print(f"Execution output: {execution.output}")
+    print("************************************************")
+
+    # Wait for 5 seconds before polling again
+    time.sleep(5)
+```
+
+```javascript Node.js
+// Fetch the execution status & current output
+const execution = await julep.executions.get(executionId=execution.id);
+
+while (execution.status !== "succeeded" && execution.status !== "failed" && execution.status !== "cancelled") {
+    execution = await julep.executions.get(executionId=execution.id);
+    console.log(`Execution status: ${execution.status}`);
+    console.log(`Execution output: ${execution.output}`);
+    console.log("************************************************");
+
+    // Wait for 5 seconds before polling again
+    await new Promise(resolve => setTimeout(resolve, 5000));
+}
+```
+</CodeGroup>
+
+### Fetching the Execution Transitions
+
+<CodeGroup>
+```python Python
+import time
+
+# Fetch the execution transitions
+transitions = julep.executions.transitions.list(execution_id=execution.id)
+
+# Wait until the execution is either finished, errored, or canceled
+while transitions[0].items.type not in ["finish", "error", "canceled"]:
+    transitions = julep.executions.transitions.list(execution_id=execution.id)
+
+    # Transitions are ordered from the latest to the oldest
+    for transition in reversed(transitions.items):
+        print(f"Transition type: {transition.type}")
+        print(f"Transition output: {transition.output}")
+        print("************************************************")
+    
+    # Wait for 5 seconds before fetching the next set of transitions
+    time.sleep(5)
+```
+
+```javascript Node.js
+// Fetch the execution transitions
+const transitions = await julep.executions.transitions.list(executionId=execution.id);
+
+// Wait until the execution is either finished, errored, or canceled
+while (transitions[0].items.type !== "finish" && transitions[0].items.type !== "error" && transitions[0].items.type !== "canceled") {
+    transitions = await julep.executions.transitions.list(executionId=execution.id);
+
+    for (const transition of transitions.items) {
+        console.log(`Transition type: ${transition.type}`);
+        console.log(`Transition output: ${transition.output}`);
+        console.log("************************************************");
+    }
+
+    // Wait for 5 seconds before fetching the next set of transitions
+    await new Promise(resolve => setTimeout(resolve, 5000));
+}
+
+```
+</CodeGroup>
+
+## Full Example
+
+<CodeGroup>
+
+```python Python
+from julep import Julep
+import yaml
+import time
+
+# Initialize the Julep client
+julep = Julep(api_key="your_api_key")
+
+# Create an agent
+agent = julep.agents.create(
+    name="Task Agent",
+    model="gpt-4o"
+)
+
+task_def = yaml.safe_load("""
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Julep Trip Planning Task
+description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
+
+########################################################
+################### INPUT SCHEMA #######################
+########################################################
+
+input_schema:
+  type: object
+  properties:
+    locations:
+      type: array
+      items:
+        type: string
+      description: The locations to search for.
+
+########################################################
+################### TOOLS ##############################
+########################################################
+
+tools:
+- name: wikipedia
+  type: integration
+  integration:
+    provider: wikipedia
+
+- name: weather
+  type: integration
+  integration:
+    provider: weather
+    setup:
+      openweathermap_api_key: "YOUR_OPENWEATHERMAP_API_KEY"
+
+- name: internet_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: "YOUR_BRAVE_API_KEY"
+
+########################################################
+################### MAIN WORKFLOW ######################
+########################################################
+
+main:
+- over: $ steps[0].input.locations
+map:
+  tool: weather
+  arguments:
+    location: $ _
+
+- over: $ steps[0].input.locations
+map:
+  tool: internet_search
+  arguments:
+    query: $ 'tourist attractions in ' + _
+
+# Zip locations, weather, and attractions into a list of tuples [(location, weather, attractions)]
+- evaluate:
+  zipped: |-
+    $ list(
+      zip(
+        steps[0].input.locations,
+        [output['result'] for output in steps[0].output],
+        steps[1].output
+      )
+    )
+
+
+- over: $ _['zipped']
+parallelism: 3
+# Inside the map step, each `_` represents the current element in the list
+# which is a tuple of (location, weather, attractions)
+map:
+  prompt:
+  - role: system
+    content: >-
+      $ f'''You are {agent.name}. Your task is to create a detailed itinerary
+      for visiting tourist attractions in some locations.
+      The user will give you the following information for each location:
+
+      - The location
+      - The current weather condition
+      - The top tourist attractions'''
+  - role: user
+    content: >-
+      $ f'''Location: "{_[0]}"
+      Weather: "{_[1]}"
+      Attractions: "{_[2]}"'''
+  unwrap: true
+
+- evaluate:
+  final_plan: |-
+    $ '\\n---------------\\n'.join(activity for activity in _)
+""")
+
+
+# Create a task
+task = julep.tasks.create(
+    agent_id=agent.id,
+    **task_def
+)
+
+# Execute the task with specific input that matches the task's input schema
+execution = julep.tasks.execute(
+    task_id=task.id,
+    input={"locations": ["New York", "Paris", "Tokyo"]}
+)
+
+# Fetch the execution status & current output
+execution = julep.executions.get(execution_id=execution.id)
+
+while execution.status not in ["succeeded", "failed", "cancelled"]:
+    execution = julep.executions.get(execution_id=execution.id)
+    print(f"Execution status: {execution.status}")
+    print(f"Execution output: {execution.output}")
+    print("************************************************")
+
+    # Wait for 5 seconds before polling again
+    time.sleep(5)
+```
+
+```javascript Node.js
+const julep = require('@julep/sdk');
+
+// Initialize the Julep client
+const julep = new Julep({ apiKey: 'your_api_key' });
+
+// Create an agent
+const agent = await julep.agents.create({
+    name: "Task Agent",
+    model: "gpt-4o"
+});
+
+const yaml = require("yaml");
+
+const task_def = yaml.safeLoad("""
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Julep Trip Planning Task
+description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
+
+########################################################
+################### INPUT SCHEMA #######################
+########################################################
+
+input_schema:
+  type: object
+  properties:
+    locations:
+      type: array
+      items:
+        type: string
+      description: The locations to search for.
+
+########################################################
+################### TOOLS ##############################
+########################################################
+
+tools:
+- name: wikipedia
+  type: integration
+  integration:
+    provider: wikipedia
+
+- name: weather
+  type: integration
+  integration:
+    provider: weather
+    setup:
+      openweathermap_api_key: "YOUR_OPENWEATHERMAP_API_KEY"
+
+- name: internet_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: "YOUR_BRAVE_API_KEY"
+
+########################################################
+################### MAIN WORKFLOW ######################
+########################################################
+
+main:
+- over: $ steps[0].input.locations
+map:
+  tool: weather
+  arguments:
+    location: $ _
+
+- over: $ steps[0].input.locations
+map:
+  tool: internet_search
+  arguments:
+    query: $ 'tourist attractions in ' + _
+
+# Zip locations, weather, and attractions into a list of tuples [(location, weather, attractions)]
+- evaluate:
+  zipped: |-
+    $ list(
+      zip(
+        steps[0].input.locations,
+        [output['result'] for output in steps[0].output],
+        steps[1].output
+      )
+    )
+
+
+- over: $ _['zipped']
+parallelism: 3
+# Inside the map step, each `_` represents the current element in the list
+# which is a tuple of (location, weather, attractions)
+map:
+  prompt:
+  - role: system
+    content: >-
+      $ f'''You are {agent.name}. Your task is to create a detailed itinerary
+      for visiting tourist attractions in some locations.
+      The user will give you the following information for each location:
+
+      - The location
+      - The current weather condition
+      - The top tourist attractions'''
+  - role: user
+    content: >-
+      $ f'''Location: "{_[0]}"
+      Weather: "{_[1]}"
+      Attractions: "{_[2]}"'''
+  unwrap: true
+
+- evaluate:
+  final_plan: |-
+    $ '\\n---------------\\n'.join(activity for activity in _)
+
+""")
+
+// Create a task
+const task = await julep.tasks.create({
+    name: "Trip Planning",
+    agentId: agent.id
+});
+
+// Execute the task with specific input that matches the task's input schema
+const execution = await julep.tasks.execute(
+    taskId: task.id,
+    input: {"locations": ["New York", "Paris", "Tokyo"]}
+)
+
+// Fetch the execution status & current output
+const execution = await julep.executions.get(executionId=execution.id);
+
+while (execution.status !== "succeeded" && execution.status !== "failed" && execution.status !== "cancelled") {
+    execution = await julep.executions.get(executionId=execution.id);
+    console.log(`Execution status: ${execution.status}`);
+    console.log(`Execution output: ${execution.output}`);
+    console.log("************************************************");
+
+    // Wait for 5 seconds before polling again
+    await new Promise(resolve => setTimeout(resolve, 5000));
+}
+
+```
+</CodeGroup>
+
+## Conclusion
+
+This guide provided a comprehensive overview of how to create and execute a Julep task. It covered the necessary steps, including initializing the Julep client, creating an agent, defining the task, executing it, and retrieving the results. By following these steps, you can effectively use Julep's capabilities to automate complex workflows and achieve your goals. 
+
+
+## Next Steps
+
+- [Tasks](/docs/concepts/tasks) - Learn about Julep tasks in more details and see other tasks steps.  
+- [Tutorials](/docs/tutorials) - Check out other tutorials to see more real-world examples of Julep in action.
+- [Cookbooks](https://github.com/julep-ai/julep/tree/dev/cookbooks) - Easy to run Jupyter notebooks to execute Julep tasks.

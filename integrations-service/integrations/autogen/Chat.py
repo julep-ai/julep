@@ -284,13 +284,20 @@ class Delta(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: str | list[str] | list[ContentModel1 | ContentModel7 | ContentModel2] | None = None
+    content: Annotated[
+        str | list[str] | list[ContentModel1 | ContentModel7 | ContentModel2] | None,
+        Field(...),
+    ] = None
     """
     The content parts of the message
     """
     name: str | None = None
     """
     Name
+    """
+    continue_: Annotated[StrictBool | None, Field(alias="continue")] = None
+    """
+    Whether to continue this message or return a new one
     """
     tool_calls: (
         list[
@@ -328,7 +335,7 @@ class LogProbResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    content: list[TokenLogProb] | None = None
+    content: Annotated[list[TokenLogProb] | None, Field(...)]
     """
     The log probabilities of the tokens
     """
@@ -343,7 +350,10 @@ class Message(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: str | list[str] | list[Content | ContentModel7 | ContentModel] | None = None
+    content: Annotated[
+        str | list[str] | list[Content | ContentModel7 | ContentModel] | None,
+        Field(...),
+    ] = None
     """
     The content parts of the message
     """
@@ -388,7 +398,10 @@ class MessageModel(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: str | list[str] | list[ContentModel3 | ContentModel7 | ContentModel4] | None = None
+    content: Annotated[
+        str | list[str] | list[ContentModel3 | ContentModel7 | ContentModel4] | None,
+        Field(...),
+    ] = None
     """
     The content parts of the message
     """
@@ -428,28 +441,6 @@ class MultipleChatOutput(BaseChatOutput):
     messages: Annotated[
         list[MessageModel], Field(json_schema_extra={"readOnly": True}, min_length=1)
     ]
-
-
-class OpenAISettings(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    frequency_penalty: Annotated[float | None, Field(ge=-2.0, le=2.0)] = None
-    """
-    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    presence_penalty: Annotated[float | None, Field(ge=-2.0, le=2.0)] = None
-    """
-    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    temperature: Annotated[float | None, Field(ge=0.0, le=5.0)] = None
-    """
-    What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-    """
-    top_p: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
-    """
-    Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-    """
 
 
 class SchemaCompletionResponseFormat(BaseModel):
@@ -513,6 +504,10 @@ class ChatInput(ChatInputData):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    remember: Annotated[StrictBool, Field(json_schema_extra={"readOnly": True})] = False
+    """
+    DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
+    """
     recall: StrictBool = True
     """
     Whether previous memories and docs should be recalled or not
@@ -588,72 +583,4 @@ class ChatInput(ChatInputData):
     top_p: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
     """
     Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-    """
-
-
-class DefaultChatSettings(OpenAISettings):
-    """
-    Default settings for the chat session (also used by the agent)
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    repetition_penalty: Annotated[float | None, Field(ge=0.0, le=2.0)] = None
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    length_penalty: Annotated[float | None, Field(ge=0.0, le=2.0)] = None
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-    """
-    min_p: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
-    """
-    Minimum probability compared to leading token to be considered
-    """
-
-
-class ChatSettings(DefaultChatSettings):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    model: Annotated[
-        str | None,
-        Field(
-            max_length=120,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ] = None
-    """
-    Identifier of the model to be used
-    """
-    stream: StrictBool = False
-    """
-    Indicates if the server should stream the response as it's generated
-    """
-    stop: Annotated[list[str], Field(max_length=4)] = []
-    """
-    Up to 4 sequences where the API will stop generating further tokens.
-    """
-    seed: Annotated[int | None, Field(ge=-1, le=1000)] = None
-    """
-    If specified, the system will make a best effort to sample deterministically for that particular seed value
-    """
-    max_tokens: Annotated[int | None, Field(ge=1)] = None
-    """
-    The maximum number of tokens to generate in the chat completion
-    """
-    logit_bias: dict[str, LogitBias] | None = None
-    """
-    Modify the likelihood of specified tokens appearing in the completion
-    """
-    response_format: SimpleCompletionResponseFormat | SchemaCompletionResponseFormat | None = (
-        None
-    )
-    """
-    Response format (set to `json_object` to restrict output to JSON)
-    """
-    agent: UUID | None = None
-    """
-    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
     """

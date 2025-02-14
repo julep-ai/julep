@@ -97,11 +97,14 @@ def preserve_and_update_changelog(new_changelog: str, source: str = "./CHANGELOG
     path = Path(source)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Load templates at runtime
-    html_content = load_template("header.html")
-    author_list = load_template("authors.md")
+    # Load existing changelog if it exists, otherwise use header template
+    if path.exists():
+        existing_content = path.read_text(encoding="utf-8")
+        content = f"{existing_content}\n\n{new_changelog}"
+    else:
+        html_content = load_template("header.html")
+        content = f"{html_content}\n\n{new_changelog}"
 
-    content = f"{html_content}\n\n{new_changelog}\n\n{author_list}"
     path.write_text(content, encoding="utf-8")
 
 

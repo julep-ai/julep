@@ -3,6 +3,8 @@ from typing import Annotated, Any, Literal
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
+from ..utils.workflows import get_workflow_name
+
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
     from pydantic_partial import create_partial_model
@@ -20,7 +22,6 @@ with workflow.unsafe.imports_passed_through():
     )
     from ...worker.codec import RemoteObject
 
-from ...common.utils.workflows import get_workflow_name
 from ...queries.executions import list_execution_transitions
 from ...queries.utils import serialize_model_data
 from .models import ExecutionInput
@@ -217,20 +218,26 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def get_inputs(self) -> list[Any]:
+    async def get_inputs(self) -> tuple[list[Any], list[str | None]]:
+        if self.execution_input.execution is None:
+            return [], []
+
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
             limit=1000,
             direction="asc",
-        )
+        )  # type: ignore[not-callable]
         assert len(transitions) > 0, "No transitions found"
         inputs = []
+        labels = []
         workflow = get_workflow_name(transitions[-1])
         transitions = [t for t in transitions if get_workflow_name(t) == workflow]
         for transition in transitions:
+            # NOTE: The length hack should be refactored in case we want to implement multi-step control steps
             if transition.next and transition.next.step >= len(inputs):
                 inputs.append(transition.output)
-        return inputs
+                labels.append(transition.step_label)
+        return inputs, labels
 
     async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
@@ -240,20 +247,26 @@ class StepContext(BaseModel):
 
         current_input = serialize_model_data(current_input)
 
-        inputs = await self.get_inputs()
-
+        inputs, labels = await self.get_inputs()
+        labels = labels[1:]
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
-        dump["inputs"] = inputs
-        dump["outputs"] = inputs[1:]
-        prepared = dump | {"_": current_input}
 
+        steps = {}
         for i, input in enumerate(inputs):
-            prepared = prepared | {f"_{i}": input}
-            if i >= 100:
-                break
+            step = {}
+            step["input"] = input
+            if i + 1 < len(inputs):
+                step["output"] = inputs[i + 1]
+                if labels[i]:
+                    steps[labels[i]] = step
 
-        return prepared
+            steps[i] = step
+
+        dump["steps"] = steps
+        dump["inputs"] = {i: step["input"] for i, step in steps.items()}
+        dump["outputs"] = {i: step["output"] for i, step in steps.items() if "output" in step}
+        return dump | {"_": current_input}
 
 
 class StepOutcome(BaseModel):

@@ -74,6 +74,16 @@ class ResourceDeletedResponse(BaseModel):
     """
 
 
+class StepLabel(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[str, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")]
+    """
+    A valid step label
+    """
+
+
 class Uuid(RootModel[UUID]):
     model_config = ConfigDict(
         populate_by_name=True,

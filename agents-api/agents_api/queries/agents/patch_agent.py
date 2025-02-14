@@ -9,7 +9,7 @@ from beartype import beartype
 
 from ...autogen.openapi_model import Agent, PatchAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import increase_counter
+from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
@@ -55,7 +55,7 @@ RETURNING *;
     one=True,
     transform=lambda d: {**d, "id": d["agent_id"]},
 )
-@increase_counter("patch_agent")
+@query_metrics("patch_agent")
 @pg_query
 @beartype
 async def patch_agent(
@@ -82,7 +82,7 @@ async def patch_agent(
         data.about,
         data.metadata,
         data.model,
-        data.default_settings.model_dump() if data.default_settings else None,
+        data.default_settings,
         [data.instructions] if isinstance(data.instructions, str) else data.instructions,
         data.canonical_name,
     ]
