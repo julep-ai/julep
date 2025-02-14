@@ -42,3 +42,16 @@
 - **Secondary Performance**: Reduced API response times by 15% 🚀
 - **Critical Breaking**: Removed `previous_inputs` parameter in workflows 💥
 - **Other Breaking**: Deprecated legacy API (v1) to be removed next month 💥
+
+# **Julep AI Changelog for 14 February 2025** ✨
+
+- **Major Feature**: Default `parallelism` in MapReduce now set to `task_max_parallelism` for optimized processing ✨
+- **Minor Feature**: Backward compatibility support added for older syntax in `base_evaluate` ➕
+- **Critical Fix**: Resolved data inconsistencies in subworkflow validations for smoother operations 🔧
+- **Minor Fix**: Addressed hotfixes in `workflows.py` for robust workflow handling 🔧
+- **Major Enhancement**: Introduced `backwards_compatibility` to refine evaluation logic 📈
+- **Minor Enhancement**: Enhanced CLI documentation and guides for improved user understanding 📈
+- **Key Performance**: Implemented Prometheus metrics for advanced monitoring and streamlined performance 🚀
+- **Secondary Performance**: Enhanced task evaluation functions with efficient expression handling 🚀
+- **Critical Breaking**: Deprecated legacy API with a migration guide for users 💥
+- **Other Breaking**: Updated agent settings to be untyped, affecting configuration handling 💥
