@@ -55,3 +55,16 @@
 - **Secondary Performance**: Enhanced task evaluation functions with efficient expression handling 🚀
 - **Critical Breaking**: Deprecated legacy API with a migration guide for users 💥
 - **Other Breaking**: Updated agent settings to be untyped, affecting configuration handling 💥
+
+# **Changelog for 14 February 2025** ✨
+
+- **Major Feature**: Default `parallelism` set to `task_max_parallelism` for MapReduce steps ✨
+- **Minor Feature**: Introduced Prometheus metrics for enhanced system monitoring ✨
+- **Critical Fix**: Fixed parallel MapReduce subworkflow logic to handle `ValueError` for missing attributes 🔧
+- **Minor Fix**: Addressed retry issues with HTTP status 524 errors 🔧
+- **Major Enhancement**: Enhanced CLI with interactive command capability via `questionary` 📈
+- **Minor Enhancement**: Improved CLI `init` command with enhanced user guidance 📈
+- **Key Performance**: Optimized task execution workflows with new error handling 🚀
+- **Secondary Performance**: API response times reduced via untyped prompt step settings 🚀
+- **Critical Breaking**: None identified 💥
+- **Other Breaking**: None identified 💥
