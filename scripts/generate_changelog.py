@@ -49,7 +49,7 @@ def run_task(pr_data: str) -> str:
         msg = f"Missing required environment variables: {', '.join(missing_vars)}"
         raise ValueError(msg)
 
-    client = Client(api_key=os.environ["JULEP_API_KEY"], environment="dev")
+    client = Client(api_key=os.environ["JULEP_API_KEY"], environment="production")
 
     # Use context manager for file operations
     with Path("./scripts/templates/changelog.yaml").open(encoding="utf-8") as f:
