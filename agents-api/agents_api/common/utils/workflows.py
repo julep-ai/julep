@@ -1,5 +1,6 @@
 from ...autogen.openapi_model import Transition
 
+
 PAR_PREFIX = "PAR:"
 SEPARATOR = "`"
 
@@ -20,4 +21,5 @@ def get_workflow_name(transition: Transition) -> str:
             "Workflow string is too short or missing backtick"
         )
         workflow_str = workflow_str[start_index:].split(SEPARATOR)[0]
+
     return workflow_str

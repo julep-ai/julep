@@ -22,6 +22,7 @@ with workflow.unsafe.imports_passed_through():
     )
     from ...worker.codec import RemoteObject
 
+from ...common.utils.workflows import get_workflow_name
 from ...queries.executions import list_execution_transitions
 from ...queries.utils import serialize_model_data
 from .models import ExecutionInput
