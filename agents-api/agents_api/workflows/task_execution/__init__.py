@@ -402,7 +402,7 @@ class TaskExecutionWorkflow:
         )
 
         result = await continue_as_child(
-            self.context,
+            self.context.execution_input,
             start=yield_next_target,
             current_input=output,
         )

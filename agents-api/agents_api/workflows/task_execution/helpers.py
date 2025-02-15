@@ -3,6 +3,7 @@ from datetime import timedelta
 from typing import Any, TypeVar
 
 from temporalio import workflow
+from temporalio.common import SearchAttributeKey, SearchAttributePair, TypedSearchAttributes
 from temporalio.exceptions import ActivityError, ApplicationError, ChildWorkflowError
 
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
@@ -78,6 +79,9 @@ async def continue_as_child(
             info.workflow_type, *args, **kwargs
         )
 
+    execution_id = execution_input.execution.id
+    execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
+
     try:
         return await run(
             args=[
@@ -87,6 +91,9 @@ async def continue_as_child(
             ],
             retry_policy=DEFAULT_RETRY_POLICY,
             memo=workflow.memo() | user_state,
+            search_attributes=TypedSearchAttributes([
+                SearchAttributePair(execution_id_key, str(execution_id)),
+            ]),
         )
     except Exception as e:
         while isinstance(e, ChildWorkflowError) and getattr(e, "__cause__", None):
