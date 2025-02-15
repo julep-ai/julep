@@ -67,7 +67,7 @@ def make_vector_with_similarity(n: int = EMBEDDING_SIZE, d: float = 0.5):
 
 
 @asynccontextmanager
-async def patch_testing_temporal():
+async def patch_testing_temporal(activities: list = []):
     # Set log level to ERROR to avoid spamming the console
     logger = logging.getLogger("temporalio")
     previous_log_level = logger.getEffectiveLevel()
@@ -79,7 +79,7 @@ async def patch_testing_temporal():
         data_converter=pydantic_data_converter
     ) as env:
         # Create a worker with our workflows and start it
-        worker = create_worker(client=env.client)
+        worker = create_worker(client=env.client, activities=activities)
         env.worker_task = asyncio.create_task(worker.run())
 
         # Mock the Temporal client

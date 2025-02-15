@@ -13,7 +13,7 @@ from ..env import (
 )
 
 
-def create_worker(client: Client) -> Any:
+def create_worker(client: Client, activities: list = []) -> Any:
     """
     Initializes the Temporal client and worker with TLS configuration (if provided),
     then create a worker to listen for tasks on the configured task queue.
@@ -34,6 +34,17 @@ def create_worker(client: Client) -> Any:
 
     _task_activity_names, task_activities = zip(*getmembers(task_steps, isfunction))
 
+    if not activities:
+        activities = [
+            *task_activities,
+            demo_activity,
+            execute_integration,
+            execute_system,
+            execute_api_call,
+            save_inputs_remote,
+            load_inputs_remote,
+        ]
+
     # Initialize the worker with the specified task queue, workflows, and activities
     return Worker(
         client,
@@ -43,15 +54,7 @@ def create_worker(client: Client) -> Any:
             DemoWorkflow,
             TaskExecutionWorkflow,
         ],
-        activities=[
-            *task_activities,
-            demo_activity,
-            execute_integration,
-            execute_system,
-            execute_api_call,
-            save_inputs_remote,
-            load_inputs_remote,
-        ],
+        activities=activities,
         interceptors=[CustomInterceptor()],
         max_concurrent_workflow_tasks=temporal_max_concurrent_workflow_tasks,
         max_concurrent_activities=temporal_max_concurrent_activities,
