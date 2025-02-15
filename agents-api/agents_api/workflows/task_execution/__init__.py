@@ -518,7 +518,7 @@ class TaskExecutionWorkflow:
         #     output=output,
         #     user_state=user_state,
         # )
-    
+
         if self.outcome is None:
             return PartialTransition(output=None)
 
