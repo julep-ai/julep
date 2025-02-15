@@ -172,7 +172,7 @@ main:
 ``` 
 
 <Note>
-- The `arguments` passed passed from the main workflow to the subworkflow are available in the `steps[0].input` of the subworkflow.
+- The `arguments` passed from the main workflow to the subworkflow are available in the `steps[0].input` of the subworkflow.
 - The `result` of the subworkflow is available in the `steps[1].output.result` of the main workflow.
 - The `Input/Output Data References` between steps is exclusive to the workflow they are defined in. 
   A workflow cannot reference the `input` or `output` of another workflow between the steps. To learn more about `Input/Output Data References` [click here](/docs/advanced/new-syntax#1-input-output-data-references).
