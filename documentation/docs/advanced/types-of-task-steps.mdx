@@ -143,6 +143,41 @@ Pause workflow for user input:
         maximum: 150
 ```
 
+### Subworkflow Step
+
+Executing a subworkflow from a main workflow:
+
+```yaml YAML
+# Subworkflow
+subworkflow:
+- evaluate:
+    main_workflow_input: $ _.content # you can use steps[0].input.content to access the input of the subworkflow
+- return:
+    result: "This is the subworkflow"
+
+# Main workflow
+main:
+# Step 0: Evaluate step
+- evaluate:
+    result: "This is the main workflow"
+
+# Step 1: Call the subworkflow
+- workflow: subworkflow # name of the subworkflow
+  arguments: # input to the subworkflow
+    content: $ _.result # you can use steps[0].output.result to access the result of the previous step
+
+# Step 2: Evaluate step
+- evaluate:
+    subworkflow_result: $ steps[1].output.result # this will be the result of the subworkflow
+``` 
+
+<Note>
+- The `arguments` passed passed from the main workflow to the subworkflow are available in the `steps[0].input` of the subworkflow.
+- The `result` of the subworkflow is available in the `steps[1].output.result` of the main workflow.
+- The `Input/Output Data References` between steps is exclusive to the workflow they are defined in. 
+  A workflow cannot reference the `input` or `output` of another workflow between the steps. To learn more about `Input/Output Data References` [click here](/docs/advanced/new-syntax#1-input-output-data-references).
+</Note>
+
 ## Key-Value Steps
 
 ### Get Step
@@ -211,17 +246,17 @@ Iterate over a collection:
 - foreach:
     in: $ _.items
     do:
-      - log: $ f'Processing {_}'
+      log: $ f'Processing {_}'
 
 # Foreach with complex processing
 - foreach:
     in: $ _.documents
     do:
-      - tool: analyze
-        arguments:
-          text: $ _.content
-      - evaluate:
-          results: $ _ + [_.analysis]
+      tool: analyze
+      arguments:
+        text: $ _.content
+      evaluate:
+        results: $ _ + [_.analysis]
 ```
 
 ### Map-Reduce Step
@@ -247,24 +282,10 @@ Process collections in parallel:
 ```
 
 <Note>
-  The `parallel` step is used to execute steps concurrently. The `reduce` step is used to combine the results of the parallel steps.
-  Moreover you can also mention `reduce` and `parallelism` after the `over` step.
-</Note>
-
-### Parallel Step
-
-Execute steps concurrently:
-
-```yaml YAML
-# Parallel execution
-- parallel:
-  tool: task1
-  arguments:
-    param: value1
-```
-
-<Note>
-  This step only runs the steps in parallel for a given value. Unlike the `map` step, it does not run the steps in parallel for all the values in the collection.
+  - By default the `parallelism` if not mentioned is 100. If mentioned, it is the maximum number of steps that can run in parallel concurrently.
+  - When using `over` step, the `map` step is executed for each value in the collection.
+  - The `reduce` step is executed after the `map` step.
+  - When using `map-reduce` step for subworkflows, the `parallelism` has to be mentioned as `1` or it will throw an error.
 </Note>
 
 ## Conditional Steps
@@ -277,25 +298,14 @@ Conditional execution:
 # Simple if
 - if: $ _.count > 0
   then:
-    - log: Found results
+    log: Found results
 
 # If-else
 - if: $ _.score > 0.8
   then:
-    - log: High score
+    log: High score
   else:
-    - log: Low score
-
-# Nested conditions
-- if: $ _.type == "A"
-  then:
-    - if: $ _.value > 10
-      then:
-        - log: High value A
-      else:
-        - log: Low value A
-  else:
-    - log: Not type A
+    log: Low score
 ```
 
 ### Switch Step
@@ -391,55 +401,84 @@ Handle errors by specifying an error message:
 Here's an example combining various step types:
 
 ```yaml YAML
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Multi-Step Task Demonstration
+description: A demonstration of multi-step task processing with research and summarization capabilities.
+
+################################################################################
+############################# INPUT SCHEMA #####################################
+################################################################################
+input_schema:
+  type: object
+  properties:
+    topic:
+      type: string
+      description: The topic to research and summarize.
+
+################################################################################
+############################# TOOLS ############################################
+################################################################################
+
+# Describing the tools that will be used in the workflow
+tools:
+- name: web_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: "DEMO_API_KEY"
+
+################################################################################
+############################# MAIN WORKFLOW ####################################
+################################################################################
 main:
-  # Initial setup
-  - evaluate:
-      start_time: $ datetime.now().isoformat()
-  
-  # Get user input
-  - wait_for_input:
-      info:
-        message: Enter search topics (comma-separated)
-  
-  # Process input
-  - evaluate:
-      topics: $ _.input.split(',')
-  
-  # Parallel search
-  - map_reduce:
-    over: $ _.topics
-    map:
-      - parallel:
-          - tool: web_search
-            arguments:
-              query: $ _
-          - tool: arxiv_search
-            arguments:
-              query: $ _
-    parallelism: 3
-  
-  # Process results
-  - foreach:
-      in: $ _
-      do:
-        - evaluate:
-            web_results: $ _[0]
-            academic_results: $ _[1]
-        - if: $ len(_.web_results) > 0 or len(_.academic_results) > 0
-          then:
-            - tool: summarize
-              arguments:
-                texts: $ _.web_results + _.academic_results
-          else:
-            - evaluate:
-                summary: No results found
-  
-  # Return final results
-  - return:
-      results: $ _
-      metadata:
-        start_time: $ _.start_time
-        end_time: $ datetime.now().isoformat()
+# Step 0: Generate initial research questions
+- prompt:
+  - role: system
+    content: >-
+      $ f'''
+      You are a research assistant. Your task is to formulate three specific research questions about the given topic: {steps[0].input.topic}'''
+  unwrap: true
+
+# Step 1: Web search for each question
+- foreach:
+    in: $ _.split('\\n')
+    do:
+      tool: web_search
+      arguments:
+        query: $ _
+
+# Step 2: Extract relevant information
+- evaluate:
+    relevant_info: $ [output for output in _]
+
+# Step 3: Process and summarize information
+- if: $ len(_.relevant_info) >= 3
+  then:
+      prompt:
+      - role: system
+        content: >-
+          $ f'''
+          Summarize the following information about {steps[0].input.topic}:
+          {_.relevant_info}'''
+      unwrap: true
+  else:
+      prompt:
+      - role: system
+        content: >-
+          $ f'''
+          Not enough information gathered. Please provide a brief overview of {steps[0].input.topic} based on your knowledge.'''
+      unwrap: true
+
+# Step 4: Record the summary
+- log: >-
+    $ f'''
+    Summary for {steps[0].input.topic}: {_}'''
+
+# Step 5: Prepare final output
+- return: 
+    summary: $ _
+    topic: $ steps[0].input.topic
 ```
 
 ## Best Practices

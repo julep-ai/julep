@@ -175,16 +175,16 @@
     {
       "group": "Advanced Topics",
       "pages": [
-        "docs/advanced/architecture-deep-dive",
-        "docs/advanced/agentic-patterns",
-        "docs/advanced/localsetup",
-        "docs/advanced/lifecycle",
-        "docs/advanced/chat",
+        "docs/advanced/new-syntax",
         "docs/advanced/python-expression",
         "docs/advanced/types-of-task-steps",
-        "docs/advanced/multi-agent-multi-user-sessions",
+        "docs/advanced/chat",
         "docs/advanced/files",
-        "docs/advanced/new-syntax"
+        "docs/advanced/architecture-deep-dive",
+        "docs/advanced/agentic-patterns",
+        "docs/advanced/lifecycle",
+        "docs/advanced/multi-agent-multi-user-sessions",
+        "docs/advanced/localsetup"
       ]
     },
     {
