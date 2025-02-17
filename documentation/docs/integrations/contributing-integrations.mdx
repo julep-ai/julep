@@ -1,0 +1,28 @@
+---
+title: 'Add New Integrations'
+description: 'Guidelines for contributing new integrations to Julep'
+icon: 'circle-plus'
+---
+
+## Overview
+
+This guide provides instructions for contributing new integrations to the Julep platform. Follow these steps to ensure your integration is successfully added to the project.
+
+## Steps to Contribute
+
+1. **Add a New Integration Provider**:
+   - Add the provider name to the `integrationProvider` alias in `typespec/tools/models.tsp`.
+   - Create a new file in `typespec/tools/` with the provider name. Refer to existing files for examples.
+
+2. **Generate OpenAPI Schema and Pydantic Models**:
+   - Run `./scripts/generate_openapi_code.sh` from the root directory to generate the necessary files.
+
+3. **Implement Integration Logic**:
+   - Add the integration logic in `integration-service/integrations/utils/integrations`.
+
+4. **Register the Provider**:
+   - Add the provider to the `available_providers` dictionary in `integrations-service/integrations/providers.py`.
+
+## Additional Resources
+
+- [CONTRIBUTING.md](../CONTRIBUTING.md) for more detailed instructions.
