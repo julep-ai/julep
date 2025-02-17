@@ -79,7 +79,7 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
 
         # Validate input format
         if not isinstance(input_data, list):
-            return FfmpegSearchOutput(
+            return FfmpegSearchOutput(fileoutput="Error: Input data must be a list", result=False, mime_type=None)
                 fileoutput="Error: Input data must be a list",
             )
 
