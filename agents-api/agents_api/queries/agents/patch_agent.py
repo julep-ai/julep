@@ -45,7 +45,7 @@ SET
 		ELSE instructions
 	END,
     canonical_name = CASE
-        WHEN $9::citext IS NOT NULL THEN $9
+        WHEN $10::citext IS NOT NULL THEN $10
         ELSE canonical_name
     END
 WHERE agent_id = $2 AND developer_id = $1
