@@ -30,12 +30,13 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
         },
         "id": {
           "format": "uuid",
@@ -2326,195 +2327,6 @@
       "title": "ChatOutputChunk",
       "type": "object"
     },
-    "ChatSettings": {
-      "properties": {
-        "agent": {
-          "anyOf": [
-            {
-              "format": "uuid",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Agent"
-        },
-        "frequency_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": -2.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Frequency Penalty"
-        },
-        "length_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Length Penalty"
-        },
-        "logit_bias": {
-          "anyOf": [
-            {
-              "additionalProperties": {
-                "$ref": "#/$defs/LogitBias"
-              },
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Logit Bias"
-        },
-        "max_tokens": {
-          "anyOf": [
-            {
-              "minimum": 1.0,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Max Tokens"
-        },
-        "min_p": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Min P"
-        },
-        "model": {
-          "anyOf": [
-            {
-              "maxLength": 120,
-              "pattern": "^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Model"
-        },
-        "presence_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": -2.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Presence Penalty"
-        },
-        "repetition_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Repetition Penalty"
-        },
-        "response_format": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SimpleCompletionResponseFormat"
-            },
-            {
-              "$ref": "#/$defs/SchemaCompletionResponseFormat"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Response Format"
-        },
-        "seed": {
-          "anyOf": [
-            {
-              "maximum": 1000.0,
-              "minimum": -1.0,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Seed"
-        },
-        "stop": {
-          "default": [],
-          "items": {
-            "type": "string"
-          },
-          "maxItems": 4,
-          "title": "Stop",
-          "type": "array"
-        },
-        "stream": {
-          "default": false,
-          "title": "Stream",
-          "type": "boolean"
-        },
-        "temperature": {
-          "anyOf": [
-            {
-              "maximum": 5.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Temperature"
-        },
-        "top_p": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Top P"
-        }
-      },
-      "title": "ChatSettings",
-      "type": "object"
-    },
     "ChosenBash20241022": {
       "properties": {
         "command": {
@@ -3572,12 +3384,13 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
         },
         "instructions": {
           "anyOf": [
@@ -3781,12 +3594,13 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
         },
         "instructions": {
           "anyOf": [
@@ -4461,104 +4275,6 @@
         }
       },
       "title": "CreateUserRequest",
-      "type": "object"
-    },
-    "DefaultChatSettings": {
-      "description": "Default settings for the chat session (also used by the agent)",
-      "properties": {
-        "frequency_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": -2.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Frequency Penalty"
-        },
-        "length_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Length Penalty"
-        },
-        "min_p": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Min P"
-        },
-        "presence_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": -2.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Presence Penalty"
-        },
-        "repetition_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Repetition Penalty"
-        },
-        "temperature": {
-          "anyOf": [
-            {
-              "maximum": 5.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Temperature"
-        },
-        "top_p": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Top P"
-        }
-      },
-      "title": "DefaultChatSettings",
       "type": "object"
     },
     "Delta": {
@@ -7668,12 +7384,13 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
         },
         "instructions": {
           "anyOf": [
@@ -8291,12 +8008,13 @@
         "settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Settings"
         },
         "tool_choice": {
           "anyOf": [
@@ -8400,12 +8118,13 @@
         "settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Settings"
         },
         "tool_choice": {
           "anyOf": [
@@ -11165,12 +10884,13 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
         },
         "instructions": {
           "anyOf": [

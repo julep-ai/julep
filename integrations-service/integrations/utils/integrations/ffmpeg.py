@@ -65,21 +65,36 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
 
         # Decode base64 input
         try:
-            input_data = base64.b64decode(arguments.file)
+            if isinstance(arguments.file, str):
+                input_data = [base64.b64decode(arguments.file)]  # Convert single str to list
+            elif isinstance(arguments.file, list):
+                input_data = [base64.b64decode(file) for file in arguments.file]
+            else:
+                msg = "Invalid file input"
+                raise ValueError(msg)
         except Exception:
             return FfmpegSearchOutput(
                 fileoutput="Error: Invalid base64 input", result=False, mime_type=None
             )
 
         # Validate input format
-        is_valid, input_mime = await validate_format(input_data)
-
-        if not is_valid:
-            return FfmpegSearchOutput(
-                fileoutput="Error: Unsupported input file format",
-                result=False,
-                mime_type=None,
-            )
+        if isinstance(input_data, list):
+            for data in input_data:
+                is_valid, input_mime = await validate_format(data)
+                if not is_valid:
+                    return FfmpegSearchOutput(
+                        fileoutput="Error: Unsupported input file format",
+                        result=False,
+                        mime_type=None,
+                    )
+        else:
+            is_valid, input_mime = await validate_format(input_data)
+            if not is_valid:
+                return FfmpegSearchOutput(
+                    fileoutput="Error: Unsupported input file format",
+                    result=False,
+                    mime_type=None,
+                )
 
         # Create temporary directory
         temp_dir = tempfile.mkdtemp()
@@ -104,8 +119,16 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
             stderr=asyncio.subprocess.PIPE,
         )
 
+        # Write each decoded image to FFmpeg's stdin
+        for image_data in input_data:
+            process.stdin.write(image_data)  # Send image to stdin
+            await process.stdin.drain()  # Ensure smooth streaming
+
+        # Close stdin to signal end of input
+        process.stdin.close()
+
         # Process FFmpeg output
-        stdout, stderr = await process.communicate(input=input_data)
+        stdout, stderr = await process.communicate()
         success = process.returncode == 0
 
         if success and os.path.exists(output_path):

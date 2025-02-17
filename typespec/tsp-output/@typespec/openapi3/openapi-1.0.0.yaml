@@ -8158,7 +8158,11 @@ components:
           type: string
           description: The bash command string
         file:
-          type: string
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                type: string
           description: The base64 string of the file
       description: Arguments for Ffmpeg CMD
     Tools.FfmpegSearchArgumentsUpdate:
@@ -8168,7 +8172,11 @@ components:
           type: string
           description: The bash command string
         file:
-          type: string
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                type: string
           description: The base64 string of the file
       description: Arguments for Ffmpeg CMD
     Tools.FunctionCallOption:
