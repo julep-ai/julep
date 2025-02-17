@@ -92,6 +92,42 @@ async def _():
         assert result["steps"]["second step"]["output"] == {"z": "3"}
 
 
+@test("utility: prepare_for_step - global state")
+async def _():
+    with patch(
+        "agents_api.common.protocol.tasks.StepContext.get_inputs",
+        return_value=(
+            [],
+            [],
+            {"user_name": "John", "count": 10, "has_data": True}
+        ),
+    ):
+        step = ToolCallStep(tool="tool1")
+        context = StepContext(
+            execution_input=ExecutionInput(
+                developer_id=uuid.uuid4(),
+                agent=Agent(
+                    id=uuid.uuid4(), name="test agent", created_at=utcnow(), updated_at=utcnow()
+                ),
+                agent_tools=[],
+                arguments={},
+                task=TaskSpecDef(
+                    name="task1",
+                    tools=[],
+                    workflows=[Workflow(name="main", steps=[step])],
+                ),
+            ),
+            current_input={"current_input": "value 1"},
+            cursor=TransitionTarget(
+                workflow="main",
+                step=0,
+            ),
+        )
+        result = await context.prepare_for_step()
+        assert result["state"]["user_name"] == "John"
+        assert result["state"]["count"] == 10
+        assert result["state"]["has_data"] == True
+
 @test("utility: get_workflow_name")
 async def _():
     transition = Transition(
