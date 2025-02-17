@@ -1,22 +1,22 @@
 # Tests for task queries
 
 import asyncio
-import ward.testing
 import json
-from temporalio import activity
 from unittest.mock import patch
 
+import ward.testing
 import yaml
+from agents_api.app import app
 from agents_api.autogen.openapi_model import (
     CreateExecutionRequest,
     CreateTaskRequest,
 )
-from agents_api.app import app
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.tasks.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 from google.protobuf.json_format import MessageToDict
 from litellm import Choices, ModelResponse
+from temporalio import activity
 from ward import raises, skip, test
 
 from .fixtures import (
@@ -71,7 +71,10 @@ async def _(
         transition_step_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -120,7 +123,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -135,6 +141,7 @@ async def _(
 
         result = await handle.result()
         assert result == "base_evaluate_activity_mocked"
+
 
 @skip("it freezes")
 @test("workflow: yield step")
@@ -176,7 +183,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -233,7 +243,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -284,7 +297,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -342,7 +358,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -399,7 +418,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -457,7 +479,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         with raises(BaseException):
             execution, handle = await start_execution(
                 developer_id=developer_id,
@@ -520,7 +545,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         pool = await create_db_pool(dsn=dsn)
         execution, handle = await start_execution(
             developer_id=developer_id,
@@ -588,7 +616,10 @@ async def _(
         save_inputs_remote_mocked,
     ]
 
-    async with patch_testing_temporal(activities=activities) as (_, mock_run_task_execution_workflow):
+    async with patch_testing_temporal(activities=activities) as (
+        _,
+        mock_run_task_execution_workflow,
+    ):
         execution, handle = await start_execution(
             developer_id=developer_id,
             task_id=task.id,
@@ -1139,7 +1170,6 @@ async def _(
 
 
 for p in [1, 3, 5]:
-
     # @skip("needs to be fixed")
     @test(f"workflow: map reduce step parallel (parallelism={p})")
     async def _(
@@ -1481,6 +1511,7 @@ async def _(
 
 def always_one():
     return 1
+
 
 ward.testing.MAX_PROCESSES = 1  # set global max_process to 1
 ward.testing.available_cpu_count = always_one  # override cpu count
