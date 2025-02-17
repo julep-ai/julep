@@ -96,11 +96,7 @@ async def _():
 async def _():
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
-        return_value=(
-            [],
-            [],
-            {"user_name": "John", "count": 10, "has_data": True}
-        ),
+        return_value=([], [], {"user_name": "John", "count": 10, "has_data": True}),
     ):
         step = ToolCallStep(tool="tool1")
         context = StepContext(
@@ -126,7 +122,8 @@ async def _():
         result = await context.prepare_for_step()
         assert result["state"]["user_name"] == "John"
         assert result["state"]["count"] == 10
-        assert result["state"]["has_data"] == True
+        assert result["state"]["has_data"] is True
+
 
 @test("utility: get_workflow_name")
 async def _():
