@@ -163,6 +163,8 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
    - Install Docker and Docker Compose
    - Set up necessary API keys and environment variables
 
+   > You can check our [Local Setup](https://docs.julep.ai/docs/advanced/localsetup) section in the docs for more information.
+
 2. **Choose an Area to Contribute**
    - Check the issue tracker for open issues
    - Look for "good first issue" labels for newcomers
@@ -188,6 +190,26 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
 
 7. **Merge**
    - Once approved, your changes will be merged into the main branch
+
+### Adding a New Integration
+
+The integration service is a crucial part of Julep, and we welcome contributions from the community to enhance its functionality and capabilities.
+
+To contribute to the integration service, you can follow these steps:
+
+1. **Add a new integration provider to our TypeSpec:** You can do so by:
+   1. Adding the provider name to the `integrationProvider` alias in `typespec/tools/models.tsp`
+   2. Adding a new file in `typespec/tools/` with the provider name. Take a look at the other integration files in the `typespec/tools/` directory for examples.
+
+      > If the integration needs an API key or other form of authentication, you would have to add a `Setup` model to the integration definition file, where you would define the authentication parameters (`spider.tsp` is an example of this). Otherwise, you can omit the `Setup` model (`wikipedia.tsp` is an example of this).
+
+2. **Generate the new OpenAPI schema and Pydantic models:** You need to `cd` into the root directory of the project and run `./scripts/generate_openapi_code.sh` to generate the new OpenAPI schema along with Pydantic models for the new changes.
+
+   > The new OpenAPI schema will be generated in `./openapi.yaml` and the Pydantic models will be generated in `./integrations-service/integrations/autogen`. 
+
+3. **Add the new integration logic in the integration service:** You need to add the new integration logic in the integration service by adding a new file in `integration-service/integrations/utils/integrations` with the provider name. Take a look at the other integration files in the same directory for examples.
+
+4. **Add the new integration provider to the providers registry:** You need to add the new integration provider to the providers registry by adding a new entry to the `available_providers` dictionary in `integrations-service/integrations/providers.py`.
 
 ### Documentation Improvements
 

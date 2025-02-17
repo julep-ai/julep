@@ -169,7 +169,8 @@
             "docs/integrations/web_browser_automation/spider",
             "docs/integrations/web_browser_automation/remote_browser"
           ]
-        }
+        },
+        "docs/integrations/contributing-integrations"
       ]
     },
     {
