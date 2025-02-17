@@ -218,9 +218,9 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def get_inputs(self) -> tuple[list[Any], list[str | None]]:
+    async def get_inputs(self) -> tuple[list[Any], list[str | None], dict[str, Any]]:
         if self.execution_input.execution is None:
-            return [], []
+            return [], [], {}
 
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
@@ -230,6 +230,7 @@ class StepContext(BaseModel):
         assert len(transitions) > 0, "No transitions found"
         inputs = []
         labels = []
+        state = {}
         workflow = get_workflow_name(transitions[-1])
         transitions = [t for t in transitions if get_workflow_name(t) == workflow]
         for transition in transitions:
@@ -237,7 +238,10 @@ class StepContext(BaseModel):
             if transition.next and transition.next.step >= len(inputs):
                 inputs.append(transition.output)
                 labels.append(transition.step_label)
-        return inputs, labels
+            if transition.metadata and transition.metadata.get("step_type") == "SetStep":
+                state.update(transition.output)
+
+        return inputs, labels, state
 
     async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
@@ -247,7 +251,7 @@ class StepContext(BaseModel):
 
         current_input = serialize_model_data(current_input)
 
-        inputs, labels = await self.get_inputs()
+        inputs, labels, state = await self.get_inputs()
         labels = labels[1:]
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
@@ -263,6 +267,7 @@ class StepContext(BaseModel):
 
             steps[i] = step
 
+        dump["state"] = state
         dump["steps"] = steps
         dump["inputs"] = {i: step["input"] for i, step in steps.items()}
         dump["outputs"] = {i: step["output"] for i, step in steps.items() if "output" in step}
