@@ -201,11 +201,11 @@ To contribute to the integration service, you can follow these steps:
    1. Adding the provider name to the `integrationProvider` alias in `typespec/tools/models.tsp`
    2. Adding a new file in `typespec/tools/` with the provider name. Take a look at the other integration files in the `typespec/tools/` directory for examples.
 
-      > If the integration needs an API key or other for of authentication, you would have to add a `Setup` model to the integration definition file, where you would define the authentication parameters (`spider.tsp` is an example of this). Otherwise, you can ommit the `Setup` model (`wikipedia.tsp` is an example of this).
+      > If the integration needs an API key or other form of authentication, you would have to add a `Setup` model to the integration definition file, where you would define the authentication parameters (`spider.tsp` is an example of this). Otherwise, you can omit the `Setup` model (`wikipedia.tsp` is an example of this).
 
 2. **Generate the new OpenAPI schema and Pydantic models:** You need to `cd` into the root directory of the project and run `./scripts/generate_openapi_code.sh` to generate the new OpenAPI schema along with Pydantic models for the new changes.
 
-   > The new OpenAPI schema will be generated in `./openapi.yaml` and the Pydantic models will be generated in `./integration-service/integrations/autogen`.
+   > The new OpenAPI schema will be generated in `./openapi.yaml` and the Pydantic models will be generated in `./integrations-service/integrations/autogen`. 
 
 3. **Add the new integration logic in the integration service:** You need to add the new integration logic in the integration service by adding a new file in `integration-service/integrations/utils/integrations` with the provider name. Take a look at the other integration files in the same directory for examples.
 
