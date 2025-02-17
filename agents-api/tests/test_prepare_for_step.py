@@ -25,7 +25,7 @@ async def _():
         return_value=(
             [{"x": "1"}, {"y": "2"}, {"z": "3"}],
             [None, "first step", "second step"],
-            {}
+            {},
         ),
     ):
         step = ToolCallStep(tool="tool1")
@@ -60,7 +60,7 @@ async def _():
         return_value=(
             [{"x": "1"}, {"y": "2"}, {"z": "3"}],
             [None, "first step", "second step"],
-            {}
+            {},
         ),
     ):
         step = ToolCallStep(tool="tool1")
