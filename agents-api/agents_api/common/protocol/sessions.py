@@ -82,6 +82,13 @@ class ChatContext(SessionData):
 
         return settings
 
+    def merge_system_template(self, system_template: str | None) -> str:
+        """
+        Merge the system template with the active agent's default system template.
+        """
+        active_agent = self.get_active_agent()
+        return system_template or active_agent.default_system_template
+
     def get_active_tools(self) -> list[Tool]:
         """
         Get the active toolset from the session data.
