@@ -509,16 +509,6 @@ class TaskExecutionWorkflow:
         self,
         step: SetStep,
     ):
-        # # Pass along the previous output unchanged
-        # output, user_state = None, {}
-        # if self.context is not None and self.outcome is not None:
-        #     output = self.context.current_input
-        #     user_state = self.outcome.output
-        # return PartialTransition(
-        #     output=output,
-        #     user_state=user_state,
-        # )
-
         if self.outcome is None:
             return PartialTransition(output=None)
 
