@@ -1,7 +1,6 @@
 # Standard library imports
 import json
 import logging
-from operator import le
 import os
 import re
 import sys
@@ -85,6 +84,7 @@ def run_task(pr_data: str) -> str:
         if result.status != "succeeded":
             raise Exception(result.error)
         return result.output
+
 
 def preserve_and_update_changelog(new_changelog: str, source: str = "./CHANGELOG.md") -> None:
     """

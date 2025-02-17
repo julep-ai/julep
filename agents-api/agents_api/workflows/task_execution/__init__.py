@@ -393,6 +393,11 @@ class TaskExecutionWorkflow:
 
         yield_transition_type, yield_next_target = self.outcome.transition_to
         workflow.logger.info(f"Yield step: Transitioning to {yield_transition_type}")
+
+        if self.context is None:
+            msg = "Context must not be None"
+            raise ApplicationError(msg)
+
         await transition(
             self.context,
             output=output,

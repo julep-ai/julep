@@ -30,6 +30,13 @@ To get started with the FFmpeg integration, follow these steps to configure and 
           cmd: "ffmpeg -i input.mp4 -vn -acodec copy output.aac"
           file: "base64_encoded_file"
     ```
+
+    <Info>
+      The `base64_encoded_file` is the base64 encoded file to process which in this case is the `input.mp4` file.
+      The `file` argument can accept either a single base64 encoded string or a list of base64 encoded strings.
+      However, even when passing a list of files, the FFmpeg command can only use a single input file (single `-i` flag).
+      Multiple input files with multiple `-i` flags are not supported.
+    </Info>
   </Step>
 </Steps>
 
@@ -53,7 +60,7 @@ To get started with the FFmpeg integration, follow these steps to configure and 
       - **_tool_**: Refers to the tool defined earlier (`ffmpeg_tool`).
       - **_arguments_**: Specifies the input parameters for the tool:
         - **_cmd_**: The FFmpeg command to execute.
-        - **_file_**: The base64 encoded file to process.
+        - **_file_**: The base64 encoded file to process. Can be a single base64 encoded string or a list of base64 encoded strings.
   </Accordion>
 </AccordionGroup>
 

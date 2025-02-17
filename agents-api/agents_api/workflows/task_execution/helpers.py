@@ -79,6 +79,10 @@ async def continue_as_child(
             info.workflow_type, *args, **kwargs
         )
 
+    if execution_input.execution is None:
+        msg = "Execution input execution cannot be None"
+        raise ApplicationError(msg)
+
     execution_id = execution_input.execution.id
     execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
 
