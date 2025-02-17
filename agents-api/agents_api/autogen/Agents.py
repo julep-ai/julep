@@ -50,6 +50,10 @@ class Agent(BaseModel):
     """
     Default settings for all sessions created by this agent
     """
+    default_system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    """
+    Default system template for all sessions created by this agent
+    """
 
 
 class CreateAgentRequest(BaseModel):
@@ -88,6 +92,10 @@ class CreateAgentRequest(BaseModel):
     """
     Default settings for all sessions created by this agent
     """
+    default_system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    """
+    Default system template for all sessions created by this agent
+    """
 
 
 class CreateOrUpdateAgentRequest(CreateAgentRequest):
@@ -122,6 +130,10 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     default_settings: dict[str, Any] | None = None
     """
     Default settings for all sessions created by this agent
+    """
+    default_system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    """
+    Default system template for all sessions created by this agent
     """
 
 
@@ -161,6 +173,10 @@ class PatchAgentRequest(BaseModel):
     """
     Default settings for all sessions created by this agent
     """
+    default_system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    """
+    Default system template for all sessions created by this agent
+    """
 
 
 class UpdateAgentRequest(BaseModel):
@@ -198,4 +214,8 @@ class UpdateAgentRequest(BaseModel):
     default_settings: dict[str, Any] | None = None
     """
     Default settings for all sessions created by this agent
+    """
+    default_system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    """
+    Default system template for all sessions created by this agent
     """

@@ -93,7 +93,7 @@ model Session {
     situation: string | null = null;
 
     /** A specific system prompt template that sets the background for this session */
-    system_template: string = defaultSessionSystemMessage;
+    system_template?: string;
 
     /** Summary (null at the beginning) - generated automatically after every interaction */
     @visibility("read")

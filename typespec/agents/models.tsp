@@ -36,6 +36,9 @@ model Agent {
 
     /** Default settings for all sessions created by this agent */
     default_settings?: Record<unknown>;
+
+    /** Default system template for all sessions created by this agent */
+    default_system_template: string = defaultSessionSystemMessage;
 }
 
 /** Payload for updating a agent */

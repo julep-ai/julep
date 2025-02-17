@@ -1434,6 +1434,7 @@ components:
         - about
         - model
         - instructions
+        - default_system_template
       properties:
         id:
           allOf:
@@ -1480,6 +1481,59 @@ components:
           type: object
           additionalProperties: {}
           description: Default settings for all sessions created by this agent
+        default_system_template:
+          type: string
+          description: Default system template for all sessions created by this agent
+          default: |-
+            {%- if agent.name -%}
+            You are {{agent.name}}.{{" "}}
+            {%- endif -%}
+
+            {%- if agent.about -%}
+            About you: {{agent.about}}.{{" "}}
+            {%- endif -%}
+
+            {%- if user -%}
+            You are talking to a user
+              {%- if user.name -%}{{" "}} and their name is {{user.name}}
+                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
+              {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
+            {{NEWLINE+NEWLINE}}
+
+            {%- if agent.instructions -%}
+            Instructions:{{NEWLINE}}
+              {%- if agent.instructions is string -%}
+                {{agent.instructions}}{{NEWLINE}}
+              {%- else -%}
+                {%- for instruction in agent.instructions -%}
+                  - {{instruction}}{{NEWLINE}}
+                {%- endfor -%}
+              {%- endif -%}
+              {{NEWLINE}}
+            {%- endif -%}
+
+            {%- if docs -%}
+            Relevant documents:{{NEWLINE}}
+              {%- for doc in docs -%}
+                {{doc.title}}{{NEWLINE}}
+                {%- if doc.content is string -%}
+                  {{doc.content}}{{NEWLINE}}
+                {%- else -%}
+                  {%- for snippet in doc.content -%}
+                    {{snippet}}{{NEWLINE}}
+                  {%- endfor -%}
+                {%- endif -%}
+                {{"---"}}
+              {%- endfor -%}
+            {%- endif -%}
     Agents.CreateAgentRequest:
       type: object
       required:
@@ -1487,6 +1541,7 @@ components:
         - about
         - model
         - instructions
+        - default_system_template
       properties:
         metadata:
           type: object
@@ -1519,6 +1574,59 @@ components:
           type: object
           additionalProperties: {}
           description: Default settings for all sessions created by this agent
+        default_system_template:
+          type: string
+          description: Default system template for all sessions created by this agent
+          default: |-
+            {%- if agent.name -%}
+            You are {{agent.name}}.{{" "}}
+            {%- endif -%}
+
+            {%- if agent.about -%}
+            About you: {{agent.about}}.{{" "}}
+            {%- endif -%}
+
+            {%- if user -%}
+            You are talking to a user
+              {%- if user.name -%}{{" "}} and their name is {{user.name}}
+                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
+              {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
+            {{NEWLINE+NEWLINE}}
+
+            {%- if agent.instructions -%}
+            Instructions:{{NEWLINE}}
+              {%- if agent.instructions is string -%}
+                {{agent.instructions}}{{NEWLINE}}
+              {%- else -%}
+                {%- for instruction in agent.instructions -%}
+                  - {{instruction}}{{NEWLINE}}
+                {%- endfor -%}
+              {%- endif -%}
+              {{NEWLINE}}
+            {%- endif -%}
+
+            {%- if docs -%}
+            Relevant documents:{{NEWLINE}}
+              {%- for doc in docs -%}
+                {{doc.title}}{{NEWLINE}}
+                {%- if doc.content is string -%}
+                  {{doc.content}}{{NEWLINE}}
+                {%- else -%}
+                  {%- for snippet in doc.content -%}
+                    {{snippet}}{{NEWLINE}}
+                  {%- endfor -%}
+                {%- endif -%}
+                {{"---"}}
+              {%- endfor -%}
+            {%- endif -%}
       description: Payload for creating a agent (and associated documents)
     Agents.CreateOrUpdateAgentRequest:
       type: object
@@ -1528,6 +1636,7 @@ components:
         - about
         - model
         - instructions
+        - default_system_template
       properties:
         id:
           $ref: '#/components/schemas/Common.uuid'
@@ -1562,6 +1671,59 @@ components:
           type: object
           additionalProperties: {}
           description: Default settings for all sessions created by this agent
+        default_system_template:
+          type: string
+          description: Default system template for all sessions created by this agent
+          default: |-
+            {%- if agent.name -%}
+            You are {{agent.name}}.{{" "}}
+            {%- endif -%}
+
+            {%- if agent.about -%}
+            About you: {{agent.about}}.{{" "}}
+            {%- endif -%}
+
+            {%- if user -%}
+            You are talking to a user
+              {%- if user.name -%}{{" "}} and their name is {{user.name}}
+                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
+              {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
+            {{NEWLINE+NEWLINE}}
+
+            {%- if agent.instructions -%}
+            Instructions:{{NEWLINE}}
+              {%- if agent.instructions is string -%}
+                {{agent.instructions}}{{NEWLINE}}
+              {%- else -%}
+                {%- for instruction in agent.instructions -%}
+                  - {{instruction}}{{NEWLINE}}
+                {%- endfor -%}
+              {%- endif -%}
+              {{NEWLINE}}
+            {%- endif -%}
+
+            {%- if docs -%}
+            Relevant documents:{{NEWLINE}}
+              {%- for doc in docs -%}
+                {{doc.title}}{{NEWLINE}}
+                {%- if doc.content is string -%}
+                  {{doc.content}}{{NEWLINE}}
+                {%- else -%}
+                  {%- for snippet in doc.content -%}
+                    {{snippet}}{{NEWLINE}}
+                  {%- endfor -%}
+                {%- endif -%}
+                {{"---"}}
+              {%- endfor -%}
+            {%- endif -%}
       allOf:
         - $ref: '#/components/schemas/Agents.CreateAgentRequest'
     Agents.PatchAgentRequest:
@@ -1598,6 +1760,59 @@ components:
           type: object
           additionalProperties: {}
           description: Default settings for all sessions created by this agent
+        default_system_template:
+          type: string
+          description: Default system template for all sessions created by this agent
+          default: |-
+            {%- if agent.name -%}
+            You are {{agent.name}}.{{" "}}
+            {%- endif -%}
+
+            {%- if agent.about -%}
+            About you: {{agent.about}}.{{" "}}
+            {%- endif -%}
+
+            {%- if user -%}
+            You are talking to a user
+              {%- if user.name -%}{{" "}} and their name is {{user.name}}
+                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
+              {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
+            {{NEWLINE+NEWLINE}}
+
+            {%- if agent.instructions -%}
+            Instructions:{{NEWLINE}}
+              {%- if agent.instructions is string -%}
+                {{agent.instructions}}{{NEWLINE}}
+              {%- else -%}
+                {%- for instruction in agent.instructions -%}
+                  - {{instruction}}{{NEWLINE}}
+                {%- endfor -%}
+              {%- endif -%}
+              {{NEWLINE}}
+            {%- endif -%}
+
+            {%- if docs -%}
+            Relevant documents:{{NEWLINE}}
+              {%- for doc in docs -%}
+                {{doc.title}}{{NEWLINE}}
+                {%- if doc.content is string -%}
+                  {{doc.content}}{{NEWLINE}}
+                {%- else -%}
+                  {%- for snippet in doc.content -%}
+                    {{snippet}}{{NEWLINE}}
+                  {%- endfor -%}
+                {%- endif -%}
+                {{"---"}}
+              {%- endfor -%}
+            {%- endif -%}
       description: Payload for patching a agent
     Agents.UpdateAgentRequest:
       type: object
@@ -1606,6 +1821,7 @@ components:
         - about
         - model
         - instructions
+        - default_system_template
       properties:
         metadata:
           type: object
@@ -1638,6 +1854,59 @@ components:
           type: object
           additionalProperties: {}
           description: Default settings for all sessions created by this agent
+        default_system_template:
+          type: string
+          description: Default system template for all sessions created by this agent
+          default: |-
+            {%- if agent.name -%}
+            You are {{agent.name}}.{{" "}}
+            {%- endif -%}
+
+            {%- if agent.about -%}
+            About you: {{agent.about}}.{{" "}}
+            {%- endif -%}
+
+            {%- if user -%}
+            You are talking to a user
+              {%- if user.name -%}{{" "}} and their name is {{user.name}}
+                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
+              {%- endif -%}
+            {%- endif -%}
+
+            {{NEWLINE}}
+
+            {%- if session.situation -%}
+            Situation: {{session.situation}}
+            {%- endif -%}
+
+            {{NEWLINE+NEWLINE}}
+
+            {%- if agent.instructions -%}
+            Instructions:{{NEWLINE}}
+              {%- if agent.instructions is string -%}
+                {{agent.instructions}}{{NEWLINE}}
+              {%- else -%}
+                {%- for instruction in agent.instructions -%}
+                  - {{instruction}}{{NEWLINE}}
+                {%- endfor -%}
+              {%- endif -%}
+              {{NEWLINE}}
+            {%- endif -%}
+
+            {%- if docs -%}
+            Relevant documents:{{NEWLINE}}
+              {%- for doc in docs -%}
+                {{doc.title}}{{NEWLINE}}
+                {%- if doc.content is string -%}
+                  {{doc.content}}{{NEWLINE}}
+                {%- else -%}
+                  {%- for snippet in doc.content -%}
+                    {{snippet}}{{NEWLINE}}
+                  {%- endfor -%}
+                {%- endif -%}
+                {{"---"}}
+              {%- endfor -%}
+            {%- endif -%}
       description: Payload for updating a agent
     Chat.BaseChatOutput:
       type: object
@@ -3652,7 +3921,6 @@ components:
       required:
         - id
         - situation
-        - system_template
         - render_templates
         - token_budget
         - context_overflow
@@ -3685,56 +3953,6 @@ components:
         system_template:
           type: string
           description: A specific system prompt template that sets the background for this session
-          default: |-
-            {%- if agent.name -%}
-            You are {{agent.name}}.{{" "}}
-            {%- endif -%}
-
-            {%- if agent.about -%}
-            About you: {{agent.about}}.{{" "}}
-            {%- endif -%}
-
-            {%- if user -%}
-            You are talking to a user
-              {%- if user.name -%}{{" "}} and their name is {{user.name}}
-                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
-              {%- endif -%}
-            {%- endif -%}
-
-            {{NEWLINE}}
-
-            {%- if session.situation -%}
-            Situation: {{session.situation}}
-            {%- endif -%}
-
-            {{NEWLINE+NEWLINE}}
-
-            {%- if agent.instructions -%}
-            Instructions:{{NEWLINE}}
-              {%- if agent.instructions is string -%}
-                {{agent.instructions}}{{NEWLINE}}
-              {%- else -%}
-                {%- for instruction in agent.instructions -%}
-                  - {{instruction}}{{NEWLINE}}
-                {%- endfor -%}
-              {%- endif -%}
-              {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if docs -%}
-            Relevant documents:{{NEWLINE}}
-              {%- for doc in docs -%}
-                {{doc.title}}{{NEWLINE}}
-                {%- if doc.content is string -%}
-                  {{doc.content}}{{NEWLINE}}
-                {%- else -%}
-                  {%- for snippet in doc.content -%}
-                    {{snippet}}{{NEWLINE}}
-                  {%- endfor -%}
-                {%- endif -%}
-                {{"---"}}
-              {%- endfor -%}
-            {%- endif -%}
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -3779,7 +3997,6 @@ components:
       type: object
       required:
         - situation
-        - system_template
         - render_templates
         - token_budget
         - context_overflow
@@ -3810,56 +4027,6 @@ components:
         system_template:
           type: string
           description: A specific system prompt template that sets the background for this session
-          default: |-
-            {%- if agent.name -%}
-            You are {{agent.name}}.{{" "}}
-            {%- endif -%}
-
-            {%- if agent.about -%}
-            About you: {{agent.about}}.{{" "}}
-            {%- endif -%}
-
-            {%- if user -%}
-            You are talking to a user
-              {%- if user.name -%}{{" "}} and their name is {{user.name}}
-                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
-              {%- endif -%}
-            {%- endif -%}
-
-            {{NEWLINE}}
-
-            {%- if session.situation -%}
-            Situation: {{session.situation}}
-            {%- endif -%}
-
-            {{NEWLINE+NEWLINE}}
-
-            {%- if agent.instructions -%}
-            Instructions:{{NEWLINE}}
-              {%- if agent.instructions is string -%}
-                {{agent.instructions}}{{NEWLINE}}
-              {%- else -%}
-                {%- for instruction in agent.instructions -%}
-                  - {{instruction}}{{NEWLINE}}
-                {%- endfor -%}
-              {%- endif -%}
-              {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if docs -%}
-            Relevant documents:{{NEWLINE}}
-              {%- for doc in docs -%}
-                {{doc.title}}{{NEWLINE}}
-                {%- if doc.content is string -%}
-                  {{doc.content}}{{NEWLINE}}
-                {%- else -%}
-                  {%- for snippet in doc.content -%}
-                    {{snippet}}{{NEWLINE}}
-                  {%- endfor -%}
-                {%- endif -%}
-                {{"---"}}
-              {%- endfor -%}
-            {%- endif -%}
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -3955,56 +4122,6 @@ components:
         system_template:
           type: string
           description: A specific system prompt template that sets the background for this session
-          default: |-
-            {%- if agent.name -%}
-            You are {{agent.name}}.{{" "}}
-            {%- endif -%}
-
-            {%- if agent.about -%}
-            About you: {{agent.about}}.{{" "}}
-            {%- endif -%}
-
-            {%- if user -%}
-            You are talking to a user
-              {%- if user.name -%}{{" "}} and their name is {{user.name}}
-                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
-              {%- endif -%}
-            {%- endif -%}
-
-            {{NEWLINE}}
-
-            {%- if session.situation -%}
-            Situation: {{session.situation}}
-            {%- endif -%}
-
-            {{NEWLINE+NEWLINE}}
-
-            {%- if agent.instructions -%}
-            Instructions:{{NEWLINE}}
-              {%- if agent.instructions is string -%}
-                {{agent.instructions}}{{NEWLINE}}
-              {%- else -%}
-                {%- for instruction in agent.instructions -%}
-                  - {{instruction}}{{NEWLINE}}
-                {%- endfor -%}
-              {%- endif -%}
-              {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if docs -%}
-            Relevant documents:{{NEWLINE}}
-              {%- for doc in docs -%}
-                {{doc.title}}{{NEWLINE}}
-                {%- if doc.content is string -%}
-                  {{doc.content}}{{NEWLINE}}
-                {%- else -%}
-                  {%- for snippet in doc.content -%}
-                    {{snippet}}{{NEWLINE}}
-                  {%- endfor -%}
-                {%- endif -%}
-                {{"---"}}
-              {%- endfor -%}
-            {%- endif -%}
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
@@ -4172,7 +4289,6 @@ components:
       type: object
       required:
         - situation
-        - system_template
         - summary
         - render_templates
         - token_budget
@@ -4191,56 +4307,6 @@ components:
         system_template:
           type: string
           description: A specific system prompt template that sets the background for this session
-          default: |-
-            {%- if agent.name -%}
-            You are {{agent.name}}.{{" "}}
-            {%- endif -%}
-
-            {%- if agent.about -%}
-            About you: {{agent.about}}.{{" "}}
-            {%- endif -%}
-
-            {%- if user -%}
-            You are talking to a user
-              {%- if user.name -%}{{" "}} and their name is {{user.name}}
-                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
-              {%- endif -%}
-            {%- endif -%}
-
-            {{NEWLINE}}
-
-            {%- if session.situation -%}
-            Situation: {{session.situation}}
-            {%- endif -%}
-
-            {{NEWLINE+NEWLINE}}
-
-            {%- if agent.instructions -%}
-            Instructions:{{NEWLINE}}
-              {%- if agent.instructions is string -%}
-                {{agent.instructions}}{{NEWLINE}}
-              {%- else -%}
-                {%- for instruction in agent.instructions -%}
-                  - {{instruction}}{{NEWLINE}}
-                {%- endfor -%}
-              {%- endif -%}
-              {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if docs -%}
-            Relevant documents:{{NEWLINE}}
-              {%- for doc in docs -%}
-                {{doc.title}}{{NEWLINE}}
-                {%- if doc.content is string -%}
-                  {{doc.content}}{{NEWLINE}}
-                {%- else -%}
-                  {%- for snippet in doc.content -%}
-                    {{snippet}}{{NEWLINE}}
-                  {%- endfor -%}
-                {%- endif -%}
-                {{"---"}}
-              {%- endfor -%}
-            {%- endif -%}
         summary:
           type: string
           nullable: true
@@ -4351,7 +4417,6 @@ components:
       type: object
       required:
         - situation
-        - system_template
         - render_templates
         - token_budget
         - context_overflow
@@ -4366,56 +4431,6 @@ components:
         system_template:
           type: string
           description: A specific system prompt template that sets the background for this session
-          default: |-
-            {%- if agent.name -%}
-            You are {{agent.name}}.{{" "}}
-            {%- endif -%}
-
-            {%- if agent.about -%}
-            About you: {{agent.about}}.{{" "}}
-            {%- endif -%}
-
-            {%- if user -%}
-            You are talking to a user
-              {%- if user.name -%}{{" "}} and their name is {{user.name}}
-                {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}
-              {%- endif -%}
-            {%- endif -%}
-
-            {{NEWLINE}}
-
-            {%- if session.situation -%}
-            Situation: {{session.situation}}
-            {%- endif -%}
-
-            {{NEWLINE+NEWLINE}}
-
-            {%- if agent.instructions -%}
-            Instructions:{{NEWLINE}}
-              {%- if agent.instructions is string -%}
-                {{agent.instructions}}{{NEWLINE}}
-              {%- else -%}
-                {%- for instruction in agent.instructions -%}
-                  - {{instruction}}{{NEWLINE}}
-                {%- endfor -%}
-              {%- endif -%}
-              {{NEWLINE}}
-            {%- endif -%}
-
-            {%- if docs -%}
-            Relevant documents:{{NEWLINE}}
-              {%- for doc in docs -%}
-                {{doc.title}}{{NEWLINE}}
-                {%- if doc.content is string -%}
-                  {{doc.content}}{{NEWLINE}}
-                {%- else -%}
-                  {%- for snippet in doc.content -%}
-                    {{snippet}}{{NEWLINE}}
-                  {%- endfor -%}
-                {%- endif -%}
-                {{"---"}}
-              {%- endfor -%}
-            {%- endif -%}
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
