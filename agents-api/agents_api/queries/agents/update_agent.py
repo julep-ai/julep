@@ -20,7 +20,8 @@ SET
     name = $4,
     about = $5,
     model = $6,
-    default_settings = $7::jsonb
+    default_settings = $7::jsonb,
+    default_system_template = $8
 WHERE agent_id = $2 AND developer_id = $1
 RETURNING *;
 """
@@ -57,6 +58,7 @@ async def update_agent(
         data.about,
         data.model,
         data.default_settings or {},
+        data.default_system_template,
     ]
 
     return (

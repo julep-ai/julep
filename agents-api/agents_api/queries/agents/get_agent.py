@@ -24,6 +24,7 @@ SELECT
     model,
     metadata,
     default_settings,
+    default_system_template,
     created_at,
     updated_at
 FROM

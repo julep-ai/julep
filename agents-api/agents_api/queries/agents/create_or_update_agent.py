@@ -28,7 +28,8 @@ INSERT INTO agents (
     instructions,
     model,
     metadata,
-    default_settings
+    default_settings,
+    default_system_template
 )
 VALUES (
     $1,                                          -- developer_id
@@ -42,7 +43,8 @@ VALUES (
     $6,                                          -- instructions
     $7,                                          -- model
     $8,                                          -- metadata
-    $9                                           -- default_settings
+    $9,                                          -- default_settings
+    $10                                          -- default_system_template
 )
 ON CONFLICT (developer_id, agent_id) DO UPDATE SET
     canonical_name = EXCLUDED.canonical_name,
@@ -51,7 +53,8 @@ ON CONFLICT (developer_id, agent_id) DO UPDATE SET
     instructions = EXCLUDED.instructions,
     model = EXCLUDED.model,
     metadata = EXCLUDED.metadata,
-    default_settings = EXCLUDED.default_settings
+    default_settings = EXCLUDED.default_settings,
+    default_system_template = EXCLUDED.default_system_template
 RETURNING *;
 """
 
@@ -102,6 +105,7 @@ async def create_or_update_agent(
         data.model,
         data.metadata,
         default_settings,
+        data.default_system_template,
     ]
 
     return (
