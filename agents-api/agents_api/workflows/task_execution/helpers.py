@@ -95,7 +95,9 @@ async def continue_as_child(
             ],
             retry_policy=DEFAULT_RETRY_POLICY,
             memo=workflow.memo() | user_state,
-            search_attributes=TypedSearchAttributes(search_attrs),
+            search_attributes=TypedSearchAttributes([
+                SearchAttributePair(execution_id_key, str(execution_id)),
+            ]),
         )
     except Exception as e:
         while isinstance(e, ChildWorkflowError) and getattr(e, "__cause__", None):
