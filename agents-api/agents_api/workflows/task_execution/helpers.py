@@ -79,11 +79,12 @@ async def continue_as_child(
             info.workflow_type, *args, **kwargs
         )
 
-    search_attrs = []
-    if execution_input.execution and execution_input.execution.id:
-        execution_id = execution_input.execution.id
-        execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
-        search_attrs.append(SearchAttributePair(execution_id_key, str(execution_id)))
+    if execution_input.execution is None:
+        msg = "Execution input execution cannot be None"
+        raise ApplicationError(msg)
+
+    execution_id = execution_input.execution.id
+    execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
 
     try:
         return await run(
