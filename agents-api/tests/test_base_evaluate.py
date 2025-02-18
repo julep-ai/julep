@@ -44,6 +44,10 @@ async def _():
     result = await base_evaluate(exprs, values={})
     assert result == "hello world"
 
+    exprs = "I forgot to put a dollar sign, can you still calculate {x + 5}?"
+    result = await base_evaluate(exprs, values={"x": 5})
+    assert result == "I forgot to put a dollar sign, can you still calculate 10?"
+
 
 @test("utility: base_evaluate - dict")
 async def _():
