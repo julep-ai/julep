@@ -79,8 +79,11 @@ async def continue_as_child(
             info.workflow_type, *args, **kwargs
         )
 
-    execution_id = execution_input.execution.id
-    execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
+    search_attrs = []
+    if execution_input.execution and execution_input.execution.id:
+        execution_id = execution_input.execution.id
+        execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
+        search_attrs.append(SearchAttributePair(execution_id_key, str(execution_id)))
 
     try:
         return await run(
@@ -91,9 +94,7 @@ async def continue_as_child(
             ],
             retry_policy=DEFAULT_RETRY_POLICY,
             memo=workflow.memo() | user_state,
-            search_attributes=TypedSearchAttributes([
-                SearchAttributePair(execution_id_key, str(execution_id)),
-            ]),
+            search_attributes=TypedSearchAttributes(search_attrs),
         )
     except Exception as e:
         while isinstance(e, ChildWorkflowError) and getattr(e, "__cause__", None):
