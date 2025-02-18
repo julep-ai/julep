@@ -36,12 +36,16 @@ SET
         WHEN $7::jsonb IS NOT NULL THEN $7
         ELSE default_settings
     END,
+    default_system_template = CASE
+        WHEN $8::text IS NOT NULL THEN $8
+        ELSE default_system_template
+    END,
     instructions = CASE
-		WHEN $8::text[] IS NOT NULL THEN $8
+		WHEN $9::text[] IS NOT NULL THEN $9
 		ELSE instructions
 	END,
     canonical_name = CASE
-        WHEN $9::citext IS NOT NULL THEN $9
+        WHEN $10::citext IS NOT NULL THEN $10
         ELSE canonical_name
     END
 WHERE agent_id = $2 AND developer_id = $1
@@ -83,6 +87,7 @@ async def patch_agent(
         data.metadata,
         data.model,
         data.default_settings,
+        data.default_system_template,
         [data.instructions] if isinstance(data.instructions, str) else data.instructions,
         data.canonical_name,
     ]

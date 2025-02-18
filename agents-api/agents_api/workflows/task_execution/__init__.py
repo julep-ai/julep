@@ -383,7 +383,7 @@ class TaskExecutionWorkflow:
         self,
         step: YieldStep,
     ):
-        if self.outcome is None:
+        if self.outcome is None or self.context is None:
             return PartialTransition(output=None)
 
         output = self.outcome.output
