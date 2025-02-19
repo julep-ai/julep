@@ -12,7 +12,7 @@ from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 
 from ..autogen.openapi_model import TransitionTarget
-from ..common.interceptors import offload_if_large
+from ..common.interceptors import CustomClientInterceptor, offload_if_large
 from ..common.protocol.tasks import ExecutionInput
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..env import (
@@ -49,6 +49,7 @@ async def get_client(
         worker_url,
         namespace=namespace,
         tls=tls_config,
+        interceptors=[CustomClientInterceptor()],
         data_converter=data_converter,
         api_key=temporal_api_key or None,
         rpc_metadata=rpc_metadata,
