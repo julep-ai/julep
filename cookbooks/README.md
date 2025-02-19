@@ -48,6 +48,7 @@ Each notebook explores a unique use case, demonstrating different aspects of Jul
 | `07-personalized-research-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb) | Demonstrates personalized research assistant capabilities | Yes |
 | `08-rag-chatbot.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/08-rag-chatbot.ipynb) | Demonstrates RAG chatbot capabilities | Yes |
 | `09-companion-agent.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/09-companion-agent.ipynb) | Demonstrates companion agent capabilities like story generation, user persona management, and more | Yes |
+| `10-reel-generator.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/10-reel-generator.ipynb) | Demonstrates reel generator capabilities | Yes |
 
 ## Potential Cookbooks for Contributors
 
