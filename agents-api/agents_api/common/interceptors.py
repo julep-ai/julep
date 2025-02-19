@@ -13,6 +13,14 @@ from typing import Any
 
 from temporalio import workflow
 from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
+from temporalio.client import (
+    Interceptor as ClientInterceptor,
+)
+from temporalio.client import (
+    OutboundInterceptor,
+    StartWorkflowInput,
+    WorkflowHandle,
+)
 from temporalio.exceptions import ActivityError, ApplicationError, FailureError, TemporalError
 from temporalio.service import RPCError
 from temporalio.worker import (
@@ -36,7 +44,6 @@ from temporalio.workflow import (
     NoReturn,
     ReadOnlyContextError,
 )
-from temporalio.client import OutboundInterceptor, StartWorkflowInput, WorkflowHandle, Interceptor as ClientInterceptor
 
 with workflow.unsafe.imports_passed_through():
     from ..env import blob_store_cutoff_kb, use_blob_store_for_temporal
@@ -356,6 +363,7 @@ class CustomInterceptor(Interceptor):
         """
         return CustomWorkflowInterceptor
 
+
 class CustomClientInterceptor(ClientInterceptor):
     """
     Custom interceptor for Temporal.
@@ -363,6 +371,7 @@ class CustomClientInterceptor(ClientInterceptor):
 
     def intercept_client(self, next: OutboundInterceptor) -> OutboundInterceptor:
         return CustomOutboundInterceptor(super().intercept_client(next))
+
 
 class CustomOutboundInterceptor(OutboundInterceptor):
     """
