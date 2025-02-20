@@ -17,6 +17,9 @@ from ...common.protocol.developers import Developer
 from ...common.utils.datetime import utcnow
 from ...dependencies.developer_id import get_developer_data
 from ...queries.entries.create_entries import create_entries
+from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
+from ..utils.model_validation import validate_model
+from ..utils.tools import eval_tool_calls
 from .metrics import total_tokens_per_user
 from .render import render_chat_input
 from .router import router
@@ -71,9 +74,9 @@ async def chat(
         "tags": developer.tags,
         "custom_api_key": x_custom_api_key,
     }
-    payload = {**settings, **params}
-
-    model_response = await litellm.acompletion(**payload)
+    model_response = await eval_tool_calls(
+        litellm.acompletion, {"system"}, developer.id, **{**settings, **params}
+    )
 
     # Save the input and the response to the session history
     if chat_input.save:
