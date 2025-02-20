@@ -94,81 +94,81 @@ model_list:
     api_key: os.environ/ANTHROPIC_API_KEY
 
 # Groq models
-- model_name: "groq-llama-3.1-70b"
+- model_name: "llama-3.1-70b-versatile"
   litellm_params:
     model: "groq/llama-3.1-70b-versatile"
     tags: ["paid"]
     api_key: os.environ/GROQ_API_KEY
 
-- model_name: "groq-llama-3.1-8b"
+- model_name: "llama-3.1-8b-instant"
   litellm_params:
     model: "groq/llama-3.1-8b-instant"
     tags: ["paid"]
     api_key: os.environ/GROQ_API_KEY
 
 # OpenRouter models
-- model_name: "openrouter-mistral-large-2411"
+- model_name: "mistral-large-2411"
   litellm_params:
     model: "openrouter/mistralai/mistral-large-2411"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
   
-- model_name: "openrouter-qwen-2.5-72b-instruct"
+- model_name: "qwen-2.5-72b-instruct"
   litellm_params:
     model: "openrouter/qwen/qwen-2.5-72b-instruct"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
  
-- model_name: "openrouter-eva-llama-3.33-70b"
+- model_name: "eva-llama-3.33-70b"
   litellm_params:
     model: "openrouter/eva-unit-01/eva-llama-3.33-70b"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
   
-- model_name: "openrouter-l3.1-euryale-70b"
+- model_name: "l3.1-euryale-70b"
   litellm_params:
     model: "openrouter/sao10k/l3.1-euryale-70b"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
-- model_name: "openrouter-l3.3-euryale-70b"
+- model_name: "l3.3-euryale-70b"
   litellm_params:
     model: "openrouter/sao10k/l3.3-euryale-70b"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
-- model_name: "openrouter-magnum-v4-72b"
+- model_name: "magnum-v4-72b"
   litellm_params:
     model: "openrouter/anthracite-org/magnum-v4-72b"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
-- model_name: "openrouter-eva-qwen-2.5-72b"
+- model_name: "eva-qwen-2.5-72b"
   litellm_params:
     model: "openrouter/eva-unit-01/eva-qwen-2.5-72b"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
-- model_name: "openrouter-hermes-3-llama-3.1-70b"
+- model_name: "hermes-3-llama-3.1-70b"
   litellm_params:
     model: "openrouter/nousresearch/hermes-3-llama-3.1-70b"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
-- model_name: "openrouter-deepseek-chat"
+- model_name: "deepseek-chat"
   litellm_params:
     model: "openrouter/deepseek/deepseek-chat"
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
 # Cerebras Models
-- model_name: "cerebras-llama3.1-8b"
+- model_name: "cerebras/llama3.1-8b"
   litellm_params:
     model: "cerebras/llama3.1-8b"
     api_key: os.environ/CEREBRAS_API_KEY
     tags: ["paid"]
 
-- model_name: "cerebras-llama3.1-70b"
+- model_name: "cerebras/llama3.1-70b"
   litellm_params:
     model: "cerebras/llama3.1-70b"
     api_key: os.environ/CEREBRAS_API_KEY
