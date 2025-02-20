@@ -3755,6 +3755,8 @@ components:
         step:
           type: integer
           format: uint16
+        scope_id:
+          $ref: '#/components/schemas/Common.uuid'
     Executions.UpdateExecutionRequest:
       type: object
       required:
