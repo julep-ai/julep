@@ -1,4 +1,5 @@
 from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
@@ -199,6 +200,11 @@ class StepContext(BaseModel):
 
     @computed_field
     @property
+    def current_scope_id(self) -> Annotated[UUID, Field(exclude=True)]:
+        return self.cursor.scope_id
+
+    @computed_field
+    @property
     def is_last_step(self) -> Annotated[bool, Field(exclude=True)]:
         return (self.cursor.step + 1) == len(self.current_workflow.steps)
 
@@ -231,8 +237,8 @@ class StepContext(BaseModel):
         inputs = []
         labels = []
         state = {}
-        workflow = get_workflow_name(transitions[-1])
-        transitions = [t for t in transitions if get_workflow_name(t) == workflow]
+        scope_id = self.current_scope_id
+        transitions = [t for t in transitions if t.current.scope_id == scope_id]
         for transition in transitions:
             # NOTE: The length hack should be refactored in case we want to implement multi-step control steps
             if transition.next and transition.next.step >= len(inputs):

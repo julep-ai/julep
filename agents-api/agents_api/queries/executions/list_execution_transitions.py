@@ -39,8 +39,13 @@ def _transform(d):
         "current": {
             "workflow": current_step[0],
             "step": current_step[1],
+            "scope_id": current_step[2],
         },
-        "next": {"workflow": next_step[0], "step": next_step[1]}
+        "next": {
+            "workflow": next_step[0],
+            "step": next_step[1],
+            "scope_id": next_step[2],
+        }
         if next_step is not None
         else None,
         "step_label": d["step_label"],

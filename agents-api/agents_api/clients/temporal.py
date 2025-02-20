@@ -1,5 +1,6 @@
 from datetime import timedelta
 from uuid import UUID
+from uuid_extensions import uuid7
 
 from beartype import beartype
 from temporalio.client import Client, TLSConfig
@@ -107,7 +108,7 @@ async def run_task_execution_workflow(
         msg = "execution_input.execution cannot be None"
         raise ValueError(msg)
 
-    start: TransitionTarget = start or TransitionTarget(workflow="main", step=0)
+    start: TransitionTarget = start or TransitionTarget(workflow="main", step=0, scope_id=uuid7())
 
     client = client or (await get_client())
     execution_id = execution_input.execution.id

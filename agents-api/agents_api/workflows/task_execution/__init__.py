@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from uuid_extensions import uuid7
 from typing import Any
 
 from temporalio import workflow
@@ -195,6 +196,7 @@ class TaskExecutionWorkflow:
                 transition_target = TransitionTarget(
                     workflow=workflow,
                     step=0,
+                    scope_id=uuid7(),
                 )
                 transition_to = ("step", transition_target)
 

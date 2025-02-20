@@ -1,5 +1,6 @@
 import asyncio
 from datetime import timedelta
+from uuid_extensions import uuid7
 from typing import Any, TypeVar
 
 from temporalio import workflow
@@ -132,7 +133,9 @@ async def execute_switch_branch(
     case_execution_input = execution_input.model_copy()
     case_execution_input.task = case_task
 
-    case_next_target = TransitionTarget(workflow=case_wf_name, step=0)
+    case_next_target = TransitionTarget(
+        workflow=case_wf_name, step=0, scope_id=context.current_scope_id
+    )
 
     return await continue_as_child(
         case_execution_input,
@@ -173,7 +176,9 @@ async def execute_if_else_branch(
     if_else_execution_input = execution_input.model_copy()
     if_else_execution_input.task = if_else_task
 
-    if_else_next_target = TransitionTarget(workflow=if_else_wf_name, step=0)
+    if_else_next_target = TransitionTarget(
+        workflow=if_else_wf_name, step=0, scope_id=context.current_scope_id
+    )
 
     return await continue_as_child(
         if_else_execution_input,
@@ -208,7 +213,9 @@ async def execute_foreach_step(
 
         foreach_execution_input = execution_input.model_copy()
         foreach_execution_input.task = foreach_task
-        foreach_next_target = TransitionTarget(workflow=foreach_wf_name, step=0)
+        foreach_next_target = TransitionTarget(
+            workflow=foreach_wf_name, step=0, scope_id=context.current_scope_id
+        )
 
         result = await continue_as_child(
             foreach_execution_input,
@@ -250,7 +257,9 @@ async def execute_map_reduce_step(
         map_reduce_execution_input = execution_input.model_copy()
         map_reduce_execution_input.task = map_reduce_task
         # NOTE: Step needs to be refactored to support multiple steps
-        map_reduce_next_target = TransitionTarget(workflow=workflow_name, step=0)
+        map_reduce_next_target = TransitionTarget(
+            workflow=workflow_name, step=0, scope_id=context.current_scope_id
+        )
 
         output = await continue_as_child(
             map_reduce_execution_input,
@@ -286,10 +295,6 @@ async def execute_map_reduce_step_parallel(
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     results = initial
 
-    if isinstance(context.current_step.map, YieldStep):
-        msg = "Subworkflow step not supported in parallel map reduce"
-        raise ValueError(msg)
-
     parallelism = min(parallelism, task_max_parallelism)
     assert parallelism > 1, "Parallelism must be greater than 1"
 
@@ -324,7 +329,9 @@ async def execute_map_reduce_step_parallel(
 
             map_reduce_execution_input = execution_input.model_copy()
             map_reduce_execution_input.task = map_reduce_task
-            map_reduce_next_target = TransitionTarget(workflow=workflow_name, step=0)
+            map_reduce_next_target = TransitionTarget(
+                workflow=workflow_name, step=0, scope_id=context.current_scope_id
+            )
 
             batch_pending.append(
                 asyncio.create_task(
