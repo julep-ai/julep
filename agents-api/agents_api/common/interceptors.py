@@ -13,6 +13,14 @@ from typing import Any
 
 from temporalio import workflow
 from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
+from temporalio.client import (
+    Interceptor as ClientInterceptor,
+)
+from temporalio.client import (
+    OutboundInterceptor,
+    StartWorkflowInput,
+    WorkflowHandle,
+)
 from temporalio.exceptions import ActivityError, ApplicationError, FailureError, TemporalError
 from temporalio.service import RPCError
 from temporalio.worker import (
@@ -285,7 +293,7 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
         To add a custom outbound interceptor, wrap the given interceptor before
         sending to the next ``init`` call.
         """
-        self.next.init(CustomOutboundInterceptor(outbound))
+        self.next.init(CustomWorkflowOutboundInterceptor(outbound))
 
     @offload_to_blob_store
     async def execute_workflow(self, input: ExecuteWorkflowInput) -> Any:
@@ -298,13 +306,14 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
         )
 
 
-class CustomOutboundInterceptor(WorkflowOutboundInterceptor):
+class CustomWorkflowOutboundInterceptor(WorkflowOutboundInterceptor):
     """
     Custom outbound interceptor for Temporal workflows.
     """
 
-    @offload_to_blob_store
+    # @offload_to_blob_store
     def start_activity(self, input: StartActivityInput) -> ActivityHandle:
+        input.args = [offload_if_large(arg) for arg in input.args]
         return handle_execution_with_errors_sync(
             super().start_activity,
             input,
@@ -324,8 +333,9 @@ class CustomOutboundInterceptor(WorkflowOutboundInterceptor):
             input,
         )
 
-    @offload_to_blob_store
+    # @offload_to_blob_store
     async def start_child_workflow(self, input: StartChildWorkflowInput) -> ChildWorkflowHandle:
+        input.args = [offload_if_large(arg) for arg in input.args]
         return await handle_execution_with_errors(
             super().start_child_workflow,
             input,
@@ -352,3 +362,29 @@ class CustomInterceptor(Interceptor):
         Returns the custom workflow interceptor class.
         """
         return CustomWorkflowInterceptor
+
+
+class CustomClientInterceptor(ClientInterceptor):
+    """
+    Custom interceptor for Temporal.
+    """
+
+    def intercept_client(self, next: OutboundInterceptor) -> OutboundInterceptor:
+        return CustomOutboundInterceptor(super().intercept_client(next))
+
+
+class CustomOutboundInterceptor(OutboundInterceptor):
+    """
+    Custom outbound interceptor for Temporal workflows.
+    """
+
+    # @offload_to_blob_store
+    async def start_workflow(self, input: StartWorkflowInput) -> WorkflowHandle[Any, Any]:
+        """
+        interceptor for outbound workflow calls
+        """
+        input.args = [offload_if_large(arg) for arg in input.args]
+        return await handle_execution_with_errors(
+            super().start_workflow,
+            input,
+        )
