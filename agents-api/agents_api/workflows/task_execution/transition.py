@@ -39,7 +39,9 @@ async def transition(
             "next": None
             if context.is_last_step
             else TransitionTarget(
-                workflow=context.cursor.workflow, step=context.cursor.step + 1
+                workflow=context.cursor.workflow,
+                step=context.cursor.step + 1,
+                scope_id=context.current_scope_id,
             ),
             "metadata": {"step_type": type(context.current_step).__name__},
             "output": state.output,

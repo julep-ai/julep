@@ -6,6 +6,7 @@ from typing import Any
 
 from temporalio import workflow
 from temporalio.exceptions import ActivityError, ApplicationError
+from uuid_extensions import uuid7
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
@@ -195,6 +196,7 @@ class TaskExecutionWorkflow:
                 transition_target = TransitionTarget(
                     workflow=workflow,
                     step=0,
+                    scope_id=uuid7(),
                 )
                 transition_to = ("step", transition_target)
 
