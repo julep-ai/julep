@@ -1443,8 +1443,11 @@ async def _():
                 YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
             )
 
+        scope_id = result.transition_to[1].scope_id
+
         assert result == StepOutcome(
-            output={"x": 3}, transition_to=("step", TransitionTarget(step=0, workflow="main"))
+            output={"x": 3},
+            transition_to=("step", TransitionTarget(step=0, workflow="main", scope_id=scope_id)),
         )
 
 
