@@ -1447,7 +1447,10 @@ async def _():
 
         assert result == StepOutcome(
             output={"x": 3},
-            transition_to=("step", TransitionTarget(step=0, workflow="main", scope_id=scope_id)),
+            transition_to=(
+                "step",
+                TransitionTarget(step=0, workflow="main", scope_id=scope_id),
+            ),
         )
 
 

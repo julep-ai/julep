@@ -9,7 +9,6 @@ from agents_api.autogen.openapi_model import (
     TaskSpecDef,
     TransitionTarget,
     Workflow,
-    YieldStep,
 )
 from agents_api.common.protocol.tasks import (
     ExecutionInput,
@@ -18,7 +17,6 @@ from agents_api.common.protocol.tasks import (
 from agents_api.common.utils.datetime import utcnow
 from agents_api.workflows.task_execution.helpers import execute_map_reduce_step_parallel
 from ward import raises, test
-
 
 # @test("execute_map_reduce_step_parallel: subworkflow step not supported")
 # async def _():
