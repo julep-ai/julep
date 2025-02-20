@@ -24,6 +24,7 @@ from ...queries.chat.prepare_chat_context import prepare_chat_context
 from ...queries.entries.create_entries import create_entries
 from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from ..utils.model_validation import validate_model
+from ..utils.tools import eval_tool_calls
 from .metrics import total_tokens_per_user
 from .router import router
 
@@ -202,7 +203,9 @@ async def chat(
         "tags": developer.tags,
         "custom_api_key": x_custom_api_key,
     }
-    model_response = await litellm.acompletion(**{**settings, **params})
+    model_response = await eval_tool_calls(
+        litellm.acompletion, {"system"}, developer.id, **{**settings, **params}
+    )
 
     # Save the input and the response to the session history
     if chat_input.save:
