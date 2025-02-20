@@ -91,11 +91,11 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
             "scope_id": d["current_step"][2],
         },
         "next": d["next_step"]
-            and {
-                "workflow": d["next_step"][0],
-                "step": d["next_step"][1],
-                "scope_id": d["next_step"][2],
-            },
+        and {
+            "workflow": d["next_step"][0],
+            "step": d["next_step"][1],
+            "scope_id": d["next_step"][2],
+        },
         "updated_at": utcnow(),
     },
     one=True,

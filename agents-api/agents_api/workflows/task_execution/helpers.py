@@ -1,6 +1,5 @@
 import asyncio
 from datetime import timedelta
-from uuid_extensions import uuid7
 from typing import Any, TypeVar
 
 from temporalio import workflow
@@ -17,7 +16,6 @@ with workflow.unsafe.imports_passed_through():
         TransitionTarget,
         Workflow,
         WorkflowStep,
-        YieldStep,
     )
     from ...common.protocol.tasks import (
         ExecutionInput,

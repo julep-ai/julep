@@ -2,11 +2,11 @@
 
 import asyncio
 from datetime import timedelta
-from uuid_extensions import uuid7
 from typing import Any
 
 from temporalio import workflow
 from temporalio.exceptions import ActivityError, ApplicationError
+from uuid_extensions import uuid7
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
