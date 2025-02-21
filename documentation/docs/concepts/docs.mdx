@@ -75,9 +75,11 @@ Our full-text search functionality leverages Timescale's powerful indexing to ef
 
 **Parameters:**
 
-- **text** (`str`): The textual query to search within documents.
-- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
-- **lang** (`str`, default `'en-US'`): The language to use for full-text search processing.
+| Parameter        | Type    | Description                                      | Default  |
+|------------------|---------|--------------------------------------------------|----------|
+| `text`           | `str`   | The textual query to search within documents.    | **Required** |
+| `metadata_filter`| `object`| Filters to apply based on document metadata.     | `None` |
+| `lang`           | `str`   | The language to use for full-text search processing. | `'en-US'` |
 
 **Example:**
 
@@ -139,11 +141,13 @@ Our embedding search functionality leverages machine learning to convert search 
 
 **Parameters:**
 
-- **vector** (`List[float]`): The embedding vector representing the semantic meaning of the query.
-- **alpha** (`float`, default `0.7`): The weight assigned to embedding-based results versus text-based results.
-- **confidence** (`float`, default `0.5`): The confidence threshold for embedding similarity.
-- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
-- **k** (`int`, default `3`): The number of top results to return.
+| Parameter        | Type            | Default | Description                                                                                   |
+|------------------|-----------------|---------|-----------------------------------------------------------------------------------------------|
+| `vector`         | `List[float]`   |  **Required**      | The embedding vector representing the semantic meaning of the query.               |
+| `alpha`          | `float`         | `0.7`   | The weight assigned to embedding-based results versus text-based results.                     |
+| `confidence`     | `float`         | `0.5`   | The confidence threshold for embedding similarity.                                            |
+| `metadata_filter`| `object`        |  None   | Filters to apply based on document metadata.                                                  |
+| `k`              | `int`           | `3`     | The number of top results to return.                                                          |
 
 <CodeGroup>
     ```python Python
@@ -208,13 +212,15 @@ Our hybrid search functionality combines the strengths of full-text search and e
 
 **Parameters:**
 
-- **text** (`str`): The textual query to search within documents.
-- **vector** (`List[float]`): The embedding vector representing the semantic meaning of the query.
-- **alpha** (`float`, default `0.7`): The weight assigned to embedding-based results versus text-based results.
-- **confidence** (`float`, default `0.5`): The confidence threshold for embedding similarity.
-- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
-- **k** (`int`, default `3`): The number of top results to return.
-- **lang** (`str`, default `'en-US'`): The language to use for full-text search processing.
+| **Parameter**     | **Type**       | **Description**                                                                 | **Default** |
+|-------------------|----------------|---------------------------------------------------------------------------------|-------------|
+| `text`            | `str`          | The textual query to search within documents.                                   | **Required** |
+| `vector`          | `List[float]`  | The embedding vector representing the semantic meaning of the query.            | **Required** |
+| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results.       | `0.7`       |
+| `confidence`      | `float`        | The confidence threshold for embedding similarity.                              | `0.5`       |
+| `metadata_filter` | `object`       | Filters to apply based on document metadata.                                    | `None`      |
+| `k`               | `int`          | The number of top results to return.                                            | `3`         |
+| `lang`            | `str`          | The language to use for full-text search processing.                            | `'en-US'`   |
 
 **Example:**
 

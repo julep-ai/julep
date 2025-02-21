@@ -137,8 +137,9 @@
     {
       "group": "Integrations",
       "pages": [
-        "docs/integrations/supported-integrations",
         "docs/integrations/supported-models",
+        "docs/integrations/supported-integrations",
+        "docs/integrations/contributing-integrations",
         {
           "group": "Communication & Data",
           "pages": [
@@ -169,8 +170,7 @@
             "docs/integrations/web_browser_automation/spider",
             "docs/integrations/web_browser_automation/remote_browser"
           ]
-        },
-        "docs/integrations/contributing-integrations"
+        }
       ]
     },
     {
