@@ -32,7 +32,7 @@ Here's an example of how a typical message object might be structured in a chat 
     # Example of a simple message structure
     messages = [{"role": "user", "content": "Your query here"}]
   ```
-  <p>This class represents a message object in the chat system, detailing the structure and types of data it can hold.</p>
+  <p>This object represents a message in the chat system, detailing the structure and types of data it can hold.</p>
 </Accordion>
 
 ## Chat Settings
@@ -124,7 +124,7 @@ Here's an example of how a typical message object might be structured in a chat 
     client.sessions.create({
         agent: agent.id,
         user: user.id,
-          recall: true,
+        recall: true,
         recall_options: {
             mode: "vector", // or "hybrid", "text"
             num_search_messages: 4, // number of messages to search for documents

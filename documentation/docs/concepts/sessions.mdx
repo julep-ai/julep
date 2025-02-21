@@ -331,7 +331,7 @@ When chatting in a session, the session can automatically search for documents t
     client.sessions.create({
         agent: agent.id,
         user: user.id,
-        recall=True,
+        recall: true,
         recall_options: {
             mode: "vector", // or "hybrid", "text"
             num_search_messages: 4, // number of messages to search for documents
