@@ -161,6 +161,19 @@ model_list:
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
+# Cerebras Models
+- model_name: "cerebras/llama-3.1-8b"
+  litellm_params:
+    model: "cerebras/llama3.1-8b"
+    api_key: os.environ/CEREBRAS_API_KEY
+    tags: ["paid"]
+
+- model_name: "cerebras/llama-3.3-70b"
+  litellm_params:
+    model: "cerebras/llama-3.3-70b"
+    api_key: os.environ/CEREBRAS_API_KEY
+    tags: ["paid"]
+
 # -*= Embedding models =*-
 # ------------------------
 

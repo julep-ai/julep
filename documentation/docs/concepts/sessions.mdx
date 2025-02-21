@@ -26,17 +26,17 @@ When creating a session, you can leverage the following configuration options to
 
 | Option               | Type                                     | Description                                                                                       | Default        |
 |----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------|----------------|
-| `agent_id`           | string                                   | The ID of the agent to associate with the session                                                | **Required**   |
-| `user_id`            | string                                   | The ID of the user interacting with the agent                                                    | **Required**   |
-| `context_overflow`   | `truncate` \| `adaptive`                 | Strategy for handling context overflow: `truncate` cuts off the oldest context; `adaptive` adjusts dynamically | `adaptive`     |
-| `metadata`           | object                                   | Additional metadata for the session (e.g., user preferences)                                      | `null`         |
-| `situation`          | string \| null                           | Description of the current situation for the session                                              | `null`         |
-| `system_template`    | string                                   | A specific system prompt template that sets the background for this session                        | Default template provided by Julep |
-| `render_templates`   | boolean                                  | Whether to render system and assistant messages as Jinja templates                                 | `true`         |
-| `token_budget`       | integer \| null                          | Threshold value for the adaptive context functionality                                           | `null`         |
-| `auto_run_tools`     | boolean                                  | Whether to auto-run tools and send the tool results to the model when available                   | `false`        |
-| `forward_tool_calls` | boolean                                  | Whether to forward tool calls directly to the model                                               | `false`        |
-| `recall_options`     | [RecallOptions](#recall-options)         | Options for recalling context or certain data during the session                                  | `null`         |
+| `agent`              | UUID \| None                             | The ID of the agent to associate with the session                                                | `None`         |
+| `user`               | UUID \| None                             | The ID of the user interacting with the agent                                                    | `None`         |
+| `context_overflow`   | `truncate` \| `adaptive` \| `None`       | Strategy for handling context overflow: `truncate` cuts off the oldest context; `adaptive` adjusts dynamically | `None`         |
+| `metadata`           | dict[str, Any] \| None                   | Additional metadata for the session (e.g., user preferences)                                      | `None`         |
+| `situation`          | str \| None                              | Description of the current situation for the session                                              | `None`         |
+| `system_template`    | str \| None                              | A specific system prompt template that sets the background for this session                        | `None`         |
+| `render_templates`   | StrictBool                               | Whether to render system and assistant messages as Jinja templates                                 | `True`         |
+| `token_budget`       | int \| None                              | Threshold value for the adaptive context functionality                                           | `None`         |
+| `auto_run_tools`     | StrictBool                               | Whether to auto-run tools and send the tool results to the model when available                   | `False`          |
+| `forward_tool_calls` | StrictBool                               | Whether to forward tool calls directly to the model                                               | `False`          |
+| `recall_options`     | RecallOptions \| None                    | Options for recalling context or certain data during the session                                  | `None`         |
 
 ### Recall Options
 
@@ -45,14 +45,22 @@ When configuring a session, you can specify recall options to control how contex
 | Option               | Type                                     | Description                                                                                       | Default        |
 |----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------|----------------|
 | `mode`               | `hybrid` \| `vector` \| `text`           | The mode to use for the search.                                                                   | `vector`       |
-| `num_search_messages`| integer                                  | The number of search messages to use for the search.                                              | 4              |
-| `max_query_length`   | integer                                  | The maximum query length to use for the search.                                                   | 1000           |
-| `alpha`              | float (0.0 - 1.0)                        | The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector.           | 0.7            |
-| `confidence`         | float (-1.0 - 1.0)                       | The confidence cutoff level.                                                                      | 0.6            |
-| `limit`              | integer (1 - 50)                         | The limit of documents to return.                                                                 | 10             |
+| `num_search_messages`| integer                                  | The number of search messages to use for the search.                                              | `4`            |
+| `max_query_length`   | integer                                  | The maximum query length to use for the search.                                                   | `1000`         |
+| `alpha`              | float (0.0 - 1.0)                        | The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector.           | `0.7`            |
+| `confidence`         | float (-1.0 - 1.0)                       | The confidence cutoff level.                                                                      | `0.6`            |
+| `limit`              | integer (1 - 100)                        | The limit of documents to return.                                                                 | `10`             |
 | `lang`               | `en-US`                                  | The language to be used for text-only search. Support for other languages coming soon.            | `en-US`        |
 | `metadata_filter`    | object                                   | Metadata filter to apply to the search.                                                           | `{}`           |
-| `mmr_strength`       | float (0.0 - 1.0)                        | MMR Strength (mmr_strength = 1 - mmr_lambda).                                                     | 0              |
+| `mmr_strength`       | float (0.0 - 1.0)                        | MMR Strength (mmr_strength = 1 - mmr_lambda).                                                     | `0`            |
+
+<Note>
+- `recall_options` are utilized only when explicitly set; otherwise, they default to `None`. 
+- Not every option within `recall_options` is applicable across all search modes. 
+- Specifically, the `text` mode does not support `mmr_strength`, `alpha`, and `confidence`. 
+- Additionally, the `vector` mode does not support `alpha`. 
+- However, the parameters `num_search_messages`, `max_query_length`, `limit`, and `metadata_filter` are universally applicable to all modes.
+</Note>
 
 ### System Template
 
@@ -327,7 +335,7 @@ When chatting in a session, the session can automatically search for documents t
     client.sessions.create({
         agent: agent.id,
         user: user.id,
-        recall=True,
+        recall: true,
         recall_options: {
             mode: "vector", // or "hybrid", "text"
             num_search_messages: 4, // number of messages to search for documents

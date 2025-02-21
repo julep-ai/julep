@@ -10,68 +10,153 @@ Julep provides a robust chat system with various features for dynamic interactio
 
 ## Chat Input
 
-<CardGroup cols={2}>
-  <Card title="Messages" icon="message">
-    An array of input messages representing the conversation so far
-  </Card>
-  <Card title="Tools" icon="wrench">
-    (Advanced) Additional tools provided for this specific interaction
-  </Card>
-  <Card title="Tool Choice" icon="hand-pointer">
-    Specifies which tool the agent should use
-  </Card>
-  <Card title="Memory Access" icon="brain">
-    Controls how the session accesses history and memories
-  </Card>
-  <Card title="Chat Settings" icon="gear">
-    Various settings to control the behavior of the chat
-  </Card>
-</CardGroup>
+- **Messages**: An array of input messages representing the conversation so far.
+- **Tools**: (Advanced) Additional tools provided for this specific interaction.
+- **Tool Choice**: Specifies which tool the agent should use.
+- **Memory Access**: Controls how the session accesses history and memories.(`recall` parameter)
+- **Chat Settings**: Various settings to control the behavior of the chat.
+
+Here's an example of how a typical message object might be structured in a chat interaction:
+
+<Accordion title="Message Object Structure">
+  ```python Python
+    """
+    Attributes for the Message object:
+        role (Literal["user", "assistant", "system", "tool"]): The role of the message sender.
+        tool_call_id (str | None): Optional identifier for a tool call associated with this message.
+        content (Annotated[str | list[str] | list[Content | ContentModel7 | ContentModel] | None, Field(...)]): The main content of the message, which can be a string, a list of strings, or a list of content models.
+        name (str | None): Optional name associated with the message.
+        continue_ (Annotated[StrictBool | None, Field(alias="continue")]): Flag to indicate whether to continue the conversation without interruption.
+        tool_calls (list[ChosenFunctionCall | ChosenComputer20241022 | ChosenTextEditor20241022 | ChosenBash20241022] | None): List of tool calls generated during the message creation, if any.
+    """
+    # Example of a simple message structure
+    messages = [{"role": "user", "content": "Your query here"}]
+  ```
+  <p>This object represents a message in the chat system, detailing the structure and types of data it can hold.</p>
+</Accordion>
 
 ## Chat Settings
 
-<AccordionGroup>
-  <Accordion title="Basic Settings" icon="gear" defaultOpen={true}>
-    - **model**: Identifier of the model to be used
-    - **stream**: Indicates if the server should stream the response as it's generated
-    - **stop**: Up to 4 sequences where the API will stop generating further tokens
-    - **seed**: For deterministic sampling
-  </Accordion>
-
-  <Accordion title="Advanced Settings" icon="gears" defaultOpen={true}>
-    - **max_tokens**: The maximum number of tokens to generate
-    - **logit_bias**: Modify the likelihood of specified tokens appearing in the completion
-    - **response_format**: Control the format of the response (e.g., JSON object)
-    - **agent**: Agent ID to use (for multi-agent sessions)
-  </Accordion>
-
-  <Accordion title="Additional Settings" icon="plus" defaultOpen={true}>
-    - **temperature**
-    - **top_p**
-    - **frequency_penalty**
-    - **presence_penalty**
-  </Accordion>
-</AccordionGroup>
+| Parameter           | Type    | Description                                      | Default  |
+|---------------------|---------|--------------------------------------------------|----------|
+| `stream`            | `bool`  | Indicates if the server should stream the response as it's generated. | `False` |
+| `stop`              | `list[str]` | Up to 4 sequences where the API will stop generating further tokens. | `[]` |
+| `seed`              | `int`   | If specified, the system will make a best effort to sample deterministically for that particular seed value. | `None` |
+| `max_tokens`        | `int`   | The maximum number of tokens to generate in the chat completion. | `None` |
+| `logit_bias`        | `dict[str, float]`  | Modify the likelihood of specified tokens appearing in the completion. | `None` |
+| `response_format`   | `str`   | Response format (set to `json_object` to restrict output to JSON). | `None` |
+| `agent`             | `UUID`  | Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions) | `None` |
+| `repetition_penalty`| `float` | Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. | `None` |
+| `length_penalty`    | `float` | Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. | `None` |
+| `min_p`             | `float` | Minimum probability compared to leading token to be considered. | `None` |
+| `frequency_penalty` | `float` | Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. | `None` |
+| `presence_penalty`  | `float` | Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. | `None` |
+| `temperature`       | `float` | What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. | `None` |
+| `top_p`             | `float` | An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. | `1.0` |
+| `recall`            | `bool` | Whether previous memories and docs should be recalled or not | `True` |
+| `save`              | `bool` | Whether this interaction should be stored in the session history or not | `True` |
+| `remember`          | `bool` | DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) | `False` |
+| `model`             | `str` | The model to use for the chat completion. | `None` |
 
 ## Chat Response
 
 <Tabs>
-  <Tab title="Streamed Response">
-    - **Content-Type**: `text/event-stream`
-    - **Body**: A stream of `ChatOutputChunk` objects
-  </Tab>
   <Tab title="Complete Response">
     - **Content-Type**: `application/json`
     - **Body**: A `MessageChatResponse` object containing the full generated message(s)
   </Tab>
+  <Tab title="Streamed Response">
+    - **Content-Type**: `text/event-stream`
+    - **Body**: A stream of `ChatOutputChunk` objects
+    <Warning>
+      This feature is not implemented yet.
+    </Warning>
+  </Tab>
 </Tabs>
 
-<Note>
+<Info>
   Both response types include:
-  - `usage`: Token usage statistics
-  - `jobs`: Background job IDs spawned from this interaction
-  - `docs`: Documents referenced for this request (for citation purposes)
-</Note>
+  - `usage`: Statistics on token usage for the completion request.
+  - `jobs`: List of UUIDs for background jobs that may have been initiated as a result of this interaction.
+  - `docs`: List of document references used for this request, intended for citation purposes.
+  - `created_at`: When this resource was created as UTC date-time
+  - `id`: The unique identifier for the chat response
+</Info>
+
+## Chat Usage
+
+<CodeGroup>
+    ```python Python
+    # Create a session with custom recall options
+    client.sessions.create(
+        agent=agent.id,
+        user=user.id,
+        recall=True,
+        recall_options={
+            "mode": "vector", # or "hybrid", "text"
+            "num_search_messages": 4, # number of messages to search for documents
+            "max_query_length": 1000, # maximum query length
+            "alpha": 0.7, # weight to apply to BM25 vs Vector search results (ranges from 0 to 1)
+            "confidence": 0.6, # confidence cutoff level (ranges from -1 to 1)
+            "limit": 10, # limit of documents to return
+            "lang": "en-US", # language to be used for text-only search
+            "metadata_filter": {}, # metadata filter to apply to the search
+            "mmr_strength": 0, # MMR Strength (ranges from 0 to 1)
+        }
+    )
+
+    # Chat in the session
+    response = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "Tell me about Julep"
+            }
+        ],
+        recall=True
+    )
+    print("Agent's response:", response.choices[0].message.content)
+    print("Searched Documents:", response.docs)
+    ```
+
+    ```javascript Node.js
+    client.sessions.create({
+        agent: agent.id,
+        user: user.id,
+        recall: true,
+        recall_options: {
+            mode: "vector", // or "hybrid", "text"
+            num_search_messages: 4, // number of messages to search for documents
+            max_query_length: 1000, // maximum query length
+            alpha: 0.7, // weight to apply to BM25 vs Vector search results (ranges from 0 to 1)
+            confidence: 0.6, // confidence cutoff level (ranges from -1 to 1)
+            limit: 10, // limit of documents to return
+            lang: "en-US", // language to be used for text-only search
+            metadata_filter: {}, // metadata filter to apply to the search
+            mmr_strength: 0, // MMR Strength (ranges from 0 to 1)
+        }
+    });
+
+    // Chat in the session
+    const response = await client.sessions.chat({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "Tell me about Julep"
+            }
+        ],
+        recall: true
+    });
+    ```
+</CodeGroup>
+
+To learn more about the Session object, check out the [Session](/concepts/sessions) page.
+
+<Tip>
+    Check out the [API reference](api-reference/sessions/chat) or SDK reference ([Python](/sdks/python/reference#sessions) or [JavaScript](/sdks/nodejs/reference#sessions)) for more details on different operations you can perform on sessions.
+</Tip>
 
 ## Finish Reasons
 
@@ -90,7 +175,7 @@ Julep provides a robust chat system with various features for dynamic interactio
   </Card>
 </CardGroup>
 
-## Advanced Features
+## Features
 
 <Steps>
   <Step title="Tool Integration">
