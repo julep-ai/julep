@@ -8,13 +8,37 @@ icon: 'message-dots'
 
 Julep provides a robust chat system with various features for dynamic interaction with agents. Here's an overview of the key components and functionalities.
 
-## Chat Input
+## Features
+
+<Steps>
+  <Step title="Tool Integration">
+    The chat API allows for the use of tools, enabling the agent to perform actions or retrieve information during the conversation.
+  </Step>
+  <Step title="Multi-agent Sessions">
+    You can specify different agents within the same session using the `agent` parameter in the chat settings.
+  </Step>
+  <Step title="Response Formatting">
+    Control the output format, including options for JSON responses with specific schemas.
+  </Step>
+  <Step title="Memory and Recall">
+    Configure how the session accesses and stores conversation history and memories.
+  </Step>
+  <Step title="Document References">
+    The API returns information about documents referenced during the interaction, useful for providing citations or sources.
+  </Step>
+</Steps>
+
+<Tip>
+  These features provide developers with a powerful and flexible system for creating sophisticated, context-aware chat interactions that integrate seamlessly with other Julep components.
+</Tip>
+
+## Input Structure
 
 - **Messages**: An array of input messages representing the conversation so far.
 - **Tools**: (Advanced) Additional tools provided for this specific interaction.
 - **Tool Choice**: Specifies which tool the agent should use.
 - **Memory Access**: Controls how the session accesses history and memories.(`recall` parameter)
-- **Chat Settings**: Various settings to control the behavior of the chat.
+- **Additional Parameters**: Various parameters to control the behavior of the chat. You can find more details in the [Additional Parameters](#additional-parameters) section.
 
 Here's an example of how a typical message object might be structured in a chat interaction:
 
@@ -35,7 +59,7 @@ Here's an example of how a typical message object might be structured in a chat 
   <p>This object represents a message in the chat system, detailing the structure and types of data it can hold.</p>
 </Accordion>
 
-## Chat Settings
+## Additional Parameters
 
 | Parameter           | Type    | Description                                      | Default  |
 |---------------------|---------|--------------------------------------------------|----------|
@@ -58,7 +82,7 @@ Here's an example of how a typical message object might be structured in a chat 
 | `remember`          | `bool` | DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) | `False` |
 | `model`             | `str` | The model to use for the chat completion. | `None` |
 
-## Chat Response
+## Response Structure
 
 <Tabs>
   <Tab title="Complete Response">
@@ -83,7 +107,13 @@ Here's an example of how a typical message object might be structured in a chat 
   - `id`: The unique identifier for the chat response
 </Info>
 
-## Chat Usage
+## Usage
+
+Here's an example of how to use the chat API in Julep using the SDKs:
+
+<Info>
+  To use the Chat endpint, you always have to create a session first.
+</Info>
 
 <CodeGroup>
     ```python Python
@@ -174,30 +204,6 @@ To learn more about the Session object, check out the [Session](/concepts/sessio
     The model called a tool
   </Card>
 </CardGroup>
-
-## Features
-
-<Steps>
-  <Step title="Tool Integration">
-    The chat API allows for the use of tools, enabling the agent to perform actions or retrieve information during the conversation.
-  </Step>
-  <Step title="Multi-agent Sessions">
-    You can specify different agents within the same session using the `agent` parameter in the chat settings.
-  </Step>
-  <Step title="Response Formatting">
-    Control the output format, including options for JSON responses with specific schemas.
-  </Step>
-  <Step title="Memory and Recall">
-    Configure how the session accesses and stores conversation history and memories.
-  </Step>
-  <Step title="Document References">
-    The API returns information about documents referenced during the interaction, useful for providing citations or sources.
-  </Step>
-</Steps>
-
-<Tip>
-  These features provide developers with a powerful and flexible system for creating sophisticated, context-aware chat interactions that integrate seamlessly with other Julep components.
-</Tip>
 
 ## Support
 
