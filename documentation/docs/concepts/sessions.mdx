@@ -49,13 +49,17 @@ When configuring a session, you can specify recall options to control how contex
 | `max_query_length`   | integer                                  | The maximum query length to use for the search.                                                   | `1000`         |
 | `alpha`              | float (0.0 - 1.0)                        | The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector.           | `0.7`            |
 | `confidence`         | float (-1.0 - 1.0)                       | The confidence cutoff level.                                                                      | `0.6`            |
-| `limit`              | integer (1 - 50)                         | The limit of documents to return.                                                                 | `10`             |
+| `limit`              | integer (1 - 100)                        | The limit of documents to return.                                                                 | `10`             |
 | `lang`               | `en-US`                                  | The language to be used for text-only search. Support for other languages coming soon.            | `en-US`        |
 | `metadata_filter`    | object                                   | Metadata filter to apply to the search.                                                           | `{}`           |
 | `mmr_strength`       | float (0.0 - 1.0)                        | MMR Strength (mmr_strength = 1 - mmr_lambda).                                                     | `0`            |
 
 <Note>
-The `recall_options` are only used when the `recall_options` option is set to some value. Or else the default value for `recall_options` is None.
+- `recall_options` are utilized only when explicitly set; otherwise, they default to `None`. 
+- Not every option within `recall_options` is applicable across all search modes. 
+- Specifically, the `text` mode does not support `mmr_strength`, `alpha`, and `confidence`. 
+- Additionally, the `vector` mode does not support `alpha`. 
+- However, the parameters `num_search_messages`, `max_query_length`, `limit`, and `metadata_filter` are universally applicable to all modes.
 </Note>
 
 ### System Template
