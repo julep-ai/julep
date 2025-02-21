@@ -124,7 +124,7 @@ Here's an example of how a typical message object might be structured in a chat 
     client.sessions.create({
         agent: agent.id,
         user: user.id,
-        recall=True,
+          recall: true,
         recall_options: {
             mode: "vector", // or "hybrid", "text"
             num_search_messages: 4, // number of messages to search for documents
