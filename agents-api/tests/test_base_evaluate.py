@@ -88,13 +88,15 @@ async def _():
             workflows=[Workflow(name="main", steps=[step])],
         ),
     )
-
+    
+    scope_id = uuid.uuid4()
     context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     values = {"x": 5}

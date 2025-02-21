@@ -3749,6 +3749,7 @@ components:
       required:
         - workflow
         - step
+        - scope_id
       properties:
         workflow:
           $ref: '#/components/schemas/Common.identifierSafeUnicode'

@@ -15,6 +15,7 @@ list_execution_transitions_query = """
 SELECT * FROM transitions
 WHERE
     execution_id = $1
+    AND (current_step).scope_id = $6
 ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
@@ -76,6 +77,7 @@ async def list_execution_transitions(
     offset: int = 0,
     sort_by: Literal["created_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
+    scope_id: UUID | None = None,
 ) -> tuple[str, list]:
     """
     List execution transitions for a given execution.
@@ -84,8 +86,9 @@ async def list_execution_transitions(
         execution_id (UUID): The ID of the execution.
         limit (int): The number of transitions to return.
         offset (int): The number of transitions to skip.
-        sort_by (Literal["created_at", "updated_at"]): The field to sort by.
+        sort_by (Literal["created_at"]): The field to sort by.
         direction (Literal["asc", "desc"]): The direction to sort by.
+        scope_id (UUID | None): Filter transitions by scope_id in current_step.
 
     Returns:
         tuple[str, list]: SQL query and parameters for listing execution transitions.
@@ -98,13 +101,19 @@ async def list_execution_transitions(
                 str(transition_id),
             ],
         )
-    return (
-        list_execution_transitions_query,
-        [
-            str(execution_id),
-            limit,
-            offset,
-            sort_by,
-            direction,
-        ],
-    )
+    
+    params = [
+        str(execution_id),
+        limit,
+        offset,
+        sort_by,
+        direction,
+    ]
+    
+    query = list_execution_transitions_query
+    if scope_id is None:
+        query = query.replace("AND (current_step).scope_id = $6", "")
+    else:
+        params.append(str(scope_id))
+    
+    return (query, params)

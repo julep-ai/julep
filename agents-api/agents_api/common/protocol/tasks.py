@@ -226,17 +226,19 @@ class StepContext(BaseModel):
         if self.execution_input.execution is None:
             return [], [], {}
 
-        transitions = await list_execution_transitions(
-            execution_id=self.execution_input.execution.id,
-            limit=1000,
-            direction="asc",
-        )  # type: ignore[not-callable]
-        assert len(transitions) > 0, "No transitions found"
         inputs = []
         labels = []
         state = {}
         scope_id = self.current_scope_id
-        transitions = [t for t in transitions if t.current.scope_id == scope_id]
+
+        transitions = await list_execution_transitions(
+            execution_id=self.execution_input.execution.id,
+            limit=1000,
+            direction="asc",
+            scope_id=scope_id,
+        )  # type: ignore[not-callable]
+        assert len(transitions) > 0, "No transitions found"
+
         for transition in transitions:
             # NOTE: The length hack should be refactored in case we want to implement multi-step control steps
             if transition.next and transition.next.step >= len(inputs):

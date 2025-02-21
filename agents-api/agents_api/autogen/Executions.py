@@ -136,7 +136,7 @@ class TransitionTarget(BaseModel):
     See: https://www.unicode.org/reports/tr39/#Identifier_Characters
     """
     step: int
-    scope_id: UUID | None = None
+    scope_id: UUID
 
 
 class UpdateExecutionRequest(BaseModel):

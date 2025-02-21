@@ -84,6 +84,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     output = {"type": "function"}
@@ -134,6 +135,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     tool_name = "tool1"
@@ -197,6 +199,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     outcome = StepOutcome(
@@ -256,6 +259,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     outcome = StepOutcome(
@@ -338,6 +342,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     outcome = StepOutcome(
@@ -398,6 +403,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     outcome = StepOutcome(output=1)
@@ -439,6 +445,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     outcome = StepOutcome(output=-1)
@@ -478,6 +485,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     outcome = StepOutcome(output=0)
@@ -519,6 +527,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     message = "Hello there"
@@ -559,6 +568,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     message = {"choices": [{"finish_reason": "stop"}]}
@@ -601,6 +611,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     message = {"choices": [{"finish_reason": "stop"}]}
@@ -644,6 +655,7 @@ async def _():
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=uuid.uuid4(),
         ),
     )
     message = {
@@ -709,12 +721,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -731,10 +745,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -777,12 +793,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -799,10 +817,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -845,12 +865,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -867,10 +889,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -913,12 +937,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -935,10 +961,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -981,12 +1009,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -1003,10 +1033,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -1049,12 +1081,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -1071,10 +1105,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -1117,12 +1153,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -1139,10 +1177,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -1183,12 +1223,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -1205,10 +1247,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -1249,12 +1293,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -1271,10 +1317,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -1328,12 +1376,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with (
@@ -1354,10 +1404,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -1406,12 +1458,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -1428,10 +1482,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )
@@ -1482,12 +1538,14 @@ async def _():
             input={"a": "1"},
         ),
     )
+    scope_id = uuid.uuid4()
     wf.context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     with patch(
@@ -1504,10 +1562,12 @@ async def _():
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
                 next=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=scope_id,
                 ),
             ),
         )

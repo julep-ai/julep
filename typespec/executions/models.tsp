@@ -120,7 +120,7 @@ alias TransitionType = (
 model TransitionTarget {
     workflow: identifierSafeUnicode;
     step: uint16;
-    scope_id?: uuid;
+    scope_id: uuid;
 }
 
 model TransitionEvent {

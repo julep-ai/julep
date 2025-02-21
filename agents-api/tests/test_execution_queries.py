@@ -25,6 +25,7 @@ from tests.fixtures import (
     test_execution_started,
     test_task,
 )
+from uuid_extensions import uuid7
 
 MODEL = "gpt-4o-mini"
 
@@ -120,14 +121,15 @@ async def _(
 @test("query: create execution transition")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
     pool = await create_db_pool(dsn=dsn)
+    scope_id = uuid7()
     result = await create_execution_transition(
         developer_id=developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
             type="init_branch",
             output={"result": "test"},
-            current={"workflow": "main", "step": 0},
-            next={"workflow": "main", "step": 0},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
+            next={"workflow": "main", "step": 0, "scope_id": scope_id},
         ),
         connection_pool=pool,
     )
@@ -144,13 +146,14 @@ async def _(
     execution=test_execution_started,
 ):
     pool = await create_db_pool(dsn=dsn)
+    scope_id = uuid7()
     result = await create_execution_transition(
         developer_id=developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
             type="cancelled",
             output={"result": "test"},
-            current={"workflow": "main", "step": 0},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
             next=None,
         ),
         # task_id=task.id,
