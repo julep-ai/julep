@@ -4,14 +4,13 @@ import math
 import os
 import subprocess
 from contextlib import asynccontextmanager, contextmanager
-from unittest.mock import patch
-from uuid_extensions import uuid7
-from uuid import UUID
 from typing import Any
+from unittest.mock import patch
+from uuid import UUID
 
+from agents_api.autogen.openapi_model import Transition
 from agents_api.common.protocol.tasks import TransitionTarget, TransitionType
 from agents_api.common.utils.datetime import utcnow
-from agents_api.autogen.openapi_model import Transition
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
 from fastapi.testclient import TestClient
@@ -21,6 +20,7 @@ from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for_logs
 from testcontainers.localstack import LocalStackContainer
 from testcontainers.postgres import PostgresContainer
+from uuid_extensions import uuid7
 
 # Replicated here to prevent circular import
 EMBEDDING_SIZE: int = 1024
@@ -71,11 +71,14 @@ def make_vector_with_similarity(n: int = EMBEDDING_SIZE, d: float = 0.5):
 
     return v
 
+
 def generate_transition(
     execution_id: UUID = uuid7(),
     transition_id: UUID = uuid7(),
     type: TransitionType = "step",
-    current_step: TransitionTarget = TransitionTarget(workflow="main", step=0, scope_id=uuid7()),
+    current_step: TransitionTarget = TransitionTarget(
+        workflow="main", step=0, scope_id=uuid7()
+    ),
     next_step: TransitionTarget | None = None,
     task_token: str | None = None,
     output: Any = None,
@@ -95,6 +98,7 @@ def generate_transition(
         updated_at=utcnow(),
         metadata=metadata,
     )
+
 
 @asynccontextmanager
 async def patch_testing_temporal():

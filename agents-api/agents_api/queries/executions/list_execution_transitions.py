@@ -101,7 +101,7 @@ async def list_execution_transitions(
                 str(transition_id),
             ],
         )
-    
+
     params = [
         str(execution_id),
         limit,
@@ -109,11 +109,11 @@ async def list_execution_transitions(
         sort_by,
         direction,
     ]
-    
+
     query = list_execution_transitions_query
     if scope_id is None:
         query = query.replace("AND (current_step).scope_id = $6", "")
     else:
         params.append(str(scope_id))
-    
+
     return (query, params)

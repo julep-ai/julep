@@ -1,15 +1,14 @@
 import uuid
-from uuid_extensions import uuid7
 from unittest.mock import patch
 
 from agents_api.autogen.openapi_model import (
     Agent,
+    Execution,
     TaskSpecDef,
     ToolCallStep,
     Transition,
     TransitionTarget,
     Workflow,
-    Execution,
 )
 from agents_api.common.protocol.tasks import (
     ExecutionInput,
@@ -17,8 +16,11 @@ from agents_api.common.protocol.tasks import (
 )
 from agents_api.common.utils.datetime import utcnow
 from agents_api.common.utils.workflows import get_workflow_name
+from uuid_extensions import uuid7
 from ward import raises, test
+
 from tests.utils import generate_transition
+
 
 @test("utility: prepare_for_step - underscore")
 async def _():
@@ -147,7 +149,9 @@ async def _():
     transition.next = TransitionTarget(workflow="main", step=1, scope_id=uuid.uuid4())
     assert get_workflow_name(transition) == "main"
 
-    transition.current = TransitionTarget(workflow="`main`[0].if_else.then", step=0, scope_id=uuid.uuid4())
+    transition.current = TransitionTarget(
+        workflow="`main`[0].if_else.then", step=0, scope_id=uuid.uuid4()
+    )
     transition.next = None
     assert get_workflow_name(transition) == "main"
 
@@ -155,11 +159,17 @@ async def _():
     transition.next = TransitionTarget(workflow="subworkflow", step=1, scope_id=uuid.uuid4())
     assert get_workflow_name(transition) == "subworkflow"
 
-    transition.current = TransitionTarget(workflow="`subworkflow`[0].if_else.then", step=0, scope_id=uuid.uuid4())
-    transition.next = TransitionTarget(workflow="`subworkflow`[0].if_else.else", step=1, scope_id=uuid.uuid4())
+    transition.current = TransitionTarget(
+        workflow="`subworkflow`[0].if_else.then", step=0, scope_id=uuid.uuid4()
+    )
+    transition.next = TransitionTarget(
+        workflow="`subworkflow`[0].if_else.else", step=1, scope_id=uuid.uuid4()
+    )
     assert get_workflow_name(transition) == "subworkflow"
 
-    transition.current = TransitionTarget(workflow="PAR:`main`[2].mapreduce[0][2],0", step=0, scope_id=uuid.uuid4())
+    transition.current = TransitionTarget(
+        workflow="PAR:`main`[2].mapreduce[0][2],0", step=0, scope_id=uuid.uuid4()
+    )
     transition.next = None
     assert get_workflow_name(transition) == "main"
 
@@ -184,7 +194,9 @@ async def _():
     )
 
     with raises(AssertionError):
-        transition.current = TransitionTarget(workflow="`main[2].mapreduce[0][2],0", step=0, scope_id=uuid.uuid4())
+        transition.current = TransitionTarget(
+            workflow="`main[2].mapreduce[0][2],0", step=0, scope_id=uuid.uuid4()
+        )
         get_workflow_name(transition)
 
     with raises(AssertionError):
@@ -204,22 +216,30 @@ async def _():
 
 @test("utility: get_inputs - 2 parallel subworkflows")
 async def _():
-    main_scope_id = uuid7()
+    uuid7()
     subworkflow1_scope_id = uuid7()
     subworkflow2_scope_id = uuid7()
-    
+
     transition1 = generate_transition(
         type="init_branch",
         output={"b": 1},
-        current_step=TransitionTarget(workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id),
-        next_step=TransitionTarget(workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id),
+        current_step=TransitionTarget(
+            workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id
+        ),
+        next_step=TransitionTarget(
+            workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id
+        ),
     )
 
     transition2 = generate_transition(
         type="step",
         output={"c": 1},
-        current_step=TransitionTarget(workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id),
-        next_step=TransitionTarget(workflow="subworkflow", step=1, scope_id=subworkflow1_scope_id),
+        current_step=TransitionTarget(
+            workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id
+        ),
+        next_step=TransitionTarget(
+            workflow="subworkflow", step=1, scope_id=subworkflow1_scope_id
+        ),
     )
 
     subworkflow1_transitions = [transition1, transition2]
@@ -227,15 +247,23 @@ async def _():
     transition3 = generate_transition(
         type="init_branch",
         output={"b": 2},
-        current_step=TransitionTarget(workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id),
-        next_step=TransitionTarget(workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id),
+        current_step=TransitionTarget(
+            workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id
+        ),
+        next_step=TransitionTarget(
+            workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id
+        ),
     )
 
     transition4 = generate_transition(
         type="step",
         output={"c": 2},
-        current_step=TransitionTarget(workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id),
-        next_step=TransitionTarget(workflow="subworkflow", step=1, scope_id=subworkflow2_scope_id),
+        current_step=TransitionTarget(
+            workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id
+        ),
+        next_step=TransitionTarget(
+            workflow="subworkflow", step=1, scope_id=subworkflow2_scope_id
+        ),
     )
 
     subworkflow2_transitions = [transition3, transition4]

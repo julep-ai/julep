@@ -16,6 +16,7 @@ from agents_api.queries.executions.get_execution import get_execution
 from agents_api.queries.executions.list_executions import list_executions
 from agents_api.queries.executions.lookup_temporal_data import lookup_temporal_data
 from temporalio.client import WorkflowHandle
+from uuid_extensions import uuid7
 from ward import test
 
 from tests.fixtures import (
@@ -25,7 +26,6 @@ from tests.fixtures import (
     test_execution_started,
     test_task,
 )
-from uuid_extensions import uuid7
 
 MODEL = "gpt-4o-mini"
 

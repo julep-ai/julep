@@ -88,7 +88,7 @@ async def _():
             workflows=[Workflow(name="main", steps=[step])],
         ),
     )
-    
+
     scope_id = uuid.uuid4()
     context = StepContext(
         execution_input=execution_input,
