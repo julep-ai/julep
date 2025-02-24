@@ -115,6 +115,7 @@ async def search_user_docs(
             np.asarray(params["embedding"]),
             [doc.snippet.embedding for doc in docs],
             k=search_params.limit,
+            lambda_mult=1 - search_params.mmr_strength,
         )
         docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
 

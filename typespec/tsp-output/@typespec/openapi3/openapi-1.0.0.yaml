@@ -2933,13 +2933,6 @@ components:
           additionalProperties: {}
           description: Metadata filter to apply to the search
           default: {}
-        mmr_strength:
-          type: number
-          minimum: 0
-          maximum: 1
-          exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
-          default: 0
     Docs.CreateDocRequest:
       type: object
       required:
@@ -3135,6 +3128,13 @@ components:
           items:
             type: number
           description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+        mmr_strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          exclusiveMaximum: true
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          default: 0.5
       allOf:
         - $ref: '#/components/schemas/Docs.BaseDocSearchRequest'
     Docs.MultipleEmbedQueryRequest:
@@ -3209,6 +3209,13 @@ components:
           items:
             type: number
           description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+        mmr_strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          exclusiveMaximum: true
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          default: 0.5
       allOf:
         - $ref: '#/components/schemas/Docs.BaseDocSearchRequest'
     Entries.BaseEntry:
@@ -4185,7 +4192,7 @@ components:
           maximum: 1
           exclusiveMaximum: true
           description: MMR Strength (mmr_strength = 1 - mmr_lambda)
-          default: 0
+          default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
     Sessions.HybridDocSearchUpdate:
@@ -4221,7 +4228,7 @@ components:
           maximum: 1
           exclusiveMaximum: true
           description: MMR Strength (mmr_strength = 1 - mmr_lambda)
-          default: 0
+          default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
     Sessions.MultiAgentMultiUserSession:
@@ -4565,7 +4572,7 @@ components:
           maximum: 1
           exclusiveMaximum: true
           description: MMR Strength (mmr_strength = 1 - mmr_lambda)
-          default: 0
+          default: 0.5
         text:
           type: string
           description: Text to use in the search.
@@ -4595,7 +4602,7 @@ components:
           maximum: 1
           exclusiveMaximum: true
           description: MMR Strength (mmr_strength = 1 - mmr_lambda)
-          default: 0
+          default: 0.5
         text:
           type: string
           description: Text to use in the search.

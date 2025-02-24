@@ -157,6 +157,7 @@ async def gather_messages(
                 np.asarray(query_embedding),
                 [doc.snippet.embedding for doc in doc_references],
                 k=recall_options.limit,
+                lambda_mult=1 - recall_options.mmr_strength,
             )
             doc_references = [doc for i, doc in enumerate(doc_references) if i in set(indices)]
 

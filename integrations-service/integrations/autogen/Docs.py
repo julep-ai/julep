@@ -25,10 +25,6 @@ class BaseDocSearchRequest(BaseModel):
     """
     Metadata filter to apply to the search
     """
-    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
-    """
-    MMR Strength (mmr_strength = 1 - mmr_lambda)
-    """
 
 
 class CreateDocRequest(BaseModel):
@@ -169,6 +165,10 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
 
 
 class MultipleEmbedQueryRequest(BaseModel):
@@ -229,4 +229,8 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     vector: list[float]
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
     """

@@ -120,7 +120,7 @@ class HybridDocSearch(BaseDocSearch):
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
-    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
@@ -150,7 +150,7 @@ class HybridDocSearchUpdate(BaseDocSearchUpdate):
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
-    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
@@ -379,7 +379,7 @@ class VectorDocSearch(BaseDocSearch):
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
-    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
@@ -405,7 +405,7 @@ class VectorDocSearchUpdate(BaseDocSearchUpdate):
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
-    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
     """

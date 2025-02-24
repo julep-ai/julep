@@ -116,11 +116,6 @@ model BaseDocSearchRequest {
 
     /** Metadata filter to apply to the search */
     metadata_filter: MetadataFilter = #{};
-
-    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
-    @minValue(0)
-    @maxValueExclusive(1)
-    mmr_strength?: float = 0.0;
 }
 
 model VectorDocSearchRequest extends BaseDocSearchRequest {
@@ -134,7 +129,10 @@ model VectorDocSearchRequest extends BaseDocSearchRequest {
 
     text?: never;
 
-    mmr_strength?: never;
+    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
+    @minValue(0)
+    @maxValueExclusive(1)
+    mmr_strength?: float = 0.5;
 }
 
 model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
@@ -160,6 +158,11 @@ model HybridDocSearchRequest extends BaseDocSearchRequest {
 
     /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
     vector: float[];
+
+    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
+    @minValue(0)
+    @maxValueExclusive(1)
+    mmr_strength?: float = 0.5;
 }
 
 alias DocSearchRequest = VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest;
