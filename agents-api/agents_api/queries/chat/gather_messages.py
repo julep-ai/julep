@@ -121,6 +121,10 @@ async def gather_messages(
                     developer_id=developer.id,
                     owners=owners,
                     embedding=query_embedding,
+                    k = recall_options.limit,
+                    search_language=recall_options.lang,
+                    confidence=recall_options.confidence,
+                    metadata_filter=recall_options.metadata_filter,
                     connection_pool=connection_pool,
                 )
             case "hybrid":
@@ -129,6 +133,11 @@ async def gather_messages(
                     owners=owners,
                     text_query=query_text,
                     embedding=query_embedding,
+                    k = recall_options.limit,
+                    search_language=recall_options.lang,
+                    confidence=recall_options.confidence,
+                    alpha=recall_options.alpha,
+                    metadata_filter=recall_options.metadata_filter,
                     connection_pool=connection_pool,
                 )
             case "text":
@@ -136,6 +145,9 @@ async def gather_messages(
                     developer_id=developer.id,
                     owners=owners,
                     query=query_text,
+                    k = recall_options.limit,
+                    search_language=recall_options.lang,
+                    metadata_filter=recall_options.metadata_filter,
                     connection_pool=connection_pool,
                 )
 
