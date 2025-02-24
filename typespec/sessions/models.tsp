@@ -18,42 +18,127 @@ enum SearchMode {
     text,
 }
 
-model RecallOptions {
-    /** The mode to use for the search. */
-    mode: SearchMode = SearchMode.vector;
+// model RecallOptions {
+//     /** The mode to use for the search. */
+//     mode: SearchMode = SearchMode.vector;
 
-    /** The number of search messages to use for the search. */
-    num_search_messages: uint32 = 4;
+//     /** The number of search messages to use for the search. */
+//     num_search_messages: uint32 = 4;
 
-    /** The maximum query length to use for the search. */
-    max_query_length: uint32 = 1000;
+//     /** The maximum query length to use for the search. */
+//     max_query_length: uint32 = 1000;
 
-    /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
-    @minValue(0)
-    @maxValue(1)
-    alpha: float = 0.7;
+//     /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
+//     @minValue(0)
+//     @maxValue(1)
+//     alpha: float = 0.7;
 
-    /** The confidence cutoff level */
-    @minValue(-1)
-    @maxValue(1)
-    confidence: float = 0.6;
+//     /** The confidence cutoff level */
+//     @minValue(-1)
+//     @maxValue(1)
+//     confidence: float = 0.6;
 
+//     /** The limit of documents to return */
+//     @minValue(1)
+//     @maxValue(50)
+//     limit: uint16 = 10;
+
+//     /** The language to be used for text-only search. Support for other languages coming soon. */
+//     lang?: "en-US" = "en-US";
+
+//     /** Metadata filter to apply to the search */
+//     metadata_filter: MetadataFilter = #{};
+
+//     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
+//     @minValue(0)
+//     @maxValueExclusive(1)
+//     mmr_strength?: float = 0.0;
+// }
+
+model BaseDocSearch {
     /** The limit of documents to return */
     @minValue(1)
     @maxValue(50)
     limit: uint16 = 10;
 
     /** The language to be used for text-only search. Support for other languages coming soon. */
-    lang?: "en-US" = "en-US";
+    lang: "en-US" = "en-US";
 
     /** Metadata filter to apply to the search */
     metadata_filter: MetadataFilter = #{};
+
+    /** The number of search messages to use for the search. */
+    @minValue(1)
+    @maxValue(50)
+    num_search_messages: uint32 = 4;
+
+    /** The maximum query length to use for the search. */
+    @minValue(1)
+    @maxValue(1000)
+    max_query_length: uint32 = 1000;
+}
+
+model VectorDocSearch extends BaseDocSearch {
+
+     /** The mode to use for the search. */
+    mode: string = "vector";
+
+    /** The confidence cutoff level */
+    @minValue(-1)
+    @maxValue(1)
+    confidence: float = 0;
+
+    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
+    vector: float[];
+
+    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
+    @minValue(0)
+    @maxValueExclusive(1)
+    mmr_strength?: float = 0.0;
+
+    /** Text to use in the search. */
+    text?: string;
+}
+
+model TextOnlyDocSearch extends BaseDocSearch {
+
+    /** The mode to use for the search. */
+    mode: string = "text";
+
+    /** Text to use in the search. */
+    text: string;
+
+    vector?: never;
+}
+
+model HybridDocSearch extends BaseDocSearch {
+
+    /** The mode to use for the search. */
+    mode: string = "hybrid";
+
+    /** The confidence cutoff level */
+    @minValue(-1)
+    @maxValue(1)
+    confidence: float = 0;
+
+    /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
+    @minValue(0)
+    @maxValue(1)
+    alpha: float = 0.75;
+
+    /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
+    text: string;
+
+    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
+    vector: float[];
 
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)
     @maxValueExclusive(1)
     mmr_strength?: float = 0.0;
 }
+
+alias DocSearch = VectorDocSearch | TextOnlyDocSearch | HybridDocSearch;
 
 enum ContextOverflowType {
     /** Truncate the context from the top except the system prompt. */
@@ -118,7 +203,9 @@ model Session {
     /** Whether to forward tool calls to the model */
     forward_tool_calls: boolean = false;
 
-    recall_options?: RecallOptions | null = null;
+    /** Recall options for the session */
+    // recall_options?: RecallOptions | null = null;
+    recall_options?: DocSearch | null = null;
 
     ...HasId;
     ...HasMetadata;
