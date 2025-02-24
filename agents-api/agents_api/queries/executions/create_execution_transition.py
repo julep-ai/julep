@@ -85,8 +85,17 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
     transform=lambda d: {
         **d,
         "id": d["transition_id"],
-        "current": {"workflow": d["current_step"][0], "step": d["current_step"][1]},
-        "next": d["next_step"] and {"workflow": d["next_step"][0], "step": d["next_step"][1]},
+        "current": {
+            "workflow": d["current_step"][0],
+            "step": d["current_step"][1],
+            "scope_id": d["current_step"][2],
+        },
+        "next": d["next_step"]
+        and {
+            "workflow": d["next_step"][0],
+            "step": d["next_step"][1],
+            "scope_id": d["next_step"][2],
+        },
         "updated_at": utcnow(),
     },
     one=True,
@@ -131,10 +140,15 @@ async def create_execution_transition(
     current_target = transition_data.pop("current")
     next_target = transition_data.pop("next")
 
-    transition_data["current"] = (current_target["workflow"], current_target["step"])
+    transition_data["current"] = (
+        current_target["workflow"],
+        current_target["step"],
+        current_target.get("scope_id"),
+    )
     transition_data["next"] = next_target and (
         next_target["workflow"],
         next_target["step"],
+        next_target.get("scope_id"),
     )
 
     return (

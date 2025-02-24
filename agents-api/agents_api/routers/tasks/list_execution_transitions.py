@@ -20,6 +20,7 @@ async def list_execution_transitions(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
+    scope_id: UUID | None = None,
 ) -> ListResponse[Transition]:
     transitions = await list_execution_transitions_query(
         execution_id=execution_id,
@@ -27,6 +28,7 @@ async def list_execution_transitions(
         offset=offset,
         sort_by=sort_by,
         direction=direction,
+        scope_id=scope_id,
     )
 
     return ListResponse[Transition](items=transitions)
