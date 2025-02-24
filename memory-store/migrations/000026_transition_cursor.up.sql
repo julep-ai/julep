@@ -1,5 +1,9 @@
 BEGIN;
 
+-- Decompress any existing compressed chunks
+SELECT decompress_chunk(c, true) 
+FROM show_chunks('transitions') c;
+
 -- Temporarily disable compression
 ALTER TABLE transitions SET (timescaledb.compress = false);
 
