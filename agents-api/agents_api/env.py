@@ -138,6 +138,12 @@ temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
     env.str("TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND", default=None)
 )
 
+# API Keys needed for the `humanize_text` method in `evaluate` step
+# ------------
+sapling_api_key: str = env.str("SAPLING_API_KEY", default="")
+copyleaks_api_key: str = env.str("COPYLEAKS_API_KEY", default="")
+zerogpt_api_key: str = env.str("ZEROGPT_API_KEY", default="")
+
 # Consolidate environment variables
 environment: dict[str, Any] = {
     "debug": debug,
