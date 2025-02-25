@@ -33,7 +33,10 @@ def get_search_fn_and_params(
             try:
                 search_language = Language.get(lang).describe()["language"].lower()
             except Exception:
-                raise HTTPException(status_code=400, detail="Invalid language or ISO 639-1 language code. Currently we only support English.")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid language or ISO 639-1 language code. Currently we only support English.",
+                )
             search_fn = search_docs_by_text
             params = {
                 "query": query,
@@ -68,7 +71,10 @@ def get_search_fn_and_params(
             try:
                 search_language = Language.get(lang).describe()["language"].lower()
             except Exception:
-                raise HTTPException(status_code=400, detail="Invalid language or ISO 639-1 language code. Currently we only support English.")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid language or ISO 639-1 language code. Currently we only support English.",
+                )
             search_fn = search_docs_hybrid
             params = {
                 "text_query": query,

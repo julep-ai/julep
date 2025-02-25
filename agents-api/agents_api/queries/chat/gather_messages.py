@@ -118,7 +118,10 @@ async def gather_messages(
         try:
             search_language = Language.get(recall_options.lang).describe()["language"].lower()
         except Exception:
-            raise HTTPException(status_code=400, detail="Invalid language or ISO 639-1 language code. Currently we only support English.")
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid language or ISO 639-1 language code. Currently we only support English.",
+            )
 
         # Search for doc references
         doc_references: list[DocReference] = []
