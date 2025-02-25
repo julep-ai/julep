@@ -22,9 +22,9 @@ When creating a user, the following attributes can be specified:
 
 | **Field**  | **Type** | **Description**                                                    | **Default** |
 |------------|----------|--------------------------------------------------------------------|-------------|
-| `name`     | string   | The name of the user.                                              | Required    |
-| `about`    | string   | Information about the user.                                        | `""`        |
-| `metadata` | object   | Additional metadata for the user, such as preferences or settings. | `null`      |
+| `name`     | `string`   | The name of the user.                                              | Required    |
+| `about`    | `string`   | Information about the user.                                        | `""`        |
+| `metadata` | `object`   | Additional metadata for the user, such as preferences or settings. | `null`      |
 
 ## Creating a User
 
@@ -103,6 +103,10 @@ Retrieve user information individually or as a list.
     ```
 </CodeGroup>
 
+<Tip>
+    Check out the [API reference](/api-reference/users) or SDK reference ([Python](/sdks/python/reference#users) or [JavaScript](/sdks/nodejs/reference#users)) for more details on different operations you can perform on users.
+</Tip>
+
 ### Updating Users
 
 Update user details or specific fields within the user profile.
@@ -137,6 +141,10 @@ Update user details or specific fields within the user profile.
     console.log(`Updated user: ${updatedUser.id}`);
     ```
 </CodeGroup>
+
+<Tip>
+    Check out the [API reference](/api-reference/users) or SDK reference ([Python](/sdks/python/reference#users) or [JavaScript](/sdks/nodejs/reference#users)) for more details on different operations you can perform on users.
+</Tip>
 
 ### Deleting Users
 
@@ -227,6 +235,10 @@ While users represent the entities interacting with your system, **agents** are 
     });
     ```
 </CodeGroup>
+
+<Tip>
+    Check out the [API reference](/api-reference/agents) or SDK reference ([Python](/sdks/python/reference#agents) or [JavaScript](/sdks/nodejs/reference#agents)) for more details on different operations you can perform on agents.
+</Tip>
 
 ## Best Practices
 

@@ -123,7 +123,7 @@ Here's an example of how to use the chat API in Julep using the SDKs:
         user=user.id,
         recall=True,
         recall_options={
-            "mode": "vector", # or "hybrid", "text"
+            "mode": "hybrid", # or "vector", "text"
             "num_search_messages": 4, # number of messages to search for documents
             "max_query_length": 1000, # maximum query length
             "alpha": 0.7, # weight to apply to BM25 vs Vector search results (ranges from 0 to 1)
@@ -156,7 +156,7 @@ Here's an example of how to use the chat API in Julep using the SDKs:
         user: user.id,
         recall: true,
         recall_options: {
-            mode: "vector", // or "hybrid", "text"
+            mode: "hybrid", // or "vector", "text"
             num_search_messages: 4, // number of messages to search for documents
             max_query_length: 1000, // maximum query length
             alpha: 0.7, // weight to apply to BM25 vs Vector search results (ranges from 0 to 1)

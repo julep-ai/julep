@@ -4,6 +4,7 @@ from uuid import UUID
 import numpy as np
 from beartype import beartype
 from fastapi import HTTPException
+from langcodes import Language
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import ChatInput, DocReference, History, Session
@@ -112,6 +113,7 @@ async def gather_messages(
         active_agent_id = chat_context.get_active_agent().id
         user_ids = [user.id for user in chat_context.users]
         owners = [("user", user_id) for user_id in user_ids] + [("agent", active_agent_id)]
+        search_language = Language.get(recall_options.lang).describe()["language"].lower()
 
         # Search for doc references
         doc_references: list[DocReference] = []
@@ -133,7 +135,7 @@ async def gather_messages(
                     text_query=query_text,
                     embedding=query_embedding,
                     k=recall_options.limit,
-                    search_language=recall_options.lang,
+                    search_language=search_language,
                     confidence=recall_options.confidence,
                     alpha=recall_options.alpha,
                     metadata_filter=recall_options.metadata_filter,
@@ -145,7 +147,7 @@ async def gather_messages(
                     owners=owners,
                     query=query_text,
                     k=recall_options.limit,
-                    search_language=recall_options.lang,
+                    search_language=search_language,
                     metadata_filter=recall_options.metadata_filter,
                     connection_pool=connection_pool,
                 )

@@ -3935,7 +3935,7 @@ components:
         lang:
           type: string
           description: The language to be used for text-only search. Support for other languages coming soon.
-          default: english
+          default: en-US
         metadata_filter:
           type: object
           additionalProperties: {}
@@ -3968,7 +3968,7 @@ components:
         lang:
           type: string
           description: The language to be used for text-only search. Support for other languages coming soon.
-          default: english
+          default: en-US
         metadata_filter:
           type: object
           additionalProperties: {}

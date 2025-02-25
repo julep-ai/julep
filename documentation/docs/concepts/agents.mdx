@@ -23,14 +23,14 @@ When creating an agent, you can leverage the following configuration options:
 
 | Option                  | Type                  | Description                                                                 | Default     |
 |-------------------------|-----------------------|-----------------------------------------------------------------------------|-------------|
-| `name`                  | string                | The name of your agent                                                      | Required    |
-| `canonical_name`        | string                | A unique identifier for your agent, following the pattern `[a-zA-Z][a-zA-Z0-9_]*` | `null`  |
-| `about`                 | string                | A brief description of what your agent does                                 | `""`        |
-| `model`                 | string                | The language model your agent uses (e.g., "gpt-4-turbo", "gemini-nano")     | `""`        |
-| `instructions`          | string or list[string]| Specific tasks or behaviors expected from the agent                         | `[]`        |
-| `metadata`              | object                | Key-value pairs for additional information about your agent                 | `null`      |
-| `default_settings`      | object                | Default configuration settings for the agent. See [supported parameters](/docs/integrations/supported-models#supported-parameters) for details. | `null` |
-| `default_system_template` | string              | Default system template for all sessions created by this agent. | See [default system template](/docs/concepts/agents#default-system-template) |
+| `name`                  | `string`                | The name of your agent                                                      | Required    |
+| `canonical_name`        | `string`                | A unique identifier for your agent, following the pattern `[a-zA-Z][a-zA-Z0-9_]*` | `null`  |
+| `about`                 | `string`                | A brief description of what your agent does                                 | `""`        |
+| `model`                 | `string`                | The language model your agent uses (e.g., "gpt-4-turbo", "gemini-nano")     | `""`        |
+| `instructions`          | `string` \| `list[string]`| Specific tasks or behaviors expected from the agent                         | `[]`        |
+| `metadata`              | `object`                | Key-value pairs for additional information about your agent                 | `null`      |
+| `default_settings`      | `object`                | Default configuration settings for the agent. See [supported parameters](/docs/integrations/supported-models#supported-parameters) for details. | `null` |
+| `default_system_template` | `string`              | Default system template for all sessions created by this agent. | See [default system template](/docs/concepts/agents#default-system-template) |
 
 <Accordion title="Default System Template" icon="template">
 ```python Python
