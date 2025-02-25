@@ -69,7 +69,7 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
         case "resume" | "step":
             assert data.next is not None, "Next target must be provided for resume/step"
 
-            if data.next.workflow == data.current.workflow:
+            if data.next.scope_id == data.current.scope_id:
                 assert data.next.step > data.current.step, (
                     "Next step must be greater than current"
                 )

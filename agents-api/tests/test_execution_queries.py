@@ -139,6 +139,51 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result.output == {"result": "test"}
 
 
+@test("query: create execution transition - validate transition targets")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+    pool = await create_db_pool(dsn=dsn)
+    scope_id = uuid7()
+    await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="init_branch",
+            output={"result": "test"},
+            current={"workflow": "subworkflow", "step": 0, "scope_id": scope_id},
+            next={"workflow": "subworkflow", "step": 0, "scope_id": scope_id},
+        ),
+        connection_pool=pool,
+    )
+
+    await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="step",
+            output={"result": "test"},
+            current={"workflow": "subworkflow", "step": 0, "scope_id": scope_id},
+            next={"workflow": "subworkflow", "step": 1, "scope_id": scope_id},
+        ),
+        connection_pool=pool,
+    )
+
+    result = await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="step",
+            output={"result": "test"},
+            current={"workflow": "subworkflow", "step": 1, "scope_id": scope_id},
+            next={"workflow": "subworkflow", "step": 0, "scope_id": uuid7()},
+        ),
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert result.type == "step"
+    assert result.output == {"result": "test"}
+
+
 @test("query: create execution transition with execution update")
 async def _(
     dsn=pg_dsn,
