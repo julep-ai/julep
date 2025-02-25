@@ -257,6 +257,22 @@ main:
             query: $ 'Latest news about ' + _ # _ is each topic
 ```
 
+### Custom Implementations
+
+#### Humanization
+
+The `humanize_text` function transforms text using multiple techniques such as:
+- Back-translation.
+- Rewriting using non-public LLMs.
+- Stylistic modifications such as homoglyphs and em dashes.
+
+Example usage:
+
+```yaml
+- evaluate:
+    humanized_text: $ humanize_text(_.text)
+```
+
 ## Security
 
 All Python expressions are executed in a sandboxed environment with:
