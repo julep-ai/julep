@@ -2924,8 +2924,6 @@ components:
           default: 10
         lang:
           type: string
-          enum:
-            - en-US
           description: The language to be used for text-only search. Support for other languages coming soon.
           default: en-US
         metadata_filter:
@@ -3936,8 +3934,6 @@ components:
           default: 10
         lang:
           type: string
-          enum:
-            - en-US
           description: The language to be used for text-only search. Support for other languages coming soon.
           default: en-US
         metadata_filter:
@@ -3971,8 +3967,6 @@ components:
           default: 10
         lang:
           type: string
-          enum:
-            - en-US
           description: The language to be used for text-only search. Support for other languages coming soon.
           default: en-US
         metadata_filter:

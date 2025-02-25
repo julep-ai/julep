@@ -112,7 +112,7 @@ model BaseDocSearchRequest {
     limit: uint16 = 10;
 
     /** The language to be used for text-only search. Support for other languages coming soon. */
-    lang: "en-US" = "en-US";
+    lang: string = "en-US";
 
     /** Metadata filter to apply to the search */
     metadata_filter: MetadataFilter = #{};

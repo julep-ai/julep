@@ -5942,23 +5942,8 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
-        },
-        "text": {
-          "title": "Text",
-          "type": "string"
-        },
-        "vector": {
-          "items": {
-            "type": "number"
-          },
-          "title": "Vector",
-          "type": "array"
         }
       },
-      "required": [
-        "text",
-        "vector"
-      ],
       "title": "HybridDocSearch",
       "type": "object"
     },
@@ -5979,7 +5964,6 @@
           "type": "number"
         },
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -6081,31 +6065,6 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
-        },
-        "text": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Text"
-        },
-        "vector": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "number"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Vector"
         }
       },
       "title": "HybridDocSearchUpdate",
@@ -10358,22 +10317,14 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
-        },
-        "text": {
-          "title": "Text",
-          "type": "string"
         }
       },
-      "required": [
-        "text"
-      ],
       "title": "TextOnlyDocSearch",
       "type": "object"
     },
     "TextOnlyDocSearchRequest": {
       "properties": {
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -10439,17 +10390,6 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
-        },
-        "text": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Text"
         }
       },
       "title": "TextOnlyDocSearchUpdate",
@@ -11597,29 +11537,8 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
-        },
-        "text": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Text"
-        },
-        "vector": {
-          "items": {
-            "type": "number"
-          },
-          "title": "Vector",
-          "type": "array"
         }
       },
-      "required": [
-        "vector"
-      ],
       "title": "VectorDocSearch",
       "type": "object"
     },
@@ -11633,7 +11552,6 @@
           "type": "number"
         },
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -11723,31 +11641,6 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
-        },
-        "text": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Text"
-        },
-        "vector": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "number"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Vector"
         }
       },
       "title": "VectorDocSearchUpdate",

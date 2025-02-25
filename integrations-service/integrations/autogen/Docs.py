@@ -17,7 +17,7 @@ class BaseDocSearchRequest(BaseModel):
     """
     The limit of documents to return
     """
-    lang: Literal["en-US"] = "en-US"
+    lang: str = "en-US"
     """
     The language to be used for text-only search. Support for other languages coming soon.
     """
