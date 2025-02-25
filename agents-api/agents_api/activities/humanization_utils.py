@@ -18,7 +18,7 @@ Change text given to you so much that even the most advanced AI writing detector
 
 Don't mention yourself, just return the end product text. **Vary your text in every possible sense. Use different vocabulary at every step. Give it your ALL!**""",
 
-    "grammar_prompt": "Only fix grammar that is wrong without chaning the words and places of the sentence",
+    "grammar_prompt": "Only fix grammar that is wrong without changing the words and places of the sentence",
 }
 
 SAPLING_URL = "https://api.sapling.ai/api/v1/aidetect"
