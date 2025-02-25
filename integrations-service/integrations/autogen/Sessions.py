@@ -112,17 +112,9 @@ class HybridDocSearch(BaseDocSearch):
     """
     The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
-    text: str
-    """
-    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
-    """
-    vector: list[float]
-    """
-    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
-    """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
-    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 
@@ -142,17 +134,9 @@ class HybridDocSearchUpdate(BaseDocSearchUpdate):
     """
     The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
-    text: str | None = None
-    """
-    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
-    """
-    vector: list[float] | None = None
-    """
-    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
-    """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
-    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 
@@ -296,10 +280,6 @@ class TextOnlyDocSearch(BaseDocSearch):
     """
     The mode to use for the search.
     """
-    text: str
-    """
-    Text to use in the search.
-    """
 
 
 class TextOnlyDocSearchUpdate(BaseDocSearchUpdate):
@@ -309,10 +289,6 @@ class TextOnlyDocSearchUpdate(BaseDocSearchUpdate):
     mode: str = "text"
     """
     The mode to use for the search.
-    """
-    text: str | None = None
-    """
-    Text to use in the search.
     """
 
 
@@ -375,17 +351,9 @@ class VectorDocSearch(BaseDocSearch):
     """
     The confidence cutoff level
     """
-    vector: list[float]
-    """
-    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
-    """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
-    MMR Strength (mmr_strength = 1 - mmr_lambda)
-    """
-    text: str | None = None
-    """
-    Text to use in the search.
+    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 
@@ -401,17 +369,9 @@ class VectorDocSearchUpdate(BaseDocSearchUpdate):
     """
     The confidence cutoff level
     """
-    vector: list[float] | None = None
-    """
-    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
-    """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
-    MMR Strength (mmr_strength = 1 - mmr_lambda)
-    """
-    text: str | None = None
-    """
-    Text to use in the search.
+    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 

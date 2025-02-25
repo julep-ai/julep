@@ -46,7 +46,7 @@ model VectorDocSearch extends BaseDocSearch {
     confidence: float = 0;
 
     /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[];
+    // vector: float[];
 
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)
@@ -54,7 +54,7 @@ model VectorDocSearch extends BaseDocSearch {
     mmr_strength?: float = 0.5;
 
     /** Text to use in the search. */
-    text?: string;
+    // text?: string;
 }
 
 model TextOnlyDocSearch extends BaseDocSearch {
@@ -63,9 +63,9 @@ model TextOnlyDocSearch extends BaseDocSearch {
     mode: string = "text";
 
     /** Text to use in the search. */
-    text: string;
+    // text: string;
 
-    vector?: never;
+    // vector?: never;
 }
 
 model HybridDocSearch extends BaseDocSearch {
@@ -84,10 +84,10 @@ model HybridDocSearch extends BaseDocSearch {
     alpha: float = 0.75;
 
     /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
-    text: string;
+    // text: string;
 
     /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[];
+    // vector: float[];
 
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)

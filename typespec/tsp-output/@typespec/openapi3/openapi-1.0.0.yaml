@@ -4159,8 +4159,6 @@ components:
         - mode
         - confidence
         - alpha
-        - text
-        - vector
       properties:
         mode:
           type: string
@@ -4178,20 +4176,12 @@ components:
           maximum: 1
           description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
           default: 0.75
-        text:
-          type: string
-          description: Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
-        vector:
-          type: array
-          items:
-            type: number
-          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
         mmr_strength:
           type: number
           minimum: 0
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          description: Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
@@ -4214,20 +4204,12 @@ components:
           maximum: 1
           description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
           default: 0.75
-        text:
-          type: string
-          description: Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
-        vector:
-          type: array
-          items:
-            type: number
-          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
         mmr_strength:
           type: number
           minimum: 0
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          description: Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
@@ -4462,15 +4444,11 @@ components:
       type: object
       required:
         - mode
-        - text
       properties:
         mode:
           type: string
           description: The mode to use for the search.
           default: text
-        text:
-          type: string
-          description: Text to use in the search.
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
     Sessions.TextOnlyDocSearchUpdate:
@@ -4480,9 +4458,6 @@ components:
           type: string
           description: The mode to use for the search.
           default: text
-        text:
-          type: string
-          description: Text to use in the search.
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
     Sessions.UpdateSessionRequest:
@@ -4549,7 +4524,6 @@ components:
       required:
         - mode
         - confidence
-        - vector
       properties:
         mode:
           type: string
@@ -4561,21 +4535,13 @@ components:
           maximum: 1
           description: The confidence cutoff level
           default: 0
-        vector:
-          type: array
-          items:
-            type: number
-          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
         mmr_strength:
           type: number
           minimum: 0
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
-        text:
-          type: string
-          description: Text to use in the search.
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
     Sessions.VectorDocSearchUpdate:
@@ -4591,21 +4557,13 @@ components:
           maximum: 1
           description: The confidence cutoff level
           default: 0
-        vector:
-          type: array
-          items:
-            type: number
-          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
         mmr_strength:
           type: number
           minimum: 0
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
-        text:
-          type: string
-          description: Text to use in the search.
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
     Tasks.CaseThen:
