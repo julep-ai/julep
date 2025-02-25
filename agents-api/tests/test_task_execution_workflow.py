@@ -97,7 +97,9 @@ async def _():
         result = await wf.handle_step(
             step=step,
         )
-        assert result == WorkflowResult(state=PartialTransition(type="resume", output="function_tool_call_response"))
+        assert result == WorkflowResult(
+            state=PartialTransition(type="resume", output="function_tool_call_response")
+        )
         workflow.execute_activity.assert_called_once_with(
             task_steps.raise_complete_async,
             args=[context, output],
@@ -154,7 +156,9 @@ async def _():
         result = await wf.handle_step(
             step=step,
         )
-        assert result == WorkflowResult(state=PartialTransition(output="integration_tool_call_response"))
+        assert result == WorkflowResult(
+            state=PartialTransition(output="integration_tool_call_response")
+        )
         provider = "dummy"
         method = None
         integration = BaseIntegrationDef(
@@ -279,7 +283,9 @@ async def _():
         result = await wf.handle_step(
             step=step,
         )
-        assert result == WorkflowResult(state=PartialTransition(output="api_call_tool_call_response"))
+        assert result == WorkflowResult(
+            state=PartialTransition(output="api_call_tool_call_response")
+        )
         api_call = ApiCallDef(
             method="GET",
             url="http://url1.com",
@@ -362,7 +368,9 @@ async def _():
         result = await wf.handle_step(
             step=step,
         )
-        assert result == WorkflowResult(state=PartialTransition(output="system_tool_call_response"))
+        assert result == WorkflowResult(
+            state=PartialTransition(output="system_tool_call_response")
+        )
         system_call = SystemDef(
             resource="agent",
             operation="create",
@@ -411,7 +419,9 @@ async def _():
     with patch(
         "agents_api.workflows.task_execution.execute_switch_branch"
     ) as execute_switch_branch:
-        execute_switch_branch.return_value = WorkflowResult(state=PartialTransition(output="switch_response"))
+        execute_switch_branch.return_value = WorkflowResult(
+            state=PartialTransition(output="switch_response")
+        )
         wf.context = context
         wf.outcome = outcome
         result = await wf.handle_step(
@@ -493,7 +503,9 @@ async def _():
     with patch(
         "agents_api.workflows.task_execution.execute_switch_branch"
     ) as execute_switch_branch:
-        execute_switch_branch.return_value = WorkflowResult(state=PartialTransition(output="switch_response"))
+        execute_switch_branch.return_value = WorkflowResult(
+            state=PartialTransition(output="switch_response")
+        )
         wf.context = context
         wf.outcome = outcome
         result = await wf.handle_step(
@@ -539,7 +551,9 @@ async def _():
         workflow.logger = Mock()
         workflow.execute_activity.return_value = "activity"
 
-        assert await wf.handle_step(step=step) == WorkflowResult(state=PartialTransition(output=message))
+        assert await wf.handle_step(step=step) == WorkflowResult(
+            state=PartialTransition(output=message)
+        )
         workflow.execute_activity.assert_not_called()
 
 
@@ -580,7 +594,9 @@ async def _():
         workflow.logger = Mock()
         workflow.execute_activity.return_value = "activity"
 
-        assert await wf.handle_step(step=step) == WorkflowResult(state=PartialTransition(output=message))
+        assert await wf.handle_step(step=step) == WorkflowResult(
+            state=PartialTransition(output=message)
+        )
         workflow.execute_activity.assert_not_called()
 
 
@@ -623,7 +639,9 @@ async def _():
         workflow.logger = Mock()
         workflow.execute_activity.return_value = "activity"
 
-        assert await wf.handle_step(step=step) == WorkflowResult(state=PartialTransition(output=message))
+        assert await wf.handle_step(step=step) == WorkflowResult(
+            state=PartialTransition(output=message)
+        )
         workflow.execute_activity.assert_not_called()
 
 
@@ -671,9 +689,9 @@ async def _():
         workflow.logger = Mock()
         workflow.execute_activity.side_effect = [_resp(), _resp()]
 
-        assert await wf.handle_step(step=step) == WorkflowResult(state=PartialTransition(
-            output="function_call", type="resume"
-        ))
+        assert await wf.handle_step(step=step) == WorkflowResult(
+            state=PartialTransition(output="function_call", type="resume")
+        )
         workflow.execute_activity.assert_has_calls([
             call(
                 task_steps.raise_complete_async,

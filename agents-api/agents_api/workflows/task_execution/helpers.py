@@ -274,7 +274,7 @@ async def execute_map_reduce_step(
 
         if workflow_result.returned:
             return workflow_result
-        
+
         result = await workflow.execute_activity(
             task_steps.base_evaluate,
             args=[reduce, None, {"results": result, "_": workflow_result.state.output}],
@@ -282,7 +282,6 @@ async def execute_map_reduce_step(
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
-
 
     return WorkflowResult(state=PartialTransition(output=result))
 
@@ -357,8 +356,10 @@ async def execute_map_reduce_step_parallel(
             batch_results = await asyncio.gather(*batch_pending)
 
             if any(batch_result.returned for batch_result in batch_results):
-                return next(batch_result for batch_result in batch_results if batch_result.returned)
-            
+                return next(
+                    batch_result for batch_result in batch_results if batch_result.returned
+                )
+
             batch_results = [batch_result.state.output for batch_result in batch_results]
 
             # Reduce the results of the batch
@@ -374,7 +375,6 @@ async def execute_map_reduce_step_parallel(
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
-
 
         except BaseException as e:
             workflow.logger.error(f"Error in batch {i}: {e}")

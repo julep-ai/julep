@@ -479,7 +479,9 @@ class TaskExecutionWorkflow:
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
-            return WorkflowResult(state=PartialTransition(output=new_response.output, type="resume"))
+            return WorkflowResult(
+                state=PartialTransition(output=new_response.output, type="resume")
+            )
         if input_type == "integrations":
             workflow.logger.debug("Prompt step: Received INTEGRATION tool call")
             # FIXME: Implement integration tool calls
@@ -557,7 +559,9 @@ class TaskExecutionWorkflow:
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
 
-            return WorkflowResult(state=PartialTransition(output=tool_call_response, type="resume"))
+            return WorkflowResult(
+                state=PartialTransition(output=tool_call_response, type="resume")
+            )
 
         if tool_call["type"] == "integration":
             # MANUAL TOOL CALL INTEGRATION
