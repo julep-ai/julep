@@ -17,6 +17,7 @@ dependencies = [
     { name = "async-lru" },
     { name = "asyncpg" },
     { name = "beartype" },
+    { name = "deep-translator" },
     { name = "en-core-web-sm" },
     { name = "environs" },
     { name = "fastapi" },
@@ -28,6 +29,7 @@ dependencies = [
     { name = "jinja2schema" },
     { name = "jsonschema" },
     { name = "langchain-core" },
+    { name = "langchain-text-splitters" },
     { name = "langcodes" },
     { name = "larch-pickle" },
     { name = "litellm" },
@@ -86,6 +88,7 @@ requires-dist = [
     { name = "async-lru", specifier = "~=2.0.4" },
     { name = "asyncpg", specifier = ">=0.30.0" },
     { name = "beartype", specifier = "~=0.18.5" },
+    { name = "deep-translator", specifier = ">=1.11.4" },
     { name = "en-core-web-sm", url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" },
     { name = "environs", specifier = "~=10.3.0" },
     { name = "fastapi", specifier = "~=0.115.4" },
@@ -97,6 +100,7 @@ requires-dist = [
     { name = "jinja2schema", specifier = "~=0.1.4" },
     { name = "jsonschema", specifier = "~=4.22.0" },
     { name = "langchain-core", specifier = "~=0.3.14" },
+    { name = "langchain-text-splitters", specifier = ">=0.3.2" },
     { name = "langcodes", specifier = ">=3.5.0" },
     { name = "larch-pickle", specifier = "~=1.4.3" },
     { name = "litellm", specifier = "~=1.57.0" },
@@ -681,6 +685,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/66/0c/8d907af351aa16b42caae42f9d6aa37b900c67308052d10fdce809f8d952/decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330", size = 35016 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186", size = 9073 },
+]
+
+[[package]]
+name = "deep-translator"
+version = "1.11.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7d/03/8fa7635c729a01de71151894cdf002ad6d245bfd6d1a731da864cf534dcf/deep_translator-1.11.4.tar.gz", hash = "sha256:801260c69231138707ea88a0955e484db7d40e210c9e0ae0f77372ffda5f4bf5", size = 36043 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/38/3f/61a8ef73236dbea83a1a063a8af2f8e1e41a0df64f122233938391d0f175/deep_translator-1.11.4-py3-none-any.whl", hash = "sha256:d635df037e23fa35d12fd42dab72a0b55c9dd19e6292009ee7207e3f30b9e60a", size = 42285 },
 ]
 
 [[package]]
@@ -1419,6 +1436,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/64/0c/9388d0959dff69fbca6e0f79076811cb1a494e06d04c8a880079228edded/langchain_core-0.3.21.tar.gz", hash = "sha256:561b52b258ffa50a9fb11d7a1940ebfd915654d1ec95b35e81dfd5ee84143411", size = 328597 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9b/50/e0bd90fc481d1cc8c2039ad6161b20fc8e396a7cba6064a4f1e8e5afea62/langchain_core-0.3.21-py3-none-any.whl", hash = "sha256:7e723dff80946a1198976c6876fea8326dc82566ef9bcb5f8d9188f738733665", size = 409467 },
+]
+
+[[package]]
+name = "langchain-text-splitters"
+version = "0.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "langchain-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/47/63/0f7dae88d87e924d819e6a6375043499e3bc9931e306edd48b396abb4e42/langchain_text_splitters-0.3.2.tar.gz", hash = "sha256:81e6515d9901d6dd8e35fb31ccd4f30f76d44b771890c789dc835ef9f16204df", size = 20229 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/c6/5ba25c8bad647e92a92b3066177ab10d78efbd16c0b9919948cdcd18b027/langchain_text_splitters-0.3.2-py3-none-any.whl", hash = "sha256:0db28c53f41d1bc024cdb3b1646741f6d46d5371e90f31e7e7c9fbe75d01c726", size = 25564 },
 ]
 
 [[package]]
