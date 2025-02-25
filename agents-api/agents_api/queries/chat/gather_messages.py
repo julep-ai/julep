@@ -113,7 +113,12 @@ async def gather_messages(
         active_agent_id = chat_context.get_active_agent().id
         user_ids = [user.id for user in chat_context.users]
         owners = [("user", user_id) for user_id in user_ids] + [("agent", active_agent_id)]
-        search_language = Language.get(recall_options.lang).describe()["language"].lower()
+
+        # Get the search language
+        try:
+            search_language = Language.get(recall_options.lang).describe()["language"].lower()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid language or ISO 639-1 language code. Currently we only support English.")
 
         # Search for doc references
         doc_references: list[DocReference] = []

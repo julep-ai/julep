@@ -3,7 +3,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 import numpy as np
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from langcodes import Language
 
 from ...autogen.openapi_model import (
@@ -30,7 +30,10 @@ def get_search_fn_and_params(
         case TextOnlyDocSearchRequest(
             text=query, limit=k, lang=lang, metadata_filter=metadata_filter
         ):
-            search_language = Language.get(lang).describe()["language"].lower()
+            try:
+                search_language = Language.get(lang).describe()["language"].lower()
+            except Exception:
+                raise HTTPException(status_code=400, detail="Invalid language or ISO 639-1 language code. Currently we only support English.")
             search_fn = search_docs_by_text
             params = {
                 "query": query,
@@ -62,7 +65,10 @@ def get_search_fn_and_params(
             alpha=alpha,
             metadata_filter=metadata_filter,
         ):
-            search_language = Language.get(lang).describe()["language"].lower()
+            try:
+                search_language = Language.get(lang).describe()["language"].lower()
+            except Exception:
+                raise HTTPException(status_code=400, detail="Invalid language or ISO 639-1 language code. Currently we only support English.")
             search_fn = search_docs_hybrid
             params = {
                 "text_query": query,
