@@ -5900,7 +5900,6 @@
           "type": "number"
         },
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -6023,7 +6022,6 @@
           "type": "number"
         },
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -10282,7 +10280,6 @@
     "TextOnlyDocSearch": {
       "properties": {
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -10355,7 +10352,6 @@
     "TextOnlyDocSearchUpdate": {
       "properties": {
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -11495,7 +11491,6 @@
           "type": "number"
         },
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -11599,7 +11594,6 @@
           "type": "number"
         },
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"

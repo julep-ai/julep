@@ -3935,7 +3935,7 @@ components:
         lang:
           type: string
           description: The language to be used for text-only search. Support for other languages coming soon.
-          default: en-US
+          default: english
         metadata_filter:
           type: object
           additionalProperties: {}
@@ -3951,8 +3951,8 @@ components:
         max_query_length:
           type: integer
           format: uint32
-          minimum: 1
-          maximum: 1000
+          minimum: 100
+          maximum: 10000
           description: The maximum query length to use for the search.
           default: 1000
     Sessions.BaseDocSearchUpdate:
@@ -3968,7 +3968,7 @@ components:
         lang:
           type: string
           description: The language to be used for text-only search. Support for other languages coming soon.
-          default: en-US
+          default: english
         metadata_filter:
           type: object
           additionalProperties: {}
@@ -3984,8 +3984,8 @@ components:
         max_query_length:
           type: integer
           format: uint32
-          minimum: 1
-          maximum: 1000
+          minimum: 100
+          maximum: 10000
           description: The maximum query length to use for the search.
           default: 1000
     Sessions.ContextOverflowType:
@@ -4175,7 +4175,7 @@ components:
           minimum: 0
           maximum: 1
           exclusiveMaximum: true
-          description: Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
@@ -4203,7 +4203,7 @@ components:
           minimum: 0
           maximum: 1
           exclusiveMaximum: true
-          description: Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
@@ -4534,7 +4534,7 @@ components:
           minimum: 0
           maximum: 1
           exclusiveMaximum: true
-          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
@@ -4556,7 +4556,7 @@ components:
           minimum: 0
           maximum: 1
           exclusiveMaximum: true
-          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'

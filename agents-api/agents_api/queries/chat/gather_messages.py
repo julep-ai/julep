@@ -122,7 +122,6 @@ async def gather_messages(
                     owners=owners,
                     embedding=query_embedding,
                     k=recall_options.limit,
-                    search_language=recall_options.lang,
                     confidence=recall_options.confidence,
                     metadata_filter=recall_options.metadata_filter,
                     connection_pool=connection_pool,

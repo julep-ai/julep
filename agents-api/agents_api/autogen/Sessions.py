@@ -17,7 +17,7 @@ class BaseDocSearch(BaseModel):
     """
     The limit of documents to return
     """
-    lang: str = "en-US"
+    lang: str = "english"
     """
     The language to be used for text-only search. Support for other languages coming soon.
     """
@@ -29,7 +29,7 @@ class BaseDocSearch(BaseModel):
     """
     The number of search messages to use for the search.
     """
-    max_query_length: Annotated[int, Field(ge=1, le=1000)] = 1000
+    max_query_length: Annotated[int, Field(ge=100, le=10000)] = 1000
     """
     The maximum query length to use for the search.
     """
@@ -114,7 +114,7 @@ class HybridDocSearch(BaseDocSearch):
     """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
-    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 
@@ -136,7 +136,7 @@ class HybridDocSearchUpdate(BaseDocSearchUpdate):
     """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
-    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 
@@ -353,7 +353,7 @@ class VectorDocSearch(BaseDocSearch):
     """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
-    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 
@@ -371,7 +371,7 @@ class VectorDocSearchUpdate(BaseDocSearchUpdate):
     """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
-    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.MMR Strength (mmr_strength = 1 - mmr_lambda)
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 

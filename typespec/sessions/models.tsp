@@ -19,7 +19,7 @@ model BaseDocSearch {
     limit: uint16 = 10;
 
     /** The language to be used for text-only search. Support for other languages coming soon. */
-    lang: string = "en-US";
+    lang: string = "english";
 
     /** Metadata filter to apply to the search */
     metadata_filter: MetadataFilter = #{};
@@ -30,8 +30,8 @@ model BaseDocSearch {
     num_search_messages: uint32 = 4;
 
     /** The maximum query length to use for the search. */
-    @minValue(1)
-    @maxValue(1000)
+    @minValue(100)
+    @maxValue(10000)
     max_query_length: uint32 = 1000;
 }
 
@@ -45,27 +45,16 @@ model VectorDocSearch extends BaseDocSearch {
     @maxValue(1)
     confidence: float = 0;
 
-    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    // vector: float[];
-
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)
     @maxValueExclusive(1)
     mmr_strength?: float = 0.5;
-
-    /** Text to use in the search. */
-    // text?: string;
 }
 
 model TextOnlyDocSearch extends BaseDocSearch {
 
     /** The mode to use for the search. */
     mode: string = "text";
-
-    /** Text to use in the search. */
-    // text: string;
-
-    // vector?: never;
 }
 
 model HybridDocSearch extends BaseDocSearch {
@@ -82,12 +71,6 @@ model HybridDocSearch extends BaseDocSearch {
     @minValue(0)
     @maxValue(1)
     alpha: float = 0.75;
-
-    /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
-    // text: string;
-
-    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    // vector: float[];
 
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)
@@ -161,7 +144,6 @@ model Session {
     forward_tool_calls: boolean = false;
 
     /** Recall options for the session */
-    // recall_options?: RecallOptions | null = null;
     recall_options?: DocSearch | null = null;
 
     ...HasId;
