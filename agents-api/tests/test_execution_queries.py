@@ -138,6 +138,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result.type == "init_branch"
     assert result.output == {"result": "test"}
 
+
 @test("query: create execution transition - validate transition targets")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
     pool = await create_db_pool(dsn=dsn)
@@ -181,6 +182,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result is not None
     assert result.type == "step"
     assert result.output == {"result": "test"}
+
 
 @test("query: create execution transition with execution update")
 async def _(
