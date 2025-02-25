@@ -19,7 +19,9 @@ with workflow.unsafe.imports_passed_through():
     )
     from ...common.protocol.tasks import (
         ExecutionInput,
+        PartialTransition,
         StepContext,
+        WorkflowResult,
     )
     from ...common.utils.workflows import PAR_PREFIX, SEPARATOR
     from ...env import task_max_parallelism, temporal_heartbeat_timeout
@@ -221,9 +223,13 @@ async def execute_foreach_step(
             item,
             user_state=user_state,
         )
-        results.append(result)
 
-    return results
+        if result.returned:
+            return result
+
+        results.append(result.state.output)
+
+    return WorkflowResult(state=PartialTransition(output=results))
 
 
 async def execute_map_reduce_step(
@@ -259,22 +265,26 @@ async def execute_map_reduce_step(
             workflow=workflow_name, step=0, scope_id=context.current_scope_id
         )
 
-        output = await continue_as_child(
+        workflow_result = await continue_as_child(
             map_reduce_execution_input,
             map_reduce_next_target,
             item,
             user_state=user_state,
         )
 
+        if workflow_result.returned:
+            return workflow_result
+        
         result = await workflow.execute_activity(
             task_steps.base_evaluate,
-            args=[reduce, None, {"results": result, "_": output}],
+            args=[reduce, None, {"results": result, "_": workflow_result.state.output}],
             schedule_to_close_timeout=timedelta(seconds=30),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
 
-    return result
+
+    return WorkflowResult(state=PartialTransition(output=result))
 
 
 async def execute_map_reduce_step_parallel(
@@ -346,6 +356,11 @@ async def execute_map_reduce_step_parallel(
         try:
             batch_results = await asyncio.gather(*batch_pending)
 
+            if any(batch_result.returned for batch_result in batch_results):
+                return next(batch_result for batch_result in batch_results if batch_result.returned)
+            
+            batch_results = [batch_result.state.output for batch_result in batch_results]
+
             # Reduce the results of the batch
             results = await workflow.execute_activity(
                 task_steps.base_evaluate,
@@ -360,9 +375,10 @@ async def execute_map_reduce_step_parallel(
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
 
+
         except BaseException as e:
             workflow.logger.error(f"Error in batch {i}: {e}")
             msg = f"Error in batch {i}: {e}"
             raise ApplicationError(msg) from e
 
-    return results
+    return WorkflowResult(state=PartialTransition(output=results))
