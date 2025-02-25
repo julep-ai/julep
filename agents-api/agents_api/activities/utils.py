@@ -25,6 +25,8 @@ from ..autogen.openapi_model import SystemDef
 from ..common.nlp import nlp
 from ..common.utils import yaml
 
+from .humanization_utils import process_paragraph, split_with_langchain
+
 # Security limits
 MAX_STRING_LENGTH = 1_000_000  # 1MB
 MAX_COLLECTION_SIZE = 10_000
@@ -215,6 +217,37 @@ def safe_extract_json(string: str):
     return json.loads(extracted_string)
 
 
+def humanize_text(
+    text: str,
+    src_lang: str = "english",
+    target_lang: str = "german",
+    grammar: bool = False,
+    is_chatgpt: bool = True,
+    use_homoglyphs: bool = True,
+    use_em_dashes: bool = True,
+    max_tries: int = 10
+) -> str:
+
+    humanized_text = ""
+
+    paragraphs = split_with_langchain(text)
+
+    for paragraph in paragraphs:
+        processed_paragraph = process_paragraph(
+            paragraph=paragraph,
+            src_lang=src_lang,
+            target_lang=target_lang,
+            grammar=grammar,
+            is_chatgpt=is_chatgpt,
+            use_homoglyphs=use_homoglyphs,
+            use_em_dashes=use_em_dashes,
+            max_tries=max_tries
+        )
+        humanized_text += processed_paragraph + "\n\n"
+
+    return humanized_text
+
+
 # Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
     # Basic Python builtins
@@ -250,6 +283,7 @@ ALLOWED_FUNCTIONS = {
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
     "nlp": nlp.__call__,
     "chunk_doc": chunk_doc,
+    "humanize_text": humanize_text,
 }
 
 
