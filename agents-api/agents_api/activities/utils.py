@@ -24,7 +24,7 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 from ..autogen.openapi_model import SystemDef
 from ..common.nlp import nlp
 from ..common.utils import yaml
-from .humanization_utils import process_paragraph, split_with_langchain
+from .humanization_utils import humanize_paragraph, split_with_langchain
 
 # Security limits
 MAX_STRING_LENGTH = 1_000_000  # 1MB
@@ -218,31 +218,32 @@ def safe_extract_json(string: str):
 
 def humanize_text(
     text: str,
+    threshold: float = 90,
     src_lang: str = "english",
     target_lang: str = "german",
-    grammar: bool = False,
+    grammar_check: bool = False,
     is_chatgpt: bool = True,
     use_homoglyphs: bool = True,
     use_em_dashes: bool = True,
-    max_tries: int = 10
+    max_tries: int = 10,
 ) -> str:
-
     humanized_text = ""
 
     paragraphs = split_with_langchain(text)
 
     for paragraph in paragraphs:
-        processed_paragraph = process_paragraph(
+        humanized_paragraph = humanize_paragraph(
             paragraph=paragraph,
+            threshold=threshold,
             src_lang=src_lang,
             target_lang=target_lang,
-            grammar=grammar,
+            grammar_check=grammar_check,
             is_chatgpt=is_chatgpt,
             use_homoglyphs=use_homoglyphs,
             use_em_dashes=use_em_dashes,
-            max_tries=max_tries
+            max_tries=max_tries,
         )
-        humanized_text += processed_paragraph + "\n\n"
+        humanized_text += humanized_paragraph + "\n\n"
 
     return humanized_text
 
