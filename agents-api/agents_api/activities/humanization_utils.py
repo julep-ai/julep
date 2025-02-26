@@ -142,7 +142,7 @@ def is_human_desklib(text: str) -> float:
         return human_score * 100
     except Exception as e:
         msg = "Error getting human score from desklib"
-        raise Exception(msg, e)
+        raise Exception(msg) from e
 
 
 def is_human_sapling(text):
@@ -158,7 +158,7 @@ def is_human_sapling(text):
         return 100 - int(ai_score * 100)
     except Exception as e:
         msg = "Error getting human score from sapling"
-        raise Exception(msg, e)
+        raise Exception(msg) from e
 
 
 def is_human_copyleaks(text):
