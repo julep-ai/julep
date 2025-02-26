@@ -26,7 +26,7 @@ Don't mention yourself, just return the end product text. **Vary your text in ev
 SAPLING_URL = "https://api.sapling.ai/api/v1/aidetect"
 COPLEYAKS_URL = "https://api.copyleaks.com/v2/writer-detector/{scan_id}/check"
 ZEROGPT_URL = "https://api.zerogpt.com/api/detect/detectText"
-DESKLIB_URL = "https://18c3-206-189-23-12.ngrok-free.app/detect" # FIXME: This is temporarily, don't merge before desklib is deployed
+DESKLIB_URL = "https://18c3-206-189-23-12.ngrok-free.app/detect"  # FIXME: This is temporarily, don't merge before desklib is deployed
 
 
 def text_translate(text, src_lang, target_lang):
