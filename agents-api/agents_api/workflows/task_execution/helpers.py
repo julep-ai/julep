@@ -22,7 +22,11 @@ with workflow.unsafe.imports_passed_through():
         StepContext,
     )
     from ...common.utils.workflows import PAR_PREFIX, SEPARATOR
-    from ...env import task_max_parallelism, temporal_heartbeat_timeout
+    from ...env import (
+        task_max_parallelism,
+        temporal_heartbeat_timeout,
+        temporal_search_attribute_key,
+    )
 
 T = TypeVar("T")
 
@@ -83,7 +87,7 @@ async def continue_as_child(
         raise ApplicationError(msg)
 
     execution_id = execution_input.execution.id
-    execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
+    execution_id_key = SearchAttributeKey.for_keyword(temporal_search_attribute_key)
 
     try:
         return await run(
