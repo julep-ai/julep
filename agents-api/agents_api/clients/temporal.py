@@ -23,6 +23,7 @@ from ..env import (
     temporal_metrics_bind_port,
     temporal_namespace,
     temporal_private_key,
+    temporal_search_attribute_key,
     temporal_task_queue,
     temporal_worker_url,
 )
@@ -115,7 +116,7 @@ async def run_task_execution_workflow(
 
     client = client or (await get_client())
     execution_id = execution_input.execution.id
-    execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
+    execution_id_key = SearchAttributeKey.for_keyword(temporal_search_attribute_key)
 
     old_args = execution_input.arguments
     execution_input.arguments = offload_if_large(old_args)

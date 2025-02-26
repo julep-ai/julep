@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  postgraphile:
+    image: graphile/postgraphile:latest
+    profiles:
+      - multi-tenant
+    ports:
+      - "5000:5000"
+    command: ["-c", "${DATABASE_URL}", "--watch", "--enhance-graphiql", "--subscriptions", "--dynamic-json", "--retry-on-init-fail", "--no-setof-functions-contain-nulls", "--no-ignore-rbac", "--extended-errors", "errcode", "--enable-query-batching", "--allow-explain", "--legacy-relations", "omit", "--jwt-token-identifier", "public.jwt_token", "--jwt-secret", "${JWT_SECRET}", "--default-role", "no_access_role"]
+    environment:
+      DATABASE_URL: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres?sslmode=disable}
+      JWT_SECRET: ${JWT_SHARED_KEY:-secret}
