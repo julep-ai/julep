@@ -24,7 +24,6 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 from ..autogen.openapi_model import SystemDef
 from ..common.nlp import nlp
 from ..common.utils import yaml
-
 from .humanization_utils import process_paragraph, split_with_langchain
 
 # Security limits

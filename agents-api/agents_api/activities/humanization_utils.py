@@ -1,15 +1,17 @@
+import json
+import random
+import time
+
 import requests
 from deep_translator import GoogleTranslator
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 from litellm import completion
+
 from ..env import (
+    copyleaks_api_key,
     litellm_url,
     sapling_api_key,
-    copyleaks_api_key,
 )
-import json
-import random
-import time
 
 # Initialize humanization as a dictionary to hold various properties
 HUMANIZATION = {
@@ -270,16 +272,14 @@ def replace_with_homoglyphs(text, max_replacements=2):
         count = random.randrange(0, max_replacements)
         if count == 0:
             continue
-            
+
         # Get random positions for replacements
         positions = random.sample(range(text_len), min(count, text_len))
         for pos in positions:
             if text_chars[pos] == original:
                 text_chars[pos] = homoglyph
 
-    text = ''.join(text_chars)
-
-    return text
+    return "".join(text_chars)
 
 
 def insert_em_dash(word: str, probability: float = 0.1, min_length: int = 7) -> str:
