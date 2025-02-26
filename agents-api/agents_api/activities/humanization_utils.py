@@ -5,6 +5,7 @@ from litellm import completion
 from ..env import (
     litellm_url,
     sapling_api_key,
+    copyleaks_api_key,
 )
 import json
 import random
@@ -106,7 +107,7 @@ def humanize(text):
         return text
 
 
-def grammer(text):
+def grammar(text):
     try:
         response = completion(
             model=HUMANIZATION["model"],
@@ -147,8 +148,7 @@ def is_human_copyleaks(text):
 
     # Define headers with Authorization and Content-Type
     headers = {
-        # "Authorization": "Bearer 16ad4126-e8b1-40a0-b700-fd971b8d4d91",
-        "Authorization": "Bearer 2c5d9a33-5dac-4e4a-b047-cc15e295ab49",
+        "Authorization": f"Bearer {copyleaks_api_key}",
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
@@ -171,7 +171,9 @@ def is_human_copyleaks(text):
     return None
 
 
-def is_human_zerogpt(input_text):
+def is_human_zerogpt(input_text, max_tries=3):
+    if max_tries < 0:
+        return None
 
     # Define headers with Content-Type
     headers = {
@@ -204,10 +206,10 @@ def is_human_zerogpt(input_text):
         resp = json.loads(response.text)
         result = False
         try:
-            result = int(resp["data"]["isHuman"])
+            result = int(resp.get("data", {}).get("isHuman", None))
         except Exception:
             time.sleep(2)
-            return is_human_zerogpt(input_text)
+            return is_human_zerogpt(input_text, max_tries - 1)
 
         return result
     return None
@@ -260,14 +262,22 @@ def replace_with_homoglyphs(text, max_replacements=2):
         # '~': '∼',
     }
 
+    # Convert text to list for single pass replacement
+    text_chars = list(text)
+    text_len = len(text_chars)
+
     for original, homoglyph in homoglyphs.items():
         count = random.randrange(0, max_replacements)
+        if count == 0:
+            continue
+            
+        # Get random positions for replacements
+        positions = random.sample(range(text_len), min(count, text_len))
+        for pos in positions:
+            if text_chars[pos] == original:
+                text_chars[pos] = homoglyph
 
-        text = "".join(reversed(text))
-
-        text = text.replace(original, homoglyph, count)
-
-        text = "".join(reversed(text))
+    text = ''.join(text_chars)
 
     return text
 
@@ -336,7 +346,7 @@ def process_paragraph(
 
         paragraph = mix_translate(paragraph, src_lang, target_lang)
         if (grammar):
-            paragraph = grammer(paragraph)
+            paragraph = grammar(paragraph)
 
         paragraph = humanize_openai(
             paragraph) if is_chatgpt else humanize(paragraph)
