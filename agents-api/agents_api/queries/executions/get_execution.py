@@ -10,9 +10,43 @@ from .constants import OUTPUT_UNNEST_KEY
 
 # Query to get an execution
 get_execution_query = """
-SELECT * FROM latest_executions
-WHERE
-    execution_id = $1
+SELECT
+    e.developer_id,
+    e.task_id,
+    e.task_version,
+    e.execution_id,
+    e.input,
+    e.metadata,
+    e.created_at,
+    coalesce(lt.created_at, e.created_at) AS updated_at,
+    CASE
+        WHEN lt.type::text IS NULL THEN 'queued'
+        WHEN lt.type::text = 'init' THEN 'starting'
+        WHEN lt.type::text = 'init_branch' THEN 'running'
+        WHEN lt.type::text = 'wait' THEN 'awaiting_input'
+        WHEN lt.type::text = 'resume' THEN 'running'
+        WHEN lt.type::text = 'step' THEN 'running'
+        WHEN lt.type::text = 'finish' THEN 'succeeded'
+        WHEN lt.type::text = 'finish_branch' THEN 'running'
+        WHEN lt.type::text = 'error' THEN 'failed'
+        WHEN lt.type::text = 'cancelled' THEN 'cancelled'
+        ELSE 'queued'
+    END AS status,
+    CASE
+        WHEN lt.type::text = 'error' THEN lt.output ->> 'error'
+        ELSE NULL
+    END AS error,
+    coalesce(lt.output, '{}'::jsonb) AS output,
+    lt.current_step,
+    lt.next_step,
+    lt.step_label,
+    lt.task_token,
+    lt.metadata AS transition_metadata
+FROM
+    executions e
+    LEFT JOIN transitions lt ON e.execution_id = lt.execution_id
+    WHERE e.execution_id = $1
+ORDER BY lt.created_at DESC
 LIMIT 1;
 """
 
