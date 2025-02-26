@@ -113,6 +113,9 @@ temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=
 temporal_activity_after_retry_timeout: int = env.int(
     "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
 )
+temporal_search_attribute_key: str = env.str(
+    "TEMPORAL_SEARCH_ATTRIBUTE_KEY", default="CustomStringField"
+)
 
 
 def _parse_optional_int(val: str | None) -> int | None:

@@ -1,9 +1,8 @@
 from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
-
-from ..utils.workflows import get_workflow_name
 
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
@@ -199,6 +198,11 @@ class StepContext(BaseModel):
 
     @computed_field
     @property
+    def current_scope_id(self) -> Annotated[UUID, Field(exclude=True)]:
+        return self.cursor.scope_id
+
+    @computed_field
+    @property
     def is_last_step(self) -> Annotated[bool, Field(exclude=True)]:
         return (self.cursor.step + 1) == len(self.current_workflow.steps)
 
@@ -222,17 +226,19 @@ class StepContext(BaseModel):
         if self.execution_input.execution is None:
             return [], [], {}
 
+        inputs = []
+        labels = []
+        state = {}
+        scope_id = self.current_scope_id
+
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
             limit=1000,
             direction="asc",
+            scope_id=scope_id,
         )  # type: ignore[not-callable]
         assert len(transitions) > 0, "No transitions found"
-        inputs = []
-        labels = []
-        state = {}
-        workflow = get_workflow_name(transitions[-1])
-        transitions = [t for t in transitions if get_workflow_name(t) == workflow]
+
         for transition in transitions:
             # NOTE: The length hack should be refactored in case we want to implement multi-step control steps
             if transition.next and transition.next.step >= len(inputs):

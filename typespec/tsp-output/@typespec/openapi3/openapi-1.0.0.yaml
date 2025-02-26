@@ -3754,12 +3754,15 @@ components:
       required:
         - workflow
         - step
+        - scope_id
       properties:
         workflow:
           $ref: '#/components/schemas/Common.identifierSafeUnicode'
         step:
           type: integer
           format: uint16
+        scope_id:
+          $ref: '#/components/schemas/Common.uuid'
     Executions.UpdateExecutionRequest:
       type: object
       required:

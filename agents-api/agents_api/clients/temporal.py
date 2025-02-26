@@ -10,6 +10,7 @@ from temporalio.common import (
 )
 from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
+from uuid_extensions import uuid7
 
 from ..autogen.openapi_model import TransitionTarget
 from ..common.interceptors import CustomClientInterceptor, offload_if_large
@@ -22,6 +23,7 @@ from ..env import (
     temporal_metrics_bind_port,
     temporal_namespace,
     temporal_private_key,
+    temporal_search_attribute_key,
     temporal_task_queue,
     temporal_worker_url,
 )
@@ -108,11 +110,13 @@ async def run_task_execution_workflow(
         msg = "execution_input.execution cannot be None"
         raise ValueError(msg)
 
-    start: TransitionTarget = start or TransitionTarget(workflow="main", step=0)
+    start: TransitionTarget = start or TransitionTarget(
+        workflow="main", step=0, scope_id=uuid7()
+    )
 
     client = client or (await get_client())
     execution_id = execution_input.execution.id
-    execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
+    execution_id_key = SearchAttributeKey.for_keyword(temporal_search_attribute_key)
 
     old_args = execution_input.arguments
     execution_input.arguments = offload_if_large(old_args)

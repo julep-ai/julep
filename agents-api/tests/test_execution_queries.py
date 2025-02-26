@@ -16,6 +16,7 @@ from agents_api.queries.executions.get_execution import get_execution
 from agents_api.queries.executions.list_executions import list_executions
 from agents_api.queries.executions.lookup_temporal_data import lookup_temporal_data
 from temporalio.client import WorkflowHandle
+from uuid_extensions import uuid7
 from ward import test
 
 from tests.fixtures import (
@@ -120,20 +121,66 @@ async def _(
 @test("query: create execution transition")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
     pool = await create_db_pool(dsn=dsn)
+    scope_id = uuid7()
     result = await create_execution_transition(
         developer_id=developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
             type="init_branch",
             output={"result": "test"},
-            current={"workflow": "main", "step": 0},
-            next={"workflow": "main", "step": 0},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
+            next={"workflow": "main", "step": 0, "scope_id": scope_id},
         ),
         connection_pool=pool,
     )
 
     assert result is not None
     assert result.type == "init_branch"
+    assert result.output == {"result": "test"}
+
+
+@test("query: create execution transition - validate transition targets")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+    pool = await create_db_pool(dsn=dsn)
+    scope_id = uuid7()
+    await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="init_branch",
+            output={"result": "test"},
+            current={"workflow": "subworkflow", "step": 0, "scope_id": scope_id},
+            next={"workflow": "subworkflow", "step": 0, "scope_id": scope_id},
+        ),
+        connection_pool=pool,
+    )
+
+    await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="step",
+            output={"result": "test"},
+            current={"workflow": "subworkflow", "step": 0, "scope_id": scope_id},
+            next={"workflow": "subworkflow", "step": 1, "scope_id": scope_id},
+        ),
+        connection_pool=pool,
+    )
+
+    result = await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="step",
+            output={"result": "test"},
+            current={"workflow": "subworkflow", "step": 1, "scope_id": scope_id},
+            next={"workflow": "subworkflow", "step": 0, "scope_id": uuid7()},
+        ),
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert result.type == "step"
     assert result.output == {"result": "test"}
 
 
@@ -144,13 +191,14 @@ async def _(
     execution=test_execution_started,
 ):
     pool = await create_db_pool(dsn=dsn)
+    scope_id = uuid7()
     result = await create_execution_transition(
         developer_id=developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
             type="cancelled",
             output={"result": "test"},
-            current={"workflow": "main", "step": 0},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
             next=None,
         ),
         # task_id=task.id,
