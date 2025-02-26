@@ -11,17 +11,59 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .constants import OUTPUT_UNNEST_KEY
 
 # Query to list executions
+# FIXME: order by updated_at as well
+# FIXME: return to latest_executions view once latest_transitions is fixed
 list_executions_query = """
-SELECT * FROM latest_executions
+SELECT
+    e.developer_id,
+    e.task_id,
+    e.task_version,
+    e.execution_id,
+    e.input,
+    e.metadata,
+    e.created_at,
+    coalesce(lt.created_at, e.created_at) AS updated_at,
+    CASE
+        WHEN lt.type::text IS NULL THEN 'queued'
+        WHEN lt.type::text = 'init' THEN 'starting'
+        WHEN lt.type::text = 'init_branch' THEN 'running'
+        WHEN lt.type::text = 'wait' THEN 'awaiting_input'
+        WHEN lt.type::text = 'resume' THEN 'running'
+        WHEN lt.type::text = 'step' THEN 'running'
+        WHEN lt.type::text = 'finish' THEN 'succeeded'
+        WHEN lt.type::text = 'finish_branch' THEN 'running'
+        WHEN lt.type::text = 'error' THEN 'failed'
+        WHEN lt.type::text = 'cancelled' THEN 'cancelled'
+        ELSE 'queued'
+    END AS status,
+    CASE
+        WHEN lt.type::text = 'error' THEN lt.output ->> 'error'
+        ELSE NULL
+    END AS error,
+    coalesce(lt.output, '{}'::jsonb) AS output,
+    lt.current_step,
+    lt.next_step,
+    lt.step_label,
+    lt.task_token,
+    lt.metadata AS transition_metadata
+FROM
+    executions e
+    LEFT JOIN LATERAL (
+        SELECT *
+        FROM transitions t
+        WHERE t.execution_id = e.execution_id
+        ORDER BY t.created_at DESC
+        LIMIT 1
+    ) lt ON true
 WHERE
-    developer_id = $1 AND
-    task_id = $2
+    e.developer_id = $1 AND
+    e.task_id = $2
 ORDER BY
-    CASE WHEN $3 = 'created_at' AND $4 = 'asc' THEN created_at END ASC NULLS LAST,
-    CASE WHEN $3 = 'created_at' AND $4 = 'desc' THEN created_at END DESC NULLS LAST,
-    CASE WHEN $3 = 'updated_at' AND $4 = 'asc' THEN updated_at END ASC NULLS LAST,
-    CASE WHEN $3 = 'updated_at' AND $4 = 'desc' THEN updated_at END DESC NULLS LAST
-LIMIT $5 OFFSET $6;
+    CASE WHEN $3 = 'asc' THEN e.created_at END ASC NULLS LAST,
+    CASE WHEN $3 = 'desc' THEN e.created_at END DESC NULLS LAST
+    -- CASE WHEN $3 = 'updated_at' AND $4 = 'asc' THEN e.updated_at END ASC NULLS LAST,
+    -- CASE WHEN $3 = 'updated_at' AND $4 = 'desc' THEN e.updated_at END DESC NULLS LAST
+LIMIT $4 OFFSET $5;
 """
 
 
@@ -84,7 +126,7 @@ async def list_executions(
         [
             developer_id,
             task_id,
-            sort_by,
+            # sort_by,
             direction,
             limit,
             offset,
