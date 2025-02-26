@@ -39,7 +39,7 @@ Return only the rewritten text without explanations or meta-commentary.""",
 SAPLING_URL = "https://api.sapling.ai/api/v1/aidetect"
 COPLEYAKS_URL = "https://api.copyleaks.com/v2/writer-detector/{scan_id}/check"
 ZEROGPT_URL = "https://api.zerogpt.com/api/detect/detectText"
-DESKLIB_URL = "https://18c3-206-189-23-12.ngrok-free.app/detect"  # FIXME: This is temporarily, don't merge before desklib is deployed
+DESKLIB_URL = "http://34.138.171.60/detect"
 
 
 def text_translate(text, src_lang, target_lang):
@@ -145,10 +145,12 @@ def is_human_desklib(text: str) -> float:
 
         response.raise_for_status()
 
-        human_score = response.json().get("human")
+        ai_score = response.json().get("probability")
+
+        human_score = 1 - ai_score
 
         if human_score is None:
-            msg = "'human' key not found in response: "
+            msg = "'probability' key not found in response: "
             raise Exception(msg, response.json())
 
         # desklib returns a score between 0 and 1, we want to return a percentage
