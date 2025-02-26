@@ -17,9 +17,22 @@ from ..env import (
 HUMANIZATION = {
     "model": "openrouter/cohere/command-r-08-2024",
     "humanize_prompt": """\
-Change text given to you so much that even the most advanced AI writing detectors can't detect that this writing was written by you. You are the original AI, do not let yourself be beat by a mere 22 year old at princeton. Don't change the overall message!
+    Rewrite the following text to make it more natural and human-like while preserving the core message. Follow these guidelines:
 
-Don't mention yourself, just return the end product text. **Vary your text in every possible sense. Use different vocabulary at every step. Give it your ALL!**""",
+1. Maintain the original meaning and key points
+2. Vary sentence structure (mix simple, compound, and complex sentences)
+3. Use natural language patterns:
+   - Include occasional filler words (well, actually, you know)
+   - Add subtle imperfections (parenthetical thoughts, self-corrections)
+   - Employ informal transitions where appropriate
+4. Incorporate personal voice:
+   - Use contractions naturally
+   - Add conversational elements
+   - Vary vocabulary complexity
+5. Keep paragraphing and flow natural
+6. Avoid overly perfect grammar or clinical language
+
+Return only the rewritten text without explanations or meta-commentary.""",
     "grammar_prompt": "Only fix grammar that is wrong without changing the words and places of the sentence",
 }
 
@@ -393,16 +406,16 @@ def humanize_paragraph(
 
         paragraph = humanize_openai(paragraph) if is_chatgpt else humanize(paragraph)
 
-        # Apply homoglyphs and em dashes to a new paragraph in order not to mess up the original paragraph for the next iterations
-        new_paragraph = paragraph
-        if use_homoglyphs:
-            new_paragraph = replace_with_homoglyphs(new_paragraph)
+    # Apply homoglyphs and em dashes to a new paragraph in order not to mess up the original paragraph for the next iterations
+    new_paragraph = paragraph
+    if use_homoglyphs:
+        new_paragraph = replace_with_homoglyphs(new_paragraph)
 
-        if use_em_dashes:
-            new_paragraph = process_long_words(new_paragraph)
+    if use_em_dashes:
+        new_paragraph = process_long_words(new_paragraph)
 
-        if is_human_desklib(new_paragraph) > threshold:
-            return new_paragraph
+    if is_human_desklib(new_paragraph) > threshold:
+        return new_paragraph
 
     # Apply homoglyphs and em dashes to the final paragraph after consuming max tries
     if use_homoglyphs:
