@@ -1,6 +1,6 @@
 import json
 from collections.abc import Awaitable, Callable
-from functools import partial
+from functools import partial, wraps
 from typing import Any
 from uuid import UUID
 
@@ -118,17 +118,19 @@ async def call_tool(developer_id: UUID, tool_name: str, arguments: dict):
 
     connection_pool = getattr(app.state, "postgres_pool", None)
     tool_handler = partial(tool_handler, connection_pool=connection_pool)
-    arguments["developer_id"] = str(developer_id)
+    arguments["developer_id"] = developer_id
 
     # Convert all UUIDs to UUID objects
     uuid_fields = ["agent_id", "user_id", "task_id", "session_id", "doc_id"]
     for field in uuid_fields:
         if field in arguments:
-            arguments[field] = UUID(arguments[field])
+            fld = arguments[field]
+            if isinstance(fld, str):
+                arguments[field] = UUID(fld)
 
     parts = tool_name.split(".")
     if len(parts) < MIN_TOOL_NAME_SEGMENTS:
-        msg = f"wrong syste tool name: {tool_name}"
+        msg = f"invalid system tool name: {tool_name}"
         raise NameError(msg)
 
     resource, subresource, operation = parts[0], None, parts[-1]
@@ -220,39 +222,47 @@ async def call_tool(developer_id: UUID, tool_name: str, arguments: dict):
     return await tool_handler(**arguments)
 
 
-async def eval_tool_calls(
-    func: Callable[..., Awaitable[ModelResponse | CustomStreamWrapper]],
+def tool_calls_evaluator(
+    *,
     tool_types: set[str],
     developer_id: UUID,
-    **kwargs,
 ):
-    response: ModelResponse | CustomStreamWrapper | None = None
-    done = False
-    while not done:
-        response: ModelResponse | CustomStreamWrapper = await func(**kwargs)
-        if not response.choices or not response.choices[0].message.tool_calls:
+    def decor(
+        func: Callable[..., Awaitable[ModelResponse | CustomStreamWrapper]],
+    ):
+        @wraps(func)
+        async def wrapper(**kwargs):
+            response: ModelResponse | CustomStreamWrapper | None = None
+            done = False
+            while not done:
+                response: ModelResponse | CustomStreamWrapper = await func(**kwargs)
+                if not response.choices or not response.choices[0].message.tool_calls:
+                    return response
+
+                # TODO: add streaming response handling
+                for tool in response.choices[0].message.tool_calls:
+                    if tool.type not in tool_types:
+                        done = True
+                        continue
+
+                    done = False
+                    # call a tool
+                    tool_name = tool.function.name
+                    tool_args = json.loads(tool.function.arguments)
+                    tool_response = await call_tool(developer_id, tool_name, tool_args)
+
+                    # append result to messages from previous step
+                    messages: list = kwargs.get("messages", [])
+                    messages.append({
+                        "tool_call_id": tool.id,
+                        "role": "tool",
+                        "name": tool_name,
+                        "content": tool_response,
+                    })
+                    kwargs["messages"] = messages
+
             return response
 
-        # TODO: add streaming response handling
-        for tool in response.choices[0].message.tool_calls:
-            if tool.type not in tool_types:
-                done = True
-                continue
+        return wrapper
 
-            done = False
-            # call a tool
-            tool_name = tool.function.name
-            tool_args = json.loads(tool.function.arguments)
-            tool_response = await call_tool(developer_id, tool_name, tool_args)
-
-            # append result to messages from previous step
-            messages: list = kwargs.get("messages", [])
-            messages.append({
-                "tool_call_id": tool.id,
-                "role": "tool",
-                "name": tool_name,
-                "content": tool_response,
-            })
-            kwargs["messages"] = messages
-
-    return response
+    return decor
