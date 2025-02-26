@@ -124,58 +124,80 @@ def grammar(text):
 
 
 def is_human_desklib(text: str) -> float:
-    payload = {
-        "text": text,
-    }
-    response = requests.post(DESKLIB_URL, json=payload)
-    return response.json().get("human", None) * 100
+    try:
+        payload = {
+            "text": text,
+        }
+        response = requests.post(DESKLIB_URL, json=payload)
+
+        response.raise_for_status()
+
+        human_score = response.json().get("human")
+
+        if human_score is None:
+            msg = "'human' key not found in response: "
+            raise Exception(msg, response.json())
+
+        # desklib returns a score between 0 and 1, we want to return a percentage
+        return human_score * 100
+    except Exception as e:
+        msg = "Error getting human score from desklib"
+        raise Exception(msg, e)
 
 
 def is_human_sapling(text):
-    payload = {
-        "text": text,
-        "key": sapling_api_key,
-    }
-    response = requests.post(SAPLING_URL, json=payload)
-    ai_score = response.json().get("score", None)
+    try:
+        payload = {
+            "text": text,
+            "key": sapling_api_key,
+        }
+        response = requests.post(SAPLING_URL, json=payload)
+        ai_score = response.json().get("score", None)
 
-    ai_score = int(ai_score * 100)
-    return 100 - ai_score
+        # sapling returns a an ai score between 0 and 1, we want to return a human_score percentage
+        return 100 - int(ai_score * 100)
+    except Exception as e:
+        msg = "Error getting human score from sapling"
+        raise Exception(msg, e)
 
 
 def is_human_copyleaks(text):
-    # Define the payload
-    payload = {
-        "text": text,
-        # "sandbox": False,
-        # "explain": False,
-        # "sensitivity": 2
-    }
+    try:
+        # Define the payload
+        payload = {
+            "text": text,
+            # "sandbox": False,
+            # "explain": False,
+            # "sensitivity": 2
+        }
 
-    # Define headers with Authorization and Content-Type
-    headers = {
-        "Authorization": f"Bearer {copyleaks_api_key}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
+        # Define headers with Authorization and Content-Type
+        headers = {
+            "Authorization": f"Bearer {copyleaks_api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
-    # Copyleaks lets you define the scan id yourself
-    from uuid import uuid4
+        # Copyleaks lets you define the scan id yourself
+        from uuid import uuid4
 
-    scan_id = str(uuid4())
+        scan_id = str(uuid4())
 
-    # Send the POST request with JSON payload and headers
-    response = requests.post(
-        COPLEYAKS_URL.format(scan_id=scan_id), json=payload, headers=headers
-    )
+        # Send the POST request with JSON payload and headers
+        response = requests.post(
+            COPLEYAKS_URL.format(scan_id=scan_id), json=payload, headers=headers
+        )
+        response.raise_for_status()
 
-    # Check the response status
-    if response.status_code == 200:
-        resp = response.json()
-        # Extract the human probability from the response
-        human_probability = resp.get("summary", {}).get("human", 0)  # float with range 0-1
-        return human_probability * 100
-    return None
+        # Check the response status
+        if response.status_code == 200:
+            resp = response.json()
+            # Extract the human score from the response
+            human_score = resp.get("summary", {}).get("human", 0)  # float with range 0-1
+            return human_score * 100
+    except Exception as e:
+        msg = "Error getting human score from copyleaks"
+        raise Exception(msg, e)
 
 
 def is_human_zerogpt(input_text, max_tries=3):
