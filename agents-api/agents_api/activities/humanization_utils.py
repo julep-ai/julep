@@ -5,7 +5,7 @@ import time
 import requests
 from deep_translator import GoogleTranslator
 from langchain_text_splitters import MarkdownHeaderTextSplitter
-from litellm import completion
+import litellm
 
 from ..env import (
     copyleaks_api_key,
@@ -63,7 +63,7 @@ def mix_translate(text, src_lang, target_lang):
 
 def humanize_llm(text: str) -> str:
     try:
-        response = completion(
+        response = litellm.completion(
             model=HUMANIZATION["model"],
             base_url=litellm_url,
             messages=[
@@ -79,7 +79,7 @@ def humanize_llm(text: str) -> str:
 
 def grammar(text):
     try:
-        response = completion(
+        response = litellm.completion(
             model=HUMANIZATION["model"],
             base_url=litellm_url,
             messages=[
