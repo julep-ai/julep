@@ -355,12 +355,20 @@ async def execute_map_reduce_step_parallel(
         try:
             batch_results = await asyncio.gather(*batch_pending)
 
-            if any(batch_result.returned for batch_result in batch_results):
-                return next(
-                    batch_result for batch_result in batch_results if batch_result.returned
-                )
-
-            batch_results = [batch_result.state.output for batch_result in batch_results]
+            # Process batch results in a single pass
+            returned_result = None
+            batch_outputs = []
+            
+            for batch_result in batch_results:
+                if batch_result.returned:
+                    returned_result = batch_result
+                    break
+                batch_outputs.append(batch_result.state.output)
+                
+            if returned_result:
+                return returned_result
+                
+            batch_results = batch_outputs
 
             # Reduce the results of the batch
             results = await workflow.execute_activity(
