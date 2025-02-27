@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 from agents_api.activities.utils import get_evaluator
-from ward import test
 
 
 @test("evaluator: csv reader")
