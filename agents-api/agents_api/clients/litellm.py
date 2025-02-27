@@ -56,6 +56,10 @@ async def acompletion(
             {"role": message["role"], "content": message["content"]} for message in messages
         ]
 
+    for message in messages:
+        if "tool_calls" in message and message["tool_calls"] == []:
+            message.pop("tool_calls")
+
     model_response = await _acompletion(
         model=model,
         messages=messages,
