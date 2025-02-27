@@ -24,6 +24,7 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 from ..autogen.openapi_model import SystemDef
 from ..common.nlp import nlp
 from ..common.utils import yaml
+from .humanization_utils import humanize_paragraph, split_with_langchain
 
 # Security limits
 MAX_STRING_LENGTH = 1_000_000  # 1MB
@@ -215,6 +216,36 @@ def safe_extract_json(string: str):
     return json.loads(extracted_string)
 
 
+def humanize_text(
+    text: str,
+    threshold: float = 90,
+    src_lang: str = "english",
+    target_lang: str = "german",
+    grammar_check: bool = False,
+    use_homoglyphs: bool = True,
+    use_em_dashes: bool = True,
+    max_tries: int = 10,
+) -> str:
+    humanized_text = ""
+
+    paragraphs = split_with_langchain(text)
+
+    for paragraph in paragraphs:
+        humanized_paragraph = humanize_paragraph(
+            paragraph=paragraph,
+            threshold=threshold,
+            src_lang=src_lang,
+            target_lang=target_lang,
+            grammar_check=grammar_check,
+            use_homoglyphs=use_homoglyphs,
+            use_em_dashes=use_em_dashes,
+            max_tries=max_tries,
+        )
+        humanized_text += humanized_paragraph + "\n\n"
+
+    return humanized_text
+
+
 # Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
     # Basic Python builtins
@@ -250,6 +281,8 @@ ALLOWED_FUNCTIONS = {
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
     "nlp": nlp.__call__,
     "chunk_doc": chunk_doc,
+    # FIXME: This is a temporary function to be removed after implementing the humanization logic as an integration tool
+    "humanize_text_alpha": humanize_text,
 }
 
 

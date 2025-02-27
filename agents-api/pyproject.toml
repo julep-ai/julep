@@ -52,6 +52,8 @@ dependencies = [
   "asyncpg>=0.30.0",
   "unique-namer>=1.6.1",
   "langcodes>=3.5.0",
+  "langchain-text-splitters>=0.3.2",
+  "deep-translator>=1.11.4",
 ]
 
 [dependency-groups]
