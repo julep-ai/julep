@@ -348,7 +348,6 @@ def humanize_paragraph(
     src_lang: str,
     target_lang: str,
     grammar_check: bool,
-    is_chatgpt: bool,
     use_homoglyphs: bool,
     use_em_dashes: bool,
     max_tries: int,
