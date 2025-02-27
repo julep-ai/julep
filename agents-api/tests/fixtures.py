@@ -48,6 +48,9 @@ from .utils import (
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
+from .utils import (
+    patch_embed_acompletion_multiple_outputs as patch_embed_acompletion_multiple_outputs_ctx,
+)
 
 
 @fixture(scope="global")
@@ -83,6 +86,15 @@ def patch_embed_acompletion():
     output = {"role": "assistant", "content": "Hello, world!"}
     with patch_embed_acompletion_ctx(output) as (embed, acompletion):
         yield embed, acompletion
+
+
+def make_acompletion_multiple_outputs(outputs: list[dict]):
+    @fixture(scope="test")
+    def patch_embed_acompletion_with_tool_calls():
+        with patch_embed_acompletion_multiple_outputs_ctx(outputs) as (embed, acompletion):
+            yield embed, acompletion
+
+    return patch_embed_acompletion_with_tool_calls
 
 
 @fixture(scope="test")

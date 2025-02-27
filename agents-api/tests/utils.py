@@ -185,6 +185,34 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
 
 
 @contextmanager
+def patch_embed_acompletion_multiple_outputs(outputs: list[dict]):
+    responses = []
+    for i, output in enumerate(outputs):
+        mock_model_response = ModelResponse(
+            id=f"fake_id_{i}",
+            choices=[
+                {
+                    "message": output,
+                    "tool_calls": [],
+                    "created_at": i,
+                }
+            ],
+            created=0,
+            object=f"text_completion_{i}",
+        )
+        responses.append(mock_model_response)
+
+    with (
+        patch("agents_api.clients.litellm.aembedding") as embed,
+        patch("agents_api.clients.litellm.acompletion") as acompletion,
+    ):
+        embed.side_effect = [[1.0] * EMBEDDING_SIZE] * len(outputs)
+        acompletion.side_effect = responses
+
+        yield embed, acompletion
+
+
+@contextmanager
 def patch_integration_service(output: dict = {"result": "ok"}):
     with patch(
         "agents_api.clients.integrations.run_integration_service",
