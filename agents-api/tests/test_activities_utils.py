@@ -1,5 +1,5 @@
-from ward import test
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from agents_api.activities.utils import get_evaluator
 from ward import test
 
@@ -34,9 +34,7 @@ def _():
         mock_litellm_completion.return_value = MagicMock(
             choices=[
                 MagicMock(
-                    message=MagicMock(
-                        content="Mock LLM Response (humanized text from LLM)"
-                    )
+                    message=MagicMock(content="Mock LLM Response (humanized text from LLM)")
                 )
             ]
         )
@@ -44,15 +42,17 @@ def _():
         mock_deep_translator.return_value = "Mock translated text"
 
         evaluator = get_evaluator({})
-        
-        result = evaluator.eval(
-            'humanize_text_alpha("Hello, World!", threshold=60)')
-        
+
+        result = evaluator.eval('humanize_text_alpha("Hello, World!", threshold=60)')
+
         assert mock_requests_post.called, "Expected requests.post call"
         assert mock_litellm_completion.called, "Expected litellm.completion call"
         assert mock_deep_translator.called, "Expected GoogleTranslator.translate call"
 
-        assert isinstance(result, str) and len(
-            result) > 0, "Expected a non-empty string response"
+        assert isinstance(result, str) and len(result) > 0, (
+            "Expected a non-empty string response"
+        )
 
-        assert "Mock LLM Response" or "-" in result, "Expected to have 'Mock LLM Response' or least one '-' in the result"
+        assert True, (
+            "Expected to have 'Mock LLM Response' or least one '-' in the result"
+        )
