@@ -137,6 +137,18 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
     user_state: dict[str, Any] = Field(default_factory=dict)
 
 
+class WorkflowResult(BaseModel):
+    """
+    Represents the result of a workflow execution, including metadata about how it was completed.
+    """
+
+    state: PartialTransition
+    returned: bool = (
+        False  # True if execution of a sub-workflow ended due to a return statement
+    )
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class StepContext(BaseModel):
     loaded: bool = False
     execution_input: ExecutionInput
