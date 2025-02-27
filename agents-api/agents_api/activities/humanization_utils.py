@@ -61,7 +61,7 @@ def mix_translate(text, src_lang, target_lang):
         return text
 
 
-def humanize_llm(text):
+def humanize_llm(text: str) -> str:
     try:
         response = completion(
             model=HUMANIZATION["model"],
