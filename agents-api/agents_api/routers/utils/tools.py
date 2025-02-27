@@ -11,6 +11,7 @@ from litellm.utils import CustomStreamWrapper, ModelResponse
 from ...app import app
 from ...autogen.openapi_model import (
     ChatInput,
+    CreateAgentRequest,
     CreateDocRequest,
     CreateSessionRequest,
     HybridDocSearchRequest,
@@ -18,6 +19,9 @@ from ...autogen.openapi_model import (
     UpdateSessionRequest,
     UpdateUserRequest,
     VectorDocSearchRequest,
+    CreateUserRequest,
+    CreateTaskRequest,
+    UpdateTaskRequest,
 )
 from ...queries.agents.create_agent import create_agent as create_agent_query
 from ...queries.agents.delete_agent import delete_agent as delete_agent_query
@@ -209,15 +213,43 @@ async def call_tool(developer_id: UUID, tool_name: str, arguments: dict):
 
     # Handle update user
     if operation == "update" and resource == "user":
-        developer_id = arguments.pop("developer_id")
-        user_id = arguments.pop("user_id")
-        update_user_request = UpdateUserRequest(**arguments)
-
         return await tool_handler(
-            developer_id=developer_id,
-            user_id=user_id,
-            data=update_user_request,
+            data=UpdateUserRequest(**arguments.pop("data")),
+            **arguments,
         )
+
+    # Handle agent operations
+    if resource == "agent" and operation in ("create", "update"):
+        return await tool_handler(
+            data=CreateAgentRequest(**arguments.pop("data")),
+            **arguments,
+        )
+
+    # Handle user operations
+    if resource == "user":
+        if operation == "create":
+            return await tool_handler(
+                data=CreateUserRequest(**arguments.pop("data")),
+                **arguments,
+            )
+        if operation == "update":
+            return await tool_handler(
+                data=UpdateUserRequest(**arguments.pop("data")),
+                **arguments,
+            )
+
+    # Handle task operations
+    if resource == "task":
+        if operation == "create":
+            return await tool_handler(
+                data=CreateTaskRequest(**arguments.pop("data")),
+                **arguments,
+            )
+        if operation == "update":
+            return await tool_handler(
+                data=UpdateTaskRequest(**arguments.pop("data")),
+                **arguments,
+            )
 
     return await tool_handler(**arguments)
 
@@ -234,6 +266,7 @@ def tool_calls_evaluator(
         async def wrapper(**kwargs):
             response: ModelResponse | CustomStreamWrapper | None = None
             done = False
+            messages = kwargs.get("messages", [])
             while not done:
                 response: ModelResponse | CustomStreamWrapper = await func(**kwargs)
                 if not response.choices or not response.choices[0].message.tool_calls:
@@ -252,7 +285,6 @@ def tool_calls_evaluator(
                     tool_response = await call_tool(developer_id, tool_name, tool_args)
 
                     # append result to messages from previous step
-                    messages: list = kwargs.get("messages", [])
                     messages.append({
                         "tool_call_id": tool.id,
                         "role": "tool",
