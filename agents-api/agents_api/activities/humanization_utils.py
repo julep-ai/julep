@@ -147,11 +147,11 @@ def is_human_desklib(text: str) -> float:
 
         ai_score = response.json().get("probability")
 
-        human_score = 1 - ai_score
-
-        if human_score is None:
+        if ai_score is None:
             msg = "'probability' key not found in response: "
             raise Exception(msg, response.json())
+
+        human_score = 1 - ai_score
 
         # desklib returns a score between 0 and 1, we want to return a percentage
         return human_score * 100
