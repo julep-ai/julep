@@ -283,7 +283,8 @@ ALLOWED_FUNCTIONS = {
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
     "nlp": nlp.__call__,
     "chunk_doc": chunk_doc,
-    "humanize_text": humanize_text,
+    # FIXME: This is a temporary function to be removed after implementing the humanization logic as an integration tool
+    "humanize_text_alpha": humanize_text,
 }
 
 
