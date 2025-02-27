@@ -61,30 +61,7 @@ def mix_translate(text, src_lang, target_lang):
         return text
 
 
-def humanize_openai(text):
-    try:
-        response = completion(
-            model=HUMANIZATION["model"],
-            base_url=litellm_url,
-            messages=[
-                {"role": "system", "content": HUMANIZATION["humanize_prompt"]},
-                {"role": "user", "content": text},
-            ],
-            # temperature=1.0,
-            # extra_body={"min_p": 0.025},
-            # temperature=2,
-            # max_tokens=100,
-            # top_p=1.0,
-            # frequency_penalty=0.0,
-            # presence_penalty=0.0,
-            stream=False,
-        )
-        return response.choices[0].message.content
-    except Exception:
-        return text
-
-
-def rewriter(text):
+def humanize_llm(text):
     try:
         response = completion(
             model=HUMANIZATION["model"],
@@ -94,25 +71,6 @@ def rewriter(text):
                 {"role": "user", "content": text},
             ],
             temperature=1.0,
-            # extra_body={"min_p": 0.025},
-        )
-        rewritten = response.choices[0].message.content
-        return humanize(rewritten)
-    except Exception:
-        return text
-
-
-def humanize(text):
-    try:
-        response = completion(
-            model=HUMANIZATION["model"],
-            base_url=litellm_url,
-            messages=[
-                {"role": "system", "content": HUMANIZATION["humanize_prompt"]},
-                {"role": "user", "content": text},
-            ],
-            temperature=1.0,
-            # extra_body={"min_p": 0.025},
         )
         return response.choices[0].message.content
     except Exception:
@@ -406,7 +364,7 @@ def humanize_paragraph(
         if grammar_check:
             paragraph = grammar(paragraph)
 
-        paragraph = humanize_openai(paragraph) if is_chatgpt else humanize(paragraph)
+        paragraph = humanize_llm(paragraph)
 
     # Apply homoglyphs and em dashes to a new paragraph in order not to mess up the original paragraph for the next iterations
     new_paragraph = paragraph
