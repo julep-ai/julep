@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from agents_api.activities.utils import get_evaluator
+from ward import test
 
 
 @test("evaluator: csv reader")
@@ -52,6 +53,6 @@ def _():
             "Expected a non-empty string response"
         )
 
-        assert True, (
+        assert ("Mock LLM Response" in result) or ("-" in result), (
             "Expected to have 'Mock LLM Response' or least one '-' in the result"
         )
