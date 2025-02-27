@@ -3736,10 +3736,19 @@
             },
             {
               "$ref": "#/$defs/HybridDocSearch"
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
+          ],
+          "title": "Recall Options"
           ],
           "title": "Recall Options"
         },
@@ -3917,10 +3926,19 @@
             },
             {
               "$ref": "#/$defs/HybridDocSearch"
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
+          ],
+          "title": "Recall Options"
           ],
           "title": "Recall Options"
         },
@@ -5884,6 +5902,7 @@
       "type": "object"
     },
     "HybridDocSearch": {
+    "HybridDocSearch": {
       "properties": {
         "alpha": {
           "default": 0.75,
@@ -5956,7 +5975,63 @@
           "type": "number"
         },
         "confidence": {
+          "default": 0.5,
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mmr Strength",
+          "type": "number"
+        },
+        "mode": {
+          "default": "hybrid",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "HybridDocSearch",
+      "type": "object"
+    },
+    "HybridDocSearchRequest": {
+      "properties": {
+        "alpha": {
+          "default": 0.75,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Alpha",
+          "type": "number"
+        },
+        "confidence": {
           "default": 0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mmr_strength": {
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
@@ -7672,10 +7747,19 @@
             },
             {
               "$ref": "#/$defs/HybridDocSearchUpdate"
+              "$ref": "#/$defs/VectorDocSearchUpdate"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearchUpdate"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearchUpdate"
             },
             {
               "type": "null"
             }
+          ],
+          "title": "Recall Options"
           ],
           "title": "Recall Options"
         },
@@ -8847,10 +8931,19 @@
             },
             {
               "$ref": "#/$defs/HybridDocSearch"
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
+          ],
+          "title": "Recall Options"
           ],
           "title": "Recall Options"
         },
@@ -10278,6 +10371,7 @@
       "type": "object"
     },
     "TextOnlyDocSearch": {
+    "TextOnlyDocSearch": {
       "properties": {
         "lang": {
           "default": "en-US",
@@ -10303,6 +10397,40 @@
           "title": "Metadata Filter",
           "type": "object"
         },
+        "mode": {
+          "default": "text",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "TextOnlyDocSearch",
+      "type": "object"
+    },
+    "TextOnlyDocSearchRequest": {
+      "properties": {
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
         "mode": {
           "default": "text",
           "title": "Mode",
@@ -11001,6 +11129,11 @@
           "title": "Scope Id",
           "type": "string"
         },
+        "scope_id": {
+          "format": "uuid",
+          "title": "Scope Id",
+          "type": "string"
+        },
         "step": {
           "title": "Step",
           "type": "integer"
@@ -11014,6 +11147,8 @@
       },
       "required": [
         "workflow",
+        "step",
+        "scope_id"
         "step",
         "scope_id"
       ],
@@ -11151,10 +11286,19 @@
             },
             {
               "$ref": "#/$defs/HybridDocSearch"
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
+          ],
+          "title": "Recall Options"
           ],
           "title": "Recall Options"
         },
@@ -11482,6 +11626,7 @@
       "type": "object"
     },
     "VectorDocSearch": {
+    "VectorDocSearch": {
       "properties": {
         "confidence": {
           "default": 0,
@@ -11540,7 +11685,56 @@
     "VectorDocSearchRequest": {
       "properties": {
         "confidence": {
+          "default": 0.5,
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mmr Strength",
+          "type": "number"
+        },
+        "mode": {
+          "default": "vector",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "VectorDocSearch",
+      "type": "object"
+    },
+    "VectorDocSearchRequest": {
+      "properties": {
+        "confidence": {
           "default": 0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mmr_strength": {
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",

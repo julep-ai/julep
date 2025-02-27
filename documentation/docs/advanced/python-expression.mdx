@@ -257,6 +257,39 @@ main:
             query: $ 'Latest news about ' + _ # _ is each topic
 ```
 
+### Custom Implementations
+
+#### Humanization (Alpha)
+
+The `humanize_text_alpha` function transforms text using multiple techniques such as:
+- Back-translation.
+- Rewriting using non-public LLMs.
+- Stylistic modifications such as homoglyphs and em dashes.
+
+Breakdown of the function:
+
+Function signature:
+
+`humanize_text_alpha(text: str, threshold: float = 90, src_lang: str = "english", target_lang: str = "german", use_homoglyphs: bool = True, use_em_dashes: bool = True, grammar_check: bool = False, max_tries: int = 10) -> str`
+
+Parameters:
+
+- `text`: The text to be humanized.
+- `threshold`: The threshold for the humanization (0-100).
+- `src_lang`: The source language of the original text.
+- `target_lang`: The target language used in the back-translation technique.
+- `use_homoglyphs`: Whether to use homoglyphs, a technique that replaces certain characters with similar looking characters to trick AI detection classifiers.
+- `use_em_dashes`: Whether to use em dashes, i.e. adding dashes between longer words to break the tokens.
+- `grammar_check`: Whether to run another prompt after back-translation to check for correct grammar.
+- `max_tries`: The maximum number of tries to humanize the text.
+
+Example usage:
+
+```yaml
+- evaluate:
+    humanized_text: $ humanize_text_alpha(_.text, threshold=30, target_lang="german")
+```
+
 ## Security
 
 All Python expressions are executed in a sandboxed environment with:
