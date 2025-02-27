@@ -33,6 +33,14 @@ async def _():
         await base_evaluate("$ b", values={"a": 1})
 
 
+@test("utility: base_evaluate - scalar values")
+async def _():
+    exprs = [1, 2, True, 1.2459, "$ x + 5"]
+    values = {"x": 5}
+    result = await base_evaluate(exprs, values=values)
+    assert result == [1, 2, True, 1.2459, 10]
+
+
 @test("utility: base_evaluate - str")
 async def _():
     exprs = "$ x + 5"

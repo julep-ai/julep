@@ -1093,23 +1093,7 @@ class ToolCallStep(BaseModel):
     """
     The tool to run
     """
-    arguments: (
-        dict[
-            str,
-            dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-            | list[dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]]
-            | str,
-        ]
-        | list[
-            dict[
-                str,
-                dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-                | list[dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]]
-                | str,
-            ]
-        ]
-        | Literal["_"]
-    ) = "_"
+    arguments: dict[str, Any] | Literal["_"] = "_"
     """
     The input parameters for the tool (defaults to last step output)
     """

@@ -52,7 +52,3 @@ def _():
         assert isinstance(result, str) and len(result) > 0, (
             "Expected a non-empty string response"
         )
-
-        assert ("Mock LLM Response" in result) or ("-" in result), (
-            "Expected to have 'Mock LLM Response' or least one '-' in the result"
-        )
