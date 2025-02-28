@@ -99,7 +99,6 @@ async def search_agent_docs(
     docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("agent", agent_id)],
-        # connection_pool=connection_pool,
         **params,
     )
 

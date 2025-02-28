@@ -48,12 +48,12 @@ def get_search_fn_and_params(
 ) -> tuple[Any, dict[str, float | int | str | dict[str, float] | list[float]] | None]:
     search_fn, params = None, None
 
-    search_language = get_language(search_params.lang)
-
     match search_params:
         case TextOnlyDocSearchRequest(
-            text=query, limit=k, lang=_, metadata_filter=metadata_filter
+            text=query, limit=k, lang=lang, metadata_filter=metadata_filter
         ):
+            search_language = get_language(lang)
+
             search_fn = search_docs_by_text
             params = {
                 "query": query,
@@ -85,6 +85,8 @@ def get_search_fn_and_params(
             alpha=alpha,
             metadata_filter=metadata_filter,
         ):
+            search_language = get_language(lang)
+
             search_fn = search_docs_hybrid
             params = {
                 "text_query": query,
@@ -93,7 +95,7 @@ def get_search_fn_and_params(
                 "confidence": confidence,
                 "alpha": alpha,
                 "metadata_filter": metadata_filter,
-                "search_language": get_language(lang),
+                "search_language": search_language,
             }
 
     # Note: connection_pool will be passed separately by the caller
