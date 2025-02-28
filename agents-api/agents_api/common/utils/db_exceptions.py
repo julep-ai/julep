@@ -52,6 +52,13 @@ def common_db_exceptions(
         return f"{base_msg} during {op_str}"
 
     exceptions = {
+        # Unique constraint violations - usually means a resource with same unique key exists
+        lambda e: isinstance(e, asyncpg.RaiseError)
+        and "content already exists" in str(e).lower(): partialclass(
+            HTTPException,
+            status_code=409,
+            detail=get_operation_message(f"A {resource_name} with this content already exists"),
+        ),
         # Foreign key violations - usually means a referenced resource doesn't exist
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
