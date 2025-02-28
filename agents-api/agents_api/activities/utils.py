@@ -10,6 +10,8 @@ import statistics
 import string
 import time
 import urllib.parse
+import markdown2
+import markdownify
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -246,6 +248,15 @@ def humanize_text(
     return humanized_text
 
 
+def markdown_to_html(markdown_text: str) -> str:
+    markdowner = markdown2.Markdown()
+    html_text = markdowner.convert(markdown_text)
+    return html_text
+
+
+def html_to_markdown(html_text: str) -> str:
+    return markdownify.markdownify(html_text)
+
 # Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
     # Basic Python builtins
@@ -283,6 +294,8 @@ ALLOWED_FUNCTIONS = {
     "chunk_doc": chunk_doc,
     # FIXME: This is a temporary function to be removed after implementing the humanization logic as an integration tool
     "humanize_text_alpha": humanize_text,
+    "markdown_to_html": markdown_to_html,
+    "html_to_markdown": html_to_markdown,
 }
 
 
@@ -376,7 +389,6 @@ def csv_dictwriter(
         *args,
         **kwds,
     )
-
 
 class stdlib_csv:
     reader = staticmethod(csv_reader)
