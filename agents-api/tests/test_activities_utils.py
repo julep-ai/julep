@@ -1,9 +1,10 @@
 from unittest.mock import MagicMock, patch
 
+import markdown2
+import markdownify
 from agents_api.activities.utils import get_evaluator
 from ward import test
-import markdownify
-import markdown2
+
 
 @test("evaluator: csv reader")
 def _():
