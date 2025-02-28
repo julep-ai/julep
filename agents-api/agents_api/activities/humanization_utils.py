@@ -85,7 +85,7 @@ def humanize_llm(text: str) -> str:
         return response.choices[0].message.content
     except Exception as e:
         msg = "Error humanizing text with an llm: "
-        raise Exception(msg, e)
+        raise Exception(msg) from e
 
 
 def grammar(text):
