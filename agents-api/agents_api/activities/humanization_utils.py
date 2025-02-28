@@ -9,13 +9,14 @@ from langchain_text_splitters import MarkdownHeaderTextSplitter
 
 from ..env import (
     copyleaks_api_key,
+    litellm_master_key,
     litellm_url,
     sapling_api_key,
 )
 
 # Initialize humanization as a dictionary to hold various properties
 HUMANIZATION = {
-    "model": "openrouter/cohere/command-r-08-2024",
+    "model": "openai/cerebras/llama-3.3-70b",
     "humanize_prompt": """\
     Rewrite the following text to make it more natural and human-like while preserving the core message. Follow these guidelines:
 
@@ -71,10 +72,12 @@ def humanize_llm(text: str) -> str:
                 {"role": "user", "content": text},
             ],
             temperature=1.0,
+            api_key=litellm_master_key,
         )
         return response.choices[0].message.content
-    except Exception:
-        return text
+    except Exception as e:
+        msg = "Error humanizing text with an llm: "
+        raise Exception(msg, e)
 
 
 def grammar(text):
@@ -87,6 +90,7 @@ def grammar(text):
                 {"role": "user", "content": text},
             ],
             temperature=1.0,
+            api_key=litellm_master_key,
             # extra_body={"min_p": 0.025},
         )
         return response.choices[0].message.content
