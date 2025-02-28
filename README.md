@@ -49,13 +49,12 @@ Whether you're building data pipelines or creating AI workflows, Julep makes it 
 - [✨ Key Features](#-key-features)
 - [🧠 Mental Model](#-mental-model)
 - [📦 Installation](#-installation)
-  - [🛠️ Julep SDKs](#-julep-sdks)
-  - [🛠️ Julep CLI](#-julep-cli)
+  - [🛠️ Julep CLI](#️-julep-cli)
 - [🚀 Quick Start](#-quick-start)
   - [What's Next?](#whats-next)
 - [🔍 Reference](#-reference)
   - [📚 SDK Reference](#-sdk-reference)
-  - [🛠️ API Reference](#-api-reference)
+  - [🛠️ API Reference](#️-api-reference)
 - [💻 Local Setup](#-local-setup)
   - [1. Clone the Repository](#1-clone-the-repository)
   - [2. Navigate to the Root Directory](#2-navigate-to-the-root-directory)
@@ -65,7 +64,6 @@ Whether you're building data pipelines or creating AI workflows, Julep makes it 
   - [6. Interaction](#6-interaction)
   - [7. Troubleshooting](#7-troubleshooting)
 - [👥 Contributors](#-contributors)
-  - [Join Our Community! 🌟](#join-our-community-)
 - [📄 License](#-license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -545,14 +543,14 @@ cd <repository_root>
 
 ### 4. Create a Docker Volume for Backup
 
-Create a Docker volume named `grafana_data`, `memory_store_data`, `temporal-db-data`, `prometheus_data`, `seadweedfs_data`:
+Create a Docker volume named `grafana_data`, `memory_store_data`, `temporal-db-data`, `prometheus_data`, `seaweedfs_data`:
 
 ```bash
 docker volume create grafana_data
 docker volume create memory_store_data
 docker volume create temporal-db-data
 docker volume create prometheus_data
-docker volume create seadweedfs_data
+docker volume create seaweedfs_data
 ```
 
 ### 5. Run the Project using Docker Compose
