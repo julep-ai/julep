@@ -12,7 +12,7 @@ RETURNS TEXT AS $$
 BEGIN
     -- Use MD5 hash of combined title and content
     -- This provides a good balance between performance and collision avoidance
-    RETURN MD5(title || '|' || content);
+    RETURN MD5(COALESCE(title, '') || '|' || COALESCE(content, ''));
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
