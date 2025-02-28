@@ -272,10 +272,43 @@ model IfElseWorkflowStepDef {
     `if`: TypedExpression<boolean>;
 
     /** The steps to run if the condition is true */
-    then: NonConditionalWorkflowStep;
+    then: WaitForInputStep
+    | EvaluateStep
+    | ToolCallStep
+    | PromptStep
+    | GetStep
+    | SetStep
+    | LogStep
+    | YieldStep
+    | ReturnStep
+    | SleepStep
+    | ErrorWorkflowStep
+    | WaitForInputStep
+    | IfElseWorkflowStep
+    | SwitchStep
+    | ForeachStep
+    | ParallelStep
+    | MapReduceStep;
 
     /** The steps to run if the condition is false */
-    `else`: NonConditionalWorkflowStep | null = null;
+    `else`: WaitForInputStep
+    | EvaluateStep
+    | ToolCallStep
+    | PromptStep
+    | GetStep
+    | SetStep
+    | LogStep
+    | YieldStep
+    | ReturnStep
+    | SleepStep
+    | ErrorWorkflowStep
+    | WaitForInputStep
+    | IfElseWorkflowStep
+    | SwitchStep
+    | ForeachStep
+    | ParallelStep
+    | MapReduceStep
+    | null = null;
 }
 
 model CaseThen {
