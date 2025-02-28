@@ -33,6 +33,13 @@ HUMANIZATION = {
 5. Keep paragraphing and flow natural
 6. Avoid overly perfect grammar or clinical language
 
+Notes:
+- The text you are rewriting is a text that has been translated from to another language, and back to English.
+- The rewritten text should be in markdown format (don't add headings unless they are already present).
+- If you see spaces before or after double stars, you should remove them.
+- If you see headings without capitalized text, you should capitalize them.
+
+
 Return only the rewritten text without explanations or meta-commentary.""",
     "grammar_prompt": "Only fix grammar that is wrong without changing the words and places of the sentence",
 }
