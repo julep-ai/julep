@@ -33,6 +33,7 @@ jobs:
 
       - name: Generate openapi code
         run: |
+          cd typespec; npm ci; cd -
           bash scripts/generate_openapi_code.sh
 
 concurrency:
