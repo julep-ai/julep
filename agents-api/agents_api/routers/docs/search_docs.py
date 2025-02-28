@@ -45,7 +45,6 @@ async def search_user_docs(
     docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("user", user_id)],
-        # connection_pool=connection_pool,
         **params,
     )
 
