@@ -5,6 +5,7 @@ import time
 import litellm
 import requests
 from deep_translator import GoogleTranslator
+from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 
 from ..env import (
@@ -325,18 +326,7 @@ def process_long_words(text: str) -> str:
     return " ".join(processed_words)
 
 
-def split_text_into_paragraphs(text: str) -> list[str]:
-    """
-    Splits the provided text into paragraphs by empty lines.
-
-    :param text: The original text.
-    :return: A list of paragraphs.
-    """
-    # Splitting by two consecutive newlines '\n\n' to identify paragraphs
-    return text.strip().split("\n\n")
-
-
-def split_with_langchain(markdown_text: str) -> list[str]:
+def split_with_langchain(markdown_text: str) -> list[Document]:
     headers_to_split_on = [
         ("#", "Header 1"),
         ("##", "Header 2"),
@@ -346,11 +336,33 @@ def split_with_langchain(markdown_text: str) -> list[str]:
 
     # MD splits
     markdown_splitter = MarkdownHeaderTextSplitter(
-        headers_to_split_on=headers_to_split_on, strip_headers=False
+        headers_to_split_on=headers_to_split_on, strip_headers=True
     )
-    md_header_splits = markdown_splitter.split_text(markdown_text)
+    return markdown_splitter.split_text(markdown_text)
 
-    return [split.page_content for split in md_header_splits]
+
+def reassemble_markdown(splits: list[Document]) -> str:
+    assembled_text = []
+
+    for doc in splits:
+        # Get the header level from metadata
+        header_level = None
+        header_content = None
+        for key, value in doc.metadata.items():
+            if key.startswith("Header "):
+                header_level = int(key.split(" ")[1])
+                header_content = value
+                break
+
+        # Add header with appropriate number of # symbols
+        if header_level and header_content:
+            header_line = f"{'#' * header_level} {header_content}\n\n"
+            assembled_text.append(header_line)
+
+        # Add the content
+        assembled_text.append(f"{doc.page_content}\n---\n")
+
+    return "".join(assembled_text).strip()
 
 
 def humanize_paragraph(

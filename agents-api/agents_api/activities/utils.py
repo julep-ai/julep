@@ -24,7 +24,7 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 from ..autogen.openapi_model import SystemDef
 from ..common.nlp import nlp
 from ..common.utils import yaml
-from .humanization_utils import humanize_paragraph, split_with_langchain
+from .humanization_utils import humanize_paragraph, reassemble_markdown, split_with_langchain
 
 # Security limits
 MAX_STRING_LENGTH = 1_000_000  # 1MB
@@ -226,13 +226,12 @@ def humanize_text(
     use_em_dashes: bool = True,
     max_tries: int = 10,
 ) -> str:
-    humanized_text = ""
-
     paragraphs = split_with_langchain(text)
 
     for paragraph in paragraphs:
-        humanized_paragraph = humanize_paragraph(
-            paragraph=paragraph,
+        paragraph_content = paragraph.page_content
+        paragraph.page_content = humanize_paragraph(
+            paragraph=paragraph_content,
             threshold=threshold,
             src_lang=src_lang,
             target_lang=target_lang,
@@ -241,9 +240,7 @@ def humanize_text(
             use_em_dashes=use_em_dashes,
             max_tries=max_tries,
         )
-        humanized_text += humanized_paragraph + "\n\n"
-
-    return humanized_text
+    return reassemble_markdown(paragraphs)
 
 
 # Restricted set of allowed functions
