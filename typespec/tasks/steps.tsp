@@ -283,7 +283,6 @@ model IfElseWorkflowStepDef {
     | ReturnStep
     | SleepStep
     | ErrorWorkflowStep
-    | WaitForInputStep
     | IfElseWorkflowStep
     | SwitchStep
     | ForeachStep
