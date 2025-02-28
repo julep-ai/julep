@@ -301,7 +301,6 @@ Process collections in parallel:
   - By default the `parallelism` if not mentioned is 100. If mentioned, it is the maximum number of steps that can run in parallel concurrently.
   - When using `over` step, the `map` step is executed for each value in the collection.
   - The `reduce` step is executed after the `map` step.
-  - When using `map-reduce` step for subworkflows, the `parallelism` has to be mentioned as `1` or it will throw an error.
 </Note>
 
 ## Conditional Steps
@@ -322,6 +321,17 @@ Conditional execution:
     log: High score
   else:
     log: Low score
+
+# If-else with multiple conditions
+- if: $ 1 > 0
+  then:
+    if: $ 2 > 1
+    then:
+      evaluate:
+        x: y
+  else:
+    evaluate:
+      x: z
 ```
 
 ### Switch Step

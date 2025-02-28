@@ -51,7 +51,7 @@ When configuring a session, you can specify recall options to control how contex
     | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
     | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0`     |
-    | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0`     |
+    | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
   </Tab>
 
   <Tab title="Text Search">
@@ -73,7 +73,7 @@ When configuring a session, you can specify recall options to control how contex
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
     | `alpha`           | `float`   | Weight between BM25 and Vector search (0=pure BM25, 1=pure vector)                        | `0.75`  |
     | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0`     |
-    | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0`     |
+    | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
     | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
   </Tab>
 </Tabs>
