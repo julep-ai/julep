@@ -28,9 +28,10 @@ Julep provides a robust chat system with various features for dynamic interactio
   </Step>
 </Steps>
 
-<Tip>
-  These features provide developers with a powerful and flexible system for creating sophisticated, context-aware chat interactions that integrate seamlessly with other Julep components.
-</Tip>
+<Info>  
+  - To use the Document(RAG) with the chat API, you need to create a session with the `recall_options` parameter set to appropriate search parameters. To learn more about the `recall_options` parameter, check out the [Session](/concepts/sessions#recall-options) page.
+  - To use the chat API, you need to create a session first. To learn more about the session object, check out the [Session](/concepts/sessions) page.
+</Info>
 
 ## Input Structure
 
@@ -123,7 +124,7 @@ Here's an example of how to use the chat API in Julep using the SDKs:
         user=user.id,
         recall=True,
         recall_options={
-            "mode": "vector", # or "hybrid", "text"
+            "mode": "hybrid", # or "vector", "text"
             "num_search_messages": 4, # number of messages to search for documents
             "max_query_length": 1000, # maximum query length
             "alpha": 0.7, # weight to apply to BM25 vs Vector search results (ranges from 0 to 1)
@@ -156,7 +157,7 @@ Here's an example of how to use the chat API in Julep using the SDKs:
         user: user.id,
         recall: true,
         recall_options: {
-            mode: "vector", // or "hybrid", "text"
+            mode: "hybrid", // or "vector", "text"
             num_search_messages: 4, // number of messages to search for documents
             max_query_length: 1000, // maximum query length
             alpha: 0.7, // weight to apply to BM25 vs Vector search results (ranges from 0 to 1)

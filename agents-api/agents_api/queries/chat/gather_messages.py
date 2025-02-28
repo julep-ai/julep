@@ -6,15 +6,21 @@ from beartype import beartype
 from fastapi import HTTPException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import ChatInput, DocReference, History, Session
+from ...autogen.openapi_model import (
+    ChatInput,
+    DocReference,
+    History,
+    HybridDocSearchRequest,
+    Session,
+    TextOnlyDocSearchRequest,
+    VectorDocSearchRequest,
+)
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
+from ...common.utils.get_doc_search import get_search_fn_and_params
 from ..docs.mmr import maximal_marginal_relevance
-from ..docs.search_docs_by_embedding import search_docs_by_embedding
-from ..docs.search_docs_by_text import search_docs_by_text
-from ..docs.search_docs_hybrid import search_docs_hybrid
 from ..entries.get_history import get_history
 from ..sessions.get_session import get_session
 from ..utils import rewrap_exceptions
@@ -113,31 +119,46 @@ async def gather_messages(
         user_ids = [user.id for user in chat_context.users]
         owners = [("user", user_id) for user_id in user_ids] + [("agent", active_agent_id)]
 
-        # Search for doc references
-        doc_references: list[DocReference] = []
-        match recall_options.mode:
-            case "vector":
-                doc_references = await search_docs_by_embedding(
-                    developer_id=developer.id,
-                    owners=owners,
-                    embedding=query_embedding,
-                    connection_pool=connection_pool,
-                )
-            case "hybrid":
-                doc_references = await search_docs_hybrid(
-                    developer_id=developer.id,
-                    owners=owners,
-                    text_query=query_text,
-                    embedding=query_embedding,
-                    connection_pool=connection_pool,
-                )
-            case "text":
-                doc_references = await search_docs_by_text(
-                    developer_id=developer.id,
-                    owners=owners,
-                    query=query_text,
-                    connection_pool=connection_pool,
-                )
+        # map the search params to the correct objects
+        search_params = None
+        if recall_options.mode == "vector":
+            search_params = VectorDocSearchRequest(
+                vector=query_embedding,
+                limit=recall_options.limit,
+                lang=recall_options.lang,
+                confidence=recall_options.confidence,
+                metadata_filter=recall_options.metadata_filter,
+                mmr_strength=recall_options.mmr_strength,
+            )
+        if recall_options.mode == "hybrid":
+            search_params = HybridDocSearchRequest(
+                text=query_text,
+                vector=query_embedding,
+                limit=recall_options.limit,
+                lang=recall_options.lang,
+                confidence=recall_options.confidence,
+                alpha=recall_options.alpha,
+                metadata_filter=recall_options.metadata_filter,
+                mmr_strength=recall_options.mmr_strength,
+            )
+        if recall_options.mode == "text":
+            search_params = TextOnlyDocSearchRequest(
+                text=query_text,
+                limit=recall_options.limit,
+                metadata_filter=recall_options.metadata_filter,
+                lang=recall_options.lang,
+            )
+
+        # Get the search function and params here
+        search_fn, params = get_search_fn_and_params(search_params)
+
+        # Get the docs here
+        doc_references: list[DocReference] = await search_fn(
+            developer_id=developer.id,
+            owners=owners,
+            connection_pool=connection_pool,
+            **params,
+        )
 
         # Apply MMR if enabled
         if (
@@ -157,6 +178,7 @@ async def gather_messages(
                 np.asarray(query_embedding),
                 [doc.snippet.embedding for doc in doc_references],
                 k=recall_options.limit,
+                lambda_mult=1 - recall_options.mmr_strength,
             )
             doc_references = [doc for i, doc in enumerate(doc_references) if i in set(indices)]
 
