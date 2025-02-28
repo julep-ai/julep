@@ -35,7 +35,7 @@ HUMANIZATION = {
 6. Avoid overly perfect grammar or clinical language
 
 Notes:
-- The text you are rewriting is a text that has been translated from to another language, and back to English.
+- The text you are rewriting has been translated from one language to another, and back to English.
 - The rewritten text should be in markdown format (don't add headings unless they are already present).
 - If you see spaces before or after double stars, you should remove them.
 - If you see headings without capitalized text, you should capitalize them.
