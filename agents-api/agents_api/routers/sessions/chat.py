@@ -99,7 +99,7 @@ async def chat(
         {
             "title": ref.title,
             "content": [ref.snippet.content],
-            "metadata": ref.metadata,
+            "metadata": ref.metadata or None,
         }
         for ref in doc_references
     ]
