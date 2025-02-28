@@ -3,8 +3,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 import numpy as np
-from fastapi import Depends, HTTPException
-from langcodes import Language
+from fastapi import Depends
 
 from ...autogen.openapi_model import (
     DocReference,
@@ -13,80 +12,10 @@ from ...autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
+from ...common.utils.get_doc_search import get_search_fn_and_params
 from ...dependencies.developer_id import get_developer_id
 from ...queries.docs.mmr import maximal_marginal_relevance
-from ...queries.docs.search_docs_by_embedding import search_docs_by_embedding
-from ...queries.docs.search_docs_by_text import search_docs_by_text
-from ...queries.docs.search_docs_hybrid import search_docs_hybrid
 from .router import router
-
-
-def get_search_fn_and_params(
-    search_params,
-) -> tuple[Any, dict[str, float | int | str | dict[str, float] | list[float]] | None]:
-    search_fn, params = None, None
-
-    match search_params:
-        case TextOnlyDocSearchRequest(
-            text=query, limit=k, lang=lang, metadata_filter=metadata_filter
-        ):
-            try:
-                search_language = Language.get(lang).describe()["language"].lower()
-            except Exception:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid language or ISO 639-1 language code. Currently we only support English.",
-                )
-            search_fn = search_docs_by_text
-            params = {
-                "query": query,
-                "k": k,
-                "metadata_filter": metadata_filter,
-                "search_language": search_language,
-            }
-
-        case VectorDocSearchRequest(
-            vector=embedding,
-            limit=k,
-            confidence=confidence,
-            metadata_filter=metadata_filter,
-        ):
-            search_fn = search_docs_by_embedding
-            params = {
-                "embedding": embedding,
-                "k": k * 3 if search_params.mmr_strength > 0 else k,
-                "confidence": confidence,
-                "metadata_filter": metadata_filter,
-            }
-
-        case HybridDocSearchRequest(
-            text=query,
-            vector=embedding,
-            lang=lang,
-            limit=k,
-            confidence=confidence,
-            alpha=alpha,
-            metadata_filter=metadata_filter,
-        ):
-            try:
-                search_language = Language.get(lang).describe()["language"].lower()
-            except Exception:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid language or ISO 639-1 language code. Currently we only support English.",
-                )
-            search_fn = search_docs_hybrid
-            params = {
-                "text_query": query,
-                "embedding": embedding,
-                "k": k * 3 if search_params.mmr_strength > 0 else k,
-                "confidence": confidence,
-                "alpha": alpha,
-                "metadata_filter": metadata_filter,
-                "search_language": search_language,
-            }
-
-    return search_fn, params
 
 
 @router.post("/users/{user_id}/search", tags=["docs"])
@@ -108,16 +37,19 @@ async def search_user_docs(
         DocSearchResponse: The search results.
     """
 
-    # MMR here
+    # Get the search function and params here
     search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
+    # Get the docs here
     docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("user", user_id)],
+        # connection_pool=connection_pool,
         **params,
     )
 
+    # Apply MMR here
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
         and search_params.mmr_strength > 0
@@ -160,15 +92,19 @@ async def search_agent_docs(
         DocSearchResponse: The search results.
     """
 
+    # Get the search function and params here
     search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
+    # Get the docs here
     docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("agent", agent_id)],
+        # connection_pool=connection_pool,
         **params,
     )
 
+    # Apply MMR here
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
         and search_params.mmr_strength > 0

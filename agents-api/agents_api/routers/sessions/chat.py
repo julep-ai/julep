@@ -86,12 +86,17 @@ async def chat(
     settings: dict = chat_context.settings or {}
 
     # Get the past messages and doc references
+    import time
+
+    start_time = time.time()
     past_messages, doc_references = await gather_messages(
         developer=developer,
         session_id=session_id,
         chat_context=chat_context,
         chat_input=chat_input,
     )
+    end_time = time.time()
+    print(f"Time taken to gather messages: {end_time - start_time} seconds")
 
     # Prepare the environment
     env: dict = chat_context.get_chat_environment()
