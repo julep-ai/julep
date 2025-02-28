@@ -72,6 +72,7 @@ dev = [
     "sqlvalidator>=0.0.20",
     "testcontainers[postgres,localstack]>=4.9.0",
     "ward>=0.68.0b0",
+    "psycopg[binary]>=3.2.5",  # only for use inside tests for now
 ]
 
 [tool.setuptools]
