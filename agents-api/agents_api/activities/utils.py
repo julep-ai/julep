@@ -10,8 +10,6 @@ import statistics
 import string
 import time
 import urllib.parse
-import markdown2
-import markdownify
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -19,6 +17,8 @@ from functools import reduce
 from threading import Lock as ThreadLock
 from typing import Any, ParamSpec, TypeVar
 
+import markdown2
+import markdownify
 import re2
 from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
@@ -250,12 +250,12 @@ def humanize_text(
 
 def markdown_to_html(markdown_text: str) -> str:
     markdowner = markdown2.Markdown()
-    html_text = markdowner.convert(markdown_text)
-    return html_text
+    return markdowner.convert(markdown_text)
 
 
 def html_to_markdown(html_text: str) -> str:
     return markdownify.markdownify(html_text)
+
 
 # Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
@@ -389,6 +389,7 @@ def csv_dictwriter(
         *args,
         **kwds,
     )
+
 
 class stdlib_csv:
     reader = staticmethod(csv_reader)
