@@ -58,7 +58,7 @@ async def base_evaluate_activity(
         return await workflow.execute_activity(
             task_steps.base_evaluate,
             args=[expr, context, values],
-            schedule_to_close_timeout=timedelta(seconds=30),
+            schedule_to_close_timeout=timedelta(seconds=300),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
