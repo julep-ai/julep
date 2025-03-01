@@ -247,13 +247,31 @@ def humanize_text(
 
     return humanized_text
 
+_markdowner = markdown2.Markdown()
 
 def markdown_to_html(markdown_text: str) -> str:
-    markdowner = markdown2.Markdown()
-    return markdowner.convert(markdown_text)
+    """
+    Convert markdown text to HTML.
+    
+    Args:
+        markdown_text: String containing markdown formatted text
+        
+    Returns:
+        HTML formatted string
+    """
+    return _markdowner.convert(markdown_text)
 
 
 def html_to_markdown(html_text: str) -> str:
+    """
+    Convert HTML text to markdown.
+    
+    Args:
+        html_text: String containing HTML formatted text
+        
+    Returns:
+        Markdown formatted string
+    """
     return markdownify.markdownify(html_text)
 
 
