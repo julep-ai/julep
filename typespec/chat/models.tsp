@@ -162,7 +162,7 @@ model ChatInputData {
     messages: InputChatMLMessage[];
 
     /** (Advanced) List of tools that are provided in addition to agent's default set of tools. */
-    tools: CreateToolRequest[] = #[];
+    tools: CreateToolRequest[] | null = null;
 
     /** Can be one of existing tools given to the agent earlier or the ones provided in this request. */
     tool_choice?: ToolChoiceOption;
@@ -259,3 +259,9 @@ model MessageChatResponse extends BaseChatResponse {
 }
 
 alias ChatResponse = ChunkChatResponse | MessageChatResponse;
+
+model RenderResponse extends ChatInputData {
+    /** Documents referenced for this request (for citation purposes). */
+    @visibility("read")
+    docs: DocReference[] = #[];
+}

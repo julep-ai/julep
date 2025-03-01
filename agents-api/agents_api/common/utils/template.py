@@ -72,12 +72,12 @@ async def render_template_nested[T: (str, dict, list[dict | list[dict]], None)](
 
 
 @beartype
-async def render_template(
-    input: str | list[dict],
+async def render_template[T: str | list[dict]](
+    input: T,
     variables: dict,
     check: bool = False,
     skip_vars: list[str] | None = None,
-) -> str | list[dict]:
+) -> T:
     variables = {
         name: val
         for name, val in variables.items()

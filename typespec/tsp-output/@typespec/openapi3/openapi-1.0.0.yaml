@@ -1022,6 +1022,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Entries.History'
+  /sessions/{id}/render:
+    post:
+      operationId: RenderRoute_render
+      description: Render system prompt for the session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The session ID
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chat.RenderResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Chat.ChatInput'
+        description: Request to generate a response from the model
   /tasks/{id}:
     get:
       operationId: TasksGetRoute_get
@@ -2245,8 +2270,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Tools.CreateToolRequest'
+          nullable: true
           description: (Advanced) List of tools that are provided in addition to agent's default set of tools.
-          default: []
+          default: null
         tool_choice:
           anyOf:
             - type: string
@@ -2627,6 +2653,20 @@ components:
       allOf:
         - $ref: '#/components/schemas/Chat.BaseChatOutput'
       description: The output returned by the model. Note that, depending on the model provider, they might return more than one message.
+    Chat.RenderResponse:
+      type: object
+      required:
+        - docs
+      properties:
+        docs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Docs.DocReference'
+          description: Documents referenced for this request (for citation purposes).
+          default: []
+          readOnly: true
+      allOf:
+        - $ref: '#/components/schemas/Chat.ChatInputData'
     Chat.SchemaCompletionResponseFormat:
       type: object
       required:
@@ -4063,9 +4103,8 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Sessions.HybridDocSearch'
           nullable: true
           description: Recall options for the session
@@ -4139,9 +4178,8 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Sessions.HybridDocSearch'
           nullable: true
           description: Recall options for the session
@@ -4296,9 +4334,8 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearchUpdate'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearchUpdate'
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Sessions.HybridDocSearchUpdate'
           nullable: true
           description: Recall options for the session
@@ -4365,9 +4402,8 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Sessions.HybridDocSearch'
           nullable: true
           description: Recall options for the session
@@ -4505,9 +4541,8 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Sessions.HybridDocSearch'
           nullable: true
           description: Recall options for the session
@@ -5054,7 +5089,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
             - $ref: '#/components/schemas/Tasks.SwitchStep'
             - $ref: '#/components/schemas/Tasks.ForeachStep'
@@ -5132,7 +5166,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
             - $ref: '#/components/schemas/Tasks.SwitchStep'
             - $ref: '#/components/schemas/Tasks.ForeachStep'
@@ -5241,7 +5274,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.IfElseWorkflowStepUpdateItem'
             - $ref: '#/components/schemas/Tasks.SwitchStepUpdateItem'
             - $ref: '#/components/schemas/Tasks.ForeachStepUpdateItem'
@@ -5307,7 +5339,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.IfElseWorkflowStepUpdateItem'
             - $ref: '#/components/schemas/Tasks.SwitchStepUpdateItem'
             - $ref: '#/components/schemas/Tasks.ForeachStepUpdateItem'

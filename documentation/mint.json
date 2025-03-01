@@ -180,6 +180,7 @@
         "docs/advanced/python-expression",
         "docs/advanced/types-of-task-steps",
         "docs/advanced/chat",
+        "docs/advanced/render",
         "docs/advanced/files",
         "docs/advanced/architecture-deep-dive",
         "docs/advanced/agentic-patterns",
