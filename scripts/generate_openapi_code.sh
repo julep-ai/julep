@@ -16,7 +16,7 @@ uv_run () {
 codegen_then_format () {
   uv_run 'poe codegen' && \
   uv_run 'poe format'  && \
-  uv_run 'ruff check --fix --unsafe-fixes .' 'ruff' || exit 0
+  uv_run 'poe lint' || exit 0
 }
 
 generate_json_schema_local () {

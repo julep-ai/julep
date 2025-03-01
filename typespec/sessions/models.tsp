@@ -144,7 +144,7 @@ model Session {
     forward_tool_calls: boolean = false;
 
     /** Recall options for the session */
-    recall_options?: DocSearch | null = null;
+    recall_options?: HybridDocSearch | null = null;
 
     ...HasId;
     ...HasMetadata;

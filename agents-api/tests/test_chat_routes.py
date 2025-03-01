@@ -93,7 +93,6 @@ async def _(
                 "num_search_messages": 6,
                 "max_query_length": 800,
                 "confidence": 0.6,
-                "alpha": 0.7,
                 "limit": 10,
                 "mmr_strength": 0.5,
             },
@@ -101,7 +100,7 @@ async def _(
         connection_pool=pool,
     )
 
-    (_embed, _) = mocks
+    (embed, acompletion) = mocks
 
     chat_context = await prepare_chat_context(
         developer_id=developer_id,
@@ -124,6 +123,9 @@ async def _(
     assert isinstance(past_messages, list)
     assert isinstance(doc_references, list)
 
+    embed.assert_called_once()
+    acompletion.assert_not_called()
+
 
 @test("chat: check that chat route calls both mocks")
 async def _(
@@ -140,7 +142,7 @@ async def _(
             agent=agent.id,
             situation="test session about",
             recall_options={
-                "mode": "text",
+                "mode": "hybrid",
                 "num_search_messages": 10,
                 "max_query_length": 1001,
                 "confidence": 0.6,
@@ -151,7 +153,7 @@ async def _(
         connection_pool=pool,
     )
 
-    (_embed, _acompletion) = mocks
+    (embed, acompletion) = mocks
 
     response = make_request(
         method="POST",
@@ -160,6 +162,57 @@ async def _(
     )
 
     response.raise_for_status()
+
+    embed.assert_called_once()
+    acompletion.assert_called_once()
+
+
+@test("chat: check that render route works and does not call completion mock")
+async def _(
+    make_request=make_request,
+    developer_id=test_developer_id,
+    agent=test_agent,
+    mocks=patch_embed_acompletion,
+    dsn=pg_dsn,
+):
+    pool = await create_db_pool(dsn=dsn)
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test session about",
+            recall_options={
+                "mode": "hybrid",
+                "num_search_messages": 10,
+                "max_query_length": 1001,
+                "confidence": 0.6,
+                "limit": 5,
+                "mmr_strength": 0.5,
+            },
+        ),
+        connection_pool=pool,
+    )
+
+    (embed, acompletion) = mocks
+
+    response = make_request(
+        method="POST",
+        url=f"/sessions/{session.id}/render",
+        json={"messages": [{"role": "user", "content": "hello"}]},
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+    messages = data["messages"]
+    assert "docs" in data
+    assert "tools" in data
+
+    assert len(messages) > 0
+    assert messages[0]["role"] == "system"
+
+    embed.assert_called_once()
+    acompletion.assert_not_called()
 
 
 @test("query: prepare chat context")

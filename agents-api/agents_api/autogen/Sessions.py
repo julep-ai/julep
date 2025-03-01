@@ -89,7 +89,7 @@ class CreateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: HybridDocSearch | None = None
     """
     Recall options for the session
     """
@@ -180,9 +180,7 @@ class PatchSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: (
-        VectorDocSearchUpdate | TextOnlyDocSearchUpdate | HybridDocSearchUpdate | None
-    ) = None
+    recall_options: HybridDocSearchUpdate | None = None
     """
     Recall options for the session
     """
@@ -229,7 +227,7 @@ class Session(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: HybridDocSearch | None = None
     """
     Recall options for the session
     """
@@ -332,7 +330,7 @@ class UpdateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: HybridDocSearch | None = None
     """
     Recall options for the session
     """
@@ -422,7 +420,7 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: HybridDocSearch | None = None
     """
     Recall options for the session
     """
