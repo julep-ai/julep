@@ -4,7 +4,7 @@ from agents_api.autogen.openapi_model import ChatInput, CreateAgentRequest, Crea
 from agents_api.clients import litellm
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.sessions import ChatContext
-from agents_api.queries.agents import create_agent
+from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.chat.gather_messages import gather_messages
 from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
 from agents_api.queries.sessions.create_session import create_session
@@ -253,7 +253,9 @@ async def _(
     pool = await create_db_pool(dsn=dsn)
 
     # Create an agent with a default system template
-    agent_default_template = "This is the agent's default system template"
+    agent_default_template = (
+        "This is the agent's default system template {{agent.name.upper()}}"
+    )
     agent_data = CreateAgentRequest(
         name="test agent with template",
         about="test agent about",
@@ -280,7 +282,7 @@ async def _(
     )
 
     # Create a session with a system template (should override agent's default)
-    session_template = "This is the session's system template"
+    session_template = "This is the session's system template: {{session.situation.upper()}}"
     session2_data = CreateSessionRequest(
         agent=agent.id,
         situation="test session with template",
@@ -304,12 +306,6 @@ async def _(
     data1 = response1.json()
     messages1 = data1["messages"]
 
-    # Verify first message is system message with agent's default template
-    assert len(messages1) > 0
-    assert messages1[0]["role"] == "system"
-    assert "You are test agent with template" in messages1[0]["content"]
-    assert "About you: test agent about" in messages1[0]["content"]
-
     # Test session with system template (should override agent's default)
     response2 = make_request(
         method="POST",
@@ -321,8 +317,12 @@ async def _(
     data2 = response2.json()
     messages2 = data2["messages"]
 
-    # Verify first message is system message with session's template
+    # Verify messages with session's template
     assert len(messages2) > 0
     assert messages2[0]["role"] == "system"
-    assert session_template in messages2[0]["content"]
-    assert agent_default_template not in messages2[0]["content"]
+    assert session2_data.situation.upper() in messages2[0]["content"]
+
+    # Verify messages with agent's default template
+    assert len(messages1) > 0
+    assert messages1[0]["role"] == "system"
+    assert agent_data.name.upper() in messages1[0]["content"]

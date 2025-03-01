@@ -49,7 +49,8 @@ SELECT * FROM
             agents.created_at,
             agents.updated_at,
             agents.metadata,
-            agents.default_settings
+            agents.default_settings,
+            agents.default_system_template
         FROM session_lookup
         INNER JOIN agents ON session_lookup.participant_id = agents.agent_id AND agents.developer_id = session_lookup.developer_id
         WHERE
