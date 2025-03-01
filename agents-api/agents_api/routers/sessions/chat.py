@@ -121,7 +121,6 @@ async def chat(
         docs=doc_references,
         usage=model_response.usage.model_dump(),
         choices=[choice.model_dump() for choice in model_response.choices],
-        internal_debug_rendered=payload,  # if debug else None,
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(

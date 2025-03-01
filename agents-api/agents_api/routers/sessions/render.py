@@ -110,17 +110,14 @@ async def render_chat_input(
             "role": "system",
             "content": system_template,
         }
-
-        system_messages: list[dict] = await render_template[list[dict]](
-            [system_message], variables=env
-        )
+        system_messages: list[dict] = await render_template([system_message], variables=env)
         past_messages = system_messages + past_messages
 
     # Render the incoming messages
     new_raw_messages = [msg.model_dump(mode="json") for msg in chat_input.messages]
 
     if chat_context.session.render_templates:
-        new_messages = await render_template[list[dict]](new_raw_messages, variables=env)
+        new_messages = await render_template(new_raw_messages, variables=env)
     else:
         new_messages = new_raw_messages
 

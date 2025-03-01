@@ -1046,7 +1046,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Chat.ChatInput'
-        description: Request to generate a response from the model
+        description: Request to render the system prompt for the session
   /tasks/{id}:
     get:
       operationId: TasksGetRoute_get
