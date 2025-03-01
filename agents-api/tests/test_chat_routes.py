@@ -320,7 +320,9 @@ async def _(
     # Verify messages with session's template
     assert len(messages2) > 0
     assert messages2[0]["role"] == "system"
-    assert session2_data.situation.upper() in messages2[0]["content"]
+    assert (
+        session2_data.situation.upper() in messages2[0]["content"]
+    )  # pytype: disable=attribute-error
 
     # Verify messages with agent's default template
     assert len(messages1) > 0
