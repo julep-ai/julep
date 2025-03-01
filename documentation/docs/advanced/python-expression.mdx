@@ -290,6 +290,48 @@ Example usage:
     humanized_text: $ humanize_text_alpha(_.text, threshold=30, target_lang="german")
 ```
 
+#### Markdown to HTML
+
+The `markdown_to_html` function converts markdown text to HTML.
+
+Breakdown of the function:
+
+Function signature:
+
+`markdown_to_html(markdown_text: str) -> str`
+
+Parameters:
+
+- `markdown_text`: The markdown text to be converted to HTML.
+
+Example usage:
+
+```yaml
+- evaluate:
+    html_text: $ markdown_to_html(_.markdown_text)
+```
+
+#### HTML to Markdown
+
+The `html_to_markdown` function converts HTML text to markdown.
+
+Breakdown of the function:  
+
+Function signature:
+
+`html_to_markdown(html_text: str) -> str`
+
+Parameters:
+
+- `html_text`: The HTML text to be converted to markdown.
+
+Example usage:
+
+```yaml
+- evaluate:
+    markdown_text: $ html_to_markdown(_.html_text)
+```
+
 ## Security
 
 All Python expressions are executed in a sandboxed environment with:

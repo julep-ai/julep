@@ -17,6 +17,8 @@ from functools import reduce
 from threading import Lock as ThreadLock
 from typing import Any, ParamSpec, TypeVar
 
+import markdown2
+import markdownify
 import re2
 from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
@@ -243,6 +245,33 @@ def humanize_text(
     return reassemble_markdown(paragraphs)
 
 
+def markdown_to_html(markdown_text: str) -> str:
+    """
+    Convert markdown text to HTML.
+
+    Args:
+        markdown_text: String containing markdown formatted text
+
+    Returns:
+        HTML formatted string
+    """
+    markdowner = markdown2.Markdown()
+    return markdowner.convert(markdown_text)
+
+
+def html_to_markdown(html_text: str) -> str:
+    """
+    Convert HTML text to markdown.
+
+    Args:
+        html_text: String containing HTML formatted text
+
+    Returns:
+        Markdown formatted string
+    """
+    return markdownify.markdownify(html_text)
+
+
 # Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
     # Basic Python builtins
@@ -280,6 +309,8 @@ ALLOWED_FUNCTIONS = {
     "chunk_doc": chunk_doc,
     # FIXME: This is a temporary function to be removed after implementing the humanization logic as an integration tool
     "humanize_text_alpha": humanize_text,
+    "markdown_to_html": markdown_to_html,
+    "html_to_markdown": html_to_markdown,
 }
 
 

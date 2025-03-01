@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock, patch
 
+import markdown2
+import markdownify
 from agents_api.activities.utils import get_evaluator
 from ward import test
 
@@ -52,3 +54,22 @@ def _():
         assert isinstance(result, str) and len(result) > 0, (
             "Expected a non-empty string response"
         )
+
+
+@test("evaluator: html_to_markdown")
+def _():
+    e = get_evaluator({})
+    html = '<b>Yay</b> <a href="http://github.com">GitHub</a>'
+    result = e.eval(f"""html_to_markdown('{html}')""")
+    markdown = markdownify.markdownify(html)
+    assert result == markdown
+
+
+@test("evaluator: markdown_to_html")
+def _():
+    e = get_evaluator({})
+    markdown = "**Yay** [GitHub](http://github.com)"
+    result = e.eval(f"""markdown_to_html('{markdown}')""")
+    markdowner = markdown2.Markdown()
+    html = markdowner.convert(markdown)
+    assert result == html
