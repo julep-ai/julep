@@ -1,15 +1,16 @@
 # Tests for session queries
 
-from agents_api.autogen.openapi_model import ChatInput, CreateSessionRequest
+from agents_api.autogen.openapi_model import ChatInput, CreateAgentRequest, CreateSessionRequest
 from agents_api.clients import litellm
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.sessions import ChatContext
+from agents_api.queries.agents import create_agent
 from agents_api.queries.chat.gather_messages import gather_messages
 from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
 from agents_api.queries.sessions.create_session import create_session
 from ward import test
 
-from tests.fixtures import (
+from .fixtures import (
     make_request,
     patch_embed_acompletion,
     pg_dsn,
@@ -233,3 +234,95 @@ async def _(
 
     assert isinstance(context, ChatContext)
     assert len(context.toolsets) > 0
+
+
+@test("chat: test system template merging logic")
+async def _(
+    make_request=make_request,
+    developer_id=test_developer_id,
+    dsn=pg_dsn,
+    mocks=patch_embed_acompletion,
+):
+    """Test that the system template merging logic works correctly.
+
+    - If agent.default_system_template is set and session.system_template is not set,
+      use the agent's default template.
+    - If session.system_template is set (regardless of whether agent.default_system_template is set),
+      use the session's template.
+    """
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create an agent with a default system template
+    agent_default_template = "This is the agent's default system template"
+    agent_data = CreateAgentRequest(
+        name="test agent with template",
+        about="test agent about",
+        model="gpt-4o-mini",
+        default_system_template=agent_default_template,
+    )
+
+    agent = await create_agent(
+        developer_id=developer_id,
+        data=agent_data,
+        connection_pool=pool,
+    )
+
+    # Create a session without a system template (should use agent's default)
+    session1_data = CreateSessionRequest(
+        agent=agent.id,
+        situation="test session without template",
+    )
+
+    session1 = await create_session(
+        developer_id=developer_id,
+        data=session1_data,
+        connection_pool=pool,
+    )
+
+    # Create a session with a system template (should override agent's default)
+    session_template = "This is the session's system template"
+    session2_data = CreateSessionRequest(
+        agent=agent.id,
+        situation="test session with template",
+        system_template=session_template,
+    )
+
+    session2 = await create_session(
+        developer_id=developer_id,
+        data=session2_data,
+        connection_pool=pool,
+    )
+
+    # Test session without system template (should use agent's default)
+    response1 = make_request(
+        method="POST",
+        url=f"/sessions/{session1.id}/render",
+        json={"messages": [{"role": "user", "content": "hello"}]},
+    )
+
+    response1.raise_for_status()
+    data1 = response1.json()
+    messages1 = data1["messages"]
+
+    # Verify first message is system message with agent's default template
+    assert len(messages1) > 0
+    assert messages1[0]["role"] == "system"
+    assert "You are test agent with template" in messages1[0]["content"]
+    assert "About you: test agent about" in messages1[0]["content"]
+
+    # Test session with system template (should override agent's default)
+    response2 = make_request(
+        method="POST",
+        url=f"/sessions/{session2.id}/render",
+        json={"messages": [{"role": "user", "content": "hello"}]},
+    )
+
+    response2.raise_for_status()
+    data2 = response2.json()
+    messages2 = data2["messages"]
+
+    # Verify first message is system message with session's template
+    assert len(messages2) > 0
+    assert messages2[0]["role"] == "system"
+    assert session_template in messages2[0]["content"]
+    assert agent_default_template not in messages2[0]["content"]
