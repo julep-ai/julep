@@ -48,7 +48,7 @@ interface RenderEndpoints {
         id: uuid;
 
         @bodyRoot
-        @doc("Request to generate a response from the model")
+        @doc("Request to render the system prompt for the session")
         body: ChatInput;
     ): {
         @statusCode _: "200";
