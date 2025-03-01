@@ -5,17 +5,19 @@ import time
 import litellm
 import requests
 from deep_translator import GoogleTranslator
+from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 
 from ..env import (
     copyleaks_api_key,
+    litellm_master_key,
     litellm_url,
     sapling_api_key,
 )
 
 # Initialize humanization as a dictionary to hold various properties
 HUMANIZATION = {
-    "model": "openrouter/cohere/command-r-08-2024",
+    "model": "openai/cerebras/llama-3.3-70b",
     "humanize_prompt": """\
     Rewrite the following text to make it more natural and human-like while preserving the core message. Follow these guidelines:
 
@@ -31,6 +33,13 @@ HUMANIZATION = {
    - Vary vocabulary complexity
 5. Keep paragraphing and flow natural
 6. Avoid overly perfect grammar or clinical language
+
+Notes:
+- The text you are rewriting has been translated from one language to another, and back to English.
+- The rewritten text should be in markdown format (don't add headings unless they are already present).
+- If you see spaces before or after double stars, you should remove them.
+- If you see headings without capitalized text, you should capitalize them.
+
 
 Return only the rewritten text without explanations or meta-commentary.""",
     "grammar_prompt": "Only fix grammar that is wrong without changing the words and places of the sentence",
@@ -71,10 +80,12 @@ def humanize_llm(text: str) -> str:
                 {"role": "user", "content": text},
             ],
             temperature=1.0,
+            api_key=litellm_master_key,
         )
         return response.choices[0].message.content
-    except Exception:
-        return text
+    except Exception as e:
+        msg = "Error humanizing text with an llm: "
+        raise Exception(msg) from e
 
 
 def grammar(text):
@@ -87,6 +98,7 @@ def grammar(text):
                 {"role": "user", "content": text},
             ],
             temperature=1.0,
+            api_key=litellm_master_key,
             # extra_body={"min_p": 0.025},
         )
         return response.choices[0].message.content
@@ -314,18 +326,7 @@ def process_long_words(text: str) -> str:
     return " ".join(processed_words)
 
 
-def split_text_into_paragraphs(text: str) -> list[str]:
-    """
-    Splits the provided text into paragraphs by empty lines.
-
-    :param text: The original text.
-    :return: A list of paragraphs.
-    """
-    # Splitting by two consecutive newlines '\n\n' to identify paragraphs
-    return text.strip().split("\n\n")
-
-
-def split_with_langchain(markdown_text: str) -> list[str]:
+def split_with_langchain(markdown_text: str) -> list[Document]:
     headers_to_split_on = [
         ("#", "Header 1"),
         ("##", "Header 2"),
@@ -335,11 +336,33 @@ def split_with_langchain(markdown_text: str) -> list[str]:
 
     # MD splits
     markdown_splitter = MarkdownHeaderTextSplitter(
-        headers_to_split_on=headers_to_split_on, strip_headers=False
+        headers_to_split_on=headers_to_split_on, strip_headers=True
     )
-    md_header_splits = markdown_splitter.split_text(markdown_text)
+    return markdown_splitter.split_text(markdown_text)
 
-    return [split.page_content for split in md_header_splits]
+
+def reassemble_markdown(splits: list[Document]) -> str:
+    assembled_text = []
+
+    for doc in splits:
+        # Get the header level from metadata
+        header_level = None
+        header_content = None
+        for key, value in doc.metadata.items():
+            if key.startswith("Header "):
+                header_level = int(key.split(" ")[1])
+                header_content = value
+                break
+
+        # Add header with appropriate number of # symbols
+        if header_level and header_content:
+            header_line = f"{'#' * header_level} {header_content}\n\n"
+            assembled_text.append(header_line)
+
+        # Add the content
+        assembled_text.append(f"{doc.page_content}\n---\n")
+
+    return "".join(assembled_text).strip()
 
 
 def humanize_paragraph(
