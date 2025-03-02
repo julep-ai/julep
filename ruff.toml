@@ -65,11 +65,10 @@ ignore = [
   "ASYNC230",   # blocking-open-in-async
   "ASYNC109",   # disallow-async-fns-with-timeout-param
   "COM812", "ISC001", # conflict with each other
-  "UP046",
+  "UP046",      # Generic class uses `Generic` subclass instead of type parameters
 ]
 
 fixable = ["ALL"]
-unfixable = []
 
 [format]
 exclude = ["*.ipynb", "*.pyi", "*.pyc"]

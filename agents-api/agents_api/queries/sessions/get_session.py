@@ -42,7 +42,14 @@ WHERE s.developer_id = $1 AND s.session_id = $2;
 
 
 @rewrap_exceptions(common_db_exceptions("session", ["get"]))
-@wrap_in_class(Session, one=True)
+@wrap_in_class(
+    Session,
+    one=True,
+    transform=lambda d: {
+        **d,
+        "recall_options": None if d["recall_options"] == {} else d["recall_options"],
+    },
+)
 @query_metrics("get_session")
 @pg_query
 @beartype

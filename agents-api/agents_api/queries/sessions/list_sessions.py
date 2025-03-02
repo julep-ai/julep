@@ -50,7 +50,13 @@ LIMIT $2 OFFSET $6;
 
 
 @rewrap_exceptions(common_db_exceptions("session", ["list"]))
-@wrap_in_class(Session)
+@wrap_in_class(
+    Session,
+    transform=lambda d: {
+        **d,
+        "recall_options": None if d["recall_options"] == {} else d["recall_options"],
+    },
+)
 @query_metrics("list_sessions")
 @pg_query
 @beartype

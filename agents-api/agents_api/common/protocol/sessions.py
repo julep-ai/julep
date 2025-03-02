@@ -127,7 +127,7 @@ def make_session(
     *,
     agents: list[UUID],
     users: list[UUID],
-    **data: dict,
+    **data: dict[str, dict],
 ) -> Session:
     """
     Create a new session object.
@@ -150,5 +150,9 @@ def make_session(
         case _:
             cls = MultiAgentMultiUserSession
             participants = {"agents": agents, "users": users}
+
+    # if recall options is an empty dict, make it None
+    if data.get("recall_options") == {}:
+        data = {**data, "recall_options": None}
 
     return cls(**{**data, **participants})

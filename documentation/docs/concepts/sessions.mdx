@@ -45,11 +45,12 @@ When configuring a session, you can specify recall options to control how contex
   <Tab title="Vector Search">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
-    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
-    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
-    | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
+    | `mode`            | `Literal["vector"]`     | The mode to use for the search (must be "vector")                                         | `"vector"` |
     | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
+    | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
+    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
+    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
     | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0`     |
     | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
   </Tab>
@@ -57,24 +58,26 @@ When configuring a session, you can specify recall options to control how contex
   <Tab title="Text Search">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
-    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
-    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
-    | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
-    | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
+    | `mode`            | `Literal["text"]`     | The mode to use for the search (must be "text")                                           | `"text"` |
     | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
+    | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
+    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
+    | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
+    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
   </Tab>
 
   <Tab title="Hybrid Search">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
-    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
-    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
+    | `mode`            | `Literal["hybrid"]`     | The mode to use for the search (must be "hybrid")                                         | `"hybrid"` |
+    | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
     | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
+    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
+    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
     | `alpha`           | `float`   | Weight between BM25 and Vector search (0=pure BM25, 1=pure vector)                        | `0.75`  |
     | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0`     |
     | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
-    | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
   </Tab>
 </Tabs>
 

@@ -2092,7 +2092,7 @@
         },
         "messages": {
           "items": {
-            "$ref": "#/$defs/Message"
+            "$ref": "#/$defs/Message-Input"
           },
           "minItems": 1,
           "title": "Messages",
@@ -2239,12 +2239,18 @@
           "title": "Tool Choice"
         },
         "tools": {
-          "default": [],
-          "items": {
-            "$ref": "#/$defs/agents_api__autogen__Tools__CreateToolRequest-Input"
-          },
-          "title": "Tools",
-          "type": "array"
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/agents_api__autogen__Tools__CreateToolRequest-Input"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tools"
         },
         "top_p": {
           "anyOf": [
@@ -3729,19 +3735,12 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/VectorDocSearch"
-            },
-            {
-              "$ref": "#/$defs/TextOnlyDocSearch"
-            },
-            {
               "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ],
-          "title": "Recall Options"
+          ]
         },
         "render_templates": {
           "default": true,
@@ -3910,19 +3909,12 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/VectorDocSearch"
-            },
-            {
-              "$ref": "#/$defs/TextOnlyDocSearch"
-            },
-            {
               "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ],
-          "title": "Recall Options"
+          ]
         },
         "render_templates": {
           "default": true,
@@ -7233,7 +7225,7 @@
       "title": "Main",
       "type": "object"
     },
-    "Message": {
+    "Message-Input": {
       "properties": {
         "content": {
           "anyOf": [
@@ -7256,7 +7248,120 @@
                     "$ref": "#/$defs/ContentModel7"
                   },
                   {
-                    "$ref": "#/$defs/agents_api__autogen__Chat__ContentModel"
+                    "$ref": "#/$defs/agents_api__autogen__Chat__ContentModel-Input"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Content"
+        },
+        "continue": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Continue"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Name"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "system",
+            "tool"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "tool_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tool Call Id"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ChosenFunctionCall"
+                  },
+                  {
+                    "$ref": "#/$defs/ChosenComputer20241022"
+                  },
+                  {
+                    "$ref": "#/$defs/ChosenTextEditor20241022"
+                  },
+                  {
+                    "$ref": "#/$defs/ChosenBash20241022"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": [],
+          "title": "Tool Calls"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "title": "Message",
+      "type": "object"
+    },
+    "Message-Output": {
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Content"
+                  },
+                  {
+                    "$ref": "#/$defs/ContentModel7"
+                  },
+                  {
+                    "$ref": "#/$defs/agents_api__autogen__Chat__ContentModel-Output"
                   }
                 ]
               },
@@ -7903,19 +8008,12 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/VectorDocSearchUpdate"
-            },
-            {
-              "$ref": "#/$defs/TextOnlyDocSearchUpdate"
-            },
-            {
               "$ref": "#/$defs/HybridDocSearchUpdate"
             },
             {
               "type": "null"
             }
-          ],
-          "title": "Recall Options"
+          ]
         },
         "render_templates": {
           "default": true,
@@ -8880,6 +8978,64 @@
       "title": "RemoteBrowserSetup",
       "type": "object"
     },
+    "RenderResponse": {
+      "properties": {
+        "docs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DocReference"
+          },
+          "readOnly": true,
+          "title": "Docs",
+          "type": "array"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/Message-Output"
+          },
+          "minItems": 1,
+          "title": "Messages",
+          "type": "array"
+        },
+        "tool_choice": {
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "none"
+              ],
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/NamedToolChoice"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tool Choice"
+        },
+        "tools": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CreateToolRequest-Output"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tools"
+        }
+      },
+      "required": [
+        "messages"
+      ],
+      "title": "RenderResponse",
+      "type": "object"
+    },
     "ResourceDeletedResponse": {
       "properties": {
         "deleted_at": {
@@ -9078,19 +9234,12 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/VectorDocSearch"
-            },
-            {
-              "$ref": "#/$defs/TextOnlyDocSearch"
-            },
-            {
               "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ],
-          "title": "Recall Options"
+          ]
         },
         "render_templates": {
           "default": true,
@@ -10515,48 +10664,6 @@
       "title": "TextEditor20241022DefUpdate",
       "type": "object"
     },
-    "TextOnlyDocSearch": {
-      "properties": {
-        "lang": {
-          "default": "en-US",
-          "title": "Lang",
-          "type": "string"
-        },
-        "limit": {
-          "default": 10,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Limit",
-          "type": "integer"
-        },
-        "max_query_length": {
-          "default": 1000,
-          "maximum": 10000.0,
-          "minimum": 100.0,
-          "title": "Max Query Length",
-          "type": "integer"
-        },
-        "metadata_filter": {
-          "default": {},
-          "title": "Metadata Filter",
-          "type": "object"
-        },
-        "mode": {
-          "default": "text",
-          "title": "Mode",
-          "type": "string"
-        },
-        "num_search_messages": {
-          "default": 4,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Num Search Messages",
-          "type": "integer"
-        }
-      },
-      "title": "TextOnlyDocSearch",
-      "type": "object"
-    },
     "TextOnlyDocSearchRequest": {
       "properties": {
         "lang": {
@@ -10585,48 +10692,6 @@
         "text"
       ],
       "title": "TextOnlyDocSearchRequest",
-      "type": "object"
-    },
-    "TextOnlyDocSearchUpdate": {
-      "properties": {
-        "lang": {
-          "default": "en-US",
-          "title": "Lang",
-          "type": "string"
-        },
-        "limit": {
-          "default": 10,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Limit",
-          "type": "integer"
-        },
-        "max_query_length": {
-          "default": 1000,
-          "maximum": 10000.0,
-          "minimum": 100.0,
-          "title": "Max Query Length",
-          "type": "integer"
-        },
-        "metadata_filter": {
-          "default": {},
-          "title": "Metadata Filter",
-          "type": "object"
-        },
-        "mode": {
-          "default": "text",
-          "title": "Mode",
-          "type": "string"
-        },
-        "num_search_messages": {
-          "default": 4,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Num Search Messages",
-          "type": "integer"
-        }
-      },
-      "title": "TextOnlyDocSearchUpdate",
       "type": "object"
     },
     "Then-Input": {
@@ -11410,19 +11475,12 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/VectorDocSearch"
-            },
-            {
-              "$ref": "#/$defs/TextOnlyDocSearch"
-            },
-            {
               "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ],
-          "title": "Recall Options"
+          ]
         },
         "render_templates": {
           "default": true,
@@ -11747,62 +11805,6 @@
       "title": "ValidationError",
       "type": "object"
     },
-    "VectorDocSearch": {
-      "properties": {
-        "confidence": {
-          "default": 0,
-          "maximum": 1.0,
-          "minimum": -1.0,
-          "title": "Confidence",
-          "type": "number"
-        },
-        "lang": {
-          "default": "en-US",
-          "title": "Lang",
-          "type": "string"
-        },
-        "limit": {
-          "default": 10,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Limit",
-          "type": "integer"
-        },
-        "max_query_length": {
-          "default": 1000,
-          "maximum": 10000.0,
-          "minimum": 100.0,
-          "title": "Max Query Length",
-          "type": "integer"
-        },
-        "metadata_filter": {
-          "default": {},
-          "title": "Metadata Filter",
-          "type": "object"
-        },
-        "mmr_strength": {
-          "default": 0.5,
-          "exclusiveMaximum": 1.0,
-          "minimum": 0.0,
-          "title": "Mmr Strength",
-          "type": "number"
-        },
-        "mode": {
-          "default": "vector",
-          "title": "Mode",
-          "type": "string"
-        },
-        "num_search_messages": {
-          "default": 4,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Num Search Messages",
-          "type": "integer"
-        }
-      },
-      "title": "VectorDocSearch",
-      "type": "object"
-    },
     "VectorDocSearchRequest": {
       "properties": {
         "confidence": {
@@ -11848,62 +11850,6 @@
         "vector"
       ],
       "title": "VectorDocSearchRequest",
-      "type": "object"
-    },
-    "VectorDocSearchUpdate": {
-      "properties": {
-        "confidence": {
-          "default": 0,
-          "maximum": 1.0,
-          "minimum": -1.0,
-          "title": "Confidence",
-          "type": "number"
-        },
-        "lang": {
-          "default": "en-US",
-          "title": "Lang",
-          "type": "string"
-        },
-        "limit": {
-          "default": 10,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Limit",
-          "type": "integer"
-        },
-        "max_query_length": {
-          "default": 1000,
-          "maximum": 10000.0,
-          "minimum": 100.0,
-          "title": "Max Query Length",
-          "type": "integer"
-        },
-        "metadata_filter": {
-          "default": {},
-          "title": "Metadata Filter",
-          "type": "object"
-        },
-        "mmr_strength": {
-          "default": 0.5,
-          "exclusiveMaximum": 1.0,
-          "minimum": 0.0,
-          "title": "Mmr Strength",
-          "type": "number"
-        },
-        "mode": {
-          "default": "vector",
-          "title": "Mode",
-          "type": "string"
-        },
-        "num_search_messages": {
-          "default": 4,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Num Search Messages",
-          "type": "integer"
-        }
-      },
-      "title": "VectorDocSearchUpdate",
       "type": "object"
     },
     "WaitForInputInfo": {
@@ -12337,7 +12283,45 @@
       "title": "YieldStep",
       "type": "object"
     },
-    "agents_api__autogen__Chat__ContentModel": {
+    "agents_api__autogen__Chat__ContentModel-Input": {
+      "description": "Anthropic image content part",
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ContentItem"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "$ref": "#/$defs/ContentItemModel"
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Content"
+        },
+        "tool_use_id": {
+          "title": "Tool Use Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool_result",
+          "default": "tool_result",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_use_id",
+        "content"
+      ],
+      "title": "ContentModel",
+      "type": "object"
+    },
+    "agents_api__autogen__Chat__ContentModel-Output": {
       "description": "Anthropic image content part",
       "properties": {
         "content": {

@@ -439,8 +439,7 @@ class MultipleChatOutput(BaseChatOutput):
         populate_by_name=True,
     )
     messages: Annotated[
-        list[MessageModel],
-        Field(json_schema_extra={"readOnly": True}, min_length=1),
+        list[MessageModel], Field(json_schema_extra={"readOnly": True}, min_length=1)
     ]
 
 

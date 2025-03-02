@@ -80,3 +80,5 @@ py-modules = [
     "agents_api",
 ]
 
+extend-safe-fixes = [""]
+

@@ -83,106 +83,101 @@ async def gather_messages(
     )
     recall_options = session.recall_options
 
-    # Ensure recall_options is not None and has the necessary attributes
-    if recall and recall_options:
-        # search the last `search_threshold` messages
-        search_messages = [
-            msg
-            for msg in (past_messages + new_raw_messages)[
-                -(recall_options.num_search_messages) :
-            ]
-            if isinstance(msg["content"], str) and msg["role"] in ["user", "assistant"]
-        ]
+    # Return early if recall options not configured
+    if not recall_options:
+        return past_messages, []
 
-        if len(search_messages) == 0:
-            return past_messages, []
+    # Get messages to search from
+    search_messages = [
+        msg
+        for msg in (past_messages + new_raw_messages)[-(recall_options.num_search_messages) :]
+        if isinstance(msg["content"], str) and msg["role"] in ["user", "assistant"]
+    ]
 
-        # Search matching docs
-        embed_text = "\n\n".join([
-            f"{msg.get('name') or msg['role']}: {msg['content']}" for msg in search_messages
-        ]).strip()
+    if not search_messages:
+        return past_messages, []
 
-        # Don't embed if search mode is text only
-        if recall_options.mode != "text":
-            [query_embedding, *_] = await litellm.aembedding(
-                # Truncate on the left to keep the last `search_query_chars` characters
-                inputs=embed_text[-(recall_options.max_query_length) :],
-                # TODO: Make this configurable once it's added to the ChatInput model
-                embed_instruction="Represent the query for retrieving supporting documents: ",
-            )
+    # Build search text and get embedding if needed
+    embed_text = "\n\n".join(
+        f"{msg.get('name') or msg['role']}: {msg['content']}" for msg in search_messages
+    ).strip()
 
-        # Truncate on the right to take only the first `search_query_chars` characters
-        query_text = search_messages[-1]["content"].strip()[: recall_options.max_query_length]
-
-        # List all the applicable owners to search docs from
-        active_agent_id = chat_context.get_active_agent().id
-        user_ids = [user.id for user in chat_context.users]
-        owners = [("user", user_id) for user_id in user_ids] + [("agent", active_agent_id)]
-
-        # map the search params to the correct objects
-        search_params = None
-        if recall_options.mode == "vector":
-            search_params = VectorDocSearchRequest(
-                vector=query_embedding,
-                limit=recall_options.limit,
-                lang=recall_options.lang,
-                confidence=recall_options.confidence,
-                metadata_filter=recall_options.metadata_filter,
-                mmr_strength=recall_options.mmr_strength,
-            )
-        if recall_options.mode == "hybrid":
-            search_params = HybridDocSearchRequest(
-                text=query_text,
-                vector=query_embedding,
-                limit=recall_options.limit,
-                lang=recall_options.lang,
-                confidence=recall_options.confidence,
-                alpha=recall_options.alpha,
-                metadata_filter=recall_options.metadata_filter,
-                mmr_strength=recall_options.mmr_strength,
-            )
-        if recall_options.mode == "text":
-            search_params = TextOnlyDocSearchRequest(
-                text=query_text,
-                limit=recall_options.limit,
-                metadata_filter=recall_options.metadata_filter,
-                lang=recall_options.lang,
-            )
-
-        # Get the search function and params here
-        search_fn, params = get_search_fn_and_params(search_params)
-
-        # Get the docs here
-        doc_references: list[DocReference] = await search_fn(
-            developer_id=developer.id,
-            owners=owners,
-            connection_pool=connection_pool,
-            **params,
+    query_embedding = None
+    if recall_options.mode != "text":
+        [query_embedding, *_] = await litellm.aembedding(
+            inputs=embed_text[-(recall_options.max_query_length) :],
+            embed_instruction="Represent the query for retrieving supporting documents: ",
         )
 
-        # Apply MMR if enabled
-        if (
-            recall_options.mmr_strength > 0
-            and len(doc_references) > recall_options.limit
-            and recall_options.mode != "text"
-            and len([doc for doc in doc_references if doc.snippet.embedding is not None]) >= 2
-        ):
-            # FIXME: This is a temporary fix to ensure that the MMR algorithm works.
-            # We shouldn't be having references without embeddings.
-            doc_references = [
-                doc for doc in doc_references if doc.snippet.embedding is not None
-            ]
+    # Get query text from last message
+    query_text = search_messages[-1]["content"].strip()[: recall_options.max_query_length]
 
+    # Get owners to search docs from
+    active_agent_id = chat_context.get_active_agent().id
+    owners = [("user", user.id) for user in chat_context.users]
+    owners.append(("agent", active_agent_id))
+
+    # Build search params based on mode
+    search_params = None
+    if recall_options.mode == "vector":
+        search_params = VectorDocSearchRequest(
+            lang=recall_options.lang,
+            limit=recall_options.limit,
+            metadata_filter=recall_options.metadata_filter,
+            confidence=recall_options.confidence,
+            mmr_strength=recall_options.mmr_strength,
+            vector=query_embedding,
+        )
+    elif recall_options.mode == "hybrid":
+        search_params = HybridDocSearchRequest(
+            lang=recall_options.lang,
+            limit=recall_options.limit,
+            metadata_filter=recall_options.metadata_filter,
+            confidence=recall_options.confidence,
+            mmr_strength=recall_options.mmr_strength,
+            alpha=recall_options.alpha,
+            text=query_text,
+            vector=query_embedding,
+        )
+    elif recall_options.mode == "text":
+        search_params = TextOnlyDocSearchRequest(
+            lang=recall_options.lang,
+            limit=recall_options.limit,
+            metadata_filter=recall_options.metadata_filter,
+            text=query_text,
+        )
+    else:
+        # Invalid mode, return early
+        return past_messages, []
+
+    # Execute search
+    search_fn, params = get_search_fn_and_params(search_params)
+    doc_references: list[DocReference] = await search_fn(
+        developer_id=developer.id,
+        owners=owners,
+        connection_pool=connection_pool,
+        **params,
+    )
+
+    # Apply MMR if enabled and applicable
+    if (
+        recall_options.mmr_strength > 0
+        and len(doc_references) > recall_options.limit
+        and recall_options.mode != "text"
+    ):
+        # Filter docs with embeddings
+        docs_with_embeddings = [
+            doc for doc in doc_references if doc.snippet.embedding is not None
+        ]
+
+        if len(docs_with_embeddings) >= 2:
             # Apply MMR
             indices = maximal_marginal_relevance(
                 np.asarray(query_embedding),
-                [doc.snippet.embedding for doc in doc_references],
+                [doc.snippet.embedding for doc in docs_with_embeddings],
                 k=recall_options.limit,
                 lambda_mult=1 - recall_options.mmr_strength,
             )
-            doc_references = [doc for i, doc in enumerate(doc_references) if i in set(indices)]
+            doc_references = [docs_with_embeddings[i] for i in indices]
 
-        return past_messages, doc_references
-
-    # If recall is False or recall_options is None, return past messages with no doc references
-    return past_messages, []
+    return past_messages, doc_references

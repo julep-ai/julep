@@ -34,6 +34,7 @@ RETURNING *
     transform=lambda d: {
         **d,
         "id": d["session_id"],
+        "recall_options": None if d["recall_options"] == {} else d["recall_options"],
     },
 )
 @query_metrics("patch_session")

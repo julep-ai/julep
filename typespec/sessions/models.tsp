@@ -38,7 +38,7 @@ model BaseDocSearch {
 model VectorDocSearch extends BaseDocSearch {
 
      /** The mode to use for the search. */
-    mode: string = "vector";
+    mode: "vector";
 
     /** The confidence cutoff level */
     @minValue(-1)
@@ -54,13 +54,13 @@ model VectorDocSearch extends BaseDocSearch {
 model TextOnlyDocSearch extends BaseDocSearch {
 
     /** The mode to use for the search. */
-    mode: string = "text";
+    mode: "text";
 }
 
 model HybridDocSearch extends BaseDocSearch {
 
     /** The mode to use for the search. */
-    mode: string = "hybrid";
+    mode: "hybrid";
 
     /** The confidence cutoff level */
     @minValue(-1)
@@ -142,9 +142,8 @@ model Session {
 
     /** Whether to forward tool calls to the model */
     forward_tool_calls: boolean = false;
-
     /** Recall options for the session */
-    recall_options?: HybridDocSearch | null = null;
+    recall_options?: DocSearch | null = null;
 
     ...HasId;
     ...HasMetadata;
