@@ -54,7 +54,6 @@ LIMIT $2 OFFSET $6;
     Session,
     transform=lambda d: {
         **d,
-        "recall_options": None if d["recall_options"] == {} else d["recall_options"],
     },
 )
 @query_metrics("list_sessions")

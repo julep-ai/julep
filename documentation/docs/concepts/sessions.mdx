@@ -75,14 +75,14 @@ When configuring a session, you can specify recall options to control how contex
     | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
     | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
-    | `alpha`           | `float`   | Weight between BM25 and Vector search (0=pure BM25, 1=pure vector)                        | `0.75`  |
+    | `alpha`           | `float`   | Weight between BM25 and Vector search (0=pure BM25, 1=pure vector)                        | `0.5`  |
     | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0`     |
     | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
   </Tab>
 </Tabs>
 
 <Note>
-`recall_options` are utilized only when explicitly set; otherwise, they default to `None`. 
+When `recall_options` is not explicitly set (for instance, it is `None`), `vector` search mode is used with default parameters.
 </Note>
 
 ### System Template

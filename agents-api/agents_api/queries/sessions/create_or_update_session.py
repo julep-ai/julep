@@ -69,7 +69,6 @@ ON CONFLICT (developer_id, session_id, participant_type, participant_id) DO NOTH
     transform=lambda d: {
         **d,
         "id": d["session_id"],
-        "recall_options": None if d["recall_options"] == {} else d["recall_options"],
     },
 )
 @query_metrics("create_or_update_session")

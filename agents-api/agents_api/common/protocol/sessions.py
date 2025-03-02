@@ -151,8 +151,4 @@ def make_session(
             cls = MultiAgentMultiUserSession
             participants = {"agents": agents, "users": users}
 
-    # if recall options is an empty dict, make it None
-    if data.get("recall_options") == {}:
-        data = {**data, "recall_options": None}
-
     return cls(**{**data, **participants})

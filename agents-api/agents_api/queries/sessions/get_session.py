@@ -47,7 +47,6 @@ WHERE s.developer_id = $1 AND s.session_id = $2;
     one=True,
     transform=lambda d: {
         **d,
-        "recall_options": None if d["recall_options"] == {} else d["recall_options"],
     },
 )
 @query_metrics("get_session")

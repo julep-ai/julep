@@ -11,7 +11,6 @@ from ...autogen.openapi_model import (
     DocReference,
     History,
     HybridDocSearchRequest,
-    Session,
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
@@ -22,7 +21,6 @@ from ...common.utils.db_exceptions import common_db_exceptions, partialclass
 from ...common.utils.get_doc_search import get_search_fn_and_params
 from ..docs.mmr import maximal_marginal_relevance
 from ..entries.get_history import get_history
-from ..sessions.get_session import get_session
 from ..utils import rewrap_exceptions
 
 T = TypeVar("T")
@@ -76,19 +74,10 @@ async def gather_messages(
     if not recall:
         return past_messages, []
 
-    # Get recall options
-    session: Session = await get_session(
-        developer_id=developer.id,
-        session_id=session_id,
-        connection_pool=connection_pool,
-    )
-    recall_options = session.recall_options
+    # Get recall config
+    recall_options = chat_context.session.recall_options
 
-    # If recall is enabled but recall options are not configured, return early
-    if recall_options is None:
-        return past_messages, []
-
-    # If recall is enabled and recall options are configured, get messages to search from
+    # Get messages to search from
     search_messages = [
         msg
         for msg in (past_messages + new_raw_messages)[-(recall_options.num_search_messages) :]

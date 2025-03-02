@@ -56,7 +56,6 @@ VALUES ($1, $2, $3, $4);
     transform=lambda d: {
         **d,
         "id": d["session_id"],
-        "recall_options": None if d["recall_options"] == {} else d["recall_options"],
     },
 )
 @query_metrics("create_session")

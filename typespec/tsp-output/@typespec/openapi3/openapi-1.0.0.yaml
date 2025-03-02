@@ -4202,6 +4202,7 @@ components:
           enum:
             - hybrid
           description: The mode to use for the search.
+          default: hybrid
         confidence:
           type: number
           minimum: -1
@@ -4213,7 +4214,7 @@ components:
           minimum: 0
           maximum: 1
           description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-          default: 0.75
+          default: 0.5
         mmr_strength:
           type: number
           minimum: 0
@@ -4231,6 +4232,7 @@ components:
           enum:
             - hybrid
           description: The mode to use for the search.
+          default: hybrid
         confidence:
           type: number
           minimum: -1
@@ -4242,7 +4244,7 @@ components:
           minimum: 0
           maximum: 1
           description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-          default: 0.75
+          default: 0.5
         mmr_strength:
           type: number
           minimum: 0
@@ -4489,6 +4491,7 @@ components:
           enum:
             - text
           description: The mode to use for the search.
+          default: text
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
     Sessions.TextOnlyDocSearchUpdate:
@@ -4499,6 +4502,7 @@ components:
           enum:
             - text
           description: The mode to use for the search.
+          default: text
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
     Sessions.UpdateSessionRequest:
@@ -4571,6 +4575,7 @@ components:
           enum:
             - vector
           description: The mode to use for the search.
+          default: vector
         confidence:
           type: number
           minimum: -1
@@ -4594,6 +4599,7 @@ components:
           enum:
             - vector
           description: The mode to use for the search.
+          default: vector
         confidence:
           type: number
           minimum: -1

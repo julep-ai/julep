@@ -1,6 +1,11 @@
 # Tests for session queries
 
-from agents_api.autogen.openapi_model import ChatInput, CreateAgentRequest, CreateSessionRequest
+from agents_api.autogen.openapi_model import (
+    ChatInput,
+    CreateAgentRequest,
+    CreateSessionRequest,
+    VectorDocSearch,
+)
 from agents_api.clients import litellm
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.sessions import ChatContext
@@ -8,7 +13,6 @@ from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.chat.gather_messages import gather_messages
 from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
 from agents_api.queries.sessions.create_session import create_session
-from agents_api.queries.sessions.get_session import get_session
 from ward import test
 
 from .fixtures import (
@@ -90,14 +94,6 @@ async def _(
         data=CreateSessionRequest(
             agent=agent.id,
             situation="test session about",
-            recall_options={
-                "mode": "hybrid",
-                "num_search_messages": 6,
-                "max_query_length": 800,
-                "confidence": 0.6,
-                "limit": 10,
-                "mmr_strength": 0.5,
-            },
         ),
         connection_pool=pool,
     )
@@ -332,9 +328,33 @@ async def _(
     assert agent_data.name.upper() in messages1[0]["content"]
 
 
-@test("recall options: validate the recall options for create session all modes")
+@test("chat: validate the recall options for different modes in ca")
 async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
+
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test session about",
+            system_template="test system template",
+        ),
+        connection_pool=pool,
+    )
+
+    chat_context = await prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+
+    assert chat_context.session.recall_options == VectorDocSearch(
+        mode="vector",
+        num_search_messages=4,
+        max_query_length=1000,
+        limit=10,
+        lang="en-US",
+    )
 
     # Create a session with a hybrid recall options to hybrid mode
     data = CreateSessionRequest(
@@ -360,7 +380,28 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
         connection_pool=pool,
     )
 
-    assert session.recall_options == data.recall_options
+    # assert session.recall_options == data.recall_options
+    chat_context = await prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+
+    assert chat_context.session.recall_options.mode == data.recall_options.mode
+    assert (
+        chat_context.session.recall_options.num_search_messages
+        == data.recall_options.num_search_messages
+    )
+    assert (
+        chat_context.session.recall_options.max_query_length
+        == data.recall_options.max_query_length
+    )
+    assert chat_context.session.recall_options.limit == data.recall_options.limit
+    assert chat_context.session.recall_options.lang == data.recall_options.lang
+    assert (
+        chat_context.session.recall_options.metadata_filter
+        == data.recall_options.metadata_filter
+    )
 
     # Update session to have a new recall options to text mode
     data = CreateSessionRequest(
@@ -383,12 +424,28 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
         connection_pool=pool,
     )
 
-    assert session.recall_options.mode == data.recall_options.mode
-    assert session.recall_options.num_search_messages == data.recall_options.num_search_messages
-    assert session.recall_options.max_query_length == data.recall_options.max_query_length
-    assert session.recall_options.limit == data.recall_options.limit
-    assert session.recall_options.lang == data.recall_options.lang
-    assert session.recall_options.metadata_filter == data.recall_options.metadata_filter
+    # assert session.recall_options == data.recall_options
+    chat_context = await prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+
+    assert chat_context.session.recall_options.mode == data.recall_options.mode
+    assert (
+        chat_context.session.recall_options.num_search_messages
+        == data.recall_options.num_search_messages
+    )
+    assert (
+        chat_context.session.recall_options.max_query_length
+        == data.recall_options.max_query_length
+    )
+    assert chat_context.session.recall_options.limit == data.recall_options.limit
+    assert chat_context.session.recall_options.lang == data.recall_options.lang
+    assert (
+        chat_context.session.recall_options.metadata_filter
+        == data.recall_options.metadata_filter
+    )
 
     # Update session to have a new recall options to vector mode
     data = CreateSessionRequest(
@@ -412,92 +469,27 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
         connection_pool=pool,
     )
 
-    assert session.recall_options.mode == data.recall_options.mode
-    assert session.recall_options.num_search_messages == data.recall_options.num_search_messages
-    assert session.recall_options.max_query_length == data.recall_options.max_query_length
-    assert session.recall_options.limit == data.recall_options.limit
-    assert session.recall_options.lang == data.recall_options.lang
-    assert session.recall_options.metadata_filter == data.recall_options.metadata_filter
-    assert session.recall_options.confidence == data.recall_options.confidence
-    assert session.recall_options.mmr_strength == 0.5
-
-
-@test("recall options: test that None recall options works correctly")
-async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
-    pool = await create_db_pool(dsn=dsn)
-
-    # Create a session with recall_options=None
-    data = CreateSessionRequest(
-        agent=agent.id,
-        situation="test session with null recall options",
-        system_template="test system template",
-        recall_options=None,
-    )
-
-    session = await create_session(
-        developer_id=developer_id,
-        data=data,
-        connection_pool=pool,
-    )
-
-    # Verify that recall_options is None
-    assert session.recall_options is None
-
-
-@test("chat: check that gather_messages works with null recall_options but recall=True")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    pool = await create_db_pool(dsn=dsn)
-
-    # Create a session with recall_options=None
-    data = CreateSessionRequest(
-        agent=agent.id,
-        situation="test session with null recall options",
-        system_template="test system template",
-        recall_options=None,
-    )
-
-    session = await create_session(
-        developer_id=developer_id,
-        data=data,
-        connection_pool=pool,
-    )
-
-    # Verify that recall_options is None
-    assert session.recall_options is None
-
-    # Get the session again to double-check
-    session_from_db = await get_session(
-        developer_id=developer_id,
-        session_id=session.id,
-        connection_pool=pool,
-    )
-
-    assert session_from_db.recall_options is None
-
+    # assert session.recall_options == data.recall_options
     chat_context = await prepare_chat_context(
         developer_id=developer_id,
         session_id=session.id,
         connection_pool=pool,
     )
 
-    assert chat_context.session.recall_options is None
-
-    messages = [{"role": "user", "content": "hello"}]
-
-    # Call gather_messages with recall=True but session has recall_options=None
-    past_messages, doc_references = await gather_messages(
-        developer=developer,
-        session_id=session.id,
-        chat_context=chat_context,
-        chat_input=ChatInput(messages=messages, recall=True),
-        connection_pool=pool,
+    assert chat_context.session.recall_options.mode == data.recall_options.mode
+    assert (
+        chat_context.session.recall_options.num_search_messages
+        == data.recall_options.num_search_messages
     )
-
-    # Verify that we get back messages but no doc references
-    assert isinstance(past_messages, list)
-    assert len(doc_references) == 0  # Should be empty since recall_options is None
+    assert (
+        chat_context.session.recall_options.max_query_length
+        == data.recall_options.max_query_length
+    )
+    assert chat_context.session.recall_options.limit == data.recall_options.limit
+    assert chat_context.session.recall_options.lang == data.recall_options.lang
+    assert (
+        chat_context.session.recall_options.metadata_filter
+        == data.recall_options.metadata_filter
+    )
+    assert chat_context.session.recall_options.confidence == data.recall_options.confidence
+    assert chat_context.session.recall_options.mmr_strength == 0.5

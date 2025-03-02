@@ -38,7 +38,7 @@ model BaseDocSearch {
 model VectorDocSearch extends BaseDocSearch {
 
      /** The mode to use for the search. */
-    mode: "vector";
+    mode: "vector" = "vector";
 
     /** The confidence cutoff level */
     @minValue(-1)
@@ -54,13 +54,13 @@ model VectorDocSearch extends BaseDocSearch {
 model TextOnlyDocSearch extends BaseDocSearch {
 
     /** The mode to use for the search. */
-    mode: "text";
+    mode: "text" = "text";
 }
 
 model HybridDocSearch extends BaseDocSearch {
 
     /** The mode to use for the search. */
-    mode: "hybrid";
+    mode: "hybrid" = "hybrid";
 
     /** The confidence cutoff level */
     @minValue(-1)
@@ -70,7 +70,7 @@ model HybridDocSearch extends BaseDocSearch {
     /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
     @minValue(0)
     @maxValue(1)
-    alpha: float = 0.75;
+    alpha: float = 0.5;
 
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)
@@ -87,6 +87,7 @@ enum ContextOverflowType {
     /** Automatically summarizes, clips and merges messages in the background to compress the context. */
     adaptive,
 }
+
 
 @discriminator("kind")
 model Session {
@@ -144,7 +145,7 @@ model Session {
     forward_tool_calls: boolean = false;
     /** Recall options for the session */
     recall_options?: DocSearch | null = null;
-
+    
     ...HasId;
     ...HasMetadata;
     ...HasTimestamps;
