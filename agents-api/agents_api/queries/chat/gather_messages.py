@@ -72,6 +72,7 @@ async def gather_messages(
         ):
             message["content"] = message["content"][0]["text"].strip()
 
+    # If recall is disabled, return early
     if not recall:
         return past_messages, []
 
@@ -83,11 +84,11 @@ async def gather_messages(
     )
     recall_options = session.recall_options
 
-    # Return early if recall options not configured
-    if not recall_options:
+    # If recall is enabled but recall options are not configured, return early
+    if recall_options is None:
         return past_messages, []
 
-    # Get messages to search from
+    # If recall is enabled and recall options are configured, get messages to search from
     search_messages = [
         msg
         for msg in (past_messages + new_raw_messages)[-(recall_options.num_search_messages) :]
@@ -175,9 +176,11 @@ async def gather_messages(
             indices = maximal_marginal_relevance(
                 np.asarray(query_embedding),
                 [doc.snippet.embedding for doc in docs_with_embeddings],
-                k=recall_options.limit,
+                k=min(recall_options.limit, len(docs_with_embeddings)),
                 lambda_mult=1 - recall_options.mmr_strength,
             )
-            doc_references = [docs_with_embeddings[i] for i in indices]
+            doc_references = [
+                doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)
+            ]
 
     return past_messages, doc_references

@@ -62,10 +62,10 @@ async def search_user_docs(
             indices = maximal_marginal_relevance(
                 np.asarray(params["embedding"]),
                 [doc.snippet.embedding for doc in docs_with_embeddings],
-                k=search_params.limit,
+                k=min(search_params.limit, len(docs_with_embeddings)),
                 lambda_mult=1 - search_params.mmr_strength,
             )
-            docs = [docs_with_embeddings[i] for i in indices]
+            docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
 
     end = time.time()
 
@@ -121,10 +121,10 @@ async def search_agent_docs(
             indices = maximal_marginal_relevance(
                 np.asarray(params["embedding"]),
                 [doc.snippet.embedding for doc in docs_with_embeddings],
-                k=search_params.limit,
+                k=min(search_params.limit, len(docs_with_embeddings)),
                 lambda_mult=1 - search_params.mmr_strength,
             )
-            docs = [docs_with_embeddings[i] for i in indices]
+            docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
 
     end = time.time()
 
