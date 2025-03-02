@@ -77,6 +77,10 @@ async def gather_messages(
     # Get recall config
     recall_options = chat_context.session.recall_options
 
+    # If recall options is None, return early
+    if recall_options is None:
+        return past_messages, []
+
     # Get messages to search from
     search_messages = [
         msg
