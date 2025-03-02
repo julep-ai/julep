@@ -35,14 +35,14 @@ When creating a session, you can leverage the following configuration options to
 | `token_budget`       | `int` \| `None`                              | Threshold value for the adaptive context functionality                                           | `None`         |
 | `auto_run_tools`     | `StrictBool`                               | Whether to auto-run tools and send the tool results to the model when available                   | `False`          |
 | `forward_tool_calls` | `StrictBool`                               | Whether to forward tool calls directly to the model                                               | `False`          |
-| `recall_options`     | `VectorDocSearch \| TextOnlyDocSearch \| HybridDocSearch \| None`                    | Options for recalling context or certain data during the session                                  | `None`         |
+| `recall_options`     | `object` \| `None`                    | Options for different RAG search modes (VectorDocSearch, TextOnlyDocSearch, HybridDocSearch) in the session                                  | `VectorDocSearch`         |
 
-### Recall Options
+### Recall Options (RAG Search)
 
 When configuring a session, you can specify recall options to control how context or certain data is recalled during the session. Below are the available options based on search mode:
 
 <Tabs>
-  <Tab title="Vector Search">
+  <Tab title="Vector Search (VectorDocSearch)">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
     | `mode`            | `Literal["vector"]`     | The mode to use for the search (must be "vector")                                         | `"vector"` |
@@ -55,7 +55,7 @@ When configuring a session, you can specify recall options to control how contex
     | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
   </Tab>
 
-  <Tab title="Text Search">
+  <Tab title="Text Search (TextOnlyDocSearch)">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
     | `mode`            | `Literal["text"]`     | The mode to use for the search (must be "text")                                           | `"text"` |
@@ -66,7 +66,7 @@ When configuring a session, you can specify recall options to control how contex
     | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
   </Tab>
 
-  <Tab title="Hybrid Search">
+  <Tab title="Hybrid Search (HybridDocSearch)">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
     | `mode`            | `Literal["hybrid"]`     | The mode to use for the search (must be "hybrid")                                         | `"hybrid"` |
