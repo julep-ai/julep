@@ -87,7 +87,8 @@ app: FastAPI = FastAPI(
 
 # Enable metrics
 Instrumentator(excluded_handlers=["/metrics", "/docs", "/openapi.json"]).instrument(app).expose(
-    app, include_in_schema=False
+    app,
+    include_in_schema=False,
 )
 
 # Create a new router for the docs

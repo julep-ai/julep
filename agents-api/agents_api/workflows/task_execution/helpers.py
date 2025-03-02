@@ -52,7 +52,9 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
 
 
 async def base_evaluate_activity(
-    expr: str, context: StepContext | None = None, values: dict[str, Any] | None = None
+    expr: str,
+    context: StepContext | None = None,
+    values: dict[str, Any] | None = None,
 ) -> Any:
     try:
         return await workflow.execute_activity(
@@ -81,7 +83,9 @@ async def continue_as_child(
         run = workflow.continue_as_new
     else:
         run = lambda *args, **kwargs: workflow.execute_child_workflow(  # noqa: E731
-            info.workflow_type, *args, **kwargs
+            info.workflow_type,
+            *args,
+            **kwargs,
         )
 
     if execution_input.execution is None:
@@ -138,7 +142,9 @@ async def execute_switch_branch(
     case_execution_input.task = case_task
 
     case_next_target = TransitionTarget(
-        workflow=case_wf_name, step=0, scope_id=context.current_scope_id
+        workflow=case_wf_name,
+        step=0,
+        scope_id=context.current_scope_id,
     )
 
     return await continue_as_child(
@@ -181,7 +187,9 @@ async def execute_if_else_branch(
     if_else_execution_input.task = if_else_task
 
     if_else_next_target = TransitionTarget(
-        workflow=if_else_wf_name, step=0, scope_id=context.current_scope_id
+        workflow=if_else_wf_name,
+        step=0,
+        scope_id=context.current_scope_id,
     )
 
     return await continue_as_child(
@@ -218,7 +226,9 @@ async def execute_foreach_step(
         foreach_execution_input = execution_input.model_copy()
         foreach_execution_input.task = foreach_task
         foreach_next_target = TransitionTarget(
-            workflow=foreach_wf_name, step=0, scope_id=context.current_scope_id
+            workflow=foreach_wf_name,
+            step=0,
+            scope_id=context.current_scope_id,
         )
 
         result = await continue_as_child(
@@ -266,7 +276,9 @@ async def execute_map_reduce_step(
         map_reduce_execution_input.task = map_reduce_task
         # NOTE: Step needs to be refactored to support multiple steps
         map_reduce_next_target = TransitionTarget(
-            workflow=workflow_name, step=0, scope_id=context.current_scope_id
+            workflow=workflow_name,
+            step=0,
+            scope_id=context.current_scope_id,
         )
 
         workflow_result = await continue_as_child(
@@ -341,7 +353,9 @@ async def execute_map_reduce_step_parallel(
             map_reduce_execution_input = execution_input.model_copy()
             map_reduce_execution_input.task = map_reduce_task
             map_reduce_next_target = TransitionTarget(
-                workflow=workflow_name, step=0, scope_id=context.current_scope_id
+                workflow=workflow_name,
+                step=0,
+                scope_id=context.current_scope_id,
             )
 
             batch_pending.append(
@@ -351,8 +365,8 @@ async def execute_map_reduce_step_parallel(
                         map_reduce_next_target,
                         item,
                         user_state=user_state,
-                    )
-                )
+                    ),
+                ),
             )
 
         # Wait for all the batch items to complete

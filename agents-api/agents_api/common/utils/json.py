@@ -63,5 +63,7 @@ def dumps(obj: Any, default_empty_value="", cls=None) -> str:
     """
 
     return json.dumps(
-        obj, cls=cls or CustomJSONEncoder, default_empty_value=default_empty_value
+        obj,
+        cls=cls or CustomJSONEncoder,
+        default_empty_value=default_empty_value,
     )

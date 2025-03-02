@@ -50,7 +50,10 @@ def get_search_fn_and_params(
 
     match search_params:
         case TextOnlyDocSearchRequest(
-            text=query, limit=k, lang=lang, metadata_filter=metadata_filter
+            text=query,
+            limit=k,
+            lang=lang,
+            metadata_filter=metadata_filter,
         ):
             search_language = get_language(lang)
 

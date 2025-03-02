@@ -113,7 +113,8 @@ async def _():
     extra_lambda_strs = {"reducer_lambda": f"lambda _result, _item: ({reduce})"}
 
     with patch(
-        "agents_api.common.protocol.tasks.StepContext.prepare_for_step", return_value={"x": 10}
+        "agents_api.common.protocol.tasks.StepContext.prepare_for_step",
+        return_value={"x": 10},
     ):
         with raises(ValueError):
             result = await base_evaluate(
@@ -130,27 +131,45 @@ async def _():
                 extra_lambda_strs=extra_lambda_strs,
             )
         result = await base_evaluate(
-            exprs, context=context_none, values=values, extra_lambda_strs=extra_lambda_strs_none
+            exprs,
+            context=context_none,
+            values=values,
+            extra_lambda_strs=extra_lambda_strs_none,
         )
         assert result == 10
         result = await base_evaluate(
-            exprs, context=context_none, values=values, extra_lambda_strs=extra_lambda_strs
+            exprs,
+            context=context_none,
+            values=values,
+            extra_lambda_strs=extra_lambda_strs,
         )
         assert result == 10
         result = await base_evaluate(
-            exprs, context=context, values=values_none, extra_lambda_strs=extra_lambda_strs_none
+            exprs,
+            context=context,
+            values=values_none,
+            extra_lambda_strs=extra_lambda_strs_none,
         )
         assert result == 15
         result = await base_evaluate(
-            exprs, context=context, values=values_none, extra_lambda_strs=extra_lambda_strs
+            exprs,
+            context=context,
+            values=values_none,
+            extra_lambda_strs=extra_lambda_strs,
         )
         assert result == 15
         result = await base_evaluate(
-            exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs_none
+            exprs,
+            context=context,
+            values=values,
+            extra_lambda_strs=extra_lambda_strs_none,
         )
         assert result == 15
         result = await base_evaluate(
-            exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs
+            exprs,
+            context=context,
+            values=values,
+            extra_lambda_strs=extra_lambda_strs,
         )
         assert result == 15
 

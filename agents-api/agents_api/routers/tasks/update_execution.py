@@ -31,7 +31,7 @@ async def update_execution(
         case StopExecutionRequest():
             try:
                 wf_handle = temporal_client.get_workflow_handle_for(
-                    *await get_temporal_workflow_data(execution_id=execution_id)
+                    *await get_temporal_workflow_data(execution_id=execution_id),
                 )
                 await wf_handle.cancel()
             except Exception:

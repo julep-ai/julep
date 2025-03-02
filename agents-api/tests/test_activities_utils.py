@@ -36,9 +36,9 @@ def _():
         mock_litellm_completion.return_value = MagicMock(
             choices=[
                 MagicMock(
-                    message=MagicMock(content="Mock LLM Response (humanized text from LLM)")
-                )
-            ]
+                    message=MagicMock(content="Mock LLM Response (humanized text from LLM)"),
+                ),
+            ],
         )
 
         mock_deep_translator.return_value = "Mock translated text"

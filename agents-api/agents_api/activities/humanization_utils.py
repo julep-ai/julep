@@ -170,7 +170,9 @@ def is_human_copyleaks(text):
 
         # Send the POST request with JSON payload and headers
         response = requests.post(
-            COPLEYAKS_URL.format(scan_id=scan_id), json=payload, headers=headers
+            COPLEYAKS_URL.format(scan_id=scan_id),
+            json=payload,
+            headers=headers,
         )
         response.raise_for_status()
 
@@ -336,7 +338,8 @@ def split_with_langchain(markdown_text: str) -> list[Document]:
 
     # MD splits
     markdown_splitter = MarkdownHeaderTextSplitter(
-        headers_to_split_on=headers_to_split_on, strip_headers=True
+        headers_to_split_on=headers_to_split_on,
+        strip_headers=True,
     )
     return markdown_splitter.split_text(markdown_text)
 

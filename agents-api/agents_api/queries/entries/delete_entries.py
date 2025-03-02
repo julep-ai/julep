@@ -94,7 +94,10 @@ async def delete_entries_for_session(
 @pg_query
 @beartype
 async def delete_entries(
-    *, developer_id: UUID, session_id: UUID, entry_ids: list[UUID]
+    *,
+    developer_id: UUID,
+    session_id: UUID,
+    entry_ids: list[UUID],
 ) -> list[tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]]:
     """Delete specific entries by their IDs.
 

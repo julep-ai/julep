@@ -20,7 +20,9 @@ with workflow.unsafe.imports_passed_through():
 
 
 async def transition(
-    context: StepContext, state: PartialTransition | None = None, **kwargs
+    context: StepContext,
+    state: PartialTransition | None = None,
+    **kwargs,
 ) -> CreateTransitionRequest:
     if state is None:
         state = PartialTransition()
@@ -55,7 +57,7 @@ async def transition(
             task_steps.transition_step,
             args=[context, transition_request],
             schedule_to_close_timeout=timedelta(
-                seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
             ),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),

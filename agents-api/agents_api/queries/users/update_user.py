@@ -33,7 +33,10 @@ RETURNING *
 @pg_query
 @beartype
 async def update_user(
-    *, developer_id: UUID, user_id: UUID, data: UpdateUserRequest
+    *,
+    developer_id: UUID,
+    user_id: UUID,
+    data: UpdateUserRequest,
 ) -> tuple[str, list]:
     """
     Constructs an optimized SQL query to update a user's details.

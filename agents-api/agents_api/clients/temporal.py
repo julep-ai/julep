@@ -78,7 +78,7 @@ async def get_client_with_metrics(
     new_runtime = Runtime(
         telemetry=TelemetryConfig(
             metrics=PrometheusConfig(
-                bind_address=f"{temporal_metrics_bind_host}:{temporal_metrics_bind_port}"
+                bind_address=f"{temporal_metrics_bind_host}:{temporal_metrics_bind_port}",
             ),
         ),
     )
@@ -111,7 +111,9 @@ async def run_task_execution_workflow(
         raise ValueError(msg)
 
     start: TransitionTarget = start or TransitionTarget(
-        workflow="main", step=0, scope_id=uuid7()
+        workflow="main",
+        step=0,
+        scope_id=uuid7(),
     )
 
     client = client or (await get_client())

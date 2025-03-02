@@ -34,7 +34,7 @@ def _(client=client, agent=test_agent):
                 "evaluate": {
                     "additionalProp1": "value1",
                 },
-            }
+            },
         ],
     }
 
@@ -57,7 +57,7 @@ def _(make_request=make_request, agent=test_agent):
                 "evaluate": {
                     "additionalProp1": "value1",
                 },
-            }
+            },
         ],
     }
 
@@ -217,7 +217,7 @@ def _(make_request=make_request, agent=test_agent):
                 "evaluate": {
                     "additionalProp1": "value1",
                 },
-            }
+            },
         ],
     }
 

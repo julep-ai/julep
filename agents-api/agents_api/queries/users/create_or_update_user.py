@@ -44,7 +44,10 @@ RETURNING *;
 @pg_query
 @beartype
 async def create_or_update_user(
-    *, developer_id: UUID, user_id: UUID, data: CreateOrUpdateUserRequest
+    *,
+    developer_id: UUID,
+    user_id: UUID,
+    data: CreateOrUpdateUserRequest,
 ) -> tuple[str, list]:
     """
     Constructs an SQL query to create or update a user.

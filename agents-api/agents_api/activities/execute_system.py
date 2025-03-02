@@ -182,5 +182,5 @@ def _create_search_request(arguments: dict) -> Any:
 mock_execute_system = execute_system
 
 execute_system = activity.defn(name="execute_system")(
-    execute_system if not testing else mock_execute_system
+    execute_system if not testing else mock_execute_system,
 )

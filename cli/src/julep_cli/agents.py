@@ -18,26 +18,31 @@ SINGLE_AGENT_COLUMN_WIDTH = 50
 def create(
     name: Annotated[str | None, typer.Option("--name", "-n", help="Name of the agent")] = None,
     model: Annotated[
-        str | None, typer.Option("--model", "-m", help="Model to be used by the agent")
+        str | None,
+        typer.Option("--model", "-m", help="Model to be used by the agent"),
     ] = None,
     about: Annotated[
-        str | None, typer.Option("--about", "-a", help="Description of the agent")
+        str | None,
+        typer.Option("--about", "-a", help="Description of the agent"),
     ] = None,
     default_settings: Annotated[
         str | None,
         typer.Option("--default-settings", help="Default settings for the agent (JSON string)"),
     ] = None,
     metadata: Annotated[
-        str | None, typer.Option("--metadata", help="Metadata for the agent (JSON string)")
+        str | None,
+        typer.Option("--metadata", help="Metadata for the agent (JSON string)"),
     ] = None,
     instructions: Annotated[
         list[str],
         typer.Option(
-            "--instructions", help="Instructions for the agent, can be specified multiple times"
+            "--instructions",
+            help="Instructions for the agent, can be specified multiple times",
         ),
     ] = [],
     definition: Annotated[
-        str | None, typer.Option("--definition", "-d", help="Path to an agent definition file")
+        str | None,
+        typer.Option("--definition", "-d", help="Path to an agent definition file"),
     ] = None,
 ):
     """Create a new AI agent. Either provide a definition file or use the other options."""
@@ -50,7 +55,8 @@ def create(
     # Validate that either definition is provided or name/model
     if not definition and not (name and model):
         error_console.print(
-            "Error: Must provide either a definition file or name and model", highlight=True
+            "Error: Must provide either a definition file or name and model",
+            highlight=True,
         )
         raise typer.Exit(1)
 
@@ -66,7 +72,9 @@ def create(
     client = get_julep_client()
 
     with Progress(
-        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
     ) as progress:
         try:
             create_agent_task = progress.add_task("Creating agent...", start=False)
@@ -92,16 +100,20 @@ def create(
 def update(
     id: Annotated[str, typer.Option("--id", help="ID of the agent to update")],
     name: Annotated[
-        str | None, typer.Option("--name", "-n", help="New name for the agent")
+        str | None,
+        typer.Option("--name", "-n", help="New name for the agent"),
     ] = None,
     model: Annotated[
-        str | None, typer.Option("--model", "-m", help="New model for the agent")
+        str | None,
+        typer.Option("--model", "-m", help="New model for the agent"),
     ] = None,
     about: Annotated[
-        str | None, typer.Option("--about", "-a", help="New description for the agent")
+        str | None,
+        typer.Option("--about", "-a", help="New description for the agent"),
     ] = None,
     metadata: Annotated[
-        str | None, typer.Option("--metadata", help="Metadata for the agent (JSON string)")
+        str | None,
+        typer.Option("--metadata", help="Metadata for the agent (JSON string)"),
     ] = None,
     default_settings: Annotated[
         str | None,
@@ -110,7 +122,8 @@ def update(
     instructions: Annotated[
         list[str],
         typer.Option(
-            "--instructions", help="Instructions for the agent, can be specified multiple times"
+            "--instructions",
+            help="Instructions for the agent, can be specified multiple times",
         ),
     ] = [],
 ):
@@ -203,11 +216,13 @@ def list(
     metadata_filter: Annotated[
         str | None,
         typer.Option(
-            "--metadata-filter", help="Filter agents based on metadata criteria (JSON string)"
+            "--metadata-filter",
+            help="Filter agents based on metadata criteria (JSON string)",
         ),
     ] = None,
     json_output: Annotated[
-        bool, typer.Option("--json", help="Output the list in JSON format")
+        bool,
+        typer.Option("--json", help="Output the list in JSON format"),
     ] = False,
 ):
     """List all AI agents or filter based on metadata"""
@@ -232,7 +247,7 @@ def list(
             agents = client.agents.list(metadata_filter=metadata_filter).items
         except Exception as e:
             error_console.print(
-                Text(f"Error fetching agents: {e}", style="bold red", highlight=True)
+                Text(f"Error fetching agents: {e}", style="bold red", highlight=True),
             )
             raise typer.Exit(1)
 
@@ -297,7 +312,8 @@ def get(
 
     if json_output:
         console.print(
-            json.dumps(agent.model_dump(), indent=2, cls=DateTimeEncoder), highlight=True
+            json.dumps(agent.model_dump(), indent=2, cls=DateTimeEncoder),
+            highlight=True,
         )
         return
 

@@ -76,7 +76,7 @@ async def list_agents(
     # Build metadata filter clause if needed
 
     agent_query = raw_query.format(
-        metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else ""
+        metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else "",
     )
 
     params = [

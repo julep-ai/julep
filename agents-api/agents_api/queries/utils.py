@@ -161,7 +161,8 @@ def pg_query[**P](
 
                 if connection_error:
                     exc = HTTPException(
-                        status_code=429, detail="Resource busy. Please try again later."
+                        status_code=429,
+                        detail="Resource busy. Please try again later.",
                     )
                     raise exc from e
 

@@ -586,7 +586,8 @@ constants = {
 
 @beartype
 def get_evaluator(
-    names: dict[str, Any], extra_functions: dict[str, Callable] | None = None
+    names: dict[str, Any],
+    extra_functions: dict[str, Callable] | None = None,
 ) -> SimpleEval:
     if len(names) > MAX_COLLECTION_SIZE:
         msg = f"Too many variables (max {MAX_COLLECTION_SIZE})"
@@ -634,7 +635,7 @@ def get_handler_with_filtered_params(system: SystemDef) -> Callable:
 
     # Remove problematic parameters
     filtered_handler.__signature__ = sig.replace(
-        parameters=[p for p in sig.parameters.values() if p.name not in parameters_to_exclude]
+        parameters=[p for p in sig.parameters.values() if p.name not in parameters_to_exclude],
     )
 
     return filtered_handler

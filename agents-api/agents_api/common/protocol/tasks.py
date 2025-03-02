@@ -171,7 +171,9 @@ class StepContext(BaseModel):
         agent_tools = execution_input.agent_tools
 
         step_tools: Literal["all"] | list[ToolRef | CreateToolRequest] = getattr(
-            self.current_step, "tools", "all"
+            self.current_step,
+            "tools",
+            "all",
         )
 
         if step_tools != "all":
@@ -186,7 +188,7 @@ class StepContext(BaseModel):
         for tool in task.tools:
             tool_def = tool.model_dump()
             task_tools.append(
-                CreateToolRequest(**{tool_def["type"]: tool_def.pop("spec"), **tool_def})
+                CreateToolRequest(**{tool_def["type"]: tool_def.pop("spec"), **tool_def}),
             )
 
         if not task.inherit_tools:

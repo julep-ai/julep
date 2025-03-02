@@ -6,5 +6,6 @@ from .base_models import BaseOutput
 
 class WikipediaSearchOutput(BaseOutput):
     documents: list[Document] = Field(
-        ..., description="The documents returned from the Wikipedia search"
+        ...,
+        description="The documents returned from the Wikipedia search",
     )

@@ -25,7 +25,15 @@ class ApiCallDef(BaseModel):
         populate_by_name=True,
     )
     method: Literal[
-        "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT", "TRACE"
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS",
+        "CONNECT",
+        "TRACE",
     ]
     """
     The HTTP method to use
@@ -1626,7 +1634,10 @@ class SpiderFetchArguments(BaseModel):
     The URL to fetch data from
     """
     content_type: Literal[
-        "application/json", "text/csv", "application/xml", "application/jsonl"
+        "application/json",
+        "text/csv",
+        "application/xml",
+        "application/jsonl",
     ] = "application/json"
     """
     The content type to return
@@ -1650,7 +1661,10 @@ class SpiderFetchArgumentsUpdate(BaseModel):
     The URL to fetch data from
     """
     content_type: Literal[
-        "application/json", "text/csv", "application/xml", "application/jsonl"
+        "application/json",
+        "text/csv",
+        "application/xml",
+        "application/jsonl",
     ] = "application/json"
     """
     The content type to return

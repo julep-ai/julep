@@ -37,7 +37,10 @@ RETURNING *;
 @pg_query
 @beartype
 async def update_agent(
-    *, agent_id: UUID, developer_id: UUID, data: UpdateAgentRequest
+    *,
+    agent_id: UUID,
+    developer_id: UUID,
+    data: UpdateAgentRequest,
 ) -> tuple[str, list]:
     """
     Constructs the SQL query to fully update an agent's details.

@@ -17,7 +17,7 @@ class PromptTooBigError(AgentsBaseException):
 
     def __init__(self, token_count, max_tokens) -> None:
         super().__init__(
-            f"prompt is too big, {token_count} tokens provided, exceeds maximum of {max_tokens}"
+            f"prompt is too big, {token_count} tokens provided, exceeds maximum of {max_tokens}",
         )
 
 

@@ -21,7 +21,8 @@ def chat(
         ),
     ],
     situation: Annotated[
-        str | None, typer.Option("--situation", "-s", help="Situation to chat about")
+        str | None,
+        typer.Option("--situation", "-s", help="Situation to chat about"),
     ] = None,
     settings: Annotated[
         str | None,
@@ -48,7 +49,7 @@ def chat(
         Panel(
             Text(f"Starting chat with agent '{agent.name}'", style="bold green"),
             title="Chat Session",
-        )
+        ),
     )
 
     while True:
@@ -68,7 +69,7 @@ def chat(
                     {
                         "role": "user",
                         "content": message,
-                    }
+                    },
                 ],
             )
 
@@ -76,5 +77,5 @@ def chat(
             Panel(
                 Text(response.choices[0].message.content, style="bold blue"),
                 title="Agent Response",
-            )
+            ),
         )

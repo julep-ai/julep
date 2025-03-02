@@ -27,7 +27,8 @@ from ...models.cloudinary import CloudinaryEditOutput, CloudinaryUploadOutput
     stop=stop_after_attempt(4),
 )
 async def media_upload(
-    setup: CloudinarySetup, arguments: CloudinaryUploadArguments
+    setup: CloudinarySetup,
+    arguments: CloudinaryUploadArguments,
 ) -> CloudinaryUploadOutput:
     """
     Upload media to Cloudinary.
@@ -99,7 +100,8 @@ async def media_upload(
     stop=stop_after_attempt(4),
 )
 async def media_edit(
-    setup: CloudinarySetup, arguments: CloudinaryEditArguments
+    setup: CloudinarySetup,
+    arguments: CloudinaryEditArguments,
 ) -> CloudinaryEditOutput:
     """
     Edit media in Cloudinary.
@@ -124,7 +126,8 @@ async def media_edit(
 
         # Generate transformed URL
         transformed_url = cloudinary.utils.cloudinary_url(
-            arguments.public_id, transformation=arguments.transformation
+            arguments.public_id,
+            transformation=arguments.transformation,
         )
         if not transformed_url or not transformed_url[0]:
             return CloudinaryEditOutput(

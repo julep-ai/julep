@@ -77,7 +77,9 @@ def generate_transition(
     transition_id: UUID = uuid7(),
     type: TransitionType = "step",
     current_step: TransitionTarget = TransitionTarget(
-        workflow="main", step=0, scope_id=uuid7()
+        workflow="main",
+        step=0,
+        scope_id=uuid7(),
     ),
     next_step: TransitionTarget | None = None,
     task_token: str | None = None,
@@ -110,7 +112,7 @@ async def patch_testing_temporal():
 
     # Start a local Temporal environment
     async with await WorkflowEnvironment.start_time_skipping(
-        data_converter=pydantic_data_converter
+        data_converter=pydantic_data_converter,
     ) as env:
         # Create a worker with our workflows and start it
         worker = create_worker(client=env.client)
@@ -165,7 +167,7 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
                 "tool_calls": [],
                 "created_at": 1,
                 # finish_reason="stop",
-            }
+            },
         ],
         created=0,
         object="text_completion",
@@ -184,7 +186,7 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
 @contextmanager
 def patch_integration_service(output: dict = {"result": "ok"}):
     with patch(
-        "agents_api.clients.integrations.run_integration_service"
+        "agents_api.clients.integrations.run_integration_service",
     ) as run_integration_service:
         run_integration_service.return_value = output
 
@@ -233,6 +235,6 @@ def get_pg_dsn(start_vectorizer: bool = False):
 @contextmanager
 def get_localstack():
     with LocalStackContainer(image="localstack/localstack:s3-latest").with_services(
-        "s3"
+        "s3",
     ) as localstack:
         yield localstack

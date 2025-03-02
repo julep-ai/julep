@@ -56,10 +56,14 @@ def _transform(d):
 
 @rewrap_exceptions({
     asyncpg.InvalidRowCountInLimitClauseError: partialclass(
-        HTTPException, status_code=400, detail="Invalid limit clause"
+        HTTPException,
+        status_code=400,
+        detail="Invalid limit clause",
     ),
     asyncpg.InvalidRowCountInResultOffsetClauseError: partialclass(
-        HTTPException, status_code=400, detail="Invalid offset clause"
+        HTTPException,
+        status_code=400,
+        detail="Invalid offset clause",
     ),
     **common_db_exceptions("transition", ["list"]),
 })

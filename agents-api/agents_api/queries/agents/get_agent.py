@@ -43,7 +43,9 @@ WHERE
 @pg_query
 @beartype
 async def get_agent(
-    *, agent_id: UUID, developer_id: UUID
+    *,
+    agent_id: UUID,
+    developer_id: UUID,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     """
     Constructs the SQL query to retrieve an agent's details.
