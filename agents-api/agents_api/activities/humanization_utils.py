@@ -46,7 +46,7 @@ Return only the rewritten text without explanations or meta-commentary.""",
 }
 
 SAPLING_URL = "https://api.sapling.ai/api/v1/aidetect"
-COPLEYAKS_URL = "https://api.copyleaks.com/v2/writer-detector/{scan_id}/check"
+COPYLEAKS_URL = "https://api.copyleaks.com/v2/writer-detector/{scan_id}/check"
 ZEROGPT_URL = "https://api.zerogpt.com/api/detect/detectText"
 DESKLIB_URL = "http://35.243.190.233/detect"
 
@@ -170,7 +170,7 @@ def is_human_copyleaks(text):
 
         # Send the POST request with JSON payload and headers
         response = requests.post(
-            COPLEYAKS_URL.format(scan_id=scan_id),
+            COPYLEAKS_URL.format(scan_id=scan_id),
             json=payload,
             headers=headers,
         )
