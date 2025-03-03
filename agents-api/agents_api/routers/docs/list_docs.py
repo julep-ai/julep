@@ -42,7 +42,8 @@ async def list_agent_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     agent_id: UUID,
     metadata_filter: Annotated[
-        MetadataFilter, Depends(create_filter_extractor("metadata_filter"))
+        MetadataFilter,
+        Depends(create_filter_extractor("metadata_filter")),
     ],
     limit: int = 100,
     offset: int = 0,

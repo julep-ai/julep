@@ -117,7 +117,10 @@ def extract_keywords(doc: Doc, top_n: int = 25, split_chunks: bool = True) -> li
 
 @lru_cache(maxsize=1000)
 def text_to_tsvector_query(
-    paragraph: str, top_n: int = 25, min_keywords: int = 1, split_chunks: bool = True
+    paragraph: str,
+    top_n: int = 25,
+    min_keywords: int = 1,
+    split_chunks: bool = True,
 ) -> str:
     """
     Extracts meaningful keywords/phrases from text and joins them with OR.

@@ -20,7 +20,8 @@ def create(
         typer.Option("--agent-id", "-a", help="ID of the agent the tool is associated with"),
     ],
     definition: Annotated[
-        str, typer.Option("--definition", "-d", help="Path to the tool configuration YAML file")
+        str,
+        typer.Option("--definition", "-d", help="Path to the tool configuration YAML file"),
     ],
     name: Annotated[
         str | None,
@@ -72,11 +73,14 @@ def update(
     definition: Annotated[
         str | None,
         typer.Option(
-            "--definition", "-d", help="Path to the updated tool configuration YAML file"
+            "--definition",
+            "-d",
+            help="Path to the updated tool configuration YAML file",
         ),
     ] = None,
     name: Annotated[
-        str | None, typer.Option("--name", "-n", help="New name for the tool")
+        str | None,
+        typer.Option("--name", "-n", help="New name for the tool"),
     ] = None,
 ):
     """Update an existing tool's details.
@@ -94,7 +98,9 @@ def update(
 
     if not tool_yaml_contents:
         error_console.print(
-            "Error: No tool name or definition provided", style="bold red", highlight=True
+            "Error: No tool name or definition provided",
+            style="bold red",
+            highlight=True,
         )
         raise typer.Exit(1)
 
@@ -126,7 +132,9 @@ def delete(
     force: Annotated[
         bool,
         typer.Option(
-            "--force", "-f", help="Force the deletion without prompting for confirmation"
+            "--force",
+            "-f",
+            help="Force the deletion without prompting for confirmation",
         ),
     ] = False,
 ):
@@ -164,10 +172,12 @@ def delete(
 @tools_app.command()
 def list(
     agent_id: Annotated[
-        str | None, typer.Option("--agent-id", "-a", help="Filter tools by associated agent ID")
+        str | None,
+        typer.Option("--agent-id", "-a", help="Filter tools by associated agent ID"),
     ] = None,
     json_output: Annotated[
-        bool, typer.Option("--json", help="Output the list in JSON format")
+        bool,
+        typer.Option("--json", help="Output the list in JSON format"),
     ] = False,
 ):
     """List all tools or filter based on criteria.
@@ -181,7 +191,9 @@ def list(
     client = get_julep_client()
 
     with Progress(
-        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
     ) as progress:
         try:
             list_tools_task = progress.add_task("Listing tools...", start=False)

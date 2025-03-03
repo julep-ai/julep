@@ -76,7 +76,7 @@ async def summarize_messages(
         result["content"]
         .split("<ct:summarized-messages>")[-1]
         .replace("</ct:summarized-messages>", "")
-        .strip()
+        .strip(),
     )
 
     assert all(msg.get("summarizes") is not None for msg in summarized_messages)

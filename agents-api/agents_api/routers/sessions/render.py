@@ -104,7 +104,7 @@ async def render_chat_input(
 
     # Render the system message
     if system_template := chat_context.merge_system_template(
-        chat_context.session.system_template
+        chat_context.session.system_template,
     ):
         system_message = {
             "role": "system",

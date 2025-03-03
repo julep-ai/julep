@@ -84,7 +84,7 @@ async def list_tasks(
 
     # Format query with metadata filter if needed
     query = list_tasks_query.format(
-        metadata_filter_query="AND metadata @> $7::jsonb" if metadata_filter else ""
+        metadata_filter_query="AND metadata @> $7::jsonb" if metadata_filter else "",
     )
 
     # Build parameters list

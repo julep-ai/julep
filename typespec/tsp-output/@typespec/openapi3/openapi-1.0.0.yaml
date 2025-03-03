@@ -4103,8 +4103,9 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          type: object
-          allOf:
+          anyOf:
+            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
             - $ref: '#/components/schemas/Sessions.HybridDocSearch'
           nullable: true
           description: Recall options for the session
@@ -4178,8 +4179,9 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          type: object
-          allOf:
+          anyOf:
+            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
             - $ref: '#/components/schemas/Sessions.HybridDocSearch'
           nullable: true
           description: Recall options for the session
@@ -4197,6 +4199,8 @@ components:
       properties:
         mode:
           type: string
+          enum:
+            - hybrid
           description: The mode to use for the search.
           default: hybrid
         confidence:
@@ -4210,7 +4214,7 @@ components:
           minimum: 0
           maximum: 1
           description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-          default: 0.75
+          default: 0.5
         mmr_strength:
           type: number
           minimum: 0
@@ -4225,6 +4229,8 @@ components:
       properties:
         mode:
           type: string
+          enum:
+            - hybrid
           description: The mode to use for the search.
           default: hybrid
         confidence:
@@ -4238,7 +4244,7 @@ components:
           minimum: 0
           maximum: 1
           description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-          default: 0.75
+          default: 0.5
         mmr_strength:
           type: number
           minimum: 0
@@ -4334,8 +4340,9 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          type: object
-          allOf:
+          anyOf:
+            - $ref: '#/components/schemas/Sessions.VectorDocSearchUpdate'
+            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearchUpdate'
             - $ref: '#/components/schemas/Sessions.HybridDocSearchUpdate'
           nullable: true
           description: Recall options for the session
@@ -4402,8 +4409,9 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          type: object
-          allOf:
+          anyOf:
+            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
             - $ref: '#/components/schemas/Sessions.HybridDocSearch'
           nullable: true
           description: Recall options for the session
@@ -4480,6 +4488,8 @@ components:
       properties:
         mode:
           type: string
+          enum:
+            - text
           description: The mode to use for the search.
           default: text
       allOf:
@@ -4489,6 +4499,8 @@ components:
       properties:
         mode:
           type: string
+          enum:
+            - text
           description: The mode to use for the search.
           default: text
       allOf:
@@ -4541,8 +4553,9 @@ components:
           description: Whether to forward tool calls to the model
           default: false
         recall_options:
-          type: object
-          allOf:
+          anyOf:
+            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
             - $ref: '#/components/schemas/Sessions.HybridDocSearch'
           nullable: true
           description: Recall options for the session
@@ -4559,6 +4572,8 @@ components:
       properties:
         mode:
           type: string
+          enum:
+            - vector
           description: The mode to use for the search.
           default: vector
         confidence:
@@ -4581,6 +4596,8 @@ components:
       properties:
         mode:
           type: string
+          enum:
+            - vector
           description: The mode to use for the search.
           default: vector
         confidence:

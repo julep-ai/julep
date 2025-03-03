@@ -79,7 +79,9 @@ async def chat(
     if chat_input.save:
         new_entries = [
             CreateEntryRequest.from_model_input(
-                model=settings["model"], **msg, source="api_request"
+                model=settings["model"],
+                **msg,
+                source="api_request",
             )
             for msg in new_messages
         ]
@@ -91,7 +93,7 @@ async def chat(
                 model=settings["model"],
                 **model_response.choices[0].model_dump()["message"],
                 source="api_response",
-            )
+            ),
         )
         background_tasks.add_task(
             create_entries,
@@ -124,7 +126,7 @@ async def chat(
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(
-        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0
+        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
     )
 
     return chat_response

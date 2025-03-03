@@ -377,7 +377,10 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 
 @test("query: search docs by embedding")
 async def _(
-    dsn=pg_dsn, agent=test_agent, developer=test_developer, doc=test_doc_with_embedding
+    dsn=pg_dsn,
+    agent=test_agent,
+    developer=test_developer,
+    doc=test_doc_with_embedding,
 ):
     pool = await create_db_pool(dsn=dsn)
 
@@ -402,7 +405,10 @@ async def _(
 
 @test("query: search docs by hybrid")
 async def _(
-    dsn=pg_dsn, agent=test_agent, developer=test_developer, doc=test_doc_with_embedding
+    dsn=pg_dsn,
+    agent=test_agent,
+    developer=test_developer,
+    doc=test_doc_with_embedding,
 ):
     pool = await create_db_pool(dsn=dsn)
 

@@ -43,7 +43,10 @@ Instructions:
 
 
 def make_entities_prompt(
-    session: list[pd.Series] | list[Any], user="a user", assistant="gpt-4-turbo", **_
+    session: list[pd.Series] | list[Any],
+    user="a user",
+    assistant="gpt-4-turbo",
+    **_,
 ):
     session = [m.to_dict() if isinstance(m, pd.Series) else m for m in session]
     session_json_str = json.dumps(session, indent=2)

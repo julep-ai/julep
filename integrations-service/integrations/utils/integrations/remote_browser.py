@@ -36,7 +36,10 @@ class PlaywrightActions:
     height: int | None
 
     def __init__(
-        self, browser: Browser, width: int | None = None, height: int | None = None
+        self,
+        browser: Browser,
+        width: int | None = None,
+        height: int | None = None,
     ) -> None:
         self.browser = browser
         self.context = self.browser.contexts[0]
@@ -50,7 +53,7 @@ class PlaywrightActions:
         return bool(
             await self._execute_javascript("""
                 window.$$julep$$_initialized
-            """)
+            """),
         )
 
     async def initialize(self, debug: bool = False) -> None:
@@ -180,7 +183,7 @@ class PlaywrightActions:
 
         # Load the cursor image
         cursor = Image.open(
-            "./integrations/utils/integrations/assets/cursor-small.png"
+            "./integrations/utils/integrations/assets/cursor-small.png",
         ).convert("RGBA")
 
         # Create a copy of the screenshot to overlay the cursor
@@ -377,7 +380,8 @@ class PlaywrightActions:
     stop=stop_after_attempt(4),
 )
 async def perform_action(
-    setup: RemoteBrowserSetup, arguments: RemoteBrowserArguments
+    setup: RemoteBrowserSetup,
+    arguments: RemoteBrowserArguments,
 ) -> RemoteBrowserOutput:
     p: PlaywrightContextManager = await async_playwright().start()
     connect_url = setup.connect_url if setup.connect_url else arguments.connect_url

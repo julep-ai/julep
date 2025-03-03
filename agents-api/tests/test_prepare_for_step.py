@@ -37,7 +37,10 @@ async def _():
             execution_input=ExecutionInput(
                 developer_id=uuid.uuid4(),
                 agent=Agent(
-                    id=uuid.uuid4(), name="test agent", created_at=utcnow(), updated_at=utcnow()
+                    id=uuid.uuid4(),
+                    name="test agent",
+                    created_at=utcnow(),
+                    updated_at=utcnow(),
                 ),
                 agent_tools=[],
                 arguments={},
@@ -73,7 +76,10 @@ async def _():
             execution_input=ExecutionInput(
                 developer_id=uuid.uuid4(),
                 agent=Agent(
-                    id=uuid.uuid4(), name="test agent", created_at=utcnow(), updated_at=utcnow()
+                    id=uuid.uuid4(),
+                    name="test agent",
+                    created_at=utcnow(),
+                    updated_at=utcnow(),
                 ),
                 agent_tools=[],
                 arguments={},
@@ -109,7 +115,10 @@ async def _():
             execution_input=ExecutionInput(
                 developer_id=uuid.uuid4(),
                 agent=Agent(
-                    id=uuid.uuid4(), name="test agent", created_at=utcnow(), updated_at=utcnow()
+                    id=uuid.uuid4(),
+                    name="test agent",
+                    created_at=utcnow(),
+                    updated_at=utcnow(),
                 ),
                 agent_tools=[],
                 arguments={},
@@ -150,7 +159,9 @@ async def _():
     assert get_workflow_name(transition) == "main"
 
     transition.current = TransitionTarget(
-        workflow="`main`[0].if_else.then", step=0, scope_id=uuid.uuid4()
+        workflow="`main`[0].if_else.then",
+        step=0,
+        scope_id=uuid.uuid4(),
     )
     transition.next = None
     assert get_workflow_name(transition) == "main"
@@ -160,21 +171,29 @@ async def _():
     assert get_workflow_name(transition) == "subworkflow"
 
     transition.current = TransitionTarget(
-        workflow="`subworkflow`[0].if_else.then", step=0, scope_id=uuid.uuid4()
+        workflow="`subworkflow`[0].if_else.then",
+        step=0,
+        scope_id=uuid.uuid4(),
     )
     transition.next = TransitionTarget(
-        workflow="`subworkflow`[0].if_else.else", step=1, scope_id=uuid.uuid4()
+        workflow="`subworkflow`[0].if_else.else",
+        step=1,
+        scope_id=uuid.uuid4(),
     )
     assert get_workflow_name(transition) == "subworkflow"
 
     transition.current = TransitionTarget(
-        workflow="PAR:`main`[2].mapreduce[0][2],0", step=0, scope_id=uuid.uuid4()
+        workflow="PAR:`main`[2].mapreduce[0][2],0",
+        step=0,
+        scope_id=uuid.uuid4(),
     )
     transition.next = None
     assert get_workflow_name(transition) == "main"
 
     transition.current = TransitionTarget(
-        workflow="PAR:`subworkflow`[2].mapreduce[0][3],0", step=0, scope_id=uuid.uuid4()
+        workflow="PAR:`subworkflow`[2].mapreduce[0][3],0",
+        step=0,
+        scope_id=uuid.uuid4(),
     )
     transition.next = None
     assert get_workflow_name(transition) == "subworkflow"
@@ -195,7 +214,9 @@ async def _():
 
     with raises(AssertionError):
         transition.current = TransitionTarget(
-            workflow="`main[2].mapreduce[0][2],0", step=0, scope_id=uuid.uuid4()
+            workflow="`main[2].mapreduce[0][2],0",
+            step=0,
+            scope_id=uuid.uuid4(),
         )
         get_workflow_name(transition)
 
@@ -209,7 +230,9 @@ async def _():
 
     with raises(AssertionError):
         transition.current = TransitionTarget(
-            workflow="PAR:`subworkflow[2].mapreduce[0][3],0", step=0, scope_id=uuid.uuid4()
+            workflow="PAR:`subworkflow[2].mapreduce[0][3],0",
+            step=0,
+            scope_id=uuid.uuid4(),
         )
         get_workflow_name(transition)
 
@@ -224,10 +247,14 @@ async def _():
         type="init_branch",
         output={"b": 1},
         current_step=TransitionTarget(
-            workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id
+            workflow="subworkflow",
+            step=0,
+            scope_id=subworkflow1_scope_id,
         ),
         next_step=TransitionTarget(
-            workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id
+            workflow="subworkflow",
+            step=0,
+            scope_id=subworkflow1_scope_id,
         ),
     )
 
@@ -235,10 +262,14 @@ async def _():
         type="step",
         output={"c": 1},
         current_step=TransitionTarget(
-            workflow="subworkflow", step=0, scope_id=subworkflow1_scope_id
+            workflow="subworkflow",
+            step=0,
+            scope_id=subworkflow1_scope_id,
         ),
         next_step=TransitionTarget(
-            workflow="subworkflow", step=1, scope_id=subworkflow1_scope_id
+            workflow="subworkflow",
+            step=1,
+            scope_id=subworkflow1_scope_id,
         ),
     )
 
@@ -248,10 +279,14 @@ async def _():
         type="init_branch",
         output={"b": 2},
         current_step=TransitionTarget(
-            workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id
+            workflow="subworkflow",
+            step=0,
+            scope_id=subworkflow2_scope_id,
         ),
         next_step=TransitionTarget(
-            workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id
+            workflow="subworkflow",
+            step=0,
+            scope_id=subworkflow2_scope_id,
         ),
     )
 
@@ -259,10 +294,14 @@ async def _():
         type="step",
         output={"c": 2},
         current_step=TransitionTarget(
-            workflow="subworkflow", step=0, scope_id=subworkflow2_scope_id
+            workflow="subworkflow",
+            step=0,
+            scope_id=subworkflow2_scope_id,
         ),
         next_step=TransitionTarget(
-            workflow="subworkflow", step=1, scope_id=subworkflow2_scope_id
+            workflow="subworkflow",
+            step=1,
+            scope_id=subworkflow2_scope_id,
         ),
     )
 
@@ -273,7 +312,10 @@ async def _():
         execution_input=ExecutionInput(
             developer_id=uuid.uuid4(),
             agent=Agent(
-                id=uuid.uuid4(), name="test agent", created_at=utcnow(), updated_at=utcnow()
+                id=uuid.uuid4(),
+                name="test agent",
+                created_at=utcnow(),
+                updated_at=utcnow(),
             ),
             agent_tools=[],
             arguments={},

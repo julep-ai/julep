@@ -19,7 +19,8 @@ from ...models import LlamaParseFetchOutput
     stop=stop_after_attempt(4),
 )
 async def parse(
-    setup: LlamaParseSetup, arguments: LlamaParseFetchArguments
+    setup: LlamaParseSetup,
+    arguments: LlamaParseFetchArguments,
 ) -> LlamaParseFetchOutput:
     """
     Parse and extract content from files using LlamaParse.
@@ -48,7 +49,8 @@ async def parse(
         extra_info = {"file_name": arguments.filename or str(uuid.uuid4())}
         # Parse the document (decode inline)
         documents = await parser.aload_data(
-            base64.b64decode(arguments.file), extra_info=extra_info
+            base64.b64decode(arguments.file),
+            extra_info=extra_info,
         )
     else:
         extra_info = {"file_name": arguments.filename} if arguments.filename else None

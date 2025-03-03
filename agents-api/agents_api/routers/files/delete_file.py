@@ -21,7 +21,8 @@ async def delete_file_content(file_id: UUID) -> None:
 
 @router.delete("/files/{file_id}", status_code=HTTP_202_ACCEPTED, tags=["files"])
 async def delete_file(
-    file_id: UUID, x_developer_id: Annotated[UUID, Depends(get_developer_id)]
+    file_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceDeletedResponse:
     resource_deleted = await delete_file_query(developer_id=x_developer_id, file_id=file_id)
 

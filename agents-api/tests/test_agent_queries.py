@@ -168,7 +168,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
         connection_pool=pool,
     )  # type: ignore[not-callable]
     delete_result = await delete_agent(
-        agent_id=create_result.id, developer_id=developer_id, connection_pool=pool
+        agent_id=create_result.id,
+        developer_id=developer_id,
+        connection_pool=pool,
     )  # type: ignore[not-callable]
 
     assert delete_result is not None

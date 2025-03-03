@@ -65,12 +65,15 @@ def run_task(pr_data: str) -> str:
 
     # Create or update the task configuration
     client.tasks.create_or_update(
-        task_id=os.environ["TASK_UUID"], agent_id=os.environ["AGENT_UUID"], **task_description
+        task_id=os.environ["TASK_UUID"],
+        agent_id=os.environ["AGENT_UUID"],
+        **task_description,
     )
 
     # Create a new execution instance
     execution = client.executions.create(
-        task_id=os.environ["TASK_UUID"], input={"pr_data": str(pr_data)}
+        task_id=os.environ["TASK_UUID"],
+        input={"pr_data": str(pr_data)},
     )
 
     # Wait for task completion using context manager for proper resource cleanup

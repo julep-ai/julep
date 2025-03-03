@@ -30,7 +30,8 @@ async def transition_step(
     if last_error is not None:
         await asyncio.sleep(temporal_activity_after_retry_timeout)
         await wf_handle.signal(
-            TaskExecutionWorkflow.set_last_error, LastErrorInput(last_error=None)
+            TaskExecutionWorkflow.set_last_error,
+            LastErrorInput(last_error=None),
         )
 
     if not isinstance(context.execution_input, ExecutionInput):

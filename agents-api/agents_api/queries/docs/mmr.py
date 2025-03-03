@@ -45,7 +45,7 @@ def _cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
     except ImportError:
         logger.debug(
             "Unable to import simsimd, defaulting to NumPy implementation. If you want "
-            "to use simsimd please install with `pip install simsimd`."
+            "to use simsimd please install with `pip install simsimd`.",
         )
         x_norm = np.linalg.norm(x, axis=1)
         y_norm = np.linalg.norm(y, axis=1)

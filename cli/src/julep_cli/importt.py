@@ -84,7 +84,7 @@ def importt(
             Text(
                 "Error: 'julep-lock.json' not found in the source directory. Please run 'julep sync' to sync your project and create a lock file.",
                 style="bold red",
-            )
+            ),
         )
         raise typer.Exit(1)
 
@@ -113,7 +113,7 @@ def importt(
             highlight=True,
         )
         confirm = typer.confirm(
-            f"Do you want to overwrite the existing agent in the lock file and {locked_agent.path}?"
+            f"Do you want to overwrite the existing agent in the lock file and {locked_agent.path}?",
         )
 
         if not confirm:
@@ -163,7 +163,8 @@ def importt(
         ) as progress:
             try:
                 update_task = progress.add_task(
-                    f"Updating agent in '{agent_yaml_path}'...", start=False
+                    f"Updating agent in '{agent_yaml_path}'...",
+                    start=False,
                 )
                 progress.start_task(update_task)
                 update_yaml_for_existing_entity(
@@ -192,10 +193,10 @@ def importt(
                 path=str(agent_yaml_path.relative_to(source)),
                 id=id,
                 last_synced=datetime.datetime.now(tz=local_tz).isoformat(
-                    timespec="milliseconds"
+                    timespec="milliseconds",
                 ),
                 revision_hash=hashlib.sha256(
-                    remote_agent.model_dump_json().encode()
+                    remote_agent.model_dump_json().encode(),
                 ).hexdigest(),
             ),
             project_dir=source,
@@ -233,7 +234,7 @@ def importt(
                 remote_agent: Agent = client.agents.get(agent_id=id)
             except Exception as e:
                 error_console.print(
-                    Text(f"Error fetching agent from remote: {e}", style="bold red")
+                    Text(f"Error fetching agent from remote: {e}", style="bold red"),
                 )
                 raise typer.Exit(1)
 
@@ -267,7 +268,8 @@ def importt(
 
         typer.echo(f"Adding agent '{remote_agent.name}' to '{agent_yaml_path}'...")
         update_yaml_for_existing_entity(
-            agent_yaml_path, remote_agent.model_dump(exclude={"id", "created_at", "updated_at"})
+            agent_yaml_path,
+            remote_agent.model_dump(exclude={"id", "created_at", "updated_at"}),
         )
 
         typer.echo(f"Agent '{id}' imported successfully to '{agent_yaml_path}'")
@@ -286,10 +288,10 @@ def importt(
                 path=str(agent_yaml_path.relative_to(source)),
                 id=remote_agent.id,
                 last_synced=datetime.datetime.now(tz=local_tz).isoformat(
-                    timespec="milliseconds"
+                    timespec="milliseconds",
                 ),
                 revision_hash=hashlib.sha256(
-                    remote_agent.model_dump_json().encode()
+                    remote_agent.model_dump_json().encode(),
                 ).hexdigest(),
             ),
             project_dir=source,

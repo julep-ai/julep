@@ -78,35 +78,10 @@ Here's an example of how a typical message object might be structured in a chat 
 | `presence_penalty`  | `float` | Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. | `None` |
 | `temperature`       | `float` | What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. | `None` |
 | `top_p`             | `float` | An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. | `1.0` |
-| `recall`            | `bool` | Whether previous memories and docs should be recalled or not | `True` |
+| `recall`            | `bool` | Whether to use the document (RAG) search or not | `True` |
 | `save`              | `bool` | Whether this interaction should be stored in the session history or not | `True` |
 | `remember`          | `bool` | DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) | `False` |
 | `model`             | `str` | The model to use for the chat completion. | `None` |
-
-## Response Structure
-
-<Tabs>
-  <Tab title="Complete Response">
-    - **Content-Type**: `application/json`
-    - **Body**: A `MessageChatResponse` object containing the full generated message(s)
-  </Tab>
-  <Tab title="Streamed Response">
-    - **Content-Type**: `text/event-stream`
-    - **Body**: A stream of `ChatOutputChunk` objects
-    <Warning>
-      This feature is not implemented yet.
-    </Warning>
-  </Tab>
-</Tabs>
-
-<Info>
-  Both response types include:
-  - `usage`: Statistics on token usage for the completion request.
-  - `jobs`: List of UUIDs for background jobs that may have been initiated as a result of this interaction.
-  - `docs`: List of document references used for this request, intended for citation purposes.
-  - `created_at`: When this resource was created as UTC date-time
-  - `id`: The unique identifier for the chat response
-</Info>
 
 ## Usage
 
@@ -188,6 +163,39 @@ To learn more about the Session object, check out the [Session](/concepts/sessio
 <Tip>
     Check out the [API reference](api-reference/sessions/chat) or SDK reference ([Python](/sdks/python/reference#sessions) or [JavaScript](/sdks/nodejs/reference#sessions)) for more details on different operations you can perform on sessions.
 </Tip>
+
+## Response
+
+<Tabs>
+  <Tab title="Complete Response">
+    - **Content-Type**: `application/json`
+    - **Body**: A `MessageChatResponse` object containing the full generated message(s)
+  </Tab>
+  <Tab title="Streamed Response">
+    - **Content-Type**: `text/event-stream`
+    - **Body**: A stream of `ChatOutputChunk` objects
+    <Warning>
+      This feature is not implemented yet.
+    </Warning>
+  </Tab>
+</Tabs>
+
+Both types of responses include the following fields:
+
+- `id`: The unique identifier for the chat response
+- `choices`: An object of generated message completions containing:
+    - `role`: The role of the message (e.g. "assistant", "user", etc.)
+    - `id`: Unique identifier for the message
+    - `content`: list of actual message content
+    - `created_at`: Timestamp when the message was created
+    - `name`: Optional name associated with the message
+    - `tool_call_id`: Optional ID referencing a tool call
+    - `tool_calls`: Optional list of tool calls made during message generation
+  - `created_at`: When this resource was created as UTC date-time
+  - `docs`: List of document references used for this request, intended for citation purposes
+  - `jobs`: List of UUIDs for background jobs that may have been initiated as a result of this interaction
+  - `usage`: Statistics on token usage for the completion request
+
 
 ## Finish Reasons
 

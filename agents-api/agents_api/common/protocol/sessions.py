@@ -127,7 +127,7 @@ def make_session(
     *,
     agents: list[UUID],
     users: list[UUID],
-    **data: dict,
+    **data: dict[str, dict],
 ) -> Session:
     """
     Create a new session object.

@@ -89,7 +89,7 @@ class CreateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
     """
     Recall options for the session
     """
@@ -100,7 +100,7 @@ class HybridDocSearch(BaseDocSearch):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    mode: str = "hybrid"
+    mode: Literal["hybrid"] = "hybrid"
     """
     The mode to use for the search.
     """
@@ -108,7 +108,7 @@ class HybridDocSearch(BaseDocSearch):
     """
     The confidence cutoff level
     """
-    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.75
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     """
     The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
@@ -122,7 +122,7 @@ class HybridDocSearchUpdate(BaseDocSearchUpdate):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    mode: str = "hybrid"
+    mode: Literal["hybrid"] = "hybrid"
     """
     The mode to use for the search.
     """
@@ -130,7 +130,7 @@ class HybridDocSearchUpdate(BaseDocSearchUpdate):
     """
     The confidence cutoff level
     """
-    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.75
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     """
     The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
@@ -180,7 +180,9 @@ class PatchSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: HybridDocSearchUpdate | None = None
+    recall_options: (
+        VectorDocSearchUpdate | TextOnlyDocSearchUpdate | HybridDocSearchUpdate | None
+    ) = None
     """
     Recall options for the session
     """
@@ -227,7 +229,7 @@ class Session(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
     """
     Recall options for the session
     """
@@ -274,7 +276,7 @@ class TextOnlyDocSearch(BaseDocSearch):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    mode: str = "text"
+    mode: Literal["text"] = "text"
     """
     The mode to use for the search.
     """
@@ -284,7 +286,7 @@ class TextOnlyDocSearchUpdate(BaseDocSearchUpdate):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    mode: str = "text"
+    mode: Literal["text"] = "text"
     """
     The mode to use for the search.
     """
@@ -330,7 +332,7 @@ class UpdateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
     """
     Recall options for the session
     """
@@ -341,7 +343,7 @@ class VectorDocSearch(BaseDocSearch):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    mode: str = "vector"
+    mode: Literal["vector"] = "vector"
     """
     The mode to use for the search.
     """
@@ -359,7 +361,7 @@ class VectorDocSearchUpdate(BaseDocSearchUpdate):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    mode: str = "vector"
+    mode: Literal["vector"] = "vector"
     """
     The mode to use for the search.
     """
@@ -420,7 +422,7 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
     """
     Recall options for the session
     """

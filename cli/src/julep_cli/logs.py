@@ -29,7 +29,7 @@ class TransitionLogApp(App):
             tooltip="Quit the app and return to the command prompt.",
             show=False,
             priority=True,
-        )
+        ),
     ]
     TITLE = "Transition Log"
 
@@ -56,14 +56,14 @@ class TransitionLogApp(App):
         # Display the initial transitions in reversed order
         for transition in reversed(self.transitions):
             self.log_widget.write(
-                f"{transition.type}:\n{json.dumps(transition.output, indent=4)}\n\n"
+                f"{transition.type}:\n{json.dumps(transition.output, indent=4)}\n\n",
             )
         # Set up a periodic callback every 1 second to check for new transitions
         self.set_interval(1, self.fetch_new_transitions)
 
     async def fetch_new_transitions(self) -> None:
         fetched_transitions = self.client.executions.transitions.list(
-            execution_id=self.execution_id
+            execution_id=self.execution_id,
         ).items
         # Calculate the number of new transitions
         delta = len(fetched_transitions) - len(self.transitions)
@@ -71,7 +71,7 @@ class TransitionLogApp(App):
             new_transitions = fetched_transitions[:delta]
             for transition in reversed(new_transitions):
                 self.log_widget.write(
-                    f"{transition.type}:\n{json.dumps(transition.output, indent=4)}\n\n"
+                    f"{transition.type}:\n{json.dumps(transition.output, indent=4)}\n\n",
                 )
             self.transitions = fetched_transitions
 
@@ -88,10 +88,12 @@ class TransitionLogApp(App):
 @app.command()
 def logs(
     execution_id: Annotated[
-        str | None, typer.Option("--execution-id", "-e", help="ID of the execution to log")
+        str | None,
+        typer.Option("--execution-id", "-e", help="ID of the execution to log"),
     ] = None,
     tailing: Annotated[
-        bool, typer.Option("--tail", "-t", help="Whether to tail the logs")
+        bool,
+        typer.Option("--tail", "-t", help="Whether to tail the logs"),
     ] = False,
 ):
     """
@@ -136,7 +138,8 @@ def logs(
     ) as progress:
         try:
             fetch_transitions = progress.add_task(
-                description="Fetching transitions", total=None
+                description="Fetching transitions",
+                total=None,
             )
             progress.start_task(fetch_transitions)
 
@@ -154,5 +157,7 @@ def logs(
         # Instead of reprinting the table repeatedly,
         # we launch the Textual TUI that uses a Log widget to display transitions.
         TransitionLogApp(
-            client=client, execution_id=execution_id, initial_transitions=transitions
+            client=client,
+            execution_id=execution_id,
+            initial_transitions=transitions,
         ).run()

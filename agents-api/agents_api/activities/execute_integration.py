@@ -85,5 +85,5 @@ async def execute_integration(
 mock_execute_integration = execute_integration
 
 execute_integration = activity.defn(name="execute_integration")(
-    execute_integration if not testing else mock_execute_integration
+    execute_integration if not testing else mock_execute_integration,
 )

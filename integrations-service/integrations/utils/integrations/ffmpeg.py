@@ -74,7 +74,9 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
                 raise ValueError(msg)
         except Exception:
             return FfmpegSearchOutput(
-                fileoutput="Error: Invalid base64 input", result=False, mime_type=None
+                fileoutput="Error: Invalid base64 input",
+                result=False,
+                mime_type=None,
             )
 
         # Validate input format

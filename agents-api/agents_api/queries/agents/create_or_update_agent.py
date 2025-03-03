@@ -69,7 +69,10 @@ RETURNING *;
 @pg_query
 @beartype
 async def create_or_update_agent(
-    *, agent_id: UUID, developer_id: UUID, data: CreateOrUpdateAgentRequest
+    *,
+    agent_id: UUID,
+    developer_id: UUID,
+    data: CreateOrUpdateAgentRequest,
 ) -> tuple[str, list]:
     """
     Constructs the SQL queries to create a new agent or update an existing agent's details.

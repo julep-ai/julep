@@ -98,7 +98,7 @@ async def _():
             step=step,
         )
         assert result == WorkflowResult(
-            state=PartialTransition(type="resume", output="function_tool_call_response")
+            state=PartialTransition(type="resume", output="function_tool_call_response"),
         )
         workflow.execute_activity.assert_called_once_with(
             task_steps.raise_complete_async,
@@ -147,7 +147,7 @@ async def _():
         output={
             "type": "integration",
             "integration": {"name": tool_name, "arguments": arguments},
-        }
+        },
     )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
@@ -157,7 +157,7 @@ async def _():
             step=step,
         )
         assert result == WorkflowResult(
-            state=PartialTransition(output="integration_tool_call_response")
+            state=PartialTransition(output="integration_tool_call_response"),
         )
         provider = "dummy"
         method = None
@@ -171,7 +171,7 @@ async def _():
             execute_integration,
             args=[context, tool_name, integration, arguments],
             schedule_to_close_timeout=timedelta(
-                seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
             ),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -208,7 +208,7 @@ async def _():
         ),
     )
     outcome = StepOutcome(
-        output={"type": "integration", "integration": {"name": "tool1", "arguments": {}}}
+        output={"type": "integration", "integration": {"name": "tool1", "arguments": {}}},
     )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = "integration_tool_call_response"
@@ -274,7 +274,7 @@ async def _():
                 "arguments": arguments,
                 "name": "tool1",
             },
-        }
+        },
     )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
@@ -284,7 +284,7 @@ async def _():
             step=step,
         )
         assert result == WorkflowResult(
-            state=PartialTransition(output="api_call_tool_call_response")
+            state=PartialTransition(output="api_call_tool_call_response"),
         )
         api_call = ApiCallDef(
             method="GET",
@@ -299,7 +299,7 @@ async def _():
                 arguments,
             ],
             schedule_to_close_timeout=timedelta(
-                seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
             ),
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
@@ -359,7 +359,7 @@ async def _():
                 **arguments,
                 "name": "tool1",
             },
-        }
+        },
     )
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.execute_activity.return_value = _resp()
@@ -369,7 +369,7 @@ async def _():
             step=step,
         )
         assert result == WorkflowResult(
-            state=PartialTransition(output="system_tool_call_response")
+            state=PartialTransition(output="system_tool_call_response"),
         )
         system_call = SystemDef(
             resource="agent",
@@ -380,7 +380,7 @@ async def _():
             execute_system,
             args=[context, system_call],
             schedule_to_close_timeout=timedelta(
-                seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
             ),
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
@@ -417,10 +417,10 @@ async def _():
     )
     outcome = StepOutcome(output=1)
     with patch(
-        "agents_api.workflows.task_execution.execute_switch_branch"
+        "agents_api.workflows.task_execution.execute_switch_branch",
     ) as execute_switch_branch:
         execute_switch_branch.return_value = WorkflowResult(
-            state=PartialTransition(output="switch_response")
+            state=PartialTransition(output="switch_response"),
         )
         wf.context = context
         wf.outcome = outcome
@@ -501,10 +501,10 @@ async def _():
     )
     outcome = StepOutcome(output=0)
     with patch(
-        "agents_api.workflows.task_execution.execute_switch_branch"
+        "agents_api.workflows.task_execution.execute_switch_branch",
     ) as execute_switch_branch:
         execute_switch_branch.return_value = WorkflowResult(
-            state=PartialTransition(output="switch_response")
+            state=PartialTransition(output="switch_response"),
         )
         wf.context = context
         wf.outcome = outcome
@@ -552,7 +552,7 @@ async def _():
         workflow.execute_activity.return_value = "activity"
 
         assert await wf.handle_step(step=step) == WorkflowResult(
-            state=PartialTransition(output=message)
+            state=PartialTransition(output=message),
         )
         workflow.execute_activity.assert_not_called()
 
@@ -595,13 +595,13 @@ async def _():
         workflow.execute_activity.return_value = "activity"
 
         assert await wf.handle_step(step=step) == WorkflowResult(
-            state=PartialTransition(output=message)
+            state=PartialTransition(output=message),
         )
         workflow.execute_activity.assert_not_called()
 
 
 @test(
-    "task execution workflow: handle prompt step, unwrap is False, finish reason is not tool_calls"
+    "task execution workflow: handle prompt step, unwrap is False, finish reason is not tool_calls",
 )
 async def _():
     wf = TaskExecutionWorkflow()
@@ -640,7 +640,7 @@ async def _():
         workflow.execute_activity.return_value = "activity"
 
         assert await wf.handle_step(step=step) == WorkflowResult(
-            state=PartialTransition(output=message)
+            state=PartialTransition(output=message),
         )
         workflow.execute_activity.assert_not_called()
 
@@ -679,8 +679,8 @@ async def _():
     )
     message = {
         "choices": [
-            {"finish_reason": "tool_calls", "message": {"tool_calls": [{"type": "function"}]}}
-        ]
+            {"finish_reason": "tool_calls", "message": {"tool_calls": [{"type": "function"}]}},
+        ],
     }
     outcome = StepOutcome(output=message)
     wf.context = context
@@ -690,7 +690,7 @@ async def _():
         workflow.execute_activity.side_effect = [_resp(), _resp()]
 
         assert await wf.handle_step(step=step) == WorkflowResult(
-            state=PartialTransition(output="function_call", type="resume")
+            state=PartialTransition(output="function_call", type="resume"),
         )
         workflow.execute_activity.assert_has_calls([
             call(
@@ -704,7 +704,7 @@ async def _():
                 task_steps.prompt_step,
                 context,
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -751,7 +751,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -778,7 +778,7 @@ async def _():
             new=base_evaluate,
         ):
             result = await wf.eval_step_exprs(
-                ForeachStep(foreach=ForeachDo(in_="$ 1 + 2", do=YieldStep(workflow="wf1")))
+                ForeachStep(foreach=ForeachDo(in_="$ 1 + 2", do=YieldStep(workflow="wf1"))),
             )
 
         assert result == StepOutcome(output=3)
@@ -823,7 +823,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -895,7 +895,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -967,7 +967,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -1039,7 +1039,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -1111,7 +1111,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -1183,7 +1183,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -1253,7 +1253,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -1323,7 +1323,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -1354,7 +1354,7 @@ async def _():
                     switch=[
                         CaseThen(case="$ None", then=YieldStep(workflow="wf1")),
                         CaseThen(case="$ 1 + 3", then=YieldStep(workflow="wf2")),
-                    ]
+                    ],
                 ),
             )
 
@@ -1407,7 +1407,7 @@ async def _():
     )
     with (
         patch(
-            "agents_api.common.protocol.tasks.list_execution_transitions"
+            "agents_api.common.protocol.tasks.list_execution_transitions",
         ) as list_execution_transitions,
         patch("agents_api.workflows.task_execution.generate_call_id") as generate_call_id,
     ):
@@ -1445,7 +1445,7 @@ async def _():
                 "function": {"arguments": {"x": 3}, "name": "tool1"},
                 "id": "XXXX",
                 "type": "function",
-            }
+            },
         )
 
 
@@ -1488,7 +1488,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(
@@ -1515,7 +1515,7 @@ async def _():
             new=base_evaluate,
         ):
             result = await wf.eval_step_exprs(
-                YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
+                YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"),
             )
 
         scope_id = result.transition_to[1].scope_id
@@ -1568,7 +1568,7 @@ async def _():
         ),
     )
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions"
+        "agents_api.common.protocol.tasks.list_execution_transitions",
     ) as list_execution_transitions:
         list_execution_transitions.return_value = (
             Transition(

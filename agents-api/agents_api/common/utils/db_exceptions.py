@@ -64,7 +64,7 @@ def common_db_exceptions(
             HTTPException,
             status_code=404,
             detail=get_operation_message(
-                f"The specified {resource_name} or its dependencies do not exist"
+                f"The specified {resource_name} or its dependencies do not exist",
             ),
         ),
         # Unique constraint violations - usually means a resource with same unique key exists
@@ -72,7 +72,7 @@ def common_db_exceptions(
             HTTPException,
             status_code=409,
             detail=get_operation_message(
-                f"A {resource_name} with these unique properties already exists"
+                f"A {resource_name} with these unique properties already exists",
             ),
         ),
         # Check constraint violations - usually means invalid data that violates DB constraints
@@ -80,7 +80,7 @@ def common_db_exceptions(
             HTTPException,
             status_code=400,
             detail=get_operation_message(
-                f"The provided {resource_name} data violates one or more constraints"
+                f"The provided {resource_name} data violates one or more constraints",
             ),
         ),
         # Data type/format errors
@@ -112,7 +112,7 @@ def common_db_exceptions(
             HTTPException,
             status_code=400,
             detail=get_operation_message(
-                f"Numeric value in {resource_name} data is out of allowed range"
+                f"Numeric value in {resource_name} data is out of allowed range",
             ),
         ),
         # String data right truncation
@@ -120,7 +120,7 @@ def common_db_exceptions(
             HTTPException,
             status_code=400,
             detail=get_operation_message(
-                f"Text data in {resource_name} is too long for the field"
+                f"Text data in {resource_name} is too long for the field",
             ),
         ),
         # Not null violation

@@ -29,7 +29,8 @@ async def execute_integration(
     method_config = next((m for m in provider_obj.methods if m.method == method), None)
     if not method_config:
         raise HTTPException(
-            status_code=400, detail=f"Unknown method: {method} for provider: {provider}"
+            status_code=400,
+            detail=f"Unknown method: {method} for provider: {provider}",
         )
 
     provider_module = importlib.import_module(
@@ -48,7 +49,8 @@ async def execute_integration(
 
     try:
         return await getattr(provider_module, method)(
-            **({"setup": setup} if setup else {}), arguments=arguments
+            **({"setup": setup} if setup else {}),
+            arguments=arguments,
         )
     except BaseException as e:
         return ExecutionError(error=str(e))

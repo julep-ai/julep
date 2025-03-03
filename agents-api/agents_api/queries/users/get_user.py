@@ -28,7 +28,9 @@ AND user_id = $2;
 @pg_query
 @beartype
 async def get_user(
-    *, developer_id: UUID, user_id: UUID
+    *,
+    developer_id: UUID,
+    user_id: UUID,
 ) -> tuple[str, list, Literal["fetchrow", "fetchmany", "fetch"]]:
     """
     Constructs an optimized SQL query to retrieve a user's details.

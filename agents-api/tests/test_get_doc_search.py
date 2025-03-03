@@ -49,7 +49,10 @@ def _():
 @test("get_search_fn_and_params: text-only search request")
 def _():
     request = TextOnlyDocSearchRequest(
-        text="search query", limit=10, lang="en", metadata_filter={"field": "value"}
+        text="search query",
+        limit=10,
+        lang="en",
+        metadata_filter={"field": "value"},
     )
 
     search_fn, params = get_search_fn_and_params(request)

@@ -1,6 +1,11 @@
 # Tests for session queries
 
-from agents_api.autogen.openapi_model import ChatInput, CreateAgentRequest, CreateSessionRequest
+from agents_api.autogen.openapi_model import (
+    ChatInput,
+    CreateAgentRequest,
+    CreateSessionRequest,
+    VectorDocSearch,
+)
 from agents_api.clients import litellm
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.sessions import ChatContext
@@ -89,14 +94,6 @@ async def _(
         data=CreateSessionRequest(
             agent=agent.id,
             situation="test session about",
-            recall_options={
-                "mode": "hybrid",
-                "num_search_messages": 6,
-                "max_query_length": 800,
-                "confidence": 0.6,
-                "limit": 10,
-                "mmr_strength": 0.5,
-            },
         ),
         connection_pool=pool,
     )
@@ -329,3 +326,170 @@ async def _(
     assert len(messages1) > 0
     assert messages1[0]["role"] == "system"
     assert agent_data.name.upper() in messages1[0]["content"]
+
+
+@test("chat: validate the recall options for different modes in chat context")
+async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
+    pool = await create_db_pool(dsn=dsn)
+
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test session about",
+            system_template="test system template",
+        ),
+        connection_pool=pool,
+    )
+
+    chat_context = await prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+
+    assert chat_context.session.recall_options == VectorDocSearch(
+        mode="vector",
+        num_search_messages=4,
+        max_query_length=1000,
+        limit=10,
+        lang="en-US",
+    )
+
+    # Create a session with a hybrid recall options to hybrid mode
+    data = CreateSessionRequest(
+        agent=agent.id,
+        situation="test session about",
+        system_template="test system template",
+        recall_options={
+            "mode": "hybrid",
+            "num_search_messages": 6,
+            "max_query_length": 800,
+            "confidence": 0.6,
+            "limit": 10,
+            "mmr_strength": 0.5,
+            "lang": "en-US",
+            "alpha": 0.75,
+            "metadata_filter": {"hybridsearch": "hybridsearch"},
+        },
+    )
+
+    session = await create_session(
+        developer_id=developer_id,
+        data=data,
+        connection_pool=pool,
+    )
+
+    # assert session.recall_options == data.recall_options
+    chat_context = await prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+
+    assert chat_context.session.recall_options.mode == data.recall_options.mode
+    assert (
+        chat_context.session.recall_options.num_search_messages
+        == data.recall_options.num_search_messages
+    )
+    assert (
+        chat_context.session.recall_options.max_query_length
+        == data.recall_options.max_query_length
+    )
+    assert chat_context.session.recall_options.limit == data.recall_options.limit
+    assert chat_context.session.recall_options.lang == data.recall_options.lang
+    assert (
+        chat_context.session.recall_options.metadata_filter
+        == data.recall_options.metadata_filter
+    )
+
+    # Update session to have a new recall options to text mode
+    data = CreateSessionRequest(
+        agent=agent.id,
+        situation="test session about",
+        system_template="test system template",
+        recall_options={
+            "mode": "text",
+            "num_search_messages": 6,
+            "max_query_length": 800,
+            "metadata_filter": {"textsearch": "textsearch"},
+            "limit": 10,
+            "lang": "en-US",
+        },
+    )
+
+    session = await create_session(
+        developer_id=developer_id,
+        data=data,
+        connection_pool=pool,
+    )
+
+    # assert session.recall_options == data.recall_options
+    chat_context = await prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+
+    assert chat_context.session.recall_options.mode == data.recall_options.mode
+    assert (
+        chat_context.session.recall_options.num_search_messages
+        == data.recall_options.num_search_messages
+    )
+    assert (
+        chat_context.session.recall_options.max_query_length
+        == data.recall_options.max_query_length
+    )
+    assert chat_context.session.recall_options.limit == data.recall_options.limit
+    assert chat_context.session.recall_options.lang == data.recall_options.lang
+    assert (
+        chat_context.session.recall_options.metadata_filter
+        == data.recall_options.metadata_filter
+    )
+
+    # Update session to have a new recall options to vector mode
+    data = CreateSessionRequest(
+        agent=agent.id,
+        situation="test session about",
+        system_template="test system template",
+        recall_options={
+            "mode": "vector",
+            "num_search_messages": 6,
+            "max_query_length": 800,
+            "limit": 10,
+            "lang": "en-US",
+            "metadata_filter": {"vectorsearch": "vectorsearch"},
+            "confidence": 0.6,
+        },
+    )
+
+    session = await create_session(
+        developer_id=developer_id,
+        data=data,
+        connection_pool=pool,
+    )
+
+    # assert session.recall_options == data.recall_options
+    chat_context = await prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        connection_pool=pool,
+    )
+
+    assert chat_context.session.recall_options.mode == data.recall_options.mode
+    assert (
+        chat_context.session.recall_options.num_search_messages
+        == data.recall_options.num_search_messages
+    )
+    assert (
+        chat_context.session.recall_options.max_query_length
+        == data.recall_options.max_query_length
+    )
+    assert chat_context.session.recall_options.limit == data.recall_options.limit
+    assert chat_context.session.recall_options.lang == data.recall_options.lang
+    assert (
+        chat_context.session.recall_options.metadata_filter
+        == data.recall_options.metadata_filter
+    )
+    assert chat_context.session.recall_options.confidence == data.recall_options.confidence
+    assert chat_context.session.recall_options.mmr_strength == 0.5

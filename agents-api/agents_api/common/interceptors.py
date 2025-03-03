@@ -175,7 +175,8 @@ def offload_to_blob_store[S, T](
 
     @wraps(func)
     def wrapper_sync(
-        self, input: ExecuteActivityInput | ExecuteWorkflowInput
+        self,
+        input: ExecuteActivityInput | ExecuteWorkflowInput,
     ) -> T | RemoteObject:
         # Load all remote arguments from the blob store
         args: Sequence[Any] = input.args
@@ -348,7 +349,8 @@ class CustomInterceptor(Interceptor):
     """
 
     def intercept_activity(
-        self, next: ActivityInboundInterceptor
+        self,
+        next: ActivityInboundInterceptor,
     ) -> ActivityInboundInterceptor:
         """
         Creates and returns a custom activity interceptor.
@@ -356,7 +358,8 @@ class CustomInterceptor(Interceptor):
         return CustomActivityInterceptor(super().intercept_activity(next))
 
     def workflow_interceptor_class(
-        self, input: WorkflowInterceptorClassInput
+        self,
+        input: WorkflowInterceptorClassInput,
     ) -> type[WorkflowInboundInterceptor] | None:
         """
         Returns the custom workflow interceptor class.

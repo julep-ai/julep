@@ -44,7 +44,9 @@ x--shared-environment: &shared-environment
   MAX_FREE_EXECUTIONS: ${MAX_FREE_EXECUTIONS:-50}
   SENTRY_DSN: ${SENTRY_DSN}
   SAPLING_API_KEY: ${SAPLING_API_KEY}
-  COPYLEAKS_API_KEY: ${COPYLEAKS_API_KEY}
+  ZEROGPT_URL: ${ZEROGPT_URL:-https://api.zerogpt.com/api/detect/detectText}
+  DESKLIB_URL: ${DESKLIB_URL:-http://35.243.190.233/detect}
+  SAPLING_URL: ${SAPLING_URL:-https://api.sapling.ai/api/v1/aidetect}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}

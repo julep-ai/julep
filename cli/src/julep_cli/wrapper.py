@@ -40,7 +40,9 @@ def make_validator(func: Callable[[Any], Any]) -> Callable[[Any], bool]:
 
 
 def build_prompt(
-    parameter: typer.Argument, meta: tuple[typing.Any, ...], expected_type: type
+    parameter: typer.Argument,
+    meta: tuple[typing.Any, ...],
+    expected_type: type,
 ) -> questionary.Question:
     """Prepares a questionary prompt based on the parameter metadata and expected type.
 

@@ -15,16 +15,19 @@ class BrowserbaseCreateSessionOutput(BaseOutput):
     id: str = Field(..., description="Unique identifier for the session")
     connect_url: str | None = Field(None, description="The connection URL for the session")
     createdAt: str | None = Field(
-        None, description="Timestamp indicating when the session was created"
+        None,
+        description="Timestamp indicating when the session was created",
     )
     projectId: str | None = Field(None, description="The Project ID linked to the Session")
     startedAt: str | None = Field(None, description="Timestamp when the session started")
     endedAt: str | None = Field(None, description="Timestamp when the session ended")
     expiresAt: str | None = Field(
-        None, description="Timestamp when the session is set to expire"
+        None,
+        description="Timestamp when the session is set to expire",
     )
     status: Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] | None = Field(
-        None, description="Current status of the session"
+        None,
+        description="Current status of the session",
     )
     proxyBytes: int | None = Field(None, description="Bytes used via the Proxy")
     avgCpuUsage: int | None = Field(None, description="CPU used by the Session")
@@ -34,23 +37,27 @@ class BrowserbaseCreateSessionOutput(BaseOutput):
         description="Indicates if the Session was created to be kept alive upon disconnections",
     )
     contextId: str | None = Field(
-        None, description="Optional. The Context linked to the Session."
+        None,
+        description="Optional. The Context linked to the Session.",
     )
 
 
 class BrowserbaseGetSessionOutput(BaseOutput):
     id: str = Field(..., description="Unique identifier for the session")
     createdAt: str | None = Field(
-        None, description="Timestamp indicating when the session was created"
+        None,
+        description="Timestamp indicating when the session was created",
     )
     projectId: str | None = Field(None, description="The Project ID linked to the Session")
     startedAt: str | None = Field(None, description="Timestamp when the session started")
     endedAt: str | None = Field(None, description="Timestamp when the session ended")
     expiresAt: str | None = Field(
-        None, description="Timestamp when the session is set to expire"
+        None,
+        description="Timestamp when the session is set to expire",
     )
     status: Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] | None = Field(
-        None, description="Current status of the session"
+        None,
+        description="Current status of the session",
     )
     proxyBytes: int | None = Field(None, description="Bytes used via the Proxy")
     avgCpuUsage: int | None = Field(None, description="CPU used by the Session")
@@ -60,13 +67,15 @@ class BrowserbaseGetSessionOutput(BaseOutput):
         description="Indicates if the Session was created to be kept alive upon disconnections",
     )
     contextId: str | None = Field(
-        None, description="Optional. The Context linked to the Session."
+        None,
+        description="Optional. The Context linked to the Session.",
     )
 
 
 class BrowserbaseCompleteSessionOutput(BaseOutput):
     success: bool = Field(
-        ..., description="Indicates if the session was completed successfully"
+        ...,
+        description="Indicates if the session was completed successfully",
     )
 
 
@@ -80,10 +89,12 @@ class PageInfo(BaseOutput):
     faviconUrl: AnyUrl | None = Field(None, description="URL for the page's favicon")
     title: str | None = Field(None, description="Title of the page")
     debuggerUrl: AnyUrl | None = Field(
-        None, description="URL to access the debugger for this page"
+        None,
+        description="URL to access the debugger for this page",
     )
     debuggerFullscreenUrl: AnyUrl | None = Field(
-        None, description="URL to access the debugger in fullscreen for this page"
+        None,
+        description="URL to access the debugger in fullscreen for this page",
     )
 
 
@@ -96,8 +107,10 @@ class BrowserbaseContextOutput(BaseOutput):
     uploadUrl: str | None = Field(None, description="The upload URL for the context")
     publicKey: str | None = Field(None, description="The public key for the context")
     cipherAlgorithm: str | None = Field(
-        None, description="The cipher algorithm for the context"
+        None,
+        description="The cipher algorithm for the context",
     )
     initializationVectorSize: int | None = Field(
-        None, description="The size of the initialization vector"
+        None,
+        description="The size of the initialization vector",
     )

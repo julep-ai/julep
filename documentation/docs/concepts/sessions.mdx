@@ -35,51 +35,54 @@ When creating a session, you can leverage the following configuration options to
 | `token_budget`       | `int` \| `None`                              | Threshold value for the adaptive context functionality                                           | `None`         |
 | `auto_run_tools`     | `StrictBool`                               | Whether to auto-run tools and send the tool results to the model when available                   | `False`          |
 | `forward_tool_calls` | `StrictBool`                               | Whether to forward tool calls directly to the model                                               | `False`          |
-| `recall_options`     | `VectorDocSearch \| TextOnlyDocSearch \| HybridDocSearch \| None`                    | Options for recalling context or certain data during the session                                  | `None`         |
+| `recall_options`     | `object` \| `None`                    | Options for different RAG search modes (VectorDocSearch, TextOnlyDocSearch, HybridDocSearch) in the session                                  | `VectorDocSearch`         |
 
-### Recall Options
+### Recall Options (RAG Search)
 
 When configuring a session, you can specify recall options to control how context or certain data is recalled during the session. Below are the available options based on search mode:
 
 <Tabs>
-  <Tab title="Vector Search">
+  <Tab title="Vector Search (VectorDocSearch)">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
-    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
-    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
-    | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
+    | `mode`            | `Literal["vector"]`     | The mode to use for the search (must be "vector")                                         | `"vector"` |
     | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
+    | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
+    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
+    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
     | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0`     |
     | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
   </Tab>
 
-  <Tab title="Text Search">
+  <Tab title="Text Search (TextOnlyDocSearch)">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
-    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
-    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
-    | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
-    | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
+    | `mode`            | `Literal["text"]`     | The mode to use for the search (must be "text")                                           | `"text"` |
     | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
+    | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
+    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
+    | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
+    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
   </Tab>
 
-  <Tab title="Hybrid Search">
+  <Tab title="Hybrid Search (HybridDocSearch)">
     | Parameter          | Type      | Description                                                                                | Default |
     |-------------------|-----------|--------------------------------------------------------------------------------------------|---------|
-    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
-    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
+    | `mode`            | `Literal["hybrid"]`     | The mode to use for the search (must be "hybrid")                                         | `"hybrid"` |
+    | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
     | `limit`           | `int`     | The limit of documents to return (1-50)                                                    | `10`    |
+    | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
-    | `alpha`           | `float`   | Weight between BM25 and Vector search (0=pure BM25, 1=pure vector)                        | `0.75`  |
+    | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
+    | `alpha`           | `float`   | Weight between BM25 and Vector search (0=pure BM25, 1=pure vector)                        | `0.5`  |
     | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0`     |
     | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
-    | `lang`            | `str`     | The language for text search (other languages coming soon)                                 | `en-US` |
   </Tab>
 </Tabs>
 
 <Note>
-`recall_options` are utilized only when explicitly set; otherwise, they default to `None`. 
+When `recall_options` is not explicitly set (for instance, it is `None`), `vector` search mode is used with default parameters.
 </Note>
 
 ### System Template

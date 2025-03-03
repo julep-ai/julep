@@ -541,7 +541,7 @@ async def _(
                         "method": "GET",
                         "url": "https://httpbin.org/get",
                     },
-                }
+                },
             ],
             main=[
                 {
@@ -603,7 +603,7 @@ async def _(
                         "method": "GET",
                         "url": f"https://httpbin.org/status/{status_codes_to_retry}",
                     },
-                }
+                },
             ],
             main=[
                 {
@@ -673,7 +673,7 @@ async def _(
                     "integration": {
                         "provider": "dummy",
                     },
-                }
+                },
             ],
             main=[
                 {
@@ -730,7 +730,7 @@ async def _(
                         "setup": {"openweathermap_api_key": "test"},
                         "arguments": {"location": "fake"},
                     },
-                }
+                },
             ],
             main=[
                 {
@@ -976,7 +976,7 @@ async def _(
                             "case": "True",
                             "then": {"evaluate": {"hello": '"bye"'}},
                         },
-                    ]
+                    ],
                 },
             ],
         ),
@@ -1391,7 +1391,7 @@ async def _(
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[
-            Choices(message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"})
+            Choices(message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"}),
         ],
         created=0,
         object="text_completion",

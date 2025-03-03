@@ -474,13 +474,13 @@ class TaskExecutionWorkflow:
                 task_steps.prompt_step,
                 self.context,
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
             return WorkflowResult(
-                state=PartialTransition(output=new_response.output, type="resume")
+                state=PartialTransition(output=new_response.output, type="resume"),
             )
         if input_type == "integrations":
             workflow.logger.debug("Prompt step: Received INTEGRATION tool call")
@@ -509,7 +509,7 @@ class TaskExecutionWorkflow:
 
             # TODO: Feed the tool call results back to the model (see above)
         workflow.logger.debug(
-            f"Prompt step: Received unknown tool call: {tool_calls_input[0]['type']}"
+            f"Prompt step: Received unknown tool call: {tool_calls_input[0]['type']}",
         )
         return WorkflowResult(state=PartialTransition(output=message))
 
@@ -560,7 +560,7 @@ class TaskExecutionWorkflow:
             )
 
             return WorkflowResult(
-                state=PartialTransition(output=tool_call_response, type="resume")
+                state=PartialTransition(output=tool_call_response, type="resume"),
             )
 
         if tool_call["type"] == "integration":
@@ -594,7 +594,7 @@ class TaskExecutionWorkflow:
                 execute_integration,
                 args=[self.context, tool_name, integration, arguments],
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -634,7 +634,7 @@ class TaskExecutionWorkflow:
                     arguments,
                 ],
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
@@ -651,7 +651,7 @@ class TaskExecutionWorkflow:
                 execute_system,
                 args=[self.context, system_call],
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
@@ -692,7 +692,7 @@ class TaskExecutionWorkflow:
 
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
-            f" [LOC {start.workflow}.{start.step}]"
+            f" [LOC {start.workflow}.{start.step}]",
         )
 
         # 0. Prepare context
@@ -718,7 +718,7 @@ class TaskExecutionWorkflow:
 
         # 2. Execute the current step's activity if applicable
         workflow.logger.info(
-            f"Executing step {context.cursor.step} of type {step_type.__name__}"
+            f"Executing step {context.cursor.step} of type {step_type.__name__}",
         )
 
         activity = STEP_TO_ACTIVITY.get(step_type)
@@ -733,7 +733,7 @@ class TaskExecutionWorkflow:
                     context,
                     #
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else temporal_schedule_to_close_timeout
+                        seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                     ),
                     retry_policy=DEFAULT_RETRY_POLICY,
                     heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -825,7 +825,7 @@ class TaskExecutionWorkflow:
             raise ApplicationError(msg)
 
         workflow.logger.info(
-            f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
+            f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}",
         )
 
         # Save the final output to the blob store
@@ -833,7 +833,7 @@ class TaskExecutionWorkflow:
             save_inputs_remote,
             args=[[final_state.output]],
             schedule_to_close_timeout=timedelta(
-                seconds=10 if debug or testing else temporal_schedule_to_close_timeout
+                seconds=10 if debug or testing else temporal_schedule_to_close_timeout,
             ),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),

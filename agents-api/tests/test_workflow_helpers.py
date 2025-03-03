@@ -38,7 +38,10 @@ async def _():
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
-            id=uuid.uuid4(), name="test agent", created_at=utcnow(), updated_at=utcnow()
+            id=uuid.uuid4(),
+            name="test agent",
+            created_at=utcnow(),
+            updated_at=utcnow(),
         ),
         agent_tools=[],
         arguments={},
@@ -101,7 +104,10 @@ async def _():
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
-            id=uuid.uuid4(), name="test agent", created_at=utcnow(), updated_at=utcnow()
+            id=uuid.uuid4(),
+            name="test agent",
+            created_at=utcnow(),
+            updated_at=utcnow(),
         ),
         agent_tools=[],
         arguments={},
@@ -124,7 +130,7 @@ async def _():
     with (
         patch("agents_api.workflows.task_execution.helpers.workflow") as workflow,
         patch(
-            "agents_api.workflows.task_execution.helpers.continue_as_child"
+            "agents_api.workflows.task_execution.helpers.continue_as_child",
         ) as continue_as_child,
     ):
         workflow.execute_activity.return_value = _resp()
@@ -177,7 +183,10 @@ async def _():
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
-            id=uuid.uuid4(), name="test agent", created_at=utcnow(), updated_at=utcnow()
+            id=uuid.uuid4(),
+            name="test agent",
+            created_at=utcnow(),
+            updated_at=utcnow(),
         ),
         agent_tools=[],
         arguments={},
@@ -200,7 +209,7 @@ async def _():
     with (
         patch("agents_api.workflows.task_execution.helpers.workflow") as workflow,
         patch(
-            "agents_api.workflows.task_execution.helpers.continue_as_child"
+            "agents_api.workflows.task_execution.helpers.continue_as_child",
         ) as continue_as_child,
     ):
         workflow.execute_activity.return_value = _resp()

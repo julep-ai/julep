@@ -230,7 +230,7 @@ Our hybrid search functionality combines the strengths of full-text search and e
 |-------------------|----------------|---------------------------------------------------------------------------------|-------------|
 | `text`            | `str`          | The textual query to search within documents.                                   | **Required** |
 | `vector`          | `List[float]`  | The embedding vector representing the semantic meaning of the query.            | **Required** |
-| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results.       | `0.75`       |
+| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results.       | `0.5`       |
 | `confidence`      | `float`        | The confidence threshold for embedding similarity.                              | `0`       |
 | `metadata_filter` | `object`       | Filters to apply based on document metadata.                                    | `None`      |
 | `limit`           | `int`          | The number of top results to return.                                            | `3`         |

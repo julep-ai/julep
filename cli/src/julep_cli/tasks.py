@@ -20,7 +20,8 @@ def create(
         typer.Option("--agent-id", "-a", help="ID of the agent the task is associated with"),
     ],
     definition: Annotated[
-        str, typer.Option("--definition", "-d", help="Path to the task definition YAML file")
+        str,
+        typer.Option("--definition", "-d", help="Path to the task definition YAML file"),
     ],
     name: Annotated[
         str | None,
@@ -38,10 +39,12 @@ def create(
         ),
     ] = None,
     metadata: Annotated[
-        str | None, typer.Option("--metadata", help="JSON metadata for the task")
+        str | None,
+        typer.Option("--metadata", help="JSON metadata for the task"),
     ] = None,
     inherit_tools: Annotated[
-        bool, typer.Option("--inherit-tools", help="Inherit tools from the associated agent")
+        bool,
+        typer.Option("--inherit-tools", help="Inherit tools from the associated agent"),
     ] = False,
 ):
     """Create a new task for an agent.
@@ -71,7 +74,9 @@ def create(
         task_yaml_contents["inherit_tools"] = False
 
     with Progress(
-        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
     ) as progress:
         try:
             create_task_task = progress.add_task("Creating task...", start=False)
@@ -97,19 +102,24 @@ def update(
     ],
     task_id: Annotated[str, typer.Option("--id", help="ID of the task to update")],
     name: Annotated[
-        str | None, typer.Option("--name", "-n", help="New name for the task")
+        str | None,
+        typer.Option("--name", "-n", help="New name for the task"),
     ] = None,
     description: Annotated[
-        str | None, typer.Option("--description", help="New description for the task")
+        str | None,
+        typer.Option("--description", help="New description for the task"),
     ] = None,
     definition: Annotated[
         str | None,
         typer.Option(
-            "--definition", "-d", help="Path to the updated task definition YAML file"
+            "--definition",
+            "-d",
+            help="Path to the updated task definition YAML file",
         ),
     ] = None,
     metadata: Annotated[
-        str | None, typer.Option("--metadata", help="JSON metadata for the task")
+        str | None,
+        typer.Option("--metadata", help="JSON metadata for the task"),
     ] = None,
     inherit_tools: Annotated[
         bool | None,
@@ -139,14 +149,18 @@ def update(
     client = get_julep_client()
 
     with Progress(
-        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
     ) as progress:
         try:
             update_task_task = progress.add_task("Updating task...", start=False)
             progress.start_task(update_task_task)
 
             client.tasks.create_or_update(
-                agent_id=agent_id, task_id=task_id, **task_yaml_contents
+                agent_id=agent_id,
+                task_id=task_id,
+                **task_yaml_contents,
             )
         except Exception as e:
             error_console.print(f"Error updating task: {e}", style="bold red", highlight=True)
@@ -158,17 +172,21 @@ def update(
 @tasks_app.command()
 def list(
     agent_id: Annotated[
-        str | None, typer.Option("--agent-id", "-a", help="Filter tasks by associated agent ID")
+        str | None,
+        typer.Option("--agent-id", "-a", help="Filter tasks by associated agent ID"),
     ] = None,
     json_output: Annotated[
-        bool, typer.Option("--json", "-j", help="Output the list in JSON format")
+        bool,
+        typer.Option("--json", "-j", help="Output the list in JSON format"),
     ] = False,
 ):
     """List all tasks or filter based on criteria"""
     client = get_julep_client()
 
     with Progress(
-        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
     ) as progress:
         try:
             list_tasks_task = progress.add_task(description="Fetching tasks", total=None)

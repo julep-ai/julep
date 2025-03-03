@@ -42,7 +42,11 @@ def patch_litellm_response(
 @wraps(_acompletion)
 @beartype
 async def acompletion(
-    *, model: str, messages: list[dict], custom_api_key: str | None = None, **kwargs
+    *,
+    model: str,
+    messages: list[dict],
+    custom_api_key: str | None = None,
+    **kwargs,
 ) -> ModelResponse | CustomStreamWrapper:
     if not custom_api_key:
         model = f"openai/{model}"  # This is needed for litellm
@@ -130,7 +134,8 @@ async def get_model_list(*, custom_api_key: str | None = None) -> list[dict]:
     async with (
         aiohttp.ClientSession() as session,
         session.get(
-            url=f"{litellm_url}/models" if not custom_api_key else "/models", headers=headers
+            url=f"{litellm_url}/models" if not custom_api_key else "/models",
+            headers=headers,
         ) as response,
     ):
         response.raise_for_status()
