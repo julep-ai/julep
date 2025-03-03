@@ -9,10 +9,12 @@ from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 
 from ..env import (
-    copyleaks_api_key,
+    desklib_url,
     litellm_master_key,
     litellm_url,
     sapling_api_key,
+    sapling_url,
+    zerogpt_url,
 )
 
 # Initialize humanization as a dictionary to hold various properties
@@ -44,11 +46,6 @@ Notes:
 Return only the rewritten text without explanations or meta-commentary.""",
     "grammar_prompt": "Only fix grammar that is wrong without changing the words and places of the sentence",
 }
-
-SAPLING_URL = "https://api.sapling.ai/api/v1/aidetect"
-COPYLEAKS_URL = "https://api.copyleaks.com/v2/writer-detector/{scan_id}/check"
-ZEROGPT_URL = "https://api.zerogpt.com/api/detect/detectText"
-DESKLIB_URL = "http://35.243.190.233/detect"
 
 
 def text_translate(text, src_lang, target_lang):
@@ -111,7 +108,7 @@ def is_human_desklib(text: str) -> float:
         payload = {
             "text": text,
         }
-        response = requests.post(DESKLIB_URL, json=payload)
+        response = requests.post(desklib_url, json=payload)
 
         response.raise_for_status()
 
@@ -136,7 +133,7 @@ def is_human_sapling(text):
             "text": text,
             "key": sapling_api_key,
         }
-        response = requests.post(SAPLING_URL, json=payload)
+        response = requests.post(sapling_url, json=payload)
         ai_score = response.json().get("score", None)
 
         # sapling returns a an ai score between 0 and 1, we want to return a human_score percentage
@@ -144,47 +141,6 @@ def is_human_sapling(text):
     except Exception as e:
         msg = "Error getting human score from sapling"
         raise Exception(msg) from e
-
-
-def is_human_copyleaks(text):
-    try:
-        # Define the payload
-        payload = {
-            "text": text,
-            # "sandbox": False,
-            # "explain": False,
-            # "sensitivity": 2
-        }
-
-        # Define headers with Authorization and Content-Type
-        headers = {
-            "Authorization": f"Bearer {copyleaks_api_key}",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-
-        # Copyleaks lets you define the scan id yourself
-        from uuid import uuid4
-
-        scan_id = str(uuid4())
-
-        # Send the POST request with JSON payload and headers
-        response = requests.post(
-            COPYLEAKS_URL.format(scan_id=scan_id),
-            json=payload,
-            headers=headers,
-        )
-        response.raise_for_status()
-
-        # Check the response status
-        if response.status_code == 200:
-            resp = response.json()
-            # Extract the human score from the response
-            human_score = resp.get("summary", {}).get("human", 0)  # float with range 0-1
-            return human_score * 100
-    except Exception as e:
-        msg = "Error getting human score from copyleaks"
-        raise Exception(msg, e)
 
 
 def is_human_zerogpt(input_text, max_tries=3):
@@ -215,7 +171,7 @@ def is_human_zerogpt(input_text, max_tries=3):
     json_payload = json.dumps(payload)
 
     # Send the POST request with JSON payload and headers
-    response = requests.post(ZEROGPT_URL, data=json_payload, headers=headers)
+    response = requests.post(zerogpt_url, data=json_payload, headers=headers)
 
     # Check the response status
     if response.status_code == 200:

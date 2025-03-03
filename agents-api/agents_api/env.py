@@ -149,8 +149,12 @@ temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
 # API Keys needed for the `humanize_text` method in `evaluate` step
 # ------------
 sapling_api_key: str = env.str("SAPLING_API_KEY", default="")
-copyleaks_api_key: str = env.str("COPYLEAKS_API_KEY", default="")
 zerogpt_api_key: str = env.str("ZEROGPT_API_KEY", default="")
+zerogpt_url: str = env.str(
+    "ZEROGPT_URL", default="https://api.zerogpt.com/api/detect/detectText"
+)
+desklib_url: str = env.str("DESKLIB_URL", default="http://35.243.190.233/detect")
+sapling_url: str = env.str("SAPLING_URL", default="https://api.sapling.ai/api/v1/aidetect")
 
 # Consolidate environment variables
 environment: dict[str, Any] = {
