@@ -23,6 +23,7 @@ from ..docs.mmr import maximal_marginal_relevance
 from ..entries.get_history import get_history
 from ..utils import rewrap_exceptions
 
+MIN_DOCS_WITH_EMBEDDINGS = 2
 T = TypeVar("T")
 
 
@@ -159,16 +160,19 @@ async def gather_messages(
         and len(doc_references) > recall_options.limit
         and recall_options.mode != "text"
     ):
-        # Filter docs with embeddings
-        docs_with_embeddings = [
-            doc for doc in doc_references if doc.snippet.embedding is not None
-        ]
+        # Filter docs with embeddings and extract embeddings in one pass
+        docs_with_embeddings = []
+        embeddings = []
+        for doc in doc_references:
+            if doc.snippet.embedding is not None:
+                docs_with_embeddings.append(doc)
+                embeddings.append(doc.snippet.embedding)
 
-        if len(docs_with_embeddings) >= 2:
+        if len(docs_with_embeddings) >= MIN_DOCS_WITH_EMBEDDINGS:
             # Apply MMR
             indices = maximal_marginal_relevance(
                 np.asarray(query_embedding),
-                [doc.snippet.embedding for doc in docs_with_embeddings],
+                embeddings,
                 k=min(recall_options.limit, len(docs_with_embeddings)),
                 lambda_mult=1 - recall_options.mmr_strength,
             )

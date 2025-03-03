@@ -328,7 +328,7 @@ async def _(
     assert agent_data.name.upper() in messages1[0]["content"]
 
 
-@test("chat: validate the recall options for different modes in ca")
+@test("chat: validate the recall options for different modes in chat context")
 async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
