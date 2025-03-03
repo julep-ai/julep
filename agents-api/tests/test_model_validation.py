@@ -26,3 +26,6 @@ async def _():
         assert exc.raised.status_code == 400
         assert "Model non-existent-model not available" in exc.raised.detail
         mock_get_models.assert_called_once()
+
+
+# TODO: test when model is None

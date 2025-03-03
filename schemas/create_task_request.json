@@ -102,7 +102,7 @@
       "title": "Agent",
       "type": "object"
     },
-    "ApiCallDef-Input": {
+    "ApiCallDef": {
       "description": "API call definition",
       "properties": {
         "content": {
@@ -242,155 +242,6 @@
         "url": {
           "format": "uri",
           "minLength": 1,
-          "title": "Url",
-          "type": "string"
-        }
-      },
-      "required": [
-        "method",
-        "url"
-      ],
-      "title": "ApiCallDef",
-      "type": "object"
-    },
-    "ApiCallDef-Output": {
-      "description": "API call definition",
-      "properties": {
-        "content": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Content"
-        },
-        "cookies": {
-          "anyOf": [
-            {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Cookies"
-        },
-        "data": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Data"
-        },
-        "files": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Files"
-        },
-        "follow_redirects": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Follow Redirects"
-        },
-        "headers": {
-          "anyOf": [
-            {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Headers"
-        },
-        "json": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Json"
-        },
-        "method": {
-          "enum": [
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "PATCH",
-            "HEAD",
-            "OPTIONS",
-            "CONNECT",
-            "TRACE"
-          ],
-          "title": "Method",
-          "type": "string"
-        },
-        "params": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Params"
-        },
-        "schema": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Schema"
-        },
-        "timeout": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Timeout"
-        },
-        "url": {
           "title": "Url",
           "type": "string"
         }
@@ -3735,12 +3586,19 @@
         "recall_options": {
           "anyOf": [
             {
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
               "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -3909,12 +3767,19 @@
         "recall_options": {
           "anyOf": [
             {
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
               "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -4120,7 +3985,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Output"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -4180,7 +4045,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Output"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -6056,7 +5921,7 @@
     "HybridDocSearch": {
       "properties": {
         "alpha": {
-          "default": 0.75,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": 0.0,
           "title": "Alpha",
@@ -6101,6 +5966,7 @@
           "type": "number"
         },
         "mode": {
+          "const": "hybrid",
           "default": "hybrid",
           "title": "Mode",
           "type": "string"
@@ -6178,7 +6044,7 @@
     "HybridDocSearchUpdate": {
       "properties": {
         "alpha": {
-          "default": 0.75,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": 0.0,
           "title": "Alpha",
@@ -6223,6 +6089,7 @@
           "type": "number"
         },
         "mode": {
+          "const": "hybrid",
           "default": "hybrid",
           "title": "Mode",
           "type": "string"
@@ -8008,12 +7875,19 @@
         "recall_options": {
           "anyOf": [
             {
+              "$ref": "#/$defs/VectorDocSearchUpdate"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearchUpdate"
+            },
+            {
               "$ref": "#/$defs/HybridDocSearchUpdate"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -9234,12 +9108,19 @@
         "recall_options": {
           "anyOf": [
             {
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
               "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -9570,7 +9451,7 @@
       "title": "Source",
       "type": "object"
     },
-    "SpiderFetchArguments-Input": {
+    "SpiderFetchArguments": {
       "description": "Arguments for Spider integration",
       "properties": {
         "content_type": {
@@ -9598,42 +9479,6 @@
         "url": {
           "format": "uri",
           "minLength": 1,
-          "title": "Url",
-          "type": "string"
-        }
-      },
-      "required": [
-        "url"
-      ],
-      "title": "SpiderFetchArguments",
-      "type": "object"
-    },
-    "SpiderFetchArguments-Output": {
-      "description": "Arguments for Spider integration",
-      "properties": {
-        "content_type": {
-          "default": "application/json",
-          "enum": [
-            "application/json",
-            "text/csv",
-            "application/xml",
-            "application/jsonl"
-          ],
-          "title": "Content Type",
-          "type": "string"
-        },
-        "params": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Params"
-        },
-        "url": {
           "title": "Url",
           "type": "string"
         }
@@ -9686,63 +9531,13 @@
       "title": "SpiderFetchArgumentsUpdate",
       "type": "object"
     },
-    "SpiderIntegrationDef-Input": {
+    "SpiderIntegrationDef": {
       "description": "Spider integration definition",
       "properties": {
         "arguments": {
           "anyOf": [
             {
-              "$ref": "#/$defs/SpiderFetchArguments-Input"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "method": {
-          "anyOf": [
-            {
-              "enum": [
-                "crawl",
-                "links",
-                "screenshot",
-                "search"
-              ],
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Method"
-        },
-        "provider": {
-          "const": "spider",
-          "default": "spider",
-          "title": "Provider",
-          "type": "string"
-        },
-        "setup": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SpiderSetup"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "title": "SpiderIntegrationDef",
-      "type": "object"
-    },
-    "SpiderIntegrationDef-Output": {
-      "description": "Spider integration definition",
-      "properties": {
-        "arguments": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SpiderFetchArguments-Output"
+              "$ref": "#/$defs/SpiderFetchArguments"
             },
             {
               "type": "null"
@@ -10293,7 +10088,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Input"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -10359,7 +10154,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Input"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -10464,7 +10259,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Output"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -10530,7 +10325,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Output"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -10664,6 +10459,49 @@
       "title": "TextEditor20241022DefUpdate",
       "type": "object"
     },
+    "TextOnlyDocSearch": {
+      "properties": {
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mode": {
+          "const": "text",
+          "default": "text",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "TextOnlyDocSearch",
+      "type": "object"
+    },
     "TextOnlyDocSearchRequest": {
       "properties": {
         "lang": {
@@ -10692,6 +10530,49 @@
         "text"
       ],
       "title": "TextOnlyDocSearchRequest",
+      "type": "object"
+    },
+    "TextOnlyDocSearchUpdate": {
+      "properties": {
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mode": {
+          "const": "text",
+          "default": "text",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "TextOnlyDocSearchUpdate",
       "type": "object"
     },
     "Then-Input": {
@@ -10919,7 +10800,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Output"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -10991,7 +10872,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Output"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -11475,12 +11356,19 @@
         "recall_options": {
           "anyOf": [
             {
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
               "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -11530,7 +11418,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Input"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -11590,7 +11478,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Input"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -11805,6 +11693,63 @@
       "title": "ValidationError",
       "type": "object"
     },
+    "VectorDocSearch": {
+      "properties": {
+        "confidence": {
+          "default": 0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mmr_strength": {
+          "default": 0.5,
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mmr Strength",
+          "type": "number"
+        },
+        "mode": {
+          "const": "vector",
+          "default": "vector",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "VectorDocSearch",
+      "type": "object"
+    },
     "VectorDocSearchRequest": {
       "properties": {
         "confidence": {
@@ -11850,6 +11795,63 @@
         "vector"
       ],
       "title": "VectorDocSearchRequest",
+      "type": "object"
+    },
+    "VectorDocSearchUpdate": {
+      "properties": {
+        "confidence": {
+          "default": 0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mmr_strength": {
+          "default": 0.5,
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mmr Strength",
+          "type": "number"
+        },
+        "mode": {
+          "const": "vector",
+          "default": "vector",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "VectorDocSearchUpdate",
       "type": "object"
     },
     "WaitForInputInfo": {
@@ -12610,7 +12612,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Input"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -12670,7 +12672,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Input"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -12775,7 +12777,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Input"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -12835,7 +12837,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Input"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"

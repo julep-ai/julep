@@ -59,9 +59,6 @@ async def render_chat_input(
     session_id: UUID,
     chat_input: ChatInput,
 ) -> tuple[list[dict], list[DocReference], list[dict] | None, dict, list[dict], ChatContext]:
-    if chat_input.model:
-        await validate_model(chat_input.model)
-
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
@@ -82,6 +79,8 @@ async def render_chat_input(
     # Merge the settings and prepare environment
     chat_context.merge_settings(chat_input)
     settings: dict = chat_context.settings or {}
+
+    await validate_model(settings.get("model"))
 
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(

@@ -9,6 +9,9 @@ async def validate_model(model_name: str) -> None:
     Validates if a given model name is available in LiteLLM.
     Raises HTTPException if model is not available.
     """
+    print("*" * 100)
+    print(model_name)
+    print("*" * 100)
     models = await get_model_list()
     available_models = [model["id"] for model in models]
 
