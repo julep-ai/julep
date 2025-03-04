@@ -50,5 +50,5 @@ def create(
             raise typer.Exit(1)
 
     console.print(
-        f"[bold blue]Execution created successfully![/bold blue]\n[green]Execution ID: {execution.id}[/green]"
+        f"[bold blue]Execution created successfully![/bold blue]\n[green]Execution ID: {execution.id}[/green]",
     )

@@ -49,7 +49,7 @@ def run_task(pr_data: str) -> str:
         msg = f"Missing required environment variables: {', '.join(missing_vars)}"
         raise ValueError(msg)
 
-    client = Client(api_key=os.environ["JULEP_API_KEY"], environment="dev")
+    client = Client(api_key=os.environ["JULEP_API_KEY"], environment="production")
 
     # Use context manager for file operations
     with Path("./scripts/templates/changelog.yaml").open(encoding="utf-8") as f:
@@ -65,12 +65,15 @@ def run_task(pr_data: str) -> str:
 
     # Create or update the task configuration
     client.tasks.create_or_update(
-        task_id=os.environ["TASK_UUID"], agent_id=os.environ["AGENT_UUID"], **task_description
+        task_id=os.environ["TASK_UUID"],
+        agent_id=os.environ["AGENT_UUID"],
+        **task_description,
     )
 
     # Create a new execution instance
     execution = client.executions.create(
-        task_id=os.environ["TASK_UUID"], input={"pr_data": str(pr_data)}
+        task_id=os.environ["TASK_UUID"],
+        input={"pr_data": str(pr_data)},
     )
 
     # Wait for task completion using context manager for proper resource cleanup
@@ -100,7 +103,10 @@ def preserve_and_update_changelog(new_changelog: str, source: str = "./CHANGELOG
     # Load existing changelog if it exists, otherwise use header template
     if path.exists():
         existing_content = path.read_text(encoding="utf-8")
-        content = f"{existing_content}\n\n{new_changelog}"
+        # Find the end of the div tag
+        div_end = existing_content.find("</div>") + len("</div>")
+        # Insert new changelog after the div
+        content = f"{existing_content[:div_end]}{new_changelog}{existing_content[div_end:]}"
     else:
         html_content = load_template("header.html")
         content = f"{html_content}\n\n{new_changelog}"

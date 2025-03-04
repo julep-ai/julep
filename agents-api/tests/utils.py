@@ -4,8 +4,13 @@ import math
 import os
 import subprocess
 from contextlib import asynccontextmanager, contextmanager
+from typing import Any
 from unittest.mock import patch
+from uuid import UUID
 
+from agents_api.autogen.openapi_model import Transition
+from agents_api.common.protocol.tasks import TransitionTarget, TransitionType
+from agents_api.common.utils.datetime import utcnow
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
 from fastapi.testclient import TestClient
@@ -15,6 +20,7 @@ from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for_logs
 from testcontainers.localstack import LocalStackContainer
 from testcontainers.postgres import PostgresContainer
+from uuid_extensions import uuid7
 
 # Replicated here to prevent circular import
 EMBEDDING_SIZE: int = 1024
@@ -66,6 +72,36 @@ def make_vector_with_similarity(n: int = EMBEDDING_SIZE, d: float = 0.5):
     return v
 
 
+def generate_transition(
+    execution_id: UUID = uuid7(),
+    transition_id: UUID = uuid7(),
+    type: TransitionType = "step",
+    current_step: TransitionTarget = TransitionTarget(
+        workflow="main",
+        step=0,
+        scope_id=uuid7(),
+    ),
+    next_step: TransitionTarget | None = None,
+    task_token: str | None = None,
+    output: Any = None,
+    label: str | None = None,
+    metadata: dict = {},
+):
+    return Transition(
+        execution_id=execution_id,
+        id=transition_id,
+        type=type,
+        current=current_step,
+        next=next_step,
+        task_token=task_token,
+        output=output,
+        label=label,
+        created_at=utcnow(),
+        updated_at=utcnow(),
+        metadata=metadata,
+    )
+
+
 @asynccontextmanager
 async def patch_testing_temporal():
     # Set log level to ERROR to avoid spamming the console
@@ -76,7 +112,7 @@ async def patch_testing_temporal():
 
     # Start a local Temporal environment
     async with await WorkflowEnvironment.start_time_skipping(
-        data_converter=pydantic_data_converter
+        data_converter=pydantic_data_converter,
     ) as env:
         # Create a worker with our workflows and start it
         worker = create_worker(client=env.client)
@@ -131,7 +167,7 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
                 "tool_calls": [],
                 "created_at": 1,
                 # finish_reason="stop",
-            }
+            },
         ],
         created=0,
         object="text_completion",
@@ -150,7 +186,7 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
 @contextmanager
 def patch_integration_service(output: dict = {"result": "ok"}):
     with patch(
-        "agents_api.clients.integrations.run_integration_service"
+        "agents_api.clients.integrations.run_integration_service",
     ) as run_integration_service:
         run_integration_service.return_value = output
 
@@ -199,6 +235,6 @@ def get_pg_dsn(start_vectorizer: bool = False):
 @contextmanager
 def get_localstack():
     with LocalStackContainer(image="localstack/localstack:s3-latest").with_services(
-        "s3"
+        "s3",
     ) as localstack:
         yield localstack

@@ -33,6 +33,14 @@ async def _():
         await base_evaluate("$ b", values={"a": 1})
 
 
+@test("utility: base_evaluate - scalar values")
+async def _():
+    exprs = [1, 2, True, 1.2459, "$ x + 5"]
+    values = {"x": 5}
+    result = await base_evaluate(exprs, values=values)
+    assert result == [1, 2, True, 1.2459, 10]
+
+
 @test("utility: base_evaluate - str")
 async def _():
     exprs = "$ x + 5"
@@ -43,6 +51,10 @@ async def _():
     exprs = "hello world"
     result = await base_evaluate(exprs, values={})
     assert result == "hello world"
+
+    exprs = "I forgot to put a dollar sign, can you still calculate {x + 5}?"
+    result = await base_evaluate(exprs, values={"x": 5})
+    assert result == "I forgot to put a dollar sign, can you still calculate 10?"
 
 
 @test("utility: base_evaluate - dict")
@@ -85,12 +97,14 @@ async def _():
         ),
     )
 
+    scope_id = uuid.uuid4()
     context = StepContext(
         execution_input=execution_input,
         current_input="value 1",
         cursor=TransitionTarget(
             workflow="main",
             step=0,
+            scope_id=scope_id,
         ),
     )
     values = {"x": 5}
@@ -99,7 +113,8 @@ async def _():
     extra_lambda_strs = {"reducer_lambda": f"lambda _result, _item: ({reduce})"}
 
     with patch(
-        "agents_api.common.protocol.tasks.StepContext.prepare_for_step", return_value={"x": 10}
+        "agents_api.common.protocol.tasks.StepContext.prepare_for_step",
+        return_value={"x": 10},
     ):
         with raises(ValueError):
             result = await base_evaluate(
@@ -116,27 +131,45 @@ async def _():
                 extra_lambda_strs=extra_lambda_strs,
             )
         result = await base_evaluate(
-            exprs, context=context_none, values=values, extra_lambda_strs=extra_lambda_strs_none
+            exprs,
+            context=context_none,
+            values=values,
+            extra_lambda_strs=extra_lambda_strs_none,
         )
         assert result == 10
         result = await base_evaluate(
-            exprs, context=context_none, values=values, extra_lambda_strs=extra_lambda_strs
+            exprs,
+            context=context_none,
+            values=values,
+            extra_lambda_strs=extra_lambda_strs,
         )
         assert result == 10
         result = await base_evaluate(
-            exprs, context=context, values=values_none, extra_lambda_strs=extra_lambda_strs_none
+            exprs,
+            context=context,
+            values=values_none,
+            extra_lambda_strs=extra_lambda_strs_none,
         )
         assert result == 15
         result = await base_evaluate(
-            exprs, context=context, values=values_none, extra_lambda_strs=extra_lambda_strs
+            exprs,
+            context=context,
+            values=values_none,
+            extra_lambda_strs=extra_lambda_strs,
         )
         assert result == 15
         result = await base_evaluate(
-            exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs_none
+            exprs,
+            context=context,
+            values=values,
+            extra_lambda_strs=extra_lambda_strs_none,
         )
         assert result == 15
         result = await base_evaluate(
-            exprs, context=context, values=values, extra_lambda_strs=extra_lambda_strs
+            exprs,
+            context=context,
+            values=values,
+            extra_lambda_strs=extra_lambda_strs,
         )
         assert result == 15
 

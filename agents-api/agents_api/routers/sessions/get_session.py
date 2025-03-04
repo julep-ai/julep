@@ -11,6 +11,7 @@ from .router import router
 
 @router.get("/sessions/{session_id}", tags=["sessions"])
 async def get_session(
-    session_id: UUID, x_developer_id: Annotated[UUID, Depends(get_developer_id)]
+    session_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> Session:
     return await get_session_query(developer_id=x_developer_id, session_id=session_id)

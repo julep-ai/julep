@@ -17,17 +17,13 @@ class BaseDocSearchRequest(BaseModel):
     """
     The limit of documents to return
     """
-    lang: Literal["en-US"] = "en-US"
+    lang: str = "en-US"
     """
     The language to be used for text-only search. Support for other languages coming soon.
     """
     metadata_filter: dict[str, Any] = {}
     """
     Metadata filter to apply to the search
-    """
-    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
-    """
-    MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
 
 
@@ -169,6 +165,10 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
 
 
 class MultipleEmbedQueryRequest(BaseModel):
@@ -229,4 +229,8 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     vector: list[float]
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
     """

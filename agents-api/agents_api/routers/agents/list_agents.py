@@ -17,7 +17,8 @@ async def list_agents(
     # Example:
     # > ?metadata_filter.name=John&metadata_filter.age=30
     metadata_filter: Annotated[
-        MetadataFilter, Depends(create_filter_extractor("metadata_filter"))
+        MetadataFilter,
+        Depends(create_filter_extractor("metadata_filter")),
     ],
     limit: int = 100,
     offset: int = 0,

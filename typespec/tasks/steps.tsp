@@ -88,7 +88,7 @@ model ToolCallStepDef {
     tool: validPythonIdentifier;
 
     /** The input parameters for the tool (defaults to last step output) */
-    arguments: NestedExpressionObject<unknown> | "_" = "_";
+    arguments: Record<unknown> | "_" = "_";
 }
 
 model PromptStep extends BaseWorkflowStep<"prompt"> {
@@ -272,10 +272,41 @@ model IfElseWorkflowStepDef {
     `if`: TypedExpression<boolean>;
 
     /** The steps to run if the condition is true */
-    then: NonConditionalWorkflowStep;
+    then: WaitForInputStep
+    | EvaluateStep
+    | ToolCallStep
+    | PromptStep
+    | GetStep
+    | SetStep
+    | LogStep
+    | YieldStep
+    | ReturnStep
+    | SleepStep
+    | ErrorWorkflowStep
+    | IfElseWorkflowStep
+    | SwitchStep
+    | ForeachStep
+    | ParallelStep
+    | MapReduceStep;
 
     /** The steps to run if the condition is false */
-    `else`: NonConditionalWorkflowStep | null = null;
+    `else`: WaitForInputStep
+    | EvaluateStep
+    | ToolCallStep
+    | PromptStep
+    | GetStep
+    | SetStep
+    | LogStep
+    | YieldStep
+    | ReturnStep
+    | SleepStep
+    | ErrorWorkflowStep
+    | IfElseWorkflowStep
+    | SwitchStep
+    | ForeachStep
+    | ParallelStep
+    | MapReduceStep
+    | null = null;
 }
 
 model CaseThen {

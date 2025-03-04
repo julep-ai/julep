@@ -47,13 +47,15 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
             if isinstance(expr, str) and expr.startswith("$ "):
                 expr = expr[2:].strip()
             else:
-                return expr
+                expr = f"f'''{expr}'''"
             return evaluator.eval(expr)
         except Exception as e:
             evaluate_error = EvaluateError(e, expr, evaluator.names)
             if activity.in_activity():
                 activity.logger.error(f"Error in base_evaluate: {evaluate_error}\n")
             raise evaluate_error from e
+    elif isinstance(expr, int | bool | float):
+        return expr
     elif isinstance(expr, list):
         return [_recursive_evaluate(e, evaluator) for e in expr]
     elif isinstance(expr, dict):

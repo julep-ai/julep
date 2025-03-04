@@ -1,7 +1,7 @@
 <sup><div align="center">[English](README.md) | [中文翻译](./.github/README-CN.md) | [日本語翻訳](./.github/README-JA.md) | [French](./.github/README-FR.md)</div></sup>
 
 <div align="center" id="top">
-<img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Serverless%20AI%20Workflows%20for%20Data%20%26%20ML%20Teams&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" />
+<img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Serverless%20AI%20Workflows%20for%20Data%20%26%20ML%20Teams&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" height=300 />
 
 <br>
   <p>
@@ -130,7 +130,7 @@ Julep is made up of the following components:
 </p>
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/38420b5d-9342-4c8d-bae9-b47c28ae45af" height="360" />
+  <img src="https://github.com/user-attachments/assets/38420b5d-9342-4c8d-bae9-b47c28ae45af" height="360"/>
 </div>
 
 <p align="justify">
@@ -545,14 +545,14 @@ cd <repository_root>
 
 ### 4. Create a Docker Volume for Backup
 
-Create a Docker volume named `grafana_data`, `memory_store_data`, `temporal-db-data`, `prometheus_data`, `seadweedfs_data`:
+Create a Docker volume named `grafana_data`, `memory_store_data`, `temporal-db-data`, `prometheus_data`, `seaweedfs_data`:
 
 ```bash
 docker volume create grafana_data
 docker volume create memory_store_data
 docker volume create temporal-db-data
 docker volume create prometheus_data
-docker volume create seadweedfs_data
+docker volume create seaweedfs_data
 ```
 
 ### 5. Run the Project using Docker Compose

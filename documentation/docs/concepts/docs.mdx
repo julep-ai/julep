@@ -23,9 +23,9 @@ When creating a doc, the following attributes can be specified:
 
 | **Field**  | **Type** | **Description**                                                           | **Default** |
 |------------|----------|---------------------------------------------------------------------------|-------------|
-| `title`    | string   | The title of the document.                                                | Required    |
-| `content`  | string   | The content of the document.                                              | Required    |
-| `metadata` | object   | Additional metadata for the document, such as preferences or settings.    | `null`      |
+| `title`    | `string`   | The title of the document.                                                | Required    |
+| `content`  | `string`   | The content of the document.                                              | Required    |
+| `metadata` | `object`   | Additional metadata for the document, such as preferences or settings.    | `null`      |
 
 ## How to Use Docs
 
@@ -61,6 +61,10 @@ Documents are attached to either an agent or a user. This is how you can create 
     To create a user doc, replace `client.agents.docs.create` with `client.users.docs.create`, and the `agent_id` argument with `user_id`.
 </Info>
 
+<Tip>
+    Check out the [API reference](/api-reference/docs/create-user-doc) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
+
 ### Chunking
 
 In Julep, documents are not automatically chunked. We recommend that developers handle chunking based on their specific use case requirements, as different applications may have unique needs for how documents should be divided. 
@@ -75,9 +79,12 @@ Our full-text search functionality leverages Timescale's powerful indexing to ef
 
 **Parameters:**
 
-- **text** (`str`): The textual query to search within documents.
-- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
-- **lang** (`str`, default `'en-US'`): The language to use for full-text search processing.
+| Parameter        | Type    | Description                                      | Default  |
+|------------------|---------|--------------------------------------------------|----------|
+| `text`           | `str`   | The textual query to search within documents.    | **Required** |
+| `metadata_filter`| `object`| Filters to apply based on document metadata.     | `None` |
+| `lang`           | `str`   | The language to use for full-text search processing. | `'english'` |
+| `limit`          | `int`   | The maximum number of documents to return.        | `10` |
 
 **Example:**
 
@@ -133,17 +140,24 @@ Our full-text search functionality leverages Timescale's powerful indexing to ef
     ```
 </Accordion>
 
-#### Embedding Search
+<Tip>
+    Check out the [API reference](/api-reference/docs/search-agent-docs) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
 
-Our embedding search functionality leverages machine learning to convert search queries and documents into numerical vectors, enabling semantic matching based on vector similarity. It utilizes an embedding space where similar vectors indicate related content and employs algorithms like k-nearest neighbors (KNN) to retrieve the most relevant documents. Key features include context awareness, flexibility for natural language queries, multi-modal search across various content types, and effective handling of synonyms.
+#### Embedding (vector) Search
+
+Our embedding (vector) search functionality leverages machine learning to convert search queries and documents into numerical vectors, enabling semantic matching based on vector similarity. It utilizes an embedding space where similar vectors indicate related content and employs algorithms like k-nearest neighbors (KNN) to retrieve the most relevant documents. Key features include context awareness, flexibility for natural language queries, multi-modal search across various content types, and effective handling of synonyms.
 
 **Parameters:**
 
-- **vector** (`List[float]`): The embedding vector representing the semantic meaning of the query.
-- **alpha** (`float`, default `0.7`): The weight assigned to embedding-based results versus text-based results.
-- **confidence** (`float`, default `0.5`): The confidence threshold for embedding similarity.
-- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
-- **k** (`int`, default `3`): The number of top results to return.
+| Parameter        | Type            | Description                                                                                   | Default |
+|------------------|-----------------|-----------------------------------------------------------------------------------------------|---------|
+| `vector`         | `number[]`      | The embedding vector representing the semantic meaning of the query.                          | **Required** |
+| `limit`          | `integer`       | The number of top results to return (must be between 1 and 50).                               | `10`    |
+| `lang`           | `string`        | The language for the search query.                                                            | `en-US` |
+| `metadata_filter`| `object`        | Filters to apply based on document metadata.                                                  | None    |
+| `mmr_strength`   | `number`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1).         | `0.5`     |
+| `confidence`     | `number`        | The confidence threshold for embedding similarity (must be between -1 and 1).                 | `0`     |
 
 <CodeGroup>
     ```python Python
@@ -202,19 +216,26 @@ Our embedding search functionality leverages machine learning to convert search 
     ```
 </Accordion>
 
+<Tip>
+    Check out the [API reference](/api-reference/docs/search-agent-docs) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
+
 #### Hybrid Search
 
 Our hybrid search functionality combines the strengths of full-text search and embedding-based search to deliver highly relevant and accurate search results. By leveraging both keyword matching and semantic vector analysis, hybrid search ensures that queries are not only matched based on exact terms but also understood in context, providing more nuanced and precise results. This dual approach enhances search performance, improves result relevance, and accommodates a wider range of search queries.
 
 **Parameters:**
 
-- **text** (`str`): The textual query to search within documents.
-- **vector** (`List[float]`): The embedding vector representing the semantic meaning of the query.
-- **alpha** (`float`, default `0.7`): The weight assigned to embedding-based results versus text-based results.
-- **confidence** (`float`, default `0.5`): The confidence threshold for embedding similarity.
-- **metadata_filter** (`object`, optional): Filters to apply based on document metadata.
-- **k** (`int`, default `3`): The number of top results to return.
-- **lang** (`str`, default `'en-US'`): The language to use for full-text search processing.
+| **Parameter**     | **Type**       | **Description**                                                                 | **Default** |
+|-------------------|----------------|---------------------------------------------------------------------------------|-------------|
+| `text`            | `str`          | The textual query to search within documents.                                   | **Required** |
+| `vector`          | `List[float]`  | The embedding vector representing the semantic meaning of the query.            | **Required** |
+| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results.       | `0.5`       |
+| `confidence`      | `float`        | The confidence threshold for embedding similarity.                              | `0`       |
+| `metadata_filter` | `object`       | Filters to apply based on document metadata.                                    | `None`      |
+| `limit`           | `int`          | The number of top results to return.                                            | `3`         |
+| `lang`            | `str`          | The language to use for full-text search processing.                            | `en-US`   |
+| `mmr_strength`    | `float`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1). | `0.5`       |
 
 **Example:**
 
@@ -281,6 +302,10 @@ Our hybrid search functionality combines the strengths of full-text search and e
     ```
 </Accordion>
 
+<Tip>
+    Check out the [API reference](/api-reference/docs/search-agent-docs) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
+
 ## Filtering
 
 While search is carried on based on the textual and/or semantic content of the documents, you can also filter the documents based on their metadata.
@@ -296,6 +321,10 @@ While search is carried on based on the textual and/or semantic content of the d
     )
     ```
 </CodeGroup>
+
+<Tip>
+    Check out the [API reference](/api-reference/docs/list-agent-docs) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
 
 ## Relationship to Other Concepts
 

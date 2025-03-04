@@ -1,9 +1,8 @@
 from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
-
-from ..utils.workflows import get_workflow_name
 
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
@@ -138,6 +137,18 @@ class PartialTransition(create_partial_model(CreateTransitionRequest)):
     user_state: dict[str, Any] = Field(default_factory=dict)
 
 
+class WorkflowResult(BaseModel):
+    """
+    Represents the result of a workflow execution, including metadata about how it was completed.
+    """
+
+    state: PartialTransition
+    returned: bool = (
+        False  # True if execution of a sub-workflow ended due to a return statement
+    )
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class StepContext(BaseModel):
     loaded: bool = False
     execution_input: ExecutionInput
@@ -160,7 +171,9 @@ class StepContext(BaseModel):
         agent_tools = execution_input.agent_tools
 
         step_tools: Literal["all"] | list[ToolRef | CreateToolRequest] = getattr(
-            self.current_step, "tools", "all"
+            self.current_step,
+            "tools",
+            "all",
         )
 
         if step_tools != "all":
@@ -175,7 +188,7 @@ class StepContext(BaseModel):
         for tool in task.tools:
             tool_def = tool.model_dump()
             task_tools.append(
-                CreateToolRequest(**{tool_def["type"]: tool_def.pop("spec"), **tool_def})
+                CreateToolRequest(**{tool_def["type"]: tool_def.pop("spec"), **tool_def}),
             )
 
         if not task.inherit_tools:
@@ -199,6 +212,11 @@ class StepContext(BaseModel):
 
     @computed_field
     @property
+    def current_scope_id(self) -> Annotated[UUID, Field(exclude=True)]:
+        return self.cursor.scope_id
+
+    @computed_field
+    @property
     def is_last_step(self) -> Annotated[bool, Field(exclude=True)]:
         return (self.cursor.step + 1) == len(self.current_workflow.steps)
 
@@ -218,26 +236,32 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def get_inputs(self) -> tuple[list[Any], list[str | None]]:
+    async def get_inputs(self) -> tuple[list[Any], list[str | None], dict[str, Any]]:
         if self.execution_input.execution is None:
-            return [], []
+            return [], [], {}
+
+        inputs = []
+        labels = []
+        state = {}
+        scope_id = self.current_scope_id
 
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
             limit=1000,
             direction="asc",
+            scope_id=scope_id,
         )  # type: ignore[not-callable]
         assert len(transitions) > 0, "No transitions found"
-        inputs = []
-        labels = []
-        workflow = get_workflow_name(transitions[-1])
-        transitions = [t for t in transitions if get_workflow_name(t) == workflow]
+
         for transition in transitions:
             # NOTE: The length hack should be refactored in case we want to implement multi-step control steps
             if transition.next and transition.next.step >= len(inputs):
                 inputs.append(transition.output)
                 labels.append(transition.step_label)
-        return inputs, labels
+            if transition.metadata and transition.metadata.get("step_type") == "SetStep":
+                state.update(transition.output)
+
+        return inputs, labels, state
 
     async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
@@ -247,7 +271,7 @@ class StepContext(BaseModel):
 
         current_input = serialize_model_data(current_input)
 
-        inputs, labels = await self.get_inputs()
+        inputs, labels, state = await self.get_inputs()
         labels = labels[1:]
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)
@@ -263,6 +287,7 @@ class StepContext(BaseModel):
 
             steps[i] = step
 
+        dump["state"] = state
         dump["steps"] = steps
         dump["inputs"] = {i: step["input"] for i, step in steps.items()}
         dump["outputs"] = {i: step["output"] for i, step in steps.items() if "output" in step}

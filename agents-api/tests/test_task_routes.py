@@ -34,7 +34,7 @@ def _(client=client, agent=test_agent):
                 "evaluate": {
                     "additionalProp1": "value1",
                 },
-            }
+            },
         ],
     }
 
@@ -57,7 +57,7 @@ def _(make_request=make_request, agent=test_agent):
                 "evaluate": {
                     "additionalProp1": "value1",
                 },
-            }
+            },
         ],
     }
 
@@ -155,6 +155,7 @@ async def _(
 ):
     pool = await create_db_pool(dsn=dsn)
 
+    scope_id = uuid7()
     # Create a transition
     transition = await create_execution_transition(
         developer_id=developer_id,
@@ -162,8 +163,8 @@ async def _(
         data=CreateTransitionRequest(
             type="step",
             output={},
-            current={"workflow": "main", "step": 0},
-            next={"workflow": "wf1", "step": 1},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
+            next={"workflow": "wf1", "step": 1, "scope_id": scope_id},
         ),
         connection_pool=pool,
     )
@@ -216,7 +217,7 @@ def _(make_request=make_request, agent=test_agent):
                 "evaluate": {
                     "additionalProp1": "value1",
                 },
-            }
+            },
         ],
     }
 

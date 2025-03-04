@@ -10,9 +10,10 @@ from temporalio.common import (
 )
 from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
+from uuid_extensions import uuid7
 
 from ..autogen.openapi_model import TransitionTarget
-from ..common.interceptors import offload_if_large
+from ..common.interceptors import CustomClientInterceptor, offload_if_large
 from ..common.protocol.tasks import ExecutionInput
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..env import (
@@ -22,6 +23,7 @@ from ..env import (
     temporal_metrics_bind_port,
     temporal_namespace,
     temporal_private_key,
+    temporal_search_attribute_key,
     temporal_task_queue,
     temporal_worker_url,
 )
@@ -49,6 +51,7 @@ async def get_client(
         worker_url,
         namespace=namespace,
         tls=tls_config,
+        interceptors=[CustomClientInterceptor()],
         data_converter=data_converter,
         api_key=temporal_api_key or None,
         rpc_metadata=rpc_metadata,
@@ -75,7 +78,7 @@ async def get_client_with_metrics(
     new_runtime = Runtime(
         telemetry=TelemetryConfig(
             metrics=PrometheusConfig(
-                bind_address=f"{temporal_metrics_bind_host}:{temporal_metrics_bind_port}"
+                bind_address=f"{temporal_metrics_bind_host}:{temporal_metrics_bind_port}",
             ),
         ),
     )
@@ -107,11 +110,15 @@ async def run_task_execution_workflow(
         msg = "execution_input.execution cannot be None"
         raise ValueError(msg)
 
-    start: TransitionTarget = start or TransitionTarget(workflow="main", step=0)
+    start: TransitionTarget = start or TransitionTarget(
+        workflow="main",
+        step=0,
+        scope_id=uuid7(),
+    )
 
     client = client or (await get_client())
     execution_id = execution_input.execution.id
-    execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
+    execution_id_key = SearchAttributeKey.for_keyword(temporal_search_attribute_key)
 
     old_args = execution_input.arguments
     execution_input.arguments = offload_if_large(old_args)

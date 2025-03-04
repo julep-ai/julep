@@ -4,7 +4,6 @@ from uuid import UUID
 
 import numpy as np
 from fastapi import Depends
-from langcodes import Language
 
 from ...autogen.openapi_model import (
     DocReference,
@@ -13,68 +12,12 @@ from ...autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
+from ...common.utils.get_doc_search import get_search_fn_and_params
 from ...dependencies.developer_id import get_developer_id
 from ...queries.docs.mmr import maximal_marginal_relevance
-from ...queries.docs.search_docs_by_embedding import search_docs_by_embedding
-from ...queries.docs.search_docs_by_text import search_docs_by_text
-from ...queries.docs.search_docs_hybrid import search_docs_hybrid
 from .router import router
 
-
-def get_search_fn_and_params(
-    search_params,
-) -> tuple[Any, dict[str, float | int | str | dict[str, float] | list[float]] | None]:
-    search_fn, params = None, None
-
-    match search_params:
-        case TextOnlyDocSearchRequest(
-            text=query, limit=k, lang=lang, metadata_filter=metadata_filter
-        ):
-            search_language = Language.get(lang).describe()["language"].lower()
-            search_fn = search_docs_by_text
-            params = {
-                "query": query,
-                "k": k,
-                "metadata_filter": metadata_filter,
-                "search_language": search_language,
-            }
-
-        case VectorDocSearchRequest(
-            vector=embedding,
-            limit=k,
-            confidence=confidence,
-            metadata_filter=metadata_filter,
-        ):
-            search_fn = search_docs_by_embedding
-            params = {
-                "embedding": embedding,
-                "k": k * 3 if search_params.mmr_strength > 0 else k,
-                "confidence": confidence,
-                "metadata_filter": metadata_filter,
-            }
-
-        case HybridDocSearchRequest(
-            text=query,
-            vector=embedding,
-            lang=lang,
-            limit=k,
-            confidence=confidence,
-            alpha=alpha,
-            metadata_filter=metadata_filter,
-        ):
-            search_language = Language.get(lang).describe()["language"].lower()
-            search_fn = search_docs_hybrid
-            params = {
-                "text_query": query,
-                "embedding": embedding,
-                "k": k * 3 if search_params.mmr_strength > 0 else k,
-                "confidence": confidence,
-                "alpha": alpha,
-                "metadata_filter": metadata_filter,
-                "search_language": search_language,
-            }
-
-    return search_fn, params
+MIN_DOCS_WITH_EMBEDDINGS = 2
 
 
 @router.post("/users/{user_id}/search", tags=["docs"])
@@ -96,27 +39,40 @@ async def search_user_docs(
         DocSearchResponse: The search results.
     """
 
-    # MMR here
+    # Get the search function and params here
     search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
+    # Get the docs here
     docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("user", user_id)],
         **params,
     )
 
+    # Apply MMR if enabled and applicable
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
         and search_params.mmr_strength > 0
         and len(docs) > search_params.limit
     ):
-        indices = maximal_marginal_relevance(
-            np.asarray(params["embedding"]),
-            [doc.snippet.embedding for doc in docs],
-            k=search_params.limit,
-        )
-        docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
+        # Filter docs with embeddings and extract embeddings in one pass
+        docs_with_embeddings = []
+        embeddings = []
+        for doc in docs:
+            if doc.snippet.embedding is not None:
+                docs_with_embeddings.append(doc)
+                embeddings.append(doc.snippet.embedding)
+
+        if len(docs_with_embeddings) >= MIN_DOCS_WITH_EMBEDDINGS:
+            # Apply MMR
+            indices = maximal_marginal_relevance(
+                np.asarray(params["embedding"]),
+                embeddings,
+                k=min(search_params.limit, len(docs_with_embeddings)),
+                lambda_mult=1 - search_params.mmr_strength,
+            )
+            docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
 
     end = time.time()
 
@@ -147,26 +103,40 @@ async def search_agent_docs(
         DocSearchResponse: The search results.
     """
 
+    # Get the search function and params here
     search_fn, params = get_search_fn_and_params(search_params)
 
     start = time.time()
+    # Get the docs here
     docs: list[DocReference] = await search_fn(
         developer_id=x_developer_id,
         owners=[("agent", agent_id)],
         **params,
     )
 
+    # Apply MMR if enabled and applicable
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
         and search_params.mmr_strength > 0
         and len(docs) > search_params.limit
     ):
-        indices = maximal_marginal_relevance(
-            np.asarray(params["embedding"]),
-            [doc.snippet.embedding for doc in docs],
-            k=search_params.limit,
-        )
-        docs = [doc for i, doc in enumerate(docs) if i in set(indices)]
+        # Filter docs with embeddings and extract embeddings in one pass
+        docs_with_embeddings = []
+        embeddings = []
+        for doc in docs:
+            if doc.snippet.embedding is not None:
+                docs_with_embeddings.append(doc)
+                embeddings.append(doc.snippet.embedding)
+
+        if len(docs_with_embeddings) >= MIN_DOCS_WITH_EMBEDDINGS:
+            # Apply MMR
+            indices = maximal_marginal_relevance(
+                np.asarray(params["embedding"]),
+                embeddings,
+                k=min(search_params.limit, len(docs_with_embeddings)),
+                lambda_mult=1 - search_params.mmr_strength,
+            )
+            docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
 
     end = time.time()
 

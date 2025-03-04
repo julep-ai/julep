@@ -68,16 +68,13 @@ services:
         required: true
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
-      CLOUDFLARE_API_KEY: ${CLOUDFLARE_API_KEY}
       DATABASE_URL: ${DATABASE_URL}
-      GITHUB_API_KEY: ${GITHUB_API_KEY}
-      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+      REDIS_URL: redis://default:${REDIS_PASSWORD:-redis}@litellm-redis:6379
       GROQ_API_KEY: ${GROQ_API_KEY}
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
-      NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      CEREBRAS_API_KEY: ${CEREBRAS_API_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      REDIS_URL: redis://default:${REDIS_PASSWORD:-redis}@litellm-redis:6379
       VOYAGE_API_KEY: ${VOYAGE_API_KEY}
     hostname: litellm
     image: ghcr.io/berriai/litellm-database:main-v1.46.6

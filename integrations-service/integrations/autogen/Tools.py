@@ -1199,7 +1199,7 @@ class FfmpegSearchArguments(BaseModel):
     """
     The bash command string
     """
-    file: str | None = None
+    file: str | list[str] | None = None
     """
     The base64 string of the file
     """
@@ -1217,7 +1217,7 @@ class FfmpegSearchArgumentsUpdate(BaseModel):
     """
     The bash command string
     """
-    file: str | None = None
+    file: str | list[str] | None = None
     """
     The base64 string of the file
     """

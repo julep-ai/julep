@@ -90,7 +90,7 @@ class ChatInputData(BaseModel):
     """
     A list of new input messages comprising the conversation so far.
     """
-    tools: list[CreateToolRequest] = []
+    tools: list[CreateToolRequest] | None = None
     """
     (Advanced) List of tools that are provided in addition to agent's default set of tools.
     """
@@ -441,6 +441,16 @@ class MultipleChatOutput(BaseChatOutput):
     messages: Annotated[
         list[MessageModel], Field(json_schema_extra={"readOnly": True}, min_length=1)
     ]
+
+
+class RenderResponse(ChatInputData):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    docs: Annotated[list[DocReference], Field(json_schema_extra={"readOnly": True})] = []
+    """
+    Documents referenced for this request (for citation purposes).
+    """
 
 
 class SchemaCompletionResponseFormat(BaseModel):

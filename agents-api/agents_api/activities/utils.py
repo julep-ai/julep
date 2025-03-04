@@ -17,6 +17,8 @@ from functools import reduce
 from threading import Lock as ThreadLock
 from typing import Any, ParamSpec, TypeVar
 
+import markdown2
+import markdownify
 import re2
 from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
@@ -24,6 +26,7 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 from ..autogen.openapi_model import SystemDef
 from ..common.nlp import nlp
 from ..common.utils import yaml
+from .humanization_utils import humanize_paragraph, reassemble_markdown, split_with_langchain
 
 # Security limits
 MAX_STRING_LENGTH = 1_000_000  # 1MB
@@ -215,6 +218,60 @@ def safe_extract_json(string: str):
     return json.loads(extracted_string)
 
 
+def humanize_text(
+    text: str,
+    threshold: float = 90,
+    src_lang: str = "english",
+    target_lang: str = "german",
+    grammar_check: bool = False,
+    use_homoglyphs: bool = True,
+    use_em_dashes: bool = True,
+    max_tries: int = 10,
+) -> str:
+    paragraphs = split_with_langchain(text)
+
+    for paragraph in paragraphs:
+        paragraph_content = paragraph.page_content
+        paragraph.page_content = humanize_paragraph(
+            paragraph=paragraph_content,
+            threshold=threshold,
+            src_lang=src_lang,
+            target_lang=target_lang,
+            grammar_check=grammar_check,
+            use_homoglyphs=use_homoglyphs,
+            use_em_dashes=use_em_dashes,
+            max_tries=max_tries,
+        )
+    return reassemble_markdown(paragraphs)
+
+
+def markdown_to_html(markdown_text: str) -> str:
+    """
+    Convert markdown text to HTML.
+
+    Args:
+        markdown_text: String containing markdown formatted text
+
+    Returns:
+        HTML formatted string
+    """
+    markdowner = markdown2.Markdown()
+    return markdowner.convert(markdown_text)
+
+
+def html_to_markdown(html_text: str) -> str:
+    """
+    Convert HTML text to markdown.
+
+    Args:
+        html_text: String containing HTML formatted text
+
+    Returns:
+        Markdown formatted string
+    """
+    return markdownify.markdownify(html_text)
+
+
 # Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
     # Basic Python builtins
@@ -250,6 +307,10 @@ ALLOWED_FUNCTIONS = {
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
     "nlp": nlp.__call__,
     "chunk_doc": chunk_doc,
+    # FIXME: This is a temporary function to be removed after implementing the humanization logic as an integration tool
+    "humanize_text_alpha": humanize_text,
+    "markdown_to_html": markdown_to_html,
+    "html_to_markdown": html_to_markdown,
 }
 
 
@@ -525,7 +586,8 @@ constants = {
 
 @beartype
 def get_evaluator(
-    names: dict[str, Any], extra_functions: dict[str, Callable] | None = None
+    names: dict[str, Any],
+    extra_functions: dict[str, Callable] | None = None,
 ) -> SimpleEval:
     if len(names) > MAX_COLLECTION_SIZE:
         msg = f"Too many variables (max {MAX_COLLECTION_SIZE})"
@@ -573,7 +635,7 @@ def get_handler_with_filtered_params(system: SystemDef) -> Callable:
 
     # Remove problematic parameters
     filtered_handler.__signature__ = sig.replace(
-        parameters=[p for p in sig.parameters.values() if p.name not in parameters_to_exclude]
+        parameters=[p for p in sig.parameters.values() if p.name not in parameters_to_exclude],
     )
 
     return filtered_handler

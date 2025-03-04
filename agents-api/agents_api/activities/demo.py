@@ -14,5 +14,5 @@ async def mock_demo_activity(a: int, b: int) -> int:
 
 
 demo_activity = activity.defn(name="demo_activity")(
-    demo_activity if not testing else mock_demo_activity
+    demo_activity if not testing else mock_demo_activity,
 )

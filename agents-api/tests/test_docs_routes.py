@@ -46,6 +46,41 @@ async def _(make_request=make_request, agent=test_agent):
         assert response.status_code == 201
 
 
+@test("route: create agent doc with duplicate title should fail")
+async def _(make_request=make_request, agent=test_agent, user=test_user):
+    async with patch_testing_temporal():
+        data = {
+            "title": "Test Duplicate Doc",
+            "content": ["This is a test duplicate document."],
+        }
+
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+
+        assert response.status_code == 201
+
+        # This should fail
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+
+        assert response.status_code == 409
+
+        # This should pass
+        response = make_request(
+            method="POST",
+            url=f"/users/{user.id}/docs",
+            json=data,
+        )
+
+        assert response.status_code == 201
+
+
 @test("route: delete doc")
 async def _(make_request=make_request, agent=test_agent):
     async with patch_testing_temporal():

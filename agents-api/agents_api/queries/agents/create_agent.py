@@ -24,7 +24,8 @@ INSERT INTO agents (
     instructions,
     model,
     metadata,
-    default_settings
+    default_settings,
+    default_system_template
 )
 VALUES (
     $1,
@@ -35,7 +36,8 @@ VALUES (
     $6,
     $7,
     $8,
-    $9
+    $9,
+    $10
 )
 RETURNING *;
 """
@@ -91,6 +93,7 @@ async def create_agent(
         data.model,
         data.metadata,
         default_settings,
+        data.default_system_template,
     ]
 
     return (

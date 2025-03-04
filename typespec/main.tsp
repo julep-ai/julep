@@ -89,6 +89,9 @@ namespace Api {
     @route("/sessions/{id}/chat")
     interface ChatRoute extends Chat.Endpoints {}
 
+    @route("/sessions/{id}/render")
+    interface RenderRoute extends Chat.RenderEndpoints {}
+
     @route("/embed")
     interface EmbedRoute extends Docs.EmbedEndpoints {}
 

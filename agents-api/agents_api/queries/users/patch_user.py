@@ -49,7 +49,10 @@ RETURNING
 @pg_query
 @beartype
 async def patch_user(
-    *, developer_id: UUID, user_id: UUID, data: PatchUserRequest
+    *,
+    developer_id: UUID,
+    user_id: UUID,
+    data: PatchUserRequest,
 ) -> tuple[str, list]:
     """
     Constructs an optimized SQL query for partial user updates.

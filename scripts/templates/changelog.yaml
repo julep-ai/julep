@@ -5,6 +5,7 @@ main:
 - prompt:
   - role: system
     content: |
+      $ f''' 
       # AI Agent Prompt for Generating a Structured and Engaging Changelog
 
       Generate a **detailed** and **engaging changelog** based on information from the PR comment, title, author, and any additional context. 
@@ -63,7 +64,7 @@ main:
       The output should not have more than 100 words in total.
       ### Example Output:
 
-      # **Changelog for {{datetime.datetime.now().strftime('%d %B %Y')}}** ✨
+      # **Changelog for {datetime.datetime.now().strftime('%d %B %Y')}** ✨
 
       - **Major Feature**: Added real-time analytics dashboard for live data visualization ✨
       - **Minor Feature**: Introduced new export options for custom reports ✨
@@ -75,11 +76,14 @@ main:
       - **Secondary Performance**: Reduced API response times by 15% 🚀
       - **Critical Breaking**: Legacy API (v1) deprecation next month 💥
       - **Other Breaking**: Updated authentication flow requires token refresh 💥
+      '''
                                   
   - role: user
     content: |
+      $ f''' 
       Here is the PR data:
 
-      {{inputs[0]['pr_data']}}                   
+      {steps[0].input.pr_data}                   
+      '''
                                   
   unwrap: true

@@ -13,7 +13,9 @@ async def execute_default(
 ) -> ExecutionResponse:
     try:
         return await execute_integration(
-            provider=provider, arguments=data.arguments, setup=data.setup
+            provider=provider,
+            arguments=data.arguments,
+            setup=data.setup,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -27,7 +29,10 @@ async def execute(
 ) -> ExecutionResponse:
     try:
         return await execute_integration(
-            provider=provider, arguments=data.arguments, setup=data.setup, method=method
+            provider=provider,
+            arguments=data.arguments,
+            setup=data.setup,
+            method=method,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

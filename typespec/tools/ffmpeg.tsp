@@ -10,7 +10,7 @@ model FfmpegSearchArguments {
     cmd: string;
 
      /** The base64 string of the file*/
-    file?: string;
+    file?: string | Array<string>;
 
 }
 

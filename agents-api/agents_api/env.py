@@ -35,14 +35,16 @@ max_payload_size: int = env.int(
 # -----
 task_max_parallelism: int = env.int("AGENTS_API_TASK_MAX_PARALLELISM", default=100)
 transition_requests_per_minute: int = env.int(
-    "AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE", default=500
+    "AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE",
+    default=500,
 )
 
 
 # Blob Store
 # ----------
 use_blob_store_for_temporal: bool = testing or env.bool(
-    "USE_BLOB_STORE_FOR_TEMPORAL", default=False
+    "USE_BLOB_STORE_FOR_TEMPORAL",
+    default=False,
 )
 
 blob_store_bucket: str = env.str("BLOB_STORE_BUCKET", default="agents-api")
@@ -105,13 +107,19 @@ temporal_api_key: str = env.str("TEMPORAL_API_KEY", default=None)
 temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 temporal_schedule_to_close_timeout: int = env.int(
-    "TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT", default=3600
+    "TEMPORAL_SCHEDULE_TO_CLOSE_TIMEOUT",
+    default=3600,
 )
 temporal_heartbeat_timeout: int = env.int("TEMPORAL_HEARTBEAT_TIMEOUT", default=900)
 temporal_metrics_bind_host: str = env.str("TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0")
 temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=14000)
 temporal_activity_after_retry_timeout: int = env.int(
-    "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT", default=30
+    "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT",
+    default=30,
+)
+temporal_search_attribute_key: str = env.str(
+    "TEMPORAL_SEARCH_ATTRIBUTE_KEY",
+    default="CustomStringField",
 )
 
 
@@ -123,20 +131,30 @@ def _parse_optional_int(val: str | None) -> int | None:
 
 # Temporal worker configuration
 temporal_max_concurrent_workflow_tasks: int | None = _parse_optional_int(
-    env.str("TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS", default=None)
+    env.str("TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS", default=None),
 )
 
 temporal_max_concurrent_activities: int | None = _parse_optional_int(
-    env.str("TEMPORAL_MAX_CONCURRENT_ACTIVITIES", default=None)
+    env.str("TEMPORAL_MAX_CONCURRENT_ACTIVITIES", default=None),
 )
 
 temporal_max_activities_per_second: int | None = _parse_optional_int(
-    env.str("TEMPORAL_MAX_ACTIVITIES_PER_SECOND", default=None)
+    env.str("TEMPORAL_MAX_ACTIVITIES_PER_SECOND", default=None),
 )
 
 temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
-    env.str("TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND", default=None)
+    env.str("TEMPORAL_MAX_TASK_QUEUE_ACTIVITIES_PER_SECOND", default=None),
 )
+
+# API Keys needed for the `humanize_text` method in `evaluate` step
+# ------------
+sapling_api_key: str = env.str("SAPLING_API_KEY", default="")
+zerogpt_api_key: str = env.str("ZEROGPT_API_KEY", default="")
+zerogpt_url: str = env.str(
+    "ZEROGPT_URL", default="https://api.zerogpt.com/api/detect/detectText"
+)
+desklib_url: str = env.str("DESKLIB_URL", default="http://35.243.190.233/detect")
+sapling_url: str = env.str("SAPLING_URL", default="https://api.sapling.ai/api/v1/aidetect")
 
 # Consolidate environment variables
 environment: dict[str, Any] = {
@@ -170,6 +188,6 @@ if debug or testing:
     # Yell if testing is enabled
     print("@" * 80)
     print(
-        f"@@@ Running in {'testing' if testing else 'debug'} mode. This should not be enabled in production. @@@"
+        f"@@@ Running in {'testing' if testing else 'debug'} mode. This should not be enabled in production. @@@",
     )
     print("@" * 80)

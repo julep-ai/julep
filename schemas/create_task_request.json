@@ -30,12 +30,18 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
+        },
+        "default_system_template": {
+          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
+          "title": "Default System Template",
+          "type": "string"
         },
         "id": {
           "format": "uuid",
@@ -96,7 +102,7 @@
       "title": "Agent",
       "type": "object"
     },
-    "ApiCallDef-Input": {
+    "ApiCallDef": {
       "description": "API call definition",
       "properties": {
         "content": {
@@ -236,155 +242,6 @@
         "url": {
           "format": "uri",
           "minLength": 1,
-          "title": "Url",
-          "type": "string"
-        }
-      },
-      "required": [
-        "method",
-        "url"
-      ],
-      "title": "ApiCallDef",
-      "type": "object"
-    },
-    "ApiCallDef-Output": {
-      "description": "API call definition",
-      "properties": {
-        "content": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Content"
-        },
-        "cookies": {
-          "anyOf": [
-            {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Cookies"
-        },
-        "data": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Data"
-        },
-        "files": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Files"
-        },
-        "follow_redirects": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Follow Redirects"
-        },
-        "headers": {
-          "anyOf": [
-            {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Headers"
-        },
-        "json": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Json"
-        },
-        "method": {
-          "enum": [
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "PATCH",
-            "HEAD",
-            "OPTIONS",
-            "CONNECT",
-            "TRACE"
-          ],
-          "title": "Method",
-          "type": "string"
-        },
-        "params": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Params"
-        },
-        "schema": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Schema"
-        },
-        "timeout": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Timeout"
-        },
-        "url": {
           "title": "Url",
           "type": "string"
         }
@@ -2086,7 +1943,7 @@
         },
         "messages": {
           "items": {
-            "$ref": "#/$defs/Message"
+            "$ref": "#/$defs/Message-Input"
           },
           "minItems": 1,
           "title": "Messages",
@@ -2233,12 +2090,18 @@
           "title": "Tool Choice"
         },
         "tools": {
-          "default": [],
-          "items": {
-            "$ref": "#/$defs/agents_api__autogen__Tools__CreateToolRequest-Input"
-          },
-          "title": "Tools",
-          "type": "array"
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/agents_api__autogen__Tools__CreateToolRequest-Input"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tools"
         },
         "top_p": {
           "anyOf": [
@@ -2324,195 +2187,6 @@
         "delta"
       ],
       "title": "ChatOutputChunk",
-      "type": "object"
-    },
-    "ChatSettings": {
-      "properties": {
-        "agent": {
-          "anyOf": [
-            {
-              "format": "uuid",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Agent"
-        },
-        "frequency_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": -2.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Frequency Penalty"
-        },
-        "length_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Length Penalty"
-        },
-        "logit_bias": {
-          "anyOf": [
-            {
-              "additionalProperties": {
-                "$ref": "#/$defs/LogitBias"
-              },
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Logit Bias"
-        },
-        "max_tokens": {
-          "anyOf": [
-            {
-              "minimum": 1.0,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Max Tokens"
-        },
-        "min_p": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Min P"
-        },
-        "model": {
-          "anyOf": [
-            {
-              "maxLength": 120,
-              "pattern": "^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Model"
-        },
-        "presence_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": -2.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Presence Penalty"
-        },
-        "repetition_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Repetition Penalty"
-        },
-        "response_format": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SimpleCompletionResponseFormat"
-            },
-            {
-              "$ref": "#/$defs/SchemaCompletionResponseFormat"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Response Format"
-        },
-        "seed": {
-          "anyOf": [
-            {
-              "maximum": 1000.0,
-              "minimum": -1.0,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Seed"
-        },
-        "stop": {
-          "default": [],
-          "items": {
-            "type": "string"
-          },
-          "maxItems": 4,
-          "title": "Stop",
-          "type": "array"
-        },
-        "stream": {
-          "default": false,
-          "title": "Stream",
-          "type": "boolean"
-        },
-        "temperature": {
-          "anyOf": [
-            {
-              "maximum": 5.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Temperature"
-        },
-        "top_p": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Top P"
-        }
-      },
-      "title": "ChatSettings",
       "type": "object"
     },
     "ChosenBash20241022": {
@@ -3572,12 +3246,18 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
+        },
+        "default_system_template": {
+          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
+          "title": "Default System Template",
+          "type": "string"
         },
         "instructions": {
           "anyOf": [
@@ -3781,12 +3461,18 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
+        },
+        "default_system_template": {
+          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
+          "title": "Default System Template",
+          "type": "string"
         },
         "instructions": {
           "anyOf": [
@@ -3900,12 +3586,19 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/RecallOptions"
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -3924,9 +3617,15 @@
           "title": "Situation"
         },
         "system_template": {
-          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
-          "title": "System Template",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "System Template"
         },
         "token_budget": {
           "anyOf": [
@@ -4068,12 +3767,19 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/RecallOptions"
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -4092,9 +3798,15 @@
           "title": "Situation"
         },
         "system_template": {
-          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
-          "title": "System Template",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "System Template"
         },
         "token_budget": {
           "anyOf": [
@@ -4273,7 +3985,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Output"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -4333,7 +4045,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Output"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -4461,104 +4173,6 @@
         }
       },
       "title": "CreateUserRequest",
-      "type": "object"
-    },
-    "DefaultChatSettings": {
-      "description": "Default settings for the chat session (also used by the agent)",
-      "properties": {
-        "frequency_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": -2.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Frequency Penalty"
-        },
-        "length_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Length Penalty"
-        },
-        "min_p": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Min P"
-        },
-        "presence_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": -2.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Presence Penalty"
-        },
-        "repetition_penalty": {
-          "anyOf": [
-            {
-              "maximum": 2.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Repetition Penalty"
-        },
-        "temperature": {
-          "anyOf": [
-            {
-              "maximum": 5.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Temperature"
-        },
-        "top_p": {
-          "anyOf": [
-            {
-              "maximum": 1.0,
-              "minimum": 0.0,
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Top P"
-        }
-      },
-      "title": "DefaultChatSettings",
       "type": "object"
     },
     "Delta": {
@@ -4982,6 +4596,184 @@
         }
       },
       "title": "DummyIntegrationDefUpdate",
+      "type": "object"
+    },
+    "Else-Input": {
+      "description": "The steps to run if the condition is false",
+      "properties": {
+        "initial": {
+          "default": [],
+          "title": "Initial"
+        },
+        "kind_": {
+          "const": "map_reduce",
+          "default": "map_reduce",
+          "readOnly": true,
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "pattern": "^[^0-9]|^[0-9]+[^0-9].*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Label"
+        },
+        "map": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvaluateStep"
+            },
+            {
+              "$ref": "#/$defs/ToolCallStep"
+            },
+            {
+              "$ref": "#/$defs/PromptStep-Input"
+            },
+            {
+              "$ref": "#/$defs/GetStep"
+            },
+            {
+              "$ref": "#/$defs/SetStep"
+            },
+            {
+              "$ref": "#/$defs/LogStep"
+            },
+            {
+              "$ref": "#/$defs/YieldStep"
+            }
+          ],
+          "title": "Map"
+        },
+        "over": {
+          "title": "Over",
+          "type": "string"
+        },
+        "parallelism": {
+          "anyOf": [
+            {
+              "maximum": 100.0,
+              "minimum": 1.0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parallelism"
+        },
+        "reduce": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reduce"
+        }
+      },
+      "required": [
+        "over",
+        "map"
+      ],
+      "title": "Else",
+      "type": "object"
+    },
+    "Else-Output": {
+      "description": "The steps to run if the condition is false",
+      "properties": {
+        "initial": {
+          "default": [],
+          "title": "Initial"
+        },
+        "kind_": {
+          "const": "map_reduce",
+          "default": "map_reduce",
+          "readOnly": true,
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "pattern": "^[^0-9]|^[0-9]+[^0-9].*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Label"
+        },
+        "map": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvaluateStep"
+            },
+            {
+              "$ref": "#/$defs/ToolCallStep"
+            },
+            {
+              "$ref": "#/$defs/PromptStep-Output"
+            },
+            {
+              "$ref": "#/$defs/GetStep"
+            },
+            {
+              "$ref": "#/$defs/SetStep"
+            },
+            {
+              "$ref": "#/$defs/LogStep"
+            },
+            {
+              "$ref": "#/$defs/YieldStep"
+            }
+          ],
+          "title": "Map"
+        },
+        "over": {
+          "title": "Over",
+          "type": "string"
+        },
+        "parallelism": {
+          "anyOf": [
+            {
+              "maximum": 100.0,
+              "minimum": 1.0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parallelism"
+        },
+        "reduce": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reduce"
+        }
+      },
+      "required": [
+        "over",
+        "map"
+      ],
+      "title": "Else",
       "type": "object"
     },
     "EmailArguments": {
@@ -5716,6 +5508,12 @@
               "type": "string"
             },
             {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
               "type": "null"
             }
           ],
@@ -5746,6 +5544,12 @@
           "anyOf": [
             {
               "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             },
             {
               "type": "null"
@@ -6114,6 +5918,70 @@
       "title": "History",
       "type": "object"
     },
+    "HybridDocSearch": {
+      "properties": {
+        "alpha": {
+          "default": 0.5,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Alpha",
+          "type": "number"
+        },
+        "confidence": {
+          "default": 0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mmr_strength": {
+          "default": 0.5,
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mmr Strength",
+          "type": "number"
+        },
+        "mode": {
+          "const": "hybrid",
+          "default": "hybrid",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "HybridDocSearch",
+      "type": "object"
+    },
     "HybridDocSearchRequest": {
       "properties": {
         "alpha": {
@@ -6131,7 +5999,6 @@
           "type": "number"
         },
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -6149,7 +6016,7 @@
           "type": "object"
         },
         "mmr_strength": {
-          "default": 0,
+          "default": 0.5,
           "exclusiveMaximum": 1.0,
           "minimum": 0.0,
           "title": "Mmr Strength",
@@ -6174,10 +6041,77 @@
       "title": "HybridDocSearchRequest",
       "type": "object"
     },
+    "HybridDocSearchUpdate": {
+      "properties": {
+        "alpha": {
+          "default": 0.5,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Alpha",
+          "type": "number"
+        },
+        "confidence": {
+          "default": 0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mmr_strength": {
+          "default": 0.5,
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mmr Strength",
+          "type": "number"
+        },
+        "mode": {
+          "const": "hybrid",
+          "default": "hybrid",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "HybridDocSearchUpdate",
+      "type": "object"
+    },
     "IfElseWorkflowStep-Input": {
       "properties": {
         "else": {
           "anyOf": [
+            {
+              "$ref": "#/$defs/WaitForInputStep"
+            },
             {
               "$ref": "#/$defs/EvaluateStep"
             },
@@ -6209,7 +6143,19 @@
               "$ref": "#/$defs/ErrorWorkflowStep"
             },
             {
-              "$ref": "#/$defs/WaitForInputStep"
+              "$ref": "#/$defs/IfElseWorkflowStep-Input"
+            },
+            {
+              "$ref": "#/$defs/SwitchStep-Input"
+            },
+            {
+              "$ref": "#/$defs/ForeachStep-Input"
+            },
+            {
+              "$ref": "#/$defs/ParallelStep-Input"
+            },
+            {
+              "$ref": "#/$defs/Else-Input"
             },
             {
               "type": "null"
@@ -6244,6 +6190,9 @@
         "then": {
           "anyOf": [
             {
+              "$ref": "#/$defs/WaitForInputStep"
+            },
+            {
               "$ref": "#/$defs/EvaluateStep"
             },
             {
@@ -6274,7 +6223,19 @@
               "$ref": "#/$defs/ErrorWorkflowStep"
             },
             {
-              "$ref": "#/$defs/WaitForInputStep"
+              "$ref": "#/$defs/IfElseWorkflowStep-Input"
+            },
+            {
+              "$ref": "#/$defs/SwitchStep-Input"
+            },
+            {
+              "$ref": "#/$defs/ForeachStep-Input"
+            },
+            {
+              "$ref": "#/$defs/ParallelStep-Input"
+            },
+            {
+              "$ref": "#/$defs/Then-Input"
             }
           ],
           "title": "Then"
@@ -6292,6 +6253,9 @@
         "else": {
           "anyOf": [
             {
+              "$ref": "#/$defs/WaitForInputStep"
+            },
+            {
               "$ref": "#/$defs/EvaluateStep"
             },
             {
@@ -6322,7 +6286,19 @@
               "$ref": "#/$defs/ErrorWorkflowStep"
             },
             {
-              "$ref": "#/$defs/WaitForInputStep"
+              "$ref": "#/$defs/IfElseWorkflowStep-Output"
+            },
+            {
+              "$ref": "#/$defs/SwitchStep-Output"
+            },
+            {
+              "$ref": "#/$defs/ForeachStep-Output"
+            },
+            {
+              "$ref": "#/$defs/ParallelStep-Output"
+            },
+            {
+              "$ref": "#/$defs/Else-Output"
             },
             {
               "type": "null"
@@ -6357,6 +6333,9 @@
         "then": {
           "anyOf": [
             {
+              "$ref": "#/$defs/WaitForInputStep"
+            },
+            {
               "$ref": "#/$defs/EvaluateStep"
             },
             {
@@ -6387,7 +6366,19 @@
               "$ref": "#/$defs/ErrorWorkflowStep"
             },
             {
-              "$ref": "#/$defs/WaitForInputStep"
+              "$ref": "#/$defs/IfElseWorkflowStep-Output"
+            },
+            {
+              "$ref": "#/$defs/SwitchStep-Output"
+            },
+            {
+              "$ref": "#/$defs/ForeachStep-Output"
+            },
+            {
+              "$ref": "#/$defs/ParallelStep-Output"
+            },
+            {
+              "$ref": "#/$defs/Then-Output"
             }
           ],
           "title": "Then"
@@ -7101,7 +7092,7 @@
       "title": "Main",
       "type": "object"
     },
-    "Message": {
+    "Message-Input": {
       "properties": {
         "content": {
           "anyOf": [
@@ -7124,7 +7115,120 @@
                     "$ref": "#/$defs/ContentModel7"
                   },
                   {
-                    "$ref": "#/$defs/agents_api__autogen__Chat__ContentModel"
+                    "$ref": "#/$defs/agents_api__autogen__Chat__ContentModel-Input"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Content"
+        },
+        "continue": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Continue"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Name"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "system",
+            "tool"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "tool_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tool Call Id"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ChosenFunctionCall"
+                  },
+                  {
+                    "$ref": "#/$defs/ChosenComputer20241022"
+                  },
+                  {
+                    "$ref": "#/$defs/ChosenTextEditor20241022"
+                  },
+                  {
+                    "$ref": "#/$defs/ChosenBash20241022"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": [],
+          "title": "Tool Calls"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "title": "Message",
+      "type": "object"
+    },
+    "Message-Output": {
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Content"
+                  },
+                  {
+                    "$ref": "#/$defs/ContentModel7"
+                  },
+                  {
+                    "$ref": "#/$defs/agents_api__autogen__Chat__ContentModel-Output"
                   }
                 ]
               },
@@ -7668,12 +7772,18 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
+        },
+        "default_system_template": {
+          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
+          "title": "Default System Template",
+          "type": "string"
         },
         "instructions": {
           "anyOf": [
@@ -7765,12 +7875,19 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/RecallOptionsUpdate"
+              "$ref": "#/$defs/VectorDocSearchUpdate"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearchUpdate"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearchUpdate"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -7789,9 +7906,15 @@
           "title": "Situation"
         },
         "system_template": {
-          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
-          "title": "System Template",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "System Template"
         },
         "token_budget": {
           "anyOf": [
@@ -8291,12 +8414,13 @@
         "settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Settings"
         },
         "tool_choice": {
           "anyOf": [
@@ -8400,12 +8524,13 @@
         "settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Settings"
         },
         "tool_choice": {
           "anyOf": [
@@ -8458,136 +8583,6 @@
         "prompt"
       ],
       "title": "PromptStep",
-      "type": "object"
-    },
-    "RecallOptions": {
-      "properties": {
-        "alpha": {
-          "default": 0.7,
-          "maximum": 1.0,
-          "minimum": 0.0,
-          "title": "Alpha",
-          "type": "number"
-        },
-        "confidence": {
-          "default": 0.6,
-          "maximum": 1.0,
-          "minimum": -1.0,
-          "title": "Confidence",
-          "type": "number"
-        },
-        "lang": {
-          "const": "en-US",
-          "default": "en-US",
-          "title": "Lang",
-          "type": "string"
-        },
-        "limit": {
-          "default": 10,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Limit",
-          "type": "integer"
-        },
-        "max_query_length": {
-          "default": 1000,
-          "title": "Max Query Length",
-          "type": "integer"
-        },
-        "metadata_filter": {
-          "default": {},
-          "title": "Metadata Filter",
-          "type": "object"
-        },
-        "mmr_strength": {
-          "default": 0,
-          "exclusiveMaximum": 1.0,
-          "minimum": 0.0,
-          "title": "Mmr Strength",
-          "type": "number"
-        },
-        "mode": {
-          "default": "vector",
-          "enum": [
-            "hybrid",
-            "vector",
-            "text"
-          ],
-          "title": "Mode",
-          "type": "string"
-        },
-        "num_search_messages": {
-          "default": 4,
-          "title": "Num Search Messages",
-          "type": "integer"
-        }
-      },
-      "title": "RecallOptions",
-      "type": "object"
-    },
-    "RecallOptionsUpdate": {
-      "properties": {
-        "alpha": {
-          "default": 0.7,
-          "maximum": 1.0,
-          "minimum": 0.0,
-          "title": "Alpha",
-          "type": "number"
-        },
-        "confidence": {
-          "default": 0.6,
-          "maximum": 1.0,
-          "minimum": -1.0,
-          "title": "Confidence",
-          "type": "number"
-        },
-        "lang": {
-          "const": "en-US",
-          "default": "en-US",
-          "title": "Lang",
-          "type": "string"
-        },
-        "limit": {
-          "default": 10,
-          "maximum": 50.0,
-          "minimum": 1.0,
-          "title": "Limit",
-          "type": "integer"
-        },
-        "max_query_length": {
-          "default": 1000,
-          "title": "Max Query Length",
-          "type": "integer"
-        },
-        "metadata_filter": {
-          "default": {},
-          "title": "Metadata Filter",
-          "type": "object"
-        },
-        "mmr_strength": {
-          "default": 0,
-          "exclusiveMaximum": 1.0,
-          "minimum": 0.0,
-          "title": "Mmr Strength",
-          "type": "number"
-        },
-        "mode": {
-          "default": "vector",
-          "enum": [
-            "hybrid",
-            "vector",
-            "text"
-          ],
-          "title": "Mode",
-          "type": "string"
-        },
-        "num_search_messages": {
-          "default": 4,
-          "title": "Num Search Messages",
-          "type": "integer"
-        }
-      },
-      "title": "RecallOptionsUpdate",
       "type": "object"
     },
     "Relation": {
@@ -8857,6 +8852,64 @@
       "title": "RemoteBrowserSetup",
       "type": "object"
     },
+    "RenderResponse": {
+      "properties": {
+        "docs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DocReference"
+          },
+          "readOnly": true,
+          "title": "Docs",
+          "type": "array"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/Message-Output"
+          },
+          "minItems": 1,
+          "title": "Messages",
+          "type": "array"
+        },
+        "tool_choice": {
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "none"
+              ],
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/NamedToolChoice"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tool Choice"
+        },
+        "tools": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CreateToolRequest-Output"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tools"
+        }
+      },
+      "required": [
+        "messages"
+      ],
+      "title": "RenderResponse",
+      "type": "object"
+    },
     "ResourceDeletedResponse": {
       "properties": {
         "deleted_at": {
@@ -9055,12 +9108,19 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/RecallOptions"
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -9091,9 +9151,15 @@
           "title": "Summary"
         },
         "system_template": {
-          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
-          "title": "System Template",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "System Template"
         },
         "token_budget": {
           "anyOf": [
@@ -9385,7 +9451,7 @@
       "title": "Source",
       "type": "object"
     },
-    "SpiderFetchArguments-Input": {
+    "SpiderFetchArguments": {
       "description": "Arguments for Spider integration",
       "properties": {
         "content_type": {
@@ -9413,42 +9479,6 @@
         "url": {
           "format": "uri",
           "minLength": 1,
-          "title": "Url",
-          "type": "string"
-        }
-      },
-      "required": [
-        "url"
-      ],
-      "title": "SpiderFetchArguments",
-      "type": "object"
-    },
-    "SpiderFetchArguments-Output": {
-      "description": "Arguments for Spider integration",
-      "properties": {
-        "content_type": {
-          "default": "application/json",
-          "enum": [
-            "application/json",
-            "text/csv",
-            "application/xml",
-            "application/jsonl"
-          ],
-          "title": "Content Type",
-          "type": "string"
-        },
-        "params": {
-          "anyOf": [
-            {
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Params"
-        },
-        "url": {
           "title": "Url",
           "type": "string"
         }
@@ -9501,63 +9531,13 @@
       "title": "SpiderFetchArgumentsUpdate",
       "type": "object"
     },
-    "SpiderIntegrationDef-Input": {
+    "SpiderIntegrationDef": {
       "description": "Spider integration definition",
       "properties": {
         "arguments": {
           "anyOf": [
             {
-              "$ref": "#/$defs/SpiderFetchArguments-Input"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "method": {
-          "anyOf": [
-            {
-              "enum": [
-                "crawl",
-                "links",
-                "screenshot",
-                "search"
-              ],
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Method"
-        },
-        "provider": {
-          "const": "spider",
-          "default": "spider",
-          "title": "Provider",
-          "type": "string"
-        },
-        "setup": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SpiderSetup"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "title": "SpiderIntegrationDef",
-      "type": "object"
-    },
-    "SpiderIntegrationDef-Output": {
-      "description": "Spider integration definition",
-      "properties": {
-        "arguments": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SpiderFetchArguments-Output"
+              "$ref": "#/$defs/SpiderFetchArguments"
             },
             {
               "type": "null"
@@ -10108,7 +10088,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Input"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -10174,7 +10154,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Input"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -10279,7 +10259,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Output"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -10345,7 +10325,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Output"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -10479,10 +10459,52 @@
       "title": "TextEditor20241022DefUpdate",
       "type": "object"
     },
+    "TextOnlyDocSearch": {
+      "properties": {
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mode": {
+          "const": "text",
+          "default": "text",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "TextOnlyDocSearch",
+      "type": "object"
+    },
     "TextOnlyDocSearchRequest": {
       "properties": {
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -10499,13 +10521,6 @@
           "title": "Metadata Filter",
           "type": "object"
         },
-        "mmr_strength": {
-          "default": 0,
-          "exclusiveMaximum": 1.0,
-          "minimum": 0.0,
-          "title": "Mmr Strength",
-          "type": "number"
-        },
         "text": {
           "title": "Text",
           "type": "string"
@@ -10515,6 +10530,227 @@
         "text"
       ],
       "title": "TextOnlyDocSearchRequest",
+      "type": "object"
+    },
+    "TextOnlyDocSearchUpdate": {
+      "properties": {
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mode": {
+          "const": "text",
+          "default": "text",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "TextOnlyDocSearchUpdate",
+      "type": "object"
+    },
+    "Then-Input": {
+      "description": "The steps to run if the condition is true",
+      "properties": {
+        "initial": {
+          "default": [],
+          "title": "Initial"
+        },
+        "kind_": {
+          "const": "map_reduce",
+          "default": "map_reduce",
+          "readOnly": true,
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "pattern": "^[^0-9]|^[0-9]+[^0-9].*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Label"
+        },
+        "map": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvaluateStep"
+            },
+            {
+              "$ref": "#/$defs/ToolCallStep"
+            },
+            {
+              "$ref": "#/$defs/PromptStep-Input"
+            },
+            {
+              "$ref": "#/$defs/GetStep"
+            },
+            {
+              "$ref": "#/$defs/SetStep"
+            },
+            {
+              "$ref": "#/$defs/LogStep"
+            },
+            {
+              "$ref": "#/$defs/YieldStep"
+            }
+          ],
+          "title": "Map"
+        },
+        "over": {
+          "title": "Over",
+          "type": "string"
+        },
+        "parallelism": {
+          "anyOf": [
+            {
+              "maximum": 100.0,
+              "minimum": 1.0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parallelism"
+        },
+        "reduce": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reduce"
+        }
+      },
+      "required": [
+        "over",
+        "map"
+      ],
+      "title": "Then",
+      "type": "object"
+    },
+    "Then-Output": {
+      "description": "The steps to run if the condition is true",
+      "properties": {
+        "initial": {
+          "default": [],
+          "title": "Initial"
+        },
+        "kind_": {
+          "const": "map_reduce",
+          "default": "map_reduce",
+          "readOnly": true,
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "pattern": "^[^0-9]|^[0-9]+[^0-9].*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Label"
+        },
+        "map": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvaluateStep"
+            },
+            {
+              "$ref": "#/$defs/ToolCallStep"
+            },
+            {
+              "$ref": "#/$defs/PromptStep-Output"
+            },
+            {
+              "$ref": "#/$defs/GetStep"
+            },
+            {
+              "$ref": "#/$defs/SetStep"
+            },
+            {
+              "$ref": "#/$defs/LogStep"
+            },
+            {
+              "$ref": "#/$defs/YieldStep"
+            }
+          ],
+          "title": "Map"
+        },
+        "over": {
+          "title": "Over",
+          "type": "string"
+        },
+        "parallelism": {
+          "anyOf": [
+            {
+              "maximum": 100.0,
+              "minimum": 1.0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parallelism"
+        },
+        "reduce": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reduce"
+        }
+      },
+      "required": [
+        "over",
+        "map"
+      ],
+      "title": "Then",
       "type": "object"
     },
     "TokenLogProb": {
@@ -10564,7 +10800,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Output"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -10636,7 +10872,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Output"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -10750,157 +10986,7 @@
         "arguments": {
           "anyOf": [
             {
-              "additionalProperties": {
-                "anyOf": [
-                  {
-                    "additionalProperties": {
-                      "anyOf": [
-                        {
-                          "items": {
-                            "type": "string"
-                          },
-                          "type": "array"
-                        },
-                        {
-                          "additionalProperties": {
-                            "type": "string"
-                          },
-                          "type": "object"
-                        },
-                        {
-                          "items": {
-                            "additionalProperties": {
-                              "type": "string"
-                            },
-                            "type": "object"
-                          },
-                          "type": "array"
-                        },
-                        {
-                          "type": "string"
-                        }
-                      ]
-                    },
-                    "type": "object"
-                  },
-                  {
-                    "items": {
-                      "additionalProperties": {
-                        "anyOf": [
-                          {
-                            "items": {
-                              "type": "string"
-                            },
-                            "type": "array"
-                          },
-                          {
-                            "additionalProperties": {
-                              "type": "string"
-                            },
-                            "type": "object"
-                          },
-                          {
-                            "items": {
-                              "additionalProperties": {
-                                "type": "string"
-                              },
-                              "type": "object"
-                            },
-                            "type": "array"
-                          },
-                          {
-                            "type": "string"
-                          }
-                        ]
-                      },
-                      "type": "object"
-                    },
-                    "type": "array"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              },
               "type": "object"
-            },
-            {
-              "items": {
-                "additionalProperties": {
-                  "anyOf": [
-                    {
-                      "additionalProperties": {
-                        "anyOf": [
-                          {
-                            "items": {
-                              "type": "string"
-                            },
-                            "type": "array"
-                          },
-                          {
-                            "additionalProperties": {
-                              "type": "string"
-                            },
-                            "type": "object"
-                          },
-                          {
-                            "items": {
-                              "additionalProperties": {
-                                "type": "string"
-                              },
-                              "type": "object"
-                            },
-                            "type": "array"
-                          },
-                          {
-                            "type": "string"
-                          }
-                        ]
-                      },
-                      "type": "object"
-                    },
-                    {
-                      "items": {
-                        "additionalProperties": {
-                          "anyOf": [
-                            {
-                              "items": {
-                                "type": "string"
-                              },
-                              "type": "array"
-                            },
-                            {
-                              "additionalProperties": {
-                                "type": "string"
-                              },
-                              "type": "object"
-                            },
-                            {
-                              "items": {
-                                "additionalProperties": {
-                                  "type": "string"
-                                },
-                                "type": "object"
-                              },
-                              "type": "array"
-                            },
-                            {
-                              "type": "string"
-                            }
-                          ]
-                        },
-                        "type": "object"
-                      },
-                      "type": "array"
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
-                },
-                "type": "object"
-              },
-              "type": "array"
             },
             {
               "const": "_",
@@ -11122,6 +11208,11 @@
     },
     "TransitionTarget": {
       "properties": {
+        "scope_id": {
+          "format": "uuid",
+          "title": "Scope Id",
+          "type": "string"
+        },
         "step": {
           "title": "Step",
           "type": "integer"
@@ -11135,7 +11226,8 @@
       },
       "required": [
         "workflow",
-        "step"
+        "step",
+        "scope_id"
       ],
       "title": "TransitionTarget",
       "type": "object"
@@ -11165,12 +11257,18 @@
         "default_settings": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DefaultChatSettings"
+              "type": "object"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Default Settings"
+        },
+        "default_system_template": {
+          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
+          "title": "Default System Template",
+          "type": "string"
         },
         "instructions": {
           "anyOf": [
@@ -11258,12 +11356,19 @@
         "recall_options": {
           "anyOf": [
             {
-              "$ref": "#/$defs/RecallOptions"
+              "$ref": "#/$defs/VectorDocSearch"
+            },
+            {
+              "$ref": "#/$defs/TextOnlyDocSearch"
+            },
+            {
+              "$ref": "#/$defs/HybridDocSearch"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "title": "Recall Options"
         },
         "render_templates": {
           "default": true,
@@ -11282,9 +11387,15 @@
           "title": "Situation"
         },
         "system_template": {
-          "default": "{%- if agent.name -%}\nYou are {{agent.name}}.{{\" \"}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{\" \"}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{\" \"}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{\"---\"}}\n  {%- endfor -%}\n{%- endif -%}",
-          "title": "System Template",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "System Template"
         },
         "token_budget": {
           "anyOf": [
@@ -11307,7 +11418,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Input"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -11367,7 +11478,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Input"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -11582,6 +11693,63 @@
       "title": "ValidationError",
       "type": "object"
     },
+    "VectorDocSearch": {
+      "properties": {
+        "confidence": {
+          "default": 0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mmr_strength": {
+          "default": 0.5,
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mmr Strength",
+          "type": "number"
+        },
+        "mode": {
+          "const": "vector",
+          "default": "vector",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "VectorDocSearch",
+      "type": "object"
+    },
     "VectorDocSearchRequest": {
       "properties": {
         "confidence": {
@@ -11592,7 +11760,6 @@
           "type": "number"
         },
         "lang": {
-          "const": "en-US",
           "default": "en-US",
           "title": "Lang",
           "type": "string"
@@ -11610,7 +11777,7 @@
           "type": "object"
         },
         "mmr_strength": {
-          "default": 0,
+          "default": 0.5,
           "exclusiveMaximum": 1.0,
           "minimum": 0.0,
           "title": "Mmr Strength",
@@ -11628,6 +11795,63 @@
         "vector"
       ],
       "title": "VectorDocSearchRequest",
+      "type": "object"
+    },
+    "VectorDocSearchUpdate": {
+      "properties": {
+        "confidence": {
+          "default": 0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lang": {
+          "default": "en-US",
+          "title": "Lang",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "max_query_length": {
+          "default": 1000,
+          "maximum": 10000.0,
+          "minimum": 100.0,
+          "title": "Max Query Length",
+          "type": "integer"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        },
+        "mmr_strength": {
+          "default": 0.5,
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mmr Strength",
+          "type": "number"
+        },
+        "mode": {
+          "const": "vector",
+          "default": "vector",
+          "title": "Mode",
+          "type": "string"
+        },
+        "num_search_messages": {
+          "default": 4,
+          "maximum": 50.0,
+          "minimum": 1.0,
+          "title": "Num Search Messages",
+          "type": "integer"
+        }
+      },
+      "title": "VectorDocSearchUpdate",
       "type": "object"
     },
     "WaitForInputInfo": {
@@ -12061,7 +12285,45 @@
       "title": "YieldStep",
       "type": "object"
     },
-    "agents_api__autogen__Chat__ContentModel": {
+    "agents_api__autogen__Chat__ContentModel-Input": {
+      "description": "Anthropic image content part",
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ContentItem"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "$ref": "#/$defs/ContentItemModel"
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Content"
+        },
+        "tool_use_id": {
+          "title": "Tool Use Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool_result",
+          "default": "tool_result",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_use_id",
+        "content"
+      ],
+      "title": "ContentModel",
+      "type": "object"
+    },
+    "agents_api__autogen__Chat__ContentModel-Output": {
       "description": "Anthropic image content part",
       "properties": {
         "content": {
@@ -12350,7 +12612,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Input"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -12410,7 +12672,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Input"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"
@@ -12515,7 +12777,7 @@
         "api_call": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ApiCallDef-Input"
+              "$ref": "#/$defs/ApiCallDef"
             },
             {
               "type": "null"
@@ -12575,7 +12837,7 @@
               "$ref": "#/$defs/EmailIntegrationDef"
             },
             {
-              "$ref": "#/$defs/SpiderIntegrationDef-Input"
+              "$ref": "#/$defs/SpiderIntegrationDef"
             },
             {
               "$ref": "#/$defs/WikipediaIntegrationDef"

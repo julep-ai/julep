@@ -5,7 +5,8 @@ from .router import router
 
 
 def convert_to_openai_tool(
-    provider: BaseProvider, method: BaseProviderMethod | None = None
+    provider: BaseProvider,
+    method: BaseProviderMethod | None = None,
 ) -> dict:
     method = method or provider.methods[0]
     name = f"{provider.provider}_{method.method}"

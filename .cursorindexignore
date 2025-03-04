@@ -1,0 +1,100 @@
+# Git
+.git/
+.github/
+
+# Build and distribution directories
+**/dist/
+**/build/
+**/.ruff_cache/
+**/node_modules/
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.tox/
+**/.coverage/
+**/.venv/
+**/venv/
+**/.next/
+**/.nuxt/
+**/out/
+**/coverage/
+
+# Environment files (may contain sensitive information)
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.cert
+**/*.crt
+
+# Large data files and binaries (to avoid loading and indexing them)
+**/*.csv
+**/*.json
+**/*.parquet
+**/*.arrow
+**/*.pickle
+**/*.pkl
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/*.so
+**/*.dll
+**/*.dylib
+**/*.exe
+**/*.whl
+**/*.tar.gz
+**/*.zip
+**/*.jar
+**/*.war
+**/*.ear
+
+# Lock files (usually don't need indexing)
+**/yarn.lock
+**/package-lock.json
+**/pnpm-lock.yaml
+**/poetry.lock
+**/Pipfile.lock
+**/requirements-frozen.txt
+**/uv.lock
+
+# Generated documentation or third-party code
+**/docs/_build/
+**/site/
+**/public/
+**/vendor/
+**/third_party/
+
+# Large media files
+**/*.mp4
+**/*.mp3
+**/*.wav
+**/*.avi
+**/*.mov
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.svg
+**/*.ico
+**/*.pdf
+
+# Logs and temporary files
+**/logs/
+**/*.log
+**/tmp/
+**/temp/
+**/*.tmp
+**/*.temp
+
+# IDE and editor files
+**/.vscode/
+**/.idea/
+**/.DS_Store
+**/.ipynb_checkpoints/
+
+# Large generated files
+gaga.json
+openapi.yaml
+openapi*.yaml
+openapi*.yml
+openapi*.json

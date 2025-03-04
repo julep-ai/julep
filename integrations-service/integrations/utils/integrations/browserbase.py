@@ -52,7 +52,8 @@ def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
     stop=stop_after_attempt(4),
 )
 async def list_sessions(
-    setup: BrowserbaseSetup, arguments: BrowserbaseListSessionsArguments
+    setup: BrowserbaseSetup,
+    arguments: BrowserbaseListSessionsArguments,
 ) -> BrowserbaseListSessionsOutput:
     client = get_browserbase_client(setup)
 
@@ -76,7 +77,8 @@ async def list_sessions(
     stop=stop_after_attempt(4),
 )
 async def create_session(
-    setup: BrowserbaseSetup, arguments: BrowserbaseCreateSessionArguments
+    setup: BrowserbaseSetup,
+    arguments: BrowserbaseCreateSessionArguments,
 ) -> BrowserbaseCreateSessionOutput:
     client = get_browserbase_client(setup)
 
@@ -124,7 +126,8 @@ async def create_session(
     stop=stop_after_attempt(4),
 )
 async def get_session(
-    setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionArguments
+    setup: BrowserbaseSetup,
+    arguments: BrowserbaseGetSessionArguments,
 ) -> BrowserbaseGetSessionOutput:
     client = get_browserbase_client(setup)
 
@@ -154,14 +157,17 @@ async def get_session(
     stop=stop_after_attempt(4),
 )
 async def complete_session(
-    setup: BrowserbaseSetup, arguments: BrowserbaseCompleteSessionArguments
+    setup: BrowserbaseSetup,
+    arguments: BrowserbaseCompleteSessionArguments,
 ) -> BrowserbaseCompleteSessionOutput:
     client = get_browserbase_client(setup)
 
     try:
         # Changed to use sessions.update() with REQUEST_RELEASE status
         client.sessions.update(
-            id=arguments.id, status="REQUEST_RELEASE", project_id=setup.project_id
+            id=arguments.id,
+            status="REQUEST_RELEASE",
+            project_id=setup.project_id,
         )
     except Exception:
         return BrowserbaseCompleteSessionOutput(success=False)
@@ -176,7 +182,8 @@ async def complete_session(
     stop=stop_after_attempt(4),
 )
 async def get_live_urls(
-    setup: BrowserbaseSetup, arguments: BrowserbaseGetSessionLiveUrlsArguments
+    setup: BrowserbaseSetup,
+    arguments: BrowserbaseGetSessionLiveUrlsArguments,
 ) -> BrowserbaseGetSessionLiveUrlsOutput:
     """Get the live URLs for a session."""
     client = get_browserbase_client(setup)
@@ -196,7 +203,8 @@ async def get_live_urls(
     stop=stop_after_attempt(4),
 )
 async def install_extension_from_github(
-    setup: BrowserbaseSetup, arguments: BrowserbaseExtensionArguments
+    setup: BrowserbaseSetup,
+    arguments: BrowserbaseExtensionArguments,
 ) -> BrowserbaseExtensionOutput:
     """Download and install an extension from GitHub to the user's Browserbase account."""
     try:
@@ -212,7 +220,9 @@ async def install_extension_from_github(
                 raise
 
             with tempfile.NamedTemporaryFile(
-                delete=True, delete_on_close=False, suffix=".zip"
+                delete=True,
+                delete_on_close=False,
+                suffix=".zip",
             ) as tmp_file:
                 tmp_file.write(response.content)
                 tmp_file_path = tmp_file.name
@@ -226,7 +236,9 @@ async def install_extension_from_github(
                     with open(tmp_file_path, "rb") as f:
                         files = {"file": f}
                         upload_response = await client.post(
-                            upload_url, headers=headers, files=files
+                            upload_url,
+                            headers=headers,
+                            files=files,
                         )
                         upload_response.raise_for_status()
                 except httpx.HTTPError as e:

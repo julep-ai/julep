@@ -12,48 +12,73 @@ namespace Sessions;
 // SESSION MODELS
 //
 
-enum SearchMode {
-    hybrid,
-    vector,
-    text,
-}
-
-model RecallOptions {
-    /** The mode to use for the search. */
-    mode: SearchMode = SearchMode.vector;
-
-    /** The number of search messages to use for the search. */
-    num_search_messages: uint32 = 4;
-
-    /** The maximum query length to use for the search. */
-    max_query_length: uint32 = 1000;
-
-    /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
-    @minValue(0)
-    @maxValue(1)
-    alpha: float = 0.7;
-
-    /** The confidence cutoff level */
-    @minValue(-1)
-    @maxValue(1)
-    confidence: float = 0.6;
-
+model BaseDocSearch {
     /** The limit of documents to return */
     @minValue(1)
     @maxValue(50)
     limit: uint16 = 10;
 
     /** The language to be used for text-only search. Support for other languages coming soon. */
-    lang?: "en-US" = "en-US";
+    lang: string = "en-US";
 
     /** Metadata filter to apply to the search */
     metadata_filter: MetadataFilter = #{};
 
+    /** The number of search messages to use for the search. */
+    @minValue(1)
+    @maxValue(50)
+    num_search_messages: uint32 = 4;
+
+    /** The maximum query length to use for the search. */
+    @minValue(100)
+    @maxValue(10000)
+    max_query_length: uint32 = 1000;
+}
+
+model VectorDocSearch extends BaseDocSearch {
+
+     /** The mode to use for the search. */
+    mode: "vector" = "vector";
+
+    /** The confidence cutoff level */
+    @minValue(-1)
+    @maxValue(1)
+    confidence: float = 0;
+
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)
     @maxValueExclusive(1)
-    mmr_strength?: float = 0.0;
+    mmr_strength?: float = 0.5;
 }
+
+model TextOnlyDocSearch extends BaseDocSearch {
+
+    /** The mode to use for the search. */
+    mode: "text" = "text";
+}
+
+model HybridDocSearch extends BaseDocSearch {
+
+    /** The mode to use for the search. */
+    mode: "hybrid" = "hybrid";
+
+    /** The confidence cutoff level */
+    @minValue(-1)
+    @maxValue(1)
+    confidence: float = 0;
+
+    /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
+    @minValue(0)
+    @maxValue(1)
+    alpha: float = 0.5;
+
+    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
+    @minValue(0)
+    @maxValueExclusive(1)
+    mmr_strength?: float = 0.5;
+}
+
+alias DocSearch = VectorDocSearch | TextOnlyDocSearch | HybridDocSearch;
 
 enum ContextOverflowType {
     /** Truncate the context from the top except the system prompt. */
@@ -62,6 +87,7 @@ enum ContextOverflowType {
     /** Automatically summarizes, clips and merges messages in the background to compress the context. */
     adaptive,
 }
+
 
 @discriminator("kind")
 model Session {
@@ -93,7 +119,7 @@ model Session {
     situation: string | null = null;
 
     /** A specific system prompt template that sets the background for this session */
-    system_template: string = defaultSessionSystemMessage;
+    system_template?: string;
 
     /** Summary (null at the beginning) - generated automatically after every interaction */
     @visibility("read")
@@ -117,9 +143,9 @@ model Session {
 
     /** Whether to forward tool calls to the model */
     forward_tool_calls: boolean = false;
-
-    recall_options?: RecallOptions | null = null;
-
+    /** Recall options for the session */
+    recall_options?: DocSearch | null = null;
+    
     ...HasId;
     ...HasMetadata;
     ...HasTimestamps;

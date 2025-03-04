@@ -173,7 +173,9 @@ def write_lock_file(project_dir: Path, content: LockFileContents):
 
 
 def get_entity_from_lock_file(
-    type: str, id: str, project_dir: Path = Path.cwd()
+    type: str,
+    id: str,
+    project_dir: Path = Path.cwd(),
 ) -> LockedEntity:
     """
     Get the contents of lock file
@@ -197,7 +199,9 @@ def get_entity_from_lock_file(
 
 
 def update_existing_entity_in_lock_file(
-    type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()
+    type: str,
+    new_entity: LockedEntity,
+    project_dir: Path = Path.cwd(),
 ):
     found = False
     lock_file = get_lock_file(project_dir)
@@ -229,7 +233,9 @@ def update_existing_entity_in_lock_file(
 
 
 def add_entity_to_lock_file(
-    type: str, new_entity: LockedEntity, project_dir: Path = Path.cwd()
+    type: str,
+    new_entity: LockedEntity,
+    project_dir: Path = Path.cwd(),
 ):
     """
     Add a new entity to the lock file
@@ -262,7 +268,8 @@ def add_agent_to_julep_yaml(source: Path, agent_data: dict):
 
 
 def get_related_agent_id(
-    id: str, relationships_list: list[TaskAgentRelationship] | list[ToolAgentRelationship]
+    id: str,
+    relationships_list: list[TaskAgentRelationship] | list[ToolAgentRelationship],
 ):
     for relationship in relationships_list:
         if relationship.id == id:
@@ -272,7 +279,11 @@ def get_related_agent_id(
 
 
 def create_locked_entity(
-    relative_path: Path, source: Path, id: str, last_synced: datetime, content_to_hash: dict
+    relative_path: Path,
+    source: Path,
+    id: str,
+    last_synced: datetime,
+    content_to_hash: dict,
 ) -> LockedEntity:
     return LockedEntity(
         path=str(relative_path.relative_to(source)),
@@ -299,7 +310,9 @@ def get_agent_id_from_expression(expression: str, locked_agents: list[LockedEnti
 
 
 def update_entity_force_remote(
-    entity: LockedEntity, remote_entity: Agent | Task, source: Path
+    entity: LockedEntity,
+    remote_entity: Agent | Task,
+    source: Path,
 ) -> LockedEntity:
     """
     Updates a local entity's yaml file with the remote entity's data and returns an updated `LockedEntity` with synced timestamp and hash
@@ -308,7 +321,9 @@ def update_entity_force_remote(
     local_agent_yaml_path: Path = source / entity.path
 
     entity_new_yaml_content = remote_entity.model_dump(
-        exclude={"id", "created_at", "updated_at"}, exclude_none=True, exclude_unset=True
+        exclude={"id", "created_at", "updated_at"},
+        exclude_none=True,
+        exclude_unset=True,
     )
 
     update_yaml_for_existing_entity(local_agent_yaml_path, entity_new_yaml_content)
@@ -457,7 +472,8 @@ def manage_db_attribute(key: str, current_value: str | None = None) -> str:
     conn = get_state_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)", (key, current_value)
+        "INSERT OR REPLACE INTO attributes (key, value) VALUES (?, ?)",
+        (key, current_value),
     )
     conn.commit()
     conn.close()

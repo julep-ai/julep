@@ -214,6 +214,100 @@ class CreateTaskRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
+class Else(BaseModel):
+    """
+    The steps to run if the condition is false
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})] = (
+        "map_reduce"
+    )
+    """
+    The kind of step
+    """
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
+    """
+    The label of this step for referencing it from other steps
+    """
+    over: str
+    """
+    The variable to iterate over
+    """
+    map: EvaluateStep | ToolCallStep | PromptStep | GetStep | SetStep | LogStep | YieldStep
+    """
+    The steps to run for each iteration
+    """
+    reduce: str | None = None
+    """
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list.
+    A special parameter named `results` is the accumulator and `_` is the current value.
+    """
+    initial: Any = []
+    """
+    The initial value of the reduce expression
+    """
+    parallelism: Annotated[int | None, Field(ge=1, le=100)] = None
+    """
+    Whether to run the reduce expression in parallel and how many items to run in each batch
+    """
+
+
+class ElseModel(BaseModel):
+    """
+    The steps to run if the condition is false
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
+    """
+    The label of this step for referencing it from other steps
+    """
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    over: str
+    """
+    The variable to iterate over
+    """
+    map: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStepUpdateItem
+        | GetStep
+        | SetStep
+        | LogStep
+        | YieldStep
+    )
+    """
+    The steps to run for each iteration
+    """
+    reduce: str | None = None
+    """
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list.
+    A special parameter named `results` is the accumulator and `_` is the current value.
+    """
+    initial: Any = []
+    """
+    The initial value of the reduce expression
+    """
+    parallelism: Annotated[int | None, Field(ge=1, le=100)] = None
+    """
+    Whether to run the reduce expression in parallel and how many items to run in each batch
+    """
+
+
 class ErrorWorkflowStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -387,7 +481,8 @@ class IfElseWorkflowStep(BaseModel):
     The condition to evaluate
     """
     then: (
-        EvaluateStep
+        WaitForInputStep
+        | EvaluateStep
         | ToolCallStep
         | PromptStep
         | GetStep
@@ -397,13 +492,18 @@ class IfElseWorkflowStep(BaseModel):
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | WaitForInputStep
+        | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | Then
     )
     """
     The steps to run if the condition is true
     """
     else_: Annotated[
-        EvaluateStep
+        WaitForInputStep
+        | EvaluateStep
         | ToolCallStep
         | PromptStep
         | GetStep
@@ -413,7 +513,11 @@ class IfElseWorkflowStep(BaseModel):
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | WaitForInputStep
+        | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | Else
         | None,
         Field(alias="else"),
     ] = None
@@ -441,7 +545,8 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
     The condition to evaluate
     """
     then: (
-        EvaluateStep
+        WaitForInputStep
+        | EvaluateStep
         | ToolCallStep
         | PromptStepUpdateItem
         | GetStep
@@ -451,13 +556,18 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | WaitForInputStep
+        | IfElseWorkflowStepUpdateItem
+        | SwitchStepUpdateItem
+        | ForeachStepUpdateItem
+        | ParallelStepUpdateItem
+        | ThenModel
     )
     """
     The steps to run if the condition is true
     """
     else_: Annotated[
-        EvaluateStep
+        WaitForInputStep
+        | EvaluateStep
         | ToolCallStep
         | PromptStepUpdateItem
         | GetStep
@@ -467,7 +577,11 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | WaitForInputStep
+        | IfElseWorkflowStepUpdateItem
+        | SwitchStepUpdateItem
+        | ForeachStepUpdateItem
+        | ParallelStepUpdateItem
+        | ElseModel
         | None,
         Field(alias="else"),
     ] = None
@@ -1073,6 +1187,100 @@ class TaskTool(CreateToolRequest):
     """
 
 
+class Then(BaseModel):
+    """
+    The steps to run if the condition is true
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})] = (
+        "map_reduce"
+    )
+    """
+    The kind of step
+    """
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
+    """
+    The label of this step for referencing it from other steps
+    """
+    over: str
+    """
+    The variable to iterate over
+    """
+    map: EvaluateStep | ToolCallStep | PromptStep | GetStep | SetStep | LogStep | YieldStep
+    """
+    The steps to run for each iteration
+    """
+    reduce: str | None = None
+    """
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list.
+    A special parameter named `results` is the accumulator and `_` is the current value.
+    """
+    initial: Any = []
+    """
+    The initial value of the reduce expression
+    """
+    parallelism: Annotated[int | None, Field(ge=1, le=100)] = None
+    """
+    Whether to run the reduce expression in parallel and how many items to run in each batch
+    """
+
+
+class ThenModel(BaseModel):
+    """
+    The steps to run if the condition is true
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
+        None
+    )
+    """
+    The label of this step for referencing it from other steps
+    """
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    over: str
+    """
+    The variable to iterate over
+    """
+    map: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStepUpdateItem
+        | GetStep
+        | SetStep
+        | LogStep
+        | YieldStep
+    )
+    """
+    The steps to run for each iteration
+    """
+    reduce: str | None = None
+    """
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list.
+    A special parameter named `results` is the accumulator and `_` is the current value.
+    """
+    initial: Any = []
+    """
+    The initial value of the reduce expression
+    """
+    parallelism: Annotated[int | None, Field(ge=1, le=100)] = None
+    """
+    Whether to run the reduce expression in parallel and how many items to run in each batch
+    """
+
+
 class ToolCallStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1093,23 +1301,7 @@ class ToolCallStep(BaseModel):
     """
     The tool to run
     """
-    arguments: (
-        dict[
-            str,
-            dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-            | list[dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]]
-            | str,
-        ]
-        | list[
-            dict[
-                str,
-                dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
-                | list[dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]]
-                | str,
-            ]
-        ]
-        | Literal["_"]
-    ) = "_"
+    arguments: dict[str, Any] | Literal["_"] = "_"
     """
     The input parameters for the tool (defaults to last step output)
     """
@@ -1280,3 +1472,7 @@ class YieldStep(BaseModel):
     """
     The input parameters for the subworkflow (defaults to last step output)
     """
+
+
+IfElseWorkflowStep.model_rebuild()
+IfElseWorkflowStepUpdateItem.model_rebuild()

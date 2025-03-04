@@ -64,5 +64,5 @@ async def execute_api_call(
 mock_execute_api_call = execute_api_call
 
 execute_api_call = activity.defn(name="execute_api_call")(
-    execute_api_call if not testing else mock_execute_api_call
+    execute_api_call if not testing else mock_execute_api_call,
 )

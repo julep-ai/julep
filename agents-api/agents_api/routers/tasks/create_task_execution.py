@@ -94,6 +94,7 @@ async def start_execution(
                 current=TransitionTarget(
                     workflow="main",
                     step=0,
+                    scope_id=uuid7(),
                 ),
                 next=None,
             ),

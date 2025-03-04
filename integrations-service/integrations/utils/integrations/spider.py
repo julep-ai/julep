@@ -35,7 +35,9 @@ def create_spider_response(pages: list[dict]) -> list[SpiderResponse]:
 
 
 async def execute_spider_method(
-    method_name: str, setup: SpiderSetup, arguments: SpiderFetchArguments
+    method_name: str,
+    setup: SpiderSetup,
+    arguments: SpiderFetchArguments,
 ) -> SpiderOutput:
     api_key = get_api_key(setup)
     final_result = []

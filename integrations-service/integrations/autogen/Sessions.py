@@ -6,7 +6,37 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel, StrictBool
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
+
+
+class BaseDocSearch(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    limit: Annotated[int, Field(ge=1, le=50)] = 10
+    """
+    The limit of documents to return
+    """
+    lang: str = "en-US"
+    """
+    The language to be used for text-only search. Support for other languages coming soon.
+    """
+    metadata_filter: dict[str, Any] = {}
+    """
+    Metadata filter to apply to the search
+    """
+    num_search_messages: Annotated[int, Field(ge=1, le=50)] = 4
+    """
+    The number of search messages to use for the search.
+    """
+    max_query_length: Annotated[int, Field(ge=100, le=10000)] = 1000
+    """
+    The maximum query length to use for the search.
+    """
+
+
+class BaseDocSearchUpdate(BaseDocSearch):
+    pass
 
 
 class CreateSessionRequest(BaseModel):
@@ -31,7 +61,7 @@ class CreateSessionRequest(BaseModel):
     """
     Session situation
     """
-    system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    system_template: str | None = None
     """
     A specific system prompt template that sets the background for this session
     """
@@ -59,8 +89,55 @@ class CreateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: RecallOptions | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    """
+    Recall options for the session
+    """
     metadata: dict[str, Any] | None = None
+
+
+class HybridDocSearch(BaseDocSearch):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    mode: Literal["hybrid"] = "hybrid"
+    """
+    The mode to use for the search.
+    """
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    """
+    The confidence cutoff level
+    """
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
+    """
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
+
+
+class HybridDocSearchUpdate(BaseDocSearchUpdate):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    mode: Literal["hybrid"] = "hybrid"
+    """
+    The mode to use for the search.
+    """
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    """
+    The confidence cutoff level
+    """
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
+    """
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
 
 
 class PatchSessionRequest(BaseModel):
@@ -75,7 +152,7 @@ class PatchSessionRequest(BaseModel):
     """
     Session situation
     """
-    system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    system_template: str | None = None
     """
     A specific system prompt template that sets the background for this session
     """
@@ -103,61 +180,13 @@ class PatchSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: RecallOptionsUpdate | None = None
+    recall_options: (
+        VectorDocSearchUpdate | TextOnlyDocSearchUpdate | HybridDocSearchUpdate | None
+    ) = None
+    """
+    Recall options for the session
+    """
     metadata: dict[str, Any] | None = None
-
-
-class RecallOptions(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    mode: Literal["hybrid", "vector", "text"] = "vector"
-    """
-    The mode to use for the search.
-    """
-    num_search_messages: int = 4
-    """
-    The number of search messages to use for the search.
-    """
-    max_query_length: int = 1000
-    """
-    The maximum query length to use for the search.
-    """
-    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.7
-    """
-    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-    """
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.6
-    """
-    The confidence cutoff level
-    """
-    limit: Annotated[int, Field(ge=1, le=50)] = 10
-    """
-    The limit of documents to return
-    """
-    lang: Literal["en-US"] = "en-US"
-    """
-    The language to be used for text-only search. Support for other languages coming soon.
-    """
-    metadata_filter: dict[str, Any] = {}
-    """
-    Metadata filter to apply to the search
-    """
-    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0
-    """
-    MMR Strength (mmr_strength = 1 - mmr_lambda)
-    """
-
-
-class RecallOptionsUpdate(RecallOptions):
-    pass
-
-
-class SearchMode(RootModel[Literal["hybrid", "vector", "text"]]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Literal["hybrid", "vector", "text"]
 
 
 class Session(BaseModel):
@@ -168,7 +197,7 @@ class Session(BaseModel):
     """
     Session situation
     """
-    system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    system_template: str | None = None
     """
     A specific system prompt template that sets the background for this session
     """
@@ -200,7 +229,10 @@ class Session(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: RecallOptions | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    """
+    Recall options for the session
+    """
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -240,6 +272,26 @@ class SingleAgentSingleUserSession(Session):
     user: UUID
 
 
+class TextOnlyDocSearch(BaseDocSearch):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    mode: Literal["text"] = "text"
+    """
+    The mode to use for the search.
+    """
+
+
+class TextOnlyDocSearchUpdate(BaseDocSearchUpdate):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    mode: Literal["text"] = "text"
+    """
+    The mode to use for the search.
+    """
+
+
 class UpdateSessionRequest(BaseModel):
     """
     Payload for updating a session
@@ -252,7 +304,7 @@ class UpdateSessionRequest(BaseModel):
     """
     Session situation
     """
-    system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    system_template: str | None = None
     """
     A specific system prompt template that sets the background for this session
     """
@@ -280,8 +332,47 @@ class UpdateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: RecallOptions | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    """
+    Recall options for the session
+    """
     metadata: dict[str, Any] | None = None
+
+
+class VectorDocSearch(BaseDocSearch):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    mode: Literal["vector"] = "vector"
+    """
+    The mode to use for the search.
+    """
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    """
+    The confidence cutoff level
+    """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
+
+
+class VectorDocSearchUpdate(BaseDocSearchUpdate):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    mode: Literal["vector"] = "vector"
+    """
+    The mode to use for the search.
+    """
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    """
+    The confidence cutoff level
+    """
+    mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
+    """
+    MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
 
 
 class CreateOrUpdateSessionRequest(CreateSessionRequest):
@@ -303,7 +394,7 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     Session situation
     """
-    system_template: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.about}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{NEWLINE}}\n\n{%- if session.situation -%}\nSituation: {{session.situation}}\n{%- endif -%}\n\n{{NEWLINE+NEWLINE}}\n\n{%- if agent.instructions -%}\nInstructions:{{NEWLINE}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{NEWLINE}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{NEWLINE}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{NEWLINE}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{NEWLINE}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{NEWLINE}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{NEWLINE}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{NEWLINE}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    system_template: str | None = None
     """
     A specific system prompt template that sets the background for this session
     """
@@ -331,7 +422,10 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: RecallOptions | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    """
+    Recall options for the session
+    """
     metadata: dict[str, Any] | None = None
 
 
