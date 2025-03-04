@@ -1,11 +1,5 @@
 BEGIN;
 
-SELECT decompress_chunk(c, true) 
-FROM show_chunks('transitions') c;
-
-SELECT decompress_chunk(c, true) 
-FROM show_chunks('entries') c;
-
 CREATE SCHEMA IF NOT EXISTS postgraphile_auth;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -103,21 +97,6 @@ $$ language plpgsql strict security definer;
 
 GRANT EXECUTE ON FUNCTION authenticate(text, text) TO no_access_role, postgraphile;
 
-CREATE OR REPLACE FUNCTION current_developer_id_by_transition_id(p_transition_id UUID)
-RETURNS UUID AS $$
-DECLARE
-    v_developer_id UUID;
-BEGIN
-    SELECT e.developer_id
-    INTO v_developer_id
-    FROM transitions t
-    JOIN executions e ON t.execution_id = e.execution_id
-    WHERE t.transition_id = p_transition_id;
-
-    RETURN v_developer_id;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION current_developer_id_by_execution_id(p_execution_id UUID)
 RETURNS UUID AS $$
 DECLARE
@@ -148,30 +127,6 @@ $$ LANGUAGE plpgsql;
 
 GRANT ALL ON ALL TABLES IN SCHEMA public TO postgraphile;
 
-DO $$
-BEGIN
-    BEGIN
-        ALTER TABLE entries
-        SET
-            (timescaledb.compress = FALSE);
-    EXCEPTION
-        WHEN others THEN
-            RAISE NOTICE 'An error occurred during unsetting entries.compress: %, %', SQLSTATE, SQLERRM;
-    END;
-END $$;
-
-DO $$
-BEGIN
-    BEGIN
-        ALTER TABLE transitions
-        SET
-            (timescaledb.compress = FALSE);
-    EXCEPTION
-        WHEN others THEN
-            RAISE NOTICE 'An error occurred during unsetting transitions.compress: %, %', SQLSTATE, SQLERRM;
-    END;
-END $$;
-
 ALTER TABLE developers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -185,9 +140,7 @@ ALTER TABLE session_lookup ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workflows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE executions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE transitions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE temporal_executions_lookup ENABLE ROW LEVEL SECURITY;
-ALTER TABLE entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE entry_relations ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY access_developers_policy
@@ -281,26 +234,12 @@ CREATE POLICY access_executions_policy
   USING (developer_id = current_developer_id())
   WITH CHECK (developer_id = current_developer_id());
 
-CREATE POLICY access_transitions_policy
-  ON transitions
-  FOR ALL
-  TO postgraphile
-  USING (transition_id = current_developer_id_by_transition_id(transition_id))
-  WITH CHECK (transition_id = current_developer_id_by_transition_id(transition_id));
-
 CREATE POLICY access_temporal_executions_lookup_policy
   ON temporal_executions_lookup
   FOR ALL
   TO postgraphile
   USING (execution_id = current_developer_id_by_execution_id(execution_id))
   WITH CHECK (execution_id = current_developer_id_by_execution_id(execution_id));
-
-CREATE POLICY access_entries_policy
-  ON entries
-  FOR ALL
-  TO postgraphile
-  USING (session_id = current_developer_id_by_session_id(session_id))
-  WITH CHECK (session_id = current_developer_id_by_session_id(session_id));
 
 CREATE POLICY access_entry_relations_policy
   ON entry_relations
@@ -309,35 +248,9 @@ CREATE POLICY access_entry_relations_policy
   USING (session_id = current_developer_id_by_session_id(session_id))
   WITH CHECK (session_id = current_developer_id_by_session_id(session_id));
 
-DO $$
-BEGIN
-    BEGIN
-        ALTER TABLE entries
-            SET (
-                timescaledb.compress = TRUE,
-                timescaledb.compress_segmentby = 'session_id',
-                timescaledb.compress_orderby = 'created_at DESC, entry_id DESC'
-            );
-    EXCEPTION
-        WHEN others THEN
-            RAISE NOTICE 'An error occurred during entries.compress: %, %', SQLSTATE, SQLERRM;
-    END;
-END $$;
-
-DO $$
-BEGIN
-    BEGIN
-        ALTER TABLE transitions
-        SET
-            (
-                timescaledb.compress = TRUE,
-                timescaledb.compress_segmentby = 'execution_id',
-                timescaledb.compress_orderby = 'created_at DESC, transition_id DESC'
-            );
-    EXCEPTION
-        WHEN others THEN
-            RAISE NOTICE 'An error occurred during transitions.compress: %, %', SQLSTATE, SQLERRM;
-    END;
-END $$;
+COMMENT ON TABLE public.entries IS '@omit';
+COMMENT ON TABLE public.transitions IS '@omit';
+REVOKE ALL ON public.entries FROM postgraphile;
+REVOKE ALL ON public.transitions FROM postgraphile;
 
 COMMIT;
