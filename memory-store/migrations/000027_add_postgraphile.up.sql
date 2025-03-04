@@ -1,3 +1,11 @@
+BEGIN;
+
+SELECT decompress_chunk(c, true) 
+FROM show_chunks('transitions') c;
+
+SELECT decompress_chunk(c, true) 
+FROM show_chunks('entries') c;
+
 CREATE SCHEMA IF NOT EXISTS postgraphile_auth;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -331,3 +339,5 @@ BEGIN
             RAISE NOTICE 'An error occurred during transitions.compress: %, %', SQLSTATE, SQLERRM;
     END;
 END $$;
+
+COMMIT;
