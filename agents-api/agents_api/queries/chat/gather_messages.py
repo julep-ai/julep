@@ -146,7 +146,8 @@ async def gather_messages(
         return past_messages, []
 
     # Execute search
-    search_fn, params = get_search_fn_and_params(search_params)
+    search_fn, params = get_search_fn_and_params(search_params, is_conversation_snippet=True)
+
     doc_references: list[DocReference] = await search_fn(
         developer_id=developer.id,
         owners=owners,
