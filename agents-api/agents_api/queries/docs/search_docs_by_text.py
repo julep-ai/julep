@@ -5,7 +5,7 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import DocReference
-from ...common.nlp import text_to_tsvector_query
+from ...common.nlp import text_to_keywords
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .utils import transform_to_doc_reference
@@ -61,8 +61,10 @@ async def search_docs_by_text(
     # Extract owner types and IDs
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
+
     #  Pre-process rawtext query
-    query = text_to_tsvector_query(query, split_chunks=True)
+    keywords = text_to_keywords(query, split_chunks=True)
+    query = " OR ".join(keywords)
 
     return (
         search_docs_text_query,
