@@ -10,17 +10,18 @@ from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .utils import transform_to_doc_reference
 
-# Raw query for text search
+# SQL query for searching docs by text
 search_docs_text_query = """
 SELECT * FROM search_by_text(
-    $1, -- developer_id
-    $2, -- query
-    $3, -- owner_types
-    $4, -- owner_ids
-    $5, -- search_language
-    $6, -- k
-    $7 -- metadata_filter
-)
+    $1::uuid,    -- developer_id
+    $2::text,    -- query_text
+    $3::text[],  -- owner_types
+    $4::uuid[],  -- owner_ids
+    $5::text,    -- search_language
+    $6::int,     -- k
+    $7::jsonb,   -- metadata_filter
+    $8::float    -- similarity_threshold (default value)
+);
 """
 
 
@@ -38,7 +39,9 @@ async def search_docs_by_text(
     query: str,
     k: int = 3,
     metadata_filter: dict[str, Any] = {},
-    search_language: str | None = "english",
+    search_language: str | None = "english_unaccent",
+    trigram_similarity_threshold: float = 0.3,
+    is_conversation_snippet: bool = False,
 ) -> tuple[str, list]:
     """
     Full-text search on docs using the search_tsv column.
@@ -62,9 +65,10 @@ async def search_docs_by_text(
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
 
-    #  Pre-process rawtext query
-    keywords = text_to_keywords(query, split_chunks=True)
-    query = " OR ".join(keywords)
+    # Pre-process rawtext query if too long or is_conversation_snippet is True
+    if len(query) > 300 or is_conversation_snippet:
+        keywords = text_to_keywords(query, split_chunks=True)
+        query = " OR ".join(keywords)
 
     return (
         search_docs_text_query,
@@ -76,5 +80,6 @@ async def search_docs_by_text(
             search_language,
             k,
             metadata_filter,
+            trigram_similarity_threshold,
         ],
     )

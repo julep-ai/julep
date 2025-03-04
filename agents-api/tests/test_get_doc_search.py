@@ -63,6 +63,7 @@ def _():
         "k": 10,
         "metadata_filter": {"field": "value"},
         "search_language": "english",
+        "is_conversation_snippet": False,
     }
 
 
@@ -132,6 +133,7 @@ def _():
         "alpha": 0.5,
         "metadata_filter": {"field": "value"},
         "search_language": "english",
+        "is_conversation_snippet": False,
     }
 
 
@@ -159,6 +161,7 @@ def _():
         "alpha": 0.5,
         "metadata_filter": {"field": "value"},
         "search_language": "english",
+        "is_conversation_snippet": False,
     }
 
 

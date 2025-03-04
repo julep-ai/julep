@@ -26,7 +26,8 @@ SELECT * FROM search_hybrid(
     $7, -- alpha
     $8, -- confidence
     $9, -- metadata_filter
-    $10 -- search_language
+    $10, -- search_language
+    $11 -- trigram_similarity_threshold
 )
 """
 
@@ -48,6 +49,8 @@ async def search_docs_hybrid(
     metadata_filter: dict[str, Any] = {},
     search_language: str = "english",
     confidence: int | float = 0.5,
+    trigram_similarity_threshold: float = 0.3,
+    is_conversation_snippet: bool = False,
 ) -> tuple[str, list]:
     """
     Hybrid text-and-embedding doc search. We get top-K from each approach,
@@ -82,9 +85,10 @@ async def search_docs_hybrid(
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
 
-    # Pre-process rawtext query
-    keywords = text_to_keywords(text_query, split_chunks=True)
-    text_query = " OR ".join(keywords)
+    # Pre-process rawtext query if too long or is_conversation_snippet is True
+    if len(text_query) > 300 or is_conversation_snippet:
+        keywords = text_to_keywords(text_query, split_chunks=True)
+        text_query = " OR ".join(keywords)
 
     return (
         search_docs_hybrid_query,
@@ -99,5 +103,6 @@ async def search_docs_hybrid(
             confidence,
             metadata_filter,
             search_language,
+            trigram_similarity_threshold,
         ],
     )
