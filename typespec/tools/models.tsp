@@ -27,6 +27,7 @@ alias integrationProvider = (
     | "ffmpeg"
     | "cloudinary"
     | "arxiv"
+    | "olostep"
 );
 
 enum ToolType {
