@@ -5,8 +5,8 @@ import typer
 from julep import Client, Julep
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from .app import console, error_console, executions_app
-from .utils import get_julep_client, persist_attribute
+from .app import executions_app
+from .utils import console, error_console, get_julep_client, persist_attribute
 
 
 @persist_attribute("execution_id", extractor=lambda exec_obj: exec_obj.id)

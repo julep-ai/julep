@@ -9,8 +9,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
-from .app import console, error_console, tools_app
-from .utils import get_julep_client
+from .app import tools_app
+from .utils import console, error_console, get_julep_client
 
 
 @tools_app.command()

@@ -6,9 +6,9 @@ import yaml
 from rich.table import Table
 from rich.text import Text
 
-from .app import app, console
+from .app import app
 from .models import LockFileContents
-from .utils import get_lock_file
+from .utils import console, get_lock_file
 
 MIN_TABLE_WIDTH = 200
 

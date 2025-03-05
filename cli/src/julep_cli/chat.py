@@ -6,8 +6,8 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text
 
-from .app import app, console, error_console
-from .utils import get_julep_client
+from .app import app
+from .utils import console, error_console, get_julep_client
 
 
 @app.command()

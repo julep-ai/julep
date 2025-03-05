@@ -7,8 +7,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
-from .app import agents_app, console, error_console
-from .utils import DateTimeEncoder, get_julep_client
+from .app import agents_app
+from .utils import DateTimeEncoder, console, error_console, get_julep_client
 
 SINGLE_AGENT_TABLE_WIDTH = 100
 SINGLE_AGENT_COLUMN_WIDTH = 50
