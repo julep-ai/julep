@@ -4,6 +4,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Session
 from ...common.utils.db_exceptions import common_db_exceptions
@@ -82,6 +83,19 @@ async def list_sessions(
     Returns:
         tuple[str, list]: SQL query and parameters
     """
+    # Validate parameters
+    if direction.lower() not in ["asc", "desc"]:
+        raise HTTPException(status_code=400, detail="Invalid sort direction")
+
+    if sort_by not in ["created_at", "updated_at"]:
+        raise HTTPException(status_code=400, detail="Invalid sort field")
+
+    if limit < 1:
+        raise HTTPException(status_code=400, detail="Limit must be greater than 0")
+
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="Offset must be non-negative")
+
     return (
         session_query,
         [

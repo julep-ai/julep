@@ -63,8 +63,8 @@ async def list_users(
     Returns:
         tuple[str, list]: SQL query and parameters
     """
-    if limit < 1 or limit > 1000:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
+    if limit < 1:
+        raise HTTPException(status_code=400, detail="Limit must be greater than 0")
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
 

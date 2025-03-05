@@ -69,12 +69,20 @@ async def list_agents(
     Returns:
         Tuple of (query, params)
     """
-    # Validate sort direction
+    # Validate parameters
     if direction.lower() not in ["asc", "desc"]:
         raise HTTPException(status_code=400, detail="Invalid sort direction")
 
-    # Build metadata filter clause if needed
+    if sort_by not in ["created_at", "updated_at"]:
+        raise HTTPException(status_code=400, detail="Invalid sort field")
 
+    if limit < 1:
+        raise HTTPException(status_code=400, detail="Limit must be greater than 0")
+
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="Offset must be non-negative")
+
+    # Build metadata filter clause if needed
     agent_query = raw_query.format(
         metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else "",
     )

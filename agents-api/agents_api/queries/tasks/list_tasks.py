@@ -73,14 +73,18 @@ async def list_tasks(
     Raises:
         HTTPException: If parameters are invalid or developer/agent doesn't exist
     """
+    # Validate parameters
     if direction.lower() not in ["asc", "desc"]:
         raise HTTPException(status_code=400, detail="Invalid sort direction")
 
-    if limit > 100 or limit < 1:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
+    if limit < 1:
+        raise HTTPException(status_code=400, detail="Limit must be greater than 0")
 
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
+
+    if sort_by not in ["created_at", "updated_at"]:
+        raise HTTPException(status_code=400, detail="Invalid sort field")
 
     # Format query with metadata filter if needed
     query = list_tasks_query.format(

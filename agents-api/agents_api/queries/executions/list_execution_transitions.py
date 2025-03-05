@@ -97,6 +97,19 @@ async def list_execution_transitions(
     Returns:
         tuple[str, list]: SQL query and parameters for listing execution transitions.
     """
+    # Validate parameters
+    if direction.lower() not in ["asc", "desc"]:
+        raise HTTPException(status_code=400, detail="Invalid sort direction")
+
+    if sort_by not in ["created_at"]:
+        raise HTTPException(status_code=400, detail="Invalid sort field")
+
+    if limit < 1:
+        raise HTTPException(status_code=400, detail="Limit must be greater than 0")
+
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="Offset must be non-negative")
+
     if transition_id is not None:
         return (
             get_execution_transition_query,

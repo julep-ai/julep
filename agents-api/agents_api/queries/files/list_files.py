@@ -55,8 +55,8 @@ async def list_files(
     if sort_by not in ["created_at", "updated_at"]:
         raise HTTPException(status_code=400, detail="Invalid sort field")
 
-    if limit > 100 or limit < 1:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
+    if limit < 1:
+        raise HTTPException(status_code=400, detail="Limit must be greater than 0")
 
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
