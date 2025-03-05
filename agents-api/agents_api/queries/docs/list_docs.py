@@ -86,7 +86,7 @@ async def list_docs(
     if direction.lower() not in ["asc", "desc"]:
         raise HTTPException(status_code=400, detail="Invalid sort direction")
 
-    if sort_by not in ["created_at", "timestamp"]:
+    if sort_by not in ["created_at", "updated_at"]:
         raise HTTPException(status_code=400, detail="Invalid sort field")
 
     if limit < 1:
