@@ -46,7 +46,7 @@ def get_language(lang: str) -> str:
 def get_search_fn_and_params(
     search_params,
     *,
-    is_conversation_snippet: bool = False,
+    extract_keywords: bool = False,
 ) -> tuple[Any, dict[str, float | int | str | dict[str, float] | list[float]] | None]:
     search_fn, params = None, None
 
@@ -65,7 +65,7 @@ def get_search_fn_and_params(
                 "k": k,
                 "metadata_filter": metadata_filter,
                 "search_language": search_language,
-                "is_conversation_snippet": is_conversation_snippet,
+                "extract_keywords": extract_keywords,
             }
 
         case VectorDocSearchRequest(
@@ -102,7 +102,7 @@ def get_search_fn_and_params(
                 "alpha": alpha,
                 "metadata_filter": metadata_filter,
                 "search_language": search_language,
-                "is_conversation_snippet": is_conversation_snippet,
+                "extract_keywords": extract_keywords,
             }
 
     # Note: connection_pool will be passed separately by the caller

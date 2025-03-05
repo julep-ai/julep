@@ -41,7 +41,7 @@ async def search_docs_by_text(
     metadata_filter: dict[str, Any] = {},
     search_language: str | None = "english_unaccent",
     trigram_similarity_threshold: float = 0.3,
-    is_conversation_snippet: bool = False,
+    extract_keywords: bool = False,
 ) -> tuple[str, list]:
     """
     Full-text search on docs using the search_tsv column.
@@ -58,15 +58,16 @@ async def search_docs_by_text(
     Returns:
         tuple[str, list]: SQL query and parameters for searching the documents.
     """
+
     if k < 1:
         raise HTTPException(status_code=400, detail="k must be >= 1")
 
     # Extract owner types and IDs
     owner_types: list[str] = [owner[0] for owner in owners]
-    owner_ids: list[str] = [str(owner[1]) for owner in owners]
+    owner_ids: list[UUID] = [owner[1] for owner in owners]
 
-    # Pre-process rawtext query if is_conversation_snippet is True
-    if is_conversation_snippet:
+    # Pre-process rawtext query if extract_keywords is True
+    if extract_keywords:
         keywords = text_to_keywords(query, split_chunks=True)
         query = " OR ".join(keywords)
 

@@ -145,8 +145,11 @@ async def gather_messages(
         # Invalid mode, return early
         return past_messages, []
 
-    # Execute search
-    search_fn, params = get_search_fn_and_params(search_params, is_conversation_snippet=True)
+    # Execute search (extract keywords for FTS because the query is a conversation snippet)
+    extract_keywords: bool = True
+    search_fn, params = get_search_fn_and_params(
+        search_params, extract_keywords=extract_keywords
+    )
 
     doc_references: list[DocReference] = await search_fn(
         developer_id=developer.id,
