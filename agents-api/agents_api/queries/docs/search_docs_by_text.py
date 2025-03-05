@@ -65,8 +65,8 @@ async def search_docs_by_text(
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
 
-    # Pre-process rawtext query if too long or is_conversation_snippet is True
-    if len(query) > 300 or is_conversation_snippet:
+    # Pre-process rawtext query if is_conversation_snippet is True
+    if is_conversation_snippet:
         keywords = text_to_keywords(query, split_chunks=True)
         query = " OR ".join(keywords)
 
