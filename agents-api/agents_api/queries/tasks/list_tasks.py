@@ -77,8 +77,8 @@ async def list_tasks(
     if direction.lower() not in ["asc", "desc"]:
         raise HTTPException(status_code=400, detail="Invalid sort direction")
 
-    if limit < 1:
-        raise HTTPException(status_code=400, detail="Limit must be greater than 0")
+    if limit < 1 or limit > 1000:
+        raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
 
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")

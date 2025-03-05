@@ -63,8 +63,16 @@ async def list_users(
     Returns:
         tuple[str, list]: SQL query and parameters
     """
-    if limit < 1:
-        raise HTTPException(status_code=400, detail="Limit must be greater than 0")
+    # Validate parameters
+    if direction.lower() not in ["asc", "desc"]:
+        raise HTTPException(status_code=400, detail="Invalid sort direction")
+
+    if sort_by not in ["created_at", "updated_at"]:
+        raise HTTPException(status_code=400, detail="Invalid sort field")
+
+    if limit < 1 or limit > 1000:
+        raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
+
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
 
