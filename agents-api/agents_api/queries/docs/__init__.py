@@ -19,6 +19,7 @@ This documentation aims to provide clear, concise, and sufficient context for ne
 
 # ruff: noqa: F401, F403, F405
 
+from .bulk_delete_docs import bulk_delete_docs
 from .create_doc import create_doc
 from .delete_doc import delete_doc
 from .get_doc import get_doc
@@ -28,6 +29,7 @@ from .search_docs_by_text import search_docs_by_text
 from .search_docs_hybrid import search_docs_hybrid
 
 __all__ = [
+    "bulk_delete_docs",
     "create_doc",
     "delete_doc",
     "get_doc",

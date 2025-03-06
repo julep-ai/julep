@@ -233,6 +233,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+  /agents/{id}/docs:bulk_delete:
+    post:
+      operationId: AgentDocsBulkDeleteRoute_bulk_delete
+      description: Bulk delete Docs owned by an Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  $ref: '#/components/schemas/Docs.BulkDeleteDocsRequest'
+              required:
+                - body
   /agents/{id}/search:
     post:
       operationId: AgentsDocsSearchRoute_search
@@ -2966,6 +2997,16 @@ components:
           type: string
           description: The language to be used for text-only search. Support for other languages coming soon.
           default: en-US
+        metadata_filter:
+          type: object
+          additionalProperties: {}
+          description: Metadata filter to apply to the search
+          default: {}
+    Docs.BulkDeleteDocsRequest:
+      type: object
+      required:
+        - metadata_filter
+      properties:
         metadata_filter:
           type: object
           additionalProperties: {}

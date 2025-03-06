@@ -22,6 +22,13 @@ model ResourceDeletedResponse {
     ...HasJobs;
 }
 
+model BulkResourceDeletedResponse {
+    @doc("IDs of deleted resources")
+    ids: uuid[];
+    ...HasDeletedAt;
+    ...HasJobs;
+}
+
 model PaginationOptions {
     @query
     @doc("Limit the number of items returned")

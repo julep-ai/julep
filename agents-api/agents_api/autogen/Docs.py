@@ -27,6 +27,16 @@ class BaseDocSearchRequest(BaseModel):
     """
 
 
+class BulkDeleteDocsRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    metadata_filter: dict[str, Any] = {}
+    """
+    Metadata filter to apply to the search
+    """
+
+
 class CreateDocRequest(BaseModel):
     """
     Payload for creating a doc
