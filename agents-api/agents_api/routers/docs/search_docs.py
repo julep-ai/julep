@@ -73,6 +73,9 @@ async def search_user_docs(
                 lambda_mult=1 - search_params.mmr_strength,
             )
             docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
+        else:
+            # If there are no docs with embeddings, return the top k docs
+            docs = docs[:search_params.limit]
 
     end = time.time()
 
@@ -137,6 +140,9 @@ async def search_agent_docs(
                 lambda_mult=1 - search_params.mmr_strength,
             )
             docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
+        else:
+            # If there are no docs with embeddings, return the top k docs
+            docs = docs[:search_params.limit]
 
     end = time.time()
 
