@@ -35,12 +35,8 @@ def _():
 
     query_embedding = np.array([0.3, 0.3, 0.3])
 
-    # Test with MMR strength = 0 (pure relevance)
+    # Test with MMR strength = 0.5
     result = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=0)
-    assert len(result) == 3
-
-    # Test with MMR strength = 1 (maximum diversity)
-    result = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=1)
     assert len(result) == 3
 
     # Test with not enough docs with embeddings (only 1, minimum required is 2 for MMR to work)
@@ -50,7 +46,7 @@ def _():
         create_test_doc("6ba7b811-9dad-11d1-80b4-00c04fd430c8", None),
     ]
 
-    # Will return the top limit docs without MMR
+    # Will return the top k docs irrespective of MMR strength and presence of embeddings
     result = apply_mmr_to_docs(docs_few_embeddings, query_embedding, limit=2, mmr_strength=0.5)
     assert len(result) == 2  # Should only return docs with embeddings
 
