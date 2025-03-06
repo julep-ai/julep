@@ -59,7 +59,6 @@ def get_search_fn_and_params(
             metadata_filter=metadata_filter,
         ):
             search_language = get_language(lang)
-            print(f"Search language: {search_language}")
             search_fn = search_docs_by_text
             params = {
                 "query": query,
@@ -93,7 +92,6 @@ def get_search_fn_and_params(
             metadata_filter=metadata_filter,
         ):
             search_language = get_language(lang)
-
             search_fn = search_docs_hybrid
             params = {
                 "text_query": query,
