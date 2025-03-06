@@ -53,8 +53,8 @@ async def search_user_docs(
     # Apply MMR if enabled and applicable
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
-        and search_params.mmr_strength > 0
         and len(docs) > search_params.limit
+        and search_params.mmr_strength > 0
     ):
         # Filter docs with embeddings and extract embeddings in one pass
         docs_with_embeddings = []
@@ -73,9 +73,10 @@ async def search_user_docs(
                 lambda_mult=1 - search_params.mmr_strength,
             )
             docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
-        else:
-            # If there are no docs with embeddings, return the top k docs
-            docs = docs[: search_params.limit]
+    
+    # if there are more docs than the limit, return the top k docs
+    if len(docs) > search_params.limit:
+        docs = docs[:search_params.limit]
 
     end = time.time()
 
@@ -120,8 +121,8 @@ async def search_agent_docs(
     # Apply MMR if enabled and applicable
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
-        and search_params.mmr_strength > 0
         and len(docs) > search_params.limit
+        and search_params.mmr_strength > 0
     ):
         # Filter docs with embeddings and extract embeddings in one pass
         docs_with_embeddings = []
@@ -140,9 +141,10 @@ async def search_agent_docs(
                 lambda_mult=1 - search_params.mmr_strength,
             )
             docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
-        else:
-            # If there are no docs with embeddings, return the top k docs
-            docs = docs[: search_params.limit]
+    
+    # if there are more docs than the limit, return the top k docs
+    if len(docs) > search_params.limit:
+        docs = docs[:search_params.limit]
 
     end = time.time()
 

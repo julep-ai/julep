@@ -156,9 +156,9 @@ async def gather_messages(
 
     # Apply MMR if enabled and applicable
     if (
-        recall_options.mmr_strength > 0
+        not isinstance(search_params, TextOnlyDocSearchRequest)
         and len(doc_references) > recall_options.limit
-        and recall_options.mode != "text"
+        and recall_options.mmr_strength > 0
     ):
         # Filter docs with embeddings and extract embeddings in one pass
         docs_with_embeddings = []
@@ -179,8 +179,9 @@ async def gather_messages(
             doc_references = [
                 doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)
             ]
-        else:
-            # If there are no docs with embeddings, return the top k docs
-            doc_references = doc_references[: recall_options.limit]
+    
+    # if there are more docs than the limit, return the top k docs
+    if len(doc_references) > recall_options.limit:
+        doc_references = doc_references[:recall_options.limit]
 
     return past_messages, doc_references
