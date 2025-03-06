@@ -179,9 +179,9 @@ async def gather_messages(
             doc_references = [
                 doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)
             ]
-    
+
     # if there are more docs than the limit, return the top k docs
     if len(doc_references) > recall_options.limit:
-        doc_references = doc_references[:recall_options.limit]
+        doc_references = doc_references[: recall_options.limit]
 
     return past_messages, doc_references
