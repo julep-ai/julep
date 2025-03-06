@@ -9,7 +9,6 @@ from ...autogen.openapi_model import (
     ListResponse,
     ResourceDeletedResponse,
 )
-from ...common.utils.datetime import utcnow
 from ...dependencies.developer_id import get_developer_id
 from ...queries.docs.bulk_delete_docs import bulk_delete_docs as bulk_delete_docs_query
 from .router import router
@@ -33,7 +32,9 @@ async def bulk_delete_agent_docs(
     return ListResponse[ResourceDeletedResponse](items=deleted_docs)
 
 
-@router.delete("/users/{user_id}/docs:bulk_delete", status_code=HTTP_202_ACCEPTED, tags=["docs"])
+@router.delete(
+    "/users/{user_id}/docs:bulk_delete", status_code=HTTP_202_ACCEPTED, tags=["docs"]
+)
 async def bulk_delete_user_docs(
     user_id: UUID,
     data: BulkDeleteDocsRequest,

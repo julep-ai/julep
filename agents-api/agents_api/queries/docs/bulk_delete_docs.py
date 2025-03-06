@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -7,6 +7,7 @@ from ...autogen.openapi_model import BulkDeleteDocsRequest, ResourceDeletedRespo
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+
 
 @rewrap_exceptions(common_db_exceptions("doc", ["delete"]))
 @wrap_in_class(
@@ -31,23 +32,23 @@ async def bulk_delete_docs(
     """
     metadata_filter = data.metadata_filter or {}
     params = [developer_id, owner_type, owner_id]
-    
+
     # Build the metadata filter conditions
     metadata_conditions = ""
     if metadata_filter:
         for key, value in metadata_filter.items():
             metadata_conditions += f" AND d.metadata->>${len(params) + 1} = ${len(params) + 2}"
             params.extend([key, value])
-            
+
     # Create a simplified query - delete docs first, then doc_owners
     query = f"""
     WITH deleted_docs AS (
         DELETE FROM docs d
         WHERE d.developer_id = $1
             AND EXISTS (
-                SELECT 1 
-                FROM doc_owners o 
-                WHERE o.doc_id = d.doc_id 
+                SELECT 1
+                FROM doc_owners o
+                WHERE o.doc_id = d.doc_id
                 AND o.developer_id = d.developer_id
                 AND o.owner_type = $2
                 AND o.owner_id = $3
@@ -64,5 +65,5 @@ async def bulk_delete_docs(
     )
     SELECT doc_id FROM deleted_docs;
     """
-    
+
     return query, params
