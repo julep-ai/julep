@@ -43,12 +43,15 @@ def _():
     docs_few_embeddings = [
         create_test_doc("550e8400-e29b-41d4-a716-446655440000", np.array([0.1, 0.2, 0.3])),
         create_test_doc("6ba7b810-9dad-11d1-80b4-00c04fd430c8", None),
+        create_test_doc("550e8400-e29b-41d4-a716-446655441122", np.array([0.11, 0.21, 0.31])),
         create_test_doc("6ba7b811-9dad-11d1-80b4-00c04fd430c8", None),
     ]
 
     # Will return the top k docs irrespective of MMR strength and presence of embeddings
     result = apply_mmr_to_docs(docs_few_embeddings, query_embedding, limit=2, mmr_strength=0.5)
     assert len(result) == 2  # Should only return docs with embeddings
+    assert result[0].id == UUID("550e8400-e29b-41d4-a716-446655440000")
+    assert result[1].id == UUID("550e8400-e29b-41d4-a716-446655441122")
 
     # Test with limit greater than available docs
     result = apply_mmr_to_docs(docs, query_embedding, limit=10, mmr_strength=0.5)
@@ -111,5 +114,5 @@ def _():
     ]
 
     # Will return the top limit docs without MMR since no embeddings are present
-    result = apply_mmr_to_docs(docs_no_embeddings, query_embedding, limit=3, mmr_strength=0.5)
-    assert len(result) == 3
+    result = apply_mmr_to_docs(docs_no_embeddings, query_embedding, limit=1, mmr_strength=0.5)
+    assert len(result) == 1
