@@ -189,20 +189,20 @@ def pg_query[**P](
 def sanitize_pg_string(value: Any) -> Any:
     """
     Remove null characters (\u0000) from strings for PostgreSQL compatibility.
-    
+
     Args:
         value: Any data structure that might contain strings with null characters
-        
+
     Returns:
         Data with null characters removed from strings
     """
     if isinstance(value, str):
-        return value.replace('\u0000', '')
-    elif isinstance(value, dict):
+        return value.replace("\u0000", "")
+    if isinstance(value, dict):
         return {key: sanitize_pg_string(val) for key, val in value.items()}
-    elif isinstance(value, list):
+    if isinstance(value, list):
         return [sanitize_pg_string(item) for item in value]
-    elif isinstance(value, tuple):
+    if isinstance(value, tuple):
         return tuple(sanitize_pg_string(item) for item in value)
     return value
 

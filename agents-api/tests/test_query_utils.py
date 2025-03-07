@@ -18,12 +18,12 @@ def _():
     test_dict = {
         "key1": "value\u0000",
         "key2": ["item\u00001", "item2"],
-        "key3": {"nested_key": "nested\u0000value"}
+        "key3": {"nested_key": "nested\u0000value"},
     }
     expected_dict = {
         "key1": "value",
         "key2": ["item1", "item2"],
-        "key3": {"nested_key": "nestedvalue"}
+        "key3": {"nested_key": "nestedvalue"},
     }
     assert sanitize_pg_string(test_dict) == expected_dict
 
