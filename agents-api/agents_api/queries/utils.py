@@ -127,7 +127,7 @@ def pg_query[**P](
                     for method_name, payload in batch:
                         method = getattr(conn, method_name)
                         query = payload["query"]
-                        args = payload["args"]
+                        args = sanitize_pg_string(payload["args"])
                         timeout = payload.get("timeout")
                         results: list[Record] = await method(query, *args, timeout=timeout)
                         if method_name == "fetchrow":
@@ -184,6 +184,27 @@ def pg_query[**P](
         return pg_query_dec(func)
 
     return pg_query_dec
+
+
+def sanitize_pg_string(value: Any) -> Any:
+    """
+    Remove null characters (\u0000) from strings for PostgreSQL compatibility.
+    
+    Args:
+        value: Any data structure that might contain strings with null characters
+        
+    Returns:
+        Data with null characters removed from strings
+    """
+    if isinstance(value, str):
+        return value.replace('\u0000', '')
+    elif isinstance(value, dict):
+        return {key: sanitize_pg_string(val) for key, val in value.items()}
+    elif isinstance(value, list):
+        return [sanitize_pg_string(item) for item in value]
+    elif isinstance(value, tuple):
+        return tuple(sanitize_pg_string(item) for item in value)
+    return value
 
 
 def wrap_in_class(
