@@ -27,7 +27,8 @@ SELECT * FROM search_hybrid(
     $8, -- confidence
     $9, -- metadata_filter
     $10, -- search_language
-    $11 -- trigram_similarity_threshold
+    $11, -- trigram_similarity_threshold
+    $12 -- k_multiplier
 )
 """
 
@@ -45,11 +46,12 @@ async def search_docs_hybrid(
     text_query: str = "",
     embedding: list[float] | None = None,
     k: int = 10,
-    alpha: float = 0.5,
+    alpha: float = 0.7,
     metadata_filter: dict[str, Any] = {},
     search_language: str = "english",
     confidence: int | float = 0.5,
-    trigram_similarity_threshold: float = 0.3,
+    trigram_similarity_threshold: float = 0.6,
+    k_multiplier: int = 4,
     extract_keywords: bool = False,
 ) -> tuple[str, list]:
     """
@@ -104,5 +106,6 @@ async def search_docs_hybrid(
             metadata_filter,
             search_language,
             trigram_similarity_threshold,
+            k_multiplier,
         ],
     )

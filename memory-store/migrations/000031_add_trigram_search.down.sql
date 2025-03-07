@@ -1,3 +1,149 @@
+DROP FUNCTION search_hybrid;
+
+CREATE OR REPLACE FUNCTION search_hybrid (
+    p_developer_id UUID,
+    p_query_text text,
+    p_query_embedding vector(1024),
+    p_owner_types TEXT[],
+    p_owner_ids UUID[],
+    p_k integer DEFAULT 3,
+    p_alpha float DEFAULT 0.7,
+    p_confidence float DEFAULT 0.5,
+    p_metadata_filter jsonb DEFAULT NULL,
+    p_search_language text DEFAULT 'english'
+)
+RETURNS SETOF doc_search_result
+LANGUAGE plpgsql AS
+$$
+DECLARE
+    text_weight float := 1.0 - p_alpha;
+    embedding_weight float := p_alpha;
+    intermediate_limit integer := p_k * 4;
+BEGIN
+    /*
+       1) Get top-N results from text search.
+       2) Get top-N results from vector search.
+       3) UNION them and pick the highest-distance row per doc_id (DISTINCT ON).
+       4) Join those rows back to each sub-result to get text_score and embedding_score.
+       5) Aggregate text & embedding scores once, dbsf_normalize once, then map them back by row_number.
+    */
+
+    RETURN QUERY
+    WITH text_results AS (
+        SELECT *
+        FROM search_by_text(
+            p_developer_id,
+            p_query_text,
+            p_owner_types,
+            p_owner_ids,
+            p_search_language,
+            intermediate_limit,
+            p_metadata_filter
+        )
+    ),
+    embedding_results AS (
+        SELECT *
+        FROM search_by_vector(
+            p_developer_id,
+            p_query_embedding,
+            p_owner_types,
+            p_owner_ids,
+            intermediate_limit,
+            p_confidence,
+            p_metadata_filter
+        )
+    ),
+
+    -- UNION both sets, pick highest distance row per doc_id
+    all_results AS (
+        SELECT DISTINCT ON (doc_id)
+               developer_id,
+               doc_id,
+               index,
+               title,
+               content,
+               distance,
+               embedding,
+               metadata,
+               owner_type,
+               owner_id
+        FROM (
+            SELECT * FROM text_results
+            UNION ALL
+            SELECT * FROM embedding_results
+        ) combined
+        ORDER BY doc_id, distance DESC
+    ),
+
+    -- Gather text_score & embedding_score for each doc
+    scores AS (
+        SELECT
+            a.developer_id,
+            a.doc_id,
+            a.index,
+            a.title,
+            a.content,
+            a.embedding,
+            a.metadata,
+            a.owner_type,
+            a.owner_id,
+            COALESCE(t.distance, 0.0) AS text_score,
+            COALESCE(e.distance, 0.0) AS embedding_score
+        FROM all_results a
+        LEFT JOIN text_results      t ON a.doc_id = t.doc_id
+        LEFT JOIN embedding_results e ON a.doc_id = e.doc_id
+    ),
+
+    -- Give each row a stable ordering
+    scores_ordered AS (
+        SELECT
+            s.*,
+            ROW_NUMBER() OVER (ORDER BY s.doc_id) AS rn
+        FROM scores s
+    ),
+
+    -- Aggregate all text/embedding scores into arrays
+    aggregated AS (
+        SELECT
+            array_agg(text_score ORDER BY rn)      AS text_scores,
+            array_agg(embedding_score ORDER BY rn) AS embedding_scores
+        FROM scores_ordered
+    ),
+
+    -- Normalize once for each array
+    normed_arrays AS (
+        SELECT
+            dbsf_normalize(text_scores)      AS norm_text_scores,
+            dbsf_normalize(embedding_scores) AS norm_embedding_scores
+        FROM aggregated
+    ),
+
+    -- Join normalized arrays back using row_number
+    final AS (
+        SELECT
+            s.developer_id,
+            s.doc_id,
+            s.index,
+            s.title,
+            s.content,
+            1.0 - (
+                text_weight      * norm_text_scores[s.rn] +
+                embedding_weight * norm_embedding_scores[s.rn]
+            ) AS distance,
+            s.embedding,
+            s.metadata,
+            s.owner_type,
+            s.owner_id
+        FROM scores_ordered s
+        CROSS JOIN normed_arrays
+        ORDER BY distance ASC
+        LIMIT p_k
+    )
+    SELECT * FROM final;
+END;
+$$;
+
+COMMENT ON FUNCTION search_hybrid IS 'Hybrid search combining text and vector search using Distribution-Based Score Fusion (DBSF)';
 DROP FUNCTION IF EXISTS embed_and_search_hybrid;
 
 -- Revert the embed_and_search_hybrid function to its original form
@@ -46,152 +192,3 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
-
-DROP FUNCTION IF EXISTS search_hybrid;
-
--- Revert the search_hybrid function to its original form
-CREATE OR REPLACE FUNCTION search_hybrid (
-    developer_id UUID,
-    query_text text,
-    query_embedding vector (1024),
-    owner_types TEXT[],
-    owner_ids UUID [],
-    k integer DEFAULT 3,
-    alpha float DEFAULT 0.7, -- Weight for embedding results
-    confidence float DEFAULT 0.5,
-    metadata_filter jsonb DEFAULT NULL,
-    search_language text DEFAULT 'english_unaccent'
-) RETURNS SETOF doc_search_result AS $$
-DECLARE
-    owner_filter_sql text := '';
-    metadata_filter_sql text := '';
-    ts_query tsquery;
-BEGIN
-    IF array_length(owner_types, 1) != array_length(owner_ids, 1) THEN
-        RAISE EXCEPTION 'owner_types and owner_ids must be the same length';
-    END IF;
-
-    IF array_length(owner_types, 1) > 0 THEN
-        owner_filter_sql := 'AND (doc_owners.owner_type = ANY($3) AND doc_owners.owner_id = ANY($4))';
-    END IF;
-
-    IF metadata_filter IS NOT NULL AND jsonb_typeof(metadata_filter) = 'object' AND jsonb_array_length(metadata_filter) > 0 THEN
-        metadata_filter_sql := 'AND d.metadata @> $5';
-    END IF;
-
-    -- Convert query to tsquery
-    ts_query := websearch_to_tsquery(search_language::regconfig, query_text);
-
-    RETURN QUERY EXECUTE format(
-        'WITH vector_results AS (
-            SELECT
-                d.developer_id,
-                d.doc_id,
-                d.index,
-                d.title,
-                d.content,
-                1 - (e.embedding <=> $9) as vector_score,
-                e.embedding,
-                d.metadata,
-                doc_owners.owner_type,
-                doc_owners.owner_id
-            FROM docs d
-            JOIN docs_embeddings e
-                ON e.developer_id = d.developer_id
-                AND e.doc_id = d.doc_id
-                AND e.index = d.index
-            LEFT JOIN doc_owners ON d.doc_id = doc_owners.doc_id
-            WHERE d.developer_id = $6
-            AND 1 - (e.embedding <=> $9) > $8
-            AND (array_length($3, 1) IS NULL OR (doc_owners.owner_type = ANY($3) AND doc_owners.owner_id = ANY($4)))
-            AND (($5)::jsonb IS NULL OR d.metadata @> ($5)::jsonb)
-        ),
-        tsv_results AS (
-            SELECT
-                d.developer_id,
-                d.doc_id,
-                d.index,
-                d.title,
-                d.content,
-                ts_rank_cd(d.search_tsv, $1, 32)::double precision as tsv_score,
-                e.embedding,
-                d.metadata,
-                doc_owners.owner_type,
-                doc_owners.owner_id
-            FROM docs d
-            LEFT JOIN docs_embeddings e
-                ON e.developer_id = d.developer_id
-                AND e.doc_id = d.doc_id
-                AND e.index = d.index
-            LEFT JOIN doc_owners ON d.doc_id = doc_owners.doc_id
-            WHERE d.developer_id = $6
-            AND d.search_tsv @@ $1
-            AND (array_length($3, 1) IS NULL OR (doc_owners.owner_type = ANY($3) AND doc_owners.owner_id = ANY($4)))
-            AND (($5)::jsonb IS NULL OR d.metadata @> ($5)::jsonb)
-        ),
-        normalized_scores AS (
-            SELECT
-                COALESCE(v.developer_id, t.developer_id) as developer_id,
-                COALESCE(v.doc_id, t.doc_id) as doc_id,
-                COALESCE(v.index, t.index) as index,
-                COALESCE(v.title, t.title) as title,
-                COALESCE(v.content, t.content) as content,
-                COALESCE(v.vector_score, 0) as vector_score,
-                COALESCE(t.tsv_score, 0) as tsv_score,
-                COALESCE(v.embedding, t.embedding) as embedding,
-                COALESCE(v.metadata, t.metadata) as metadata,
-                COALESCE(v.owner_type, t.owner_type) as owner_type,
-                COALESCE(v.owner_id, t.owner_id) as owner_id
-            FROM vector_results v
-            FULL OUTER JOIN tsv_results t
-                ON v.doc_id = t.doc_id
-                AND v.index = t.index
-        ),
-        combined_scores AS (
-            SELECT
-                developer_id,
-                doc_id,
-                index,
-                title,
-                content,
-                ($7 * vector_score + (1 - $7) * tsv_score) as combined_score,
-                embedding,
-                metadata,
-                owner_type,
-                owner_id
-            FROM normalized_scores
-        )
-        SELECT
-            developer_id,
-            doc_id,
-            index,
-            title,
-            content,
-            combined_score as distance,
-            embedding,
-            metadata,
-            owner_type,
-            owner_id
-        FROM combined_scores
-        ORDER BY combined_score DESC
-        LIMIT $2',
-        owner_filter_sql,
-        metadata_filter_sql,
-        owner_filter_sql,
-        metadata_filter_sql
-    )
-    USING
-        ts_query,
-        k,
-        owner_types,
-        owner_ids,
-        metadata_filter,
-        developer_id,
-        alpha,
-        confidence,
-        query_embedding;
-END;
-$$ LANGUAGE plpgsql;
-
--- Note: We don't drop the pg_trgm extension or the trigram indexes
--- as they might be used by other parts of the application 
