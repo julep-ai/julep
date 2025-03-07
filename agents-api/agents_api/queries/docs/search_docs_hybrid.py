@@ -48,10 +48,10 @@ async def search_docs_hybrid(
     k: int = 10,
     alpha: float = 0.7,
     metadata_filter: dict[str, Any] = {},
-    search_language: str = "english",
+    search_language: str = "english_unaccent",
     confidence: int | float = 0.5,
     trigram_similarity_threshold: float = 0.6,
-    k_multiplier: int = 4,
+    k_multiplier: int = 5,
     extract_keywords: bool = False,
 ) -> tuple[str, list]:
     """
