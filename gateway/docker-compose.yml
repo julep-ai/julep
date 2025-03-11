@@ -22,7 +22,17 @@ services:
       dockerfile: Dockerfile
     ports:
       # - 443:443
-      - 80:80
+      - 127.0.0.1:80:80
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
     command:
       # - --entrypoints.web.address=:443

@@ -14,7 +14,7 @@ from temporalio import activity
 
 from ...common.exceptions.executions import EvaluateError
 from ...common.protocol.tasks import StepContext
-from ..utils import get_evaluator
+from ..utils import ALLOWED_FUNCTIONS, get_evaluator, stdlib
 
 
 def backwards_compatibility(expr: str) -> str:
@@ -111,3 +111,237 @@ async def base_evaluate(
 
     # Recursively evaluate the expression
     return _recursive_evaluate(exprs, evaluator)
+
+
+def validate_py_expression(
+    expr: str | None,
+    allow_placeholder_variables: bool = True,
+    expected_variables: set[str] | None = None,
+) -> dict[str, list[str]]:
+    """
+    Statically validate a Python expression before task execution.
+
+    Args:
+        expr: The Python expression to validate (or None)
+        allow_placeholder_variables: Whether to allow _ and placeholders like _.attr in expression
+        expected_variables: Optional set of expected variable names that should be available
+
+    Returns:
+        Dict with potential issues categorized by type
+    """
+    issues: dict[str, list[str]] = {
+        "syntax_errors": [],
+        "undefined_names": [],
+        "unsafe_operations": [],
+        "potential_runtime_errors": [],
+    }
+
+    # Skip None or empty expressions
+    if expr is None or not expr or not expr.strip():
+        return issues
+
+    # Apply backwards compatibility transformation first
+    expr = backwards_compatibility(expr)
+
+    # Handle expressions with $ prefix
+    if expr.startswith("$ "):
+        expr = expr[2:].strip()
+
+    # Handle f-string expressions (these are often used in templates)
+    if expr.startswith(("f'''", 'f"""')):
+        # Just basic syntax check for f-strings, can't do much static analysis
+        try:
+            ast.parse(expr)
+        except SyntaxError as e:
+            issues["syntax_errors"].append(f"F-string syntax error: {e!s}")
+        return issues
+
+    # Try to parse the expression to check for syntax errors
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError as e:
+        issues["syntax_errors"].append(f"Syntax error: {e!s}")
+        return issues  # Return early if we can't even parse the expression
+
+    # Get all name references in the expression
+    name_nodes = [node for node in ast.walk(tree) if isinstance(node, ast.Name)]
+
+    # Check for undefined names
+    referenced_names = {node.id for node in name_nodes if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)}
+
+    # Build the set of allowed names
+    allowed_names = set(ALLOWED_FUNCTIONS.keys()) | set(stdlib.keys()) | {"true", "false", "null", "NEWLINE"}
+
+    # Add standard placeholder variable names if allowed
+    if allow_placeholder_variables:
+        allowed_names.add("_")  # Special underscore variable
+        # Some common inputs that might be accessed via _
+        allowed_names.update({"inputs", "outputs", "state"})
+
+    # Add expected variables if provided
+    if expected_variables:
+        allowed_names.update(expected_variables)
+
+    # Find undefined names
+    undefined_names = referenced_names - allowed_names
+    if undefined_names:
+        issues["undefined_names"].extend([f"Undefined name: '{name}'" for name in undefined_names])
+
+    # Check for potentially unsafe operations
+    for node in ast.walk(tree):
+        # Check for attribute access that might be unsafe
+        if isinstance(node, ast.Attribute):
+            # Allow specific attributes on known objects
+            attr_name = node.attr
+            if isinstance(node.value, ast.Name):
+                obj_name = node.value.id
+
+                # Allow accessing attributes on the underscore variable
+                if obj_name == "_" and allow_placeholder_variables:
+                    continue
+
+                # Allow accessing attributes on stdlib modules
+                if obj_name in stdlib:
+                    continue
+
+                # Otherwise flag unexpected attribute access
+                issues["unsafe_operations"].append(
+                    f"Potentially unsafe attribute access: {obj_name}.{attr_name}"
+                )
+
+        # Check for function calls to make sure they're allowed
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            func_name = node.func.id
+            if func_name not in ALLOWED_FUNCTIONS and func_name not in allowed_names:
+                issues["unsafe_operations"].append(f"Call to potentially unsafe function: {func_name}")
+
+    # Check for common potential runtime errors
+    for node in ast.walk(tree):
+        # Division by zero
+        if (isinstance(node, ast.BinOp) and
+            isinstance(node.op, ast.Div) and
+            isinstance(node.right, ast.Constant) and
+            node.right.value == 0):
+            issues["potential_runtime_errors"].append("Division by zero detected")
+
+        # Index out of bounds for list literals
+        if (isinstance(node, ast.Subscript) and
+            isinstance(node.value, ast.List) and
+            isinstance(node.slice, ast.Constant) and
+            isinstance(node.slice.value, int)):
+            list_size = len(node.value.elts)
+            index = node.slice.value
+            if index >= list_size:
+                issues["potential_runtime_errors"].append(
+                    f"Possible index error: index {index} exceeds list size {list_size}"
+                )
+
+    return issues
+
+
+def validate_task_expressions(task_spec: dict[str, Any]) -> dict[str, dict[str, list[dict[str, Any]]]]:
+    """
+    Validate all Python expressions in a task specification.
+
+    Args:
+        task_spec: The task specification dictionary
+
+    Returns:
+        Dict mapping workflow names to step indices to lists of expression validation issues
+    """
+    validation_results: dict[str, dict[str, list[dict[str, Any]]]] = {}
+
+    # Process all workflows in the task
+    if "workflows" not in task_spec:
+        return validation_results
+
+    for workflow in task_spec.get("workflows", []):
+        workflow_name = workflow.get("name", "unknown")
+        validation_results[workflow_name] = {}
+
+        for step_idx, step in enumerate(workflow.get("steps", [])):
+            step_issues = []
+
+            # Identify which step type we're dealing with
+            step_type = None
+            step_data = None
+
+            # Each step should have exactly one key that is the step type
+            for key, value in step.items():
+                if key not in ["id", "name", "label"] and isinstance(value, dict):
+                    step_type = key
+                    step_data = value
+                    break
+
+            if not step_type or not step_data:
+                continue
+
+            # Check for Python expressions based on step type
+            if step_type == "evaluate":
+                # In evaluate steps, all values are potentially expressions
+                for eval_key, eval_value in step_data.items():
+                    if isinstance(eval_value, str) and (
+                        eval_value.startswith(("$ ", "_")) or "{{" in eval_value or eval_value.strip() == "_"
+                    ):
+                        issues = validate_py_expression(eval_value)
+                        if any(issues.values()):  # If we found any issues
+                            step_issues.append({
+                                "location": f"{step_type}.{eval_key}",
+                                "expression": eval_value,
+                                "issues": issues
+                            })
+
+            elif step_type in ["if", "match"]:
+                # Check condition expression
+                if "case" in step_data and isinstance(step_data["case"], str):
+                    issues = validate_py_expression(step_data["case"])
+                    if any(issues.values()):
+                        step_issues.append({
+                            "location": f"{step_type}.case",
+                            "expression": step_data["case"],
+                            "issues": issues
+                        })
+
+                # For match statements, check all cases in "cases" array
+                if "cases" in step_data and isinstance(step_data["cases"], list):
+                    for case_idx, case_item in enumerate(step_data["cases"]):
+                        if "case" in case_item and isinstance(case_item["case"], str) and case_item["case"] != "_":
+                            issues = validate_py_expression(case_item["case"])
+                            if any(issues.values()):
+                                step_issues.append({
+                                    "location": f"{step_type}.cases[{case_idx}].case",
+                                    "expression": case_item["case"],
+                                    "issues": issues
+                                })
+
+            elif step_type in ["foreach", "map"]:
+                # Check "in" expression for iterable
+                if "in" in step_data and isinstance(step_data["in"], str):
+                    issues = validate_py_expression(step_data["in"])
+                    if any(issues.values()):
+                        step_issues.append({
+                            "location": f"{step_type}.in",
+                            "expression": step_data["in"],
+                            "issues": issues
+                        })
+
+            elif step_type == "tool":
+                # Check arguments that might be expressions
+                if "arguments" in step_data:
+                    for arg_key, arg_value in step_data["arguments"].items():
+                        if isinstance(arg_value, str) and (
+                            arg_value.startswith(("$ ", "_")) or "{{" in arg_value or arg_value.strip() == "_"
+                        ):
+                            issues = validate_py_expression(arg_value)
+                            if any(issues.values()):
+                                step_issues.append({
+                                    "location": f"{step_type}.arguments.{arg_key}",
+                                    "expression": arg_value,
+                                    "issues": issues
+                                })
+
+            # Store issues for this step if we found any
+            if step_issues:
+                validation_results[workflow_name][str(step_idx)] = step_issues
+
+    return validation_results

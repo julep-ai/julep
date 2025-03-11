@@ -25,7 +25,7 @@ class CreateExecutionRequest(BaseModel):
     """
     The output of the execution if it succeeded
     """
-    error: str | None = None
+    error: Annotated[str | None, Field(max_length=5000)] = None
     """
     The error of the execution if it failed
     """
@@ -63,7 +63,7 @@ class Execution(BaseModel):
     """
     The output of the execution if it succeeded
     """
-    error: str | None = None
+    error: Annotated[str | None, Field(max_length=5000)] = None
     """
     The error of the execution if it failed
     """
@@ -170,7 +170,7 @@ class StopExecutionRequest(UpdateExecutionRequest):
         populate_by_name=True,
     )
     status: Literal["cancelled"] = "cancelled"
-    reason: str | None = None
+    reason: Annotated[str | None, Field(max_length=500)] = None
     """
     The reason for stopping the execution
     """

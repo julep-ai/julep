@@ -13,7 +13,7 @@ class JinjaTemplate(RootModel[str]):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: str
+    root: Annotated[str, Field(max_length=10000)]
     """
     A valid jinja template.
     """
@@ -50,7 +50,7 @@ class PyExpression(RootModel[str]):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: str
+    root: Annotated[str, Field(max_length=5000)]
     """
     A simple python expression compatible with SimpleEval.
     """

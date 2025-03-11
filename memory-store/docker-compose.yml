@@ -4,10 +4,10 @@ services:
     image: timescale/timescaledb-ha:pg17
 
     environment:
-      - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-postgres}
+      - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-julep_secure_password}
       - OPENAI_API_KEY=${OPENAI_API_KEY:?OPENAI_API_KEY is required}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - memory_store_data:/home/postgres/pgdata/data
 
@@ -22,16 +22,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
 
   vectorizer-worker:
     image: timescale/pgai-vectorizer-worker:latest
     environment:
-      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres
+      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-julep_secure_password}@memory-store:5432/postgres
       - OPENAI_API_KEY=${OPENAI_API_KEY:?OPENAI_API_KEY is required}
     command: [ "--poll-interval", "5s" ]
     depends_on:
       memory-store:
         condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
   migration:
     image: migrate/migrate:latest

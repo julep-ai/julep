@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
+from .Common import JinjaTemplate, PyExpression
 from .Tools import (
     ChosenBash20241022,
     ChosenComputer20241022,
@@ -22,7 +23,7 @@ class CaseThen(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    case: Literal["_"] | str
+    case: PyExpression | Literal["_"]
     """
     The condition to evaluate
     """
@@ -48,7 +49,7 @@ class CaseThenUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    case: Literal["_"] | str
+    case: PyExpression | Literal["_"]
     """
     The condition to evaluate
     """
@@ -74,7 +75,7 @@ class Content(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    text: str
+    text: Annotated[str, Field(max_length=10000)]
     """
     A valid jinja template.
     """
@@ -171,7 +172,7 @@ class CreateTaskRequest(BaseModel):
     """
     The canonical name of the task.
     """
-    description: str = ""
+    description: Annotated[str, Field(max_length=1000)] = ""
     """
     The description of the task.
     """
@@ -234,7 +235,7 @@ class Else(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    over: str
+    over: Annotated[str, Field(max_length=5000)]
     """
     The variable to iterate over
     """
@@ -242,7 +243,7 @@ class Else(BaseModel):
     """
     The steps to run for each iteration
     """
-    reduce: str | None = None
+    reduce: Annotated[str | None, Field(max_length=5000)] = None
     """
     The expression to reduce the results.
     If not provided, the results are collected and returned as a list.
@@ -276,7 +277,7 @@ class ElseModel(BaseModel):
     """
     Discriminator property for BaseWorkflowStep.
     """
-    over: str
+    over: Annotated[str, Field(max_length=5000)]
     """
     The variable to iterate over
     """
@@ -292,7 +293,7 @@ class ElseModel(BaseModel):
     """
     The steps to run for each iteration
     """
-    reduce: str | None = None
+    reduce: Annotated[str | None, Field(max_length=5000)] = None
     """
     The expression to reduce the results.
     If not provided, the results are collected and returned as a list.
@@ -322,7 +323,7 @@ class ErrorWorkflowStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    error: str
+    error: Annotated[str, Field(max_length=1000, min_length=1)]
     """
     The error message
     """
@@ -344,7 +345,7 @@ class EvaluateStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    evaluate: dict[str, dict[str, Any] | str]
+    evaluate: dict[str, PyExpression | dict[str, Any]]
     """
     The expression to evaluate
     """
@@ -354,7 +355,7 @@ class ForeachDo(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    in_: Annotated[str, Field(alias="in")]
+    in_: Annotated[str, Field(alias="in", max_length=5000)]
     """
     The variable to iterate over.
     VALIDATION: Should NOT return more than 1000 elements.
@@ -378,7 +379,7 @@ class ForeachDoUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    in_: Annotated[str, Field(alias="in")]
+    in_: Annotated[str, Field(alias="in", max_length=5000)]
     """
     The variable to iterate over.
     VALIDATION: Should NOT return more than 1000 elements.
@@ -476,7 +477,7 @@ class IfElseWorkflowStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    if_: Annotated[str, Field(alias="if")]
+    if_: Annotated[str, Field(alias="if", max_length=5000)]
     """
     The condition to evaluate
     """
@@ -540,7 +541,7 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
     """
     Discriminator property for BaseWorkflowStep.
     """
-    if_: Annotated[str, Field(alias="if")]
+    if_: Annotated[str, Field(alias="if", max_length=5000)]
     """
     The condition to evaluate
     """
@@ -622,7 +623,7 @@ class LogStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    log: str
+    log: Annotated[str, Field(max_length=10000)]
     """
     The value to log
     """
@@ -644,7 +645,7 @@ class Main(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    over: str
+    over: Annotated[str, Field(max_length=5000)]
     """
     The variable to iterate over
     """
@@ -652,7 +653,7 @@ class Main(BaseModel):
     """
     The steps to run for each iteration
     """
-    reduce: str | None = None
+    reduce: Annotated[str | None, Field(max_length=5000)] = None
     """
     The expression to reduce the results.
     If not provided, the results are collected and returned as a list.
@@ -682,7 +683,7 @@ class MainModel(BaseModel):
     """
     Discriminator property for BaseWorkflowStep.
     """
-    over: str
+    over: Annotated[str, Field(max_length=5000)]
     """
     The variable to iterate over
     """
@@ -698,7 +699,7 @@ class MainModel(BaseModel):
     """
     The steps to run for each iteration
     """
-    reduce: str | None = None
+    reduce: Annotated[str | None, Field(max_length=5000)] = None
     """
     The expression to reduce the results.
     If not provided, the results are collected and returned as a list.
@@ -791,7 +792,7 @@ class PatchTaskRequest(BaseModel):
     """
     The canonical name of the task.
     """
-    description: str = ""
+    description: Annotated[str, Field(max_length=1000)] = ""
     """
     The description of the task.
     """
@@ -845,7 +846,10 @@ class PromptItem(BaseModel):
     """
     tool_call_id: str | None = None
     content: Annotated[
-        list[str] | list[Content | ContentModel | ContentModel1] | str | None,
+        JinjaTemplate
+        | list[JinjaTemplate]
+        | list[Content | ContentModel | ContentModel1]
+        | None,
         Field(...),
     ]
     """
@@ -887,7 +891,7 @@ class PromptStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    prompt: list[PromptItem] | str
+    prompt: JinjaTemplate | list[PromptItem]
     """
     The prompt to run
     """
@@ -935,7 +939,7 @@ class PromptStepUpdateItem(BaseModel):
     """
     Discriminator property for BaseWorkflowStep.
     """
-    prompt: list[PromptItem] | str
+    prompt: JinjaTemplate | list[PromptItem]
     """
     The prompt to run
     """
@@ -984,7 +988,13 @@ class ReturnStep(BaseModel):
     The label of this step for referencing it from other steps
     """
     return_: Annotated[
-        dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str],
+        dict[
+            str,
+            PyExpression
+            | list[PyExpression]
+            | dict[str, PyExpression]
+            | list[dict[str, PyExpression]],
+        ],
         Field(alias="return"),
     ]
     """
@@ -1006,7 +1016,7 @@ class SetStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    set: dict[str, dict[str, Any] | str]
+    set: dict[str, PyExpression | dict[str, Any]]
     """
     The value to set
     """
@@ -1060,7 +1070,7 @@ class Source(BaseModel):
     )
     type: Literal["base64"] = "base64"
     media_type: str
-    data: str
+    data: Annotated[str, Field(max_length=10000)]
     """
     A valid jinja template.
     """
@@ -1125,7 +1135,7 @@ class Task(BaseModel):
     """
     The canonical name of the task.
     """
-    description: str = ""
+    description: Annotated[str, Field(max_length=1000)] = ""
     """
     The description of the task.
     """
@@ -1207,7 +1217,7 @@ class Then(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    over: str
+    over: Annotated[str, Field(max_length=5000)]
     """
     The variable to iterate over
     """
@@ -1215,7 +1225,7 @@ class Then(BaseModel):
     """
     The steps to run for each iteration
     """
-    reduce: str | None = None
+    reduce: Annotated[str | None, Field(max_length=5000)] = None
     """
     The expression to reduce the results.
     If not provided, the results are collected and returned as a list.
@@ -1249,7 +1259,7 @@ class ThenModel(BaseModel):
     """
     Discriminator property for BaseWorkflowStep.
     """
-    over: str
+    over: Annotated[str, Field(max_length=5000)]
     """
     The variable to iterate over
     """
@@ -1265,7 +1275,7 @@ class ThenModel(BaseModel):
     """
     The steps to run for each iteration
     """
-    reduce: str | None = None
+    reduce: Annotated[str | None, Field(max_length=5000)] = None
     """
     The expression to reduce the results.
     If not provided, the results are collected and returned as a list.
@@ -1372,7 +1382,7 @@ class UpdateTaskRequest(BaseModel):
     """
     The canonical name of the task.
     """
-    description: str = ""
+    description: Annotated[str, Field(max_length=1000)] = ""
     """
     The description of the task.
     """
@@ -1419,7 +1429,13 @@ class WaitForInputInfo(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    info: dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
+    info: dict[
+        str,
+        PyExpression
+        | list[PyExpression]
+        | dict[str, PyExpression]
+        | list[dict[str, PyExpression]],
+    ]
     """
     Any additional info or data
     """
@@ -1467,7 +1483,14 @@ class YieldStep(BaseModel):
     VALIDATION: Should resolve to a defined subworkflow.
     """
     arguments: (
-        dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str] | Literal["_"]
+        dict[
+            str,
+            PyExpression
+            | list[PyExpression]
+            | dict[str, PyExpression]
+            | list[dict[str, PyExpression]],
+        ]
+        | Literal["_"]
     ) = "_"
     """
     The input parameters for the subworkflow (defaults to last step output)

@@ -26,12 +26,16 @@ model Agent {
     canonical_name?: canonicalName;
 
     /** About the agent */
+    @maxLength(1000)
     about: string = "";
 
     /** Model name to use (gpt-4-turbo, gemini-nano etc) */
+    @minLength(1)
+    @maxLength(100)
     "model": string = "";
 
     /** Instructions for the agent */
+    @maxLength(10000)
     instructions: string | string[] = #[];
 
     /** Default settings for all sessions created by this agent */

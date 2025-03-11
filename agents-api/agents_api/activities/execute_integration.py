@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 from beartype import beartype
@@ -54,9 +55,11 @@ async def execute_integration(
     setup = merged_tool_setup.get(tool_name, {}) | (integration.setup or {}) | setup
 
     try:
+        # Handle dummy provider as a special case
         if integration.provider == "dummy":
             return arguments
 
+        # Call the integration service
         integration_service_response = await integrations.run_integration_service(
             provider=integration.provider,
             setup=setup,
@@ -64,22 +67,49 @@ async def execute_integration(
             arguments=arguments,
         )
 
+        # Check for error in the response
         if integration_service_response.get("error"):
+            error_message = integration_service_response["error"]
+            integration_str = (
+                f"{integration.provider}.{integration.method}"
+                if integration.method
+                else integration.provider
+            )
+
+            # Log the error with more context
+            if activity.in_activity():
+                activity.logger.error(
+                    f"Integration {integration_str} returned error: {error_message}. "
+                    f"Arguments: {json.dumps(arguments)[:200]}..."
+                )
+
+            # Raise a proper exception with details
             raise IntegrationExecutionException(
                 integration=integration,
-                error=integration_service_response["error"],
+                error=error_message,
             )
 
         return integration_service_response
 
-    except BaseException as e:
-        if activity.in_activity():
-            integration_str = integration.provider + (
-                "." + integration.method if integration.method else ""
-            )
-            activity.logger.error(f"Error in execute_integration {integration_str}: {e}")
-
+    except IntegrationExecutionException:
+        # Re-raise our custom exceptions directly
         raise
+    except Exception as e:
+        # For all other exceptions, add context
+        integration_str = integration.provider + (
+            "." + integration.method if integration.method else ""
+        )
+
+        if activity.in_activity():
+            activity.logger.error(
+                f"Error executing integration {integration_str}: {e!s}. Tool: {tool_name}"
+            )
+
+        # Re-raise with better context
+        raise IntegrationExecutionException(
+            integration=integration,
+            error=f"Failed to execute {integration_str}: {e!s}",
+        ) from e
 
 
 mock_execute_integration = execute_integration

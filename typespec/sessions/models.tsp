@@ -116,13 +116,16 @@ model Session {
     agents?: uuid[];
 
     /** Session situation */
+    @maxLength(5000)
     situation: string | null = null;
 
     /** A specific system prompt template that sets the background for this session */
+    @maxLength(10000)
     system_template?: string;
 
     /** Summary (null at the beginning) - generated automatically after every interaction */
     @visibility("read")
+    @maxLength(10000)
     summary: string | null = null;
 
     /** Render system and assistant message content as jinja templates */

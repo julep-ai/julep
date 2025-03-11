@@ -360,6 +360,8 @@ model ErrorWorkflowStep extends BaseWorkflowStep<"error"> {
 
 model ErrorWorkflowStepDef {
     /** The error message */
+    @minLength(1)
+    @maxLength(1000)
     error: string;
 }
 

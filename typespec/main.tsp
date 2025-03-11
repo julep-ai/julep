@@ -1,6 +1,7 @@
 import "@typespec/http";
 import "@typespec/openapi";
 import "@typespec/versioning";
+import "@typespec/rest";
 
 import "./agents";
 import "./chat";
@@ -18,6 +19,7 @@ import "./versions.tsp";
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
 using TypeSpec.Versioning;
+using TypeSpec.Rest;
 
 using Versions;
 

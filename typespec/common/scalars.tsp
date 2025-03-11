@@ -1,3 +1,9 @@
+import "@typespec/http";
+import "@typespec/rest";
+
+using TypeSpec.Http;
+using TypeSpec.Rest;
+
 namespace Common;
 
 //
@@ -67,9 +73,11 @@ alias entrySource =
     | "meta";
 
 /** A simple python expression compatible with SimpleEval. */
+@maxLength(5000)
 scalar PyExpression extends string;
 
 /** A valid jinja template. */
+@maxLength(10000)
 scalar JinjaTemplate extends string;
 
 /**

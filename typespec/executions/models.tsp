@@ -54,6 +54,7 @@ model Execution {
     output?: unknown;
 
     /** The error of the execution if it failed */
+    @maxLength(5000)
     error?: string;
 
     ...HasTimestamps;
@@ -76,6 +77,7 @@ model StopExecutionRequest extends UpdateExecutionRequest {
     status: "cancelled" = "cancelled";
 
     /** The reason for stopping the execution */
+    @maxLength(500)
     reason: string | null = null;
 }
 

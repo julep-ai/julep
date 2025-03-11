@@ -1,11 +1,13 @@
 import "@typespec/http";
 import "@typespec/sse";
+import "@typespec/rest";
 
 import "./scalars.tsp";
 import "./types.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.SSE;
+using TypeSpec.Rest;
 
 namespace Common;
 

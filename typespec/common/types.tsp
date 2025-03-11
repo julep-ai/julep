@@ -1,10 +1,12 @@
 import "@typespec/events";
 import "@typespec/http";
 import "@typespec/openapi";
+import "@typespec/rest";
 
 using TypeSpec.Events;
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
+using TypeSpec.Rest;
 
 namespace Common;
 

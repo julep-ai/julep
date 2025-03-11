@@ -109,10 +109,18 @@ async def continue_as_child(
             ]),
         )
     except Exception as e:
+        # Unwrap the exception to get the root cause
+        original_e = e
         while isinstance(e, ChildWorkflowError) and getattr(e, "__cause__", None):
             e = e.__cause__
-        e.transitioned = True
-        raise e
+
+        # Create a new ApplicationError that includes the transition information
+        # instead of modifying the exception object directly
+        msg = f"Error in child workflow: {e}"
+        error = ApplicationError(msg, details={"transitioned": True})
+
+        # Preserve the original exception context
+        raise error from original_e
 
 
 async def execute_switch_branch(
@@ -318,8 +326,23 @@ async def execute_map_reduce_step_parallel(
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     results = initial
 
-    parallelism = min(parallelism, task_max_parallelism)
-    assert parallelism > 1, "Parallelism must be greater than 1"
+    # Ensure parallelism is at least 1 and not greater than max
+    parallelism = max(1, min(parallelism, task_max_parallelism))
+
+    # If parallelism is 1, we're effectively running sequentially
+    if parallelism == 1:
+        workflow.logger.warn("Parallelism is set to 1, falling back to sequential execution")
+        # Fall back to sequential map-reduce
+        return await execute_map_reduce_step(
+            context=context,
+            execution_input=execution_input,
+            map_defn=map_defn,
+            items=items,
+            current_input=current_input,
+            user_state=user_state,
+            initial=initial,
+            reduce=reduce,
+        )
 
     # Modify reduce expression to use reduce function (since we are passing a list)
     reduce = "results + [_]" if reduce is None else reduce

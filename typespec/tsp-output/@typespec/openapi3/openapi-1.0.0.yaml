@@ -1488,10 +1488,13 @@ components:
           description: Canonical name of the agent
         about:
           type: string
+          maxLength: 1000
           description: About the agent
           default: ''
         model:
           type: string
+          minLength: 1
+          maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
         instructions:
@@ -1500,6 +1503,7 @@ components:
             - type: array
               items:
                 type: string
+          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -1581,10 +1585,13 @@ components:
           description: Canonical name of the agent
         about:
           type: string
+          maxLength: 1000
           description: About the agent
           default: ''
         model:
           type: string
+          minLength: 1
+          maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
         instructions:
@@ -1593,6 +1600,7 @@ components:
             - type: array
               items:
                 type: string
+          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -1678,10 +1686,13 @@ components:
           description: Canonical name of the agent
         about:
           type: string
+          maxLength: 1000
           description: About the agent
           default: ''
         model:
           type: string
+          minLength: 1
+          maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
         instructions:
@@ -1690,6 +1701,7 @@ components:
             - type: array
               items:
                 type: string
+          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -1767,10 +1779,13 @@ components:
           description: Canonical name of the agent
         about:
           type: string
+          maxLength: 1000
           description: About the agent
           default: ''
         model:
           type: string
+          minLength: 1
+          maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
         instructions:
@@ -1779,6 +1794,7 @@ components:
             - type: array
               items:
                 type: string
+          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -1861,10 +1877,13 @@ components:
           description: Canonical name of the agent
         about:
           type: string
+          maxLength: 1000
           description: About the agent
           default: ''
         model:
           type: string
+          minLength: 1
+          maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
         instructions:
@@ -1873,6 +1892,7 @@ components:
             - type: array
               items:
                 type: string
+          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -2863,9 +2883,11 @@ components:
         - $ref: '#/components/schemas/Chat.BaseTokenLogProb'
     Common.JinjaTemplate:
       type: string
+      maxLength: 10000
       description: A valid jinja template.
     Common.PyExpression:
       type: string
+      maxLength: 5000
       description: A simple python expression compatible with SimpleEval.
     Common.ResourceDeletedResponse:
       type: object
@@ -3615,6 +3637,7 @@ components:
           description: The output of the execution if it succeeded
         error:
           type: string
+          maxLength: 5000
           description: The error of the execution if it failed
         metadata:
           type: object
@@ -3655,6 +3678,7 @@ components:
           description: The output of the execution if it succeeded
         error:
           type: string
+          maxLength: 5000
           description: The error of the execution if it failed
         created_at:
           type: string
@@ -3703,6 +3727,7 @@ components:
         reason:
           type: string
           nullable: true
+          maxLength: 500
           description: The reason for stopping the execution
           default: null
       allOf:
@@ -4068,10 +4093,12 @@ components:
         situation:
           type: string
           nullable: true
+          maxLength: 5000
           description: Session situation
           default: null
         system_template:
           type: string
+          maxLength: 10000
           description: A specific system prompt template that sets the background for this session
         render_templates:
           type: boolean
@@ -4144,10 +4171,12 @@ components:
         situation:
           type: string
           nullable: true
+          maxLength: 5000
           description: Session situation
           default: null
         system_template:
           type: string
+          maxLength: 10000
           description: A specific system prompt template that sets the background for this session
         render_templates:
           type: boolean
@@ -4305,10 +4334,12 @@ components:
         situation:
           type: string
           nullable: true
+          maxLength: 5000
           description: Session situation
           default: null
         system_template:
           type: string
+          maxLength: 10000
           description: A specific system prompt template that sets the background for this session
         render_templates:
           type: boolean
@@ -4368,14 +4399,17 @@ components:
         situation:
           type: string
           nullable: true
+          maxLength: 5000
           description: Session situation
           default: null
         system_template:
           type: string
+          maxLength: 10000
           description: A specific system prompt template that sets the background for this session
         summary:
           type: string
           nullable: true
+          maxLength: 10000
           description: Summary (null at the beginning) - generated automatically after every interaction
           default: null
           readOnly: true
@@ -4518,10 +4552,12 @@ components:
         situation:
           type: string
           nullable: true
+          maxLength: 5000
           description: Session situation
           default: null
         system_template:
           type: string
+          maxLength: 10000
           description: A specific system prompt template that sets the background for this session
         render_templates:
           type: boolean
@@ -4689,6 +4725,7 @@ components:
           description: The canonical name of the task.
         description:
           type: string
+          maxLength: 1000
           description: The description of the task.
           default: ''
         main:
@@ -4883,6 +4920,8 @@ components:
           readOnly: true
         error:
           type: string
+          minLength: 1
+          maxLength: 1000
           description: The error message
       allOf:
         - type: object
@@ -5544,6 +5583,7 @@ components:
           description: The canonical name of the task.
         description:
           type: string
+          maxLength: 1000
           description: The description of the task.
           default: ''
         main:
@@ -6360,6 +6400,7 @@ components:
           description: The canonical name of the task.
         description:
           type: string
+          maxLength: 1000
           description: The description of the task.
           default: ''
         main:
@@ -6653,6 +6694,7 @@ components:
           description: The canonical name of the task.
         description:
           type: string
+          maxLength: 1000
           description: The description of the task.
           default: ''
         main:
@@ -6969,6 +7011,7 @@ components:
         url:
           type: string
           format: uri
+          pattern: ^https?://[\w.-]+(:\d+)?(/[\w.-]*)*/?$
           description: The URL to call
         schema:
           type: object
@@ -6981,6 +7024,7 @@ components:
           description: The headers to send with the request
         content:
           type: string
+          maxLength: 1048576
           description: The content as base64 to send with the request
         data:
           type: object
@@ -7011,7 +7055,9 @@ components:
         timeout:
           type: integer
           format: uint8
-          description: The timeout for the request
+          minimum: 1
+          maximum: 60
+          description: The timeout for the request (in seconds)
       description: API call definition
     Tools.ApiCallDefUpdate:
       type: object
@@ -7032,6 +7078,7 @@ components:
         url:
           type: string
           format: uri
+          pattern: ^https?://[\w.-]+(:\d+)?(/[\w.-]*)*/?$
           description: The URL to call
         schema:
           type: object
@@ -7044,6 +7091,7 @@ components:
           description: The headers to send with the request
         content:
           type: string
+          maxLength: 1048576
           description: The content as base64 to send with the request
         data:
           type: object
@@ -7074,7 +7122,9 @@ components:
         timeout:
           type: integer
           format: uint8
-          description: The timeout for the request
+          minimum: 1
+          maximum: 60
+          description: The timeout for the request (in seconds)
       description: API call definition
     Tools.ArxivIntegrationDef:
       type: object
@@ -8227,6 +8277,8 @@ components:
           description: Type of the tool
         description:
           type: string
+          minLength: 1
+          maxLength: 1000
           description: Description of the tool
         function:
           allOf:
@@ -8658,6 +8710,8 @@ components:
           description: Type of the tool
         description:
           type: string
+          minLength: 1
+          maxLength: 1000
           description: Description of the tool
         function:
           allOf:
@@ -9081,6 +9135,8 @@ components:
           description: Type of the tool
         description:
           type: string
+          minLength: 1
+          maxLength: 1000
           description: Description of the tool
         function:
           allOf:
@@ -9176,6 +9232,8 @@ components:
           description: Type of the tool
         description:
           type: string
+          minLength: 1
+          maxLength: 1000
           description: Description of the tool
         function:
           allOf:
