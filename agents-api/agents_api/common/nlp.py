@@ -50,8 +50,8 @@ def extract_keywords(doc: Doc, top_n: int = 25, split_chunks: bool = True) -> li
         "QUANTITY",  # Measurements, as of weight or distance.
         "ORDINAL",  # “first”, “second”, etc.
         "CARDINAL",  # Numerals that do not fall under another type.
-        "DATE",        # Absolute or relative dates or periods.
-        "MONEY",       # Monetary values, including unit.
+        "DATE",  # Absolute or relative dates or periods.
+        "MONEY",  # Monetary values, including unit.
         # "PERSON",      # People, including fictional.
         # "NORP",        # Nationalities or religious or political groups.
         # "FAC",         # Buildings, airports, highways, bridges, etc.
