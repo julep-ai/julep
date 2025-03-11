@@ -36,7 +36,7 @@ def _():
     query_embedding = np.array([0.3, 0.3, 0.3])
 
     # Test with MMR strength = 0.5
-    result = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=0)
+    result = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=0.0)
     assert len(result) == 3
 
     # Test with not enough docs with embeddings (only 1, minimum required is 2 for MMR to work)
@@ -82,14 +82,14 @@ def _():
     query_embedding = np.array([1.0, 0.0, 0.0])
 
     # With mmr_strength = 0, should return docs in order of similarity to query
-    result_relevance = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=0)
+    result_relevance = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=0.0)
     assert len(result_relevance) == 3
     assert result_relevance[0].id == UUID("550e8400-e29b-41d4-a716-446655440001")
     assert result_relevance[1].id == UUID("550e8400-e29b-41d4-a716-446655440002")
     assert result_relevance[2].id == UUID("550e8400-e29b-41d4-a716-446655440003")
 
     # With mmr_strength = 1, should prioritize diversity
-    result_diverse = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=1)
+    result_diverse = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=1.0)
     assert len(result_diverse) == 3
     # The first document should still be the most relevant one
     assert result_diverse[0].id == UUID("550e8400-e29b-41d4-a716-446655440001")

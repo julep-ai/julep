@@ -4,6 +4,7 @@ import logging
 from typing import TypeVar
 
 import numpy as np
+from beartype import beartype
 
 from ...autogen.openapi_model import DocReference
 
@@ -63,6 +64,7 @@ def _cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
         return similarity
 
 
+@beartype
 def maximal_marginal_relevance(
     query_embedding: np.ndarray,
     embedding_list: list,
@@ -109,6 +111,7 @@ def maximal_marginal_relevance(
     return idxs
 
 
+@beartype
 def apply_mmr_to_docs(
     docs: list[DocReference], query_embedding: np.ndarray, limit: int, mmr_strength: float
 ) -> list[DocReference]:
