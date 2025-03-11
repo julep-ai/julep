@@ -215,7 +215,7 @@ async def chat(
                         error_response = {
                             "id": str(response_id),
                             "created_at": created_at.isoformat(),
-                            "error": f"Error processing chunk: {e!s}",
+                            "error": "An error occurred while processing the chunk.",
                         }
                         yield json.dumps(error_response) + "\n"
                         # Continue with next chunk rather than crashing the stream
@@ -247,6 +247,13 @@ async def chat(
                         import logging
 
                         logging.error(f"Failed to save complete streamed response: {e!s}")
+                        # Handle the error without exposing details to the user
+                        error_response = {
+                            "id": str(response_id),
+                            "created_at": created_at.isoformat(),
+                            "error": "An error occurred while saving the streamed response.",
+                        }
+                        yield json.dumps(error_response) + "\n"
             except Exception as e:
                 # Handle errors in the streaming process
                 import logging
@@ -255,7 +262,7 @@ async def chat(
                 error_response = {
                     "id": str(response_id),
                     "created_at": created_at.isoformat(),
-                    "error": f"Streaming error: {e!s}",
+                    "error": "An error occurred during streaming.",
                 }
                 yield json.dumps(error_response) + "\n"
 
