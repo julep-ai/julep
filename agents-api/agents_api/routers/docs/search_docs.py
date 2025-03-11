@@ -69,7 +69,7 @@ async def search_user_docs(
 
     return DocSearchResponse(
         docs=docs,
-        time=time_taken,
+        time=max(time_taken, 0.01),
     )
 
 
@@ -122,5 +122,5 @@ async def search_agent_docs(
 
     return DocSearchResponse(
         docs=docs,
-        time=time_taken,
+        time=max(time_taken, 0.01),
     )
