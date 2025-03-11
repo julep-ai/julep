@@ -35,7 +35,7 @@ def _():
 
     query_embedding = np.array([0.3, 0.3, 0.3])
 
-    # Test with MMR strength = 0.5
+    # Test with MMR strength = 0.0
     result = apply_mmr_to_docs(docs, query_embedding, limit=3, mmr_strength=0.0)
     assert len(result) == 3
 
