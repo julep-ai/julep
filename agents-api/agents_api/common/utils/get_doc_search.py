@@ -1,8 +1,8 @@
 from typing import Any
 
+from beartype import beartype
 from fastapi import HTTPException
 from langcodes import Language
-from beartype import beartype
 
 from ...autogen.openapi_model import (
     HybridDocSearchRequest,
