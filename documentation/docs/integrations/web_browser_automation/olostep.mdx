@@ -1,0 +1,184 @@
+---
+title: Olostep Integration
+description: Web scraping with Olostep's advanced capabilities
+---
+
+# Olostep Integration
+
+Olostep provides fast and reliable web scraping capabilities with advanced features:
+- 1-6 second response time
+- Built-in bot detection avoidance
+- Parallel processing up to 100K requests
+- Multiple content formats
+
+## Configuration
+
+To use Olostep integration, provide the following setup:
+
+```typescript
+{
+  "provider": "olostep",
+  "setup": {
+    "olostep_api_key": "your_api_key"
+  }
+}
+```
+
+## Methods
+
+### scrape
+Scrapes content from a given URL with advanced configurations.
+
+#### Arguments
+
+```typescript
+{
+  "url": "https://example.com",
+  "params": {
+    "formats": ["markdown", "html"],
+    "transformer": "postlight",
+    "remove_css_selectors": "default",
+    "screen_size": {
+      "screen_type": "desktop"
+    },
+    "wait_before_scraping": 1000,
+    "actions": [
+      {
+        "type": "wait",
+        "milliseconds": 1000
+      },
+      {
+        "type": "scroll",
+        "position": "bottom"
+      }
+    ]
+  }
+}
+```
+
+#### Response
+
+```typescript
+{
+  "result": [
+    {
+      "url": "https://example.com",
+      "content": "Extracted content in specified format",
+      "status": "success",
+      "metadata": {
+        "timestamp": 1738850463
+      }
+    }
+  ]
+}
+```
+
+## Examples
+
+### Basic Usage
+
+```yaml
+tools:
+- name: olostep_crawler
+  type: integration
+  integration:
+    provider: olostep
+    setup:
+      olostep_api_key: "{{env.OLOSTEP_API_KEY}}"
+
+main:
+- tool: olostep_crawler
+  arguments:
+    url: "https://example.com"
+    params:
+      formats: ["markdown"]
+```
+
+### Advanced Configuration
+
+```yaml
+tools:
+- name: olostep_crawler
+  type: integration
+  integration:
+    provider: olostep
+    setup:
+      olostep_api_key: "{{env.OLOSTEP_API_KEY}}"
+
+main:
+- tool: olostep_crawler
+  arguments:
+    url: "https://example.com"
+    params:
+      formats: ["markdown", "html"]
+      transformer: "postlight"
+      screen_size:
+        screen_type: "desktop"
+      actions:
+        - type: "wait"
+          milliseconds: 1000
+        - type: "scroll"
+          position: "bottom"
+```
+
+## Features
+
+### Content Formats
+
+- **markdown**: Clean, formatted markdown text
+- **html**: Raw HTML content
+- **text**: Plain text extraction
+- **parser_extract**: Structured data extraction
+- **llm_extract**: AI-enhanced content extraction
+
+### Page Actions
+
+- **wait**: Wait for a specified duration
+- **scroll**: Scroll to various positions
+- **click**: Click on elements
+- **fill**: Fill form inputs
+
+### Screen Sizes
+
+- **desktop**: 1920x1080
+- **mobile**: 414x896
+- **default**: 768x1024
+
+### Content Cleaning
+
+- Built-in ad removal
+- Navigation/footer removal
+- Custom selector removal
+- Class-based filtering
+
+## Error Handling
+
+Common error responses and their meanings:
+
+| Status | Description |
+|--------|-------------|
+| 200 | Successful scrape |
+| 400 | Invalid parameters |
+| 401 | Authentication failed |
+| 429 | Rate limit exceeded |
+| 500 | Server error |
+
+## Best Practices
+
+### Content Format Selection
+
+- Use **markdown** for clean, readable content
+- Use **html** when markup structure is needed
+
+### Performance Optimization
+
+- Set appropriate wait times
+- Use selective content removal
+- Enable parallel processing for multiple URLs
+
+## Support
+
+For issues or questions about the Olostep integration:
+
+- **[Documentation](https://docs.olostep.com/get-started/welcome)**
+- **[Support Email](mailto:info@olostep.com)**

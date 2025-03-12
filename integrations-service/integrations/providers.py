@@ -50,6 +50,8 @@ from .models import (
     WikipediaSearchOutput,
 )
 
+from .utils.integrations.olostep import scrape
+
 wikipedia = BaseProvider(
     provider="wikipedia",
     setup=None,
@@ -85,6 +87,25 @@ weather = BaseProvider(
         docs="https://www.weatherapi.com/docs/",
         icon="https://www.weatherapi.com/favicon.ico",
         friendly_name="Weather API",
+    ),
+)
+
+olostep = BaseProvider(
+    provider="olostep",
+    setup=OlostepSetup,
+    methods=[
+        BaseProviderMethod(
+            method="scrape",
+            description="Scrape website content using Olostep API",
+            arguments=OlostepScrapeArguments,
+            output=OlostepOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://olostep.com/",
+        docs="https://docs.olostep.com/",
+        icon="https://www.olostep.com/images/olostep-logo-cropped.svg",
+        friendly_name="Olostep",
     ),
 )
 
@@ -322,4 +343,5 @@ available_providers: dict[str, BaseProvider] = {
     "ffmpeg": ffmpeg,
     "cloudinary": cloudinary,
     "arxiv": arxiv,
+    "olostep": olostep,
 }
