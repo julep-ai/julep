@@ -59,8 +59,5 @@ from .spider import (
 from .unstructured import (
     UnstructuredParseOutput as UnstructuredParseOutput,
 )
-from .unstructured import (
-    UnstructuredResponse as UnstructuredResponse,
-)
 from .weather import WeatherGetOutput as WeatherGetOutput
 from .wikipedia import WikipediaSearchOutput as WikipediaSearchOutput

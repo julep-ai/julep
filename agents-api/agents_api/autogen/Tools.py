@@ -2002,7 +2002,7 @@ class UnstructuredPartitionArguments(BaseModel):
     """
     File Name. If not provided, a random name will be generated.
     """
-    file: str | list[str]
+    file: str
     """
     The base64 string of the file, which can be a single string or a list of strings
     """
@@ -2024,7 +2024,7 @@ class UnstructuredPartitionArgumentsUpdate(BaseModel):
     """
     File Name. If not provided, a random name will be generated.
     """
-    file: str | list[str] | None = None
+    file: str | None = None
     """
     The base64 string of the file, which can be a single string or a list of strings
     """

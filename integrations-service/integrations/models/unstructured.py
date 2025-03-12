@@ -1,18 +1,10 @@
 from typing import Any
 
-from pydantic import Field
-
-from .base_models import BaseModel, BaseOutput
+from .base_models import BaseOutput
 
 
-class UnstructuredResponse(BaseModel):
+class UnstructuredParseOutput(BaseOutput):
     content_type: str
     status_code: int
     csv_elements: str | None = None
     content: list[dict[str, Any]] | None = None
-
-
-class UnstructuredParseOutput(BaseOutput):
-    result: list[UnstructuredResponse] = Field(
-        ..., description="The responses from the unstructured parse"
-    )

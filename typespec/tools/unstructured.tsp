@@ -31,7 +31,7 @@ model UnstructuredPartitionArguments {
     filename?: string;
 
     /** The base64 string of the file, which can be a single string or a list of strings */
-    file: string | Array<string>;
+    file: string;
 
     /** Additional partition parameters */
     partition_params?: Record<unknown>;

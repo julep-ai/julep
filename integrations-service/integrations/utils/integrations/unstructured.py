@@ -1,4 +1,3 @@
-import asyncio
 import base64
 import uuid
 
@@ -11,7 +10,7 @@ from ...autogen.Tools import UnstructuredPartitionArguments, UnstructuredSetup
 from ...env import (
     unstructured_api_key,  # Import env to access environment variables
 )
-from ...models import UnstructuredParseOutput, UnstructuredResponse
+from ...models import UnstructuredParseOutput
 
 
 class UnstructuredProcessingError(Exception):
@@ -55,47 +54,31 @@ async def parse(
         # retries=retry_config,
     )
 
-    # Process file input
-    files = [arguments.file] if isinstance(arguments.file, str) else arguments.file
-
-    # Final result
-    final_result = []
-
-    # Process files concurrently
-    async def process_file(file):
-        req = operations.PartitionRequest(
-            partition_parameters=shared.PartitionParameters(
-                files=shared.Files(
-                    content=base64.b64decode(file),
-                    file_name=arguments.filename or f"{uuid.uuid4()}.txt",
-                ),
-                **(
-                    arguments.partition_params
-                    if hasattr(arguments, "partition_params") and arguments.partition_params
-                    else {}
-                ),
-            )
+    # Process file
+    req = operations.PartitionRequest(
+        partition_parameters=shared.PartitionParameters(
+            files=shared.Files(
+                content=base64.b64decode(arguments.file),
+                file_name=arguments.filename or f"{uuid.uuid4()}.txt",
+            ),
+            **(
+                arguments.partition_params
+                if hasattr(arguments, "partition_params") and arguments.partition_params
+                else {}
+            ),
         )
-        try:
-            # Make the API call
+    )
 
-            result = await client.general.partition_async(request=req)
-            return UnstructuredResponse(
-                content_type=result.content_type,
-                status_code=result.status_code,
-                csv_elements=result.csv_elements or None,
-                content=result.elements or None,
-            )
-        except Exception as e:
-            # Return error information instead of raising HTTP exception
-            msg = f"Error executing Unstructured method: {e}"
-            raise RuntimeError(msg)
-
-    # Process all files concurrently and gather results
     try:
-        tasks = [process_file(file) for file in files]
-        final_result = await asyncio.gather(*tasks)
-        return UnstructuredParseOutput(result=final_result)
+        # Make the API call
+        result = await client.general.partition_async(request=req)
+        return UnstructuredParseOutput(
+            content_type=result.content_type,
+            status_code=result.status_code,
+            csv_elements=result.csv_elements or None,
+            content=result.elements or None,
+        )
     except Exception as e:
-        msg = f"Failed to process files: {e!s}"
+        # Return error information instead of raising HTTP exception
+        msg = f"Error executing Unstructured method: {e}"
         raise RuntimeError(msg)

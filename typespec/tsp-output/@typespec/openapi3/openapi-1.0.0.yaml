@@ -9224,11 +9224,7 @@ components:
           type: string
           description: File Name. If not provided, a random name will be generated.
         file:
-          anyOf:
-            - type: string
-            - type: array
-              items:
-                type: string
+          type: string
           description: The base64 string of the file, which can be a single string or a list of strings
         partition_params:
           type: object
@@ -9242,11 +9238,7 @@ components:
           type: string
           description: File Name. If not provided, a random name will be generated.
         file:
-          anyOf:
-            - type: string
-            - type: array
-              items:
-                type: string
+          type: string
           description: The base64 string of the file, which can be a single string or a list of strings
         partition_params:
           type: object
