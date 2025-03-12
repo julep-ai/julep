@@ -1,14 +1,16 @@
 # Julep Development Guidelines
 
 ## Build & Test Commands
-- **Format code**: `ruff format`
-- **Lint code**: `ruff check`
-- **Type checking**: `pytype --config pytype.toml` (or `pyright` for CLI)
-- **Test**: `ward test --exclude .venv` (or `pytest` for integrations-service)
-- **Single test**: `ward test -p "pattern"` (e.g., `ward test -p "test_session_routes"`)
+- **Format code**: `poe format` (runs `ruff format`)
+- **Lint code**: `poe lint` (runs `ruff check`)
+- **Type checking**: `poe typecheck` (runs `pytype --config pytype.toml` or `pyright` for CLI)
+- **Test**: `poe test` (runs `ward test --exclude .venv` or `pytest` for integrations-service)
+- **Single test**: `poe test -p "pattern"` (e.g., `poe test -p "test_session_routes"`)
 - **Quick test file**: `PYTHONPATH=$PWD python tests/test_file.py` (for simple tests)
 - **Run all checks**: `poe check` (runs lint, format, typecheck, SQL validation)
 - **Generate API code**: `poe codegen`
+
+Note: Always prefer using `poe` commands over direct tool invocation when available. The project uses poethepoet (poe) as a task runner to ensure consistent environment and configuration.
 
 ## Code Style
 - **Python**: 3.12+ (fastAPI, async/await preferred)
@@ -36,7 +38,7 @@ See `CONTRIBUTING.md` for details on architecture and component relationships.
 
 ### Ward Testing Framework 
 - Use descriptive Ward test names: `@test("What the test is verifying")`
-- When testing specific patterns: `ward test -p "pattern_to_match"` 
+- When testing specific patterns: `poe test -p "pattern_to_match"` 
 - For quick Python script tests, use `PYTHONPATH=$PWD python tests/test_file.py`
 - The environment needs to be activated: `source .venv/bin/activate`
 - Path issues: Make sure you're in the right directory (agents-api/, not julep/)

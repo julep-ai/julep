@@ -4,6 +4,7 @@ from unittest.mock import patch
 from agents_api.activities.task_steps.base_evaluate import (
     backwards_compatibility,
     base_evaluate,
+    validate_py_expression,
 )
 from agents_api.autogen.openapi_model import (
     Agent,
@@ -265,3 +266,66 @@ async def _():
     exprs = "  _[0]  "
     result = backwards_compatibility(exprs)
     assert result == "$ _[0]"
+
+
+@test("validate_py_expression should return early for non-dollar expressions")
+def test_validate_non_dollar_expressions():
+    """Tests that expressions without $ prefix return empty issues and don't get validated."""
+    # Regular string without $ prefix
+    expression = "Hello world"
+    result = validate_py_expression(expression)
+    assert all(len(issues) == 0 for issues in result.values())
+    
+    # Valid Python syntax but no $ prefix
+    expression = "1 + 2"
+    result = validate_py_expression(expression)
+    assert all(len(issues) == 0 for issues in result.values())
+    
+    # Invalid Python syntax but no $ prefix
+    expression = "1 + )"
+    result = validate_py_expression(expression)
+    assert all(len(issues) == 0 for issues in result.values())
+
+
+@test("validate_py_expression should handle dollar sign variations")
+def test_dollar_sign_prefix_formats():
+    """Tests that $ prefix is correctly recognized in various formats."""
+    # $ with space
+    expression = "$ 1 + 2"
+    result = validate_py_expression(expression)
+    assert all(len(issues) == 0 for issues in result.values())
+    
+    # $ without space
+    expression = "$1 + 2"
+    result = validate_py_expression(expression)
+    assert all(len(issues) == 0 for issues in result.values())
+    
+    # Leading whitespace before $
+    expression = "   $ 1 + 2"
+    result = validate_py_expression(expression)
+    assert all(len(issues) == 0 for issues in result.values())
+    
+    # Leading whitespace and $ without space
+    expression = "   $1 + 2"
+    result = validate_py_expression(expression)
+    assert all(len(issues) == 0 for issues in result.values())
+
+
+@test("validate_py_expression should handle edge cases")
+def test_validate_edge_cases():
+    """Tests edge cases like empty strings, None values, etc."""
+    # None value
+    result = validate_py_expression(None)
+    assert all(len(issues) == 0 for issues in result.values())
+    
+    # Empty string
+    result = validate_py_expression("")
+    assert all(len(issues) == 0 for issues in result.values())
+    
+    # Just whitespace
+    result = validate_py_expression("   ")
+    assert all(len(issues) == 0 for issues in result.values())
+    
+    # Just $ sign
+    result = validate_py_expression("$")
+    assert all(len(issues) == 0 for issues in result.values())

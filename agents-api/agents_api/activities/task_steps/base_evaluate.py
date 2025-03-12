@@ -20,7 +20,8 @@ from ..utils import ALLOWED_FUNCTIONS, get_evaluator, stdlib
 def backwards_compatibility(expr: str) -> str:
     expr = expr.strip()
 
-    if expr.startswith("$ "):
+    # Check if it already starts with $ (with or without space)
+    if expr.startswith("$"):
         return expr
 
     if "{{" in expr:
@@ -34,7 +35,7 @@ def backwards_compatibility(expr: str) -> str:
         or "inputs[" in expr
         or expr == "_"
     ):
-        return "$ " + expr
+        return "$ " + expr  # Keep space after $ for backward compatibility
 
     return expr
 
@@ -44,8 +45,10 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
     if isinstance(expr, str):
         try:
             expr = backwards_compatibility(expr)
-            if isinstance(expr, str) and expr.startswith("$ "):
-                expr = expr[2:].strip()
+            expr = expr.strip()
+            if isinstance(expr, str) and expr.startswith("$"):
+                # Remove $ and any space after it
+                expr = expr[1:].strip()
             else:
                 expr = f"f'''{expr}'''"
             return evaluator.eval(expr)
@@ -143,9 +146,15 @@ def validate_py_expression(
     # Apply backwards compatibility transformation first
     expr = backwards_compatibility(expr)
 
-    # Handle expressions with $ prefix
-    if expr.startswith("$ "):
-        expr = expr[2:].strip()
+    # Ensure the expression is stripped before checking prefix
+    expr = expr.strip()
+
+    # Handle expressions with $ prefix - return early if it doesn't start with $
+    if not expr.startswith("$"):
+        return issues
+
+    # Remove $ and strip any leading space after $
+    expr = expr[1:].strip()
 
     # Handle f-string expressions (these are often used in templates)
     if expr.startswith(("f'''", 'f"""')):
@@ -170,7 +179,7 @@ def validate_py_expression(
     referenced_names = {node.id for node in name_nodes if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)}
 
     # Build the set of allowed names
-    allowed_names = set(ALLOWED_FUNCTIONS.keys()) | set(stdlib.keys()) | {"true", "false", "null", "NEWLINE"}
+    allowed_names = set(ALLOWED_FUNCTIONS.keys()) | set(stdlib.keys()) | {"true", "false", "null", "NEWLINE", "hasattr"}
 
     # Add standard placeholder variable names if allowed
     if allow_placeholder_variables:
@@ -281,7 +290,7 @@ def validate_task_expressions(task_spec: dict[str, Any]) -> dict[str, dict[str, 
                 # In evaluate steps, all values are potentially expressions
                 for eval_key, eval_value in step_data.items():
                     if isinstance(eval_value, str) and (
-                        eval_value.startswith(("$ ", "_")) or "{{" in eval_value or eval_value.strip() == "_"
+                        eval_value.strip().startswith(("$", "_")) or "{{" in eval_value or eval_value.strip() == "_"
                     ):
                         issues = validate_py_expression(eval_value)
                         if any(issues.values()):  # If we found any issues
@@ -325,20 +334,19 @@ def validate_task_expressions(task_spec: dict[str, Any]) -> dict[str, dict[str, 
                             "issues": issues
                         })
 
-            elif step_type == "tool":
+            elif step_type == "tool" and "arguments" in step_data:
                 # Check arguments that might be expressions
-                if "arguments" in step_data:
-                    for arg_key, arg_value in step_data["arguments"].items():
-                        if isinstance(arg_value, str) and (
-                            arg_value.startswith(("$ ", "_")) or "{{" in arg_value or arg_value.strip() == "_"
-                        ):
-                            issues = validate_py_expression(arg_value)
-                            if any(issues.values()):
-                                step_issues.append({
-                                    "location": f"{step_type}.arguments.{arg_key}",
-                                    "expression": arg_value,
-                                    "issues": issues
-                                })
+                for arg_key, arg_value in step_data["arguments"].items():
+                    if isinstance(arg_value, str) and (
+                        arg_value.strip().startswith(("$", "_")) or "{{" in arg_value or arg_value.strip() == "_"
+                    ):
+                        issues = validate_py_expression(arg_value)
+                        if any(issues.values()):
+                            step_issues.append({
+                                "location": f"{step_type}.arguments.{arg_key}",
+                                "expression": arg_value,
+                                "issues": issues
+                            })
 
             # Store issues for this step if we found any
             if step_issues:
