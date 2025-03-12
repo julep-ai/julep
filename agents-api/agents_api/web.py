@@ -140,56 +140,84 @@ def _get_error_suggestions(error: dict) -> dict:
     # Handle different validation error types
     if error_type == "missing":
         suggestions["fix"] = "Add this required field to your request"
+        suggestions["example"] = '{ "field_name": "value" }'
 
     elif error_type == "type_error":
         if "expected_type" in error:
             suggestions["fix"] = f"Provide a value of type {error['expected_type']}"
+            if error["expected_type"] == "string":
+                suggestions["example"] = '"text value"'
+            elif error["expected_type"] == "integer":
+                suggestions["example"] = "42"
+            elif error["expected_type"] == "number":
+                suggestions["example"] = "3.14"
+            elif error["expected_type"] == "boolean":
+                suggestions["example"] = "true"
+            elif error["expected_type"] == "array":
+                suggestions["example"] = "[]"
+            elif error["expected_type"] == "object":
+                suggestions["example"] = "{}"
         else:
             suggestions["fix"] = "Provide a value of the correct type"
 
     elif error_type == "value_error.missing":
         suggestions["fix"] = "Provide a value for this required field"
+        suggestions["note"] = "This field cannot be null or undefined"
 
     elif error_type == "value_error.extra":
         suggestions["fix"] = "Remove this field as it is not expected"
+        suggestions["note"] = "Check the API documentation for the correct field names"
 
     elif error_type == "value_error.const":
         if "permitted" in error:
             suggestions["fix"] = f"Value must be one of: {error['permitted']}"
+            suggestions["example"] = (
+                f"{error['permitted'][0] if error['permitted'] else 'appropriate_value'}"
+            )
 
     elif error_type == "value_error.str.min_length":
         if "limit_value" in error:
             suggestions["fix"] = f"Value must have at least {error['limit_value']} characters"
+            suggestions["example"] = "x" * int(error["limit_value"])
 
     elif error_type == "value_error.str.max_length":
         if "limit_value" in error:
             suggestions["fix"] = f"Value must have at most {error['limit_value']} characters"
+            suggestions["note"] = (
+                f"Current value exceeds the maximum length of {error['limit_value']} characters"
+            )
 
     elif error_type == "value_error.any_str.min_length":
         if "limit_value" in error:
             suggestions["fix"] = f"Value must have at least {error['limit_value']} characters"
+            suggestions["example"] = "x" * int(error["limit_value"])
 
     elif error_type == "value_error.any_str.max_length":
         if "limit_value" in error:
             suggestions["fix"] = f"Value must have at most {error['limit_value']} characters"
+            suggestions["note"] = f"Truncate your input to {error['limit_value']} characters"
 
     elif error_type == "value_error.number.not_ge":
         if "limit_value" in error:
             suggestions["fix"] = (
                 f"Value must be greater than or equal to {error['limit_value']}"
             )
+            suggestions["example"] = f"{error['limit_value']}"
 
     elif error_type == "value_error.number.not_le":
         if "limit_value" in error:
             suggestions["fix"] = f"Value must be less than or equal to {error['limit_value']}"
+            suggestions["example"] = f"{error['limit_value']}"
 
     elif error_type == "value_error.number.not_gt":
         if "limit_value" in error:
             suggestions["fix"] = f"Value must be greater than {error['limit_value']}"
+            suggestions["example"] = f"{float(error['limit_value']) + 1}"
 
     elif error_type == "value_error.number.not_lt":
         if "limit_value" in error:
             suggestions["fix"] = f"Value must be less than {error['limit_value']}"
+            suggestions["example"] = f"{float(error['limit_value']) - 1}"
 
     elif "enum" in error_type:
         if "permitted" in error:
