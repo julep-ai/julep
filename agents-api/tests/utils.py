@@ -166,11 +166,12 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
                 "message": output,
                 "tool_calls": [],
                 "created_at": 1,
-                # finish_reason="stop",
+                "finish_reason": "stop",
             },
         ],
         created=0,
         object="text_completion",
+        usage={"total_tokens": 10, "prompt_tokens": 5, "completion_tokens": 5},
     )
 
     with (

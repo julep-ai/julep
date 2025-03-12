@@ -53,6 +53,21 @@ def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest,
     **model_opts,
 ) -> TaskSpecDef | PartialTaskSpecDef:
+    """
+    Converts a task to a task specification.
+
+    IMPORTANT CONVERSION NOTES:
+    - This conversion changes the structure of workflow steps
+    - Raw task dictionaries use step types as keys (e.g., "if": condition)
+    - Converted tasks use Pydantic models with kind_ field and renamed fields
+      to avoid Python keywords:
+      * "if" step becomes an IfElseWorkflowStep with kind_="if_else" and if_=condition
+      * Fields like "if", "in", "from" get renamed to "if_", "in_", "from_"
+      * These fields maintain their original names as aliases in the JSON
+
+    This conversion is vital to understand when working with task validation,
+    especially for expression validation which needs to handle both formats.
+    """
     task_data = task.model_dump(
         **model_opts,
         exclude={"version", "developer_id", "task_id", "id", "agent_id"},

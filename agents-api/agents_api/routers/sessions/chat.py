@@ -207,7 +207,15 @@ async def chat(
                         # Only extract choices if they exist
                         choices_to_send = []
                         if has_choices:
-                            choices_to_send = [chunk.choices[0].model_dump()]
+                            # Get the chunk data
+                            chunk_data = chunk.choices[0].model_dump()
+
+                            # Ensure delta contains the required role field
+                            if "delta" in chunk_data and "role" not in chunk_data["delta"]:
+                                # Add the assistant role as default for delta chunks
+                                chunk_data["delta"]["role"] = "assistant"
+
+                            choices_to_send = [chunk_data]
 
                         chunk_response = ChunkChatResponse(
                             id=response_id,

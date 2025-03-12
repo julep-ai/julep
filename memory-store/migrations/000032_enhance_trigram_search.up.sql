@@ -123,7 +123,7 @@ CREATE OR REPLACE FUNCTION search_by_text (
     k integer DEFAULT 3,
     metadata_filter jsonb DEFAULT NULL,
     similarity_threshold float DEFAULT 0.6
-) RETURNS SETOF doc_search_result LANGUAGE plpgsql AS $$$
+) RETURNS SETOF doc_search_result LANGUAGE plpgsql AS $$
 DECLARE
     ts_query tsquery;
 BEGIN

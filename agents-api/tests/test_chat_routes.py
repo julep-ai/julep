@@ -13,6 +13,7 @@ from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.chat.gather_messages import gather_messages
 from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
 from agents_api.queries.sessions.create_session import create_session
+from litellm.types.utils import ModelResponse
 from ward import test
 
 from .fixtures import (
@@ -161,6 +162,89 @@ async def _(
 
     response.raise_for_status()
 
+    embed.assert_called_once()
+    acompletion.assert_called_once()
+
+
+@test("chat: check that streaming chat route works")
+async def _(
+    make_request=make_request,
+    developer_id=test_developer_id,
+    agent=test_agent,
+    mocks=patch_embed_acompletion,
+    dsn=pg_dsn,
+):
+    (embed, acompletion) = mocks
+
+    # Configure mock acompletion to behave like a streaming response
+    mock_chunk_iter = [
+        ModelResponse(
+            id="fake_id",
+            choices=[
+                {
+                    "delta": {"content": "Hello, ", "role": "assistant"},
+                    "created_at": 1,
+                },
+            ],
+            created=0,
+            object="text_completion_chunk",
+        ),
+        ModelResponse(
+            id="fake_id",
+            choices=[
+                {
+                    "delta": {"content": "world!", "role": "assistant"},
+                    "created_at": 1,
+                    "finish_reason": "stop",
+                },
+            ],
+            created=0,
+            object="text_completion_chunk",
+            usage={"total_tokens": 10, "prompt_tokens": 5, "completion_tokens": 5},
+        ),
+    ]
+
+    # Set up the mock to return an async iterator
+    async def mock_response():
+        for chunk in mock_chunk_iter:
+            yield chunk
+
+    acompletion.return_value = mock_response()
+
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create the session using the existing agent fixture
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test streaming session",
+        ),
+        connection_pool=pool,
+    )
+
+    # Make the request with stream=True
+    response = make_request(
+        method="POST",
+        url=f"/sessions/{session.id}/chat",
+        json={
+            "messages": [{"role": "user", "content": "hello"}],
+            "stream": True,
+        },
+    )
+
+    # Verify response
+    assert response.status_code in (200, 201)  # Accept either success code
+    assert response.headers.get("content-type") == "application/json"
+
+    # Process streaming response
+    content = response.content.decode("utf-8")
+    chunks = [line for line in content.split("\n") if line.strip()]
+
+    # Verify we got chunks
+    assert len(chunks) >= 2  # We should have at least 2 chunks
+
+    # Check that we got embed and acompletion calls
     embed.assert_called_once()
     acompletion.assert_called_once()
 

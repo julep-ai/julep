@@ -308,15 +308,38 @@ def validate_task_expressions(
             step_issues = []
 
             # Identify which step type we're dealing with
-            step_type = None
-            step_data = None
+            # IMPORTANT: Steps can be represented in two ways:
+            # 1. As Pydantic model objects with kind_ field (after passing through task_to_spec)
+            # 2. As raw dictionaries with step type as the key (in original task JSON)
+            # We need to handle both cases, with preference for kind_ field which is more reliable
 
-            # Each step should have exactly one key that is the step type
-            for key, value in step.items():
-                if key not in ["id", "name", "label"] and isinstance(value, dict):
-                    step_type = key
-                    step_data = value
-                    break
+            step_type = step.get("kind_")
+            step_data = {}
+
+            # If kind_ field is present, use it to determine step type
+            if step_type:
+                # Handle special case for if_else step (converted from "if" in the original task)
+                # The if_else step has the condition in if_ field (with alias "if")
+                if step_type == "if_else":
+                    step_data = {
+                        "if_": step.get("if_"),
+                        "then": step.get("then"),
+                        "else_": step.get("else_"),
+                    }
+                else:
+                    # For other steps, find the data dict by the same name as kind_
+                    for key, value in step.items():
+                        if key == step_type and isinstance(value, dict):
+                            step_data = value
+                            break
+            else:
+                # Fall back to the old method if kind_ is not present
+                # This handles raw dictionary representation where step type is the key
+                for key, value in step.items():
+                    if key not in ["id", "name", "label"] and isinstance(value, dict):
+                        step_type = key
+                        step_data = value
+                        break
 
             if not step_type or not step_data:
                 continue
@@ -338,8 +361,43 @@ def validate_task_expressions(
                                 "issues": issues,
                             })
 
-            elif step_type in ["if", "match"]:
-                # Check condition expression
+            elif step_type == "if":
+                # For "if" steps, the condition is the value of the "if" key itself
+                # Get the condition from step_type (the "if" key)
+                condition = step.get(step_type)
+                if isinstance(condition, str):
+                    issues = validate_py_expression(condition)
+                    if any(issues.values()):
+                        step_issues.append({
+                            "location": step_type,
+                            "expression": condition,
+                            "issues": issues,
+                        })
+
+                # Check "then" and "else" branches for expressions
+                for branch in ["then", "else"]:
+                    if branch in step_data and isinstance(step_data[branch], dict):
+                        # Recursively process the nested step
+                        # This is a simplified approach - for full validation, we'd need to process nested steps completely
+                        pass
+
+            elif step_type == "if_else":
+                # For if_else steps, check the condition in if_ field
+                # NOTE: The if_else step type comes from the Pydantic model conversion
+                # In the original task JSON, this is an "if" step with the condition directly
+                # in the "if" key. The task_to_spec function converts it to if_else with if_ field
+                # (with alias "if") to avoid Python keyword conflicts.
+                if "if_" in step_data and isinstance(step_data["if_"], str):
+                    issues = validate_py_expression(step_data["if_"])
+                    if any(issues.values()):
+                        step_issues.append({
+                            "location": f"{step_type}.if",
+                            "expression": step_data["if_"],
+                            "issues": issues,
+                        })
+
+            elif step_type == "match":
+                # Check condition expression for match statements
                 if "case" in step_data and isinstance(step_data["case"], str):
                     issues = validate_py_expression(step_data["case"])
                     if any(issues.values()):

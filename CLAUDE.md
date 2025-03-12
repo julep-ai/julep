@@ -35,6 +35,10 @@ See `CONTRIBUTING.md` for details on architecture and component relationships.
 - Expression validation checks syntax, undefined names, unsafe operations, and runtime errors
 - All expressions should have access to `_` (current input) and stdlib modules 
 - Testing expressions: `PYTHONPATH=$PWD python -c "from agents_api.activities.task_steps.base_evaluate import validate_py_expression; print(validate_py_expression('$ your_expr_here'))"` 
+- Task validation handles both raw task dictionaries and Pydantic models (after task_to_spec conversion)
+- When a task is converted through task_to_spec, step types can change (e.g., "if" becomes "if_else" with alias)
+- The `validate_task_expressions` function needs to check for both `kind_` field (in converted tasks) and for step type keys (in raw tasks)
+- For "if_else" steps, the condition is in the `if_` field (with alias "if") to avoid Python keyword conflicts
 
 ### Ward Testing Framework 
 - Use descriptive Ward test names: `@test("What the test is verifying")`
