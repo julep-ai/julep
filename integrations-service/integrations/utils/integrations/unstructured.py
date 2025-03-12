@@ -53,12 +53,18 @@ async def parse(
         timeout_ms=setup.timeout_ms,
         # retries=retry_config,
     )
+    
+    # Decode the base64 encoded file
+    try:
+        decoded_file = base64.b64decode(arguments.file)
+    except Exception as e:
+        raise RuntimeError(f"Failed to decode base64 encoded file: {e}")
 
     # Process file
     req = operations.PartitionRequest(
         partition_parameters=shared.PartitionParameters(
             files=shared.Files(
-                content=base64.b64decode(arguments.file),
+                content=decoded_file,
                 file_name=arguments.filename or f"{uuid.uuid4()}.txt",
             ),
             **(
