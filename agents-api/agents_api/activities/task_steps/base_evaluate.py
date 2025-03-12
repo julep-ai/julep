@@ -176,10 +176,18 @@ def validate_py_expression(
     name_nodes = [node for node in ast.walk(tree) if isinstance(node, ast.Name)]
 
     # Check for undefined names
-    referenced_names = {node.id for node in name_nodes if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)}
+    referenced_names = {
+        node.id
+        for node in name_nodes
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+    }
 
     # Build the set of allowed names
-    allowed_names = set(ALLOWED_FUNCTIONS.keys()) | set(stdlib.keys()) | {"true", "false", "null", "NEWLINE", "hasattr"}
+    allowed_names = (
+        set(ALLOWED_FUNCTIONS.keys())
+        | set(stdlib.keys())
+        | {"true", "false", "null", "NEWLINE", "hasattr"}
+    )
 
     # Add standard placeholder variable names if allowed
     if allow_placeholder_variables:
@@ -194,7 +202,9 @@ def validate_py_expression(
     # Find undefined names
     undefined_names = referenced_names - allowed_names
     if undefined_names:
-        issues["undefined_names"].extend([f"Undefined name: '{name}'" for name in undefined_names])
+        issues["undefined_names"].extend([
+            f"Undefined name: '{name}'" for name in undefined_names
+        ])
 
     # Check for potentially unsafe operations
     for node in ast.walk(tree):
@@ -222,22 +232,28 @@ def validate_py_expression(
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
             func_name = node.func.id
             if func_name not in ALLOWED_FUNCTIONS and func_name not in allowed_names:
-                issues["unsafe_operations"].append(f"Call to potentially unsafe function: {func_name}")
+                issues["unsafe_operations"].append(
+                    f"Call to potentially unsafe function: {func_name}"
+                )
 
     # Check for common potential runtime errors
     for node in ast.walk(tree):
         # Division by zero
-        if (isinstance(node, ast.BinOp) and
-            isinstance(node.op, ast.Div) and
-            isinstance(node.right, ast.Constant) and
-            node.right.value == 0):
+        if (
+            isinstance(node, ast.BinOp)
+            and isinstance(node.op, ast.Div)
+            and isinstance(node.right, ast.Constant)
+            and node.right.value == 0
+        ):
             issues["potential_runtime_errors"].append("Division by zero detected")
 
         # Index out of bounds for list literals
-        if (isinstance(node, ast.Subscript) and
-            isinstance(node.value, ast.List) and
-            isinstance(node.slice, ast.Constant) and
-            isinstance(node.slice.value, int)):
+        if (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.value, ast.List)
+            and isinstance(node.slice, ast.Constant)
+            and isinstance(node.slice.value, int)
+        ):
             list_size = len(node.value.elts)
             index = node.slice.value
             if index >= list_size:
@@ -248,7 +264,9 @@ def validate_py_expression(
     return issues
 
 
-def validate_task_expressions(task_spec: dict[str, Any]) -> dict[str, dict[str, list[dict[str, Any]]]]:
+def validate_task_expressions(
+    task_spec: dict[str, Any],
+) -> dict[str, dict[str, list[dict[str, Any]]]]:
     """
     Validate all Python expressions in a task specification.
 
@@ -290,14 +308,16 @@ def validate_task_expressions(task_spec: dict[str, Any]) -> dict[str, dict[str, 
                 # In evaluate steps, all values are potentially expressions
                 for eval_key, eval_value in step_data.items():
                     if isinstance(eval_value, str) and (
-                        eval_value.strip().startswith(("$", "_")) or "{{" in eval_value or eval_value.strip() == "_"
+                        eval_value.strip().startswith(("$", "_"))
+                        or "{{" in eval_value
+                        or eval_value.strip() == "_"
                     ):
                         issues = validate_py_expression(eval_value)
                         if any(issues.values()):  # If we found any issues
                             step_issues.append({
                                 "location": f"{step_type}.{eval_key}",
                                 "expression": eval_value,
-                                "issues": issues
+                                "issues": issues,
                             })
 
             elif step_type in ["if", "match"]:
@@ -308,19 +328,23 @@ def validate_task_expressions(task_spec: dict[str, Any]) -> dict[str, dict[str, 
                         step_issues.append({
                             "location": f"{step_type}.case",
                             "expression": step_data["case"],
-                            "issues": issues
+                            "issues": issues,
                         })
 
                 # For match statements, check all cases in "cases" array
                 if "cases" in step_data and isinstance(step_data["cases"], list):
                     for case_idx, case_item in enumerate(step_data["cases"]):
-                        if "case" in case_item and isinstance(case_item["case"], str) and case_item["case"] != "_":
+                        if (
+                            "case" in case_item
+                            and isinstance(case_item["case"], str)
+                            and case_item["case"] != "_"
+                        ):
                             issues = validate_py_expression(case_item["case"])
                             if any(issues.values()):
                                 step_issues.append({
                                     "location": f"{step_type}.cases[{case_idx}].case",
                                     "expression": case_item["case"],
-                                    "issues": issues
+                                    "issues": issues,
                                 })
 
             elif step_type in ["foreach", "map"]:
@@ -331,21 +355,23 @@ def validate_task_expressions(task_spec: dict[str, Any]) -> dict[str, dict[str, 
                         step_issues.append({
                             "location": f"{step_type}.in",
                             "expression": step_data["in"],
-                            "issues": issues
+                            "issues": issues,
                         })
 
             elif step_type == "tool" and "arguments" in step_data:
                 # Check arguments that might be expressions
                 for arg_key, arg_value in step_data["arguments"].items():
                     if isinstance(arg_value, str) and (
-                        arg_value.strip().startswith(("$", "_")) or "{{" in arg_value or arg_value.strip() == "_"
+                        arg_value.strip().startswith(("$", "_"))
+                        or "{{" in arg_value
+                        or arg_value.strip() == "_"
                     ):
                         issues = validate_py_expression(arg_value)
                         if any(issues.values()):
                             step_issues.append({
                                 "location": f"{step_type}.arguments.{arg_key}",
                                 "expression": arg_value,
-                                "issues": issues
+                                "issues": issues,
                             })
 
             # Store issues for this step if we found any

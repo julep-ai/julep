@@ -275,12 +275,12 @@ def test_validate_non_dollar_expressions():
     expression = "Hello world"
     result = validate_py_expression(expression)
     assert all(len(issues) == 0 for issues in result.values())
-    
+
     # Valid Python syntax but no $ prefix
     expression = "1 + 2"
     result = validate_py_expression(expression)
     assert all(len(issues) == 0 for issues in result.values())
-    
+
     # Invalid Python syntax but no $ prefix
     expression = "1 + )"
     result = validate_py_expression(expression)
@@ -294,17 +294,17 @@ def test_dollar_sign_prefix_formats():
     expression = "$ 1 + 2"
     result = validate_py_expression(expression)
     assert all(len(issues) == 0 for issues in result.values())
-    
+
     # $ without space
     expression = "$1 + 2"
     result = validate_py_expression(expression)
     assert all(len(issues) == 0 for issues in result.values())
-    
+
     # Leading whitespace before $
     expression = "   $ 1 + 2"
     result = validate_py_expression(expression)
     assert all(len(issues) == 0 for issues in result.values())
-    
+
     # Leading whitespace and $ without space
     expression = "   $1 + 2"
     result = validate_py_expression(expression)
@@ -317,15 +317,15 @@ def test_validate_edge_cases():
     # None value
     result = validate_py_expression(None)
     assert all(len(issues) == 0 for issues in result.values())
-    
+
     # Empty string
     result = validate_py_expression("")
     assert all(len(issues) == 0 for issues in result.values())
-    
+
     # Just whitespace
     result = validate_py_expression("   ")
     assert all(len(issues) == 0 for issues in result.values())
-    
+
     # Just $ sign
     result = validate_py_expression("$")
     assert all(len(issues) == 0 for issues in result.values())

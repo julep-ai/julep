@@ -9,6 +9,7 @@ from ...common.protocol.models import task_to_spec
 
 class ValidationIssue(BaseModel):
     """Represents a validation issue found in a task specification."""
+
     location: str
     message: str
     severity: str = "error"  # error, warning, info
@@ -17,6 +18,7 @@ class ValidationIssue(BaseModel):
 
 class TaskValidationResult(BaseModel):
     """Result of task validation with issues categorized by type."""
+
     is_valid: bool
     python_expression_issues: list[ValidationIssue] = []
     schema_issues: list[ValidationIssue] = []
@@ -58,11 +60,13 @@ def validate_task(
                                 ValidationIssue(
                                     location=f"workflows.{workflow_name}.steps[{step_idx}].{issue['location']}",
                                     message=message,
-                                    severity="error" if issue_type in ["syntax_errors", "undefined_names"] else "warning",
+                                    severity="error"
+                                    if issue_type in ["syntax_errors", "undefined_names"]
+                                    else "warning",
                                     details={
                                         "issue_type": issue_type,
-                                        "expression": issue["expression"]
-                                    }
+                                        "expression": issue["expression"],
+                                    },
                                 )
                             )
 
@@ -74,7 +78,7 @@ def validate_task(
                     location=".".join(str(loc) for loc in error["loc"]),
                     message=error["msg"],
                     severity="error",
-                    details={"error_type": error["type"]}
+                    details={"error_type": error["type"]},
                 )
             )
 
@@ -84,7 +88,7 @@ def validate_task(
             ValidationIssue(
                 location="task",
                 message=f"Unexpected error during validation: {e!s}",
-                severity="error"
+                severity="error",
             )
         )
 
@@ -94,7 +98,7 @@ def validate_task(
         for issues in [
             validation_result.python_expression_issues,
             validation_result.schema_issues,
-            validation_result.other_issues
+            validation_result.other_issues,
         ]
         for issue in issues
     )

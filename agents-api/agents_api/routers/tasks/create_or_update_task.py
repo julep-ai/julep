@@ -37,27 +37,36 @@ async def create_or_update_task(
         # Prepare a detailed error response
 
         # Gather all issues categorized by type
-        issues = [{
+        issues = [
+            {
                 "location": issue.location,
                 "message": issue.message,
                 "severity": issue.severity,
                 "type": "python_expression",
                 **({} if issue.details is None else {"details": issue.details}),
-            } for issue in validation_result.python_expression_issues]
+            }
+            for issue in validation_result.python_expression_issues
+        ]
 
-        issues.extend({
+        issues.extend(
+            {
                 "location": issue.location,
                 "message": issue.message,
                 "severity": issue.severity,
                 "type": "schema",
-            } for issue in validation_result.schema_issues)
+            }
+            for issue in validation_result.schema_issues
+        )
 
-        issues.extend({
+        issues.extend(
+            {
                 "location": issue.location,
                 "message": issue.message,
                 "severity": issue.severity,
                 "type": "other",
-            } for issue in validation_result.other_issues)
+            }
+            for issue in validation_result.other_issues
+        )
 
         # Return a structured error response
         raise HTTPException(
