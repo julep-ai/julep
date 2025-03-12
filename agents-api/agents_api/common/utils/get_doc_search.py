@@ -1,5 +1,6 @@
 from typing import Any
 
+from beartype import beartype
 from fastapi import HTTPException
 from langcodes import Language
 
@@ -13,11 +14,9 @@ from ...queries.docs.search_docs_by_text import search_docs_by_text
 from ...queries.docs.search_docs_hybrid import search_docs_hybrid
 
 
+@beartype
 def get_language(lang: str) -> str:
     error_msg = "Invalid ISO 639 language code."
-
-    if not lang or not isinstance(lang, str):
-        raise HTTPException(status_code=422, detail=error_msg)
 
     try:
         language_obj = Language.get(lang)
