@@ -17,8 +17,6 @@ from ...common.utils.mmr import apply_mmr_to_docs
 from ...dependencies.developer_id import get_developer_id
 from .router import router
 
-MIN_DOCS_WITH_EMBEDDINGS = 2
-
 
 @router.post("/users/{user_id}/search", tags=["docs"])
 async def search_user_docs(

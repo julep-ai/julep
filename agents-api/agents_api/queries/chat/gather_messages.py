@@ -23,7 +23,6 @@ from ...common.utils.mmr import apply_mmr_to_docs
 from ..entries.get_history import get_history
 from ..utils import rewrap_exceptions
 
-MIN_DOCS_WITH_EMBEDDINGS = 2
 T = TypeVar("T")
 
 
