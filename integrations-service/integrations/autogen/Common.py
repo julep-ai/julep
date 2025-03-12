@@ -13,7 +13,7 @@ class JinjaTemplate(RootModel[str]):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: Annotated[str, Field(max_length=10000)]
+    root: Annotated[str, Field(max_length=500000)]
     """
     A valid jinja template.
     """

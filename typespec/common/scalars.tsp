@@ -1,9 +1,3 @@
-import "@typespec/http";
-import "@typespec/rest";
-
-using TypeSpec.Http;
-using TypeSpec.Rest;
-
 namespace Common;
 
 //
@@ -77,7 +71,7 @@ alias entrySource =
 scalar PyExpression extends string;
 
 /** A valid jinja template. */
-@maxLength(10000)
+@maxLength(500000)
 scalar JinjaTemplate extends string;
 
 /**

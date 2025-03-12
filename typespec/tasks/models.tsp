@@ -58,7 +58,7 @@ model Task {
     canonical_name?: canonicalName;
 
     /** The description of the task. */
-    @maxLength(1000)
+    @maxLength(10000)
     description: string = "";
 
     /** The entrypoint of the task. */

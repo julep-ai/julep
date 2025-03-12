@@ -57,11 +57,11 @@ class CreateSessionRequest(BaseModel):
     Agent ID of agent associated with this session
     """
     agents: list[UUID] | None = None
-    situation: Annotated[str | None, Field(max_length=5000)] = None
+    situation: Annotated[str | None, Field(max_length=500000)] = None
     """
     Session situation
     """
-    system_template: Annotated[str | None, Field(max_length=10000)] = None
+    system_template: Annotated[str | None, Field(max_length=1000000)] = None
     """
     A specific system prompt template that sets the background for this session
     """
@@ -148,11 +148,11 @@ class PatchSessionRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    situation: Annotated[str | None, Field(max_length=5000)] = None
+    situation: Annotated[str | None, Field(max_length=500000)] = None
     """
     Session situation
     """
-    system_template: Annotated[str | None, Field(max_length=10000)] = None
+    system_template: Annotated[str | None, Field(max_length=1000000)] = None
     """
     A specific system prompt template that sets the background for this session
     """
@@ -193,16 +193,16 @@ class Session(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    situation: Annotated[str | None, Field(max_length=5000)] = None
+    situation: Annotated[str | None, Field(max_length=500000)] = None
     """
     Session situation
     """
-    system_template: Annotated[str | None, Field(max_length=10000)] = None
+    system_template: Annotated[str | None, Field(max_length=1000000)] = None
     """
     A specific system prompt template that sets the background for this session
     """
     summary: Annotated[
-        str | None, Field(json_schema_extra={"readOnly": True}, max_length=10000)
+        str | None, Field(json_schema_extra={"readOnly": True}, max_length=50000)
     ] = None
     """
     Summary (null at the beginning) - generated automatically after every interaction
@@ -302,11 +302,11 @@ class UpdateSessionRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    situation: Annotated[str | None, Field(max_length=5000)] = None
+    situation: Annotated[str | None, Field(max_length=500000)] = None
     """
     Session situation
     """
-    system_template: Annotated[str | None, Field(max_length=10000)] = None
+    system_template: Annotated[str | None, Field(max_length=1000000)] = None
     """
     A specific system prompt template that sets the background for this session
     """
@@ -392,11 +392,11 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     Agent ID of agent associated with this session
     """
     agents: list[UUID] | None = None
-    situation: Annotated[str | None, Field(max_length=5000)] = None
+    situation: Annotated[str | None, Field(max_length=500000)] = None
     """
     Session situation
     """
-    system_template: Annotated[str | None, Field(max_length=10000)] = None
+    system_template: Annotated[str | None, Field(max_length=1000000)] = None
     """
     A specific system prompt template that sets the background for this session
     """

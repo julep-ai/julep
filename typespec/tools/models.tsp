@@ -186,7 +186,6 @@ model ApiCallDef {
     method: httpMethod;
 
     /** The URL to call */
-    @pattern("^https?://[\\w.-]+(:\\d+)?(/[\\w.-]*)*/?$")
     url: url;
 
     /** The schema of the response */
@@ -196,7 +195,7 @@ model ApiCallDef {
     headers?: Record<string>;
 
     /** The content as base64 to send with the request */
-    @maxLength(1048576) // 1MB max for base64 content
+    @maxLength(10485760) // 10MB max for base64 content
     content?: string;
 
     /** The data to send as form data */
@@ -219,8 +218,8 @@ model ApiCallDef {
 
     /** The timeout for the request (in seconds) */
     @minValue(1)
-    @maxValue(60)
-    timeout?: uint8;
+    @maxValue(300)
+    timeout: uint8 = 60;
 }
 
 
@@ -233,7 +232,7 @@ model Tool {
 
     /** Description of the tool */
     @minLength(1)
-    @maxLength(1000)
+    @maxLength(10000)
     description?: string;
 
     /** The function to call */

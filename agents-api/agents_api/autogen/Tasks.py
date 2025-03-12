@@ -75,7 +75,7 @@ class Content(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    text: Annotated[str, Field(max_length=10000)]
+    text: Annotated[str, Field(max_length=500000)]
     """
     A valid jinja template.
     """
@@ -172,7 +172,7 @@ class CreateTaskRequest(BaseModel):
     """
     The canonical name of the task.
     """
-    description: Annotated[str, Field(max_length=1000)] = ""
+    description: Annotated[str, Field(max_length=10000)] = ""
     """
     The description of the task.
     """
@@ -323,7 +323,7 @@ class ErrorWorkflowStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    error: Annotated[str, Field(max_length=1000, min_length=1)]
+    error: Annotated[str, Field(max_length=10000, min_length=1)]
     """
     The error message
     """
@@ -623,7 +623,7 @@ class LogStep(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    log: Annotated[str, Field(max_length=10000)]
+    log: Annotated[str, Field(max_length=500000)]
     """
     The value to log
     """
@@ -792,7 +792,7 @@ class PatchTaskRequest(BaseModel):
     """
     The canonical name of the task.
     """
-    description: Annotated[str, Field(max_length=1000)] = ""
+    description: Annotated[str, Field(max_length=10000)] = ""
     """
     The description of the task.
     """
@@ -1070,7 +1070,7 @@ class Source(BaseModel):
     )
     type: Literal["base64"] = "base64"
     media_type: str
-    data: Annotated[str, Field(max_length=10000)]
+    data: Annotated[str, Field(max_length=500000)]
     """
     A valid jinja template.
     """
@@ -1135,7 +1135,7 @@ class Task(BaseModel):
     """
     The canonical name of the task.
     """
-    description: Annotated[str, Field(max_length=1000)] = ""
+    description: Annotated[str, Field(max_length=10000)] = ""
     """
     The description of the task.
     """
@@ -1382,7 +1382,7 @@ class UpdateTaskRequest(BaseModel):
     """
     The canonical name of the task.
     """
-    description: Annotated[str, Field(max_length=1000)] = ""
+    description: Annotated[str, Field(max_length=10000)] = ""
     """
     The description of the task.
     """

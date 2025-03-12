@@ -116,16 +116,16 @@ model Session {
     agents?: uuid[];
 
     /** Session situation */
-    @maxLength(5000)
+    @maxLength(500000)
     situation: string | null = null;
 
     /** A specific system prompt template that sets the background for this session */
-    @maxLength(10000)
+    @maxLength(1000000)
     system_template?: string;
 
     /** Summary (null at the beginning) - generated automatically after every interaction */
     @visibility("read")
-    @maxLength(10000)
+    @maxLength(50000)
     summary: string | null = null;
 
     /** Render system and assistant message content as jinja templates */
@@ -139,7 +139,7 @@ model Session {
 
     /** Whether to auto-run the tool and send the tool results to the model when available.
      * (default: false for sessions, true for tasks)
-     * 
+     *
      * If a tool call is made, the tool's output will be sent back to the model as the model's input.
      * If a tool call is not made, the model's output will be returned as is. */
     auto_run_tools: boolean = false;
@@ -148,7 +148,7 @@ model Session {
     forward_tool_calls: boolean = false;
     /** Recall options for the session */
     recall_options?: DocSearch | null = null;
-    
+
     ...HasId;
     ...HasMetadata;
     ...HasTimestamps;

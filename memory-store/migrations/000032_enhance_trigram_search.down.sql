@@ -2,10 +2,15 @@
 DROP FUNCTION IF EXISTS comprehensive_similarity;
 
 -- Drop the word similarity function
-DROP FUNCTION IF EXISTS word_similarity;
+DROP FUNCTION IF EXISTS fuzzy_word_similarity;
 
 -- Drop the enhanced similarity function
 DROP FUNCTION IF EXISTS enhanced_similarity;
+
+-- Drop the additional indexes we created
+DROP INDEX IF EXISTS idx_docs_lookup;
+DROP INDEX IF EXISTS idx_docs_search_covering;
+DROP INDEX IF EXISTS idx_doc_owners_search;
 
 -- Restore the original search_by_text function from 000031
 DROP FUNCTION IF EXISTS search_by_text;
@@ -30,7 +35,7 @@ BEGIN
     -- Convert query to tsquery
     ts_query := websearch_to_tsquery(search_language::regconfig, query_text);
 
-    RETURN QUERY EXECUTE 
+    RETURN QUERY EXECUTE
         'WITH tsv_results AS (
             SELECT
                 d.developer_id,
@@ -85,7 +90,7 @@ BEGIN
             AND (array_length($4, 1) IS NULL OR doc_owners.owner_id = ANY($4))
             AND (($5)::jsonb IS NULL OR d.metadata @> ($5)::jsonb)
             AND NOT EXISTS (
-                SELECT 1 FROM tsv_results tr 
+                SELECT 1 FROM tsv_results tr
                 WHERE tr.doc_id = d.doc_id AND tr.index = d.index
             )
         ),
@@ -94,7 +99,7 @@ BEGIN
             UNION ALL
             SELECT *, trigram_score as score, 2 as source FROM trigram_results
         )
-        SELECT 
+        SELECT
             developer_id,
             doc_id,
             index,

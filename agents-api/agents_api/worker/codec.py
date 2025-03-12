@@ -74,14 +74,15 @@ def serialize(x: Any) -> bytes:
         # Log timing for large objects
         duration = time.time() - start_time
         if duration > 1:
-            obj_size = sys.getsizeof(x) / 1000 if hasattr(x, "__sizeof__") else "unknown"
+            # Use pickled size as a more accurate measure of the object's true size
+            original_size = len(pickled) / 1000
             compressed_size = len(compressed) / 1000
             compression_ratio = (
                 f"{len(pickled) / len(compressed):.2f}x" if len(compressed) > 0 else "N/A"
             )
 
             print(
-                f"||| [SERIALIZE] Time: {duration:.2f}s | Original: {obj_size}kb | "
+                f"||| [SERIALIZE] Time: {duration:.2f}s | Original: {original_size:.2f}kb | "
                 f"Compressed: {compressed_size:.2f}kb | Ratio: {compression_ratio}",
             )
 

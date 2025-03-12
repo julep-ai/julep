@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 
 class Agent(BaseModel):
@@ -34,15 +34,15 @@ class Agent(BaseModel):
     """
     Canonical name of the agent
     """
-    about: Annotated[str, Field(max_length=1000)] = ""
+    about: Annotated[str, Field(max_length=500000)] = ""
     """
     About the agent
     """
-    model: Annotated[str, Field(max_length=100, min_length=1)] = ""
+    model: Annotated[str, Field(max_length=100)] = ""
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: Instructions | InstructionsModel = []
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """
@@ -76,15 +76,15 @@ class CreateAgentRequest(BaseModel):
     """
     Canonical name of the agent
     """
-    about: Annotated[str, Field(max_length=1000)] = ""
+    about: Annotated[str, Field(max_length=500000)] = ""
     """
     About the agent
     """
-    model: Annotated[str, Field(max_length=100, min_length=1)] = ""
+    model: Annotated[str, Field(max_length=100)] = ""
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: InstructionsModel1 | InstructionsModel2 = []
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """
@@ -115,15 +115,15 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     """
     Canonical name of the agent
     """
-    about: Annotated[str, Field(max_length=1000)] = ""
+    about: Annotated[str, Field(max_length=500000)] = ""
     """
     About the agent
     """
-    model: Annotated[str, Field(max_length=100, min_length=1)] = ""
+    model: Annotated[str, Field(max_length=100)] = ""
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: InstructionsModel3 | InstructionsModel4 = []
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """
@@ -135,58 +135,6 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     """
     Default system template for all sessions created by this agent
     """
-
-
-class Instructions(RootModel[str]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Annotated[str, Field(max_length=10000)] = []
-    """
-    Instructions for the agent
-    """
-
-
-class InstructionsModel(RootModel[list[str]]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Annotated[list[str], Field(max_length=10000)] = []
-    """
-    Instructions for the agent
-    """
-
-
-class InstructionsModel1(Instructions):
-    pass
-
-
-class InstructionsModel2(InstructionsModel):
-    pass
-
-
-class InstructionsModel3(Instructions):
-    pass
-
-
-class InstructionsModel4(InstructionsModel):
-    pass
-
-
-class InstructionsModel5(Instructions):
-    pass
-
-
-class InstructionsModel6(InstructionsModel):
-    pass
-
-
-class InstructionsModel7(Instructions):
-    pass
-
-
-class InstructionsModel8(InstructionsModel):
-    pass
 
 
 class PatchAgentRequest(BaseModel):
@@ -209,15 +157,15 @@ class PatchAgentRequest(BaseModel):
     """
     Canonical name of the agent
     """
-    about: Annotated[str, Field(max_length=1000)] = ""
+    about: Annotated[str, Field(max_length=500000)] = ""
     """
     About the agent
     """
-    model: Annotated[str, Field(max_length=100, min_length=1)] = ""
+    model: Annotated[str, Field(max_length=100)] = ""
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: InstructionsModel5 | InstructionsModel6 = []
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """
@@ -251,15 +199,15 @@ class UpdateAgentRequest(BaseModel):
     """
     Canonical name of the agent
     """
-    about: Annotated[str, Field(max_length=1000)] = ""
+    about: Annotated[str, Field(max_length=500000)] = ""
     """
     About the agent
     """
-    model: Annotated[str, Field(max_length=100, min_length=1)] = ""
+    model: Annotated[str, Field(max_length=100)] = ""
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: InstructionsModel7 | InstructionsModel8 = []
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """

@@ -1,11 +1,5 @@
-import "@typespec/http";
-import "@typespec/rest";
-
 import "./scalars.tsp";
 import "./types.tsp";
-
-using TypeSpec.Http;
-using TypeSpec.Rest;
 
 namespace Common;
 

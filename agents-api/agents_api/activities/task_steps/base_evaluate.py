@@ -42,6 +42,11 @@ def backwards_compatibility(expr: str) -> str:
 
 # Recursive evaluation helper function
 def _recursive_evaluate(expr, evaluator: SimpleEval):
+    # Handle PyExpression type from the model
+    if hasattr(expr, "root") and isinstance(expr.root, str):
+        # Extract the string from the RootModel
+        expr = expr.root
+
     if isinstance(expr, str):
         try:
             expr = backwards_compatibility(expr)
@@ -84,8 +89,13 @@ async def base_evaluate(
     if context:
         values.update(await context.prepare_for_step())
 
-    input_len = 1 if isinstance(exprs, str) else len(exprs)
-    assert input_len > 0, "exprs must be a non-empty string, list or dict"
+    # Handle PyExpression objects and strings similarly
+    if isinstance(exprs, str) or (hasattr(exprs, "root") and isinstance(exprs.root, str)):
+        input_len = 1
+    else:
+        input_len = len(exprs)
+
+    assert input_len > 0, "exprs must be a non-empty string, PyExpression, list or dict"
 
     extra_lambdas = {}
     if extra_lambda_strs:
@@ -156,6 +166,10 @@ def validate_py_expression(
     # Remove $ and strip any leading space after $
     expr = expr[1:].strip()
 
+    # Special case: just a $ sign with nothing after it
+    if not expr:
+        return issues
+
     # Handle f-string expressions (these are often used in templates)
     if expr.startswith(("f'''", 'f"""')):
         # Just basic syntax check for f-strings, can't do much static analysis
@@ -221,6 +235,10 @@ def validate_py_expression(
 
                 # Allow accessing attributes on stdlib modules
                 if obj_name in stdlib:
+                    continue
+
+                # Allow accessing attributes on allowed names
+                if obj_name in allowed_names:
                     continue
 
                 # Otherwise flag unexpected attribute access

@@ -1,4 +1,3 @@
-
 from agents_api.activities.task_steps.base_evaluate import validate_py_expression
 from agents_api.autogen.openapi_model import CreateTaskRequest
 from agents_api.common.utils.task_validation import validate_task
@@ -75,10 +74,8 @@ def invalid_task_dict():
                 }
             },
             {
-                "if": {
-                    "case": "$ undefined_var == True",  # Undefined variable
-                    "then": {"evaluate": {"value": "$ 'valid'"}},
-                }
+                "if": "$ undefined_var == True",  # Undefined variable
+                "then": {"evaluate": {"value": "$ 'valid'"}},
             },
         ],
     }
@@ -98,10 +95,8 @@ def valid_task_dict():
                 }
             },
             {
-                "if": {
-                    "case": "$ _ is not None",  # Valid expression
-                    "then": {"evaluate": {"value": "$ str(_)"}},
-                }
+                "if": "$ _ is not None",  # Valid expression
+                "then": {"evaluate": {"value": "$ str(_)"}},
             },
         ],
     }

@@ -42,7 +42,7 @@ class ApiCallDef(BaseModel):
     """
     The headers to send with the request
     """
-    content: Annotated[str | None, Field(max_length=1048576)] = None
+    content: Annotated[str | None, Field(max_length=10485760)] = None
     """
     The content as base64 to send with the request
     """
@@ -70,7 +70,7 @@ class ApiCallDef(BaseModel):
     """
     Follow redirects
     """
-    timeout: Annotated[int | None, Field(ge=1, le=60)] = None
+    timeout: Annotated[int, Field(ge=1, le=300)] = 60
     """
     The timeout for the request (in seconds)
     """
@@ -113,7 +113,7 @@ class ApiCallDefUpdate(BaseModel):
     """
     The headers to send with the request
     """
-    content: Annotated[str | None, Field(max_length=1048576)] = None
+    content: Annotated[str | None, Field(max_length=10485760)] = None
     """
     The content as base64 to send with the request
     """
@@ -141,7 +141,7 @@ class ApiCallDefUpdate(BaseModel):
     """
     Follow redirects
     """
-    timeout: Annotated[int | None, Field(ge=1, le=60)] = None
+    timeout: Annotated[int, Field(ge=1, le=300)] = 60
     """
     The timeout for the request (in seconds)
     """
@@ -916,7 +916,7 @@ class CreateToolRequest(BaseModel):
     """
     Type of the tool
     """
-    description: Annotated[str | None, Field(max_length=1000, min_length=1)] = None
+    description: Annotated[str | None, Field(max_length=10000, min_length=1)] = None
     """
     Description of the tool
     """
@@ -1433,7 +1433,7 @@ class PatchToolRequest(BaseModel):
     """
     Type of the tool
     """
-    description: Annotated[str | None, Field(max_length=1000, min_length=1)] = None
+    description: Annotated[str | None, Field(max_length=10000, min_length=1)] = None
     """
     Description of the tool
     """
@@ -1864,7 +1864,7 @@ class Tool(BaseModel):
     """
     Type of the tool
     """
-    description: Annotated[str | None, Field(max_length=1000, min_length=1)] = None
+    description: Annotated[str | None, Field(max_length=10000, min_length=1)] = None
     """
     Description of the tool
     """
@@ -1957,7 +1957,7 @@ class UpdateToolRequest(BaseModel):
     """
     Type of the tool
     """
-    description: Annotated[str | None, Field(max_length=1000, min_length=1)] = None
+    description: Annotated[str | None, Field(max_length=10000, min_length=1)] = None
     """
     Description of the tool
     """

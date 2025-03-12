@@ -1488,12 +1488,11 @@ components:
           description: Canonical name of the agent
         about:
           type: string
-          maxLength: 1000
+          maxLength: 500000
           description: About the agent
           default: ''
         model:
           type: string
-          minLength: 1
           maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
@@ -1503,7 +1502,6 @@ components:
             - type: array
               items:
                 type: string
-          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -1585,12 +1583,11 @@ components:
           description: Canonical name of the agent
         about:
           type: string
-          maxLength: 1000
+          maxLength: 500000
           description: About the agent
           default: ''
         model:
           type: string
-          minLength: 1
           maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
@@ -1600,7 +1597,6 @@ components:
             - type: array
               items:
                 type: string
-          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -1686,12 +1682,11 @@ components:
           description: Canonical name of the agent
         about:
           type: string
-          maxLength: 1000
+          maxLength: 500000
           description: About the agent
           default: ''
         model:
           type: string
-          minLength: 1
           maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
@@ -1701,7 +1696,6 @@ components:
             - type: array
               items:
                 type: string
-          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -1779,12 +1773,11 @@ components:
           description: Canonical name of the agent
         about:
           type: string
-          maxLength: 1000
+          maxLength: 500000
           description: About the agent
           default: ''
         model:
           type: string
-          minLength: 1
           maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
@@ -1794,7 +1787,6 @@ components:
             - type: array
               items:
                 type: string
-          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -1877,12 +1869,11 @@ components:
           description: Canonical name of the agent
         about:
           type: string
-          maxLength: 1000
+          maxLength: 500000
           description: About the agent
           default: ''
         model:
           type: string
-          minLength: 1
           maxLength: 100
           description: Model name to use (gpt-4-turbo, gemini-nano etc)
           default: ''
@@ -1892,7 +1883,6 @@ components:
             - type: array
               items:
                 type: string
-          maxLength: 10000
           description: Instructions for the agent
           default: []
         default_settings:
@@ -2883,7 +2873,7 @@ components:
         - $ref: '#/components/schemas/Chat.BaseTokenLogProb'
     Common.JinjaTemplate:
       type: string
-      maxLength: 10000
+      maxLength: 500000
       description: A valid jinja template.
     Common.PyExpression:
       type: string
@@ -4093,12 +4083,12 @@ components:
         situation:
           type: string
           nullable: true
-          maxLength: 5000
+          maxLength: 500000
           description: Session situation
           default: null
         system_template:
           type: string
-          maxLength: 10000
+          maxLength: 1000000
           description: A specific system prompt template that sets the background for this session
         render_templates:
           type: boolean
@@ -4171,12 +4161,12 @@ components:
         situation:
           type: string
           nullable: true
-          maxLength: 5000
+          maxLength: 500000
           description: Session situation
           default: null
         system_template:
           type: string
-          maxLength: 10000
+          maxLength: 1000000
           description: A specific system prompt template that sets the background for this session
         render_templates:
           type: boolean
@@ -4334,12 +4324,12 @@ components:
         situation:
           type: string
           nullable: true
-          maxLength: 5000
+          maxLength: 500000
           description: Session situation
           default: null
         system_template:
           type: string
-          maxLength: 10000
+          maxLength: 1000000
           description: A specific system prompt template that sets the background for this session
         render_templates:
           type: boolean
@@ -4399,17 +4389,17 @@ components:
         situation:
           type: string
           nullable: true
-          maxLength: 5000
+          maxLength: 500000
           description: Session situation
           default: null
         system_template:
           type: string
-          maxLength: 10000
+          maxLength: 1000000
           description: A specific system prompt template that sets the background for this session
         summary:
           type: string
           nullable: true
-          maxLength: 10000
+          maxLength: 50000
           description: Summary (null at the beginning) - generated automatically after every interaction
           default: null
           readOnly: true
@@ -4552,12 +4542,12 @@ components:
         situation:
           type: string
           nullable: true
-          maxLength: 5000
+          maxLength: 500000
           description: Session situation
           default: null
         system_template:
           type: string
-          maxLength: 10000
+          maxLength: 1000000
           description: A specific system prompt template that sets the background for this session
         render_templates:
           type: boolean
@@ -4725,7 +4715,7 @@ components:
           description: The canonical name of the task.
         description:
           type: string
-          maxLength: 1000
+          maxLength: 10000
           description: The description of the task.
           default: ''
         main:
@@ -4921,7 +4911,7 @@ components:
         error:
           type: string
           minLength: 1
-          maxLength: 1000
+          maxLength: 10000
           description: The error message
       allOf:
         - type: object
@@ -5583,7 +5573,7 @@ components:
           description: The canonical name of the task.
         description:
           type: string
-          maxLength: 1000
+          maxLength: 10000
           description: The description of the task.
           default: ''
         main:
@@ -6400,7 +6390,7 @@ components:
           description: The canonical name of the task.
         description:
           type: string
-          maxLength: 1000
+          maxLength: 10000
           description: The description of the task.
           default: ''
         main:
@@ -6694,7 +6684,7 @@ components:
           description: The canonical name of the task.
         description:
           type: string
-          maxLength: 1000
+          maxLength: 10000
           description: The description of the task.
           default: ''
         main:
@@ -6994,6 +6984,7 @@ components:
       required:
         - method
         - url
+        - timeout
       properties:
         method:
           type: string
@@ -7011,7 +7002,6 @@ components:
         url:
           type: string
           format: uri
-          pattern: ^https?://[\w.-]+(:\d+)?(/[\w.-]*)*/?$
           description: The URL to call
         schema:
           type: object
@@ -7024,7 +7014,7 @@ components:
           description: The headers to send with the request
         content:
           type: string
-          maxLength: 1048576
+          maxLength: 10485760
           description: The content as base64 to send with the request
         data:
           type: object
@@ -7056,8 +7046,9 @@ components:
           type: integer
           format: uint8
           minimum: 1
-          maximum: 60
+          maximum: 300
           description: The timeout for the request (in seconds)
+          default: 60
       description: API call definition
     Tools.ApiCallDefUpdate:
       type: object
@@ -7078,7 +7069,6 @@ components:
         url:
           type: string
           format: uri
-          pattern: ^https?://[\w.-]+(:\d+)?(/[\w.-]*)*/?$
           description: The URL to call
         schema:
           type: object
@@ -7091,7 +7081,7 @@ components:
           description: The headers to send with the request
         content:
           type: string
-          maxLength: 1048576
+          maxLength: 10485760
           description: The content as base64 to send with the request
         data:
           type: object
@@ -7123,8 +7113,9 @@ components:
           type: integer
           format: uint8
           minimum: 1
-          maximum: 60
+          maximum: 300
           description: The timeout for the request (in seconds)
+          default: 60
       description: API call definition
     Tools.ArxivIntegrationDef:
       type: object
@@ -8278,7 +8269,7 @@ components:
         description:
           type: string
           minLength: 1
-          maxLength: 1000
+          maxLength: 10000
           description: Description of the tool
         function:
           allOf:
@@ -8711,7 +8702,7 @@ components:
         description:
           type: string
           minLength: 1
-          maxLength: 1000
+          maxLength: 10000
           description: Description of the tool
         function:
           allOf:
@@ -9136,7 +9127,7 @@ components:
         description:
           type: string
           minLength: 1
-          maxLength: 1000
+          maxLength: 10000
           description: Description of the tool
         function:
           allOf:
@@ -9233,7 +9224,7 @@ components:
         description:
           type: string
           minLength: 1
-          maxLength: 1000
+          maxLength: 10000
           description: Description of the tool
         function:
           allOf:

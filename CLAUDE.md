@@ -38,7 +38,8 @@ See `CONTRIBUTING.md` for details on architecture and component relationships.
 
 ### Ward Testing Framework 
 - Use descriptive Ward test names: `@test("What the test is verifying")`
-- When testing specific patterns: `poe test -p "pattern_to_match"` 
+- When testing specific patterns: `poe test --search "pattern_to_match"` (NOT `-p` which isn't supported in Ward)
+- Limit failures for faster feedback: `poe test --fail-limit 1 --search "pattern_to_match"`
 - For quick Python script tests, use `PYTHONPATH=$PWD python tests/test_file.py`
 - The environment needs to be activated: `source .venv/bin/activate`
 - Path issues: Make sure you're in the right directory (agents-api/, not julep/)

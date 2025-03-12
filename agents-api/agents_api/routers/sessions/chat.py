@@ -1,9 +1,11 @@
+import asyncio
 import json
 from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header
 from fastapi.responses import StreamingResponse
+from starlette.background import BackgroundTask
 from starlette.status import HTTP_201_CREATED
 from uuid_extensions import uuid7
 
@@ -24,6 +26,12 @@ from .render import render_chat_input
 from .router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
+
+
+async def wait_for_tasks(tasks: list[asyncio.Task]) -> None:
+    """Wait for all background tasks to complete."""
+    if tasks:
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 @router.post(
@@ -130,9 +138,8 @@ async def chat(
                 session_id=session_id,
                 data=new_entries,
             )
-            # FIXME: Implement a mechanism to collect the full streamed message and save it
-            # This might require a separate background task started after streaming completes
-            # or a callback mechanism from the streaming response
+            # The complete streamed response will be saved in the stream_chat_response function
+            # using a separate background task to avoid blocking the stream
 
     # Adaptive context handling
     jobs = []
@@ -146,6 +153,8 @@ async def chat(
 
     # Return the response
     # Handle streaming response if requested
+    stream_tasks: list[asyncio.Task] = []
+
     if chat_input.stream:
         # For streaming, we'll use an async generator to yield chunks
         async def stream_chat_response():
@@ -157,6 +166,9 @@ async def chat(
             # Collect full response for metrics and optional saving
             content_so_far = ""
             final_usage = None
+            has_content = False
+
+            nonlocal stream_tasks
 
             try:
                 # Stream chunks from the model_response (CustomStreamWrapper from litellm)
@@ -189,6 +201,7 @@ async def chat(
                             and chunk.choices[0].delta.content
                         ):
                             content_so_far += chunk.choices[0].delta.content
+                            has_content = True
 
                         # Convert litellm chunk to our API format
                         # Only extract choices if they exist
@@ -222,7 +235,7 @@ async def chat(
                         continue
 
                 # Save complete response to history if needed
-                if chat_input.save and content_so_far:
+                if chat_input.save and has_content:
                     # FIXME: Implement saving the complete streamed response
                     # We have content_so_far containing the full message
                     # Need to create a CreateEntryRequest and call create_entries
@@ -236,13 +249,18 @@ async def chat(
                             content=content_so_far,
                             source="api_response",
                         )
-                        # Direct call to create_entries (not as background task)
-                        # This is not ideal but allows saving for now
-                        await create_entries(
-                            developer_id=developer.id,
-                            session_id=session_id,
-                            data=[complete_entry],
+                        # Use asyncio.create_task instead of direct await to avoid blocking
+                        import asyncio
+
+                        ref = asyncio.create_task(
+                            create_entries(
+                                developer_id=developer.id,
+                                session_id=session_id,
+                                data=[complete_entry],
+                            )
                         )
+                        stream_tasks.append(ref)
+
                     except Exception as e:
                         import logging
 
@@ -266,11 +284,13 @@ async def chat(
                 }
                 yield json.dumps(error_response) + "\n"
 
-        # Return a streaming response
+        # Return a streaming response with a background task to wait for all entry saving tasks
         return StreamingResponse(
             stream_chat_response(),
             media_type="application/json",
+            background=BackgroundTask(wait_for_tasks, stream_tasks),
         )
+
     # For non-streaming, return the complete response
     chat_response_class = MessageChatResponse
     chat_response: ChatResponse = chat_response_class(
@@ -288,7 +308,7 @@ async def chat(
             amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
         )
         return chat_response
-    return None
 
     # Note: For streaming responses, we've already returned the StreamingResponse above
     # This code is unreachable for streaming responses
+    return None
