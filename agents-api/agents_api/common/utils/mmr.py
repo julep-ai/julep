@@ -1,12 +1,20 @@
 from __future__ import annotations
 
 import logging
+from typing import TypeVar
 
 import numpy as np
+from beartype import beartype
+
+from ...autogen.openapi_model import DocReference
 
 Matrix = list[list[float]] | list[np.ndarray] | np.ndarray
 
 logger = logging.getLogger(__name__)
+
+MIN_DOCS_WITH_EMBEDDINGS = 2
+
+T = TypeVar("T")
 
 
 def _cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
@@ -56,6 +64,7 @@ def _cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
         return similarity
 
 
+@beartype
 def maximal_marginal_relevance(
     query_embedding: np.ndarray,
     embedding_list: list,
@@ -100,3 +109,41 @@ def maximal_marginal_relevance(
         idxs.append(idx_to_add)
         selected = np.append(selected, [embedding_list[idx_to_add]], axis=0)
     return idxs
+
+
+@beartype
+def apply_mmr_to_docs(
+    docs: list[DocReference], query_embedding: np.ndarray, limit: int, mmr_strength: float
+) -> list[DocReference]:
+    """
+    Apply Maximal Marginal Relevance to a list of document references.
+
+    Parameters:
+        docs: List of document references
+        query_embedding: The embedding vector of the query
+        limit: Maximum number of documents to return
+        mmr_strength: Strength of MMR (0-1), where 0 means no diversity and 1 means maximum diversity
+
+    Returns:
+        List of document references after applying MMR
+    """
+    # Filter docs with embeddings and extract embeddings in one pass
+    docs_with_embeddings = []
+    embeddings = []
+    for doc in docs:
+        if doc.snippet.embedding is not None:
+            docs_with_embeddings.append(doc)
+            embeddings.append(doc.snippet.embedding)
+
+    if len(docs_with_embeddings) >= MIN_DOCS_WITH_EMBEDDINGS:
+        # Apply MMR
+        indices = maximal_marginal_relevance(
+            query_embedding,
+            embeddings,
+            k=min(limit, len(docs_with_embeddings)),
+            lambda_mult=1 - mmr_strength,
+        )
+        return [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
+
+    # If docs are present but no embeddings are present for any of the docs, return the top k docs
+    return docs[:limit]

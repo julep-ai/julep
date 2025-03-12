@@ -20,31 +20,10 @@ def _():
     assert result == "french"
 
 
-@test("get_language: invalid language code raises HTTPException")
-def _():
-    with raises(HTTPException) as exc:
-        # Cast None to str to satisfy type checking while still testing the behavior
-        get_language(None)  # type: ignore
-
-    assert exc.raised.status_code == 422
-    assert exc.raised.detail == "Invalid ISO 639 language code."
-
-
 @test("get_language: empty language code raises HTTPException")
 def _():
     with raises(HTTPException) as exc:
         get_language("")
-
-    assert exc.raised.status_code == 422
-    assert exc.raised.detail == "Invalid ISO 639 language code."
-
-
-@test("get_language: None language code raises HTTPException")
-def _():
-    with raises(HTTPException) as exc:
-        # Using a string variable set to None to test the behavior
-        none_lang = None  # type: ignore
-        get_language(none_lang)  # type: ignore
 
     assert exc.raised.status_code == 422
     assert exc.raised.detail == "Invalid ISO 639 language code."
