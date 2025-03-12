@@ -10,11 +10,10 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 lookup_temporal_data_query = """
 SELECT t.*
 FROM
-    temporal_executions_lookup t,
-    executions e
+    temporal_executions_lookup t
+    JOIN latest_executions e ON t.execution_id = e.execution_id
 WHERE
-    t.execution_id = e.execution_id
-    AND e.execution_id = $1
+    e.execution_id = $1
     AND e.developer_id = $2
 LIMIT 1;
 """

@@ -3,13 +3,15 @@ BEGIN;
 /*
  * CONTINUOUS AGGREGATES WITH STATE AGGREGATION (Complexity: 9/10)
  * This is a TimescaleDB feature that automatically maintains a real-time summary of the transitions table.
- * It uses special aggregation functions like state_agg() to track state changes and last() to get most recent values.
- * The view updates every 10 minutes and can serve both historical and real-time data (materialized_only = FALSE).
+ * It uses special aggregation functions like last() to get most recent values.
+ * The view updates every 1 minute and can serve both historical and real-time data (materialized_only = FALSE).
+ * Uses a 1-minute bucket size for more granular and accurate tracking of latest transitions.
  */
--- create a function to convert transition_type to text (needed coz ::text is stable not immutable)
+-- Create a function to convert transition_type to text 
+-- (needed because casting with ::text is stable not immutable, but continuous views require immutable functions)
 CREATE
 OR REPLACE function to_text (transition_type) RETURNS text AS $$
-    select $1
+    select $1::text
 $$ STRICT IMMUTABLE LANGUAGE sql;
 
 -- create a continuous view that aggregates the transitions table
@@ -20,11 +22,11 @@ WITH
         timescaledb.materialized_only = FALSE
     ) AS
 SELECT
-    time_bucket ('1 day', t.created_at) AS bucket,
+    time_bucket ('1 minute', t.created_at) AS bucket,  -- Changed from 1 day to 1 minute for more granular bucketing
     t.execution_id,
     last (t.transition_id, t.created_at) AS transition_id,
     count(*) AS total_transitions,
-    state_agg (t.created_at, to_text (t.type)) AS state,
+    -- Removed unused state_agg column
     max(t.created_at) AS created_at,
     last (t.type, t.created_at) AS type,
     last (t.step_label, t.created_at) AS step_label,
@@ -53,8 +55,8 @@ SELECT
     add_continuous_aggregate_policy (
         'latest_transitions',
         start_offset => NULL,
-        end_offset => INTERVAL '10 minutes',
-        schedule_interval => INTERVAL '10 minutes'
+        end_offset => INTERVAL '1 minute',  -- Changed from 10 minutes to 1 minute
+        schedule_interval => INTERVAL '1 minute'  -- More frequent updates
     );
 
 -- Create a view that combines executions with their latest transitions

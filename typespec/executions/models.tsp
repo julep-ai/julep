@@ -56,6 +56,9 @@ model Execution {
     /** The error of the execution if it failed */
     error?: string;
 
+    /** The number of transitions in this execution */
+    transition_count?: uint8;
+
     ...HasTimestamps;
     ...HasMetadata;
     ...HasId;
