@@ -171,6 +171,7 @@ def validate_py_expression(
         return issues
 
     # Handle f-string expressions (these are often used in templates)
+    expr = expr.strip()
     if expr.startswith(("f'''", 'f"""')):
         # Just basic syntax check for f-strings, can't do much static analysis
         try:
