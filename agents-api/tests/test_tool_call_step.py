@@ -29,15 +29,8 @@ async def _():
         type="function",
         function={
             "description": "A test function",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "param1": {
-                        "type": "string"
-                    }
-                }
-            }
-        }
+            "parameters": {"type": "object", "properties": {"param1": {"type": "string"}}},
+        },
     )
 
     arguments = {"param1": "test_value"}
@@ -60,14 +53,10 @@ async def _():
         resource="doc",
         operation="get",
         resource_id=UUID("00000000-0000-0000-0000-000000000000"),
-        subresource="doc"
+        subresource="doc",
     )
 
-    tool = CreateToolRequest(
-        name="test_system",
-        type="system",
-        system=system_info
-    )
+    tool = CreateToolRequest(name="test_system", type="system", system=system_info)
 
     arguments = {"param1": "test_value"}
     call_id = "call_abc123"
@@ -94,19 +83,12 @@ async def _():
         type="function",
         function={
             "description": "A test function",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "param1": {
-                        "type": "string"
-                    }
-                }
-            }
+            "parameters": {"type": "object", "properties": {"param1": {"type": "string"}}},
         },
         agent_id=UUID("00000000-0000-0000-0000-000000000000"),
         developer_id=UUID("00000000-0000-0000-0000-000000000000"),
         created_at="2023-01-01T00:00:00Z",
-        updated_at="2023-01-01T00:00:00Z"
+        updated_at="2023-01-01T00:00:00Z",
     )
 
     arguments = {"param1": "test_value"}

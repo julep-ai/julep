@@ -46,10 +46,7 @@ async def _():
 async def _():
     # Try with an invalid query name (no dot separator)
     try:
-        await pg_query_step(
-            query_name="invalid_query_name",
-            values={}
-        )
+        await pg_query_step(query_name="invalid_query_name", values={})
         assert False, "Expected an exception but none was raised"
     except ValueError:
         # Expected behavior - ValueError should be raised
