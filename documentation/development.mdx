@@ -1,6 +1,7 @@
+```markdown
 ---
 title: 'Development'
-description: 'Learn how to preview changes locally'
+description: 'Learn how to preview changes locally and integrate the Entelligence Chat script'
 ---
 
 <Info>
@@ -72,6 +73,25 @@ You should see the following if the deploy successfully went through:
   <img src="/images/checks-passed.png" style={{ borderRadius: '0.5rem' }} />
 </Frame>
 
+## Entelligence Chat Integration
+
+The `entelligence-chat.js` script allows you to integrate the Entelligence Chat widget into your documentation site. Follow these steps to set it up:
+
+1. **Include the Script**: Ensure the `entelligence-chat.js` script is included in your project. This script will automatically initialize the chat widget when the page loads.
+
+2. **Script Initialization**: The script will look for an element with the ID `entelligence-chat-root` to attach the chat widget. Ensure this element is present in your HTML.
+
+3. **Styling**: The script fetches styles from an external CSS file and applies them to the chat widget using a shadow DOM. No additional styling is required unless customization is needed.
+
+4. **Configuration**: The script initializes the chat with the following configuration:
+   - `repoName`: "julep"
+   - `organization`: "julep-ai"
+   - `apiKey`: "-QPa1vq4X-2-KwLus5GxhDBE71g5BdXKwZs2M3iPh8U"
+   - `theme`: 'dark'
+   - `companyName`: "Julep AI"
+
+Ensure these values are correct for your use case.
+
 ## Troubleshooting
 
 Here's how to solve some common problems when working with the CLI.
@@ -95,3 +115,4 @@ Repeat step 3.
 </AccordionGroup>
 
 Curious about what changed in a CLI version? [Check out the CLI changelog.](/changelog/command-line)
+```
