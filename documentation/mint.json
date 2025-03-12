@@ -152,7 +152,8 @@
           "pages": [
             "docs/integrations/media_file_processing/llama-parse",
             "docs/integrations/media_file_processing/ffmpeg",
-            "docs/integrations/media_file_processing/cloudinary"
+            "docs/integrations/media_file_processing/cloudinary",
+            "docs/integrations/media_file_processing/unstructured"
           ]
         },
         {
