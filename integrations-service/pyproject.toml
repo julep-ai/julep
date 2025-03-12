@@ -33,6 +33,7 @@ dependencies = [
   "environs~=11.2.1",
   "arxiv~=2.1.3",
   "sentry-sdk[flask]>=2.19.0",
+  "unstructured-client>=0.28.1",
 ]
 
 [dependency-groups]

@@ -18,19 +18,12 @@ async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGet
     Fetches weather data for a specified location using OpenWeatherMap API.
     """
 
-    assert isinstance(setup, WeatherSetup), "Invalid setup"
-    assert isinstance(arguments, WeatherGetArguments), "Invalid arguments"
-
     location = arguments.location
 
-    openweathermap_api_key = setup.openweathermap_api_key
-    if openweathermap_api_key == "DEMO_API_KEY":
-        openweathermap_api_key = openweather_api_key
+    # Use walrus operator to simplify assignment and condition
+    if (api_key := setup.openweathermap_api_key) == "DEMO_API_KEY":
+        api_key = openweather_api_key
 
-    if not location:
-        msg = "Location parameter is required for weather data"
-        raise ValueError(msg)
-
-    weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=openweathermap_api_key)
+    weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=api_key)
     result = weather.run(location)
     return WeatherGetOutput(result=result)

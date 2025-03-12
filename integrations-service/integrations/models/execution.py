@@ -26,6 +26,8 @@ from ..autogen.Tools import (
     RemoteBrowserSetup,
     SpiderFetchArguments,
     SpiderSetup,
+    UnstructuredPartitionArguments,
+    UnstructuredSetup,
     WeatherGetArguments,
     WeatherSetup,
     WikipediaSearchArguments,
@@ -47,6 +49,7 @@ from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
 from .remote_browser import RemoteBrowserOutput
 from .spider import SpiderOutput
+from .unstructured import UnstructuredParseOutput
 from .weather import WeatherGetOutput
 from .wikipedia import WikipediaSearchOutput
 
@@ -68,6 +71,7 @@ ExecutionSetup = (
     | RemoteBrowserSetup
     | LlamaParseSetup
     | CloudinarySetup
+    | UnstructuredSetup
 )
 
 # Argument configurations
@@ -90,6 +94,7 @@ ExecutionArguments = (
     | CloudinaryUploadArguments
     | CloudinaryEditArguments
     | ArxivSearchArguments
+    | UnstructuredPartitionArguments
 )
 
 ExecutionResponse = (
@@ -112,6 +117,7 @@ ExecutionResponse = (
     | ExecutionError
     | ArxivSearchOutput
     | SpiderOutput
+    | UnstructuredParseOutput
 )
 
 

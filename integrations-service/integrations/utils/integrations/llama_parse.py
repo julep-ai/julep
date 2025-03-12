@@ -26,9 +26,6 @@ async def parse(
     Parse and extract content from files using LlamaParse.
     """
 
-    assert isinstance(setup, LlamaParseSetup), "Invalid setup"
-    assert isinstance(arguments, LlamaParseFetchArguments), "Invalid arguments"
-
     # Use walrus operator to simplify assignment and condition
     if (api_key := setup.llamaparse_api_key) == "DEMO_API_KEY":
         api_key = llama_api_key

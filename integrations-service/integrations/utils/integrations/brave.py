@@ -20,14 +20,11 @@ async def search(setup: BraveSearchSetup, arguments: BraveSearchArguments) -> Br
     Searches Brave Search with the provided query.
     """
 
-    assert isinstance(setup, BraveSearchSetup), "Invalid setup"
-    assert isinstance(arguments, BraveSearchArguments), "Invalid arguments"
+    # Use walrus operator to simplify assignment and condition
+    if (api_key := setup.brave_api_key) == "DEMO_API_KEY":
+        api_key = brave_api_key
 
-    # Check if the setup.api_key is 'DEMO_API_KEY' and load from environment if true
-    if setup.api_key == "DEMO_API_KEY":
-        setup.api_key = brave_api_key
-
-    tool = BraveSearch.from_api_key(api_key=setup.api_key, search_kwargs={"count": 3})
+    tool = BraveSearch.from_api_key(api_key=api_key, search_kwargs={"count": 3})
 
     result = tool.run(arguments.query)
 

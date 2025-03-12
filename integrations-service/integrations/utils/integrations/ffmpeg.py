@@ -61,8 +61,6 @@ async def validate_format(binary_data: bytes) -> tuple[bool, str]:
 async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
     """Execute a FFmpeg bash command using base64-encoded input data."""
     try:
-        assert isinstance(arguments, FfmpegSearchArguments), "Invalid arguments"
-
         # Decode base64 input
         try:
             if isinstance(arguments.file, str):
@@ -118,6 +116,11 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
+
+        # Ensure stdin is available (will satisfy type checker)
+        if process.stdin is None:
+            msg = "Failed to open stdin pipe for FFmpeg process"
+            raise RuntimeError(msg)
 
         # Write each decoded image to FFmpeg's stdin
         for image_data in input_data:

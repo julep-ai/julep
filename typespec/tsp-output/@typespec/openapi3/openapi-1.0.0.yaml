@@ -7344,6 +7344,7 @@ components:
             - ffmpeg
             - cloudinary
             - arxiv
+            - unstructured
           description: The provider of the integration
         method:
           type: string
@@ -7366,6 +7367,7 @@ components:
           ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDef'
           cloudinary: '#/components/schemas/Tools.BaseCloudinaryIntegrationDef'
           arxiv: '#/components/schemas/Tools.ArxivIntegrationDef'
+          unstructured: '#/components/schemas/Tools.UnstructuredIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -7385,6 +7387,7 @@ components:
             - ffmpeg
             - cloudinary
             - arxiv
+            - unstructured
           description: The provider of the integration
         method:
           type: string
@@ -7407,6 +7410,7 @@ components:
           ffmpeg: '#/components/schemas/Tools.FfmpegIntegrationDefUpdate'
           cloudinary: '#/components/schemas/Tools.BaseCloudinaryIntegrationDefUpdate'
           arxiv: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
+          unstructured: '#/components/schemas/Tools.UnstructuredIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -8253,6 +8257,7 @@ components:
             - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
+            - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -8684,6 +8689,7 @@ components:
             - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -9107,6 +9113,7 @@ components:
             - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
+            - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -9160,6 +9167,144 @@ components:
         - computer_20241022
         - text_editor_20241022
         - bash_20241022
+    Tools.UnstructuredIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - unstructured
+          description: The provider must be "unstructured"
+          default: unstructured
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.UnstructuredSetup'
+          description: The setup parameters for Unstructured
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.UnstructuredPartitionArguments'
+          description: The arguments for Unstructured
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Unstructured integration definition
+    Tools.UnstructuredIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - unstructured
+          description: The provider must be "unstructured"
+          default: unstructured
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.UnstructuredSetupUpdate'
+          description: The setup parameters for Unstructured
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.UnstructuredPartitionArgumentsUpdate'
+          description: The arguments for Unstructured
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Unstructured integration definition
+    Tools.UnstructuredPartitionArguments:
+      type: object
+      required:
+        - file
+      properties:
+        filename:
+          type: string
+          description: File Name. If not provided, a random name will be generated.
+        file:
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: The base64 string of the file, which can be a single string or a list of strings
+        partition_params:
+          type: object
+          additionalProperties: {}
+          description: Additional partition parameters
+      description: Arguments for Unstructured partition integration
+    Tools.UnstructuredPartitionArgumentsUpdate:
+      type: object
+      properties:
+        filename:
+          type: string
+          description: File Name. If not provided, a random name will be generated.
+        file:
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: The base64 string of the file, which can be a single string or a list of strings
+        partition_params:
+          type: object
+          additionalProperties: {}
+          description: Additional partition parameters
+      description: Arguments for Unstructured partition integration
+    Tools.UnstructuredSetup:
+      type: object
+      required:
+        - unstructured_api_key
+      properties:
+        unstructured_api_key:
+          type: string
+          description: The API key for Unstructured.io
+        server_url:
+          type: string
+          description: Optional server endpoint URL
+        server:
+          type: string
+          description: The server by name to use for all methods
+        url_params:
+          type: object
+          additionalProperties: {}
+          description: Parameters to optionally template the server URL with
+        retry_config:
+          type: object
+          additionalProperties: {}
+          description: The retry configuration to use for all supported methods
+        timeout_ms:
+          type: integer
+          format: int16
+          description: Optional request timeout applied to each operation in milliseconds
+      description: Setup parameters for Unstructured integration
+    Tools.UnstructuredSetupUpdate:
+      type: object
+      properties:
+        unstructured_api_key:
+          type: string
+          description: The API key for Unstructured.io
+        server_url:
+          type: string
+          description: Optional server endpoint URL
+        server:
+          type: string
+          description: The server by name to use for all methods
+        url_params:
+          type: object
+          additionalProperties: {}
+          description: Parameters to optionally template the server URL with
+        retry_config:
+          type: object
+          additionalProperties: {}
+          description: The retry configuration to use for all supported methods
+        timeout_ms:
+          type: integer
+          format: int16
+          description: Optional request timeout applied to each operation in milliseconds
+      description: Setup parameters for Unstructured integration
     Tools.UpdateToolRequest:
       type: object
       required:
@@ -9202,6 +9347,7 @@ components:
             - $ref: '#/components/schemas/Tools.CloudinaryUploadIntegrationDef'
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
+            - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
           description: The integration to call
         system:
           allOf:
