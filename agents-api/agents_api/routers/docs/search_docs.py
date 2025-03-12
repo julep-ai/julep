@@ -13,11 +13,9 @@ from ...autogen.openapi_model import (
     VectorDocSearchRequest,
 )
 from ...common.utils.get_doc_search import get_search_fn_and_params
+from ...common.utils.mmr import apply_mmr_to_docs
 from ...dependencies.developer_id import get_developer_id
-from ...queries.docs.mmr import maximal_marginal_relevance
 from .router import router
-
-MIN_DOCS_WITH_EMBEDDINGS = 2
 
 
 @router.post("/users/{user_id}/search", tags=["docs"])
@@ -53,26 +51,15 @@ async def search_user_docs(
     # Apply MMR if enabled and applicable
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
-        and search_params.mmr_strength > 0
         and len(docs) > search_params.limit
+        and search_params.mmr_strength > 0
     ):
-        # Filter docs with embeddings and extract embeddings in one pass
-        docs_with_embeddings = []
-        embeddings = []
-        for doc in docs:
-            if doc.snippet.embedding is not None:
-                docs_with_embeddings.append(doc)
-                embeddings.append(doc.snippet.embedding)
-
-        if len(docs_with_embeddings) >= MIN_DOCS_WITH_EMBEDDINGS:
-            # Apply MMR
-            indices = maximal_marginal_relevance(
-                np.asarray(params["embedding"]),
-                embeddings,
-                k=min(search_params.limit, len(docs_with_embeddings)),
-                lambda_mult=1 - search_params.mmr_strength,
-            )
-            docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
+        docs = apply_mmr_to_docs(
+            docs=docs,
+            query_embedding=np.asarray(params["embedding"]),
+            limit=search_params.limit,
+            mmr_strength=search_params.mmr_strength,
+        )
 
     end = time.time()
 
@@ -117,26 +104,15 @@ async def search_agent_docs(
     # Apply MMR if enabled and applicable
     if (
         not isinstance(search_params, TextOnlyDocSearchRequest)
-        and search_params.mmr_strength > 0
         and len(docs) > search_params.limit
+        and search_params.mmr_strength > 0
     ):
-        # Filter docs with embeddings and extract embeddings in one pass
-        docs_with_embeddings = []
-        embeddings = []
-        for doc in docs:
-            if doc.snippet.embedding is not None:
-                docs_with_embeddings.append(doc)
-                embeddings.append(doc.snippet.embedding)
-
-        if len(docs_with_embeddings) >= MIN_DOCS_WITH_EMBEDDINGS:
-            # Apply MMR
-            indices = maximal_marginal_relevance(
-                np.asarray(params["embedding"]),
-                embeddings,
-                k=min(search_params.limit, len(docs_with_embeddings)),
-                lambda_mult=1 - search_params.mmr_strength,
-            )
-            docs = [doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)]
+        docs = apply_mmr_to_docs(
+            docs=docs,
+            query_embedding=np.asarray(params["embedding"]),
+            limit=search_params.limit,
+            mmr_strength=search_params.mmr_strength,
+        )
 
     end = time.time()
 
