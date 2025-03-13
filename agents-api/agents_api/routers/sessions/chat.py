@@ -19,7 +19,7 @@ from ...dependencies.developer_id import get_developer_data
 from ...queries.entries.create_entries import create_entries
 from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from ..utils.model_validation import validate_model
-from ..utils.tools import tool_calls_evaluator
+from ..utils.tools import ToolCallsEvaluator
 from .metrics import total_tokens_per_user
 from .render import render_chat_input
 from .router import router
@@ -74,9 +74,10 @@ async def chat(
         "tags": developer.tags,
         "custom_api_key": x_custom_api_key,
     }
-    evaluator = tool_calls_evaluator(tool_types={"system"}, developer_id=developer.id)
-    acompletion = evaluator(litellm.acompletion)
-    model_response = await acompletion(**{
+    evaluator = ToolCallsEvaluator(
+        tool_types={"system"}, developer_id=developer.id, completion_func=litellm.acompletion
+    )
+    model_response = await evaluator.completion(**{
         **settings,
         **params,
     })
