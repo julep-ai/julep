@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Development'
 description: 'Learn how to preview changes locally'
@@ -95,3 +96,27 @@ Repeat step 3.
 </AccordionGroup>
 
 Curious about what changed in a CLI version? [Check out the CLI changelog.](/changelog/command-line)
+
+## Code Changes Overview
+
+Recent updates to the codebase have introduced new functions and modified existing ones. The following sections provide an overview of these changes and how they affect the development process.
+
+### New Functions and Modifications
+
+- **create_response**: This function has been significantly updated to handle chat inputs and responses. It now includes adaptive context handling and uses the `litellm` client for model interactions.
+- **create_responses_user** and **create_responses_session**: These new functions are responsible for creating user and session identifiers, respectively, and are crucial for managing session data.
+
+### New Modules
+
+- **model_converters.py**: This new module includes functions to convert between different data models, such as `CreateResponse` to `ChatInput` and `ChatResponse` to `Response`.
+
+### Dependencies
+
+Ensure that any new dependencies introduced by these changes, such as `uuid_extensions`, are installed and properly configured in your development environment.
+
+### Usage Patterns
+
+The updated functions and new modules introduce changes in how responses are created and managed. Developers should familiarize themselves with the new usage patterns, particularly the handling of chat inputs and responses.
+
+For more detailed information on the code changes, refer to the updated source files and the associated comments within the codebase.
+```
