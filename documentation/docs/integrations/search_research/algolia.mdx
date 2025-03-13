@@ -34,23 +34,22 @@ To get started with the Algolia integration, follow these steps to configure and
           provider: algolia
           method: search
           setup:
-            algolia_application_id: "ALGOLIA_APPLICATION_ID"
-            algolia_api_key: "ALGOLIA_API_KEY"
+            algolia_application_id: ALGOLIA_APPLICATION_ID
+            algolia_api_key: ALGOLIA_API_KEY
     main:
       - tool: algolia_search
         arguments:
-          index_name: "your_index_name"
-          query: "search query"
+          index_name: your_index_name # this is a placeholder for the actual index name
+          query: searchquery # this is a placeholder for the actual search query
           hits_per_page: 10
           attributes_to_retrieve:
-            - title
-            - description
-            - url
+            key1: value1 # these are placeholders for the actual parameters
+            key2: value2 # these are placeholders for the actual parameters
     ```
   </Step>
 </Steps>
 
-### YAML Explanation
+## YAML Explanation
 
 <AccordionGroup>
   <Accordion title="Basic Configuration">
@@ -75,75 +74,13 @@ To get started with the Algolia integration, follow these steps to configure and
         - **_index_name_**: The name of the Algolia index to search.
         - **_query_**: The search query to run against the index.
         - **_hits_per_page_** (optional): Maximum number of results to return (default: 20).
-        - **_attributes_to_retrieve_** (optional): Array of specific attributes to retrieve from the search results.
+        - **_attributes_to_retrieve_** (optional): Dictionary of specific attributes to retrieve from the search results.
   </Accordion>
 </AccordionGroup>
 
 <Note>
   Remember to replace `ALGOLIA_APPLICATION_ID` and `ALGOLIA_API_KEY` with your actual Algolia credentials. For security, it's recommended to use search-only API keys with the minimal necessary permissions.
 </Note>
-
-## Advanced Usage
-
-<AccordionGroup>
-  <Accordion title="Retrieving Specific Attributes">
-    You can retrieve only specific attributes from search results by configuring the `attributes_to_retrieve` parameter:
-
-    ```yaml
-    - tool: algolia_search
-      arguments:
-        index_name: "products"
-        query: "wireless headphones"
-        attributes_to_retrieve:
-          - name
-          - price
-          - image_url
-          - rating
-    ```
-
-    This will return only the specified attributes for each hit, reducing response size and improving performance.
-  </Accordion>
-
-  <Accordion title="Controlling Results Count">
-    By default, Algolia returns 20 hits per page. You can adjust this using the `hits_per_page` parameter:
-
-    ```yaml
-    - tool: algolia_search
-      arguments:
-        index_name: "blog_posts"
-        query: "machine learning"
-        hits_per_page: 5
-    ```
-
-    This is useful for controlling the amount of data returned or for implementing pagination.
-  </Accordion>
-</AccordionGroup>
-
-## Output Format
-
-The Algolia integration returns search results in the following format:
-
-```json
-{
-  "hits": [
-    // Array of matching records from your index
-    {
-      "objectID": "123456",
-      "title": "Example Product",
-      "description": "This is an example product description",
-      // ... other attributes
-    },
-    // ... more hits
-  ],
-  "metadata": {
-    "nbHits": 42,        // Total number of matches
-    "page": 0,           // Current page (0-based)
-    "nbPages": 3,        // Total number of pages
-    "processingTimeMS": 2, // Time taken for the search
-    "query": "example"   // The search query
-  }
-}
-```
 
 ## Conclusion
 

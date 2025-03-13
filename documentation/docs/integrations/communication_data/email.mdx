@@ -34,17 +34,17 @@ To get started with the Email integration, follow these steps to configure and c
           provider: email
           method: send
           setup:
-            host: "smtp.example.com"
+            host: smtp.example.com
             port: 587
-            user: "your_username"
-            password: "your_password"
+            user: YOUR_USERNAME
+            password: YOUR_PASSWORD
     main:
       - tool: email_tool
         arguments:
-          to: "recipient@example.com"
-          from: "sender@example.com"
-          subject: "Hello from Julep"
-          body: "This is a test email sent using Julep's Email integration."
+          to: recipient@example.com # this is a placeholder for the actual recipient email
+          from: sender@example.com # this is a placeholder for the actual sender email
+          subject: Hello from Julep # this is a placeholder for the actual subject
+          body: This is a test email sent using Julep's Email integration. # this is a placeholder for the actual body
     ```
   </Step>
 </Steps>
@@ -81,7 +81,9 @@ To get started with the Email integration, follow these steps to configure and c
 </AccordionGroup>
 
 <Note>
-  Remember to replace the SMTP server credentials and email addresses with your actual information. Ensure your SMTP server allows sending emails from the specified addresses.
+  - Please note that the `to` and `from` arguments can accept a single email address only.
+  - Replace the `YOUR_USERNAME` and `YOUR_PASSWORD` with your actual SMTP server credentials.
+  - Remember to replace the SMTP server credentials and email addresses with your actual information. Ensure your SMTP server allows sending emails from the specified addresses.
 </Note>
 
 ## Conclusion

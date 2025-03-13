@@ -34,16 +34,15 @@ To get started with the Unstructured.io integration, follow these steps to confi
           provider: unstructured
           method: parse
           setup:
-            unstructured_api_key: "UNSTRUCTURED_API_KEY"
+            unstructured_api_key: UNSTRUCTURED_API_KEY
     main:
       - tool: unstructured_processor
         arguments:
-          file: "${document_base64}"
-          filename: "document.pdf"
+          file: document_base64 # this is a placeholder for the actual file
+          filename: document.pdf # this is a placeholder for the actual filename
           partition_params:
             key1: value1 # these are placeholders for the actual parameters
             key2: value2 # these are placeholders for the actual parameters
-        result_var: "parsed_document"
     ```
   </Step>
   <Step title="Run Task">
