@@ -27,6 +27,7 @@ alias integrationProvider = (
     | "ffmpeg"
     | "cloudinary"
     | "arxiv"
+    | "algolia"
 );
 
 enum ToolType {
@@ -122,6 +123,7 @@ alias IntegrationDef = (
     | FfmpegIntegrationDef
     | CloudinaryIntegrationDef
     | ArxivIntegrationDef
+    | AlgoliaIntegrationDef
 );
 
 //

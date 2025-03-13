@@ -1,4 +1,6 @@
 from .autogen.Tools import (
+    AlgoliaSearchArguments,
+    AlgoliaSetup,
     ArxivSearchArguments,
     # Arguments imports
     BraveSearchArguments,
@@ -28,6 +30,7 @@ from .autogen.Tools import (
     WikipediaSearchArguments,
 )
 from .models import (
+    AlgoliaSearchOutput,
     ArxivSearchOutput,
     BaseProvider,
     BaseProviderMethod,
@@ -310,6 +313,25 @@ arxiv = BaseProvider(
     ),
 )
 
+algolia = BaseProvider(
+    provider="algolia",
+    setup=AlgoliaSetup,
+    methods=[
+        BaseProviderMethod(
+            method="search",
+            description="Search for content in an Algolia index",
+            arguments=AlgoliaSearchArguments,
+            output=AlgoliaSearchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://www.algolia.com/",
+        docs="https://www.algolia.com/doc/",
+        icon="https://www.algolia.com/favicon.ico",
+        friendly_name="Algolia Search",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -322,4 +344,5 @@ available_providers: dict[str, BaseProvider] = {
     "ffmpeg": ffmpeg,
     "cloudinary": cloudinary,
     "arxiv": arxiv,
+    "algolia": algolia,
 }

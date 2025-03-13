@@ -12,6 +12,7 @@ import "./llama_parse.tsp";
 import "./ffmpeg.tsp";
 import "./cloudinary.tsp";
 import "./arxiv.tsp";
+import "./algolia.tsp";
 
 namespace Tools;
 
