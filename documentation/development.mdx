@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Development'
 description: 'Learn how to preview changes locally'
@@ -72,6 +73,16 @@ You should see the following if the deploy successfully went through:
   <img src="/images/checks-passed.png" style={{ borderRadius: '0.5rem' }} />
 </Frame>
 
+## Search Functionality Updates
+
+The `search_by_text` function has been updated to use enhanced fuzzy matching and comprehensive similarity. This includes the introduction of new SQL functions:
+
+- **Enhanced Similarity Function**: Combines trigram similarity with Levenshtein distance for improved accuracy on shorter strings.
+- **Fuzzy Word Similarity Function**: Calculates similarity at the word level, providing a more granular matching approach.
+- **Comprehensive Similarity Function**: Integrates both enhanced and word-level similarities, adjusting weights based on query length to optimize search results.
+
+These functions improve the search functionality by providing more accurate and flexible matching capabilities, especially for shorter queries.
+
 ## Troubleshooting
 
 Here's how to solve some common problems when working with the CLI.
@@ -95,3 +106,4 @@ Repeat step 3.
 </AccordionGroup>
 
 Curious about what changed in a CLI version? [Check out the CLI changelog.](/changelog/command-line)
+```
