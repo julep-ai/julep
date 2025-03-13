@@ -2,9 +2,7 @@ from .autogen.Tools import (
     AlgoliaSearchArguments,
     AlgoliaSetup,
     ArxivSearchArguments,
-    # Arguments imports
     BraveSearchArguments,
-    # Setup imports
     BraveSearchSetup,
     BrowserbaseCompleteSessionArguments,
     BrowserbaseCreateSessionArguments,
@@ -366,5 +364,6 @@ available_providers: dict[str, BaseProvider] = {
     "ffmpeg": ffmpeg,
     "cloudinary": cloudinary,
     "arxiv": arxiv,
+    "unstructured": unstructured,
     "algolia": algolia,
 }
