@@ -17,13 +17,10 @@ from ...clients import litellm
 from ...common.utils.datetime import utcnow
 from ...dependencies.developer_id import get_developer_data, get_developer_id
 from ...queries.entries.create_entries import create_entries
-from ...routers.utils.create_responses_ids import (
-    create_responses_session,
-    create_responses_user,
-)
+
 from ...routers.utils.model_converters import (
     convert_chat_response_to_response,
-    convert_create_response_to_chat_input,
+    convert_create_response,
 )
 from ..sessions.metrics import total_tokens_per_user
 from ..sessions.render import render_chat_input
@@ -35,19 +32,16 @@ async def create_response(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     create_response_data: CreateResponse,
 ) -> Response:
-    chat_input = convert_create_response_to_chat_input(create_response_data)
-    session_id = None
-    agent_id = None
-    if create_response_data.previous_response_id:
-        session_id = create_response_data.previous_response_id
-        # TODO: get agent_id from session_id
-    else:
-        agent_id = (await create_responses_user(x_developer_id, create_response_data)).id
-        session_id = (
-            await create_responses_session(x_developer_id, create_response_data, agent_id)
-        ).id
+    developer = await get_developer_data(x_developer_id)
 
-    developer = get_developer_data(x_developer_id)
+    agent, session, chat_input = await convert_create_response(
+        x_developer_id,
+        create_response_data,
+    )
+
+
+    agent_id = agent.id
+    session_id = session.id
     x_custom_api_key = None
     background_tasks = BackgroundTasks()
 
@@ -74,6 +68,9 @@ async def create_response(
         "custom_api_key": x_custom_api_key,
     }
     payload = {**settings, **params}
+
+    print("PAYLOAD SENT TO LITELLM:")
+    print(payload)
 
     model_response = await litellm.acompletion(**payload)
 
@@ -133,5 +130,9 @@ async def create_response(
     # End chat function
 
     return convert_chat_response_to_response(
-        chat_response, chat_input, session_id, agent_id
+        create_response=create_response_data,
+        chat_response=chat_response,
+        chat_input=chat_input,
+        session_id=session_id,
+        user_id=developer.id,
     )

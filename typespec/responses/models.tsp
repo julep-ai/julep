@@ -5,21 +5,6 @@ using Common;
 
 namespace Responses;
 
-// Base properties for response creation
-model CreateModelResponseProperties {
-  `model`: string;
-  max_tokens?: int32;
-  temperature?: float = 1.0;
-  top_p?: float = 1.0;
-  n?: int32;
-  stream?: boolean = false;
-  stop?: string | string[];
-  presence_penalty?: float;
-  frequency_penalty?: float;
-  logit_bias?: Record<logit_bias>;
-  user?: string;
-}
-
 // Common response properties
 model ResponseProperties {
   instructions?: string;
@@ -95,8 +80,7 @@ model Response {
   instructions?: string;
   max_output_tokens?: int32;
   `model`: string;
-  output: OutputItem[];
-  output_text?: string;
+  output: MessageOutputItem[];
   parallel_tool_calls: boolean = true;
   previous_response_id?: string;
   reasoning?: {
@@ -157,7 +141,7 @@ model MessageOutputItem extends OutputItem {
   id: string;
   status: "completed" | "in_progress";
   role: "assistant";
-  content: ContentPart[];
+  content: TextContentPart[];
 }
 
 // Function call output item
@@ -224,7 +208,7 @@ model FileCitationAnnotation extends Annotation {
 
 // Input item for creating a response
 model InputItem {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system" | "developer";
   content: InputContentItem[];
 }
 
@@ -246,10 +230,11 @@ model ImageInputContentItem extends InputContentItem {
   image_url: string;
 }
 
-// Includable item for response creation
-// @discriminator("type")
-model Includable {
-  type: string;
+// Includable item for response creation field "include"
+enum Includable {
+  "file_search_call.results",
+  "message.input_image.image_url",
+  "computer_call_output.output.image_url"
 }
 
 // Tool for response creation

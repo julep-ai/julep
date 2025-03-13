@@ -5,66 +5,152 @@ from ...autogen.openapi_model import (
     ChatResponse,
     CreateResponse,
     Response,
+    Session,
+    CreateSessionRequest,
+    CreateAgentRequest,
+    Agent,
+    ResponseUsage,
+    MessageOutputItem,
+    TextContentPart,
 )
+from ...queries.sessions import get_session as get_session_query, create_session as create_session_query
+from ...queries.agents import list_agents as list_agents_query, create_agent as create_agent_query
 
 
-def convert_create_response_to_chat_input(create_response: CreateResponse) -> ChatInput:
-    return ChatInput(
+async def convert_create_response(developer_id: UUID, create_response: CreateResponse) -> tuple[Agent, Session, ChatInput]:
+
+    agents = await list_agents_query(
+        developer_id=developer_id,
+    )
+
+    # Sessions cannot be created without an agent. So:
+    # - If there is an agent, use it
+    # - If there is no agent, create a draft agent and use it
+    if agents:
+        agent = agents[0]
+    else:
+        agent = await create_agent_query(
+            developer_id=developer_id,
+            data=CreateAgentRequest(
+                name="draft-agent-for-response",
+                about="Draft agent for response",
+                model=create_response.model,
+            )
+        )
+
+    # Session ids are treated as previous_response_ids. So:
+    # - If there is a previous_response_id, use it
+    # - If there is no previous_response_id, create a session and use its id as the previous_response_id
+    session_id = create_response.previous_response_id
+    if session_id:
+        # TODO: Handle case where previous_response_id is provided, but session is not found
+        session: Session = await get_session_query(
+            developer_id = developer_id,
+            session_id=session_id,
+        )
+    else:
+        session = await create_session_query(
+            developer_id = developer_id,
+            session_id=session_id,
+            data=CreateSessionRequest(
+                agent=agent.id,
+                system_template=create_response.instructions or "You are a helpful assistant.",
+                metadata=create_response.metadata,
+            )
+        )
+
+    # Unsupported fields from `CreateResponse` that are not supported by `ChatInput` or `Session`:
+    # - include
+    # - parallel_tool_calls
+    # - response_format
+    # - n
+    # - user
+    # - reasoning
+    # - text
+    # - truncation
+
+    chat_input = ChatInput(
         model=create_response.model,
-        input=create_response.input,
-        include=create_response.include,
-        parallel_tool_calls=create_response.parallel_tool_calls,
+        messages=[{"role": "user", "content": create_response.input}] if type(
+            create_response.input) == str else create_response.input,
         save=create_response.store,
         stream=create_response.stream,
         max_tokens=create_response.max_tokens,
         temperature=create_response.temperature,
-        top_p=create_response.top_p,
-        n=create_response.n,
-        stop=create_response.stop,
         presence_penalty=create_response.presence_penalty,
         frequency_penalty=create_response.frequency_penalty,
+        top_p=create_response.top_p,
+        stop=create_response.stop or [],
         logit_bias=create_response.logit_bias,
-        user=create_response.user,
-        instructions=create_response.instructions,
-        previous_response_id=create_response.previous_response_id,
-        reasoning=create_response.reasoning,
-        text=create_response.text,
         tool_choice=create_response.tool_choice,
         tools=create_response.tools,
         truncation=create_response.truncation,
-        metadata=create_response.metadata,
+        recall=False,  # TODO: Enable recall only when file_search tool is present
     )
+
+    return agent, session, chat_input
 
 
 def convert_chat_response_to_response(
+    create_response: CreateResponse,
     chat_response: ChatResponse,
     chat_input: ChatInput,
     session_id: UUID,
     user_id: UUID,
 ) -> Response:
+    usage = ResponseUsage(
+        input_tokens=chat_response.usage.prompt_tokens,
+        input_tokens_details={"cached_tokens": 0}, # FIXME: Placeholder. Need to add proper input_tokens_details
+        output_tokens=chat_response.usage.completion_tokens,
+        output_tokens_details={"reasoning_tokens": 0}, # FIXME: Placeholder. Need to add proper output_tokens_details
+        total_tokens=chat_response.usage.total_tokens,
+    )
+
+    print("Received chat_response:")
+    print(chat_response)
+
+    output_text = chat_response.choices[0].message.content
+
+    output: list[MessageOutputItem] = [
+        MessageOutputItem(
+            type="message",
+            id=str(chat_response.id),
+            status="completed",
+            role="assistant",
+            content=[
+                TextContentPart(
+                    type="output_text",
+                    text=output_text,
+                    annotations=[]
+                )
+            ]
+        ),
+    ]
     return Response(
-        id=chat_response.id,
-        object=chat_response.object,
-        created_at=chat_response.created_at,
-        status="completeed",  # because we don't have get endpoint
+        id=str(session_id),
+        created_at=int(chat_response.created_at.timestamp()),
+        status="completed",  # because we don't have get endpoint
         error=None,
         incomplete_details=None,
-        instructions=None,  # TODO: Add instructions
-        max_output_tokens=None,  # TODO: Add max_output_tokens (is it the same as chat_input.max_tokens?)
+        instructions=create_response.instructions,
+        max_output_tokens=create_response.max_tokens,  # TODO: is it the same as chat_input.max_tokens?
         model=chat_input.model,
-        output=chat_response.output,  # TODO: fetch from chat_response.choices
-        output_text=chat_response.output_text,  # TODO: fetch from chat_response.choices
-        parallel_tool_calls=None,  # TODO: add parallel_tool_calls
-        previous_response_id=session_id,
-        reasoning=None,  # TODO: add reasoning (or not?)
+        output=output,
+        parallel_tool_calls=create_response.parallel_tool_calls,
+        previous_response_id=str(session_id),
+        reasoning=create_response.reasoning,  # TODO: add reasoning (or not?)
         store=chat_input.save,
         temperature=chat_input.temperature,
-        text=None,  # TODO: add text
-        tool_choice=chat_input.tool_choice,
-        tools=chat_input.tools,
+        text=create_response.text or {
+            "format": {
+                "type": "text"
+                }
+            },
+        tool_choice="auto",  # Default to auto if None
+        tools=[],  # Default to empty list if None
         top_p=chat_input.top_p,
-        truncation=None,  # TODO: add truncation
-        usage=None,  # TODO: add usage
-        user=user_id,
-        metadata=None,  # TODO: add metadata
+        truncation="auto",  # Default to auto if None
+        usage=usage,
+        user=str(user_id),
+        metadata=create_response.metadata or {},
     )
