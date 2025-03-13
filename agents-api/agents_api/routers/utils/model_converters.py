@@ -37,17 +37,16 @@ def convert_create_response_to_chat_input(create_response: CreateResponse) -> Ch
 
 
 def convert_chat_response_to_response(
-    chat_response: ChatResponse,
-    chat_input: ChatInput,
-    session_id: UUID,
-    user_id: UUID,
-    developer_id: UUID,
-) -> Response:
-    Response(
+        chat_response: ChatResponse,
+        chat_input: ChatInput,
+        session_id: UUID,
+        user_id: UUID,
+        ) -> Response:
+    return Response(
         id=chat_response.id,
         object=chat_response.object,
         created_at=chat_response.created_at,
-        status="completeed",
+        status="completeed", # because we don't have get endpoint
         error=None,
         incomplete_details=None,
         instructions=None,  # TODO: Add instructions
