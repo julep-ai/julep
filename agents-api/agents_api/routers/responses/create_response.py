@@ -1,18 +1,34 @@
 from typing import Annotated
 from uuid import UUID
-from uuid_extensions import uuid7
+
 from fastapi import Depends
 from fastapi.background import BackgroundTasks
-from ...autogen.openapi_model import CreateResponse, Response, ChatResponse, ChunkChatResponse, MessageChatResponse, CreateEntryRequest
-from ...dependencies.developer_id import get_developer_id, get_developer_data
-from ...queries.entries.create_entries import create_entries
-from .router import router
-from ..sessions.render import render_chat_input
-from ...routers.utils.model_converters import convert_create_response_to_chat_input, convert_chat_response_to_response
-from ...routers.utils.create_responses_ids import create_responses_user, create_responses_session
+from uuid_extensions import uuid7
+
+from ...autogen.openapi_model import (
+    ChatResponse,
+    ChunkChatResponse,
+    CreateEntryRequest,
+    CreateResponse,
+    MessageChatResponse,
+    Response,
+)
 from ...clients import litellm
 from ...common.utils.datetime import utcnow
+from ...dependencies.developer_id import get_developer_data, get_developer_id
+from ...queries.entries.create_entries import create_entries
+from ...routers.utils.create_responses_ids import (
+    create_responses_session,
+    create_responses_user,
+)
+from ...routers.utils.model_converters import (
+    convert_chat_response_to_response,
+    convert_create_response_to_chat_input,
+)
 from ..sessions.metrics import total_tokens_per_user
+from ..sessions.render import render_chat_input
+from .router import router
+
 
 @router.post("/responses", tags=["responses"])
 async def create_response(
@@ -27,13 +43,15 @@ async def create_response(
         # TODO: get agent_id from session_id
     else:
         agent_id = (await create_responses_user(x_developer_id, create_response_data)).id
-        session_id = (await create_responses_session(x_developer_id, create_response_data, agent_id)).id
-    
+        session_id = (
+            await create_responses_session(x_developer_id, create_response_data, agent_id)
+        ).id
+
     developer = get_developer_data(x_developer_id)
     x_custom_api_key = None
     background_tasks = BackgroundTasks()
 
-    ### Chat function
+    # Chat function
     (
         messages,
         doc_references,
@@ -112,7 +130,8 @@ async def create_response(
     total_tokens_per_user.labels(str(developer.id)).inc(
         amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
     )
-    ### End chat function
+    # End chat function
 
-    response = convert_chat_response_to_response(chat_response, chat_input, session_id, agent_id)
-    return response
+    return convert_chat_response_to_response(
+        chat_response, chat_input, session_id, agent_id
+    )
