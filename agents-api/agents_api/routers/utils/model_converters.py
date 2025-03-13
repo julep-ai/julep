@@ -54,7 +54,6 @@ async def convert_create_response(
     else:
         session = await create_session_query(
             developer_id=developer_id,
-            session_id=session_id,
             data=CreateSessionRequest(
                 agent=agent.id,
                 system_template=create_response.instructions or "You are a helpful assistant.",
