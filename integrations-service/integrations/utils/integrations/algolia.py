@@ -42,17 +42,17 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
     async with SearchClient(application_id, api_key) as client:
         result = json.loads((await client.search(search_request)).to_json())
 
-        # Direct array access instead of get() for known structure
-        first_result = result["results"][0]
+    # Access the first result from the results array as we only have one request
+    first_result = result.get("results", [])[0]
 
-        # Build metadata dict in one go
-        metadata = {
-            "nbHits": first_result["nbHits"],
-            "page": first_result["page"],
-            "nbPages": first_result["nbPages"],
-            "processingTimeMS": first_result["processingTimeMS"],
-            "query": arguments.query,
-        }
+    # Build metadata dict in one go
+    metadata = {
+        "nbHits": first_result.get("nbHits", 0),
+        "page": first_result.get("page", 0),
+        "nbPages": first_result.get("nbPages", 0),
+        "processingTimeMS": first_result.get("processingTimeMS", 0),
+        "query": arguments.query,
+    }
 
-        # Avoid redundant print statements in production code
-        return AlgoliaSearchOutput(hits=first_result["hits"], metadata=metadata)
+    # Avoid redundant print statements in production code
+    return AlgoliaSearchOutput(hits=first_result.get("hits", []), metadata=metadata)
