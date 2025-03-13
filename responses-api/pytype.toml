@@ -1,0 +1,54 @@
+[tool.pytype]
+inputs = ["responses_api"]
+output = ".pytype"
+python_version = "3.12"
+platform = "linux"
+exclude = [
+    "**/*_test.py",
+    "**/*.pyi",
+    ".venv/**/*.py",
+    "**/__pycache__/**/*.py",
+]
+keep_going = true
+jobs = 4
+protocols = true
+strict_primitive_comparisons = true
+strict_import = true
+precise_return = true
+precise_tuple = true
+overriding_renamed_parameter_count_checks = true
+overriding_parameter_count_checks = true
+attribute_error_reporting = "early"
+disable = [
+    "pyi-error",
+]
+enable = [
+    "import-error",
+    "attribute-error",
+    "name-error",
+    "wrong-arg-count",
+    "wrong-arg-types",
+    "wrong-keyword-args",
+    "invalid-typevar",
+    "not-instantiable",
+    "not-callable",
+    "bad-return-type",
+    "bad-concrete-type",
+    "unsupported-operands",
+    "missing-parameter",
+    "redundant-function-type-comment",
+    "incompatible-assignment",
+    "annotation-type-mismatch",
+    "invalid-annotation",
+    "container-type-mismatch",
+    "not-supported-yet",
+    "bad-function-defaults",
+    "bad-slots",
+    "duplicate-keyword-argument",
+    "invalid-function-type-comment",
+    "mro-error",
+    "redundant-cast",
+    "reveal-type",
+    "unbound-type-param",
+    "unsupported-operands",
+] 
