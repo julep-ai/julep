@@ -17,6 +17,9 @@ class RequestArgs(TypedDict):
     params: str | dict[str, Any] | None
     url: str | None
     headers: dict[str, str] | None
+    files: dict[str, Any] | None
+    method: str | None
+    follow_redirects: bool | None
 
 
 @beartype
@@ -30,10 +33,12 @@ async def execute_api_call(
             arg_headers = request_args.pop("headers", None)
 
             response = await client.request(
-                method=api_call.method,
+                method=request_args.pop("method", api_call.method),
                 url=arg_url or str(api_call.url),
                 headers={**(arg_headers or {}), **(api_call.headers or {})},
-                follow_redirects=api_call.follow_redirects,
+                follow_redirects=request_args.pop(
+                    "follow_redirects", api_call.follow_redirects
+                ),
                 **request_args,
             )
 
