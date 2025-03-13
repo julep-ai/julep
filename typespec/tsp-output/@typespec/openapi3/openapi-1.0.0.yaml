@@ -7503,16 +7503,16 @@ components:
     Tools.BraveSearchSetup:
       type: object
       required:
-        - api_key
+        - brave_api_key
       properties:
-        api_key:
+        brave_api_key:
           type: string
           description: The api key for Brave Search
       description: Integration definition for Brave Search
     Tools.BraveSearchSetupUpdate:
       type: object
       properties:
-        api_key:
+        brave_api_key:
           type: string
           description: The api key for Brave Search
       description: Integration definition for Brave Search

@@ -431,7 +431,7 @@ class BraveSearchSetup(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    api_key: str
+    brave_api_key: str
     """
     The api key for Brave Search
     """
@@ -445,7 +445,7 @@ class BraveSearchSetupUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    api_key: str | None = None
+    brave_api_key: str | None = None
     """
     The api key for Brave Search
     """
