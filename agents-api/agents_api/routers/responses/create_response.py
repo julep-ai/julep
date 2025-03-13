@@ -8,7 +8,7 @@ from ...dependencies.developer_id import get_developer_id
 from .router import router
 
 
-@router.post("/responses/", tags=["responses"])
+@router.post("/responses", tags=["responses"])
 async def create_response(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     create_response_data: CreateResponse,
