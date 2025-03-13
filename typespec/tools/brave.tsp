@@ -7,7 +7,7 @@ namespace Tools;
 /** Integration definition for Brave Search */
 model BraveSearchSetup {
     /** The api key for Brave Search */
-    api_key: string;
+    brave_api_key: string;
 }
 
 /** Arguments for Brave Search */

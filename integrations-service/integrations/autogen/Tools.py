@@ -269,6 +269,7 @@ class BaseIntegrationDef(BaseModel):
         "ffmpeg",
         "cloudinary",
         "arxiv",
+        "unstructured",
     ]
     """
     The provider of the integration
@@ -309,6 +310,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "ffmpeg",
             "cloudinary",
             "arxiv",
+            "unstructured",
         ]
         | None
     ) = None
@@ -429,7 +431,7 @@ class BraveSearchSetup(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    api_key: str
+    brave_api_key: str
     """
     The api key for Brave Search
     """
@@ -443,7 +445,7 @@ class BraveSearchSetupUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    api_key: str | None = None
+    brave_api_key: str | None = None
     """
     The api key for Brave Search
     """
@@ -944,6 +946,7 @@ class CreateToolRequest(BaseModel):
         | CloudinaryUploadIntegrationDef
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
+        | UnstructuredIntegrationDef
         | None
     ) = None
     """
@@ -1461,6 +1464,7 @@ class PatchToolRequest(BaseModel):
         | CloudinaryUploadIntegrationDefUpdate
         | CloudinaryEditIntegrationDefUpdate
         | ArxivIntegrationDefUpdate
+        | UnstructuredIntegrationDefUpdate
         | None
     ) = None
     """
@@ -1892,6 +1896,7 @@ class Tool(BaseModel):
         | CloudinaryUploadIntegrationDef
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
+        | UnstructuredIntegrationDef
         | None
     ) = None
     """
@@ -1930,6 +1935,170 @@ class ToolResponse(BaseModel):
     output: dict[str, Any]
     """
     The output of the tool
+    """
+
+
+class UnstructuredIntegrationDef(BaseIntegrationDef):
+    """
+    Unstructured integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["unstructured"] = "unstructured"
+    """
+    The provider must be "unstructured"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: UnstructuredSetup | None = None
+    """
+    The setup parameters for Unstructured
+    """
+    arguments: UnstructuredPartitionArguments | None = None
+    """
+    The arguments for Unstructured
+    """
+
+
+class UnstructuredIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Unstructured integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["unstructured"] = "unstructured"
+    """
+    The provider must be "unstructured"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: UnstructuredSetupUpdate | None = None
+    """
+    The setup parameters for Unstructured
+    """
+    arguments: UnstructuredPartitionArgumentsUpdate | None = None
+    """
+    The arguments for Unstructured
+    """
+
+
+class UnstructuredPartitionArguments(BaseModel):
+    """
+    Arguments for Unstructured partition integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filename: str | None = None
+    """
+    File Name. If not provided, a random name will be generated.
+    """
+    file: str
+    """
+    The base64 string of the file, which can be a single string or a list of strings
+    """
+    partition_params: dict[str, Any] | None = None
+    """
+    Additional partition parameters
+    """
+
+
+class UnstructuredPartitionArgumentsUpdate(BaseModel):
+    """
+    Arguments for Unstructured partition integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filename: str | None = None
+    """
+    File Name. If not provided, a random name will be generated.
+    """
+    file: str | None = None
+    """
+    The base64 string of the file, which can be a single string or a list of strings
+    """
+    partition_params: dict[str, Any] | None = None
+    """
+    Additional partition parameters
+    """
+
+
+class UnstructuredSetup(BaseModel):
+    """
+    Setup parameters for Unstructured integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    unstructured_api_key: str
+    """
+    The API key for Unstructured.io
+    """
+    server_url: str | None = None
+    """
+    Optional server endpoint URL
+    """
+    server: str | None = None
+    """
+    The server by name to use for all methods
+    """
+    url_params: dict[str, Any] | None = None
+    """
+    Parameters to optionally template the server URL with
+    """
+    retry_config: dict[str, Any] | None = None
+    """
+    The retry configuration to use for all supported methods
+    """
+    timeout_ms: int | None = None
+    """
+    Optional request timeout applied to each operation in milliseconds
+    """
+
+
+class UnstructuredSetupUpdate(BaseModel):
+    """
+    Setup parameters for Unstructured integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    unstructured_api_key: str | None = None
+    """
+    The API key for Unstructured.io
+    """
+    server_url: str | None = None
+    """
+    Optional server endpoint URL
+    """
+    server: str | None = None
+    """
+    The server by name to use for all methods
+    """
+    url_params: dict[str, Any] | None = None
+    """
+    Parameters to optionally template the server URL with
+    """
+    retry_config: dict[str, Any] | None = None
+    """
+    The retry configuration to use for all supported methods
+    """
+    timeout_ms: int | None = None
+    """
+    Optional request timeout applied to each operation in milliseconds
     """
 
 
@@ -1985,6 +2154,7 @@ class UpdateToolRequest(BaseModel):
         | CloudinaryUploadIntegrationDef
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
+        | UnstructuredIntegrationDef
         | None
     ) = None
     """

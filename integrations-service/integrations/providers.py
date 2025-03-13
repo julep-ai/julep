@@ -23,6 +23,8 @@ from .autogen.Tools import (
     RemoteBrowserSetup,
     SpiderFetchArguments,
     SpiderSetup,
+    UnstructuredPartitionArguments,
+    UnstructuredSetup,
     WeatherGetArguments,
     WeatherSetup,
     WikipediaSearchArguments,
@@ -46,6 +48,7 @@ from .models import (
     ProviderInfo,
     RemoteBrowserOutput,
     SpiderOutput,
+    UnstructuredParseOutput,
     WeatherGetOutput,
     WikipediaSearchOutput,
 )
@@ -310,6 +313,25 @@ arxiv = BaseProvider(
     ),
 )
 
+unstructured = BaseProvider(
+    provider="unstructured",
+    setup=UnstructuredSetup,
+    methods=[
+        BaseProviderMethod(
+            method="parse",
+            description="Parse documents into structured elements",
+            arguments=UnstructuredPartitionArguments,
+            output=UnstructuredParseOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://unstructured.io/",
+        docs="https://docs.unstructured.io/",
+        icon="https://unstructured.io/favicon.ico",
+        friendly_name="Unstructured.io",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -322,4 +344,5 @@ available_providers: dict[str, BaseProvider] = {
     "ffmpeg": ffmpeg,
     "cloudinary": cloudinary,
     "arxiv": arxiv,
+    "unstructured": unstructured,
 }
