@@ -1,9 +1,11 @@
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
+
+from .base_models import BaseOutput
 
 
-class AlgoliaSearchOutput(BaseModel):
+class AlgoliaSearchOutput(BaseOutput):
     """Output model for Algolia search"""
 
     model_config = ConfigDict(extra="allow")
