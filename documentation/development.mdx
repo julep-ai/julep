@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Development'
 description: 'Learn how to preview changes locally'
@@ -59,6 +60,27 @@ yarn global upgrade mintlify
 
 </CodeGroup>
 
+## Algolia Integration
+
+The project now includes an integration with Algolia. This requires setting up specific environment variables and dependencies.
+
+### Environment Variables
+
+Ensure the following environment variables are set in your environment:
+
+- `ALGOLIA_API_KEY`: Your Algolia API Key.
+- `ALGOLIA_APPLICATION_ID`: Your Algolia Application ID.
+
+These variables are necessary for the Algolia integration to function correctly.
+
+### Dependencies
+
+The following dependency has been added to support Algolia integration:
+
+- `algoliasearch>=4.14.0`
+
+Ensure your environment is updated with this dependency.
+
 ## Deployment
 
 <Tip>
@@ -95,3 +117,4 @@ Repeat step 3.
 </AccordionGroup>
 
 Curious about what changed in a CLI version? [Check out the CLI changelog.](/changelog/command-line)
+```
