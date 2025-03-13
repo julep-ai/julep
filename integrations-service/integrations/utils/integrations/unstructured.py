@@ -12,11 +12,6 @@ from ...env import (
 )
 from ...models import UnstructuredParseOutput
 
-
-class UnstructuredProcessingError(Exception):
-    """Custom exception for unstructured processing errors"""
-
-
 @beartype
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
@@ -35,15 +30,6 @@ async def parse(
     if (api_key := setup.unstructured_api_key) == "DEMO_API_KEY":
         api_key = unstructured_api_key
 
-    # # create a Retrying client
-    # retry_config = RetryConfig(
-    #     strategy=setup.retry_config.strategy,
-    #     backoff=BackoffStrategy(
-    #         **setup.retry_config.backoff,
-    #     ),
-    #     retry_connection_errors=setup.retry_config.retry_connection_errors,
-    # ) or None
-
     # Create a new client with all available parameters
     client = unstructured_client.UnstructuredClient(
         api_key_auth=api_key,
@@ -51,7 +37,6 @@ async def parse(
         server=setup.server,
         url_params=setup.url_params,
         timeout_ms=setup.timeout_ms,
-        # retries=retry_config,
     )
 
     # Decode the base64 encoded file
