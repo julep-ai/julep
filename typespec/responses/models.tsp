@@ -1,5 +1,7 @@
 import "@typespec/http";
 
+namespace Responses;
+
 // Base properties for response creation
 model CreateModelResponseProperties {
   model: string;
@@ -36,7 +38,7 @@ model ResponseProperties {
   };
   tools?: Tool[];
   truncation?: "disabled" | "auto";
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Model for creating a response
@@ -74,7 +76,7 @@ model CreateResponse {
   };
   tools?: Tool[];
   truncation?: "disabled" | "auto";
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Model for response
@@ -116,7 +118,7 @@ model Response {
   truncation: "disabled" | "auto";
   usage: ResponseUsage;
   user?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 // Model for response usage information
@@ -178,7 +180,7 @@ model FileSearchCallOutputItem extends OutputItem {
   id: string;
   status: "completed" | "in_progress";
   queries: string[];
-  results?: any;
+  results?: unknown;
 }
 
 // Content part in a message
@@ -258,7 +260,7 @@ model FunctionTool extends Tool {
   type: "function";
   name: string;
   description?: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   strict?: boolean;
 }
 
@@ -279,7 +281,7 @@ model WebSearchTool extends Tool {
 // File search tool
 model FileSearchTool extends Tool {
   type: "file_search";
-  filters?: any;
+  filters?: unknown;
   max_num_results?: int32;
   ranking_options?: {
     ranker?: "auto";

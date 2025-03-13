@@ -1,19 +1,31 @@
+#!/usr/bin/env bash
+
+# Turn on echo command
+set -x
+
 # Exit on error
 set -e
 
-# Run the TypeSpec compiler to generate OpenAPI and Pydantic models for the Responses API
 uv_run () {
   uvx \
     --with ruff --with datamodel-code-generator \
-    --from typespec-responses/openapi-responses.yaml
+    --from ${2:-poethepoet} \
+    $1
 }
 
+codegen_then_format () {
+  uv_run 'poe codegen' && \
+  uv_run 'poe format'  && \
+  uv_run 'poe lint' || exit 0
+}
+
+
 cd typespec-responses && \
-  tsp compile . --output-file openapi-responses.yaml
+  tsp compile .
 cd -
 
 cd responses-api && \
-  uv_run
+  codegen_then_format
 cd -
 
 # Generate JSON schema from OpenAPI specification
