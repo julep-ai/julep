@@ -814,6 +814,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Jobs.JobStatus'
+  /responses:
+    post:
+      operationId: ResponsesRoute_createResponse
+      description: Creates a model response. Provide text or image inputs to generate text or JSON outputs.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.Response'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Responses.CreateResponse'
   /sessions:
     get:
       operationId: SessionsRoute_list
@@ -3959,6 +3977,647 @@ components:
             - $ref: '#/components/schemas/Jobs.JobState'
           description: Current state of the job
           default: pending
+    Responses.Annotation:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+    Responses.ContentPart:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+    Responses.CreateResponse:
+      type: object
+      required:
+        - model
+        - input
+      properties:
+        model:
+          type: string
+        input:
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/Responses.InputItem'
+        include:
+          type: array
+          items:
+            $ref: '#/components/schemas/Responses.Includable'
+        parallel_tool_calls:
+          type: boolean
+          default: true
+        store:
+          type: boolean
+          default: true
+        stream:
+          type: boolean
+          default: false
+        max_tokens:
+          type: integer
+          format: int32
+        temperature:
+          type: number
+          default: 1
+        top_p:
+          type: number
+          default: 1
+        n:
+          type: integer
+          format: int32
+        stop:
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+        presence_penalty:
+          type: number
+        frequency_penalty:
+          type: number
+        logit_bias:
+          type: object
+          additionalProperties: {}
+        user:
+          type: string
+        instructions:
+          type: string
+        previous_response_id:
+          type: string
+        reasoning:
+          type: object
+          properties:
+            effort:
+              type: string
+              enum:
+                - low
+                - medium
+                - high
+        text:
+          type: object
+          properties:
+            format:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - text
+                    - json_object
+              required:
+                - type
+        tool_choice:
+          anyOf:
+            - type: string
+              enum:
+                - auto
+                - none
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - function
+                function:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                  required:
+                    - name
+              required:
+                - type
+                - function
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/Responses.Tool'
+        truncation:
+          type: string
+          enum:
+            - disabled
+            - auto
+        metadata:
+          type: object
+          additionalProperties: {}
+    Responses.FileCitationAnnotation:
+      type: object
+      required:
+        - type
+        - index
+        - file_id
+        - filename
+      properties:
+        type:
+          type: string
+          enum:
+            - file_citation
+        index:
+          type: integer
+          format: int32
+        file_id:
+          type: string
+        filename:
+          type: string
+      allOf:
+        - $ref: '#/components/schemas/Responses.Annotation'
+    Responses.FileSearchCallOutputItem:
+      type: object
+      required:
+        - type
+        - id
+        - status
+        - queries
+      properties:
+        type:
+          type: string
+          enum:
+            - file_search_call
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - completed
+            - in_progress
+        queries:
+          type: array
+          items:
+            type: string
+        results: {}
+      allOf:
+        - $ref: '#/components/schemas/Responses.OutputItem'
+    Responses.FileSearchTool:
+      type: object
+      required:
+        - type
+        - vector_store_ids
+      properties:
+        type:
+          type: string
+          enum:
+            - file_search
+        filters: {}
+        max_num_results:
+          type: integer
+          format: int32
+        ranking_options:
+          type: object
+          properties:
+            ranker:
+              type: string
+              enum:
+                - auto
+            score_threshold:
+              type: number
+        vector_store_ids:
+          type: array
+          items:
+            type: string
+      allOf:
+        - $ref: '#/components/schemas/Responses.Tool'
+    Responses.FunctionCallOutputItem:
+      type: object
+      required:
+        - type
+        - id
+        - call_id
+        - name
+        - arguments
+        - status
+      properties:
+        type:
+          type: string
+          enum:
+            - function_call
+        id:
+          type: string
+        call_id:
+          type: string
+        name:
+          type: string
+        arguments:
+          type: string
+        status:
+          type: string
+          enum:
+            - completed
+            - in_progress
+      allOf:
+        - $ref: '#/components/schemas/Responses.OutputItem'
+    Responses.FunctionTool:
+      type: object
+      required:
+        - type
+        - name
+        - parameters
+      properties:
+        type:
+          type: string
+          enum:
+            - function
+        name:
+          type: string
+        description:
+          type: string
+        parameters:
+          type: object
+          additionalProperties: {}
+        strict:
+          type: boolean
+      allOf:
+        - $ref: '#/components/schemas/Responses.Tool'
+    Responses.ImageInputContentItem:
+      type: object
+      required:
+        - type
+        - image_url
+      properties:
+        type:
+          type: string
+          enum:
+            - input_image
+        image_url:
+          type: string
+      allOf:
+        - $ref: '#/components/schemas/Responses.InputContentItem'
+    Responses.Includable:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+    Responses.InputContentItem:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+    Responses.InputItem:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Responses.InputContentItem'
+    Responses.MessageOutputItem:
+      type: object
+      required:
+        - type
+        - id
+        - status
+        - role
+        - content
+      properties:
+        type:
+          type: string
+          enum:
+            - message
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - completed
+            - in_progress
+        role:
+          type: string
+          enum:
+            - assistant
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Responses.ContentPart'
+      allOf:
+        - $ref: '#/components/schemas/Responses.OutputItem'
+    Responses.OutputItem:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+    Responses.Response:
+      type: object
+      required:
+        - id
+        - object
+        - created_at
+        - status
+        - model
+        - output
+        - parallel_tool_calls
+        - temperature
+        - tool_choice
+        - tools
+        - top_p
+        - truncation
+        - usage
+        - metadata
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum:
+            - response
+        created_at:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+            - completed
+            - failed
+            - in_progress
+            - incomplete
+        error:
+          $ref: '#/components/schemas/Responses.ResponseError'
+        incomplete_details:
+          type: object
+          properties:
+            reason:
+              type: string
+              enum:
+                - max_output_tokens
+                - content_filter
+          required:
+            - reason
+        instructions:
+          type: string
+        max_output_tokens:
+          type: integer
+          format: int32
+        model:
+          type: string
+        output:
+          type: array
+          items:
+            $ref: '#/components/schemas/Responses.OutputItem'
+        output_text:
+          type: string
+        parallel_tool_calls:
+          type: boolean
+          default: true
+        previous_response_id:
+          type: string
+        reasoning:
+          type: object
+          properties:
+            effort:
+              type: string
+              enum:
+                - low
+                - medium
+                - high
+            summary:
+              type: string
+        store:
+          type: boolean
+          default: true
+        temperature:
+          type: number
+          default: 1
+        text:
+          type: object
+          properties:
+            format:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - text
+                    - json_object
+              required:
+                - type
+        tool_choice:
+          anyOf:
+            - type: string
+              enum:
+                - auto
+                - none
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - function
+                function:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                  required:
+                    - name
+              required:
+                - type
+                - function
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/Responses.Tool'
+        top_p:
+          type: number
+          default: 1
+        truncation:
+          type: string
+          enum:
+            - disabled
+            - auto
+        usage:
+          $ref: '#/components/schemas/Responses.ResponseUsage'
+        user:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: {}
+    Responses.ResponseError:
+      type: object
+      required:
+        - message
+        - type
+      properties:
+        message:
+          type: string
+        type:
+          type: string
+        param:
+          type: string
+        code:
+          type: string
+    Responses.ResponseUsage:
+      type: object
+      required:
+        - input_tokens
+        - input_tokens_details
+        - output_tokens
+        - output_tokens_details
+        - total_tokens
+      properties:
+        input_tokens:
+          type: integer
+          format: int32
+        input_tokens_details:
+          type: object
+          properties:
+            cached_tokens:
+              type: integer
+              format: int32
+          required:
+            - cached_tokens
+        output_tokens:
+          type: integer
+          format: int32
+        output_tokens_details:
+          type: object
+          properties:
+            reasoning_tokens:
+              type: integer
+              format: int32
+          required:
+            - reasoning_tokens
+        total_tokens:
+          type: integer
+          format: int32
+    Responses.TextContentPart:
+      type: object
+      required:
+        - type
+        - text
+        - annotations
+      properties:
+        type:
+          type: string
+          enum:
+            - output_text
+        text:
+          type: string
+        annotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Responses.Annotation'
+      allOf:
+        - $ref: '#/components/schemas/Responses.ContentPart'
+    Responses.TextInputContentItem:
+      type: object
+      required:
+        - type
+        - text
+      properties:
+        type:
+          type: string
+          enum:
+            - input_text
+        text:
+          type: string
+      allOf:
+        - $ref: '#/components/schemas/Responses.InputContentItem'
+    Responses.Tool:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+    Responses.UrlCitationAnnotation:
+      type: object
+      required:
+        - type
+        - start_index
+        - end_index
+        - url
+        - title
+      properties:
+        type:
+          type: string
+          enum:
+            - url_citation
+        start_index:
+          type: integer
+          format: int32
+        end_index:
+          type: integer
+          format: int32
+        url:
+          type: string
+        title:
+          type: string
+      allOf:
+        - $ref: '#/components/schemas/Responses.Annotation'
+    Responses.WebSearchCallOutputItem:
+      type: object
+      required:
+        - type
+        - id
+        - status
+      properties:
+        type:
+          type: string
+          enum:
+            - web_search_call
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - completed
+            - in_progress
+      allOf:
+        - $ref: '#/components/schemas/Responses.OutputItem'
+    Responses.WebSearchTool:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - web_search_preview
+        domains:
+          type: array
+          items:
+            type: string
+        search_context_size:
+          type: string
+          enum:
+            - small
+            - medium
+            - large
+        user_location:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - approximate
+            city:
+              type: string
+            country:
+              type: string
+            region:
+              type: string
+            timezone:
+              type: string
+          required:
+            - type
+      allOf:
+        - $ref: '#/components/schemas/Responses.Tool'
     Sessions.BaseDocSearch:
       type: object
       required:

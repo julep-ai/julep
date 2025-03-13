@@ -811,13 +811,13 @@
     "BraveSearchSetup": {
       "description": "Integration definition for Brave Search",
       "properties": {
-        "api_key": {
-          "title": "Api Key",
+        "brave_api_key": {
+          "title": "Brave Api Key",
           "type": "string"
         }
       },
       "required": [
-        "api_key"
+        "brave_api_key"
       ],
       "title": "BraveSearchSetup",
       "type": "object"
@@ -825,7 +825,7 @@
     "BraveSearchSetupUpdate": {
       "description": "Integration definition for Brave Search",
       "properties": {
-        "api_key": {
+        "brave_api_key": {
           "anyOf": [
             {
               "type": "string"
@@ -834,7 +834,7 @@
               "type": "null"
             }
           ],
-          "title": "Api Key"
+          "title": "Brave Api Key"
         }
       },
       "title": "BraveSearchSetupUpdate",
@@ -4091,6 +4091,9 @@
             },
             {
               "$ref": "#/$defs/ArxivIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
             },
             {
               "type": "null"
@@ -8045,6 +8048,9 @@
               "$ref": "#/$defs/ArxivIntegrationDefUpdate"
             },
             {
+              "$ref": "#/$defs/UnstructuredIntegrationDefUpdate"
+            },
+            {
               "type": "null"
             }
           ],
@@ -10202,6 +10208,9 @@
               "$ref": "#/$defs/ArxivIntegrationDef"
             },
             {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
               "type": "null"
             }
           ],
@@ -10371,6 +10380,9 @@
             },
             {
               "$ref": "#/$defs/ArxivIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
             },
             {
               "type": "null"
@@ -10920,6 +10932,9 @@
               "$ref": "#/$defs/ArxivIntegrationDef"
             },
             {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
               "type": "null"
             }
           ],
@@ -11232,6 +11247,312 @@
       "title": "TransitionTarget",
       "type": "object"
     },
+    "UnstructuredIntegrationDef": {
+      "description": "Unstructured integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnstructuredPartitionArguments"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "unstructured",
+          "default": "unstructured",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnstructuredSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "UnstructuredIntegrationDef",
+      "type": "object"
+    },
+    "UnstructuredIntegrationDefUpdate": {
+      "description": "Unstructured integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnstructuredPartitionArgumentsUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "unstructured",
+          "default": "unstructured",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnstructuredSetupUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "UnstructuredIntegrationDefUpdate",
+      "type": "object"
+    },
+    "UnstructuredPartitionArguments": {
+      "description": "Arguments for Unstructured partition integration",
+      "properties": {
+        "file": {
+          "title": "File",
+          "type": "string"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Filename"
+        },
+        "partition_params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Partition Params"
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "title": "UnstructuredPartitionArguments",
+      "type": "object"
+    },
+    "UnstructuredPartitionArgumentsUpdate": {
+      "description": "Arguments for Unstructured partition integration",
+      "properties": {
+        "file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "File"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Filename"
+        },
+        "partition_params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Partition Params"
+        }
+      },
+      "title": "UnstructuredPartitionArgumentsUpdate",
+      "type": "object"
+    },
+    "UnstructuredSetup": {
+      "description": "Setup parameters for Unstructured integration",
+      "properties": {
+        "retry_config": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retry Config"
+        },
+        "server": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server"
+        },
+        "server_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server Url"
+        },
+        "timeout_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Timeout Ms"
+        },
+        "unstructured_api_key": {
+          "title": "Unstructured Api Key",
+          "type": "string"
+        },
+        "url_params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url Params"
+        }
+      },
+      "required": [
+        "unstructured_api_key"
+      ],
+      "title": "UnstructuredSetup",
+      "type": "object"
+    },
+    "UnstructuredSetupUpdate": {
+      "description": "Setup parameters for Unstructured integration",
+      "properties": {
+        "retry_config": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retry Config"
+        },
+        "server": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server"
+        },
+        "server_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server Url"
+        },
+        "timeout_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Timeout Ms"
+        },
+        "unstructured_api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unstructured Api Key"
+        },
+        "url_params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url Params"
+        }
+      },
+      "title": "UnstructuredSetupUpdate",
+      "type": "object"
+    },
     "UpdateAgentRequest": {
       "description": "Payload for updating a agent",
       "properties": {
@@ -11524,6 +11845,9 @@
             },
             {
               "$ref": "#/$defs/ArxivIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
             },
             {
               "type": "null"
@@ -12720,6 +13044,9 @@
               "$ref": "#/$defs/ArxivIntegrationDef"
             },
             {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
               "type": "null"
             }
           ],
@@ -12883,6 +13210,9 @@
             },
             {
               "$ref": "#/$defs/ArxivIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
             },
             {
               "type": "null"

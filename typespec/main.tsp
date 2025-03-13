@@ -14,6 +14,7 @@ import "./tasks";
 import "./tools";
 import "./users";
 import "./versions.tsp";
+import "./responses";
 
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
@@ -70,6 +71,9 @@ namespace Api {
 
     @route("/agents/{id}/tools")
     interface AgentToolsRoute extends Tools.AgentEndpoints {}
+
+    @route("/responses")
+    interface ResponsesRoute extends Responses.ResponsesEndpoints {}
 
     @route("/users")
     interface UsersRoute extends Users.Endpoints {}

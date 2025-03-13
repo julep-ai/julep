@@ -1,10 +1,13 @@
 import "@typespec/http";
+import "../common";
+
+using Common;
 
 namespace Responses;
 
 // Base properties for response creation
 model CreateModelResponseProperties {
-  model: string;
+  `model`: string;
   max_tokens?: int32;
   temperature?: float = 1.0;
   top_p?: float = 1.0;
@@ -13,7 +16,7 @@ model CreateModelResponseProperties {
   stop?: string | string[];
   presence_penalty?: float;
   frequency_penalty?: float;
-  logit_bias?: Record<string, float>;
+  logit_bias?: Record<logit_bias>;
   user?: string;
 }
 
@@ -38,12 +41,12 @@ model ResponseProperties {
   };
   tools?: Tool[];
   truncation?: "disabled" | "auto";
-  metadata?: Record<string, unknown>;
+  metadata?: Record<unknown>;
 }
 
 // Model for creating a response
 model CreateResponse {
-  model: string;
+  `model`: string;
   input: string | InputItem[];
   include?: Includable[];
   parallel_tool_calls?: boolean = true;
@@ -56,7 +59,7 @@ model CreateResponse {
   stop?: string | string[];
   presence_penalty?: float;
   frequency_penalty?: float;
-  logit_bias?: Record<string, float>;
+  logit_bias?: Record<unknown>;
   user?: string;
   instructions?: string;
   previous_response_id?: string;
@@ -76,7 +79,7 @@ model CreateResponse {
   };
   tools?: Tool[];
   truncation?: "disabled" | "auto";
-  metadata?: Record<string, unknown>;
+  metadata?: Record<unknown>;
 }
 
 // Model for response
@@ -91,7 +94,7 @@ model Response {
   };
   instructions?: string;
   max_output_tokens?: int32;
-  model: string;
+  `model`: string;
   output: OutputItem[];
   output_text?: string;
   parallel_tool_calls: boolean = true;
@@ -118,7 +121,7 @@ model Response {
   truncation: "disabled" | "auto";
   usage: ResponseUsage;
   user?: string;
-  metadata: Record<string, unknown>;
+  metadata: Record<unknown>;
 }
 
 // Model for response usage information
@@ -143,8 +146,8 @@ model ResponseError {
 }
 
 // Model for output items in a response
+// @discriminator("type")
 model OutputItem {
-  @discriminator("type")
   type: string;
 }
 
@@ -184,8 +187,8 @@ model FileSearchCallOutputItem extends OutputItem {
 }
 
 // Content part in a message
+// @discriminator("type")
 model ContentPart {
-  @discriminator("type")
   type: string;
 }
 
@@ -197,8 +200,8 @@ model TextContentPart extends ContentPart {
 }
 
 // Annotation in text content
+// @discriminator("type")
 model Annotation {
-  @discriminator("type")
   type: string;
 }
 
@@ -226,8 +229,8 @@ model InputItem {
 }
 
 // Content item in an input
+// @discriminator("type")
 model InputContentItem {
-  @discriminator("type")
   type: string;
 }
 
@@ -244,14 +247,14 @@ model ImageInputContentItem extends InputContentItem {
 }
 
 // Includable item for response creation
+// @discriminator("type")
 model Includable {
-  @discriminator("type")
   type: string;
 }
 
 // Tool for response creation
+// @discriminator("type")
 model Tool {
-  @discriminator("type")
   type: string;
 }
 
@@ -260,7 +263,7 @@ model FunctionTool extends Tool {
   type: "function";
   name: string;
   description?: string;
-  parameters: Record<string, unknown>;
+  parameters: Record<unknown>;
   strict?: boolean;
 }
 

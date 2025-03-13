@@ -6,7 +6,7 @@ using TypeSpec.Http;
 namespace Responses;
 
 @route("/responses")
-interface ResponsesApi {
+interface ResponsesEndpoints {
   @doc("Creates a model response. Provide text or image inputs to generate text or JSON outputs.")
   @post
   createResponse(
