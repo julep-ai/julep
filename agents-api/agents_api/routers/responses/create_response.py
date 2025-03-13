@@ -2,9 +2,27 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
+from fastapi.background import BackgroundTasks
+from uuid_extensions import uuid7
 
-from ...autogen.openapi_model import CreateResponse, Response
-from ...dependencies.developer_id import get_developer_id
+from ...autogen.openapi_model import (
+    ChatResponse,
+    ChunkChatResponse,
+    CreateEntryRequest,
+    CreateResponse,
+    MessageChatResponse,
+    Response,
+)
+from ...clients import litellm
+from ...common.utils.datetime import utcnow
+from ...dependencies.developer_id import get_developer_data, get_developer_id
+from ...queries.entries.create_entries import create_entries
+from ...routers.utils.model_converters import (
+    convert_chat_response_to_response,
+    convert_create_response,
+)
+from ..sessions.metrics import total_tokens_per_user
+from ..sessions.render import render_chat_input
 from .router import router
 
 
@@ -12,50 +30,102 @@ from .router import router
 async def create_response(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     create_response_data: CreateResponse,
+    background_tasks: BackgroundTasks,
 ) -> Response:
-    print("Got create_response_data", create_response_data)
-    return Response(
-        id="resp_67ccd2bed1ec8190b14f964abc0542670bb6a6b452d3795b",
-        object="response",
-        created_at=1741476542,
-        status="completed",
-        error=None,
-        incomplete_details=None,
-        instructions=None,
-        max_output_tokens=None,
-        model="gpt-4o-2024-08-06",
-        output=[
-            {
-                "type": "message",
-                "id": "msg_67ccd2bf17f0819081ff3bb2cf6508e60bb6a6b452d3795b",
-                "status": "completed",
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "output_text",
-                        "text": "In a peaceful grove beneath a silver moon, a unicorn named Lumina discovered a hidden pool that reflected the stars. As she dipped her horn into the water, the pool began to shimmer, revealing a pathway to a magical realm of endless night skies. Filled with wonder, Lumina whispered a wish for all who dream to find their own hidden magic, and as she glanced back, her hoofprints sparkled like stardust.",
-                        "annotations": [],
-                    }
-                ],
-            }
-        ],
-        parallel_tool_calls=True,
-        previous_response_id=None,
-        reasoning={"effort": None, "summary": None},
-        store=True,
-        temperature=1.0,
-        text={"format": {"type": "text"}},
-        tool_choice="auto",
-        tools=[],
-        top_p=1.0,
-        truncation="disabled",
-        usage={
-            "input_tokens": 36,
-            "input_tokens_details": {"cached_tokens": 0},
-            "output_tokens": 87,
-            "output_tokens_details": {"reasoning_tokens": 0},
-            "total_tokens": 123,
-        },
-        user=None,
-        metadata={},
+    developer = await get_developer_data(x_developer_id)
+
+    _agent, session, chat_input = await convert_create_response(
+        x_developer_id,
+        create_response_data,
+    )
+
+    session_id = session.id
+    x_custom_api_key = None
+    # Chat function
+    (
+        messages,
+        doc_references,
+        formatted_tools,
+        settings,
+        new_messages,
+        chat_context,
+    ) = await render_chat_input(
+        developer=developer,
+        session_id=session_id,
+        chat_input=chat_input,
+    )
+
+    # Use litellm for other models
+    params = {
+        "messages": messages,
+        "tools": formatted_tools or None,
+        "user": str(developer.id),
+        "tags": developer.tags,
+        "custom_api_key": x_custom_api_key,
+    }
+    payload = {**settings, **params}
+
+    model_response = await litellm.acompletion(**payload)
+
+    # Save the input and the response to the session history
+    if chat_input.save:
+        new_entries = [
+            CreateEntryRequest.from_model_input(
+                model=settings["model"],
+                **msg,
+                source="api_request",
+            )
+            for msg in new_messages
+        ]
+
+        # Add the response to the new entries
+        # FIXME: We need to save all the choices
+        new_entries.append(
+            CreateEntryRequest.from_model_input(
+                model=settings["model"],
+                **model_response.choices[0].model_dump()["message"],
+                source="api_response",
+            ),
+        )
+        background_tasks.add_task(
+            create_entries,
+            developer_id=developer.id,
+            session_id=session_id,
+            data=new_entries,
+        )
+
+    # Adaptive context handling
+    jobs = []
+    if chat_context.session.context_overflow == "adaptive":
+        # FIXME: Start the adaptive context workflow
+        # SCRUM-8
+
+        # jobs = [await start_adaptive_context_workflow]
+        msg = "Adaptive context is not yet implemented"
+        raise NotImplementedError(msg)
+
+    # Return the response
+    # FIXME: Implement streaming for chat
+    chat_response_class = ChunkChatResponse if chat_input.stream else MessageChatResponse
+
+    chat_response: ChatResponse = chat_response_class(
+        id=uuid7(),
+        created_at=utcnow(),
+        jobs=jobs,
+        docs=doc_references,
+        usage=model_response.usage.model_dump(),
+        choices=[choice.model_dump() for choice in model_response.choices],
+    )
+
+    total_tokens_per_user.labels(str(developer.id)).inc(
+        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
+    )
+    # End chat function
+
+    return convert_chat_response_to_response(
+        create_response=create_response_data,
+        chat_response=chat_response,
+        chat_input=chat_input,
+        session_id=session_id,
+        user_id=developer.id,
     )

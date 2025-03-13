@@ -4247,12 +4247,11 @@ components:
       allOf:
         - $ref: '#/components/schemas/Responses.InputContentItem'
     Responses.Includable:
-      type: object
-      required:
-        - type
-      properties:
-        type:
-          type: string
+      type: string
+      enum:
+        - file_search_call.results
+        - message.input_image.image_url
+        - computer_call_output.output.image_url
     Responses.InputContentItem:
       type: object
       required:
