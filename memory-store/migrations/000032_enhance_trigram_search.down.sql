@@ -9,7 +9,6 @@ DROP FUNCTION IF EXISTS enhanced_similarity;
 
 -- Drop the additional indexes we created
 DROP INDEX IF EXISTS idx_docs_lookup;
-DROP INDEX IF EXISTS idx_docs_search_covering;
 DROP INDEX IF EXISTS idx_doc_owners_search;
 
 -- Restore the original search_by_text function from 000031

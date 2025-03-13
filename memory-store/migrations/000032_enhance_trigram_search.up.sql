@@ -105,10 +105,6 @@ $$ LANGUAGE plpgsql;
 -- Create additional indexes for improved search performance
 CREATE INDEX IF NOT EXISTS idx_docs_lookup ON docs (developer_id, doc_id, index);
 
-CREATE INDEX IF NOT EXISTS idx_docs_search_covering ON docs (developer_id)
-INCLUDE (doc_id, index, title, content)
-WHERE search_tsv IS NOT NULL;
-
 CREATE INDEX IF NOT EXISTS idx_doc_owners_search ON doc_owners (doc_id, developer_id, owner_type, owner_id);
 
 -- Update search_by_text function to use comprehensive similarity
