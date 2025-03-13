@@ -1,11 +1,44 @@
+```markdown
 ---
 title: 'Development'
-description: 'Learn how to preview changes locally'
+description: 'Learn how to preview changes locally and understand the development process for the responses-api'
 ---
 
 <Info>
-  **Prerequisite**: Please install Node.js (version 19 or higher) before proceeding.
+  **Prerequisite**: Please install Node.js (version 19 or higher) and Python 3.12 before proceeding.
 </Info>
+
+## Development Process
+
+### Build, Lint, and Test Commands
+
+For Python:
+
+- **Lint**: `poe lint` or `ruff check`
+- **Format**: `poe format` or `ruff format`
+- **Typecheck**: `poe typecheck` or `pytype --config pytype.toml`
+- **Test**: `poe test` or use `pytest tests/test_file.py::test_function`
+- **SQL Validation**: `poe validate-sql`
+- **Full Check**: `poe check` (includes lint, format, validate-sql, typecheck)
+
+For Node:
+
+- **Build**: `yarn build` or `./scripts/build`
+- **Test**: `yarn test` or `./scripts/test`
+- **Lint**: `yarn lint` or `./scripts/lint`
+- **Format**: `yarn format` or `./scripts/format`
+
+### Code Style Guidelines
+
+- **Python**: Use snake_case for variables/functions, PascalCase for classes. Strict typing with annotations; use pydantic for data validation. Max line length 96 characters, 4 spaces indentation.
+- **TypeScript**: camelCase for variables/functions, PascalCase for classes.
+- **Import Order**: Standard library, third-party, local packages.
+- **Exceptions**: Define custom exceptions in dedicated exceptions.py modules.
+- **Async/Await**: Use async/await patterns consistently where applicable.
+- **Architecture**: Follow microservice architecture patterns within Docker Compose.
+- **Documentation**: Add docstrings to functions/classes for better documentation.
+
+## Local Development
 
 Step 1. Install Mintlify on your OS:
 
@@ -21,7 +54,7 @@ yarn global add mintlify
 
 </CodeGroup>
 
-Step 2. Go to the docs are located (where you can find `mint.json`) and run the following command:
+Step 2. Navigate to the directory where the docs are located (where you can find `mint.json`) and run the following command:
 
 ```bash
 mintlify dev
@@ -31,13 +64,13 @@ The documentation website is now available at `http://localhost:3000`.
 
 ### Custom Ports
 
-Mintlify uses port 3000 by default. You can use the `--port` flag to customize the port Mintlify runs on. For example, use this command to run in port 3333:
+Mintlify uses port 3000 by default. You can use the `--port` flag to customize the port Mintlify runs on. For example, use this command to run on port 3333:
 
 ```bash
 mintlify dev --port 3333
 ```
 
-You will see an error like this if you try to run Mintlify in a port that's already taken:
+You will see an error like this if you try to run Mintlify on a port that's already taken:
 
 ```md
 Error: listen EADDRINUSE: address already in use :::3000
@@ -62,8 +95,7 @@ yarn global upgrade mintlify
 ## Deployment
 
 <Tip>
-  Unlimited editors available under the [Pro
-  Plan](https://mintlify.com/pricing) and above.
+  Unlimited editors available under the [Pro Plan](https://mintlify.com/pricing) and above.
 </Tip>
 
 You should see the following if the deploy successfully went through:
@@ -81,17 +113,14 @@ Here's how to solve some common problems when working with the CLI.
     Update to Node v18. Run `mintlify install` and try again.
   </Accordion>
   <Accordion title="No such file or directory on Windows">
-Go to the `C:/Users/Username/.mintlify/` directory and remove the `mint`
-folder. Then Open the Git Bash in this location and run `git clone
-https://github.com/mintlify/mint.git`.
+    Go to the `C:/Users/Username/.mintlify/` directory and remove the `mint` folder. Then open the Git Bash in this location and run `git clone https://github.com/mintlify/mint.git`.
 
-Repeat step 3.
-
+    Repeat step 3.
   </Accordion>
   <Accordion title="Getting an unknown error">
-    Try navigating to the root of your device and delete the ~/.mintlify folder.
-    Then run `mintlify dev` again.
+    Try navigating to the root of your device and delete the ~/.mintlify folder. Then run `mintlify dev` again.
   </Accordion>
 </AccordionGroup>
 
 Curious about what changed in a CLI version? [Check out the CLI changelog.](/changelog/command-line)
+```
