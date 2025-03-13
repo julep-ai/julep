@@ -9,18 +9,7 @@ from ...env import (
 from ...models import SpiderOutput, SpiderResponse
 
 
-# Spider client instances
-def get_spider_client(api_key: str) -> AsyncSpider:
-    return AsyncSpider(api_key=api_key)
-
-
-def get_api_key(setup: SpiderSetup) -> str:
-    """
-    Helper function to get the API key.
-    """
-    return setup.spider_api_key if setup.spider_api_key != "DEMO_API_KEY" else spider_api_key
-
-
+@beartype
 def create_spider_response(pages: list[dict]) -> list[SpiderResponse]:
     return [
         SpiderResponse(
@@ -34,17 +23,22 @@ def create_spider_response(pages: list[dict]) -> list[SpiderResponse]:
     ]
 
 
+@beartype
 async def execute_spider_method(
     method_name: str,
     setup: SpiderSetup,
     arguments: SpiderFetchArguments,
 ) -> SpiderOutput:
-    api_key = get_api_key(setup)
+    # Use walrus operator to simplify assignment and condition
+    if (api_key := setup.spider_api_key) == "DEMO_API_KEY":
+        api_key = spider_api_key
+    # Initialize the final result list
     final_result = []
+    # Initialize the results variable
     results = None
 
     try:
-        async with get_spider_client(api_key=api_key) as spider_client:
+        async with AsyncSpider(api_key=api_key) as spider_client:
             async for result in getattr(spider_client, method_name)(
                 url=str(arguments.url),
                 params=arguments.params,
@@ -75,8 +69,6 @@ async def crawl(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderOu
     """
     Crawl a website and extract data.
     """
-    assert isinstance(setup, SpiderSetup), "Invalid setup"
-    assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
     return await execute_spider_method("crawl_url", setup, arguments)
 
 
@@ -90,8 +82,6 @@ async def links(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderOu
     """
     Extract all links from the webpage.
     """
-    assert isinstance(setup, SpiderSetup), "Invalid setup"
-    assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
     return await execute_spider_method("links", setup, arguments)
 
 
@@ -105,8 +95,6 @@ async def screenshot(setup: SpiderSetup, arguments: SpiderFetchArguments) -> Spi
     """
     Take a screenshot of the webpage.
     """
-    assert isinstance(setup, SpiderSetup), "Invalid setup"
-    assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
     return await execute_spider_method("screenshot", setup, arguments)
 
 
@@ -120,6 +108,4 @@ async def search(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderO
     """
     Search content within the webpage.
     """
-    assert isinstance(setup, SpiderSetup), "Invalid setup"
-    assert isinstance(arguments, SpiderFetchArguments), "Invalid arguments"
     return await execute_spider_method("search", setup, arguments)

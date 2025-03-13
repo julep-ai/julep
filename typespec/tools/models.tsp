@@ -27,6 +27,7 @@ alias integrationProvider = (
     | "ffmpeg"
     | "cloudinary"
     | "arxiv"
+    | "unstructured"
     | "algolia"
 );
 
@@ -123,6 +124,7 @@ alias IntegrationDef = (
     | FfmpegIntegrationDef
     | CloudinaryIntegrationDef
     | ArxivIntegrationDef
+    | UnstructuredIntegrationDef
     | AlgoliaIntegrationDef
 );
 
