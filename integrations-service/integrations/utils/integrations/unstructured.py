@@ -12,6 +12,7 @@ from ...env import (
 )
 from ...models import UnstructuredParseOutput
 
+
 @beartype
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
