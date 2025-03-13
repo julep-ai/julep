@@ -69,8 +69,6 @@ async def create_response(
     }
     payload = {**settings, **params}
 
-    print("PAYLOAD SENT TO LITELLM:")
-    print(payload)
 
     model_response = await litellm.acompletion(**payload)
 

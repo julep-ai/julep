@@ -106,8 +106,6 @@ def convert_chat_response_to_response(
         total_tokens=chat_response.usage.total_tokens,
     )
 
-    print("Received chat_response:")
-    print(chat_response)
 
     output_text = chat_response.choices[0].message.content
 
