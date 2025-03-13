@@ -164,7 +164,7 @@ Checkout the list of integrations that Julep supports [here](/docs/integrations)
 
 #### API Call Tool
 
-Julep can also directly make api calls during workflow executions as tool calls. Same as `integration's`, additional runtime parameters are loaded from metadata fields. For example,
+Julep can also directly make `api_call` during workflow executions as tool calls. Similar to `integration` tools, additional runtime parameters are loaded from metadata fields. For example,
 
 ```yaml YAML
 name: Example api_call task
@@ -172,8 +172,9 @@ tools:
   - type: api_call
     name: hello
     api_call:
-      method: GET
-      url: https://httpbin.org/get
+      method: GET  # Required - HTTP method must be specified
+      url: https://httpbin.org/get  # Required - URL must be specified
+      # Optional parameters can be added here (headers, follow_redirects, etc.)
 
 main:
   - tool: hello
@@ -215,8 +216,10 @@ main:
 </AccordionGroup>
 
 <Note>
-  We utlize the python httpx library to make the api calls. Please refer to the [httpx documentation](https://www.python-httpx.org/api/#request-parameters) for more details on the parameters.
+ - In the argument one can override the `method` and `url` from the `api_call` setup step.
+  - We utlize the python httpx library to make the api calls. Please refer to the [httpx documentation](https://www.python-httpx.org/api/#request-parameters) for more details on the parameters.
 </Note>
+
 
 ## How to Use Tools
 
