@@ -30,6 +30,7 @@ from .router import router
 async def create_response(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     create_response_data: CreateResponse,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
 ) -> Response:
     developer = await get_developer_data(x_developer_id)
 
@@ -40,8 +41,6 @@ async def create_response(
 
     session_id = session.id
     x_custom_api_key = None
-    background_tasks = BackgroundTasks()
-
     # Chat function
     (
         messages,
