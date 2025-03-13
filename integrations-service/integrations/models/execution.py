@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from ..autogen.Tools import (
+    AlgoliaSearchArguments,
     AlgoliaSetup,
     ArxivSearchArguments,
     # Arguments
@@ -96,6 +97,7 @@ ExecutionArguments = (
     | CloudinaryUploadArguments
     | CloudinaryEditArguments
     | ArxivSearchArguments
+    | AlgoliaSearchArguments
 )
 
 ExecutionResponse = (

@@ -366,4 +366,5 @@ available_providers: dict[str, BaseProvider] = {
     "ffmpeg": ffmpeg,
     "cloudinary": cloudinary,
     "arxiv": arxiv,
+    "algolia": algolia,
 }

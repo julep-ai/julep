@@ -1,3 +1,5 @@
+import json
+
 from algoliasearch.search.client import SearchClient
 from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -24,34 +26,33 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
     if (application_id := setup.algolia_application_id) == "DEMO_APPLICATION_ID":
         application_id = algolia_application_id
 
-    # Extract the parameters
-    index_name = arguments.index_name
-    query = arguments.query
-    hits_per_page = arguments.hits_per_page or 20
+    # Build the search request
+    search_request = {
+        "requests": [
+            {
+                "indexName": arguments.index_name,
+                "query": arguments.query,
+                "hitsPerPage": arguments.hits_per_page or 20,
+                **(arguments.attributes_to_retrieve or {}),
+            }
+        ]
+    }
 
     # Initialize the Algolia client
     async with SearchClient(application_id, api_key) as client:
-        result = await client.search({
-            "requests": [
-                {
-                    "indexName": index_name,
-                    "query": query,
-                    "hitsPerPage": hits_per_page,
-                }
-            ]
-        })
+        result = json.loads((await client.search(search_request)).to_json())
 
-        # Extract the results from the first query
-        result = result.to_json()
+        # Direct array access instead of get() for known structure
+        first_result = result["results"][0]
 
-        # Extract relevant information
-        hits = result.get("hits", [])
+        # Build metadata dict in one go
         metadata = {
-            "nbHits": result.get("nbHits", 0),
-            "page": result.get("page", 0),
-            "nbPages": result.get("nbPages", 0),
-            "processingTimeMS": result.get("processingTimeMS", 0),
-            "query": query,
+            "nbHits": first_result["nbHits"],
+            "page": first_result["page"],
+            "nbPages": first_result["nbPages"],
+            "processingTimeMS": first_result["processingTimeMS"],
+            "query": arguments.query,
         }
 
-        return AlgoliaSearchOutput(hits=hits, metadata=metadata)
+        # Avoid redundant print statements in production code
+        return AlgoliaSearchOutput(hits=first_result["hits"], metadata=metadata)
