@@ -17,7 +17,6 @@ from ...clients import litellm
 from ...common.utils.datetime import utcnow
 from ...dependencies.developer_id import get_developer_data, get_developer_id
 from ...queries.entries.create_entries import create_entries
-
 from ...routers.utils.model_converters import (
     convert_chat_response_to_response,
     convert_create_response,
@@ -34,13 +33,11 @@ async def create_response(
 ) -> Response:
     developer = await get_developer_data(x_developer_id)
 
-    agent, session, chat_input = await convert_create_response(
+    _agent, session, chat_input = await convert_create_response(
         x_developer_id,
         create_response_data,
     )
 
-
-    agent_id = agent.id
     session_id = session.id
     x_custom_api_key = None
     background_tasks = BackgroundTasks()
@@ -68,7 +65,6 @@ async def create_response(
         "custom_api_key": x_custom_api_key,
     }
     payload = {**settings, **params}
-
 
     model_response = await litellm.acompletion(**payload)
 
