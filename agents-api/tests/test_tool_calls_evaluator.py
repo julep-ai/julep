@@ -12,9 +12,9 @@ from tests.fixtures import (
     pg_dsn,
     test_agent,
     test_developer_id,
+    test_user,
 )
 
-# Agent doc fixtures
 agent_doc_list = make_acompletion_multiple_outputs([
     {
         "role": "assistant",
@@ -25,7 +25,11 @@ agent_doc_list = make_acompletion_multiple_outputs([
                 "type": "system",
                 "function": {
                     "name": "agent.doc.list",
-                    "arguments": {"agent_id": str(uuid7()), "developer_id": str(UUID(int=0))},
+                    "arguments": {
+                        "owner_id": str(uuid7()),
+                        "developer_id": str(UUID(int=0)),
+                        "owner_type": "agent",
+                    },
                 },
             }
         ],
@@ -36,51 +40,60 @@ agent_doc_list = make_acompletion_multiple_outputs([
     },
 ])
 
-agent_doc_create = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Creating agent doc",
-        "tool_calls": [
-            {
-                "id": "call_agent_doc_create",
-                "type": "system",
-                "function": {
-                    "name": "agent.doc.create",
-                    "arguments": {
-                        "agent_id": str(uuid7()),
-                        "developer_id": str(UUID(int=0)),
-                        "data": {"title": "Test Doc", "content": "This is a test document"},
+agent_doc_create = make_acompletion_multiple_outputs(
+    lambda agent, doc, user: [
+        {
+            "role": "assistant",
+            "content": "Creating agent doc",
+            "tool_calls": [
+                {
+                    "id": "call_agent_doc_create",
+                    "type": "system",
+                    "function": {
+                        "name": "agent.doc.create",
+                        "arguments": {
+                            "agent_id": str(agent.id),
+                            "x_developer_id": str(UUID(int=0)),
+                            "data": {"title": "Test Doc", "content": "This is a test document"},
+                        },
                     },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Agent doc created successfully",
-    },
-])
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Agent doc created successfully",
+        },
+    ]
+)
 
-agent_doc_delete = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Deleting agent doc",
-        "tool_calls": [
-            {
-                "id": "call_agent_doc_delete",
-                "type": "system",
-                "function": {
-                    "name": "agent.doc.delete",
-                    "arguments": {"doc_id": str(uuid7()), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Agent doc deleted successfully",
-    },
-])
+agent_doc_delete = make_acompletion_multiple_outputs(
+    lambda agent, doc, user: [
+        {
+            "role": "assistant",
+            "content": "Deleting agent doc",
+            "tool_calls": [
+                {
+                    "id": "call_agent_doc_delete",
+                    "type": "system",
+                    "function": {
+                        "name": "agent.doc.delete",
+                        "arguments": {
+                            "doc_id": str(doc.id),
+                            "developer_id": str(UUID(int=0)),
+                            "owner_type": "agent",
+                            "owner_id": str(agent.id),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Agent doc deleted successfully",
+        },
+    ]
+)
 
 agent_doc_search = make_acompletion_multiple_outputs([
     {
@@ -94,8 +107,10 @@ agent_doc_search = make_acompletion_multiple_outputs([
                     "name": "agent.doc.search",
                     "arguments": {
                         "agent_id": str(uuid7()),
-                        "developer_id": str(UUID(int=0)),
-                        "text": "test query",
+                        "x_developer_id": str(UUID(int=0)),
+                        "search_params": {
+                            "text": "any string",
+                        },
                     },
                 },
             }
@@ -107,7 +122,6 @@ agent_doc_search = make_acompletion_multiple_outputs([
     },
 ])
 
-# Agent fixtures
 agent_list = make_acompletion_multiple_outputs([
     {
         "role": "assistant",
@@ -163,6 +177,7 @@ agent_create = make_acompletion_multiple_outputs([
                     "arguments": {
                         "data": {
                             "name": "test agent 2",
+                            "canonical_name": f"some_unique_name_{uuid7()}",
                             "model": "gpt-4o-mini",
                             "about": "test agent about 2",
                             "metadata": {"test": "test 2"},
@@ -226,7 +241,6 @@ agent_delete = make_acompletion_multiple_outputs([
     },
 ])
 
-# User doc fixtures
 user_doc_list = make_acompletion_multiple_outputs([
     {
         "role": "assistant",
@@ -237,7 +251,11 @@ user_doc_list = make_acompletion_multiple_outputs([
                 "type": "system",
                 "function": {
                     "name": "user.doc.list",
-                    "arguments": {"user_id": str(uuid7()), "developer_id": str(UUID(int=0))},
+                    "arguments": {
+                        "owner_id": str(uuid7()),
+                        "developer_id": str(UUID(int=0)),
+                        "owner_type": "user",
+                    },
                 },
             }
         ],
@@ -260,7 +278,7 @@ user_doc_create = make_acompletion_multiple_outputs([
                     "name": "user.doc.create",
                     "arguments": {
                         "user_id": str(uuid7()),
-                        "developer_id": str(UUID(int=0)),
+                        "x_developer_id": str(UUID(int=0)),
                         "data": {"title": "User Doc", "content": "This is a user document"},
                     },
                 },
@@ -273,26 +291,33 @@ user_doc_create = make_acompletion_multiple_outputs([
     },
 ])
 
-user_doc_delete = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Deleting user doc",
-        "tool_calls": [
-            {
-                "id": "call_user_doc_delete",
-                "type": "system",
-                "function": {
-                    "name": "user.doc.delete",
-                    "arguments": {"doc_id": str(uuid7()), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "User doc deleted successfully",
-    },
-])
+user_doc_delete = make_acompletion_multiple_outputs(
+    lambda agent, doc, user: [
+        {
+            "role": "assistant",
+            "content": "Deleting user doc",
+            "tool_calls": [
+                {
+                    "id": "call_user_doc_delete",
+                    "type": "system",
+                    "function": {
+                        "name": "user.doc.delete",
+                        "arguments": {
+                            "doc_id": str(doc.id),
+                            "developer_id": str(UUID(int=0)),
+                            "owner_type": "user",
+                            "owner_id": str(user.id),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "User doc deleted successfully",
+        },
+    ]
+)
 
 user_doc_search = make_acompletion_multiple_outputs([
     {
@@ -306,8 +331,8 @@ user_doc_search = make_acompletion_multiple_outputs([
                     "name": "user.doc.search",
                     "arguments": {
                         "user_id": str(uuid7()),
-                        "developer_id": str(UUID(int=0)),
-                        "text": "test query",
+                        "x_developer_id": str(UUID(int=0)),
+                        "search_params": {"text": "test query"},
                     },
                 },
             }
@@ -319,7 +344,6 @@ user_doc_search = make_acompletion_multiple_outputs([
     },
 ])
 
-# User fixtures
 user_list = make_acompletion_multiple_outputs([
     {
         "role": "assistant",
@@ -432,7 +456,6 @@ user_delete = make_acompletion_multiple_outputs([
     },
 ])
 
-# Session fixtures
 session_list = make_acompletion_multiple_outputs([
     {
         "role": "assistant",
@@ -545,7 +568,6 @@ session_history = make_acompletion_multiple_outputs([
     },
 ])
 
-# Task fixtures
 task_list = make_acompletion_multiple_outputs([
     {
         "role": "assistant",
@@ -556,7 +578,7 @@ task_list = make_acompletion_multiple_outputs([
                 "type": "system",
                 "function": {
                     "name": "task.list",
-                    "arguments": {"developer_id": str(UUID(int=0))},
+                    "arguments": {"developer_id": str(UUID(int=0)), "agent_id": str(uuid7())},
                 },
             }
         ],
@@ -600,7 +622,8 @@ task_create = make_acompletion_multiple_outputs([
                     "name": "task.create",
                     "arguments": {
                         "developer_id": str(UUID(int=0)),
-                        "data": {"title": "Test Task", "description": "Test task description"},
+                        "agent": str(uuid7()),
+                        "data": {"name": "Test Task", "main": [{"sleep": {"seconds": 1}}]},
                     },
                 },
             }
@@ -624,10 +647,10 @@ task_update = make_acompletion_multiple_outputs([
                     "name": "task.update",
                     "arguments": {
                         "task_id": str(uuid7()),
+                        "agent_id": str(uuid7()),
                         "developer_id": str(UUID(int=0)),
                         "data": {
-                            "title": "Updated Task",
-                            "description": "Updated task description",
+                            "name": "Updated Task",
                         },
                     },
                 },
@@ -1085,7 +1108,8 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_doc_delete,  # Reusing agent_doc_delete as a placeholder
+    user=test_user,
+    mocks=user_doc_delete,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1093,6 +1117,7 @@ async def _(
         developer_id=developer_id,
         data=CreateSessionRequest(
             agent=agent.id,
+            user=user.id,
             situation="test session about",
             recall_options={
                 "mode": "text",
