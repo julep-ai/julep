@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Development'
 description: 'Learn how to preview changes locally'
@@ -95,3 +96,30 @@ Repeat step 3.
 </AccordionGroup>
 
 Curious about what changed in a CLI version? [Check out the CLI changelog.](/changelog/command-line)
+
+## API Call Execution
+
+The `RequestArgs` class now includes additional parameters to enhance API call flexibility:
+
+- `files`: A dictionary for file uploads.
+- `method`: Specifies the HTTP method to use.
+- `follow_redirects`: A boolean to determine if redirects should be followed.
+
+### Example Usage
+
+When using the `execute_api_call` function, you can now pass these new parameters as part of the `request_args`:
+
+```python
+request_args = {
+    "url": "https://api.example.com/data",
+    "method": "POST",
+    "headers": {"Authorization": "Bearer token"},
+    "files": {"file": open("example.txt", "rb")},
+    "follow_redirects": True
+}
+
+response = await execute_api_call(api_call, request_args)
+```
+
+This update allows for more comprehensive control over the API requests, accommodating file uploads and custom HTTP methods.
+```
