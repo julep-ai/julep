@@ -30,6 +30,7 @@ from .routers import (
     healthz,
     internal,
     jobs,
+    responses,
     sessions,
     tasks,
     users,
@@ -151,9 +152,9 @@ app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(files.router, dependencies=[Depends(get_api_key)])
 app.include_router(docs.router, dependencies=[Depends(get_api_key)])
 app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
+app.include_router(responses.router, dependencies=[Depends(get_api_key)])
 app.include_router(internal.router)
 app.include_router(healthz.router)
-
 # TODO: CORS should be enabled only for JWT auth
 #
 app.add_middleware(
