@@ -1,7 +1,7 @@
 ---
 title: 'Unstructured'
 description: 'Learn how to use the Unstructured.io integration with Julep'
-icon: 'file-text'
+icon: 'file-lines'
 ---
 
 ## Overview
@@ -32,17 +32,17 @@ To get started with the Unstructured.io integration, follow these steps to confi
         type: integration
         integration:
           provider: unstructured
+          method: parse
           setup:
-            unstructured_api_key: ${UNSTRUCTURED_API_KEY}
+            unstructured_api_key: UNSTRUCTURED_API_KEY
     main:
       - tool: unstructured_processor
         arguments:
-          file: "${document_base64}"
-          filename: "document.pdf"
+          file: document_base64 # this is a placeholder for the actual file
+          filename: document.pdf # this is a placeholder for the actual filename
           partition_params:
             key1: value1 # these are placeholders for the actual parameters
             key2: value2 # these are placeholders for the actual parameters
-        result_var: "parsed_document"
     ```
   </Step>
   <Step title="Run Task">
@@ -62,6 +62,7 @@ To get started with the Unstructured.io integration, follow these steps to confi
     - **_type_**: Specifies the type of tool, which is `integration` in this context.
     - **_integration_**: Details the provider and setup for the integration.
       - **_provider_**: Indicates the service provider, which is `unstructured` for Unstructured.io.
+      - **_method_**: Indicates the method to be used, which is `parse` for Unstructured.io.
       - **_setup_**: Contains configuration details
           - **_unstructured_api_key_**: (Required) The API key for your Unstructured.io account.
           - **_server_url_**: (Optional) Custom API endpoint URL if needed.
@@ -85,11 +86,8 @@ To get started with the Unstructured.io integration, follow these steps to confi
 </Callout>
 
 <Note>
-  Remember to replace `${UNSTRUCTURED_API_KEY}` with your actual API key or use environment variables. For base64 encoded files, ensure your file is properly encoded before passing it to the integration.
-</Note>
-
-<Note>
-  Unstructured.io supports a wide range of file types including PDFs, Word documents, PowerPoint presentations, Excel spreadsheets, emails, HTML, images, and more. For a full list of supported file types, please refer to the [Unstructured.io documentation](https://docs.unstructured.io/getting-started/supported-files).
+  - Remember to replace `UNSTRUCTURED_API_KEY` with your actual API key or use environment variables. For base64 encoded files, ensure your file is properly encoded before passing it to the integration.
+  - Unstructured.io supports a wide range of file types including PDFs, Word documents, PowerPoint presentations, Excel spreadsheets, emails, HTML, images, and more. For a full list of supported file types, please refer to the [Unstructured.io documentation](https://docs.unstructured.io/getting-started/supported-files).
 </Note>
 
 ## Conclusion

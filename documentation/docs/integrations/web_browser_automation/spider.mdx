@@ -34,15 +34,15 @@ To get started with the Spider integration, follow these steps to configure and 
           provider: spider
           method: crawl
           setup:
-            spider_api_key: {spider_api_key}
+            spider_api_key: SPIDER_API_KEY
     main:
       - tool: spider_tool
         method: crawl
         arguments:
-          url: "https://example.com"
+          url: $ _.url
           params: # Optional parameters
             key1: value1 # this a placeholder for the actual parameters
-          content_type: "application/json"
+          content_type: application/json
     ```
   </Step>
 </Steps>
@@ -74,7 +74,7 @@ To get started with the Spider integration, follow these steps to configure and 
 </AccordionGroup>
 
 <Note>
-  Remember to replace `{spider_api_key}` with your actual API key. Customize the `url`, `params`, and `content_type` parameters to suit your specific needs.
+  Remember to replace `SPIDER_API_KEY` with your actual API key. Customize the `url`, `params`, and `content_type` parameters to suit your specific needs.
 </Note>
 <Note>
   The different parameters available depending on the method used for the Spider integration can be found in the [Spider API documentation](https://spider.cloud/docs/api).

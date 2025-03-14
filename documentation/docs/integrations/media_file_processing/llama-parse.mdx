@@ -33,7 +33,7 @@ To get started with the Llama Parse integration, follow these steps to configure
         integration:
           provider: llama-parse
           setup:
-            llamaparse_api_key: {llamaparse_api_key}
+            llamaparse_api_key: LLAMAPARSE_API_KEY
             method: parse
             params: # Optional setup parameters
               key1: value1 # these are placeholders for the actual parameters
@@ -41,8 +41,8 @@ To get started with the Llama Parse integration, follow these steps to configure
     main:
       - tool: llama_parse
         arguments:
-          file: "base64_encoded_file"
-          filename: "document.pdf"
+          file: base64_encoded_file # this is a placeholder for the actual file
+          filename: document.pdf # this is a placeholder for the actual filename
           base64: true
           params: # Optional arguments parameters
             key1: value1 # these are placeholders for the actual parameters
@@ -88,7 +88,7 @@ To get started with the Llama Parse integration, follow these steps to configure
 </Callout>
 
 <Note>
-  Remember to replace `{llamaparse_api_key}` with your actual API key and ensure your file is base64 encoded if `base64` is set to true. Use the `params` field to pass any additional parameters required by your specific use case.
+  Remember to replace `LLAMAPARSE_API_KEY` with your actual API key and ensure your file is base64 encoded if `base64` is set to true. Use the `params` field to pass any additional parameters required by your specific use case.
 </Note>
 <Note>
   Llama Parse supports a wide range of different file types. For a full list of supported file types, please refer to the [Llama Parse documentation](https://github.com/run-llama/llama_parse/blob/main/llama_parse/utils.py).

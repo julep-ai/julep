@@ -22,7 +22,7 @@ Tools in Julep consist of three main components:
    - **`api_calls`**: Direct API calls executed during workflow processes as tool calls. [Learn more](#api-call-tools)
 3. **Arguments**: The inputs required by the tool.
 
-#### User-defined `functions`
+#### User-defined Function Tool
 
 These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
 
@@ -52,7 +52,7 @@ main:
 Whenever julep encounters a user-defined function, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 </Note>
 
-#### `System` Tools
+#### System Tool
 
 Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 
@@ -135,7 +135,7 @@ main:
   </Accordion>
 </Accordion>
 
-#### `Integration` Tools
+#### Integration Tool
 
 Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
 
@@ -162,9 +162,9 @@ main:
 Checkout the list of integrations that Julep supports [here](/docs/integrations).
 </Info>
 
-#### `API Call` Tools
+#### API Call Tool
 
-Julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from metadata fields. For example,
+Julep can also directly make `api_call` during workflow executions as tool calls. Similar to `integration` tools, additional runtime parameters are loaded from metadata fields. For example,
 
 ```yaml YAML
 name: Example api_call task
@@ -172,8 +172,9 @@ tools:
   - type: api_call
     name: hello
     api_call:
-      method: GET
-      url: https://httpbin.org/get
+      method: GET  # Required - HTTP method must be specified
+      url: https://httpbin.org/get  # Required - URL must be specified
+      # Optional parameters can be added here (headers, follow_redirects, etc.)
 
 main:
   - tool: hello
@@ -181,6 +182,44 @@ main:
       json:
         test: $ _.input # <-- python expression
 ```
+
+<AccordionGroup>
+  <Accordion title="Available API HTTP Methods">
+    <ul>
+      <li><strong>GET</strong>: Get a resource.</li>
+      <li><strong>POST</strong>: POST a resource.</li>
+      <li><strong>PUT</strong>: PUT a resource.</li>
+      <li><strong>DELETE</strong>: DELETE a resource.</li>
+      <li><strong>PATCH</strong>: PATCH a resource.</li>
+      <li><strong>HEAD</strong>: HEAD a resource.</li>
+      <li><strong>OPTIONS</strong>: OPTIONS a resource.</li>
+      <li><strong>CONNECT</strong>: CONNECT to a resource.</li>
+      <li><strong>TRACE</strong>: TRACE a resource.</li>
+    </ul>
+  </Accordion>
+  <Accordion title="Available API Call Parameters">
+    <ul>
+      <li><strong>method</strong>: (Required) The HTTP method to use.</li>
+      <li><strong>url</strong>: (Required) The URL to call.</li>
+      <li><strong>schema</strong>: The schema of the response.</li>
+      <li><strong>headers</strong>: The headers to send with the request.</li>
+      <li><strong>content</strong>: The content as base64 to send with the request.</li>
+      <li><strong>data</strong>: The data to send as form data.</li>
+      <li><strong>files</strong>: The data to send as files data.</li>
+      <li><strong>json</strong>: The JSON body to send with the request.</li>
+      <li><strong>cookies</strong>: The cookies to send with the request.</li>
+      <li><strong>params</strong>: The parameters to send with the request.</li>
+      <li><strong>follow_redirects</strong>: Follow redirects.</li>
+      <li><strong>timeout</strong>: The timeout for the request.</li>
+    </ul>
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+ - Arguments provided during the tool call can override the default `method` and `url` set in the `api_call` configuration.
+  - We utlize the python httpx library to make the api calls. Please refer to the [httpx documentation](https://www.python-httpx.org/api/#request-parameters) for more details on the parameters.
+</Note>
+
 
 ## How to Use Tools
 

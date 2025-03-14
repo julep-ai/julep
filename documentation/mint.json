@@ -159,9 +159,11 @@
         {
           "group": "Search & Research",
           "pages": [
+            "docs/integrations/search_research/arxiv",
+            "docs/integrations/search_research/algolia",
             "docs/integrations/search_research/brave-search",
-            "docs/integrations/search_research/wikipedia", 
-            "docs/integrations/search_research/arxiv"
+            "docs/integrations/search_research/wikipedia"
+            
           ]
         },
         {
