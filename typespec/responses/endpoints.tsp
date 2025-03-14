@@ -7,15 +7,18 @@ using Common;
 
 namespace Responses;
 
-@route("/responses")
-interface ResponsesEndpoints {
+interface ResponsesEndpoints extends GetResponsesEndpoints, CreateResponsesEndpoints {}
+
+interface CreateResponsesEndpoints {
   @doc("Creates a model response. Provide text or image inputs to generate text or JSON outputs.")
   @post
   createResponse(
     @body 
     body: CreateResponse
   ): Response;
-  
+}
+
+interface GetResponsesEndpoints {
   @get
   @doc("Get a response by id")
   getResponse(

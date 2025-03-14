@@ -1,6 +1,6 @@
 # ruff: noqa: F401, F403, F405
 import ast
-from typing import Annotated, Any, Generic, Self, TypeVar, get_args
+from typing import Annotated, Any, Generic, Literal, Self, TypeVar, get_args
 from uuid import UUID
 
 import jinja2
@@ -517,3 +517,10 @@ class UpdateTaskRequest(_UpdateTaskRequest):
         **_UpdateTaskRequest.model_config,
         "extra": "allow",
     })
+
+
+Includable = Literal[
+    "file_search_call.results",
+    "message.input_image.image_url",
+    "computer_call_output.output.image_url",
+]
