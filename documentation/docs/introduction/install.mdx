@@ -118,7 +118,7 @@ To verify your installation:
   # Test connection
   agent = client.agents.create(
       name="Test Agent",
-      model="claude-3.5-sonnet",
+      model="claude-3.5-haiku",
       about="A test agent"
   )
   print(f"Successfully created agent: {agent.id}")
@@ -133,12 +133,12 @@ To verify your installation:
   const client = new Julep({
     apiKey: process.env.JULEP_API_KEY,
     environment: process.env.JULEP_ENVIRONMENT || 'production'
-  });;
+  });
 
   // Test connection
   const agent = await client.agents.create({
     name: "Test Agent",
-    model: "claude-3.5-sonnet",
+    model: "claude-3.5-haiku",
     about: "A test agent"
   });
   console.log(`Successfully created agent: ${agent.id}`);
