@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Tools'
 description: 'Understanding tools in Julep'
@@ -8,7 +9,7 @@ icon: 'screwdriver-wrench'
 
 Agents can be given access to a number of "tools" -- any programmatic interface that a foundation model can "call" with a set of inputs to achieve a goal. For example, it might use a `web_search(query)` tool to search the Internet for some information.
 
-Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
+Unlike agent frameworks, Julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. Julep takes care of executing tasks and running integrations.
 
 ## Components
 
@@ -16,15 +17,15 @@ Tools in Julep consist of three main components:
 
 1. **Name**: A unique identifier for the tool.
 2. **Type**: The category of the tool. In Julep, there are four types of tools:
-   - **User-defined `functions`**: Function signatures provided to the model, similar to OpenAI's function-calling. These require client handling, and the workflow pauses until the client executes the function and returns the results to Julep. [Learn more](#user-defined-functions)
-   - **`system` tools**: Built-in tools for calling Julep APIs, such as triggering task execution or appending to a metadata field. [Learn more](#system-tools)
-   - **`integrations`**: Built-in third-party tools that enhance the capabilities of your agents. [Learn more](#integration-tools)
-   - **`api_calls`**: Direct API calls executed during workflow processes as tool calls. [Learn more](#api-call-tools)
+   - **User-defined `functions`**: Function signatures provided to the model, similar to OpenAI's function-calling. These require client handling, and the workflow pauses until the client executes the function and returns the results to Julep. [Learn more](#user-defined-function-tool)
+   - **`system` tools**: Built-in tools for calling Julep APIs, such as triggering task execution or appending to a metadata field. [Learn more](#system-tool)
+   - **`integrations`**: Built-in third-party tools that enhance the capabilities of your agents. [Learn more](#integration-tool)
+   - **`api_calls`**: Direct API calls executed during workflow processes as tool calls. [Learn more](#api-call-tool)
 3. **Arguments**: The inputs required by the tool.
 
 #### User-defined Function Tool
 
-These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
+These are function signatures that you can give the model to choose from, similar to how [OpenAI]'s function-calling works. An example:
 
 ```yaml YAML
 name: Example system tool task
@@ -49,12 +50,12 @@ main:
 ```
 
 <Note>
-Whenever julep encounters a user-defined function, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
+Whenever Julep encounters a user-defined function, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to Julep.
 </Note>
 
 #### System Tool
 
-Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
+Built-in tools that can be used to call the Julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 
 `System` tools are built into the backend. They get executed automatically when needed. They do not require any action from the client-side. For example,
 
@@ -137,9 +138,9 @@ main:
 
 #### Integration Tool
 
-Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+Julep comes with a number of built-in integrations (as described in the section below). `Integration` tools are directly executed on the Julep backend. Any additional parameters needed by them at runtime can be set in the `agent/session/user` `metadata` fields.
 
-An example of how to create a `integration` tool for an agent using the `wikipedia` integration:
+An example of how to create an `integration` tool for an agent using the `wikipedia` integration:
 
 ```yaml YAML
 name: Example integration tool task
@@ -159,7 +160,7 @@ main:
 ```
 
 <Info>
-Checkout the list of integrations that Julep supports [here](/docs/integrations).
+Checkout the list of integrations that Julep supports [here](/docs/integrations/supported-integrations).
 </Info>
 
 #### API Call Tool
@@ -217,9 +218,8 @@ main:
 
 <Note>
  - Arguments provided during the tool call can override the default `method` and `url` set in the `api_call` configuration.
-  - We utlize the python httpx library to make the api calls. Please refer to the [httpx documentation](https://www.python-httpx.org/api/#request-parameters) for more details on the parameters.
+  - We utilize the python httpx library to make the api calls. Please refer to the [httpx documentation](https://www.python-httpx.org/api/#request-parameters) for more details on the parameters.
 </Note>
-
 
 ## How to Use Tools
 
@@ -227,7 +227,7 @@ main:
 
 A tool can be created for an agent using the `client.agents.tools.create` method.
 
-An example of how to create a `integration` tool for an agent using the `wikipedia` integration:
+An example of how to create an `integration` tool for an agent using the `wikipedia` integration:
 
 <CodeGroup>
 ```python Python
@@ -367,5 +367,6 @@ When a tool is associated with an agent, it is meant to be used across all tasks
 
 ## Next Steps
 
-- [Checkout the Integration](/docs/integrations) - Learn how to use executions in an integration
+- [Checkout the Integration](/docs/integrations/supported-integrations) - Learn how to use executions in an integration
 - [Checkout the Tutorial](/docs/tutorials/tool-usage) - Learn how to use tools in a task
+```
