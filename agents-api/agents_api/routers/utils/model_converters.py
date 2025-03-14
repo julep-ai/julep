@@ -5,6 +5,7 @@ from ...autogen.openapi_model import (
     ChatInput,
     ChatResponse,
     CreateAgentRequest,
+    CreateEntryRequest,
     CreateResponse,
     CreateSessionRequest,
     MessageOutputItem,
@@ -12,11 +13,10 @@ from ...autogen.openapi_model import (
     ResponseUsage,
     Session,
     TextContentPart,
-    CreateEntryRequest,
 )
 from ...queries.agents import create_agent as create_agent_query
 from ...queries.agents import list_agents as list_agents_query
-from ...queries.entries import create_entries, add_entry_relations, get_history
+from ...queries.entries import add_entry_relations, create_entries, get_history
 from ...queries.sessions import create_session as create_session_query
 from ...queries.sessions import get_session as get_session_query
 
@@ -76,7 +76,7 @@ async def convert_create_response(
                 del entry_data["id"]
             if "created_at" in entry_data:
                 del entry_data["created_at"]
-            
+
             entry_request = CreateEntryRequest(**entry_data)
             entry_requests.append(entry_request)
 
