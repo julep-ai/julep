@@ -66,7 +66,7 @@ It's recommended to use environment variables for sensitive information like API
 1. Create a `.env` file in your project root:
 ```bash
 JULEP_API_KEY=your_api_key_here
-JULEP_ENVIRONMENT=production  # or development
+JULEP_ENVIRONMENT=production  # or dev (development)
 ```
 
 2. Load the environment variables in your code:
@@ -105,8 +105,15 @@ To verify your installation:
 <CodeGroup>
   ```python Python
   from julep import Julep
+  import os
+  from dotenv import load_dotenv
 
-  client = Julep(api_key="your_api_key")
+  load_dotenv()
+
+  client = Julep(
+      api_key=os.getenv('JULEP_API_KEY'),
+      environment=os.getenv('JULEP_ENVIRONMENT', 'production')
+  )
   
   # Test connection
   agent = client.agents.create(
@@ -119,10 +126,14 @@ To verify your installation:
 
   ```javascript Node.js
   import { Julep } from '@julep/sdk';
+  import dotenv from 'dotenv';
+
+  dotenv.config();
 
   const client = new Julep({
-    apiKey: 'your_api_key'
-  });
+    apiKey: process.env.JULEP_API_KEY,
+    environment: process.env.JULEP_ENVIRONMENT || 'production'
+  });;
 
   // Test connection
   const agent = await client.agents.create({
