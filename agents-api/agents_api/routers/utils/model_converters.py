@@ -164,7 +164,7 @@ def convert_chat_response_to_response(
         model=chat_input.model,
         output=output,
         parallel_tool_calls=create_response.parallel_tool_calls,
-        previous_response_id=str(session_id),
+        previous_response_id=create_response.previous_response_id,
         reasoning=create_response.reasoning,  # TODO: add reasoning (or not?)
         store=chat_input.save,
         temperature=chat_input.temperature,
