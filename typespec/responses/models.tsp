@@ -223,10 +223,10 @@ model FilePath {
 }
 
 enum MessageRole {
-  user
-  assistant
-  system
-  developer
+  user,
+  assistant,
+  system,
+  developer,
 }
 
 // Input item for creating a response
@@ -323,6 +323,7 @@ model InputImage {
   detail: "high" | "low" | "auto" = "auto";
 }
 
+@doc("A file input to the model.")
 model InputFile {
   @doc("The type of the input item. Always `input_file`.")
   type: "input_file";
@@ -343,9 +344,9 @@ alias InputContent = InputText | InputImage | InputFile;
 model InputMessageContentList is InputContent[];
 
 enum MessageStatus {
-  in_progress
-  completed
-  incomplete
+  in_progress,
+  completed,
+  incomplete,
 }
 
 // Input message
@@ -392,6 +393,15 @@ model InputMessageResource extends InputMessage {
   id: string;
 }
 
+@maxLength(512)
+scalar VectorStoreFileAttributesString extends string;
+
+@doc("Set of key-value pairs that can be attached to an object. This can be useful for storing additional information about the object in a structured format, and querying for objects via API or the dashboard. Keys are strings with a maximum length of 64 characters. Values are strings with a maximum length of 512 characters, booleans, or numbers.")
+model VectorStoreFileAttributes {
+  @doc("Key-value pairs where keys are strings with max length 64 and values are strings with max length 512, booleans, or numbers.")
+  properties: Record<VectorStoreFileAttributesString | boolean | numeric>;
+}
+
 
 // File search tool call
 model FileSearchToolCall {
@@ -436,6 +446,111 @@ model ComputerToolCallSafetyCheck {
   @doc("Details about the pending safety check.")
   message: string;
 }
+
+model Click {
+  @doc("Specifies the event type. For a click action, this property is always set to `click`.")
+  type: "click" = "click";
+
+  @doc("Indicates which mouse button was pressed during the click. One of `left`, `right`, `wheel`, `back`, or `forward`.")
+  button: "left" | "right" | "wheel" | "back" | "forward";
+
+  @doc("The x-coordinate where the click occurred.")
+  x: int32;
+
+  @doc("The y-coordinate where the click occurred.") 
+  y: int32;
+}
+
+model DoubleClick {
+  @doc("Specifies the event type. For a double click action, this property is always set to `double_click`.")
+  type: "double_click" = "double_click";
+
+  @doc("The x-coordinate where the double click occurred.")
+  x: int32;
+
+  @doc("The y-coordinate where the double click occurred.")
+  y: int32;
+}
+
+model Coordinate {
+  @doc("The x-coordinate.")
+  x: int32;
+
+  @doc("The y-coordinate.")
+  y: int32;
+}
+
+model Drag {
+  @doc("Specifies the event type. For a drag action, this property is always set to `drag`.")
+  type: "drag" = "drag";
+
+  @doc("An array of coordinates representing the path of the drag action.")
+  path: Coordinate[];
+}
+
+model KeyPress {
+  @doc("Specifies the event type. For a keypress action, this property is always set to `keypress`.")
+  type: "keypress" = "keypress";
+
+  @doc("The combination of keys the model is requesting to be pressed. This is an array of strings, each representing a key.")
+  keys: string[];
+}
+
+model Move {
+  @doc("Specifies the event type. For a move action, this property is always set to `move`.")
+  type: "move" = "move";
+
+  @doc("The x-coordinate to move to.")
+  x: int32;
+
+  @doc("The y-coordinate to move to.")
+  y: int32;
+}
+
+model Screenshot {
+  @doc("Specifies the event type. For a screenshot action, this property is always set to `screenshot`.")
+  type: "screenshot" = "screenshot";
+}
+
+model Scroll {
+  @doc("Specifies the event type. For a scroll action, this property is always set to `scroll`.")
+  type: "scroll" = "scroll";
+
+  @doc("The x-coordinate where the scroll occurred.")
+  x: int32;
+
+  @doc("The y-coordinate where the scroll occurred.")
+  y: int32;
+
+  @doc("The horizontal scroll distance.")
+  scroll_x: int32;
+
+  @doc("The vertical scroll distance.")
+  scroll_y: int32;
+}
+
+model Type {
+  @doc("Specifies the event type. For a type action, this property is always set to `type`.")
+  type: "type" = "type";
+
+  @doc("The text to type.")
+  text: string;
+}
+
+model Wait {
+  @doc("Specifies the event type. For a wait action, this property is always set to `wait`.")
+  type: "wait" = "wait";
+}
+
+alias ComputerAction = Click
+| DoubleClick
+| Drag
+| KeyPress
+| Move
+| Screenshot
+| Scroll
+| Type
+| Wait;
 
 // Computer tool call
 model ComputerToolCall {
@@ -496,10 +611,10 @@ model ComputerToolCallOutputResource extends ComputerToolCallOutput {
 }
 
 enum WebSearchStatus {
-  in_progress
-  searching
-  completed
-  failed
+  in_progress,
+  searching,
+  completed,
+  failed,
 }
 
 // Web search tool call
