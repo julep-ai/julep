@@ -1,6 +1,6 @@
 import json
 from collections.abc import Awaitable, Callable
-from functools import partial
+from functools import partial, reduce
 from typing import Any, ClassVar
 from uuid import UUID
 
@@ -85,6 +85,9 @@ class ToolCallsEvaluator:
         "task.update": update_task_query,
         "task.delete": delete_task_query,
     }
+    handler_sets: ClassVar[dict[str, Any]] = {
+        "system": system_tool_handlers,
+    }
 
     def __init__(
         self,
@@ -92,6 +95,11 @@ class ToolCallsEvaluator:
         developer_id: UUID,
         completion_func: Callable[..., Awaitable[ModelResponse | CustomStreamWrapper]],
     ):
+        self._handlers_mapping = reduce(
+            lambda a, v: a.update(v) or a,
+            [self.handler_sets.get(t, {}) for t in tool_types],
+            {},
+        )
         self._tool_types = tool_types
         self._developer_id = developer_id
         self._completion_func = completion_func
@@ -124,7 +132,7 @@ class ToolCallsEvaluator:
 
     @beartype
     async def _call_tool(self, developer_id: UUID, tool_name: str, arguments: dict):
-        tool_handler = self.system_tool_handlers.get(tool_name)
+        tool_handler = self._handlers_mapping.get(tool_name)
         if not tool_handler:
             msg = f"System call not implemented for {tool_name}"
             raise NotImplementedError(msg)
