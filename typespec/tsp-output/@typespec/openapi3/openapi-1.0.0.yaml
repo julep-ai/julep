@@ -4270,6 +4270,8 @@ components:
           enum:
             - user
             - assistant
+            - system
+            - developer
         content:
           type: array
           items:
@@ -4301,7 +4303,7 @@ components:
         content:
           type: array
           items:
-            $ref: '#/components/schemas/Responses.ContentPart'
+            $ref: '#/components/schemas/Responses.TextContentPart'
       allOf:
         - $ref: '#/components/schemas/Responses.OutputItem'
     Responses.OutputItem:
@@ -4367,9 +4369,7 @@ components:
         output:
           type: array
           items:
-            $ref: '#/components/schemas/Responses.OutputItem'
-        output_text:
-          type: string
+            $ref: '#/components/schemas/Responses.MessageOutputItem'
         parallel_tool_calls:
           type: boolean
           default: true

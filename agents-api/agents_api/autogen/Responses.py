@@ -25,7 +25,16 @@ class CreateResponse(BaseModel):
     )
     model: str
     input: str | list[InputItem]
-    include: list[Includable] | None = None
+    include: (
+        list[
+            Literal[
+                "file_search_call.results",
+                "message.input_image.image_url",
+                "computer_call_output.output.image_url",
+            ]
+        ]
+        | None
+    ) = None
     parallel_tool_calls: StrictBool = True
     store: StrictBool = True
     stream: StrictBool = False
@@ -70,10 +79,6 @@ class Function(BaseModel):
         populate_by_name=True,
     )
     name: str
-
-
-class Includable(Annotation):
-    pass
 
 
 class IncompleteDetails(BaseModel):

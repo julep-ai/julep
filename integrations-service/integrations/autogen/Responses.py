@@ -25,7 +25,16 @@ class CreateResponse(BaseModel):
     )
     model: str
     input: str | list[InputItem]
-    include: list[Includable] | None = None
+    include: (
+        list[
+            Literal[
+                "file_search_call.results",
+                "message.input_image.image_url",
+                "computer_call_output.output.image_url",
+            ]
+        ]
+        | None
+    ) = None
     parallel_tool_calls: StrictBool = True
     store: StrictBool = True
     stream: StrictBool = False
@@ -72,10 +81,6 @@ class Function(BaseModel):
     name: str
 
 
-class Includable(Annotation):
-    pass
-
-
 class IncompleteDetails(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -91,7 +96,7 @@ class InputItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    role: Literal["user", "assistant"]
+    role: Literal["user", "assistant", "system", "developer"]
     content: list[InputContentItem]
 
 
@@ -149,8 +154,7 @@ class Response(BaseModel):
     instructions: str | None = None
     max_output_tokens: int | None = None
     model: str
-    output: list[OutputItem]
-    output_text: str | None = None
+    output: list[MessageOutputItem]
     parallel_tool_calls: StrictBool = True
     previous_response_id: str | None = None
     reasoning: ReasoningModel | None = None
@@ -325,4 +329,4 @@ class MessageOutputItem(OutputItem):
     id: str
     status: Literal["completed", "in_progress"]
     role: Literal["assistant"] = "assistant"
-    content: list[ContentPart]
+    content: list[TextContentPart]
