@@ -60,8 +60,6 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
 
     # Return with appropriate hits based on whether results were found
     return AlgoliaSearchOutput(
-        hits=hits
-        if hits
-        else [{"content": "Not Available", "IndexName": arguments.index_name}],
+        hits=hits,
         metadata=metadata,
     )
