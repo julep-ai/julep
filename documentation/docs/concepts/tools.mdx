@@ -16,10 +16,10 @@ Tools in Julep consist of three main components:
 
 1. **Name**: A unique identifier for the tool.
 2. **Type**: The category of the tool. In Julep, there are four types of tools:
-   - **User-defined `functions`**: Function signatures provided to the model, similar to OpenAI's function-calling. These require client handling, and the workflow pauses until the client executes the function and returns the results to Julep. [Learn more](#user-defined-functions)
-   - **`system` tools**: Built-in tools for calling Julep APIs, such as triggering task execution or appending to a metadata field. [Learn more](#system-tools)
-   - **`integrations`**: Built-in third-party tools that enhance the capabilities of your agents. [Learn more](#integration-tools)
-   - **`api_calls`**: Direct API calls executed during workflow processes as tool calls. [Learn more](#api-call-tools)
+   - **User-defined `functions`**: Function signatures provided to the model, similar to OpenAI's function-calling. These require client handling, and the workflow pauses until the client executes the function and returns the results to Julep. [Learn more](#user-defined-function-tool)
+   - **`system` tools**: Built-in tools for calling Julep APIs, such as triggering task execution or appending to a metadata field. [Learn more](#system-tool)
+   - **`integrations`**: Built-in third-party tools that enhance the capabilities of your agents. [Learn more](#integration-tool)
+   - **`api_calls`**: Direct API calls executed during workflow processes as tool calls. [Learn more](#api-call-tool)
 3. **Arguments**: The inputs required by the tool.
 
 #### User-defined Function Tool
@@ -137,7 +137,7 @@ main:
 
 #### Integration Tool
 
-Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the `agent/session/user` `metadata` fields.
 
 An example of how to create a `integration` tool for an agent using the `wikipedia` integration:
 
@@ -159,7 +159,7 @@ main:
 ```
 
 <Info>
-Checkout the list of integrations that Julep supports [here](/docs/integrations).
+Checkout the list of integrations that Julep supports [here](/docs/integrations/supported-integrations).
 </Info>
 
 #### API Call Tool
