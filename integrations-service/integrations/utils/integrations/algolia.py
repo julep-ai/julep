@@ -45,10 +45,10 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
     # Extract results safely and get the first result if available
     results = result.get("results", [])
     first_result = results[0] if results else {}
-    
+
     # Extract hits directly from first_result
     hits = first_result.get("hits", [])
-    
+
     # Build metadata dict with all relevant information
     metadata = {
         "query": arguments.query,
@@ -57,9 +57,11 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
         "nbPages": first_result.get("nbPages", 0),
         "processingTimeMS": first_result.get("processingTimeMS", 0),
     }
-    
+
     # Return with appropriate hits based on whether results were found
     return AlgoliaSearchOutput(
-        hits=hits if hits else [{"content": "Not Available", "IndexName": arguments.index_name}],
-        metadata=metadata
+        hits=hits
+        if hits
+        else [{"content": "Not Available", "IndexName": arguments.index_name}],
+        metadata=metadata,
     )
