@@ -832,6 +832,33 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Responses.CreateResponse'
+  /responses/{id}:
+    get:
+      operationId: ResponsesRoute_getResponse
+      description: Get a response by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the response
+          schema:
+            type: string
+        - name: include
+          in: query
+          required: false
+          description: Specify additional output data to include in the model response
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Responses.Includable'
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.Response'
   /sessions:
     get:
       operationId: SessionsRoute_list
