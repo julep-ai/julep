@@ -143,26 +143,31 @@ agent_list = make_acompletion_multiple_outputs([
     },
 ])
 
-agent_get = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Getting agent details",
-        "tool_calls": [
-            {
-                "id": "call_agent_get",
-                "type": "system",
-                "function": {
-                    "name": "agent.get",
-                    "arguments": {"agent_id": str(uuid7()), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Here are the agent details",
-    },
-])
+agent_get = make_acompletion_multiple_outputs(
+    lambda agent, doc, user: [
+        {
+            "role": "assistant",
+            "content": "Getting agent details",
+            "tool_calls": [
+                {
+                    "id": "call_agent_get",
+                    "type": "system",
+                    "function": {
+                        "name": "agent.get",
+                        "arguments": {
+                            "agent_id": str(agent.id),
+                            "developer_id": str(UUID(int=0)),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Here are the agent details",
+        },
+    ]
+)
 
 agent_create = make_acompletion_multiple_outputs([
     {
@@ -177,7 +182,7 @@ agent_create = make_acompletion_multiple_outputs([
                     "arguments": {
                         "data": {
                             "name": "test agent 2",
-                            "canonical_name": f"some_unique_name_{uuid7()}",
+                            "canonical_name": f"some_unique_name_{str(uuid7()).split('-')[0]}",
                             "model": "gpt-4o-mini",
                             "about": "test agent about 2",
                             "metadata": {"test": "test 2"},
@@ -195,51 +200,58 @@ agent_create = make_acompletion_multiple_outputs([
     },
 ])
 
-agent_update = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Updating agent",
-        "tool_calls": [
-            {
-                "id": "call_agent_update",
-                "type": "system",
-                "function": {
-                    "name": "agent.update",
-                    "arguments": {
-                        "agent_id": str(uuid7()),
-                        "developer_id": str(UUID(int=0)),
-                        "data": {"name": "Updated Agent", "about": "Updated description"},
+agent_update = make_acompletion_multiple_outputs(
+    lambda agent, doc, user: [
+        {
+            "role": "assistant",
+            "content": "Updating agent",
+            "tool_calls": [
+                {
+                    "id": "call_agent_update",
+                    "type": "system",
+                    "function": {
+                        "name": "agent.update",
+                        "arguments": {
+                            "agent_id": str(agent.id),
+                            "developer_id": str(UUID(int=0)),
+                            "data": {"name": "Updated Agent", "about": "Updated description"},
+                        },
                     },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Agent updated successfully",
-    },
-])
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Agent updated successfully",
+        },
+    ]
+)
 
-agent_delete = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Deleting agent",
-        "tool_calls": [
-            {
-                "id": "call_agent_delete",
-                "type": "system",
-                "function": {
-                    "name": "agent.delete",
-                    "arguments": {"agent_id": str(uuid7()), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Agent deleted successfully",
-    },
-])
+agent_delete = make_acompletion_multiple_outputs(
+    lambda agent, doc, user: [
+        {
+            "role": "assistant",
+            "content": "Deleting agent",
+            "tool_calls": [
+                {
+                    "id": "call_agent_delete",
+                    "type": "system",
+                    "function": {
+                        "name": "agent.delete",
+                        "arguments": {
+                            "agent_id": str(agent.id),
+                            "developer_id": str(UUID(int=0)),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Agent deleted successfully",
+        },
+    ]
+)
 
 user_doc_list = make_acompletion_multiple_outputs([
     {
