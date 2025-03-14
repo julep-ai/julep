@@ -231,7 +231,7 @@ enum MessageRole {
 
 // Input item for creating a response
 model InputItem {
-  role: InputMessageRole;
+  role: MessageRole;
   content: InputContentItem[];
 }
 
