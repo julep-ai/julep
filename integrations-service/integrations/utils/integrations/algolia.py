@@ -32,7 +32,7 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
             {
                 "indexName": arguments.index_name,
                 "query": arguments.query,
-                "hitsPerPage": arguments.hits_per_page or 20,
+                "hitsPerPage": arguments.hits_per_page,
                 **(arguments.attributes_to_retrieve or {}),
             }
         ]
@@ -42,17 +42,24 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
     async with SearchClient(application_id, api_key) as client:
         result = json.loads((await client.search(search_request)).to_json())
 
-    # Access the first result from the results array as we only have one request
-    first_result = result.get("results", [])[0]
-
-    # Build metadata dict in one go
+    # Extract results safely and get the first result if available
+    results = result.get("results", [])
+    first_result = results[0] if results else {}
+    
+    # Extract hits directly from first_result
+    hits = first_result.get("hits", [])
+    
+    # Build metadata dict with all relevant information
     metadata = {
+        "query": arguments.query,
         "nbHits": first_result.get("nbHits", 0),
         "page": first_result.get("page", 0),
         "nbPages": first_result.get("nbPages", 0),
         "processingTimeMS": first_result.get("processingTimeMS", 0),
-        "query": arguments.query,
     }
-
-    # Avoid redundant print statements in production code
-    return AlgoliaSearchOutput(hits=first_result.get("hits", []), metadata=metadata)
+    
+    # Return with appropriate hits based on whether results were found
+    return AlgoliaSearchOutput(
+        hits=hits if hits else [{"content": "Not Available", "IndexName": arguments.index_name}],
+        metadata=metadata
+    )

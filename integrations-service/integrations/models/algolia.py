@@ -10,5 +10,5 @@ class AlgoliaSearchOutput(BaseOutput):
 
     model_config = ConfigDict(extra="allow")
 
-    hits: list[Any] = Field(description="The search results")
-    metadata: dict[str, Any] = Field(description="Additional metadata from the search")
+    hits: list[Any] | None = Field(description="The search results")
+    metadata: dict[str, Any] | None = Field(description="Additional metadata from the search")
