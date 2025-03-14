@@ -3,12 +3,13 @@ from uuid import UUID
 
 from fastapi import Depends, Query
 
+from ...autogen.Entries import History
 from ...autogen.openapi_model import Includable, Response
 from ...dependencies.developer_id import get_developer_id
-from .router import router
-from ...queries.entries import get_history as get_history_query
 from ...queries.developers import get_developer as get_developer_query
-from ...autogen.Entries import History
+from ...queries.entries import get_history as get_history_query
+from .router import router
+
 
 @router.get("/responses/{response_id}", tags=["responses"])
 async def get_response(
@@ -23,8 +24,7 @@ async def get_response(
     session_id = response_id
 
     session_history: History = await get_history_query(
-        developer_id=developer.id,
-        session_id=session_id
+        developer_id=developer.id, session_id=session_id
     )
 
     last_entries = []
@@ -33,7 +33,6 @@ async def get_response(
         if entry.role in ["user", "developer"]:
             last_entries = list(reversed(session_history.entries))[:i]
             break
-
 
     return {
         "id": response_id,
@@ -81,7 +80,6 @@ async def get_response(
         "user": None,
         "metadata": {},
     }
-
 
     return {
         "id": "resp_67cb71b351908190a308f3859487620d06981a8637e6bc44",
