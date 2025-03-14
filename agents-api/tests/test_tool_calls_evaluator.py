@@ -41,7 +41,7 @@ agent_doc_list = make_acompletion_multiple_outputs([
 ])
 
 agent_doc_create = make_acompletion_multiple_outputs(
-    lambda agent, doc, user: [
+    lambda agent, doc, user, task: [
         {
             "role": "assistant",
             "content": "Creating agent doc",
@@ -68,7 +68,7 @@ agent_doc_create = make_acompletion_multiple_outputs(
 )
 
 agent_doc_delete = make_acompletion_multiple_outputs(
-    lambda agent, doc, user: [
+    lambda agent, doc, user, task: [
         {
             "role": "assistant",
             "content": "Deleting agent doc",
@@ -144,7 +144,7 @@ agent_list = make_acompletion_multiple_outputs([
 ])
 
 agent_get = make_acompletion_multiple_outputs(
-    lambda agent, doc, user: [
+    lambda agent, doc, user, task: [
         {
             "role": "assistant",
             "content": "Getting agent details",
@@ -201,7 +201,7 @@ agent_create = make_acompletion_multiple_outputs([
 ])
 
 agent_update = make_acompletion_multiple_outputs(
-    lambda agent, doc, user: [
+    lambda agent, doc, user, task: [
         {
             "role": "assistant",
             "content": "Updating agent",
@@ -228,7 +228,7 @@ agent_update = make_acompletion_multiple_outputs(
 )
 
 agent_delete = make_acompletion_multiple_outputs(
-    lambda agent, doc, user: [
+    lambda agent, doc, user, task: [
         {
             "role": "assistant",
             "content": "Deleting agent",
@@ -304,7 +304,7 @@ user_doc_create = make_acompletion_multiple_outputs([
 ])
 
 user_doc_delete = make_acompletion_multiple_outputs(
-    lambda agent, doc, user: [
+    lambda agent, doc, user, task: [
         {
             "role": "assistant",
             "content": "Deleting user doc",
@@ -447,7 +447,7 @@ user_update = make_acompletion_multiple_outputs([
     },
 ])
 
-user_delete = make_acompletion_multiple_outputs([
+user_delete = make_acompletion_multiple_outputs(lambda agent, doc, user, task: [
     {
         "role": "assistant",
         "content": "Deleting user",
@@ -457,7 +457,7 @@ user_delete = make_acompletion_multiple_outputs([
                 "type": "system",
                 "function": {
                     "name": "user.delete",
-                    "arguments": {"user_id": str(uuid7()), "developer_id": str(UUID(int=0))},
+                    "arguments": {"user_id": str(user.id), "developer_id": str(UUID(int=0))},
                 },
             }
         ],
@@ -510,29 +510,31 @@ session_get = make_acompletion_multiple_outputs([
     },
 ])
 
-session_create = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Creating session",
-        "tool_calls": [
-            {
-                "id": "call_session_create",
-                "type": "system",
-                "function": {
-                    "name": "session.create",
-                    "arguments": {
-                        "developer_id": str(UUID(int=0)),
-                        "data": {"agent": str(uuid7()), "situation": "Test session"},
+session_create = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task: [
+        {
+            "role": "assistant",
+            "content": "Creating session",
+            "tool_calls": [
+                {
+                    "id": "call_session_create",
+                    "type": "system",
+                    "function": {
+                        "name": "session.create",
+                        "arguments": {
+                            "developer_id": str(UUID(int=0)),
+                            "data": {"agent": str(agent.id), "situation": "Test session"},
+                        },
                     },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Session created successfully",
-    },
-])
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Session created successfully",
+        },
+    ]
+)
 
 session_update = make_acompletion_multiple_outputs([
     {
@@ -622,79 +624,89 @@ task_get = make_acompletion_multiple_outputs([
     },
 ])
 
-task_create = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Creating task",
-        "tool_calls": [
-            {
-                "id": "call_task_create",
-                "type": "system",
-                "function": {
-                    "name": "task.create",
-                    "arguments": {
-                        "developer_id": str(UUID(int=0)),
-                        "agent": str(uuid7()),
-                        "data": {"name": "Test Task", "main": [{"sleep": {"seconds": 1}}]},
-                    },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Task created successfully",
-    },
-])
-
-task_update = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Updating task",
-        "tool_calls": [
-            {
-                "id": "call_task_update",
-                "type": "system",
-                "function": {
-                    "name": "task.update",
-                    "arguments": {
-                        "task_id": str(uuid7()),
-                        "agent_id": str(uuid7()),
-                        "developer_id": str(UUID(int=0)),
-                        "data": {
-                            "name": "Updated Task",
+task_create = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task: [
+        {
+            "role": "assistant",
+            "content": "Creating task",
+            "tool_calls": [
+                {
+                    "id": "call_task_create",
+                    "type": "system",
+                    "function": {
+                        "name": "task.create",
+                        "arguments": {
+                            "developer_id": str(UUID(int=0)),
+                            "agent_id": str(agent.id),
+                            "data": {"name": "Test Task", "main": [{"sleep": {"seconds": 1}}]},
                         },
                     },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Task updated successfully",
-    },
-])
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Task created successfully",
+        },
+    ]
+)
 
-task_delete = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Deleting task",
-        "tool_calls": [
-            {
-                "id": "call_task_delete",
-                "type": "system",
-                "function": {
-                    "name": "task.delete",
-                    "arguments": {"task_id": str(uuid7()), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Task deleted successfully",
-    },
-])
+task_update = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task: [
+        {
+            "role": "assistant",
+            "content": "Updating task",
+            "tool_calls": [
+                {
+                    "id": "call_task_update",
+                    "type": "system",
+                    "function": {
+                        "name": "task.update",
+                        "arguments": {
+                            "task_id": str(task.id),
+                            "agent_id": str(agent.id),
+                            "developer_id": str(UUID(int=0)),
+                            "data": {
+                                "name": "Updated Task",
+                                "main": [{"sleep": {"seconds": 1}}],
+                            },
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Task updated successfully",
+        },
+    ]
+)
+
+task_delete = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task: [
+        {
+            "role": "assistant",
+            "content": "Deleting task",
+            "tool_calls": [
+                {
+                    "id": "call_task_delete",
+                    "type": "system",
+                    "function": {
+                        "name": "task.delete",
+                        "arguments": {
+                            "task_id": str(task.id),
+                            "developer_id": str(UUID(int=0)),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Task deleted successfully",
+        },
+    ]
+)
 
 
 @test("chat: evaluate agent.doc.list tool call")
@@ -1274,7 +1286,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_create,  # Reusing agent_create as a placeholder
+    mocks=user_create,  # Reusing agent_create as a placeholder
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1350,7 +1362,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_delete,  # Reusing agent_delete as a placeholder
+    mocks=user_delete,  # Reusing agent_delete as a placeholder
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1464,7 +1476,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_create,  # Reusing agent_create as a placeholder
+    mocks=session_create,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
