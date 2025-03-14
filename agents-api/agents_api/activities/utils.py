@@ -215,7 +215,7 @@ def safe_extract_json(string: str):
     else:
         # If no markers, try to parse the whole string as JSON
         extracted_string = string
-    return json.loads(extracted_string)
+    return json.loads(extracted_string, strict=False)
 
 
 def humanize_text(
