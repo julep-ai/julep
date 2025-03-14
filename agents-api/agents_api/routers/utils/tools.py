@@ -18,6 +18,7 @@ from ...autogen.openapi_model import (
     CreateUserRequest,
     HybridDocSearchRequest,
     TextOnlyDocSearchRequest,
+    UpdateAgentRequest,
     UpdateSessionRequest,
     UpdateTaskRequest,
     UpdateUserRequest,
@@ -227,11 +228,17 @@ class ToolCallsEvaluator:
             )
 
         # Handle agent operations
-        if resource == "agent" and operation in ("create", "update"):
-            return await tool_handler(
-                data=CreateAgentRequest(**arguments.pop("data")),
-                **arguments,
-            )
+        if resource == "agent":
+            if operation == "create":
+                return await tool_handler(
+                    data=CreateAgentRequest(**arguments.pop("data")),
+                    **arguments,
+                )
+            if operation == "update":
+                return await tool_handler(
+                    data=UpdateAgentRequest(**arguments.pop("data")),
+                    **arguments,
+                )
 
         # Handle user operations
         if resource == "user":
