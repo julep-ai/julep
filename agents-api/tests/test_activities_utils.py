@@ -73,3 +73,10 @@ def _():
     markdowner = markdown2.Markdown()
     html = markdowner.convert(markdown)
     assert result == html
+
+
+@test("evaluator: safe_extract_json")
+def _():
+    e = get_evaluator({})
+    result = e.eval('extract_json("""```json {"pp": "\thello"}```""")')
+    assert result == {"pp": "\thello"}
