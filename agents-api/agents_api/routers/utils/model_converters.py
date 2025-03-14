@@ -12,9 +12,11 @@ from ...autogen.openapi_model import (
     ResponseUsage,
     Session,
     TextContentPart,
+    CreateEntryRequest,
 )
 from ...queries.agents import create_agent as create_agent_query
 from ...queries.agents import list_agents as list_agents_query
+from ...queries.entries import create_entries, add_entry_relations, get_history
 from ...queries.sessions import create_session as create_session_query
 from ...queries.sessions import get_session as get_session_query
 
@@ -45,22 +47,49 @@ async def convert_create_response(
     # - If there is a previous_response_id, use it
     # - If there is no previous_response_id, create a session and use its id as the previous_response_id
     session_id = create_response.previous_response_id
+    previous_session = None
     if session_id:
         # TODO: Handle case where previous_response_id is provided, but session is not found
-        session: Session = await get_session_query(
+        previous_session: Session = await get_session_query(
             developer_id=developer_id,
-            session_id=session_id,
-        )
-    else:
-        session = await create_session_query(
-            developer_id=developer_id,
-            data=CreateSessionRequest(
-                agent=agent.id,
-                system_template=create_response.instructions or "You are a helpful assistant.",
-                metadata=create_response.metadata,
-            ),
+            session_id=UUID(session_id),
         )
 
+    session = await create_session_query(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            system_template=create_response.instructions or "You are a helpful assistant.",
+            metadata=create_response.metadata,
+        ),
+    )
+
+    if previous_session:
+        history = await get_history(
+            developer_id=developer_id,
+            session_id=previous_session.id,
+        )
+        entry_requests = []
+        for entry in history.entries:
+            entry_data = entry.model_dump(mode="json")
+            if "id" in entry_data:
+                del entry_data["id"]
+            if "created_at" in entry_data:
+                del entry_data["created_at"]
+            
+            entry_request = CreateEntryRequest(**entry_data)
+            entry_requests.append(entry_request)
+
+        await create_entries(
+            developer_id=developer_id,
+            session_id=session.id,
+            data=entry_requests,
+        )
+        await add_entry_relations(
+            developer_id=developer_id,
+            session_id=session.id,
+            data=history.relations,
+        )
     # Unsupported fields from `CreateResponse` that are not supported by `ChatInput` or `Session`:
     # - include
     # - parallel_tool_calls
