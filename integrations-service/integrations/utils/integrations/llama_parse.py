@@ -39,7 +39,7 @@ async def parse(
 
     parser = LlamaParse(
         api_key=api_key,  # Use the local variable instead
-        **(params if params is not None else None),
+        **(params or {}),
     )
 
     if isinstance(arguments.file, str) and arguments.base64:
