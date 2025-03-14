@@ -447,26 +447,31 @@ user_update = make_acompletion_multiple_outputs([
     },
 ])
 
-user_delete = make_acompletion_multiple_outputs(lambda agent, doc, user, task: [
-    {
-        "role": "assistant",
-        "content": "Deleting user",
-        "tool_calls": [
-            {
-                "id": "call_user_delete",
-                "type": "system",
-                "function": {
-                    "name": "user.delete",
-                    "arguments": {"user_id": str(user.id), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "User deleted successfully",
-    },
-])
+user_delete = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task: [
+        {
+            "role": "assistant",
+            "content": "Deleting user",
+            "tool_calls": [
+                {
+                    "id": "call_user_delete",
+                    "type": "system",
+                    "function": {
+                        "name": "user.delete",
+                        "arguments": {
+                            "user_id": str(user.id),
+                            "developer_id": str(UUID(int=0)),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "User deleted successfully",
+        },
+    ]
+)
 
 session_list = make_acompletion_multiple_outputs([
     {
