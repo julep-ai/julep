@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Development'
 description: 'Learn how to preview changes locally'
@@ -95,3 +96,26 @@ Repeat step 3.
 </AccordionGroup>
 
 Curious about what changed in a CLI version? [Check out the CLI changelog.](/changelog/command-line)
+
+## API Data Models and Structures
+
+The API has undergone significant updates to its data models and structures. Below are the key changes:
+
+- **Removal of `WebSearchCallOutputItem`**: This model has been removed from the API.
+
+- **Introduction of New Models**:
+  - `FunctionToolCall`: Represents a call to a function tool with attributes such as `id`, `type`, `call_id`, `name`, `arguments`, and `status`.
+  - `ComputerToolCall`: Represents a call to a computer tool with attributes such as `id`, `type`, `call_id`, `action`, `pending_safety_checks`, and `status`.
+  - `WebSearchToolCall`: Represents a call to a web search tool with attributes such as `id`, `type`, and `status`.
+
+- **Updated `Annotation` Alias**:
+  - The `Annotation` alias now includes `FileCitation`, `UrlCitation`, and `FilePath`.
+
+These changes ensure that developers can effectively implement and interact with the updated API. For detailed information on each model and its attributes, please refer to the API reference documentation.
+
+```markdown
+- **FunctionToolCall**: Represents a call to a function tool with attributes such as `id`, `type`, `call_id`, `name`, `arguments`, and `status`.
+- **ComputerToolCall**: Represents a call to a computer tool with attributes such as `id`, `type`, `call_id`, `action`, `pending_safety_checks`, and `status`.
+- **WebSearchToolCall**: Represents a call to a web search tool with attributes such as `id`, `type`, and `status`.
+```
+```
