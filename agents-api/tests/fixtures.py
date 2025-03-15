@@ -93,11 +93,18 @@ def patch_embed_acompletion():
 def make_acompletion_multiple_outputs(outputs: list[dict] | Callable):
     @fixture(scope="test")
     def patch_embed_acompletion_with_tool_calls(
-        agent=test_agent, doc=test_doc, user=test_user, task=test_task, user_doc=test_user_doc, session=test_session,
+        agent=test_agent,
+        doc=test_doc,
+        user=test_user,
+        task=test_task,
+        user_doc=test_user_doc,
+        session=test_session,
     ):
         nonlocal outputs
         if callable(outputs):
-            outputs = outputs(agent=agent, doc=doc, user=user, task=task, user_doc=user_doc, session=session)
+            outputs = outputs(
+                agent=agent, doc=doc, user=user, task=task, user_doc=user_doc, session=session
+            )
         with patch_embed_acompletion_multiple_outputs_ctx(outputs) as (embed, acompletion):
             yield embed, acompletion
 
