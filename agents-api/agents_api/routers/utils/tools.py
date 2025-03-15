@@ -85,9 +85,6 @@ class ToolCallsEvaluator:
         "task.update": update_task_query,
         "task.delete": delete_task_query,
     }
-    handler_sets: ClassVar[dict[str, Any]] = {
-        "system": system_tool_handlers,
-    }
 
     def __init__(
         self,
@@ -95,44 +92,39 @@ class ToolCallsEvaluator:
         developer_id: UUID,
         completion_func: Callable[..., Awaitable[ModelResponse | CustomStreamWrapper]],
     ):
-        self._handlers_mapping = reduce(
-            lambda a, v: a.update(v) or a,
-            [self.handler_sets.get(t, {}) for t in tool_types],
-            {},
-        )
         self._tool_types = tool_types
         self._developer_id = developer_id
         self._completion_func = completion_func
 
-    def _create_search_request(self, arguments: dict) -> Any:
+    def _create_search_request(self, search_params: dict) -> Any:
         """Create appropriate search request based on available parameters."""
-        if "text" in arguments and "vector" in arguments:
+        if "text" in search_params and "vector" in search_params:
             return HybridDocSearchRequest(
-                text=arguments.pop("text"),
-                mmr_strength=arguments.pop("mmr_strength", 0),
-                vector=arguments.pop("vector"),
-                alpha=arguments.pop("alpha", 0.75),
-                confidence=arguments.pop("confidence", 0.5),
-                limit=arguments.get("limit", 10),
+                text=search_params.pop("text"),
+                mmr_strength=search_params.pop("mmr_strength", 0),
+                vector=search_params.pop("vector"),
+                alpha=search_params.pop("alpha", 0.75),
+                confidence=search_params.pop("confidence", 0.5),
+                limit=search_params.get("limit", 10),
             )
-        if "text" in arguments:
+        if "text" in search_params:
             return TextOnlyDocSearchRequest(
-                text=arguments.pop("text"),
-                mmr_strength=arguments.pop("mmr_strength", 0),
-                limit=arguments.get("limit", 10),
+                text=search_params.pop("text"),
+                mmr_strength=search_params.pop("mmr_strength", 0),
+                limit=search_params.get("limit", 10),
             )
-        if "vector" in arguments:
+        if "vector" in search_params:
             return VectorDocSearchRequest(
-                vector=arguments.pop("vector"),
-                mmr_strength=arguments.pop("mmr_strength", 0),
-                confidence=arguments.pop("confidence", 0.7),
-                limit=arguments.get("limit", 10),
+                vector=search_params.pop("vector"),
+                mmr_strength=search_params.pop("mmr_strength", 0),
+                confidence=search_params.pop("confidence", 0.7),
+                limit=search_params.get("limit", 10),
             )
         return None
 
     @beartype
     async def _call_tool(self, developer_id: UUID, tool_name: str, arguments: dict):
-        tool_handler = self._handlers_mapping.get(tool_name)
+        tool_handler = self.system_tool_handlers.get(tool_name)
         if not tool_handler:
             msg = f"System call not implemented for {tool_name}"
             raise NotImplementedError(msg)
@@ -140,6 +132,7 @@ class ToolCallsEvaluator:
         connection_pool = getattr(app.state, "postgres_pool", None)
         tool_handler = partial(tool_handler, connection_pool=connection_pool)
         arguments["developer_id"] = developer_id
+        data = arguments.pop("data", {})
 
         # Convert all UUIDs to UUID objects
         uuid_fields = ["agent_id", "user_id", "task_id", "session_id", "doc_id", "owner_id"]
@@ -173,14 +166,14 @@ class ToolCallsEvaluator:
         if operation == "create" and subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
             return await tool_handler(
-                data=CreateDocRequest(**arguments.pop("data")),
+                data=CreateDocRequest(**data),
                 **arguments,
             )
 
         # Handle search operations
         if operation == "search" and subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
-            search_params = self._create_search_request(arguments)
+            search_params = self._create_search_request(arguments.pop("search_params"))
             return await tool_handler(search_params=search_params, **arguments)
 
         # Handle chat operations
@@ -208,7 +201,7 @@ class ToolCallsEvaluator:
         if operation == "create" and resource == "session":
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id", None)
-            create_session_request = CreateSessionRequest(**arguments)
+            create_session_request = CreateSessionRequest(**data)
 
             return await tool_handler(
                 developer_id=developer_id,
@@ -231,7 +224,7 @@ class ToolCallsEvaluator:
         # Handle update user
         if operation == "update" and resource == "user":
             return await tool_handler(
-                data=UpdateUserRequest(**arguments.pop("data")),
+                data=UpdateUserRequest(**data),
                 **arguments,
             )
 
@@ -239,12 +232,12 @@ class ToolCallsEvaluator:
         if resource == "agent":
             if operation == "create":
                 return await tool_handler(
-                    data=CreateAgentRequest(**arguments.pop("data")),
+                    data=CreateAgentRequest(**data),
                     **arguments,
                 )
             if operation == "update":
                 return await tool_handler(
-                    data=UpdateAgentRequest(**arguments.pop("data")),
+                    data=UpdateAgentRequest(**data),
                     **arguments,
                 )
 
@@ -252,12 +245,12 @@ class ToolCallsEvaluator:
         if resource == "user":
             if operation == "create":
                 return await tool_handler(
-                    data=CreateUserRequest(**arguments.pop("data")),
+                    data=CreateUserRequest(**data),
                     **arguments,
                 )
             if operation == "update":
                 return await tool_handler(
-                    data=UpdateUserRequest(**arguments.pop("data")),
+                    data=UpdateUserRequest(**data),
                     **arguments,
                 )
 
@@ -265,12 +258,12 @@ class ToolCallsEvaluator:
         if resource == "task":
             if operation == "create":
                 return await tool_handler(
-                    data=CreateTaskRequest(**arguments.pop("data")),
+                    data=CreateTaskRequest(**data),
                     **arguments,
                 )
             if operation == "update":
                 return await tool_handler(
-                    data=UpdateTaskRequest(**arguments.pop("data")),
+                    data=UpdateTaskRequest(**data),
                     **arguments,
                 )
 
