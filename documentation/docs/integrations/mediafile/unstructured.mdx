@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Unstructured'
 description: 'Learn how to use the Unstructured.io integration with Julep'
@@ -34,7 +35,7 @@ To get started with the Unstructured.io integration, follow these steps to confi
           provider: unstructured
           method: parse
           setup:
-            unstructured_api_key: UNSTRUCTURED_API_KEY
+            unstructured_api_key: "UNSTRUCTURED_API_KEY"
     main:
       - tool: unstructured_processor
         arguments:
@@ -86,7 +87,7 @@ To get started with the Unstructured.io integration, follow these steps to confi
 </Callout>
 
 <Note>
-  - Remember to replace `UNSTRUCTURED_API_KEY` with your actual API key or use environment variables. For base64 encoded files, ensure your file is properly encoded before passing it to the integration.
+  - Remember to replace `"UNSTRUCTURED_API_KEY"` with your actual API key or use environment variables. For base64 encoded files, ensure your file is properly encoded before passing it to the integration.
   - Unstructured.io supports a wide range of file types including PDFs, Word documents, PowerPoint presentations, Excel spreadsheets, emails, HTML, images, and more. For a full list of supported file types, please refer to the [Unstructured.io documentation](https://docs.unstructured.io/getting-started/supported-files).
 </Note>
 
@@ -97,3 +98,4 @@ With the Unstructured.io integration, you can efficiently convert unstructured d
 <Tip>
   For more information, please refer to the [Unstructured.io documentation](https://docs.unstructured.io/).
 </Tip>
+```
