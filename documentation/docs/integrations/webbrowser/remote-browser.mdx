@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Remote Browser'
 description: 'Learn how to use the Remote Browser integration with Julep'
@@ -35,7 +36,7 @@ To get started with the Remote Browser integration, follow these steps to config
           provider: browserbase
           method: create_session
           setup:
-            project_id: BROWSERBASE_PROJECT_ID
+            project_id: "BROWSERBASE_PROJECT_ID"
 
       - name: browser_tool
         type: integration
@@ -50,7 +51,7 @@ To get started with the Remote Browser integration, follow these steps to config
       - tool: browserbase_tool
         method: create_session
         arguments:
-          project_id: BROWSERBASE_PROJECT_ID
+          project_id: "BROWSERBASE_PROJECT_ID"
 
       - evaluate:
           browser_session_id: $ _.id
@@ -107,7 +108,7 @@ To get started with the Remote Browser integration, follow these steps to config
 </AccordionGroup>
 
 <Note>
-  - Remember to replace `BROWSERBASE_PROJECT_ID` with your actual project ID.
+  - Remember to replace `"BROWSERBASE_PROJECT_ID"` with your actual project ID.
   - Make sure to properly configure browser settings and action parameters for your use case.
 </Note>
 
@@ -118,3 +119,4 @@ With the Remote Browser integration, you can efficiently automate browser intera
 <Tip>
   For more information, please refer to the [Playwright documentation](https://playwright.dev/docs/).
 </Tip>
+```
