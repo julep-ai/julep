@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'LlamaParse'
 description: 'Learn how to use the LlamaParse integration with Julep'
@@ -32,12 +33,12 @@ To get started with the LlamaParse integration, follow these steps to configure 
         type: integration
         integration:
           provider: llama-parse
+          method: parse
           setup:
-            llamaparse_api_key: LLAMAPARSE_API_KEY
-            method: parse
+            llamaparse_api_key: "LLAMAPARSE_API_KEY"
             params: # Optional setup parameters
-              key1: value1 # these are placeholders for the actual parameters
-              key2: value2 # these are placeholders for the actual parameters
+              key1: "value1" # these are placeholders for the actual parameters
+              key2: "value2" # these are placeholders for the actual parameters
     main:
       - tool: llama_parse
         arguments:
@@ -45,8 +46,8 @@ To get started with the LlamaParse integration, follow these steps to configure 
           filename: document.pdf # this is a placeholder for the actual filename
           base64: true
           params: # Optional arguments parameters
-            key1: value1 # these are placeholders for the actual parameters
-            key2: value2 # these are placeholders for the actual parameters
+            key1: "value1" # these are placeholders for the actual parameters
+            key2: "value2" # these are placeholders for the actual parameters
     ```
   </Step>
   <Step title="Run Task">
@@ -100,4 +101,5 @@ This integration provides a robust solution for document processing, enhancing y
 
 <Tip>
   For more information, please refer to the [LlamaParse documentation](https://docs.cloud.llamaindex.ai/llamaparse/getting_started/python).
-</Tip> 
+</Tip>
+```
