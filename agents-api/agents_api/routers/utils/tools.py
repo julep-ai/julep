@@ -1,6 +1,6 @@
 import json
 from collections.abc import Awaitable, Callable
-from functools import partial, reduce
+from functools import partial
 from typing import Any, ClassVar
 from uuid import UUID
 

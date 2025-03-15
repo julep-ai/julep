@@ -95,32 +95,34 @@ agent_doc_delete = make_acompletion_multiple_outputs(
     ]
 )
 
-agent_doc_search = make_acompletion_multiple_outputs(lambda agent, doc, user, task, user_doc, session: [
-    {
-        "role": "assistant",
-        "content": "Searching agent docs",
-        "tool_calls": [
-            {
-                "id": "call_agent_doc_search",
-                "type": "system",
-                "function": {
-                    "name": "agent.doc.search",
-                    "arguments": {
-                        "agent_id": str(agent.id),
-                        "x_developer_id": str(UUID(int=0)),
-                        "search_params": {
-                            "text": "any string",
+agent_doc_search = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task, user_doc, session: [
+        {
+            "role": "assistant",
+            "content": "Searching agent docs",
+            "tool_calls": [
+                {
+                    "id": "call_agent_doc_search",
+                    "type": "system",
+                    "function": {
+                        "name": "agent.doc.search",
+                        "arguments": {
+                            "agent_id": str(agent.id),
+                            "x_developer_id": str(UUID(int=0)),
+                            "search_params": {
+                                "text": "any string",
+                            },
                         },
                     },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Here are the search results",
-    },
-])
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Here are the search results",
+        },
+    ]
+)
 
 agent_list = make_acompletion_multiple_outputs([
     {
@@ -278,30 +280,32 @@ user_doc_list = make_acompletion_multiple_outputs([
     },
 ])
 
-user_doc_create = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Creating user doc",
-        "tool_calls": [
-            {
-                "id": "call_user_doc_create",
-                "type": "system",
-                "function": {
-                    "name": "user.doc.create",
-                    "arguments": {
-                        "user_id": str(uuid7()),
-                        "x_developer_id": str(UUID(int=0)),
-                        "data": {"title": "User Doc", "content": "This is a user document"},
+user_doc_create = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task, user_doc, session: [
+        {
+            "role": "assistant",
+            "content": "Creating user doc",
+            "tool_calls": [
+                {
+                    "id": "call_user_doc_create",
+                    "type": "system",
+                    "function": {
+                        "name": "user.doc.create",
+                        "arguments": {
+                            "user_id": str(user.id),
+                            "x_developer_id": str(UUID(int=0)),
+                            "data": {"title": "User Doc", "content": "This is a user document"},
+                        },
                     },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "User doc created successfully",
-    },
-])
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "User doc created successfully",
+        },
+    ]
+)
 
 user_doc_delete = make_acompletion_multiple_outputs(
     lambda agent, doc, user, task, user_doc, session: [
@@ -377,26 +381,31 @@ user_list = make_acompletion_multiple_outputs([
     },
 ])
 
-user_get = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Getting user details",
-        "tool_calls": [
-            {
-                "id": "call_user_get",
-                "type": "system",
-                "function": {
-                    "name": "user.get",
-                    "arguments": {"user_id": str(uuid7()), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Here are the user details",
-    },
-])
+user_get = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task, user_doc, session: [
+        {
+            "role": "assistant",
+            "content": "Getting user details",
+            "tool_calls": [
+                {
+                    "id": "call_user_get",
+                    "type": "system",
+                    "function": {
+                        "name": "user.get",
+                        "arguments": {
+                            "user_id": str(user.id),
+                            "developer_id": str(UUID(int=0)),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Here are the user details",
+        },
+    ]
+)
 
 user_create = make_acompletion_multiple_outputs([
     {
@@ -422,30 +431,35 @@ user_create = make_acompletion_multiple_outputs([
     },
 ])
 
-user_update = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Updating user",
-        "tool_calls": [
-            {
-                "id": "call_user_update",
-                "type": "system",
-                "function": {
-                    "name": "user.update",
-                    "arguments": {
-                        "user_id": str(uuid7()),
-                        "developer_id": str(UUID(int=0)),
-                        "data": {"name": "Updated User", "about": "Updated user description"},
+user_update = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task, user_doc, session: [
+        {
+            "role": "assistant",
+            "content": "Updating user",
+            "tool_calls": [
+                {
+                    "id": "call_user_update",
+                    "type": "system",
+                    "function": {
+                        "name": "user.update",
+                        "arguments": {
+                            "user_id": str(user.id),
+                            "developer_id": str(UUID(int=0)),
+                            "data": {
+                                "name": "Updated User",
+                                "about": "Updated user description",
+                            },
+                        },
                     },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "User updated successfully",
-    },
-])
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "User updated successfully",
+        },
+    ]
+)
 
 user_delete = make_acompletion_multiple_outputs(
     lambda agent, doc, user, task, user_doc, session: [
@@ -494,26 +508,31 @@ session_list = make_acompletion_multiple_outputs([
     },
 ])
 
-session_get = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Getting session details",
-        "tool_calls": [
-            {
-                "id": "call_session_get",
-                "type": "system",
-                "function": {
-                    "name": "session.get",
-                    "arguments": {"session_id": str(uuid7()), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Here are the session details",
-    },
-])
+session_get = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task, user_doc, session: [
+        {
+            "role": "assistant",
+            "content": "Getting session details",
+            "tool_calls": [
+                {
+                    "id": "call_session_get",
+                    "type": "system",
+                    "function": {
+                        "name": "session.get",
+                        "arguments": {
+                            "session_id": str(session.id),
+                            "developer_id": str(UUID(int=0)),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Here are the session details",
+        },
+    ]
+)
 
 session_create = make_acompletion_multiple_outputs(
     lambda agent, doc, user, task, user_doc, session: [
@@ -542,30 +561,32 @@ session_create = make_acompletion_multiple_outputs(
     ]
 )
 
-session_update = make_acompletion_multiple_outputs(lambda agent, doc, user, task, user_doc, session: [
-    {
-        "role": "assistant",
-        "content": "Updating session",
-        "tool_calls": [
-            {
-                "id": "call_session_update",
-                "type": "system",
-                "function": {
-                    "name": "session.update",
-                    "arguments": {
-                        "session_id": str(session.id),
-                        "developer_id": str(UUID(int=0)),
-                        "data": {"situation": "Updated session situation"},
+session_update = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task, user_doc, session: [
+        {
+            "role": "assistant",
+            "content": "Updating session",
+            "tool_calls": [
+                {
+                    "id": "call_session_update",
+                    "type": "system",
+                    "function": {
+                        "name": "session.update",
+                        "arguments": {
+                            "session_id": str(session.id),
+                            "developer_id": str(UUID(int=0)),
+                            "data": {"situation": "Updated session situation"},
+                        },
                     },
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Session updated successfully",
-    },
-])
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Session updated successfully",
+        },
+    ]
+)
 
 session_history = make_acompletion_multiple_outputs([
     {
@@ -609,26 +630,31 @@ task_list = make_acompletion_multiple_outputs([
     },
 ])
 
-task_get = make_acompletion_multiple_outputs([
-    {
-        "role": "assistant",
-        "content": "Getting task details",
-        "tool_calls": [
-            {
-                "id": "call_task_get",
-                "type": "system",
-                "function": {
-                    "name": "task.get",
-                    "arguments": {"task_id": str(uuid7()), "developer_id": str(UUID(int=0))},
-                },
-            }
-        ],
-    },
-    {
-        "role": "assistant",
-        "content": "Here are the task details",
-    },
-])
+task_get = make_acompletion_multiple_outputs(
+    lambda agent, doc, user, task, user_doc, session: [
+        {
+            "role": "assistant",
+            "content": "Getting task details",
+            "tool_calls": [
+                {
+                    "id": "call_task_get",
+                    "type": "system",
+                    "function": {
+                        "name": "task.get",
+                        "arguments": {
+                            "task_id": str(task.id),
+                            "developer_id": str(UUID(int=0)),
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "Here are the task details",
+        },
+    ]
+)
 
 task_create = make_acompletion_multiple_outputs(
     lambda agent, doc, user, task, user_doc, session: [
@@ -1100,7 +1126,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_doc_create,  # Reusing agent_doc_create as a placeholder
+    mocks=user_doc_create,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1216,7 +1242,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_list,  # Reusing agent_list as a placeholder
+    mocks=user_list,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1254,7 +1280,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_get,  # Reusing agent_get as a placeholder
+    mocks=user_get,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1292,7 +1318,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=user_create,  # Reusing agent_create as a placeholder
+    mocks=user_create,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1330,7 +1356,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_update,  # Reusing agent_update as a placeholder
+    mocks=user_update,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1368,7 +1394,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=user_delete,  # Reusing agent_delete as a placeholder
+    mocks=user_delete,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1406,7 +1432,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_list,  # Reusing agent_list as a placeholder
+    mocks=session_list,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1444,7 +1470,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_get,  # Reusing agent_get as a placeholder
+    mocks=session_get,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1558,7 +1584,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_list,  # Reusing agent_list as a placeholder
+    mocks=session_history,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1596,7 +1622,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_list,  # Reusing agent_list as a placeholder
+    mocks=task_list,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
@@ -1634,7 +1660,7 @@ async def _(
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
-    mocks=agent_get,  # Reusing agent_get as a placeholder
+    mocks=task_get,
     dsn=pg_dsn,
 ):
     pool = await create_db_pool(dsn=dsn)
