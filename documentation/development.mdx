@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Development'
 description: 'Learn how to preview changes locally'
@@ -95,3 +96,21 @@ Repeat step 3.
 </AccordionGroup>
 
 Curious about what changed in a CLI version? [Check out the CLI changelog.](/changelog/command-line)
+
+## Execution Queries
+
+The `get_execution.py` script has been updated to include a new field, `transition_count`, in the query results. This field provides the count of transitions associated with a specific execution. Developers working with execution queries should be aware of this addition as it affects how execution data is retrieved and interpreted.
+
+### Key Changes:
+- **transition_count**: This new field is included in the query results and represents the number of transitions for a given execution. It is part of the metadata returned by the query.
+
+### Example Usage:
+When querying execution data, the result will now include a `transition_count` within the metadata, which can be accessed as follows:
+
+```python
+result = get_execution(execution_id=execution.id, connection_pool=pool)
+transition_count = result.metadata["transition_count"]
+```
+
+This change allows developers to easily track the number of transitions an execution has undergone, providing more insight into the execution's lifecycle.
+```
