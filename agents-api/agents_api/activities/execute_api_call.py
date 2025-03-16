@@ -34,7 +34,7 @@ async def execute_api_call(
             # Allow the method to be overridden by the request_args
             response: Response = await client.request(
                 method=request_args.pop("method", api_call.method),
-                url=request_args.pop("url", str(api_call.url)),
+                url=request_args.pop("url", None) or str(api_call.url),
                 headers={**(arg_headers or {}), **(api_call.headers or {})},
                 follow_redirects=request_args.pop(
                     "follow_redirects", api_call.follow_redirects
