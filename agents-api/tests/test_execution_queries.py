@@ -68,6 +68,20 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result.status == "queued"
 
 
+@test("query: get execution with transitions count")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+    pool = await create_db_pool(dsn=dsn)
+    result = await get_execution(
+        execution_id=execution.id,
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert isinstance(result, Execution)
+    assert result.status == "queued"
+    assert result.metadata["transition_count"] == 0
+
+
 @test("query: lookup temporal id")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
     pool = await create_db_pool(dsn=dsn)

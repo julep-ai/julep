@@ -109,6 +109,17 @@ def _(make_request=make_request, execution=test_execution):
     assert response.status_code == 200
 
 
+@test("route: get execution exists with transition count")
+def _(make_request=make_request, execution=test_execution_started):
+    response = make_request(
+        method="GET",
+        url=f"/executions/{execution.id!s}",
+    )
+
+    assert response.status_code == 200
+    assert response.json()["metadata"]["transition_count"] > 0
+
+
 @test("route: get task not exists")
 def _(make_request=make_request):
     task_id = str(uuid7())

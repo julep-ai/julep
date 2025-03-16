@@ -38,6 +38,7 @@ SELECT
     END AS error,
     coalesce(lt.output, '{}'::jsonb) AS output,
     lt.current_step,
+    tc.count as transition_count,
     lt.next_step,
     lt.step_label,
     lt.task_token,
@@ -45,7 +46,12 @@ SELECT
 FROM
     executions e
     LEFT JOIN transitions lt ON e.execution_id = lt.execution_id
-    WHERE e.execution_id = $1
+    CROSS JOIN LATERAL (
+        SELECT COUNT(*) as count
+        FROM transitions t
+        WHERE t.execution_id = e.execution_id
+    ) tc
+WHERE e.execution_id = $1
 ORDER BY lt.created_at DESC
 LIMIT 1;
 """
@@ -61,6 +67,10 @@ LIMIT 1;
         "output": d["output"][OUTPUT_UNNEST_KEY]
         if isinstance(d["output"], dict) and OUTPUT_UNNEST_KEY in d["output"]
         else d["output"],
+        "metadata": {
+            **({"transitions": d["transition_metadata"]} if d["transition_metadata"] else {}),
+            "transition_count": d["transition_count"],
+        },
     },
 )
 @pg_query
