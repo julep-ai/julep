@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, Query
+from fastapi import Depends, HTTPException, Query
 
 from ...autogen.Entries import History
 from ...autogen.openapi_model import Includable, Response
@@ -27,33 +27,39 @@ async def get_response(
         developer_id=developer.id, session_id=session_id
     )
 
+    if not session_history.entries:
+        raise HTTPException(status_code=404, detail="Provided response id does not exist")
+
     last_entries = []
 
     for i, entry in enumerate(reversed(session_history.entries)):
         if entry.role in ["user", "developer"]:
-            last_entries = list(reversed(session_history.entries))[:i]
+            # Take all entries after the current entry
+            last_entries = session_history.entries[len(session_history.entries) - i :]
             break
 
+    last_entry = last_entries[-1]
+
     return {
-        "id": response_id,
+        "id": str(response_id),
         "object": "response",
-        "created_at": last_entries[-1].created_at,
+        "created_at": int(last_entry.created_at.timestamp()),
         "status": "completed",
         "error": None,
         "incomplete_details": None,
         "instructions": None,
         "max_output_tokens": None,
-        "model": "gpt-4o-2024-08-06",
+        "model": last_entry.model,
         "output": [
             {
                 "type": "message",
-                "id": entry.id,
+                "id": str(entry.id),
                 "status": "completed",
                 "role": entry.role,
                 "content": [
                     {
                         "type": "output_text",
-                        "text": entry.content,
+                        "text": entry.content[0].text,
                         "annotations": [],
                     }
                 ],
@@ -71,57 +77,11 @@ async def get_response(
         "top_p": 1.0,
         "truncation": "disabled",
         "usage": {
-            "input_tokens": 32,
+            "input_tokens": 0,
             "input_tokens_details": {"cached_tokens": 0},
-            "output_tokens": 18,
+            "output_tokens": sum(entry.token_count for entry in last_entries),
             "output_tokens_details": {"reasoning_tokens": 0},
-            "total_tokens": 50,
-        },
-        "user": None,
-        "metadata": {},
-    }
-
-    return {
-        "id": "resp_67cb71b351908190a308f3859487620d06981a8637e6bc44",
-        "object": "response",
-        "created_at": 1741386163,
-        "status": "completed",
-        "error": None,
-        "incomplete_details": None,
-        "instructions": None,
-        "max_output_tokens": None,
-        "model": "gpt-4o-2024-08-06",
-        "output": [
-            {
-                "type": "message",
-                "id": "msg_67cb71b3c2b0819084d481baaaf148f206981a8637e6bc44",
-                "status": "completed",
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "output_text",
-                        "text": "Silent circuits hum,  \nThoughts emerge in data streams—  \nDigital dawn breaks.",
-                        "annotations": [],
-                    }
-                ],
-            }
-        ],
-        "parallel_tool_calls": True,
-        "previous_response_id": None,
-        "reasoning": {"effort": None, "summary": None},
-        "store": True,
-        "temperature": 1.0,
-        "text": {"format": {"type": "text"}},
-        "tool_choice": "auto",
-        "tools": [],
-        "top_p": 1.0,
-        "truncation": "disabled",
-        "usage": {
-            "input_tokens": 32,
-            "input_tokens_details": {"cached_tokens": 0},
-            "output_tokens": 18,
-            "output_tokens_details": {"reasoning_tokens": 0},
-            "total_tokens": 50,
+            "total_tokens": sum(entry.token_count for entry in last_entries),
         },
         "user": None,
         "metadata": {},
