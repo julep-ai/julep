@@ -97,7 +97,7 @@ class InputItem(BaseModel):
         populate_by_name=True,
     )
     role: Literal["user", "assistant", "system", "developer"]
-    content: list[InputContentItem]
+    content: list[ImageInputContentItem | TextInputContentItem]
 
 
 class InputTokensDetails(BaseModel):

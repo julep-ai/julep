@@ -55,6 +55,9 @@ async def create_response(
         chat_input=chat_input,
     )
 
+    if settings.get("stop") == []:
+        settings.pop("stop")
+
     # Use litellm for other models
     params = {
         "messages": messages,

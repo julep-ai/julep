@@ -2,7 +2,6 @@ from uuid import UUID
 
 from ...autogen.openapi_model import (
     Agent,
-    ChatInput,
     ChatResponse,
     CompletionUsage,
     CreateAgentRequest,
@@ -16,10 +15,14 @@ from ...autogen.openapi_model import (
     ResponseUsage,
     Session,
     TextContentPart,
+    TextInputContentItem,
+    ImageInputContentItem,
 )
+
+from ...autogen.Chat import Message, ContentModel7, ImageUrl, Content, ChatInput
+
 from ...queries.agents.create_agent import create_agent as create_agent_query
 from ...queries.agents.list_agents import list_agents as list_agents_query
-from ...queries.entries import add_entry_relations, create_entries, get_history
 from ...queries.sessions.create_session import create_session as create_session_query
 from ...queries.sessions.get_session import get_session as get_session_query
 
@@ -103,11 +106,33 @@ async def convert_create_response(
     # - text
     # - truncation
 
+    messages: list[Message] = []
+
+    if isinstance(create_response.input, str):
+        messages = [{"role": "user", "content": create_response.input}]
+    else:
+        # Create a ChatInput object from each InputItem object in the input list
+        for item in create_response.input:
+            for content_item in item.content:
+                content = None
+                if content_item.type == "input_text" and isinstance(content_item, TextInputContentItem):
+                    content = [Content(text=content_item.text)]
+                elif content_item.type == "input_image" and isinstance(content_item, ImageInputContentItem):
+                    image_url = ImageUrl(
+                        url=content_item.image_url,
+                    )
+                    content = [ContentModel7(image_url=image_url)]
+
+                if content:
+                    messages.append(Message(role=item.role, content=content))
+                else:
+                    raise ValueError(f"Unsupported content type: {content_item.type}. Content item: {content_item}")
+
+    
+
     chat_input = ChatInput(
         model=create_response.model,
-        messages=[{"role": "user", "content": create_response.input}]
-        if isinstance(create_response.input, str)
-        else create_response.input,
+        messages=messages,
         save=create_response.store,
         stream=create_response.stream,
         max_tokens=create_response.max_tokens,
