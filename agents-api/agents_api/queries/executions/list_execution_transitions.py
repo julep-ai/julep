@@ -14,7 +14,7 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 list_execution_transitions_query = """
 SELECT
     created_at, execution_id, transition_id as id, type, step_label,
-    get_transition_output(output_oid) as output, 
+    get_transition_output(output_oid) as output,
     current_step, next_step, task_token, metadata, error_info
 FROM transitions
 WHERE
@@ -30,7 +30,7 @@ LIMIT $2 OFFSET $3;
 get_execution_transition_query = """
 SELECT
     created_at, execution_id, transition_id as id, type, step_label,
-    get_transition_output(output_oid) as output, 
+    get_transition_output(output_oid) as output,
     current_step, next_step, task_token, metadata, error_info
 FROM transitions
 WHERE
@@ -43,14 +43,14 @@ LIMIT 1;
 def _transform(d):
     current_step = d.pop("current_step")
     next_step = d.pop("next_step", None)
-    
+
     # Handle error_info by merging it with output if needed
     error_info = d.pop("error_info", None)
-    
+
     # Convert empty {} output to None to match original behavior
     if d.get("output") == {}:
         d["output"] = None
-    
+
     # Handle error info only if output is not None
     if error_info and d.get("output"):
         # If output is a dict, update it with error_info

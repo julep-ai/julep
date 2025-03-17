@@ -11,7 +11,7 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 get_execution_transition_query = """
 SELECT
     created_at, execution_id, transition_id as id, type, step_label,
-    get_transition_output(output_oid) as output, 
+    get_transition_output(output_oid) as output,
     current_step, next_step, task_token, metadata, error_info
 FROM transitions
 WHERE

@@ -5,16 +5,16 @@ This module provides functions to work with transition output data after migrati
 from JSONB to LO (large object) storage using PostgreSQL's lo extension.
 """
 
-from typing import Any, Dict, List, Optional, cast
-
 import json
-import asyncpg
+from typing import Any, cast
 from uuid import UUID
+
+import asyncpg
 
 
 async def get_transition_output(
     conn: asyncpg.Connection, transition_id: UUID
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Fetch transition output data from a large object.
 
@@ -35,18 +35,18 @@ async def get_transition_output(
     FROM transitions
     WHERE transition_id = $1
     """
-    
+
     row = await conn.fetchrow(query, transition_id)
     if not row or not row["parsed_output"]:
         return {}
-        
+
     data = json.loads(row["parsed_output"])
-    return cast(Dict[str, Any], data)
+    return cast(dict[str, Any], data)
 
 
 async def store_transition_output(
-    conn: asyncpg.Connection, data: Dict[str, Any]
-) -> Optional[int]:
+    conn: asyncpg.Connection, data: dict[str, Any]
+) -> int | None:
     """
     Store transition output data in a large object.
 
@@ -62,14 +62,13 @@ async def store_transition_output(
     """
     if not data:
         return None
-        
+
     # Use the PostgreSQL function to create and store the large object
-    oid = await conn.fetchval("SELECT set_transition_output($1)", json.dumps(data))
-    return oid
+    return await conn.fetchval("SELECT set_transition_output($1)", json.dumps(data))
 
 
 async def update_transition_output(
-    conn: asyncpg.Connection, transition_id: UUID, new_data: Dict[str, Any]
+    conn: asyncpg.Connection, transition_id: UUID, new_data: dict[str, Any]
 ) -> None:
     """
     Update transition output data.
@@ -84,18 +83,17 @@ async def update_transition_output(
     """
     # Create a new large object with the data
     oid = await store_transition_output(conn, new_data)
-    
+
     # Update the transition record to point to the new large object
     # The old one will be cleaned up by the lo_manage trigger
     await conn.execute(
-        "UPDATE transitions SET output_oid = $1 WHERE transition_id = $2",
-        oid, transition_id
+        "UPDATE transitions SET output_oid = $1 WHERE transition_id = $2", oid, transition_id
     )
 
 
 async def bulk_get_transition_outputs(
-    conn: asyncpg.Connection, transition_ids: List[UUID]
-) -> Dict[UUID, Dict[str, Any]]:
+    conn: asyncpg.Connection, transition_ids: list[UUID]
+) -> dict[UUID, dict[str, Any]]:
     """
     Fetch multiple transition outputs in bulk.
 
@@ -108,7 +106,7 @@ async def bulk_get_transition_outputs(
     """
     if not transition_ids:
         return {}
-        
+
     query = """
     SELECT
         transition_id,
@@ -116,14 +114,14 @@ async def bulk_get_transition_outputs(
     FROM transitions
     WHERE transition_id = ANY($1)
     """
-    
+
     rows = await conn.fetch(query, transition_ids)
     result = {}
-    
+
     for row in rows:
         if row["output"]:
-            result[row["transition_id"]] = cast(Dict[str, Any], json.loads(row["output"]))
+            result[row["transition_id"]] = cast(dict[str, Any], json.loads(row["output"]))
         else:
             result[row["transition_id"]] = {}
-            
+
     return result

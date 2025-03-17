@@ -16,9 +16,9 @@ from ..utils import pg_query, rewrap_exceptions, serialize_model_data, wrap_in_c
 # Query to create a transition
 create_execution_transition_query = """
 WITH output_data AS (
-    SELECT CASE 
-        WHEN $7::JSONB = '{}'::JSONB OR $7 IS NULL THEN NULL 
-        ELSE set_transition_output($7) 
+    SELECT CASE
+        WHEN $7::JSONB = '{}'::JSONB OR $7 IS NULL THEN NULL
+        ELSE set_transition_output($7)
     END AS output_oid
 )
 INSERT INTO transitions
@@ -45,13 +45,13 @@ VALUES
     (SELECT output_oid FROM output_data),
     $8,
     $9,
-    CASE 
-        WHEN $7::jsonb->'error' IS NOT NULL THEN 
+    CASE
+        WHEN $7::jsonb->'error' IS NOT NULL THEN
             jsonb_build_object('error', $7::jsonb->'error')
         ELSE NULL
     END
 )
-RETURNING *, 
+RETURNING *,
   -- Include the original output value in the result for easier access
   $7 AS original_output;
 """
@@ -112,7 +112,7 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
         },
         "updated_at": utcnow(),
         # Handle empty objects consistently
-        "output": None if d.get("original_output") == {} else d.get("original_output")
+        "output": None if d.get("original_output") == {} else d.get("original_output"),
     },
     one=True,
 )
