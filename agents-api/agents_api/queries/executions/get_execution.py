@@ -43,17 +43,20 @@ SELECT
     lt.step_label,
     lt.task_token,
     lt.metadata AS transition_metadata
-FROM
-    executions e
-    LEFT JOIN transitions lt ON e.execution_id = lt.execution_id
-    CROSS JOIN LATERAL (
-        SELECT COUNT(*) as count
-        FROM transitions t
-        WHERE t.execution_id = e.execution_id
-    ) tc
-WHERE e.execution_id = $1
-ORDER BY lt.created_at DESC
-LIMIT 1;
+FROM executions e
+CROSS JOIN LATERAL (
+    SELECT COUNT(*) AS count
+    FROM transitions t
+    WHERE t.execution_id = e.execution_id
+) tc
+LEFT JOIN LATERAL (
+    SELECT next_step, step_label, task_token, metadata
+    FROM transitions t
+    WHERE t.execution_id = e.execution_id
+    ORDER BY created_at DESC
+    LIMIT 1
+) lt ON true
+WHERE e.execution_id = $1;
 """
 
 
