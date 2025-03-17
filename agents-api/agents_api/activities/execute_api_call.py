@@ -30,12 +30,12 @@ async def execute_api_call(
 ) -> Any:
     try:
         async with httpx.AsyncClient(timeout=600) as client:
-            arg_headers = request_args.pop("headers", None)
+            arg_headers: dict = request_args.pop("headers", None) or {}
             # Allow the method to be overridden by the request_args
             response: Response = await client.request(
                 method=request_args.pop("method", api_call.method),
-                url=request_args.pop("url", None) or str(api_call.url),
-                headers={**(arg_headers or {}), **(api_call.headers or {})},
+                url=str(request_args.pop("url", api_call.url)),
+                headers={**arg_headers, **(api_call.headers or {})},
                 follow_redirects=request_args.pop(
                     "follow_redirects", api_call.follow_redirects
                 ),
@@ -54,7 +54,7 @@ async def execute_api_call(
             # Try to parse the response as JSON
             try:
                 response_dict["json"] = response.json()
-            except BaseException as e:
+            except (httpx.HTTPError, httpx.StreamError) as e:
                 response_dict["json"] = None
                 activity.logger.debug(f"Failed to parse JSON response: {e}")
 
