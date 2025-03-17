@@ -1,3 +1,4 @@
+```markdown
 ---
 title: 'Trip Planning'
 description: 'Learn how to create a task that generates personalized travel itineraries based on weather conditions and tourist attractions for multiple locations'
@@ -21,7 +22,6 @@ Let's break down the task into its core components:
 First, we define what inputs our task expects:
 
 ```yaml
-
 input_schema:
     type: object
     properties:
@@ -30,7 +30,6 @@ input_schema:
             items:
                 type: string
 ```
-
 
 This schema specifies that our task expects an array of location strings (e.g., `["New York", "London", "Paris"]`).
 
@@ -85,7 +84,6 @@ We're using two integrations:
       ```
     </Accordion>
 
-
     This step:
     - Iterates over each location in the input array
     - Calls the weather API for each location
@@ -100,7 +98,6 @@ We're using two integrations:
       arguments:
         query: $ 'tourist attractions in ' + _
     ```
-
 
     This step:
     - Iterates over the locations again
@@ -121,7 +118,6 @@ We're using two integrations:
           )
         )
     ```
-
 
     This step:
     - Combines the data from previous steps into tuples
@@ -156,7 +152,6 @@ We're using two integrations:
       unwrap: true
     ```
 
-
     This step:
     - Processes up to 3 locations in parallel
     - For each location tuple:
@@ -173,7 +168,6 @@ We're using two integrations:
       final_plan: |-
         $ '\\n---------------\\n'.join(activity for activity in _)
     ```
-
 
     This step:
     - Combines all itineraries into a single output
@@ -253,7 +247,6 @@ main:
           steps[1].output
         )
       )
-
 
 - over: $ _['zipped']
   parallelism: 3
@@ -633,8 +626,8 @@ Here's a detailed itinerary for exploring some of Sydney's top tourist attractio
 With clear skies and mild temperatures, this itinerary offers a balanced mix of cultural, historical, and scenic experiences. Enjoy your visit to Sydney!
 </Accordion>
 
-
 ## Next Steps
 
 - Try this task yourself, check out the full example, see the [trip-planning cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/03-trip-planning-assistant.ipynb).
 - To learn more about the integrations used in this task, check out the [integrations](/docs/integrations/supported-integrations) page.
+```
