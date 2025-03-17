@@ -3,7 +3,6 @@ from typing import Any, TypedDict
 
 import httpx
 from beartype import beartype
-from httpx import Response
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
@@ -18,9 +17,6 @@ class RequestArgs(TypedDict):
     params: str | dict[str, Any] | None
     url: str | None
     headers: dict[str, str] | None
-    files: dict[str, Any] | None
-    method: str | None
-    follow_redirects: bool | None
 
 
 @beartype
@@ -30,33 +26,31 @@ async def execute_api_call(
 ) -> Any:
     try:
         async with httpx.AsyncClient(timeout=600) as client:
+            arg_url = request_args.pop("url", None)
             arg_headers = request_args.pop("headers", None)
-            # Allow the method to be overridden by the request_args
-            response: Response = await client.request(
-                method=request_args.pop("method", api_call.method),
-                url=request_args.pop("url", str(api_call.url)),
+
+            response = await client.request(
+                method=api_call.method,
+                url=arg_url or str(api_call.url),
                 headers={**(arg_headers or {}), **(api_call.headers or {})},
-                follow_redirects=request_args.pop(
-                    "follow_redirects", api_call.follow_redirects
-                ),
+                follow_redirects=api_call.follow_redirects,
                 **request_args,
             )
-            # Raise an error if the response is not successful
-            response.raise_for_status()
-            # Get the content of the response
-            content_base64 = base64.b64encode(response.content).decode("ascii")
-            #  Create a response dict with the status code, headers, and content
-            response_dict = {
-                "status_code": response.status_code,
-                "headers": dict(response.headers),
-                "content": content_base64,
-            }
-            # Try to parse the response as JSON
-            try:
-                response_dict["json"] = response.json()
-            except BaseException as e:
-                response_dict["json"] = None
-                activity.logger.debug(f"Failed to parse JSON response: {e}")
+
+        response.raise_for_status()
+        content_base64 = base64.b64encode(response.content).decode("ascii")
+
+        response_dict = {
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "content": content_base64,
+        }
+
+        try:
+            response_dict["json"] = response.json()
+        except BaseException as e:
+            response_dict["json"] = None
+            activity.logger.debug(f"Failed to parse JSON response: {e}")
 
         return response_dict
 
