@@ -1,4 +1,5 @@
 import base64
+import json
 from typing import Any, TypedDict
 
 import httpx
@@ -54,7 +55,7 @@ async def execute_api_call(
             # Try to parse the response as JSON
             try:
                 response_dict["json"] = response.json()
-            except (httpx.HTTPError, httpx.StreamError) as e:
+            except json.JSONDecodeError as e:
                 response_dict["json"] = None
                 activity.logger.debug(f"Failed to parse JSON response: {e}")
 
