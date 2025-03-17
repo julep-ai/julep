@@ -34,10 +34,10 @@ To get started with the Email integration, follow these steps to configure and c
           provider: email
           method: send
           setup:
-            host: smtp.example.com
+            host: "smtp.example.com"
             port: 587
-            user: YOUR_USERNAME
-            password: YOUR_PASSWORD
+            user: "YOUR_USERNAME"
+            password: "YOUR_PASSWORD"
     main:
       - tool: email_tool
         arguments:

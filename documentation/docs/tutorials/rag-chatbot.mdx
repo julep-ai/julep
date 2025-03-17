@@ -309,7 +309,7 @@ client = Client(api_key=JULEP_API_KEY)
 # Create the agent
 agent = client.agents.create(
   name="Julep Jina Crawler Agent",
-  description="A Julep agent that can crawl a website and store the content in the document store.",
+  about="A Julep agent that can crawl a website and store the content in the document store.",
 )
 
 # Load the task definition
@@ -351,7 +351,7 @@ const client = new Julep({
 // Create the agent
 const agent = await client.agents.create({
   name: "Julep Crawler Agent",
-  description: "A Julep agent that can crawl a website and store the content in the document store.",
+  about: "A Julep agent that can crawl a website and store the content in the document store.",
 });
 
 // Load the task definition
