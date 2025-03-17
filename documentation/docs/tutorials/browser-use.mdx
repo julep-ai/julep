@@ -498,7 +498,7 @@ client = Client(api_key=JULEP_API_KEY)
 # Create the agent
 agent = client.agents.create(
   name="Julep Browser Use Agent",
-  description="A Julep agent that can use the computer tool to interact with the browser.",
+  about="A Julep agent that can use the computer tool to interact with the browser.",
 )
 
 # Load the task definition
@@ -545,7 +545,7 @@ const client = new Julep({
 // Create the agent
 const agent = await client.agents.create({
   name: "Julep Browser Use Agent",
-  description: "A Julep agent that can use the computer tool to interact with the browser.",
+  about: "A Julep agent that can use the computer tool to interact with the browser.",
 });
 
 // Parse the task definition
