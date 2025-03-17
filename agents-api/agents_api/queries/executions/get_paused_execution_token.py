@@ -9,12 +9,14 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 # FIXME: We should use latest_transitions instead of transitions
 # Query to get a paused execution token
 get_paused_execution_token_query = """
-SELECT * FROM transitions
+SELECT
+    created_at, execution_id, transition_id, task_token, type
+FROM transitions
 WHERE
     execution_id = $1
-        AND type = 'wait'
-    ORDER BY created_at DESC
-    LIMIT 1;
+    AND type = 'wait'
+ORDER BY created_at DESC
+LIMIT 1;
 """
 
 

@@ -12,7 +12,10 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list execution transitions
 list_execution_transitions_query = """
-SELECT * FROM transitions
+SELECT
+    created_at, execution_id, transition_id as id, type, step_label,
+    output, current_step, next_step, task_token, metadata
+FROM transitions
 WHERE
     execution_id = $1
     AND (current_step).scope_id = $6
@@ -21,12 +24,17 @@ ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
 """
+
 #  Query to get a single transition
 get_execution_transition_query = """
-SELECT * FROM transitions
+SELECT
+    created_at, execution_id, transition_id as id, type, step_label,
+    output, current_step, next_step, task_token, metadata
+FROM transitions
 WHERE
     execution_id = $1
-    AND transition_id = $2;
+    AND transition_id = $2
+LIMIT 1;
 """
 
 
@@ -35,7 +43,6 @@ def _transform(d):
     next_step = d.pop("next_step", None)
 
     return {
-        "id": d["transition_id"],
         "updated_at": utcnow(),
         "current": {
             "workflow": current_step[0],
