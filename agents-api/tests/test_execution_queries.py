@@ -79,7 +79,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result is not None
     assert isinstance(result, Execution)
     assert result.status == "queued"
-    assert result.metadata["transition"]["count"] == 0
+    assert result.transition_count == 0
 
 
 @test("query: lookup temporal id")

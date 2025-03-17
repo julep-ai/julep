@@ -3616,6 +3616,10 @@ components:
         error:
           type: string
           description: The error of the execution if it failed
+        transition_count:
+          type: integer
+          format: uint8
+          description: The number of transitions in this execution
         metadata:
           type: object
           additionalProperties: {}
@@ -3656,6 +3660,10 @@ components:
         error:
           type: string
           description: The error of the execution if it failed
+        transition_count:
+          type: integer
+          format: uint8
+          description: The number of transitions in this execution
         created_at:
           type: string
           format: date-time

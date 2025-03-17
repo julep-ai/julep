@@ -29,6 +29,10 @@ class CreateExecutionRequest(BaseModel):
     """
     The error of the execution if it failed
     """
+    transition_count: int | None = None
+    """
+    The number of transitions in this execution
+    """
     metadata: dict[str, Any] | None = None
 
 
@@ -66,6 +70,10 @@ class Execution(BaseModel):
     error: str | None = None
     """
     The error of the execution if it failed
+    """
+    transition_count: int | None = None
+    """
+    The number of transitions in this execution
     """
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """

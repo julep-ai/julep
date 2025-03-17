@@ -67,13 +67,6 @@ LIMIT 1;
         "output": d["output"][OUTPUT_UNNEST_KEY]
         if isinstance(d["output"], dict) and OUTPUT_UNNEST_KEY in d["output"]
         else d["output"],
-        "metadata": {
-            **d["metadata"],
-            "transition": {
-                **({"metadata": d["transition_metadata"]} if d["transition_metadata"] else {}),
-                "count": d["transition_count"],
-            },
-        },
     },
 )
 @pg_query
