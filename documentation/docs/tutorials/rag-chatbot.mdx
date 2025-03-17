@@ -1,6 +1,7 @@
+```markdown
 ---
 title: 'RAG Chatbot for Website'
-description: 'Learn how to build a RAG chatbot for a website with Julep'
+about: 'Learn how to build a RAG chatbot for a website with Julep'
 icon: 'display'
 ---
 
@@ -168,7 +169,7 @@ We're using two tools:
   ```yaml YAML
   # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
   name: Julep Jina Crawler Task
-  description: A Julep agent that can crawl a website and store the content in the document store.
+  about: A Julep agent that can crawl a website and store the content in the document store.
 
   ########################################################
   ################### INPUT SCHEMA #######################
@@ -202,7 +203,7 @@ We're using two tools:
       Authorization: "Bearer JINA_API_KEY"
 
   - name : create_agent_doc
-    description: Create an agent doc
+    about: Create an agent doc
     type: system
     system:
       resource: agent
@@ -325,7 +326,7 @@ task = client.tasks.create(
 # Create the execution
 execution = client.executions.create(
   task_id=task.id,
-  input={"url": "https://en.wikipedia.org/wiki/Artificial_intelligence, "reducing_strength": 5}
+  input={"url": "https://en.wikipedia.org/wiki/Artificial_intelligence", "reducing_strength": 5}
 )
 # Wait for the execution to complete
 while (result := client.executions.get(execution.id)).status not in ['succeeded', 'failed']:
@@ -493,8 +494,8 @@ For additional support or to learn more:
 - Dev Support: hey@julep.ai
 </Accordion>
 
-
 ## Next Steps
 
 - Try this task yourself, check out the full example, see the [RAG Chatbot cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/08-rag-chatbot.ipynb).
 - To learn more about the integrations used in this task, check out the [integrations](/docs/integrations/supported-integrations) page.
+```
