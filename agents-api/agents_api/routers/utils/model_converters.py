@@ -4,21 +4,24 @@ from ...autogen.openapi_model import (
     Agent,
     ChatInput,
     ChatResponse,
+    CompletionUsage,
     CreateAgentRequest,
     CreateEntryRequest,
     CreateResponse,
     CreateSessionRequest,
+    InputTokensDetails,
     MessageOutputItem,
+    OutputTokensDetails,
     Response,
     ResponseUsage,
     Session,
     TextContentPart,
 )
-from ...queries.agents import create_agent as create_agent_query
-from ...queries.agents import list_agents as list_agents_query
+from ...queries.agents.create_agent import create_agent as create_agent_query
+from ...queries.agents.list_agents import list_agents as list_agents_query
 from ...queries.entries import add_entry_relations, create_entries, get_history
-from ...queries.sessions import create_session as create_session_query
-from ...queries.sessions import get_session as get_session_query
+from ...queries.sessions.create_session import create_session as create_session_query
+from ...queries.sessions.get_session import get_session as get_session_query
 
 
 async def convert_create_response(
@@ -130,17 +133,26 @@ def convert_chat_response_to_response(
     session_id: UUID,
     user_id: UUID,
 ) -> Response:
-    usage = ResponseUsage(
-        input_tokens=chat_response.usage.prompt_tokens,
-        input_tokens_details={
-            "cached_tokens": 0
-        },  # FIXME: Placeholder. Need to add proper input_tokens_details
-        output_tokens=chat_response.usage.completion_tokens,
-        output_tokens_details={
-            "reasoning_tokens": 0
-        },  # FIXME: Placeholder. Need to add proper output_tokens_details
-        total_tokens=chat_response.usage.total_tokens,
-    )
+    chat_response_usage: CompletionUsage | None = chat_response.usage
+
+    if chat_response_usage is None:
+        usage = ResponseUsage(
+            input_tokens=0,
+            input_tokens_details=InputTokensDetails(cached_tokens=0),
+            output_tokens=0,
+            output_tokens_details=OutputTokensDetails(reasoning_tokens=0),
+            total_tokens=0,
+        )
+    else:
+        usage = ResponseUsage(
+            input_tokens=chat_response_usage.prompt_tokens or 0,
+            # FIXME: Placeholder. Need to add proper input_tokens_details
+            input_tokens_details=InputTokensDetails(cached_tokens=0),
+            output_tokens=chat_response_usage.completion_tokens or 0,
+            # FIXME: Placeholder. Need to add proper output_tokens_details
+            output_tokens_details=OutputTokensDetails(reasoning_tokens=0),
+            total_tokens=chat_response_usage.total_tokens or 0,
+        )
 
     output_text = chat_response.choices[0].message.content
 

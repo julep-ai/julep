@@ -4,10 +4,21 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, Query
 
 from ...autogen.Entries import History
-from ...autogen.openapi_model import Includable, Response
+from ...autogen.openapi_model import (
+    Format,
+    Includable,
+    InputTokensDetails,
+    MessageOutputItem,
+    OutputTokensDetails,
+    Reasoning,
+    Response,
+    ResponseUsage,
+    Text,
+    TextContentPart,
+)
 from ...dependencies.developer_id import get_developer_id
-from ...queries.developers import get_developer as get_developer_query
-from ...queries.entries import get_history as get_history_query
+from ...queries.developers.get_developer import get_developer as get_developer_query
+from ...queries.entries.get_history import get_history as get_history_query
 from .router import router
 
 
@@ -38,51 +49,56 @@ async def get_response(
             last_entries = session_history.entries[len(session_history.entries) - i :]
             break
 
+    if not last_entries:
+        raise HTTPException(
+            status_code=404, detail="No response was found for the provided response id"
+        )
+
     last_entry = last_entries[-1]
 
-    return {
-        "id": str(response_id),
-        "object": "response",
-        "created_at": int(last_entry.created_at.timestamp()),
-        "status": "completed",
-        "error": None,
-        "incomplete_details": None,
-        "instructions": None,
-        "max_output_tokens": None,
-        "model": last_entry.model,
-        "output": [
-            {
-                "type": "message",
-                "id": str(entry.id),
-                "status": "completed",
-                "role": entry.role,
-                "content": [
-                    {
-                        "type": "output_text",
-                        "text": entry.content[0].text,
-                        "annotations": [],
-                    }
+    return Response(
+        id=str(response_id),
+        object="response",
+        created_at=int(last_entry.created_at.timestamp()),
+        status="completed",
+        error=None,
+        incomplete_details=None,
+        instructions=None,
+        max_output_tokens=None,
+        model=last_entry.model,
+        output=[
+            MessageOutputItem(
+                type="message",
+                id=str(entry.id),
+                status="completed",
+                role=entry.role,
+                content=[
+                    TextContentPart(
+                        type="output_text",
+                        text=entry.content[0].text,
+                        annotations=[],
+                    )
                 ],
-            }
+            )
             for entry in last_entries
         ],
-        "parallel_tool_calls": True,
-        "previous_response_id": None,
-        "reasoning": {"effort": None, "summary": None},
-        "store": True,
-        "temperature": 1.0,
-        "text": {"format": {"type": "text"}},
-        "tool_choice": "auto",
-        "tools": [],
-        "top_p": 1.0,
-        "truncation": "disabled",
-        "usage": {
-            "input_tokens": 0,
-            "input_tokens_details": {"cached_tokens": 0},
-            "output_tokens": sum(entry.token_count for entry in last_entries),
-            "output_tokens_details": {"reasoning_tokens": 0},
-            "total_tokens": sum(entry.token_count for entry in last_entries),
-        },
-        "user": None,
-        "metadata": {},
-    }
+        parallel_tool_calls=True,
+        previous_response_id=None,
+        reasoning=Reasoning(effort=None, summary=None),
+        store=True,
+        temperature=1.0,
+        text=Text(format=Format(type="text")),
+        tool_choice="auto",
+        tools=[],
+        top_p=1.0,
+        truncation="disabled",
+        usage=ResponseUsage(
+            input_tokens=0,
+            input_tokens_details=InputTokensDetails(cached_tokens=0),
+            output_tokens=sum(entry.token_count for entry in last_entries),
+            output_tokens_details=OutputTokensDetails(reasoning_tokens=0),
+            total_tokens=sum(entry.token_count for entry in last_entries),
+        ),
+        user=None,
+        metadata={},
+    )
