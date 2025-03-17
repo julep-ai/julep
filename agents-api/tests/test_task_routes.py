@@ -117,7 +117,7 @@ def _(make_request=make_request, execution=test_execution_started):
     )
 
     assert response.status_code == 200
-    assert response.json()["metadata"]["transition_count"] > 0
+    assert response.json()["metadata"]["transition"]["count"] > 0
 
 
 @test("route: get task not exists")

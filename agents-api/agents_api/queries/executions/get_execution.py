@@ -68,8 +68,11 @@ LIMIT 1;
         if isinstance(d["output"], dict) and OUTPUT_UNNEST_KEY in d["output"]
         else d["output"],
         "metadata": {
-            **({"transitions": d["transition_metadata"]} if d["transition_metadata"] else {}),
-            "transition_count": d["transition_count"],
+            **d["metadata"],
+            "transition": {
+                **({"metadata": d["transition_metadata"]} if d["transition_metadata"] else {}),
+                "count": d["transition_count"],
+            },
         },
     },
 )
