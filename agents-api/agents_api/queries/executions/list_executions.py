@@ -23,6 +23,7 @@ SELECT
     updated_at,
     status,
     error,
+    transition_count,
     output,
     current_step,
     next_step,
