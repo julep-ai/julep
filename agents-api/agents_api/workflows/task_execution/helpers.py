@@ -323,7 +323,7 @@ async def execute_map_reduce_step_parallel(
 
     # If parallelism is 1, we're effectively running sequentially
     if parallelism == 1:
-        workflow.logger.warn("Parallelism is set to 1, falling back to sequential execution")
+        workflow.logger.warning("Parallelism is set to 1, falling back to sequential execution")
         # Fall back to sequential map-reduce
         return await execute_map_reduce_step(
             context=context,
