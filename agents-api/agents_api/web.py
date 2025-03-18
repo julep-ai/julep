@@ -178,7 +178,11 @@ def _get_error_suggestions(error: dict) -> dict:
     elif "min_length" in error_type:
         if "limit_value" in error:
             suggestions["fix"] = f"Value must have at least {error['limit_value']} characters"
-            suggestions["example"] = "x" * int(error["limit_value"])
+            try:
+                limit = int(error["limit_value"])
+                suggestions["example"] = "x" * limit
+            except (ValueError, TypeError):
+                suggestions["example"] = "x" * 5  # Fallback example
 
     elif "max_length" in error_type:
         if "limit_value" in error:
