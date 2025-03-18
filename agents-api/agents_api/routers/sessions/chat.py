@@ -88,11 +88,9 @@ async def chat(
 
     try:
         evaluator = ToolCallsEvaluator(
-            tool_types={"system"},
-            developer_id=developer.id,
             completion_func=litellm.acompletion,
         )
-        model_response = await evaluator.completion(**payload)
+        model_response = await evaluator.completion(developer.id, **payload)
     except Exception as e:
         import logging
 

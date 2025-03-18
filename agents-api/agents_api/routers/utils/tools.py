@@ -1,7 +1,7 @@
 import json
 from collections.abc import Awaitable, Callable
 from functools import partial
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 from uuid import UUID
 
 from beartype import beartype
@@ -88,12 +88,8 @@ class ToolCallsEvaluator:
 
     def __init__(
         self,
-        tool_types: set[str],
-        developer_id: UUID,
         completion_func: Callable[..., Awaitable[ModelResponse | CustomStreamWrapper]],
     ):
-        self._tool_types = tool_types
-        self._developer_id = developer_id
         self._completion_func = completion_func
 
     def _create_search_request(self, search_params: dict) -> Any:
@@ -269,36 +265,80 @@ class ToolCallsEvaluator:
 
         return await tool_handler(**arguments)
 
-    async def completion(self, **kwargs):
+    @staticmethod
+    async def get_first_chunk(response: CustomStreamWrapper):
+        try:
+            first_chunk = await response.__anext__()
+        except StopAsyncIteration:
+            return None, response
+
+        async def gen():
+            yield first_chunk
+            async for chunk in response:
+                yield chunk
+
+        return first_chunk, CustomStreamWrapper(
+            completion_stream=gen(),
+            model=response.model,
+            logging_obj=response.logging_obj,
+            custom_llm_provider=response.custom_llm_provider,
+            stream_options=response.stream_options,
+            make_call=response.make_call,
+        )
+
+    async def completion(self, developer_id: UUID, **kwargs):
         response: ModelResponse | CustomStreamWrapper | None = None
-        done = False
-        messages = kwargs.get("messages", [])
-        while not done:
-            response: ModelResponse | CustomStreamWrapper = await self._completion_func(
-                **kwargs
-            )
-            if not response.choices or not response.choices[0].message.tool_calls:
-                return response
+        stream: bool = kwargs.get("stream", False)
+        while True:
+            tool_calls = []
 
-            # TODO: add streaming response handling
-            for tool in response.choices[0].message.tool_calls:
-                if tool.type not in self._tool_types:
-                    done = True
-                    continue
+            if not stream:
+                response: ModelResponse = await self._completion_func(**kwargs)
+                if not response.choices:
+                    return response
 
-                done = False
+                tool_calls = response.choices[0].message.tool_calls
+
+                if not tool_calls:
+                    return response
+            else:
+                first_chunk, response = await self.get_first_chunk(response)
+                if first_chunk and not first_chunk.choices:
+                    return response
+
+                delta = first_chunk.choices[0].delta
+                if delta.content:
+                    return response
+
+                async for chunk in cast(CustomStreamWrapper, response):
+                    delta = chunk.choices[0].delta
+                    if delta.tool_calls:
+                        for tool_call in delta.tool_calls:
+                            if len(tool_calls) <= tool_call.index:
+                                tool_calls.append({
+                                    "id": "",
+                                    "type": "function",
+                                    "function": {"name": "", "arguments": ""},
+                                })
+
+                            tc = tool_calls[tool_call.index]
+                            if tool_call.id:
+                                tc["id"] = tool_call.id
+                            if tool_call.function.name:
+                                tc["function"]["name"] += tool_call.function.name
+                            if tool_call.function.arguments:
+                                tc["function"]["arguments"] += tool_call.function.arguments
+
+            for tool in tool_calls:
                 # call a tool
                 tool_name = tool.function.name
                 tool_args = json.loads(tool.function.arguments)
-                tool_response = await self._call_tool(self._developer_id, tool_name, tool_args)
+                tool_response = await self._call_tool(developer_id, tool_name, tool_args)
 
                 # append result to messages from previous step
-                messages.append({
+                kwargs["messages"].append({
                     "tool_call_id": tool.id,
                     "role": "tool",
                     "name": tool_name,
                     "content": tool_response,
                 })
-                kwargs["messages"] = messages
-
-        return response
