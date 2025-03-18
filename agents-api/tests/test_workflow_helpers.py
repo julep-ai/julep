@@ -1,8 +1,9 @@
 import uuid
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from agents_api.autogen.openapi_model import (
     Agent,
+    Execution,
     MapReduceStep,
     PromptItem,
     PromptStep,
@@ -45,6 +46,14 @@ async def _():
         ),
         agent_tools=[],
         arguments={},
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            status="running",
+            task_id=uuid.uuid4(),
+            input={},
+        ),
         task=TaskSpecDef(
             name="task1",
             tools=[],
@@ -61,8 +70,27 @@ async def _():
             scope_id=uuid.uuid4(),
         ),
     )
-    with patch("agents_api.workflows.task_execution.helpers.workflow") as workflow:
+    with (
+        patch("agents_api.workflows.task_execution.helpers.workflow") as workflow,
+        patch("agents_api.workflows.task_execution.helpers.continue_as_child"),
+        # Also patch execute_map_reduce_step as it gets called when parallelism is 1
+        patch(
+            "agents_api.workflows.task_execution.helpers.execute_map_reduce_step"
+        ) as execute_map_reduce_step_mock,
+    ):
+        # This is the function that gets called when parallelism is 1
+        execute_map_reduce_step_mock.side_effect = AssertionError(
+            "Parallelism must be greater than 1"
+        )
+
+        # Mock run function that will be returned by lambda in continue_as_child
+        run_mock = AsyncMock()
+
+        # Mock lambda that creates child workflow or continue as new
+        workflow.continue_as_new = run_mock
+        workflow.execute_child_workflow.return_value = run_mock
         workflow.execute_activity.return_value = _resp()
+
         with raises(AssertionError):
             await execute_map_reduce_step_parallel(
                 context=context,
@@ -79,18 +107,16 @@ async def _():
     async def _resp():
         return "response"
 
-    async def mock_continue_as_child(*args, **kwargs):
-        # Return different workflow results based on the item being processed
-        if args[2] == 1:  # first item
-            return WorkflowResult(
-                returned=False,
-                state=PartialTransition(output="response 1"),
-            )
-        # second item
-        return WorkflowResult(
-            returned=True,
-            state=PartialTransition(output="response 2"),
-        )
+    # Create the workflow results we'll use
+    result1 = WorkflowResult(
+        returned=False,
+        state=PartialTransition(output="response 1"),
+    )
+
+    result2 = WorkflowResult(
+        returned=True,
+        state=PartialTransition(output="response 2"),
+    )
 
     subworkflow_step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
 
@@ -111,6 +137,14 @@ async def _():
         ),
         agent_tools=[],
         arguments={},
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            status="running",
+            task_id=uuid.uuid4(),
+            input={},
+        ),
         task=TaskSpecDef(
             name="task1",
             tools=[],
@@ -130,11 +164,13 @@ async def _():
     with (
         patch("agents_api.workflows.task_execution.helpers.workflow") as workflow,
         patch(
-            "agents_api.workflows.task_execution.helpers.continue_as_child",
-        ) as continue_as_child,
+            "agents_api.workflows.task_execution.helpers.continue_as_child"
+        ) as continue_as_child_mock,
     ):
+        # Mock continue_as_child directly to return our workflow results
+        # First call returns result1, second call returns result2
+        continue_as_child_mock.side_effect = [result1, result2]
         workflow.execute_activity.return_value = _resp()
-        continue_as_child.side_effect = mock_continue_as_child
 
         result = await execute_map_reduce_step_parallel(
             context=context,
@@ -158,18 +194,16 @@ async def _():
     async def _resp():
         return ["response 1", "response 2"]
 
-    async def mock_continue_as_child(*args, **kwargs):
-        # Return different workflow results based on the item being processed
-        if args[2] == 1:  # first item
-            return WorkflowResult(
-                returned=False,
-                state=PartialTransition(output="response 1"),
-            )
-        # second item
-        return WorkflowResult(
-            returned=False,
-            state=PartialTransition(output="response 2"),
-        )
+    # Create the workflow results we'll use
+    result1 = WorkflowResult(
+        returned=False,
+        state=PartialTransition(output="response 1"),
+    )
+
+    result2 = WorkflowResult(
+        returned=False,
+        state=PartialTransition(output="response 2"),
+    )
 
     subworkflow_step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
 
@@ -190,6 +224,14 @@ async def _():
         ),
         agent_tools=[],
         arguments={},
+        execution=Execution(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            status="running",
+            task_id=uuid.uuid4(),
+            input={},
+        ),
         task=TaskSpecDef(
             name="task1",
             tools=[],
@@ -209,11 +251,13 @@ async def _():
     with (
         patch("agents_api.workflows.task_execution.helpers.workflow") as workflow,
         patch(
-            "agents_api.workflows.task_execution.helpers.continue_as_child",
-        ) as continue_as_child,
+            "agents_api.workflows.task_execution.helpers.continue_as_child"
+        ) as continue_as_child_mock,
     ):
+        # Mock continue_as_child directly to return our workflow results
+        # First call returns result1, second call returns result2
+        continue_as_child_mock.side_effect = [result1, result2]
         workflow.execute_activity.return_value = _resp()
-        continue_as_child.side_effect = mock_continue_as_child
 
         result = await execute_map_reduce_step_parallel(
             context=context,

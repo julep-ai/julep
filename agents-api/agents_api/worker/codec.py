@@ -50,31 +50,88 @@ class RemoteObject(BaseModel):
 
 
 def serialize(x: Any) -> bytes:
+    """
+    Serialize an object using pickle and compress with lz4.
+
+    Args:
+        x: The object to serialize
+
+    Returns:
+        Compressed serialized bytes
+
+    Raises:
+        Exception: If serialization fails
+    """
     start_time = time.time()
-    pickled = pickle.dumps(x, protocol=-1)
-    compressed = compress(pickled)
 
-    duration = time.time() - start_time
-    if duration > 1:
+    try:
+        # First pickle the object
+        pickled = pickle.dumps(x, protocol=-1)
+
+        # Then compress the pickled data
+        compressed = compress(pickled)
+
+        # Log timing for large objects
+        duration = time.time() - start_time
+        if duration > 1:
+            # Use pickled size as a more accurate measure of the object's true size
+            original_size = len(pickled) / 1000
+            compressed_size = len(compressed) / 1000
+            compression_ratio = (
+                f"{len(pickled) / len(compressed):.2f}x" if len(compressed) > 0 else "N/A"
+            )
+
+            print(
+                f"||| [SERIALIZE] Time: {duration:.2f}s | Original: {original_size:.2f}kb | "
+                f"Compressed: {compressed_size:.2f}kb | Ratio: {compression_ratio}",
+            )
+
+        return compressed
+    except Exception as e:
         print(
-            f"||| [SERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(x) / 1000}kb",
+            f"||| [SERIALIZE ERROR] Failed to serialize object of type {type(x).__name__}: {e!s}"
         )
-
-    return compressed
+        raise
 
 
 def deserialize(b: bytes) -> Any:
+    """
+    Deserialize a compressed pickle object.
+
+    Args:
+        b: Compressed serialized bytes
+
+    Returns:
+        The deserialized object
+
+    Raises:
+        Exception: If deserialization fails
+    """
     start_time = time.time()
-    decompressed = decompress(b)
-    object = pickle.loads(decompressed)
 
-    duration = time.time() - start_time
-    if duration > 1:
-        print(
-            f"||| [DESERIALIZE] Time taken: {duration}s // Object size: {sys.getsizeof(b) / 1000}kb",
-        )
+    try:
+        # First decompress the data
+        decompressed = decompress(b)
 
-    return object
+        # Then unpickle to get the original object
+        obj = pickle.loads(decompressed)
+
+        # Log timing for large objects
+        duration = time.time() - start_time
+        if duration > 1:
+            compressed_size = len(b) / 1000
+            decompressed_size = len(decompressed) / 1000
+            obj_size = sys.getsizeof(obj) / 1000 if hasattr(obj, "__sizeof__") else "unknown"
+
+            print(
+                f"||| [DESERIALIZE] Time: {duration:.2f}s | Compressed: {compressed_size:.2f}kb | "
+                f"Decompressed: {decompressed_size:.2f}kb | Object: {obj_size}kb | Type: {type(obj).__name__}"
+            )
+
+        return obj
+    except Exception as e:
+        print(f"||| [DESERIALIZE ERROR] Failed to deserialize: {e!s}")
+        raise
 
 
 def from_payload_data(data: bytes, type_hint: type | None = None) -> Any:
@@ -146,12 +203,22 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
         try:
             return from_payload_data(payload.data, type_hint)
         except Exception as e:
+            # In debug/testing mode, we want to see the full error
             if debug or testing:
                 raise e
 
-            # TODO: In production, we don't want to crash the workflow
-            #       But the sentinel object must be handled by the caller
-            logging.warning(f"Failed to decode payload with our encoder: {e}")
+            # Create a more detailed log message with payload metadata
+            payload_size = len(payload.data) if payload.data else 0
+            metadata_str = ", ".join(f"{k}={v}" for k, v in payload.metadata.items())
+
+            logging.warning(
+                f"Failed to decode payload: {e!s}\n"
+                f"Payload size: {payload_size} bytes\n"
+                f"Metadata: {metadata_str}\n"
+                f"Type hint: {type_hint.__name__ if type_hint else 'None'}"
+            )
+
+            # Return sentinel object that must be handled by the caller
             return FailedDecodingSentinel(payload_data=payload.data)
 
 
