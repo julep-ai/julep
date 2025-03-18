@@ -5,7 +5,7 @@
 - **Lint code**: `poe lint` (runs `ruff check`)
 - **Type checking**: `poe typecheck` (runs `pytype --config pytype.toml` or `pyright` for CLI)
 - **Test**: `poe test` (runs `ward test --exclude .venv` or `pytest` for integrations-service)
-- **Single test**: `poe test -p "pattern"` (e.g., `poe test -p "test_session_routes"`)
+- **Single test**: `poe test --search "pattern"` (e.g., `poe test --search "test_session_routes"`)
 - **Quick test file**: `PYTHONPATH=$PWD python tests/test_file.py` (for simple tests)
 - **Run all checks**: `poe check` (runs lint, format, typecheck, SQL validation)
 - **Generate API code**: `poe codegen`
