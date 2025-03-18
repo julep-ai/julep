@@ -6,7 +6,12 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi.background import BackgroundTasks
-from litellm.utils import CustomStreamWrapper, ModelResponse, ModelResponseStream
+from litellm.utils import (
+    ChatCompletionMessageToolCall,
+    CustomStreamWrapper,
+    ModelResponse,
+    ModelResponseStream,
+)
 
 from ...app import app
 from ...autogen.openapi_model import (
@@ -295,7 +300,7 @@ class ToolCallsEvaluator:
         response: ModelResponse | CustomStreamWrapper | None = None
         stream: bool = kwargs.get("stream", False)
         while True:
-            tool_calls = []
+            tool_calls: list[ChatCompletionMessageToolCall | dict] = []
 
             if not stream:
                 response: ModelResponse = await self._completion_func(**kwargs)
@@ -339,13 +344,23 @@ class ToolCallsEvaluator:
 
             for tool in tool_calls:
                 # call a tool
-                tool_name = tool.function.name
-                tool_args = json.loads(tool.function.arguments)
+                tool_name = (
+                    tool.function.name
+                    if isinstance(tool, ChatCompletionMessageToolCall)
+                    else tool["function"]["name"]
+                )
+                tool_args = json.loads(
+                    tool.function.arguments
+                    if isinstance(tool, ChatCompletionMessageToolCall)
+                    else tool["function"]["arguments"]
+                )
                 tool_response = await self._call_tool(developer_id, tool_name, tool_args)
 
                 # append result to messages from previous step
                 kwargs["messages"].append({
-                    "tool_call_id": tool.id,
+                    "tool_call_id": tool.id
+                    if isinstance(tool, ChatCompletionMessageToolCall)
+                    else tool["id"],
                     "role": "tool",
                     "name": tool_name,
                     "content": tool_response,
