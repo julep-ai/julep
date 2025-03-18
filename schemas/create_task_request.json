@@ -102,6 +102,226 @@
       "title": "Agent",
       "type": "object"
     },
+    "AlgoliaIntegrationDef": {
+      "description": "Algolia integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlgoliaSearchArguments"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "algolia",
+          "default": "algolia",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlgoliaSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "AlgoliaIntegrationDef",
+      "type": "object"
+    },
+    "AlgoliaIntegrationDefUpdate": {
+      "description": "Algolia integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlgoliaSearchArgumentsUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "algolia",
+          "default": "algolia",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlgoliaSetupUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "AlgoliaIntegrationDefUpdate",
+      "type": "object"
+    },
+    "AlgoliaSearchArguments": {
+      "description": "Arguments for Algolia Search",
+      "properties": {
+        "attributes_to_retrieve": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Attributes To Retrieve"
+        },
+        "hits_per_page": {
+          "default": 10,
+          "maximum": 1000.0,
+          "minimum": 1.0,
+          "title": "Hits Per Page",
+          "type": "integer"
+        },
+        "index_name": {
+          "title": "Index Name",
+          "type": "string"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        }
+      },
+      "required": [
+        "index_name",
+        "query"
+      ],
+      "title": "AlgoliaSearchArguments",
+      "type": "object"
+    },
+    "AlgoliaSearchArgumentsUpdate": {
+      "description": "Arguments for Algolia Search",
+      "properties": {
+        "attributes_to_retrieve": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Attributes To Retrieve"
+        },
+        "hits_per_page": {
+          "default": 10,
+          "maximum": 1000.0,
+          "minimum": 1.0,
+          "title": "Hits Per Page",
+          "type": "integer"
+        },
+        "index_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Index Name"
+        },
+        "query": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Query"
+        }
+      },
+      "title": "AlgoliaSearchArgumentsUpdate",
+      "type": "object"
+    },
+    "AlgoliaSetup": {
+      "description": "Integration definition for Algolia",
+      "properties": {
+        "algolia_api_key": {
+          "title": "Algolia Api Key",
+          "type": "string"
+        },
+        "algolia_application_id": {
+          "title": "Algolia Application Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algolia_application_id",
+        "algolia_api_key"
+      ],
+      "title": "AlgoliaSetup",
+      "type": "object"
+    },
+    "AlgoliaSetupUpdate": {
+      "description": "Integration definition for Algolia",
+      "properties": {
+        "algolia_api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Algolia Api Key"
+        },
+        "algolia_application_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Algolia Application Id"
+        }
+      },
+      "title": "AlgoliaSetupUpdate",
+      "type": "object"
+    },
     "ApiCallDef": {
       "description": "API call definition",
       "properties": {
@@ -2472,7 +2692,7 @@
         "usage": {
           "anyOf": [
             {
-              "$ref": "#/$defs/CompletionUsage"
+              "$ref": "#/$defs/CompetionUsage"
             },
             {
               "type": "null"
@@ -2880,7 +3100,7 @@
       "title": "CloudinaryUploadIntegrationDefUpdate",
       "type": "object"
     },
-    "CompletionUsage": {
+    "CompetionUsage": {
       "description": "Usage statistics for the completion request",
       "properties": {
         "completion_tokens": {
@@ -2920,7 +3140,7 @@
           "title": "Total Tokens"
         }
       },
-      "title": "CompletionUsage",
+      "title": "CompetionUsage",
       "type": "object"
     },
     "Computer20241022Def": {
@@ -3392,6 +3612,17 @@
             }
           ],
           "title": "Output"
+        },
+        "transition_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transition Count"
         }
       },
       "required": [
@@ -4094,6 +4325,9 @@
             },
             {
               "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"
@@ -5393,6 +5627,17 @@
           "readOnly": true,
           "title": "Task Id",
           "type": "string"
+        },
+        "transition_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transition Count"
         },
         "updated_at": {
           "format": "date-time",
@@ -7371,7 +7616,7 @@
         "usage": {
           "anyOf": [
             {
-              "$ref": "#/$defs/CompletionUsage"
+              "$ref": "#/$defs/CompetionUsage"
             },
             {
               "type": "null"
@@ -8049,6 +8294,9 @@
             },
             {
               "$ref": "#/$defs/UnstructuredIntegrationDefUpdate"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDefUpdate"
             },
             {
               "type": "null"
@@ -10211,6 +10459,9 @@
               "$ref": "#/$defs/UnstructuredIntegrationDef"
             },
             {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
               "type": "null"
             }
           ],
@@ -10383,6 +10634,9 @@
             },
             {
               "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"
@@ -10933,6 +11187,9 @@
             },
             {
               "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"
@@ -11848,6 +12105,9 @@
             },
             {
               "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"
@@ -13047,6 +13307,9 @@
               "$ref": "#/$defs/UnstructuredIntegrationDef"
             },
             {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
               "type": "null"
             }
           ],
@@ -13213,6 +13476,9 @@
             },
             {
               "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"

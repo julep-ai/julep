@@ -8,13 +8,13 @@ from ...autogen.openapi_model import (
     Format,
     Includable,
     InputTokensDetails,
-    MessageOutputItem,
+    OutputMessage,
+    OutputText,
     OutputTokensDetails,
-    Reasoning,
+    ReasoningModel,
     Response,
     ResponseUsage,
     Text,
-    TextContentPart,
 )
 from ...dependencies.developer_id import get_developer_id
 from ...queries.developers.get_developer import get_developer as get_developer_query
@@ -67,13 +67,13 @@ async def get_response(
         max_output_tokens=None,
         model=last_entry.model,
         output=[
-            MessageOutputItem(
+            OutputMessage(
                 type="message",
                 id=str(entry.id),
                 status="completed",
                 role=entry.role,
                 content=[
-                    TextContentPart(
+                    OutputText(
                         type="output_text",
                         text=entry.content[0].text,
                         annotations=[],
@@ -84,7 +84,7 @@ async def get_response(
         ],
         parallel_tool_calls=True,
         previous_response_id=None,
-        reasoning=Reasoning(effort=None, summary=None),
+        reasoning=ReasoningModel(effort=None, summary=None),
         store=True,
         temperature=1.0,
         text=Text(format=Format(type="text")),

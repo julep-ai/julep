@@ -1,6 +1,13 @@
 from uuid import UUID
 
-from ...autogen.Chat import ChatInput, Content, ContentModel7, ImageUrl, Message
+from ...autogen.Chat import (
+    ChatInput,
+    Content,
+    ContentModel7,
+    CreateToolRequest,
+    ImageUrl,
+    Message,
+)
 from ...autogen.openapi_model import (
     Agent,
     ChatResponse,
@@ -9,16 +16,24 @@ from ...autogen.openapi_model import (
     CreateEntryRequest,
     CreateResponse,
     CreateSessionRequest,
-    ImageInputContentItem,
     InputTokensDetails,
-    MessageOutputItem,
     OutputTokensDetails,
     Response,
     ResponseUsage,
     Session,
-    TextContentPart,
-    TextInputContentItem,
 )
+from ...autogen.Responses import (
+    ComputerToolCall,
+    FileSearchToolCall,
+    FunctionToolCall,
+    InputImage,
+    InputText,
+    OutputMessage,
+    OutputText,
+    ReasoningItem,
+    WebSearchToolCall,
+)
+from ...autogen.Tools import FunctionDef
 from ...queries.agents.create_agent import create_agent as create_agent_query
 from ...queries.agents.list_agents import list_agents as list_agents_query
 from ...queries.entries import add_entry_relations, create_entries, get_history
@@ -114,12 +129,10 @@ async def convert_create_response(
         for item in create_response.input:
             for content_item in item.content:
                 content = None
-                if content_item.type == "input_text" and isinstance(
-                    content_item, TextInputContentItem
-                ):
+                if content_item.type == "input_text" and isinstance(content_item, InputText):
                     content = [Content(text=content_item.text)]
                 elif content_item.type == "input_image" and isinstance(
-                    content_item, ImageInputContentItem
+                    content_item, InputImage
                 ):
                     image_url = ImageUrl(
                         url=content_item.image_url,
@@ -133,6 +146,43 @@ async def convert_create_response(
                     raise ValueError(msg)
 
     # TODO: Convert tools from `CreateResponse` to `ChatInput`
+    tools: list[CreateToolRequest] = []
+
+    if create_response.tools:
+        for tool in create_response.tools:
+            if tool.type == "function":
+                # tools.append(
+                #     {
+                #         "type": "function",
+                #         "name": tool.name,
+                #         "description": tool.description,
+                #         "parameters": tool.parameters,
+                #     }
+                # )
+
+                tools.append(
+                    CreateToolRequest(
+                        name=tool.name,
+                        description=tool.description,
+                        type="function",
+                        function=FunctionDef(
+                            name=tool.name,
+                            description=tool.description,
+                            parameters=tool.parameters,
+                        ),
+                    )
+                )
+            elif (
+                tool.type == "web_search_preview"
+                or tool.type == "file_search"
+                or tool.type == "computer-preview"
+            ):
+                tools.append(
+                    CreateToolRequest(
+                        name=tool.name,
+                        type=tool.type,
+                    )
+                )
 
     chat_input = ChatInput(
         model=create_response.model,
@@ -147,7 +197,7 @@ async def convert_create_response(
         stop=create_response.stop or [],
         logit_bias=create_response.logit_bias,
         tool_choice=create_response.tool_choice,
-        tools=create_response.tools,
+        tools=tools,
         truncation=create_response.truncation,
         recall=False,  # TODO: Enable recall only when file_search tool is present
     )
@@ -183,17 +233,34 @@ def convert_chat_response_to_response(
             total_tokens=chat_response_usage.total_tokens or 0,
         )
 
-    output_text = chat_response.choices[0].message.content
+    output: list[
+        OutputMessage
+        | FileSearchToolCall
+        | FunctionToolCall
+        | WebSearchToolCall
+        | ComputerToolCall
+        | ReasoningItem
+    ] = []
 
-    output: list[MessageOutputItem] = [
-        MessageOutputItem(
-            type="message",
-            id=str(chat_response.id),
-            status="completed",
-            role="assistant",
-            content=[TextContentPart(type="output_text", text=output_text, annotations=[])],
-        ),
-    ]
+    for choice in chat_response.choices:
+        if choice.finish_reason == "tool_calls":
+            pass
+            # output.append(
+            #     FunctionToolCall(
+
+            #     )
+        else:
+            output_text = chat_response.choices[0].message.content
+            output.append(
+                OutputMessage(
+                    type="message",
+                    id=str(chat_response.id),
+                    status="completed",
+                    role="assistant",
+                    content=[OutputText(text=output_text, annotations=[])],
+                )
+            )
+
     return Response(
         id=str(session_id),
         created_at=int(chat_response.created_at.timestamp()),
