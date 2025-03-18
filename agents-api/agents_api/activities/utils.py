@@ -231,8 +231,18 @@ def safe_extract_json(string: str):
             start_marker = string.find("```") + 3
             end_marker = string.find("```", start_marker)
 
-        # Extract from code block if both markers were found
-        if start_marker >= 3 and end_marker != -1:
+        # Verify we found a valid start marker
+        if "```json" in string and start_marker < 7:
+            # If ```json wasn't found, find returns -1, so start_marker would be 6
+            msg = "Code block has invalid or missing markers"
+            raise ValueError(msg)
+        if "```json" not in string and start_marker < 3:
+            # If ``` wasn't found, find returns -1, so start_marker would be 2
+            msg = "Code block has invalid or missing markers"
+            raise ValueError(msg)
+
+        # Extract from code block if end marker was found
+        if end_marker != -1:
             extracted_string = string[start_marker:end_marker].strip()
         else:
             # If incomplete markers, raise a specific error

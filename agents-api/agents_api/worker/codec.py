@@ -24,6 +24,7 @@ from temporalio.converter import (
 
 with workflow.unsafe.imports_passed_through():
     from ..clients import sync_s3
+    from ..common.utils.memory import total_size
     from ..env import blob_store_bucket, debug, testing
     from ..exceptions import FailedDecodingSentinel, FailedEncodingSentinel
 
@@ -77,18 +78,22 @@ def serialize(x: Any) -> bytes:
             # Use pickled size as a more accurate measure of the object's true size
             original_size = len(pickled) / 1000
             compressed_size = len(compressed) / 1000
-            compression_ratio = (
-                f"{len(pickled) / len(compressed):.2f}x" if len(compressed) > 0 else "N/A"
-            )
 
-            print(
+            # Safely calculate compression ratio to avoid division by zero
+            if len(compressed) > 0:
+                compression_ratio = f"{len(pickled) / len(compressed):.2f}x"
+            else:
+                compression_ratio = "N/A"
+
+            # Use proper logger instead of print statements
+            logging.info(
                 f"||| [SERIALIZE] Time: {duration:.2f}s | Original: {original_size:.2f}kb | "
-                f"Compressed: {compressed_size:.2f}kb | Ratio: {compression_ratio}",
+                f"Compressed: {compressed_size:.2f}kb | Ratio: {compression_ratio}"
             )
 
         return compressed
     except Exception as e:
-        print(
+        logging.error(
             f"||| [SERIALIZE ERROR] Failed to serialize object of type {type(x).__name__}: {e!s}"
         )
         raise
@@ -121,16 +126,16 @@ def deserialize(b: bytes) -> Any:
         if duration > 1:
             compressed_size = len(b) / 1000
             decompressed_size = len(decompressed) / 1000
-            obj_size = sys.getsizeof(obj) / 1000 if hasattr(obj, "__sizeof__") else "unknown"
+            obj_size = total_size(obj) / 1000
 
-            print(
+            logging.info(
                 f"||| [DESERIALIZE] Time: {duration:.2f}s | Compressed: {compressed_size:.2f}kb | "
-                f"Decompressed: {decompressed_size:.2f}kb | Object: {obj_size}kb | Type: {type(obj).__name__}"
+                f"Decompressed: {decompressed_size:.2f}kb | Object: {obj_size:.2f}kb | Type: {type(obj).__name__}"
             )
 
         return obj
     except Exception as e:
-        print(f"||| [DESERIALIZE ERROR] Failed to deserialize: {e!s}")
+        logging.error(f"||| [DESERIALIZE ERROR] Failed to deserialize: {e!s}")
         raise
 
 

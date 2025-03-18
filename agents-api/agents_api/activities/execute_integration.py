@@ -68,8 +68,7 @@ async def execute_integration(
         )
 
         # Check for error in the response
-        if integration_service_response.get("error"):
-            error_message = integration_service_response["error"]
+        if error_message := integration_service_response.get("error"):
             integration_str = (
                 f"{integration.provider}.{integration.method}"
                 if integration.method
