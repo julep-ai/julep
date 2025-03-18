@@ -35,12 +35,19 @@ async def bulk_delete_docs(
 
     # Build the metadata filter conditions
     metadata_conditions = ""
-    if metadata_filter:
+    delete_all = getattr(data, "delete_all", False)
+
+    if not delete_all and not metadata_filter:
+        query = """
+        SELECT doc_id FROM docs WHERE 1=0;
+        """
+        return query, []
+
+    if not delete_all and metadata_filter:
         for key, value in metadata_filter.items():
             metadata_conditions += f" AND d.metadata->>${len(params) + 1} = ${len(params) + 2}"
             params.extend([key, value])
 
-    # Create a simplified query - delete docs first, then doc_owners
     query = f"""
     WITH deleted_docs AS (
         DELETE FROM docs d

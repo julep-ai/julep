@@ -44,8 +44,8 @@ interface SearchEndpoints<DocString extends valueof string = "Search for documen
 
 interface BulkDeleteEndpoints<DocString extends valueof string = "Bulk delete documents"> {
     @doc(DocString)
-    @post
-    bulk_delete(
+    @delete
+    deleteAll(
         @path
         @doc("ID of the parent")
         id: uuid,

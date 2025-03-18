@@ -209,33 +209,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
-  /agents/{id}/docs/{child_id}:
     delete:
-      operationId: AgentDocsRoute_delete
-      description: Delete a Doc for this Agent
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID of parent resource
-          schema:
-            $ref: '#/components/schemas/Common.uuid'
-        - name: child_id
-          in: path
-          required: true
-          description: ID of the resource to be deleted
-          schema:
-            $ref: '#/components/schemas/Common.uuid'
-      responses:
-        '202':
-          description: The request has been accepted for processing, but processing has not yet completed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Common.ResourceDeletedResponse'
-  /agents/{id}/docs:bulk_delete:
-    post:
-      operationId: AgentDocsBulkDeleteRoute_bulk_delete
+      operationId: AgentDocsRoute_deleteAll
       description: Bulk delete Docs owned by an Agent
       parameters:
         - name: id
@@ -264,6 +239,30 @@ paths:
                   $ref: '#/components/schemas/Docs.BulkDeleteDocsRequest'
               required:
                 - body
+  /agents/{id}/docs/{child_id}:
+    delete:
+      operationId: AgentDocsRoute_delete
+      description: Delete a Doc for this Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: child_id
+          in: path
+          required: true
+          description: ID of the resource to be deleted
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Common.ResourceDeletedResponse'
   /agents/{id}/search:
     post:
       operationId: AgentsDocsSearchRoute_search
@@ -1342,6 +1341,36 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
+    delete:
+      operationId: UserDocsRoute_deleteAll
+      description: Bulk delete Docs owned by a User
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  $ref: '#/components/schemas/Docs.BulkDeleteDocsRequest'
+              required:
+                - body
   /users/{id}/docs/{child_id}:
     delete:
       operationId: UserDocsRoute_delete
@@ -3006,12 +3035,17 @@ components:
       type: object
       required:
         - metadata_filter
+        - delete_all
       properties:
         metadata_filter:
           type: object
           additionalProperties: {}
           description: Metadata filter to apply to the search
           default: {}
+        delete_all:
+          type: boolean
+          description: Delete all docs
+          default: false
     Docs.CreateDocRequest:
       type: object
       required:

@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 
 class BaseDocSearchRequest(BaseModel):
@@ -34,6 +34,10 @@ class BulkDeleteDocsRequest(BaseModel):
     metadata_filter: dict[str, Any] = {}
     """
     Metadata filter to apply to the search
+    """
+    delete_all: StrictBool = False
+    """
+    Delete all docs
     """
 
 

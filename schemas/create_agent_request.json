@@ -102,6 +102,226 @@
       "title": "Agent",
       "type": "object"
     },
+    "AlgoliaIntegrationDef": {
+      "description": "Algolia integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlgoliaSearchArguments"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "algolia",
+          "default": "algolia",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlgoliaSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "AlgoliaIntegrationDef",
+      "type": "object"
+    },
+    "AlgoliaIntegrationDefUpdate": {
+      "description": "Algolia integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlgoliaSearchArgumentsUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "algolia",
+          "default": "algolia",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlgoliaSetupUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "AlgoliaIntegrationDefUpdate",
+      "type": "object"
+    },
+    "AlgoliaSearchArguments": {
+      "description": "Arguments for Algolia Search",
+      "properties": {
+        "attributes_to_retrieve": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Attributes To Retrieve"
+        },
+        "hits_per_page": {
+          "default": 10,
+          "maximum": 1000.0,
+          "minimum": 1.0,
+          "title": "Hits Per Page",
+          "type": "integer"
+        },
+        "index_name": {
+          "title": "Index Name",
+          "type": "string"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        }
+      },
+      "required": [
+        "index_name",
+        "query"
+      ],
+      "title": "AlgoliaSearchArguments",
+      "type": "object"
+    },
+    "AlgoliaSearchArgumentsUpdate": {
+      "description": "Arguments for Algolia Search",
+      "properties": {
+        "attributes_to_retrieve": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Attributes To Retrieve"
+        },
+        "hits_per_page": {
+          "default": 10,
+          "maximum": 1000.0,
+          "minimum": 1.0,
+          "title": "Hits Per Page",
+          "type": "integer"
+        },
+        "index_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Index Name"
+        },
+        "query": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Query"
+        }
+      },
+      "title": "AlgoliaSearchArgumentsUpdate",
+      "type": "object"
+    },
+    "AlgoliaSetup": {
+      "description": "Integration definition for Algolia",
+      "properties": {
+        "algolia_api_key": {
+          "title": "Algolia Api Key",
+          "type": "string"
+        },
+        "algolia_application_id": {
+          "title": "Algolia Application Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algolia_application_id",
+        "algolia_api_key"
+      ],
+      "title": "AlgoliaSetup",
+      "type": "object"
+    },
+    "AlgoliaSetupUpdate": {
+      "description": "Integration definition for Algolia",
+      "properties": {
+        "algolia_api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Algolia Api Key"
+        },
+        "algolia_application_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Algolia Application Id"
+        }
+      },
+      "title": "AlgoliaSetupUpdate",
+      "type": "object"
+    },
     "ApiCallDef": {
       "description": "API call definition",
       "properties": {
@@ -811,13 +1031,13 @@
     "BraveSearchSetup": {
       "description": "Integration definition for Brave Search",
       "properties": {
-        "api_key": {
-          "title": "Api Key",
+        "brave_api_key": {
+          "title": "Brave Api Key",
           "type": "string"
         }
       },
       "required": [
-        "api_key"
+        "brave_api_key"
       ],
       "title": "BraveSearchSetup",
       "type": "object"
@@ -825,7 +1045,7 @@
     "BraveSearchSetupUpdate": {
       "description": "Integration definition for Brave Search",
       "properties": {
-        "api_key": {
+        "brave_api_key": {
           "anyOf": [
             {
               "type": "string"
@@ -834,7 +1054,7 @@
               "type": "null"
             }
           ],
-          "title": "Api Key"
+          "title": "Brave Api Key"
         }
       },
       "title": "BraveSearchSetupUpdate",
@@ -3392,6 +3612,17 @@
             }
           ],
           "title": "Output"
+        },
+        "transition_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transition Count"
         }
       },
       "required": [
@@ -4091,6 +4322,12 @@
             },
             {
               "$ref": "#/$defs/ArxivIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"
@@ -5390,6 +5627,17 @@
           "readOnly": true,
           "title": "Task Id",
           "type": "string"
+        },
+        "transition_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transition Count"
         },
         "updated_at": {
           "format": "date-time",
@@ -8045,6 +8293,12 @@
               "$ref": "#/$defs/ArxivIntegrationDefUpdate"
             },
             {
+              "$ref": "#/$defs/UnstructuredIntegrationDefUpdate"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDefUpdate"
+            },
+            {
               "type": "null"
             }
           ],
@@ -10202,6 +10456,12 @@
               "$ref": "#/$defs/ArxivIntegrationDef"
             },
             {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
               "type": "null"
             }
           ],
@@ -10371,6 +10631,12 @@
             },
             {
               "$ref": "#/$defs/ArxivIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"
@@ -10920,6 +11186,12 @@
               "$ref": "#/$defs/ArxivIntegrationDef"
             },
             {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
               "type": "null"
             }
           ],
@@ -11232,6 +11504,312 @@
       "title": "TransitionTarget",
       "type": "object"
     },
+    "UnstructuredIntegrationDef": {
+      "description": "Unstructured integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnstructuredPartitionArguments"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "unstructured",
+          "default": "unstructured",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnstructuredSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "UnstructuredIntegrationDef",
+      "type": "object"
+    },
+    "UnstructuredIntegrationDefUpdate": {
+      "description": "Unstructured integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnstructuredPartitionArgumentsUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "unstructured",
+          "default": "unstructured",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnstructuredSetupUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "UnstructuredIntegrationDefUpdate",
+      "type": "object"
+    },
+    "UnstructuredPartitionArguments": {
+      "description": "Arguments for Unstructured partition integration",
+      "properties": {
+        "file": {
+          "title": "File",
+          "type": "string"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Filename"
+        },
+        "partition_params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Partition Params"
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "title": "UnstructuredPartitionArguments",
+      "type": "object"
+    },
+    "UnstructuredPartitionArgumentsUpdate": {
+      "description": "Arguments for Unstructured partition integration",
+      "properties": {
+        "file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "File"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Filename"
+        },
+        "partition_params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Partition Params"
+        }
+      },
+      "title": "UnstructuredPartitionArgumentsUpdate",
+      "type": "object"
+    },
+    "UnstructuredSetup": {
+      "description": "Setup parameters for Unstructured integration",
+      "properties": {
+        "retry_config": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retry Config"
+        },
+        "server": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server"
+        },
+        "server_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server Url"
+        },
+        "timeout_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Timeout Ms"
+        },
+        "unstructured_api_key": {
+          "title": "Unstructured Api Key",
+          "type": "string"
+        },
+        "url_params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url Params"
+        }
+      },
+      "required": [
+        "unstructured_api_key"
+      ],
+      "title": "UnstructuredSetup",
+      "type": "object"
+    },
+    "UnstructuredSetupUpdate": {
+      "description": "Setup parameters for Unstructured integration",
+      "properties": {
+        "retry_config": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retry Config"
+        },
+        "server": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server"
+        },
+        "server_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server Url"
+        },
+        "timeout_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Timeout Ms"
+        },
+        "unstructured_api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unstructured Api Key"
+        },
+        "url_params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url Params"
+        }
+      },
+      "title": "UnstructuredSetupUpdate",
+      "type": "object"
+    },
     "UpdateAgentRequest": {
       "description": "Payload for updating a agent",
       "properties": {
@@ -11524,6 +12102,12 @@
             },
             {
               "$ref": "#/$defs/ArxivIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"
@@ -12720,6 +13304,12 @@
               "$ref": "#/$defs/ArxivIntegrationDef"
             },
             {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
+            },
+            {
               "type": "null"
             }
           ],
@@ -12883,6 +13473,12 @@
             },
             {
               "$ref": "#/$defs/ArxivIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/UnstructuredIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/AlgoliaIntegrationDef"
             },
             {
               "type": "null"

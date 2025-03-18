@@ -15,7 +15,10 @@ from .router import router
 
 
 @router.delete(
-    "/agents/{agent_id}/docs:bulk_delete", status_code=HTTP_202_ACCEPTED, tags=["docs"]
+    "/agents/{agent_id}/docs",
+    status_code=HTTP_202_ACCEPTED,
+    tags=["docs"],
+    description="Bulk delete documents owned by an agent based on metadata filter",
 )
 async def bulk_delete_agent_docs(
     agent_id: UUID,
@@ -33,7 +36,10 @@ async def bulk_delete_agent_docs(
 
 
 @router.delete(
-    "/users/{user_id}/docs:bulk_delete", status_code=HTTP_202_ACCEPTED, tags=["docs"]
+    "/users/{user_id}/docs",
+    status_code=HTTP_202_ACCEPTED,
+    tags=["docs"],
+    description="Bulk delete documents owned by a user based on metadata filter",
 )
 async def bulk_delete_user_docs(
     user_id: UUID,
