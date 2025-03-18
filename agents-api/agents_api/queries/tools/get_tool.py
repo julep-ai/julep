@@ -8,7 +8,10 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for getting a tool
 tools_query = """
-SELECT * FROM tools
+SELECT
+    tool_id, name, description, type, spec,
+    developer_id, agent_id, created_at, updated_at
+FROM tools
 WHERE
     developer_id = $1 AND
     agent_id = $2 AND

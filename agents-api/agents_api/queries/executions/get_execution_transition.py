@@ -9,7 +9,11 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to get an execution transition
 get_execution_transition_query = """
-SELECT * FROM transitions
+SELECT
+    created_at, execution_id, transition_id as id, type, step_label,
+    get_transition_output(output_oid) as output,
+    current_step, next_step, task_token, metadata, error_info
+FROM transitions
 WHERE
     transition_id = $1
     OR task_token = $2

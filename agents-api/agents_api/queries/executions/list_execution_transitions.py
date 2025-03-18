@@ -12,7 +12,11 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list execution transitions
 list_execution_transitions_query = """
-SELECT * FROM transitions
+SELECT
+    created_at, execution_id, transition_id as id, type, step_label,
+    get_transition_output(output_oid) as output,
+    current_step, next_step, task_token, metadata, error_info
+FROM transitions
 WHERE
     execution_id = $1
     AND (current_step).scope_id = $6
@@ -21,12 +25,18 @@ ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
 """
+
 #  Query to get a single transition
 get_execution_transition_query = """
-SELECT * FROM transitions
+SELECT
+    created_at, execution_id, transition_id as id, type, step_label,
+    get_transition_output(output_oid) as output,
+    current_step, next_step, task_token, metadata, error_info
+FROM transitions
 WHERE
     execution_id = $1
-    AND transition_id = $2;
+    AND transition_id = $2
+LIMIT 1;
 """
 
 
@@ -34,8 +44,23 @@ def _transform(d):
     current_step = d.pop("current_step")
     next_step = d.pop("next_step", None)
 
+    # Handle error_info by merging it with output if needed
+    error_info = d.pop("error_info", None)
+
+    # Convert empty {} output to None to match original behavior
+    if d.get("output") == {}:
+        d["output"] = None
+
+    # Handle error info only if output is not None
+    if error_info and d.get("output"):
+        # If output is a dict, update it with error_info
+        if isinstance(d["output"], dict):
+            d["output"].update(error_info)
+        else:
+            # If output is not a dict but error_info exists, use error_info
+            d["output"] = error_info
+
     return {
-        "id": d["transition_id"],
         "updated_at": utcnow(),
         "current": {
             "workflow": current_step[0],
