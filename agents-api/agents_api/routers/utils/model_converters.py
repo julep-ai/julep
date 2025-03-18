@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from ...autogen.Chat import ChatInput, Content, ContentModel7, ImageUrl, Message
 from ...autogen.openapi_model import (
     Agent,
     ChatResponse,
@@ -8,6 +9,7 @@ from ...autogen.openapi_model import (
     CreateEntryRequest,
     CreateResponse,
     CreateSessionRequest,
+    ImageInputContentItem,
     InputTokensDetails,
     MessageOutputItem,
     OutputTokensDetails,
@@ -16,13 +18,10 @@ from ...autogen.openapi_model import (
     Session,
     TextContentPart,
     TextInputContentItem,
-    ImageInputContentItem,
 )
-
-from ...autogen.Chat import Message, ContentModel7, ImageUrl, Content, ChatInput
-
 from ...queries.agents.create_agent import create_agent as create_agent_query
 from ...queries.agents.list_agents import list_agents as list_agents_query
+from ...queries.entries import add_entry_relations, create_entries, get_history
 from ...queries.sessions.create_session import create_session as create_session_query
 from ...queries.sessions.get_session import get_session as get_session_query
 
@@ -109,15 +108,19 @@ async def convert_create_response(
     messages: list[Message] = []
 
     if isinstance(create_response.input, str):
-        messages = [{"role": "user", "content": create_response.input}]
+        messages = [Message(role="user", content=[Content(text=create_response.input)])]
     else:
         # Create a ChatInput object from each InputItem object in the input list
         for item in create_response.input:
             for content_item in item.content:
                 content = None
-                if content_item.type == "input_text" and isinstance(content_item, TextInputContentItem):
+                if content_item.type == "input_text" and isinstance(
+                    content_item, TextInputContentItem
+                ):
                     content = [Content(text=content_item.text)]
-                elif content_item.type == "input_image" and isinstance(content_item, ImageInputContentItem):
+                elif content_item.type == "input_image" and isinstance(
+                    content_item, ImageInputContentItem
+                ):
                     image_url = ImageUrl(
                         url=content_item.image_url,
                     )
@@ -126,9 +129,10 @@ async def convert_create_response(
                 if content:
                     messages.append(Message(role=item.role, content=content))
                 else:
-                    raise ValueError(f"Unsupported content type: {content_item.type}. Content item: {content_item}")
+                    msg = f"Unsupported content type: {content_item.type}. Content item: {content_item}"
+                    raise ValueError(msg)
 
-    
+    # TODO: Convert tools from `CreateResponse` to `ChatInput`
 
     chat_input = ChatInput(
         model=create_response.model,
