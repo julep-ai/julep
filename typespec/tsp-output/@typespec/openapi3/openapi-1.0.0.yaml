@@ -4004,13 +4004,6 @@ components:
             - $ref: '#/components/schemas/Jobs.JobState'
           description: Current state of the job
           default: pending
-    Responses.Annotation:
-      type: object
-      required:
-        - type
-      properties:
-        type:
-          type: string
     Responses.ContentPart:
       type: object
       required:
@@ -4132,27 +4125,44 @@ components:
         metadata:
           type: object
           additionalProperties: {}
-    Responses.FileCitationAnnotation:
+    Responses.FileCitation:
       type: object
       required:
         - type
         - index
         - file_id
-        - filename
       properties:
         type:
           type: string
           enum:
             - file_citation
+          description: The type of the file citation. Always `file_citation`.
         index:
           type: integer
           format: int32
+          description: The index of the file in the list of files.
         file_id:
           type: string
-        filename:
+          description: The ID of the file.
+    Responses.FilePath:
+      type: object
+      required:
+        - type
+        - file_id
+        - index
+      properties:
+        type:
           type: string
-      allOf:
-        - $ref: '#/components/schemas/Responses.Annotation'
+          enum:
+            - file_path
+          description: The type of the file path. Always `file_path`.
+        file_id:
+          type: string
+          description: The ID of the file.
+        index:
+          type: integer
+          format: int32
+          description: The index of the file in the list of files.
     Responses.FileSearchCallOutputItem:
       type: object
       required:
@@ -4217,6 +4227,7 @@ components:
         - name
         - arguments
         - status
+        - output
       properties:
         type:
           type: string
@@ -4235,6 +4246,8 @@ components:
           enum:
             - completed
             - in_progress
+        output:
+          type: string
       allOf:
         - $ref: '#/components/schemas/Responses.OutputItem'
     Responses.FunctionTool:
@@ -4293,12 +4306,7 @@ components:
         - content
       properties:
         role:
-          type: string
-          enum:
-            - user
-            - assistant
-            - system
-            - developer
+          $ref: '#/components/schemas/Responses.MessageRole'
         content:
           type: array
           items:
@@ -4333,6 +4341,13 @@ components:
             $ref: '#/components/schemas/Responses.TextContentPart'
       allOf:
         - $ref: '#/components/schemas/Responses.OutputItem'
+    Responses.MessageRole:
+      type: string
+      enum:
+        - user
+        - assistant
+        - system
+        - developer
     Responses.OutputItem:
       type: object
       required:
@@ -4537,7 +4552,10 @@ components:
         annotations:
           type: array
           items:
-            $ref: '#/components/schemas/Responses.Annotation'
+            anyOf:
+              - $ref: '#/components/schemas/Responses.FileCitation'
+              - $ref: '#/components/schemas/Responses.UrlCitation'
+              - $ref: '#/components/schemas/Responses.FilePath'
       allOf:
         - $ref: '#/components/schemas/Responses.ContentPart'
     Responses.TextInputContentItem:
@@ -4561,51 +4579,34 @@ components:
       properties:
         type:
           type: string
-    Responses.UrlCitationAnnotation:
+    Responses.UrlCitation:
       type: object
       required:
+        - url
+        - title
         - type
         - start_index
         - end_index
-        - url
-        - title
       properties:
+        url:
+          type: string
+          description: The URL of the web resource.
+        title:
+          type: string
+          description: The title of the web resource.
         type:
           type: string
           enum:
             - url_citation
+          description: The type of the URL citation. Always `url_citation`.
         start_index:
           type: integer
           format: int32
+          description: The index of the first character of the URL citation in the message.
         end_index:
           type: integer
           format: int32
-        url:
-          type: string
-        title:
-          type: string
-      allOf:
-        - $ref: '#/components/schemas/Responses.Annotation'
-    Responses.WebSearchCallOutputItem:
-      type: object
-      required:
-        - type
-        - id
-        - status
-      properties:
-        type:
-          type: string
-          enum:
-            - web_search_call
-        id:
-          type: string
-        status:
-          type: string
-          enum:
-            - completed
-            - in_progress
-      allOf:
-        - $ref: '#/components/schemas/Responses.OutputItem'
+          description: The index of the last character of the URL citation in the message.
     Responses.WebSearchTool:
       type: object
       required:

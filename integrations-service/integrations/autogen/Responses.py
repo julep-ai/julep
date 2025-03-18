@@ -8,15 +8,11 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, StrictBool
 
 
-class Annotation(BaseModel):
+class ContentPart(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
     type: str
-
-
-class ContentPart(Annotation):
-    pass
 
 
 class CreateResponse(BaseModel):
@@ -57,14 +53,40 @@ class CreateResponse(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class FileCitationAnnotation(Annotation):
+class FileCitation(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
     type: Literal["file_citation"] = "file_citation"
+    """
+    The type of the file citation. Always `file_citation`.
+    """
     index: int
+    """
+    The index of the file in the list of files.
+    """
     file_id: str
-    filename: str
+    """
+    The ID of the file.
+    """
+
+
+class FilePath(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["file_path"] = "file_path"
+    """
+    The type of the file path. Always `file_path`.
+    """
+    file_id: str
+    """
+    The ID of the file.
+    """
+    index: int
+    """
+    The index of the file in the list of files.
+    """
 
 
 class Format(BaseModel):
@@ -88,7 +110,7 @@ class IncompleteDetails(BaseModel):
     reason: Literal["max_output_tokens", "content_filter"]
 
 
-class InputContentItem(Annotation):
+class InputContentItem(ContentPart):
     pass
 
 
@@ -107,7 +129,7 @@ class InputTokensDetails(BaseModel):
     cached_tokens: int
 
 
-class OutputItem(Annotation):
+class OutputItem(ContentPart):
     pass
 
 
@@ -204,7 +226,7 @@ class TextContentPart(ContentPart):
     )
     type: Literal["output_text"] = "output_text"
     text: str
-    annotations: list[Annotation]
+    annotations: list[FileCitation | UrlCitation | FilePath]
 
 
 class TextInputContentItem(InputContentItem):
@@ -215,7 +237,7 @@ class TextInputContentItem(InputContentItem):
     text: str
 
 
-class Tool(Annotation):
+class Tool(ContentPart):
     pass
 
 
@@ -227,15 +249,30 @@ class ToolChoice(BaseModel):
     function: Function
 
 
-class UrlCitationAnnotation(Annotation):
+class UrlCitation(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["url_citation"] = "url_citation"
-    start_index: int
-    end_index: int
     url: str
+    """
+    The URL of the web resource.
+    """
     title: str
+    """
+    The title of the web resource.
+    """
+    type: Literal["url_citation"] = "url_citation"
+    """
+    The type of the URL citation. Always `url_citation`.
+    """
+    start_index: int
+    """
+    The index of the first character of the URL citation in the message.
+    """
+    end_index: int
+    """
+    The index of the last character of the URL citation in the message.
+    """
 
 
 class UserLocation(BaseModel):
@@ -247,15 +284,6 @@ class UserLocation(BaseModel):
     country: str | None = None
     region: str | None = None
     timezone: str | None = None
-
-
-class WebSearchCallOutputItem(OutputItem):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["web_search_call"] = "web_search_call"
-    id: str
-    status: Literal["completed", "in_progress"]
 
 
 class WebSearchTool(Tool):
@@ -300,6 +328,7 @@ class FunctionCallOutputItem(OutputItem):
     name: str
     arguments: str
     status: Literal["completed", "in_progress"]
+    output: str
 
 
 class FunctionTool(Tool):
