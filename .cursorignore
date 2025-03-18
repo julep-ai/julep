@@ -43,6 +43,7 @@
 **/docs/_build/
 **/site/
 **/public/
+documentation/openapi.yaml
 
 # Package-manager files
 **/yarn-error.log
@@ -114,3 +115,33 @@ openapi.yaml
 openapi*.yaml
 openapi*.yml
 openapi*.json
+
+# Julep-specific
+# TypeSpec generated outputs
+**/tsp-output/
+typespec/node_modules/
+
+# Memory store migrations (database structure is handled separately)
+memory-store/migrations/
+
+# Local database data
+data/
+
+# Testing fixtures and large example files
+**/tests/sample_tasks/*.base64
+**/tests/sample_tasks/*.png
+
+# Temporal scheduler certificates
+scheduler/cert/
+
+# Docker and container configuration
+**/.docker/
+**/docker-compose.override.yml
+
+# Generated files in gateway
+gateway/letsencrypt/
+
+# Monitoring data
+monitoring/grafana/dashboards/
+monitoring/prometheus/data/
+monitoring/grafana/storage/

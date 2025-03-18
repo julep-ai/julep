@@ -98,3 +98,53 @@ openapi.yaml
 openapi*.yaml
 openapi*.yml
 openapi*.json
+
+# Julep-specific exclusions
+# TypeSpec generated outputs (avoid indexing auto-generated code)
+typespec/tsp-output/
+typespec/node_modules/
+
+# Memory-store migration files (SQL structure)
+memory-store/migrations/*.up.sql
+memory-store/migrations/*.down.sql
+
+# Large binary files in tests
+**/tests/sample_tasks/*.base64
+**/tests/sample_tasks/*.png
+**/tests/sample_tasks/screenshot.*
+
+# Auto-generated OpenAPI specs
+documentation/openapi.yaml
+sdks/**/api.md
+
+# Docker templates that don't need indexing
+**/*.template
+**/Dockerfile*
+**/docker-compose*.yml
+
+# Generated configuration files
+**/litellm-config.yaml
+scheduler/dynamicconfig/temporal-postgres.yaml
+
+# Exclude large notebooks in cookbooks
+cookbooks/*.ipynb
+
+# Browser automation screenshots and binary data
+**/browser_screenshots/
+**/downloads/
+
+# Certificate files
+scheduler/cert/
+gateway/letsencrypt/
+
+# Generated Python package files
+**/*.egg-info/
+**/*.pyc
+**/__pycache__/
+
+# Vector search training data
+**/embeddings/
+**/vectors/
+
+# Temporal workflow history (large and not needed for indexing)
+**/.temporal/
