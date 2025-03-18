@@ -601,7 +601,7 @@ model ComputerToolCallOutput {
   output: ComputerScreenshotImage;
 
   @doc("The status of the message input. One of `in_progress`, `completed`, or `incomplete`. Populated when input items are returned via API.")
-  status?: "in_progress" | "completed" | "incomplete";
+  status?: MessageStatus;
 }
 
 // Computer tool call output resource
