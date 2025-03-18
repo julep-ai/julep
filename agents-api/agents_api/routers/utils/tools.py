@@ -6,7 +6,7 @@ from uuid import UUID
 
 from beartype import beartype
 from fastapi.background import BackgroundTasks
-from litellm.utils import CustomStreamWrapper, ModelResponse
+from litellm.utils import CustomStreamWrapper, ModelResponse, ModelResponseStream
 
 from ...app import app
 from ...autogen.openapi_model import (
@@ -266,7 +266,9 @@ class ToolCallsEvaluator:
         return await tool_handler(**arguments)
 
     @staticmethod
-    async def get_first_chunk(response: CustomStreamWrapper):
+    async def peek_first_chunk(
+        response: CustomStreamWrapper,
+    ) -> tuple[ModelResponseStream, CustomStreamWrapper]:
         try:
             first_chunk = await response.__anext__()
         except StopAsyncIteration:
@@ -284,9 +286,12 @@ class ToolCallsEvaluator:
             custom_llm_provider=response.custom_llm_provider,
             stream_options=response.stream_options,
             make_call=response.make_call,
+            _response_headers=response._response_headers,  # noqa: SLF001
         )
 
-    async def completion(self, developer_id: UUID, **kwargs):
+    async def completion(
+        self, developer_id: UUID, **kwargs
+    ) -> ModelResponse | CustomStreamWrapper:
         response: ModelResponse | CustomStreamWrapper | None = None
         stream: bool = kwargs.get("stream", False)
         while True:
@@ -302,12 +307,15 @@ class ToolCallsEvaluator:
                 if not tool_calls:
                     return response
             else:
-                first_chunk, response = await self.get_first_chunk(response)
+                first_chunk, response = await self.peek_first_chunk(response)
                 if first_chunk and not first_chunk.choices:
                     return response
 
                 delta = first_chunk.choices[0].delta
                 if delta.content:
+                    return response
+
+                if not delta.tool_calls:
                     return response
 
                 async for chunk in cast(CustomStreamWrapper, response):
