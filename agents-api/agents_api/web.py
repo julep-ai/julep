@@ -206,7 +206,10 @@ def _get_error_suggestions(error: dict) -> dict:
     elif "not_gt" in error_type:
         if "limit_value" in error:
             suggestions["fix"] = f"Value must be greater than {error['limit_value']}"
-            suggestions["example"] = f"{float(error['limit_value']) + 1}"
+            try:
+                suggestions["example"] = f"{float(error['limit_value']) + 1}"
+            except (ValueError, TypeError):
+                suggestions["example"] = "a value greater than the limit"
 
     elif "not_lt" in error_type:
         if "limit_value" in error:
