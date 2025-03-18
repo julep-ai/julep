@@ -204,18 +204,60 @@ def chunk_doc(string: str) -> list[str]:
 
 
 def safe_extract_json(string: str):
+    """
+    Safely extract and parse JSON from a string, handling code blocks.
+
+    Args:
+        string: String that may contain JSON data, possibly in a code block
+
+    Returns:
+        Parsed JSON data
+
+    Raises:
+        ValueError: If string exceeds size limit or JSON parsing fails
+    """
     if len(string) > MAX_STRING_LENGTH:
         msg = f"String exceeds maximum length of {MAX_STRING_LENGTH}"
         raise ValueError(msg)
-    # Check if the string contains JSON code block markers
-    if "```json" in string:
-        extracted_string = string[
-            string.find("```json") + 7 : string.find("```", string.find("```json") + 7)
-        ]
+
+    # Check if the string contains code block markers (support both ```json and plain ```)
+    if "```" in string:
+        # First try ```json blocks
+        if "```json" in string:
+            start_marker = string.find("```json") + 7
+            end_marker = string.find("```", start_marker)
+        # Then try plain ``` blocks that might contain JSON
+        else:
+            start_marker = string.find("```") + 3
+            end_marker = string.find("```", start_marker)
+
+        # Verify we found a valid start marker
+        if "```json" in string and start_marker < 7:
+            # If ```json wasn't found, find returns -1, so start_marker would be 6
+            msg = "Code block has invalid or missing markers"
+            raise ValueError(msg)
+        if "```json" not in string and start_marker < 3:
+            # If ``` wasn't found, find returns -1, so start_marker would be 2
+            msg = "Code block has invalid or missing markers"
+            raise ValueError(msg)
+
+        # Extract from code block if end marker was found
+        if end_marker != -1:
+            extracted_string = string[start_marker:end_marker].strip()
+        else:
+            # If incomplete markers, raise a specific error
+            msg = "Code block has invalid or missing markers"
+            raise ValueError(msg)
     else:
         # If no markers, try to parse the whole string as JSON
         extracted_string = string
-    return json.loads(extracted_string, strict=False)
+
+    try:
+        return json.loads(extracted_string, strict=False)
+    except json.JSONDecodeError as e:
+        # Provide a more helpful error message with context
+        msg = f"Failed to parse JSON: {e}. The extracted text was: {extracted_string[:100]}..."
+        raise ValueError(msg) from e
 
 
 def humanize_text(
@@ -660,6 +702,9 @@ def get_handler(system: SystemDef) -> Callable:
     from ..queries.docs.delete_doc import delete_doc as delete_doc_query
     from ..queries.docs.list_docs import list_docs as list_docs_query
     from ..queries.entries.get_history import get_history as get_history_query
+    from ..queries.sessions.create_or_update_session import (
+        create_or_update_session as create_or_update_session_query,
+    )
     from ..queries.sessions.create_session import create_session as create_session_query
     from ..queries.sessions.get_session import get_session as get_session_query
     from ..queries.sessions.list_sessions import list_sessions as list_sessions_query
@@ -730,7 +775,8 @@ def get_handler(system: SystemDef) -> Callable:
             return create_session_query
         case ("session", None, "update"):
             return update_session_query
-        # TODO: Add support for create_or_update_session
+        case ("session", None, "create_or_update"):
+            return create_or_update_session_query
         case ("session", None, "chat"):
             return chat
         case ("session", None, "history"):

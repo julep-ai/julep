@@ -222,7 +222,31 @@ Our embedding (vector) search functionality leverages machine learning to conver
 
 #### Hybrid Search
 
-Our hybrid search functionality combines the strengths of full-text search and embedding-based search to deliver highly relevant and accurate search results. By leveraging both keyword matching and semantic vector analysis, hybrid search ensures that queries are not only matched based on exact terms but also understood in context, providing more nuanced and precise results. This dual approach enhances search performance, improves result relevance, and accommodates a wider range of search queries.
+Our hybrid search functionality combines multiple search techniques to deliver highly relevant and accurate search results. Julep's hybrid search uses a three-pronged approach that leverages:
+
+1. **Full-text search** - Traditional keyword-based search using PostgreSQL's tsquery/tsrank
+2. **Vector search** - Semantic search using embeddings for contextual understanding
+3. **Trigram search** - Fuzzy text matching using character n-grams for typo tolerance
+
+By combining these approaches, hybrid search ensures that queries are matched not only on exact terms but also understood in context and tolerant of variations, providing more nuanced and precise results. This comprehensive approach enhances search performance, improves result relevance, and accommodates a wider range of search queries.
+
+##### Trigram Search Features
+
+Julep's trigram search capabilities include:
+
+- **Fuzzy Matching** - Handles typos, spelling variations, and morphological differences
+- **Similarity Scoring** - Combines trigram similarity with Levenshtein distance for accurate matching
+- **Word-Level Analysis** - Matches individual meaningful words against target content
+- **Adaptive Weighting** - Adjusts fuzzy matching strength based on query length
+- **Performance Optimization** - Uses PostgreSQL's GIN indexes and materialized CTEs for efficient processing
+
+##### How It Works
+
+1. When a search query is submitted, Julep runs both full-text search and trigram-based fuzzy search in parallel.
+2. Traditional full-text search results are prioritized (returned first).
+3. Trigram search then finds documents that full-text search might miss due to minor variations or typos.
+4. The system integrates these results with vector-based search results using Distribution-Based Score Fusion (DBSF).
+5. Results are ranked and returned based on a combination of all three search approaches.
 
 **Parameters:**
 
@@ -230,12 +254,14 @@ Our hybrid search functionality combines the strengths of full-text search and e
 |-------------------|----------------|---------------------------------------------------------------------------------|-------------|
 | `text`            | `str`          | The textual query to search within documents.                                   | **Required** |
 | `vector`          | `List[float]`  | The embedding vector representing the semantic meaning of the query.            | **Required** |
-| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results.       | `0.5`       |
-| `confidence`      | `float`        | The confidence threshold for embedding similarity.                              | `0`       |
+| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results.       | `0.7`       |
+| `confidence`      | `float`        | The confidence threshold for embedding similarity.                              | `0.5`       |
 | `metadata_filter` | `object`       | Filters to apply based on document metadata.                                    | `None`      |
 | `limit`           | `int`          | The number of top results to return.                                            | `3`         |
-| `lang`            | `str`          | The language to use for full-text search processing.                            | `en-US`   |
+| `lang`            | `str`          | The language to use for full-text search processing.                            | `english_unaccent` |
 | `mmr_strength`    | `float`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1). | `0.5`       |
+| `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (higher values require closer matches). | `0.6`       |
+| `k_multiplier`    | `int`          | Controls how many intermediate results to fetch before final scoring.           | `5`         |
 
 **Example:**
 
@@ -401,6 +427,96 @@ By leveraging [System Tools](/docs/concepts/tools#system-tools), Julep [Tasks](/
         </ul>
     </Card>
 </CardGroup>
+
+## Advanced Search Features
+
+### Trigram-Enhanced Fuzzy Matching
+
+Julep's advanced fuzzy matching capability is built on PostgreSQL's `pg_trgm` extension and enhanced with additional similarity techniques. This allows for resilient document retrieval that can handle variations in text, including:
+
+- Typos and spelling errors
+- Morphological variations
+- Term order differences
+- Incomplete terms
+
+#### Similarity Mechanisms
+
+Julep uses a multi-layered approach to determine text similarity:
+
+1. **Basic Trigram Similarity** - Uses PostgreSQL's built-in trigram functions to match documents based on character-level n-grams.
+
+2. **Enhanced Similarity** - Combines trigram matching with Levenshtein distance calculations to provide better accuracy, especially for shorter text segments:
+   ```sql
+   -- 70% trigram, 30% Levenshtein for shorter strings
+   RETURN 0.7 * trgm_sim + 0.3 * norm_lev;
+   ```
+
+3. **Word-Level Similarity** - Breaks text into individual words and finds the best match for each meaningful word:
+   ```sql
+   -- Only process meaningful words (longer than 2 chars)
+   IF length(words1[i]) > 2 THEN
+       -- Find best match in target content
+       best_match := GREATEST(best_match, similarity(words1[i], words2[j]));
+   ```
+
+4. **Comprehensive Similarity** - Adaptively weights different similarity metrics based on query characteristics:
+   ```sql
+   -- Weight factor based on query length - shorter queries need more help
+   word_weight float := CASE
+       WHEN length(query) < 10 THEN 0.4
+       WHEN length(query) < 20 THEN 0.3
+       ELSE 0.2
+   END;
+   ```
+
+#### Tuning Search Behavior
+
+You can customize Julep's fuzzy search behavior through several parameters:
+
+- **Similarity Threshold** (`trigram_similarity_threshold`) - Controls the minimum similarity score required for a document to match:
+  - Higher values (e.g., 0.8) require closer matches, reducing false positives but may miss relevant documents with variations
+  - Lower values (e.g., 0.3) are more lenient, catching more variations but potentially including less relevant results
+  - Default: 0.6 for hybrid search, 0.3 for text-only search
+
+- **Alpha Weight** (`alpha`) - Balances the importance of vector-based semantic search vs. text-based search:
+  - Higher values prioritize semantic/embedding matches
+  - Lower values prioritize text and trigram matches
+  - Default: 0.7 (70% weight to embeddings)
+
+- **Search Language** (`lang`) - Affects tokenization, stemming, and other text processing operations:
+  - Default: 'english_unaccent' which handles accent/diacritic-insensitive matching
+
+#### Implementation Details
+
+Julep's trigram search is implemented using:
+
+1. **Database Indexes** - GIN indexes on document title and content for efficient trigram operations:
+   ```sql
+   CREATE INDEX IF NOT EXISTS idx_docs_title_trgm ON docs USING GIN (title gin_trgm_ops);
+   CREATE INDEX IF NOT EXISTS idx_docs_content_trgm ON docs USING GIN (content gin_trgm_ops);
+   ```
+
+2. **Materialized CTEs** - Improves performance for complex query operations:
+   ```sql
+   WITH tsv_results AS MATERIALIZED (...)
+   ```
+
+3. **Runtime Optimizations** - Selective application of more expensive calculations:
+   ```sql
+   -- Only compute Levenshtein for reasonable length strings (performance)
+   IF length(text1) <= 50 AND length(text2) <= 50 THEN
+   ```
+
+4. **Distribution-Based Score Fusion** - Combines results from different search methods:
+   ```sql
+   -- Aggregate all text/embedding scores into arrays
+   aggregated AS (
+       SELECT
+           array_agg(text_score ORDER BY rn)      AS text_scores,
+           array_agg(embedding_score ORDER BY rn) AS embedding_scores
+   ```
+
+These technologies combine to provide a sophisticated fuzzy search capability that significantly improves document retrieval compared to traditional search methods.
 
 ## Next Steps
 
