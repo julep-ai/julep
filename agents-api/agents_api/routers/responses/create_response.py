@@ -45,7 +45,6 @@ async def create_response(
     (
         messages,
         doc_references,
-        formatted_tools,
         settings,
         new_messages,
         chat_context,
@@ -61,7 +60,7 @@ async def create_response(
     # Use litellm for other models
     params = {
         "messages": messages,
-        "tools": formatted_tools or None,
+        "tools": [tool.model_dump() for tool in chat_input.tools] or None,
         "user": str(developer.id),
         "tags": developer.tags,
         "custom_api_key": x_custom_api_key,
