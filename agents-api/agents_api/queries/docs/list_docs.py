@@ -103,8 +103,8 @@ async def list_docs(
     query = base_docs_query
     params = [developer_id, include_without_embeddings, owner_type, owner_id]
 
-    # Add metadata filtering before GROUP BY using the utility function
-    metadata_conditions, params = build_metadata_filter_conditions(params, metadata_filter)
+    # Add metadata filtering before GROUP BY using the utility function with table alias
+    metadata_conditions, params = build_metadata_filter_conditions(params, metadata_filter, table_alias="d.")
     query += metadata_conditions
 
     # Add GROUP BY clause

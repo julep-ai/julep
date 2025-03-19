@@ -47,9 +47,9 @@ async def bulk_delete_docs(
     # Initialize base parameters
     params = [developer_id, owner_type, owner_id]
 
-    # Use the utility function to safely build metadata filter conditions
+    # Use the utility function to safely build metadata filter conditions with table alias
     metadata_conditions, params = build_metadata_filter_conditions(
-        params, metadata_filter if not delete_all else {}
+        params, metadata_filter if not delete_all else {}, table_alias="d."
     )
 
     query = f"""

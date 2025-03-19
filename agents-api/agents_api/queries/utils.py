@@ -341,7 +341,7 @@ def serialize_model_data(data: Any) -> Any:
 
 
 def build_metadata_filter_conditions(
-    base_params: list[Any], metadata_filter: dict[str, Any]
+    base_params: list[Any], metadata_filter: dict[str, Any], table_alias: str = ""
 ) -> tuple[str, list[Any]]:
     """
     Safely build SQL conditions for metadata filtering to prevent SQL injection.
@@ -353,6 +353,7 @@ def build_metadata_filter_conditions(
     Args:
         base_params: The existing list of parameters for the SQL query
         metadata_filter: A dictionary of key-value pairs to filter by metadata
+        table_alias: Optional table alias (e.g., "d.") to prefix to metadata column name
 
     Returns:
         tuple[str, list[Any]]: A tuple containing the SQL condition string and the updated parameter list
@@ -362,11 +363,12 @@ def build_metadata_filter_conditions(
 
     params = base_params.copy()
     conditions = []
+    metadata_col = f"{table_alias}metadata" if table_alias else "metadata"
 
     for key, value in metadata_filter.items():
         param_idx_key = len(params) + 1
         param_idx_value = len(params) + 2
-        conditions.append(f"metadata->>${param_idx_key} = ${param_idx_value}")
+        conditions.append(f"{metadata_col}->>${param_idx_key} = ${param_idx_value}")
         params.extend([key, value])
 
     sql_conditions = " AND ".join(conditions)
