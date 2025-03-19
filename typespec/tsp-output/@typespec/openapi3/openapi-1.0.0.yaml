@@ -4214,14 +4214,7 @@ components:
         previous_response_id:
           type: string
         reasoning:
-          type: object
-          properties:
-            effort:
-              type: string
-              enum:
-                - low
-                - medium
-                - high
+          $ref: '#/components/schemas/Responses.Reasoning'
         text:
           type: object
           properties:
@@ -4708,6 +4701,20 @@ components:
               - $ref: '#/components/schemas/Responses.UrlCitation'
               - $ref: '#/components/schemas/Responses.FilePath'
           description: The annotations of the text output.
+    Responses.Reasoning:
+      type: object
+      required:
+        - effort
+      properties:
+        effort:
+          $ref: '#/components/schemas/Responses.ReasoningEffort'
+        generate_summary:
+          type: string
+          enum:
+            - concise
+            - detailed
+          description: A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process. One of `concise` or `detailed`.
+      description: Reasoning configuration options for o-series models.
     Responses.ReasoningContent:
       type: object
       required:
@@ -4722,6 +4729,13 @@ components:
         text:
           type: string
           description: A short summary of the reasoning used by the model when generating the response.
+    Responses.ReasoningEffort:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+      description: Constraint effort on reasoning models.
     Responses.ReasoningItem:
       type: object
       required:
@@ -4791,12 +4805,7 @@ components:
           type: integer
           format: int32
         status:
-          type: string
-          enum:
-            - completed
-            - failed
-            - in_progress
-            - incomplete
+          $ref: '#/components/schemas/Responses.ResponseStatus'
         error:
           $ref: '#/components/schemas/Responses.ResponseError'
         incomplete_details:
@@ -4826,16 +4835,7 @@ components:
         previous_response_id:
           type: string
         reasoning:
-          type: object
-          properties:
-            effort:
-              type: string
-              enum:
-                - low
-                - medium
-                - high
-            summary:
-              type: string
+          $ref: '#/components/schemas/Responses.Reasoning'
         store:
           type: boolean
           default: true
@@ -4843,40 +4843,15 @@ components:
           type: number
           default: 1
         text:
-          type: object
-          properties:
-            format:
-              type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - text
-                    - json_object
-              required:
-                - type
+          anyOf:
+            - $ref: '#/components/schemas/Responses.ResponseFormatText'
+            - $ref: '#/components/schemas/Responses.TextResponseFormatJsonSchema'
+            - $ref: '#/components/schemas/Responses.ResponseFormatJsonObject'
         tool_choice:
           anyOf:
-            - type: string
-              enum:
-                - auto
-                - none
-            - type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - function
-                function:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                  required:
-                    - name
-              required:
-                - type
-                - function
+            - $ref: '#/components/schemas/Responses.ToolChoiceOptions'
+            - $ref: '#/components/schemas/Responses.ToolChoiceTypes'
+            - $ref: '#/components/schemas/Responses.ToolChoiceFunction'
         tools:
           type: array
           items:
@@ -4910,6 +4885,40 @@ components:
           type: string
         code:
           type: string
+    Responses.ResponseFormatJsonObject:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - json_object
+          description: The type of response format being defined. Always `json_object`.
+      description: |-
+        JSON object response format. An older method of generating JSON responses.
+
+        Using `json_schema` is recommended for models that support it. Note that the
+        model will not generate JSON without a system or user message instructing it
+        to do so.
+    Responses.ResponseFormatText:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - text
+          description: The type of response format being defined. Always `text`.
+      description: Default response format. Used to generate text responses.
+    Responses.ResponseStatus:
+      type: string
+      enum:
+        - completed
+        - failed
+        - in_progress
+        - incomplete
     Responses.ResponseUsage:
       type: object
       required:
@@ -4986,12 +4995,83 @@ components:
           type: integer
           format: int32
           description: The vertical scroll distance.
+    Responses.TextResponseFormatJsonSchema:
+      type: object
+      required:
+        - type
+        - schema
+      properties:
+        type:
+          type: string
+          enum:
+            - json_schema
+          description: The type of response format being defined. Always `json_schema`.
+        description:
+          type: string
+          description: A description of what the response format is for, used by the model to determine how to respond in the format.
+        name:
+          type: string
+          description: The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        schema:
+          type: object
+          additionalProperties: {}
+          description: The JSON schema that defines the structure of the response.
+        strict:
+          type: boolean
+          description: Whether to enable strict schema adherence when generating the output. If set to true, the model will always follow the exact schema defined in the `schema` field. Only a subset of JSON Schema is supported when `strict` is `true`. To learn more, read the [Structured Outputs guide](/docs/guides/structured-outputs).
+          default: false
+      description: JSON Schema response format. Used to generate structured JSON responses. Learn more about [Structured Outputs](/docs/guides/structured-outputs).
     Responses.Tool:
       anyOf:
         - $ref: '#/components/schemas/Responses.FunctionTool'
         - $ref: '#/components/schemas/Responses.WebSearchTool'
         - $ref: '#/components/schemas/Responses.FileSearchTool'
         - $ref: '#/components/schemas/Responses.ComputerTool'
+    Responses.ToolChoiceFunction:
+      type: object
+      required:
+        - type
+        - name
+      properties:
+        type:
+          type: string
+          enum:
+            - function
+          description: For function calling, the type is always `function`.
+        name:
+          type: string
+          description: The name of the function to call.
+      description: Use this option to force the model to call a specific function.
+    Responses.ToolChoiceOptions:
+      type: string
+      enum:
+        - auto
+        - none
+        - required
+    Responses.ToolChoiceTypes:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - file_search
+            - web_search_preview
+            - computer_use_preview
+            - web_search_preview_2025_03_11
+          description: |-
+            The type of hosted tool the model should to use. Learn more about
+            [built-in tools](/docs/guides/tools).
+
+            Allowed values are:
+            - `file_search`
+            - `web_search_preview` 
+            - `computer_use_preview`
+      description: |-
+        Indicates that the model should use a built-in tool to generate a response.
+
+        [Learn more about built-in tools](/docs/guides/tools).
     Responses.Type:
       type: object
       required:
