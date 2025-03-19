@@ -63,7 +63,7 @@ async def process_tool_calls(
     # Execute all tool calls in parallel
     async def execute_tool_calls_async(tool_call: dict[str, Any]):
         # Execute the tool call
-        tool_result = await execute_tool_call(tool_call, tools)
+        tool_result = await execute_tool_call(tool_call)
         # Format results for the LLM
         return format_tool_results_for_llm(tool_result)
 

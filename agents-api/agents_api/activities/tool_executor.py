@@ -83,15 +83,12 @@ async def execute_web_search_tool(tool_call: WebSearchToolCall) -> ToolExecution
         )
 
 
-async def execute_tool_call(
-    tool_call: dict[str, Any], tools: list[dict[str, Any] | None]
-) -> ToolExecutionResult:
+async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
     """
     Execute a single tool call based on its type and return the result.
 
     Args:
         tool_call: The tool call to execute (either BaseChosenToolCall or dict)
-        tools: List of available tools configured for this session/agent
 
     Returns:
         ToolExecutionResult containing the output or error
@@ -102,42 +99,24 @@ async def execute_tool_call(
     tool_type = ""
 
     try:
-        # Extract common fields safely
-        if isinstance(tool_call, dict):
-            tool_id = tool_call.get("id", "")
-            tool_type = tool_call.get("type", "")
+        tool_id = tool_call.get("id", "")
+        tool_type = tool_call.get("type", "")
 
-            # Get function name if present
-            if "function" in tool_call and isinstance(tool_call["function"], dict):
-                tool_name = tool_call["function"].get("name")
-        else:
-            # Object-style access
-            tool_id = getattr(tool_call, "id", "") or ""
-            tool_type = getattr(tool_call, "type", "")
-
-            # Get function name if present
-            if hasattr(tool_call, "function"):
-                tool_name = getattr(tool_call.function, "name", None)
+        # Get function name if present
+        if "function" in tool_call and isinstance(tool_call["function"], dict):
+            tool_name = tool_call["function"].get("name")
 
         # Handle web search tools
         if tool_type == "web_search_preview":
             # Extract query directly for web_search_preview type
-            query = ""
-            if isinstance(tool_call, dict):
-                query = tool_call.get("query", "")
-            else:
-                query = getattr(tool_call, "query", "")
+            query = tool_call.get("query", "")
 
             web_search_call = WebSearchToolCall(id=tool_id, query=query, name=tool_name)
             return await execute_web_search_tool(web_search_call)
 
         if tool_type == "function":
             # Extract function data
-            func_data = None
-            if isinstance(tool_call, dict):
-                func_data = tool_call.get("function", {})
-            else:
-                func_data = getattr(tool_call, "function", None)
+            func_data = tool_call.get("function", {})
 
             if not func_data:
                 return ToolExecutionResult(
