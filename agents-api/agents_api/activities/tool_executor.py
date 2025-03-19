@@ -88,7 +88,7 @@ async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
     Execute a single tool call based on its type and return the result.
 
     Args:
-        tool_call: The tool call to execute (either BaseChosenToolCall or dict)
+        tool_call: The tool call to execute (dict)
 
     Returns:
         ToolExecutionResult containing the output or error
