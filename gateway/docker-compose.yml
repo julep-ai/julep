@@ -22,7 +22,7 @@ services:
       dockerfile: Dockerfile
     ports:
       # - 443:443
-      - 127.0.0.1:80:80
+      - 80:80
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:80"]
