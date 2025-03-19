@@ -1,6 +1,8 @@
 from typing import TypeVar
 
 from beartype import beartype
+from fastapi import HTTPException, status
+from jinja2 import TemplateSyntaxError, UndefinedError
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2schema import infer, to_json_schema
 from jsonschema import validate
@@ -34,16 +36,32 @@ async def render_template_string(
     variables: dict,
     check: bool = False,
 ) -> str:
-    # Parse template
-    template = jinja_env.from_string(template_string)
+    try:
+        # Parse template
+        template = jinja_env.from_string(template_string)
 
-    # If check is required, get required vars from template and validate variables
-    if check:
-        schema = to_json_schema(infer(template_string))
-        validate(instance=variables, schema=schema)
+        # If check is required, get required vars from template and validate variables
+        if check:
+            schema = to_json_schema(infer(template_string))
+            validate(instance=variables, schema=schema)
 
-    # Render
-    return await template.render_async(**variables)
+        # Render
+        return await template.render_async(**variables)
+    except TemplateSyntaxError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Template syntax error: {e!s}",
+        )
+    except UndefinedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Template undefined variable: {e!s}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Template rendering error: {e!s}",
+        )
 
 
 # A render function that can render arbitrarily nested lists of dicts
