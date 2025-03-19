@@ -5,7 +5,11 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS idx_docs_title_trgm ON docs USING GIN (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_docs_content_trgm ON docs USING GIN (content gin_trgm_ops);
 
-DROP FUNCTION IF EXISTS search_by_text;
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer, jsonb, float);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer, jsonb);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[]);
 
 CREATE OR REPLACE FUNCTION search_by_text (
     developer_id UUID,
@@ -117,7 +121,13 @@ BEGIN
 END;
 $$;
 
-DROP FUNCTION IF EXISTS search_hybrid;
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float, float, jsonb, text, float, integer);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float, float, jsonb, text);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float, float, jsonb);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float, float);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[]);
 
 -- Update the hybrid search function to use trigram similarity as well
 CREATE OR REPLACE FUNCTION search_hybrid (
