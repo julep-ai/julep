@@ -12,7 +12,7 @@ ALTER TABLE
     entries
 SET
     (
-        timescaledb.enable_columnstore,
+        timescaledb.enable_columnstore = true,
         timescaledb.segmentby = 'session_id',
         timescaledb.compress_chunk_time_interval = '14 days'
     ),
