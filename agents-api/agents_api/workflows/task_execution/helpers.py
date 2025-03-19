@@ -325,7 +325,7 @@ async def execute_map_reduce_step_parallel(
     if parallelism == 1:
         workflow.logger.warning("Parallelism is set to 1, falling back to sequential execution")
         # Fall back to sequential map-reduce
-        # Note: 'workflow' parameter is missing here, but it's not needed because 
+        # Note: 'workflow' parameter is missing here, but it's not needed because
         # 'workflow' is imported at the top of the file (`from temporalio import workflow`)
         # and used directly as a module, not as a parameter
         return await execute_map_reduce_step(

@@ -49,7 +49,7 @@ async def bulk_delete_docs(
             # Calculate the next parameter indices safely
             param_idx_key = len(params) + 1
             param_idx_value = len(params) + 2
-            metadata_conditions += f" AND d.metadata->>${ param_idx_key } = ${ param_idx_value }"
+            metadata_conditions += f" AND d.metadata->>${param_idx_key} = ${param_idx_value}"
             params.extend([key, value])
 
     query = f"""
