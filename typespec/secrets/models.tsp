@@ -1,5 +1,8 @@
 import "../common";
 
+using TypeSpec.Http;
+using TypeSpec.OpenAPI;
+using TypeSpec.Versioning;
 using Common;
 
 namespace Secrets;

@@ -1,6 +1,9 @@
 import "./models.tsp";
 import "../common";
 
+using TypeSpec.Http;
+using TypeSpec.OpenAPI;
+using TypeSpec.Versioning;
 using Common;
 using Secrets;
 
@@ -11,7 +14,8 @@ namespace Secrets;
 interface DeveloperSecretsRoute {
     @summary("Create a Secret")
     @doc("Create a new Secret for a Developer")
-    createSecret is StandardCreate<CreateSecretRequest, Secret>;
+    @post
+    createSecret(@path id: uuid, @body secret: CreateSecretRequest): Secret;
 
     @summary("List Secrets")
     @doc("List all Secrets for a Developer")
@@ -24,19 +28,23 @@ interface DeveloperSecretsRoute {
 interface DeveloperSecretRoute {
     @summary("Get Secret details")
     @doc("Get Secret details (without the encrypted value)")
-    getSecretDetails is StandardGet<SecretsSummary>;
+    @get
+    getSecretDetails(@path developer_id: uuid, @path id: uuid): SecretsSummary;
 
     @summary("Update Secret")
     @doc("Update an existing Secret")
-    updateSecret is StandardUpdate<UpdateSecretRequest, Secret>;
+    @put
+    updateSecret(@path developer_id: uuid, @path id: uuid, @body secret: UpdateSecretRequest): Secret;
 
     @summary("Patch Secret")
     @doc("Patch an existing Secret")
-    patchSecret is StandardPatch<PatchSecretRequest, Secret>;
+    @patch
+    patchSecret(@path developer_id: uuid, @path id: uuid, @body secret: PatchSecretRequest): Secret;
 
     @summary("Delete Secret")
     @doc("Delete a Secret")
-    deleteSecret is StandardDelete;
+    @delete
+    deleteSecret(@path developer_id: uuid, @path id: uuid): ResourceDeletedResponse;
 }
 
 @route("/agents/{id}/secrets")
@@ -44,7 +52,8 @@ interface DeveloperSecretRoute {
 interface AgentSecretsRoute {
     @summary("Create an Agent Secret")
     @doc("Create a new Secret for a specific Agent")
-    createAgentSecret is StandardCreate<CreateSecretRequest, Secret>;
+    @post
+    createAgentSecret(@path id: uuid, @body secret: CreateSecretRequest): Secret;
 
     @summary("List Agent Secrets")
     @doc("List all Secrets for a specific Agent")
@@ -57,17 +66,21 @@ interface AgentSecretsRoute {
 interface AgentSecretRoute {
     @summary("Get Agent Secret details")
     @doc("Get Agent Secret details (without the encrypted value)")
-    getAgentSecretDetails is StandardGet<SecretsSummary>;
+    @get
+    getAgentSecretDetails(@path agent_id: uuid, @path id: uuid): SecretsSummary;
 
     @summary("Update Agent Secret")
     @doc("Update an existing Agent Secret")
-    updateAgentSecret is StandardUpdate<UpdateSecretRequest, Secret>;
+    @put
+    updateAgentSecret(@path agent_id: uuid, @path id: uuid, @body secret: UpdateSecretRequest): Secret;
 
     @summary("Patch Agent Secret")
     @doc("Patch an existing Agent Secret")
-    patchAgentSecret is StandardPatch<PatchSecretRequest, Secret>;
+    @patch
+    patchAgentSecret(@path agent_id: uuid, @path id: uuid, @body secret: PatchSecretRequest): Secret;
 
     @summary("Delete Agent Secret")
     @doc("Delete an Agent Secret")
-    deleteAgentSecret is StandardDelete;
+    @delete
+    deleteAgentSecret(@path agent_id: uuid, @path id: uuid): ResourceDeletedResponse;
 }
