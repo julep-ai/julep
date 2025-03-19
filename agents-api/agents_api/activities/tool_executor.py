@@ -2,6 +2,7 @@ import json
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+from temporalio import activity
 
 from ..clients.integrations import run_integration_service
 from ..env import brave_api_key
@@ -75,12 +76,9 @@ async def execute_web_search_tool(tool_call: WebSearchToolCall) -> ToolExecution
             id=tool_call.id, output=formatted_result, name=tool_call.name
         )
     except Exception as e:
-        return ToolExecutionResult(
-            id=tool_call.id,
-            output={},
-            error=f"Error executing web search: {e!s}",
-            name=tool_call.name,
-        )
+        if activity.in_activity():
+            activity.logger.error(f"Error in execute_web_search_tool: {e}")
+        raise
 
 
 async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
@@ -148,12 +146,7 @@ async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
                     try:
                         args = json.loads(arguments_str)
                     except json.JSONDecodeError:
-                        return ToolExecutionResult(
-                            id=tool_id,
-                            name=tool_name,
-                            output={},
-                            error=f"Invalid JSON in arguments: {arguments_str}",
-                        )
+                        raise
 
                 # Get query from arguments
                 query = args.get("query", "")
@@ -177,9 +170,12 @@ async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
         )
 
     except Exception as e:
-        return ToolExecutionResult(
-            id=tool_id, name=tool_name, output={}, error=f"Error executing tool call: {e!s}"
-        )
+        if activity.in_activity():
+            tool_info = f"{tool_type}"
+            if tool_name:
+                tool_info += f".{tool_name}"
+            activity.logger.error(f"Error in execute_tool_call {tool_info}: {e}")
+        raise
 
 
 def format_tool_results_for_llm(result: ToolExecutionResult) -> dict[str, Any]:

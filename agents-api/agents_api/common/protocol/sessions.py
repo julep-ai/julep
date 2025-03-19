@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from ...autogen.openapi_model import (
     Agent,
     ChatInput,
-    CreateToolRequest,
     MultiAgentMultiUserSession,
     Session,
     SingleAgentMultiUserSession,
@@ -90,7 +89,7 @@ class ChatContext(SessionData):
         active_agent = self.get_active_agent()
         return system_template or active_agent.default_system_template
 
-    def get_active_tools(self) -> list[CreateToolRequest]:
+    def get_active_tools(self) -> list[Tool]:
         """
         Get the active toolset from the session data.
         """
