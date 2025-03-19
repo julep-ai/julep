@@ -148,7 +148,6 @@ async def create_response(
         # Process tool calls in a loop until no more calls or max iterations reached
         while has_tool_calls and iterations < max_iterations:
             iterations += len(tool_call_response)
-            print(f"Tool call iteration {iterations}/{max_iterations}")
 
             # Process tool calls and get updated messages
             current_messages = await process_tool_calls(
