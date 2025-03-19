@@ -1,4 +1,16 @@
-DROP FUNCTION search_hybrid;
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer, jsonb, float);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer, jsonb);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[]);
+
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float, float, jsonb, text, float, integer);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float, float, jsonb, text);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float, float, jsonb);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float, float);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer, float);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[], integer);
+DROP FUNCTION IF EXISTS search_hybrid(UUID, text, vector, TEXT[], UUID[]);
 
 CREATE OR REPLACE FUNCTION search_hybrid (
     p_developer_id UUID,

@@ -108,7 +108,11 @@ CREATE INDEX IF NOT EXISTS idx_docs_lookup ON docs (developer_id, doc_id, index)
 CREATE INDEX IF NOT EXISTS idx_doc_owners_search ON doc_owners (doc_id, developer_id, owner_type, owner_id);
 
 -- Update search_by_text function to use comprehensive similarity
-DROP FUNCTION IF EXISTS search_by_text;
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer, jsonb, float);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer, jsonb);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[]);
 
 CREATE OR REPLACE FUNCTION search_by_text (
     developer_id UUID,
