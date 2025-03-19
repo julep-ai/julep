@@ -1,32 +1,17 @@
 import json
-from typing import Any, Literal
+from typing import Any
 
-from pydantic import BaseModel, Field
 from temporalio import activity
 
+from ..autogen.openapi_model import (
+    ToolExecutionResult,
+    WebPreviewToolCall,
+)
 from ..clients.integrations import run_integration_service
 from ..env import brave_api_key
 
 
-class ToolExecutionResult(BaseModel):
-    """Represents the result of executing a tool"""
-
-    id: str
-    name: str | None = None
-    output: dict[str, Any]
-    error: str | None = None
-
-
-class WebSearchToolCall(BaseModel):
-    """Represents a WebSearchTool call from the model"""
-
-    id: str
-    name: str | None = None
-    type: Literal["web_search_preview"] = "web_search_preview"
-    query: str = Field(default="")
-
-
-async def execute_web_search_tool(tool_call: WebSearchToolCall) -> ToolExecutionResult:
+async def execute_web_search_tool(tool_call: WebPreviewToolCall) -> ToolExecutionResult:
     """
     Execute a web search tool call using the Brave search integration.
 
@@ -109,7 +94,7 @@ async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
             # Extract query directly for web_search_preview type
             query = tool_call.get("query", "")
 
-            web_search_call = WebSearchToolCall(id=tool_id, query=query, name=tool_name)
+            web_search_call = WebPreviewToolCall(id=tool_id, query=query, name=tool_name)
             return await execute_web_search_tool(web_search_call)
 
         if tool_type == "function":
@@ -158,7 +143,7 @@ async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
                         error="No search query found in the web search function call",
                     )
 
-                web_search_call = WebSearchToolCall(id=tool_id, query=query, name=tool_name)
+                web_search_call = WebPreviewToolCall(id=tool_id, query=query, name=tool_name)
                 return await execute_web_search_tool(web_search_call)
 
         # Unsupported tool type
