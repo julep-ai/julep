@@ -148,9 +148,7 @@ async def create_response(
             iterations += len(tool_call_response)
 
             # Process tool calls and get updated messages
-            current_messages = await process_tool_calls(
-                current_messages, tool_call_response
-            )
+            current_messages = await process_tool_calls(current_messages, tool_call_response)
 
             # Make a follow-up call to the model with updated messages
             response_params = {
