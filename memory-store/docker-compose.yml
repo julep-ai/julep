@@ -1,7 +1,7 @@
 name: pgai
 services:
   memory-store:
-    image: timescale/timescaledb-ha:pg17
+    image: timescale/timescaledb-ha:pg17-ts2.18-all
 
     environment:
       - POSTGRES_PASSWORD=${MEMORY_STORE_PASSWORD:-julep_secure_password}
@@ -22,12 +22,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    
+
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 2G
 
   vectorizer-worker:
     image: timescale/pgai-vectorizer-worker:latest
@@ -49,7 +45,7 @@ services:
     volumes:
       - ./migrations:/migrations
     command: [ "-path", "/migrations", "-database", "postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres?sslmode=disable" , "up"]
-    
+
     restart: "no"
     develop:
       watch:
