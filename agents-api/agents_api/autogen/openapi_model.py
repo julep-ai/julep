@@ -372,6 +372,24 @@ class CreateTransitionRequest(Transition):
     task_token: str | None = None
 
 
+class ToolExecutionResult(BaseModel):
+    """Represents the result of executing a tool"""
+
+    id: str
+    name: str | None = None
+    output: dict[str, Any]
+    error: str | None = None
+
+
+class WebPreviewToolCall(BaseModel):
+    """Represents a WebPreviewTool call from the model"""
+
+    id: str
+    name: str | None = None
+    type: Literal["web_search_preview"] = "web_search_preview"
+    query: str = Field(default="")
+
+
 class CreateEntryRequest(BaseEntry):
     timestamp: Annotated[AwareDatetime, Field(default_factory=lambda: utcnow())]
 
