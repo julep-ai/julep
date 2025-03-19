@@ -30,7 +30,7 @@ from .router import router
 
 async def process_tool_calls(
     current_messages: list[dict[str, Any]],
-    tool_call_responses: list[dict[str, Any]] | None,
+    tool_call_requests: list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
     """
     Process any tool calls from the model response, execute them, and prepare
@@ -44,7 +44,7 @@ async def process_tool_calls(
         Updated messages with tool results appended
     """
     # Early exit if no tool calls to process
-    if not tool_call_responses:
+    if not tool_call_requests:
         return current_messages
 
     # Find the last assistant message with tool_calls
@@ -66,7 +66,7 @@ async def process_tool_calls(
         return format_tool_results_for_llm(tool_result)
 
     # Create and execute tasks for all tool calls at once
-    tasks = [execute_tool_calls_async(tool_call) for tool_call in tool_call_responses]
+    tasks = [execute_tool_calls_async(tool_call) for tool_call in tool_call_requests]
     formatted_results = await asyncio.gather(*tasks)
 
     # Extend the current messages with all formatted results
@@ -126,10 +126,12 @@ async def create_response(
     assistant_message = model_response.choices[0].message
 
     # Extract web search tool call if it exists
-    tool_call_response = assistant_message.tool_calls
+    tool_call_requests = assistant_message.tool_calls
+
+    performed_tool_calls = []
 
     # Process tool calls if present (including multiple recursive tool calls if needed)
-    if tool_call_response and tools_list:
+    if tool_call_requests and tools_list:
         # Start with the original messages
         current_messages = messages.copy()
 
@@ -145,10 +147,12 @@ async def create_response(
 
         # Process tool calls in a loop until no more calls or max iterations reached
         while has_tool_calls and iterations < max_iterations:
-            iterations += len(tool_call_response)
+            iterations += len(tool_call_requests)
+
+            performed_tool_calls.extend(tool_call_requests)
 
             # Process tool calls and get updated messages
-            current_messages = await process_tool_calls(current_messages, tool_call_response)
+            current_messages = await process_tool_calls(current_messages, tool_call_requests)
 
             # Make a follow-up call to the model with updated messages
             response_params = {
@@ -174,7 +178,7 @@ async def create_response(
             )
 
             # Update tool calls for next iteration
-            tool_call_response = assistant_message.tool_calls
+            tool_call_requests = assistant_message.tool_calls
 
         # After loop completes, current_messages contains the full conversation
         all_interaction_messages = current_messages
@@ -281,4 +285,5 @@ async def create_response(
         chat_input=chat_input,
         session_id=session_id,
         user_id=developer.id,
+        performed_tool_calls=performed_tool_calls,
     )
