@@ -1,4 +1,5 @@
-from typing import TypeVar
+from typing import Any, TypeVar
+from uuid import UUID
 
 from beartype import beartype
 from fastapi import HTTPException, status
@@ -6,10 +7,13 @@ from jinja2 import TemplateSyntaxError, UndefinedError
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2schema import infer, to_json_schema
 from jsonschema import validate
+from psycopg import AsyncConnection
 
 from ...activities.utils import ALLOWED_FUNCTIONS, constants, stdlib
+from ...queries.secrets import get_secret_by_name
 
 __all__: list[str] = [
+    "get_secrets",
     "render_template",
 ]
 
@@ -23,10 +27,50 @@ jinja_env: ImmutableSandboxedEnvironment = ImmutableSandboxedEnvironment(
     loader=None,
 )
 
-# Add arrow to jinja
-
+# Add constants and stdlib functions to jinja
 for k, v in (constants | stdlib | ALLOWED_FUNCTIONS).items():
     jinja_env.globals[k] = v
+
+
+# Function to get secrets for templates
+async def get_secrets(
+    conn: AsyncConnection[dict[str, Any]],
+    developer_id: UUID,
+    agent_id: UUID | None,
+    secret_refs: dict[str, dict[str, str]],
+) -> dict[str, Any]:
+    """
+    Get secrets for template rendering.
+
+    Args:
+        conn: Database connection.
+        developer_id: Developer ID.
+        agent_id: Optional agent ID.
+        secret_refs: Dictionary of secret references with format {variable_name: {"name": "secret_name"}}.
+
+    Returns:
+        Dictionary of resolved secrets with format {variable_name: secret_value}.
+    """
+    secrets = {}
+
+    for var_name, ref in secret_refs.items():
+        # Skip if the ref is not properly formatted
+        if not isinstance(ref, dict) or "name" not in ref:
+            continue
+
+        secret_name = ref["name"]
+        secret_result = await get_secret_by_name(
+            conn=conn,
+            name=secret_name,
+            developer_id=developer_id,
+            agent_id=agent_id,
+        )
+
+        if secret_result:
+            # Secret found, store the value (hashed) in the secrets dictionary
+            secrets[var_name] = secret_result[0]  # First item is the value
+
+    return secrets
 
 
 # Funcs

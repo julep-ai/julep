@@ -54,6 +54,7 @@ dependencies = [
   "deep-translator>=1.11.4",
   "markdownify>=1.0.0",
   "markdown2>=2.5.3",
+  "bcrypt>=4.3.0",
 ]
 
 [dependency-groups]

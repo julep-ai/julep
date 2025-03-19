@@ -57,6 +57,12 @@ alias ToolOutput = Record<unknown>;
 
 alias ToolChoiceOption = "auto" | "none" | NamedToolChoice;
 
+/** Secret reference model to access encrypted secrets stored in the database */
+model SecretRef {
+    /** The name of the secret to reference */
+    name: string;
+}
+
 /** Function definition */
 model FunctionDef {
     /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
@@ -81,6 +87,9 @@ model BaseIntegrationDef {
 
     /** The setup parameters the integration accepts */
     setup?: unknown;
+
+    /** Secret references to use in templates (available only at setup time, not during execution) */
+    secrets?: Record<SecretRef>;
 
     /** The arguments to pre-apply to the integration call */
     arguments?: unknown;
@@ -197,6 +206,9 @@ model ApiCallDef {
 
     /** The headers to send with the request */
     headers?: Record<string>;
+
+    /** Secret references to use in templates (available only at setup time, not during execution) */
+    secrets?: Record<SecretRef>;
 
     /** The content as base64 to send with the request */
     content?: string;
