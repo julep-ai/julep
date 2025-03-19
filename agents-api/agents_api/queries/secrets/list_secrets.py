@@ -40,7 +40,7 @@ async def list_secrets(
     try:
         query = """
             SELECT
-                id,
+                secret_id as id,
                 name,
                 description,
                 agent_id,

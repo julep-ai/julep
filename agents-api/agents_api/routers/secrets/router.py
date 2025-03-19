@@ -1,5 +1,6 @@
 """Router for secrets."""
 
+import datetime
 import logging
 from typing import Annotated, Any
 from uuid import UUID
@@ -7,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from psycopg import AsyncConnection
 
-from ...autogen.Secrets import (
+from ...autogen.openapi_model import (
     CreateSecretRequest,
     ListResponse,
     PatchSecretRequest,
@@ -16,7 +17,7 @@ from ...autogen.Secrets import (
     SecretsSummary,
     UpdateSecretRequest,
 )
-from ...dependencies.auth import Developer
+from ...common.protocol.developers import Developer
 from ...dependencies.developer_id import get_developer_id
 from ...queries import secrets as secret_queries
 
@@ -392,7 +393,11 @@ async def delete_secret(
                 detail="Secret not found",
             )
 
-        return ResourceDeletedResponse(id=str(id))
+        return ResourceDeletedResponse(
+            id=id,
+            deleted_at=datetime.datetime.now(datetime.UTC),
+            jobs=[]
+        )
 
     except HTTPException:
         raise
@@ -787,7 +792,11 @@ async def delete_agent_secret(
                 detail="Secret not found",
             )
 
-        return ResourceDeletedResponse(id=str(id))
+        return ResourceDeletedResponse(
+            id=id,
+            deleted_at=datetime.datetime.now(datetime.UTC),
+            jobs=[]
+        )
 
     except HTTPException:
         raise

@@ -1,13 +1,11 @@
 """Tests for secrets queries."""
 
 import os
-import uuid
-from typing import Any
+from uuid import UUID
 
-import pytest
-from agents_api.app import app
-from agents_api.clients.pg import get_db_connection
+from agents_api.clients.pg import create_db_pool
 from agents_api.queries.secrets import (
+    PatchSecretInput,
     SecretInput,
     create_secret,
     delete_secret,
@@ -17,44 +15,38 @@ from agents_api.queries.secrets import (
     patch_secret,
     update_secret,
 )
-from fastapi.testclient import TestClient
-from psycopg import AsyncConnection
-from pytest import FixtureRequest, fixture
+from ward import fixture, skip, test
+
+# Create fixtures
 
 
-@fixture
-async def test_conn(request: FixtureRequest) -> AsyncConnection[dict[str, Any]]:
-    """Get a test database connection."""
+@fixture(scope="test")
+def pg_dsn():
     pg_dsn = os.environ.get("PG_DSN")
     if not pg_dsn:
-        pytest.skip("No PG_DSN environment variable")
+        skip("No PG_DSN environment variable")
 
-    conn = await get_db_connection(pg_dsn)
-    request.addfinalizer(lambda: conn.close())
-    return conn
+    return pg_dsn
 
 
-@fixture
-def test_client() -> TestClient:
-    """Get a test client for the FastAPI app."""
-    return TestClient(app)
-
-
-@fixture
-def mock_developer_id() -> uuid.UUID:
+@fixture(scope="test")
+def mock_developer_id() -> UUID:
     """Get a mock developer ID for testing."""
-    return uuid.UUID("00000000-0000-0000-0000-000000000001")
+    return UUID("00000000-0000-0000-0000-000000000001")
 
 
-@fixture
-def mock_agent_id() -> uuid.UUID:
+@fixture(scope="test")
+def mock_agent_id() -> UUID:
     """Get a mock agent ID for testing."""
-    return uuid.UUID("00000000-0000-0000-0000-000000000002")
+    return UUID("00000000-0000-0000-0000-000000000002")
 
 
-@pytest.mark.skip("Integration test, only run manually")
-async def test_create_and_get_secret(test_conn, mock_developer_id):
+@test("Create and retrieve a secret", tags=["integration"])
+@skip("Integration test, only run manually")
+async def _(dsn=pg_dsn, developer_id=mock_developer_id):
     """Test creating and retrieving a secret."""
+    pool = await create_db_pool(dsn=dsn)
+
     # Create a secret
     secret_input = SecretInput(
         name="TEST_API_KEY",
@@ -63,35 +55,56 @@ async def test_create_and_get_secret(test_conn, mock_developer_id):
         metadata={"purpose": "testing"},
     )
 
-    result = await create_secret(test_conn, mock_developer_id, secret_input)
+    result = await create_secret(
+        conn=pool,
+        developer_id=developer_id,
+        input=secret_input,
+    )
 
     # Verify the result
     assert result.name == "TEST_API_KEY"
     assert result.description == "Test API Key for integration testing"
     assert result.metadata == {"purpose": "testing"}
-    assert result.developer_id == mock_developer_id
+    assert result.developer_id == developer_id
     assert result.agent_id is None
 
     # Get the secret by ID
-    retrieved = await get_secret(test_conn, result.id, mock_developer_id)
+    retrieved = await get_secret(
+        conn=pool,
+        secret_id=result.id,
+        developer_id=developer_id,
+    )
     assert retrieved is not None
     assert retrieved.name == "TEST_API_KEY"
     assert retrieved.description == "Test API Key for integration testing"
 
     # Get the secret value by name
-    secret_value = await get_secret_by_name(test_conn, "TEST_API_KEY", mock_developer_id)
+    secret_value = await get_secret_by_name(
+        conn=pool,
+        name="TEST_API_KEY",
+        developer_id=developer_id,
+    )
     assert secret_value is not None
     hashed_value, metadata = secret_value
     assert isinstance(hashed_value, str)
     assert metadata == {"purpose": "testing"}
 
     # Clean up
-    await delete_secret(test_conn, result.id, mock_developer_id)
+    await delete_secret(
+        conn=pool,
+        secret_id=result.id,
+        developer_id=developer_id,
+    )
+
+    await pool.close()
 
 
-@pytest.mark.skip("Integration test, only run manually")
-async def test_list_secrets(test_conn, mock_developer_id):
+@test("List secrets", tags=["integration"])
+@skip("Integration test, only run manually")
+async def _(dsn=pg_dsn, developer_id=mock_developer_id):
     """Test listing secrets."""
+    pool = await create_db_pool(dsn=dsn)
+
     # Create a few secrets
     secrets = []
     for i in range(3):
@@ -100,11 +113,18 @@ async def test_list_secrets(test_conn, mock_developer_id):
             value=f"test-value-{i}",
             description=f"Test key {i}",
         )
-        result = await create_secret(test_conn, mock_developer_id, secret_input)
+        result = await create_secret(
+            conn=pool,
+            developer_id=developer_id,
+            input=secret_input,
+        )
         secrets.append(result)
 
     # List the secrets
-    listed = await list_secrets(test_conn, mock_developer_id)
+    listed = await list_secrets(
+        conn=pool,
+        developer_id=developer_id,
+    )
 
     # Verify the list
     assert len(listed) >= 3  # Could be more if previous tests left secrets
@@ -115,30 +135,43 @@ async def test_list_secrets(test_conn, mock_developer_id):
 
     # Clean up
     for secret in secrets:
-        await delete_secret(test_conn, secret.id, mock_developer_id)
+        await delete_secret(
+            conn=pool,
+            secret_id=secret.id,
+            developer_id=developer_id,
+        )
+
+    await pool.close()
 
 
-@pytest.mark.skip("Integration test, only run manually")
-async def test_update_and_patch_secret(test_conn, mock_developer_id, mock_agent_id):
+@test("Update and patch a secret", tags=["integration"])
+@skip("Integration test, only run manually")
+async def _(dsn=pg_dsn, developer_id=mock_developer_id, agent_id=mock_agent_id):
     """Test updating and patching a secret."""
+    pool = await create_db_pool(dsn=dsn)
+
     # Create a secret
     secret_input = SecretInput(
         name="UPDATE_TEST_KEY",
         value="original-value",
         description="Original description",
     )
-    result = await create_secret(test_conn, mock_developer_id, secret_input)
+    result = await create_secret(
+        conn=pool,
+        developer_id=developer_id,
+        input=secret_input,
+    )
 
     # Update the secret
     updated = await update_secret(
-        test_conn,
-        result.id,
-        mock_developer_id,
-        SecretInput(
+        conn=pool,
+        secret_id=result.id,
+        developer_id=developer_id,
+        input=SecretInput(
             name="UPDATE_TEST_KEY",
             value="updated-value",
             description="Updated description",
-            agent_id=mock_agent_id,
+            agent_id=agent_id,
         ),
     )
 
@@ -146,21 +179,27 @@ async def test_update_and_patch_secret(test_conn, mock_developer_id, mock_agent_
     assert updated is not None
     assert updated.name == "UPDATE_TEST_KEY"
     assert updated.description == "Updated description"
-    assert updated.agent_id == mock_agent_id
+    assert updated.agent_id == agent_id
 
     # Patch the secret
     patched = await patch_secret(
-        test_conn,
-        updated.id,
-        mock_developer_id,
-        {"description": "Patched description"},
+        conn=pool,
+        secret_id=updated.id,
+        developer_id=developer_id,
+        input=PatchSecretInput(description="Patched description"),
     )
 
     # Verify the patch
     assert patched is not None
     assert patched.name == "UPDATE_TEST_KEY"
     assert patched.description == "Patched description"
-    assert patched.agent_id == mock_agent_id
+    assert patched.agent_id == agent_id
 
     # Clean up
-    await delete_secret(test_conn, result.id, mock_developer_id)
+    await delete_secret(
+        conn=pool,
+        secret_id=result.id,
+        developer_id=developer_id,
+    )
+
+    await pool.close()

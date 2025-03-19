@@ -4,6 +4,7 @@ import "@typespec/versioning";
 
 import "./agents";
 import "./chat";
+import "./developers";
 import "./docs";
 import "./entries";
 import "./executions";
@@ -71,6 +72,9 @@ namespace Api {
 
     @route("/agents/{id}/tools")
     interface AgentToolsRoute extends Tools.AgentEndpoints {}
+    
+    @route("/developers")
+    interface DevelopersRoute extends Developers.Endpoints {}
 
     @route("/users")
     interface UsersRoute extends Users.Endpoints {}

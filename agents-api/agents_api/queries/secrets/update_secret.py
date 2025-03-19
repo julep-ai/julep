@@ -55,9 +55,9 @@ async def update_secret(
                 metadata = $4,
                 agent_id = $5,
                 updated_at = NOW()
-            WHERE id = $6 AND developer_id = $7
+            WHERE secret_id = $6 AND developer_id = $7
             RETURNING
-                id,
+                secret_id as id,
                 name,
                 description,
                 metadata,

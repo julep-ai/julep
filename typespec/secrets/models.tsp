@@ -7,6 +7,18 @@ using Common;
 
 namespace Secrets;
 
+/** Response containing a list of items */
+model ListResponse<T> {
+  /** The list of items */
+  items: T[];
+}
+
+/** Response for a resource deletion */
+model ResourceDeletedResponse {
+  /** The ID of the deleted resource */
+  id: string;
+}
+
 /** Secret model for encrypting and storing sensitive values */
 model Secret {
     /** The secret's unique identifier */

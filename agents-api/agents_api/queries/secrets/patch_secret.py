@@ -77,7 +77,7 @@ async def patch_secret(
                 await cur.execute(
                     """
                     SELECT
-                        id,
+                        secret_id as id,
                         name,
                         description,
                         metadata,
@@ -86,7 +86,7 @@ async def patch_secret(
                         created_at,
                         updated_at
                     FROM secrets
-                    WHERE id = $1 AND developer_id = $2
+                    WHERE secret_id = $1 AND developer_id = $2
                     """,
                     [secret_id, developer_id],
                 )
@@ -101,9 +101,9 @@ async def patch_secret(
         query = f"""
             UPDATE secrets
             SET {", ".join(set_clauses)}
-            WHERE id = ${len(params) + 1} AND developer_id = ${len(params) + 2}
+            WHERE secret_id = ${len(params) + 1} AND developer_id = ${len(params) + 2}
             RETURNING
-                id,
+                secret_id as id,
                 name,
                 description,
                 metadata,

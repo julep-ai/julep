@@ -72,7 +72,7 @@ async def create_secret(
                 $1, $2, $3, $4, $5, $6
             )
             RETURNING
-                id,
+                secret_id as id,
                 name,
                 description,
                 metadata,

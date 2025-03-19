@@ -57,6 +57,107 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Agents.CreateAgentRequest'
+  /agents/{agent_id}/secrets/{id}:
+    get:
+      operationId: AgentSecretRoute_getAgentSecretDetails
+      summary: Get Agent Secret details
+      description: Get Agent Secret details (without the encrypted value)
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.SecretsSummary'
+    put:
+      operationId: AgentSecretRoute_updateAgentSecret
+      summary: Update Agent Secret
+      description: Update an existing Agent Secret
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.UpdateSecretRequest'
+    patch:
+      operationId: AgentSecretRoute_patchAgentSecret
+      summary: Patch Agent Secret
+      description: Patch an existing Agent Secret
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.PatchSecretRequest'
+    delete:
+      operationId: AgentSecretRoute_deleteAgentSecret
+      summary: Delete Agent Secret
+      description: Delete an Agent Secret
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.ResourceDeletedResponse'
   /agents/{id}:
     post:
       operationId: AgentsRoute_createOrUpdate
@@ -290,6 +391,56 @@ paths:
                     - $ref: '#/components/schemas/Docs.HybridDocSearchRequest'
               required:
                 - body
+  /agents/{id}/secrets:
+    post:
+      operationId: AgentSecretsRoute_createAgentSecret
+      summary: Create an Agent Secret
+      description: Create a new Secret for a specific Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.CreateSecretRequest'
+    get:
+      operationId: AgentSecretsRoute_listAgentSecrets
+      summary: List Agent Secrets
+      description: List all Secrets for a specific Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Secrets.SecretsSummary'
+                    description: The list of items
+                description: Response containing a list of items
   /agents/{id}/tasks:
     get:
       operationId: TasksRoute_list
@@ -609,6 +760,240 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Tasks.CreateTaskRequest'
+  /developers:
+    post:
+      operationId: DevelopersRoute_createDeveloper
+      summary: Create a Developer
+      description: Create a new developer account
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Developers.Developer'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Developers.CreateDeveloperRequest'
+  /developers/{developer_id}/secrets/{id}:
+    get:
+      operationId: DeveloperSecretRoute_getSecretDetails
+      summary: Get Secret details
+      description: Get Secret details (without the encrypted value)
+      parameters:
+        - name: developer_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.SecretsSummary'
+    put:
+      operationId: DeveloperSecretRoute_updateSecret
+      summary: Update Secret
+      description: Update an existing Secret
+      parameters:
+        - name: developer_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.UpdateSecretRequest'
+    patch:
+      operationId: DeveloperSecretRoute_patchSecret
+      summary: Patch Secret
+      description: Patch an existing Secret
+      parameters:
+        - name: developer_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.PatchSecretRequest'
+    delete:
+      operationId: DeveloperSecretRoute_deleteSecret
+      summary: Delete Secret
+      description: Delete a Secret
+      parameters:
+        - name: developer_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.ResourceDeletedResponse'
+  /developers/{id}:
+    get:
+      operationId: DevelopersRoute_getDeveloper
+      summary: Get a Developer
+      description: Get a developer's details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Developers.Developer'
+    put:
+      operationId: DevelopersRoute_updateDeveloper
+      summary: Update a Developer
+      description: Update a developer's details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Developers.Developer'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Developers.UpdateDeveloperRequest'
+    patch:
+      operationId: DevelopersRoute_patchDeveloper
+      summary: Patch a Developer
+      description: Patch a developer's details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Developers.Developer'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Developers.PatchDeveloperRequest'
+  /developers/{id}/secrets:
+    post:
+      operationId: DeveloperSecretsRoute_createSecret
+      summary: Create a Secret
+      description: Create a new Secret for a Developer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.CreateSecretRequest'
+    get:
+      operationId: DeveloperSecretsRoute_listSecrets
+      summary: List Secrets
+      description: List all Secrets for a Developer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Secrets.SecretsSummary'
+                    description: The list of items
+                description: Response containing a list of items
   /docs/{id}:
     get:
       operationId: IndividualDocsRoute_get
@@ -2998,6 +3383,115 @@ components:
       maxLength: 40
       pattern: ^[^\W0-9]\w*$
       description: Valid python identifier names
+    Developers.CreateDeveloperRequest:
+      type: object
+      required:
+        - email
+        - active
+        - tags
+        - settings
+      properties:
+        email:
+          type: string
+          description: The developer's email address
+        active:
+          type: boolean
+          description: Whether the developer account is active
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the developer
+        settings:
+          type: object
+          additionalProperties: {}
+          description: Developer settings
+      description: Payload for creating a developer
+    Developers.Developer:
+      type: object
+      required:
+        - id
+        - email
+        - active
+        - tags
+        - settings
+        - created_at
+        - updated_at
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: The developer's unique identifier
+          readOnly: true
+        email:
+          type: string
+          description: The developer's email address
+        active:
+          type: boolean
+          description: Whether the developer account is active
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the developer
+        settings:
+          type: object
+          additionalProperties: {}
+          description: Developer settings
+        created_at:
+          type: string
+          format: date-time
+          description: When this resource was created as UTC date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          description: When this resource was updated as UTC date-time
+          readOnly: true
+      description: Developer model representing a platform developer account
+    Developers.PatchDeveloperRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: The developer's email address
+        active:
+          type: boolean
+          description: Whether the developer account is active
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the developer
+        settings:
+          type: object
+          additionalProperties: {}
+          description: Developer settings
+      description: Payload for patching a developer
+    Developers.UpdateDeveloperRequest:
+      type: object
+      required:
+        - email
+        - active
+        - tags
+        - settings
+      properties:
+        email:
+          type: string
+          description: The developer's email address
+        active:
+          type: boolean
+          description: Whether the developer account is active
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the developer
+        settings:
+          type: object
+          additionalProperties: {}
+          description: Developer settings
+      description: Payload for updating a developer
     Docs.BaseDocSearchRequest:
       type: object
       required:
@@ -4032,6 +4526,154 @@ components:
             - $ref: '#/components/schemas/Jobs.JobState'
           description: Current state of the job
           default: pending
+    Secrets.CreateSecretRequest:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+          description: The name of the secret (unique within developer and agent scope)
+        value:
+          type: string
+          description: The encrypted value of the secret (never returned back in API responses)
+        description:
+          type: string
+          description: Optional description of what the secret is used for
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Optional metadata for the secret
+        agent_id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: The agent that can access this secret (if null, all developer's agents can access)
+      description: Payload for creating a secret
+    Secrets.PatchSecretRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the secret (unique within developer and agent scope)
+        value:
+          type: string
+          description: The encrypted value of the secret (never returned back in API responses)
+        description:
+          type: string
+          description: Optional description of what the secret is used for
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Optional metadata for the secret
+        agent_id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: The agent that can access this secret (if null, all developer's agents can access)
+      description: Payload for patching a secret
+    Secrets.ResourceDeletedResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: The ID of the deleted resource
+      description: Response for a resource deletion
+    Secrets.Secret:
+      type: object
+      required:
+        - id
+        - name
+        - created_at
+        - updated_at
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: The secret's unique identifier
+          readOnly: true
+        name:
+          type: string
+          description: The name of the secret (unique within developer and agent scope)
+        description:
+          type: string
+          description: Optional description of what the secret is used for
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Optional metadata for the secret
+        developer_id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: The developer that owns this secret
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          description: When this resource was created as UTC date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          description: When this resource was updated as UTC date-time
+          readOnly: true
+      description: Secret model for encrypting and storing sensitive values
+    Secrets.SecretsSummary:
+      type: object
+      required:
+        - id
+        - name
+        - created_at
+        - updated_at
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: The secret's unique identifier
+        name:
+          type: string
+          description: The name of the secret
+        description:
+          type: string
+          description: Optional description of what the secret is used for
+        created_at:
+          type: string
+          format: date-time
+          description: When the secret was created
+        updated_at:
+          type: string
+          format: date-time
+          description: When the secret was last updated
+        agent_id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: The agent that can access this secret (if null, all developer's agents can access)
+      description: Response for listing secrets
+    Secrets.UpdateSecretRequest:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+          description: The name of the secret (unique within developer and agent scope)
+        value:
+          type: string
+          description: The encrypted value of the secret (never returned back in API responses)
+        description:
+          type: string
+          description: Optional description of what the secret is used for
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Optional metadata for the secret
+        agent_id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: The agent that can access this secret (if null, all developer's agents can access)
+      description: Payload for updating a secret
     Sessions.BaseDocSearch:
       type: object
       required:
@@ -7170,6 +7812,11 @@ components:
           additionalProperties:
             type: string
           description: The headers to send with the request
+        secrets:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Tools.SecretRef'
+          description: Secret references to use in templates (available only at setup time, not during execution)
         content:
           type: string
           description: The content as base64 to send with the request
@@ -7233,6 +7880,11 @@ components:
           additionalProperties:
             type: string
           description: The headers to send with the request
+        secrets:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Tools.SecretRefUpdate'
+          description: Secret references to use in templates (available only at setup time, not during execution)
         content:
           type: string
           description: The content as base64 to send with the request
@@ -7543,6 +8195,11 @@ components:
           description: The specific method of the integration to call
         setup:
           description: The setup parameters the integration accepts
+        secrets:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Tools.SecretRef'
+          description: Secret references to use in templates (available only at setup time, not during execution)
         arguments:
           description: The arguments to pre-apply to the integration call
       discriminator:
@@ -7588,6 +8245,11 @@ components:
           description: The specific method of the integration to call
         setup:
           description: The setup parameters the integration accepts
+        secrets:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Tools.SecretRefUpdate'
+          description: Secret references to use in templates (available only at setup time, not during execution)
         arguments:
           description: The arguments to pre-apply to the integration call
       discriminator:
@@ -9026,6 +9688,22 @@ components:
           format: uint16
           description: The height of the browser
       description: The setup parameters for the remote browser
+    Tools.SecretRef:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: The name of the secret to reference
+      description: Secret reference model to access encrypted secrets stored in the database
+    Tools.SecretRefUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the secret to reference
+      description: Secret reference model to access encrypted secrets stored in the database
     Tools.SpiderFetchArguments:
       type: object
       required:

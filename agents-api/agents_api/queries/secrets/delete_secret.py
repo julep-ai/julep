@@ -28,8 +28,8 @@ async def delete_secret(
     try:
         query = """
             DELETE FROM secrets
-            WHERE id = $1 AND developer_id = $2
-            RETURNING id
+            WHERE secret_id = $1 AND developer_id = $2
+            RETURNING secret_id as id
         """
 
         async with conn.cursor(row_factory=dict_row) as cur:

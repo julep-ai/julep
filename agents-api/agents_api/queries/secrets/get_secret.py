@@ -30,7 +30,7 @@ async def get_secret(
     try:
         query = """
             SELECT
-                id,
+                secret_id as id,
                 name,
                 description,
                 metadata,
@@ -39,7 +39,7 @@ async def get_secret(
                 created_at,
                 updated_at
             FROM secrets
-            WHERE id = $1 AND developer_id = $2
+            WHERE secret_id = $1 AND developer_id = $2
         """
 
         async with conn.cursor(row_factory=dict_row) as cur:
