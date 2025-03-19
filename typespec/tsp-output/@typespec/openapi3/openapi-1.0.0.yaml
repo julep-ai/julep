@@ -210,7 +210,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
     delete:
-      operationId: AgentDocsRoute_deleteAll
+      operationId: AgentDocsRoute_deleteBulk
       description: Bulk delete Docs owned by an Agent
       parameters:
         - name: id
@@ -1337,7 +1337,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
     delete:
-      operationId: UserDocsRoute_deleteAll
+      operationId: UserDocsRoute_deleteBulk
       description: Bulk delete Docs owned by a User
       parameters:
         - name: id
@@ -7081,8 +7081,9 @@ components:
           type: string
           description: The query to search for
         attributes_to_retrieve:
-          type: object
-          additionalProperties: {}
+          type: array
+          items:
+            type: string
           description: Optional attributes to retrieve
         hits_per_page:
           type: integer
@@ -7102,8 +7103,9 @@ components:
           type: string
           description: The query to search for
         attributes_to_retrieve:
-          type: object
-          additionalProperties: {}
+          type: array
+          items:
+            type: string
           description: Optional attributes to retrieve
         hits_per_page:
           type: integer
