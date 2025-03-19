@@ -31,7 +31,6 @@ from .router import router
 async def process_tool_calls(
     current_messages: list[dict[str, Any]],
     tool_call_responses: list[dict[str, Any]] | None,
-    tools: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """
     Process any tool calls from the model response, execute them, and prepare
@@ -40,7 +39,6 @@ async def process_tool_calls(
     Args:
         current_messages: The current message history
         tool_call_responses: The response from the model containing tool calls
-        tools: List of available tools configured for this session/agent
 
     Returns:
         Updated messages with tool results appended
@@ -151,7 +149,7 @@ async def create_response(
 
             # Process tool calls and get updated messages
             current_messages = await process_tool_calls(
-                current_messages, tool_call_response, tools_list
+                current_messages, tool_call_response
             )
 
             # Make a follow-up call to the model with updated messages
