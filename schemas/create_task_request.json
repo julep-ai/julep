@@ -3612,6 +3612,17 @@
             }
           ],
           "title": "Output"
+        },
+        "transition_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transition Count"
         }
       },
       "required": [
@@ -5616,6 +5627,17 @@
           "readOnly": true,
           "title": "Task Id",
           "type": "string"
+        },
+        "transition_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transition Count"
         },
         "updated_at": {
           "format": "date-time",
