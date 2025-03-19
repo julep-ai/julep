@@ -151,15 +151,6 @@ async def convert_create_response(
     if create_response.tools:
         for tool in create_response.tools:
             if tool.type == "function":
-                # tools.append(
-                #     {
-                #         "type": "function",
-                #         "name": tool.name,
-                #         "description": tool.description,
-                #         "parameters": tool.parameters,
-                #     }
-                # )
-
                 tools.append(
                     CreateToolRequest(
                         name=tool.name,
@@ -172,17 +163,29 @@ async def convert_create_response(
                         ),
                     )
                 )
-            elif (
-                tool.type == "web_search_preview"
-                or tool.type == "file_search"
-                or tool.type == "computer-preview"
-            ):
+            elif tool.type == "web_search_preview":
                 tools.append(
                     CreateToolRequest(
-                        name=tool.name,
-                        type=tool.type,
+                        name="web_search_preview",
+                        type="function",
+                        function=FunctionDef(
+                            name="web_search_preview",
+                            description="Search the web for information",
+                            parameters={
+                                "type": "object",
+                                "properties": {
+                                    "query": {"type": "string"},
+                                    "domains": {"type": "array", "items": {"type": "string"}},
+                                    "search_context_size": {"type": "integer"},
+                                    "user_location": {"type": "string"},
+                                },
+                                "required": ["query"],
+                            },
+                        ),
                     )
                 )
+            elif tool.type == "file_search" or tool.type == "computer-preview":
+                pass
 
     chat_input = ChatInput(
         model=create_response.model,

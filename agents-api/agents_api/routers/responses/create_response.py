@@ -1,10 +1,12 @@
-from typing import Annotated
+import asyncio
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import Depends
 from fastapi.background import BackgroundTasks
 from uuid_extensions import uuid7
 
+from ...activities.tool_executor import execute_tool_call, format_tool_results_for_llm
 from ...autogen.openapi_model import (
     ChatResponse,
     ChunkChatResponse,
@@ -26,6 +28,55 @@ from ..sessions.render import render_chat_input
 from .router import router
 
 
+async def process_tool_calls(
+    current_messages: list[dict[str, Any]],
+    tool_call_responses: list[dict[str, Any]] | None,
+    tools: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Process any tool calls from the model response, execute them, and prepare
+    messages for a follow-up model call if needed.
+
+    Args:
+        current_messages: The current message history
+        tool_call_response: The response from the model containing tool calls
+        tools: List of available tools configured for this session/agent
+
+    Returns:
+        Updated messages with tool results appended
+    """
+    # Early exit if no tool calls to process
+    if not tool_call_responses:
+        return current_messages
+
+    # Find the last assistant message with tool_calls
+    # This is more efficient than iterating through the entire list
+    for i in range(len(current_messages) - 1, -1, -1):
+        if current_messages[i].get("role") == "assistant" and current_messages[i].get(
+            "tool_calls"
+        ):
+            break
+    else:
+        # No assistant message with tool_calls found
+        return current_messages
+
+    # Execute all tool calls in parallel
+    async def execute_tool_calls_async(tool_call: dict[str, Any]):
+        # Execute the tool call
+        tool_result = await execute_tool_call(tool_call, tools)
+        # Format results for the LLM
+        return format_tool_results_for_llm(tool_result)
+
+    # Create and execute tasks for all tool calls at once
+    tasks = [execute_tool_calls_async(tool_call) for tool_call in tool_call_responses]
+    formatted_results = await asyncio.gather(*tasks)
+
+    # Extend the current messages with all formatted results
+    current_messages.extend(formatted_results)
+
+    return current_messages
+
+
 @router.post("/responses", tags=["responses"])
 async def create_response(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
@@ -38,13 +89,13 @@ async def create_response(
         x_developer_id,
         create_response_data,
     )
-
     session_id = session.id
     x_custom_api_key = None
     # Chat function
     (
         messages,
         doc_references,
+        _formatted_tools,
         settings,
         new_messages,
         chat_context,
@@ -57,44 +108,148 @@ async def create_response(
     if settings.get("stop") == []:
         settings.pop("stop")
 
-    # Use litellm for other models
+    # Prepare tools for the model - pass through tools as is
+    tools_list = [tool.model_dump() for tool in chat_input.tools] if chat_input.tools else []
+
+    # Use litellm for the models
     params = {
         "messages": messages,
-        "tools": [tool.model_dump() for tool in chat_input.tools] or None,
+        "tools": tools_list or None,
         "user": str(developer.id),
         "tags": developer.tags,
         "custom_api_key": x_custom_api_key,
     }
     payload = {**settings, **params}
 
+    # Get initial model response
     model_response = await litellm.acompletion(**payload)
 
-    # Save the input and the response to the session history
-    if chat_input.save:
-        new_entries = [
-            CreateEntryRequest.from_model_input(
-                model=settings["model"],
-                **msg,
-                source="api_request",
-            )
-            for msg in new_messages
-        ]
+    # Model response is a list of choices
+    assistant_message = model_response.choices[0].message
 
-        # Add the response to the new entries
-        # FIXME: We need to save all the choices
-        new_entries.append(
-            CreateEntryRequest.from_model_input(
-                model=settings["model"],
-                **model_response.choices[0].model_dump()["message"],
-                source="api_response",
-            ),
-        )
-        background_tasks.add_task(
-            create_entries,
-            developer_id=developer.id,
-            session_id=session_id,
-            data=new_entries,
-        )
+    # Extract web search tool call if it exists
+    tool_call_response = assistant_message.tool_calls
+
+    # Process tool calls if present (including multiple recursive tool calls if needed)
+    if tool_call_response and tools_list:
+        # Start with the original messages
+        current_messages = messages.copy()
+
+        # Add the initial assistant message
+        current_messages.append(assistant_message.model_dump())
+
+        # Track if there are more tool calls to process
+        has_tool_calls = True
+
+        # Set a reasonable limit for tool call iterations to prevent infinite loops
+        max_iterations = 20
+        iterations = 0
+
+        # Process tool calls in a loop until no more calls or max iterations reached
+        while has_tool_calls and iterations < max_iterations:
+            iterations += len(tool_call_response)
+            print(f"Tool call iteration {iterations}/{max_iterations}")
+
+            # Process tool calls and get updated messages
+            current_messages = await process_tool_calls(
+                current_messages, tool_call_response, tools_list
+            )
+
+            # Make a follow-up call to the model with updated messages
+            response_params = {
+                "messages": current_messages,
+                "tools": tools_list,
+                "user": str(developer.id),
+                "tags": developer.tags,
+                "custom_api_key": x_custom_api_key,
+            }
+            response_payload = {**settings, **response_params}
+
+            # Get model response
+            model_response = await litellm.acompletion(**response_payload)
+            assistant_message = model_response.choices[0].message
+
+            # Add the assistant message to the current messages
+            current_messages.append(assistant_message.model_dump())
+
+            # Check if there are more tool calls to process
+            has_tool_calls = bool(
+                assistant_message.tool_calls
+                and model_response.choices[0].finish_reason == "tool_calls"
+            )
+
+            # Update tool calls for next iteration
+            tool_call_response = assistant_message.tool_calls
+
+        # After loop completes, current_messages contains the full conversation
+        all_interaction_messages = current_messages
+
+        # Save all the interaction history if requested
+        if chat_input.save:
+            # Create entry requests for all interactions
+            new_entries = []
+
+            # Add the user message
+            new_entries.extend([
+                CreateEntryRequest.from_model_input(
+                    model=settings["model"],
+                    **msg,
+                    source="api_request",
+                )
+                for msg in new_messages
+            ])
+
+            # Add all the tool interaction messages
+            for msg in all_interaction_messages[len(messages) :]:
+                # Skip messages already included from new_messages
+                if msg.get("role") == "user" and any(
+                    nm.get("content") == msg.get("content") for nm in new_messages
+                ):
+                    continue
+
+                new_entries.append(
+                    CreateEntryRequest.from_model_input(
+                        model=settings["model"],
+                        **msg,
+                        source="api_response"
+                        if msg.get("role") == "assistant"
+                        else "tool_response",
+                    )
+                )
+
+            # Save all entries
+            background_tasks.add_task(
+                create_entries,
+                developer_id=developer.id,
+                session_id=session_id,
+                data=new_entries,
+            )
+    else:
+        # No tool calls, just save the standard input and response
+        if chat_input.save:
+            new_entries = [
+                CreateEntryRequest.from_model_input(
+                    model=settings["model"],
+                    **msg,
+                    source="api_request",
+                )
+                for msg in new_messages
+            ]
+
+            # Add the response to the new entries
+            new_entries.append(
+                CreateEntryRequest.from_model_input(
+                    model=settings["model"],
+                    **model_response.choices[0].model_dump()["message"],
+                    source="api_response",
+                ),
+            )
+            background_tasks.add_task(
+                create_entries,
+                developer_id=developer.id,
+                session_id=session_id,
+                data=new_entries,
+            )
 
     # Adaptive context handling
     jobs = []
@@ -104,6 +259,7 @@ async def create_response(
 
         # jobs = [await start_adaptive_context_workflow]
         msg = "Adaptive context is not yet implemented"
+        print("Error: Adaptive context not implemented")
         raise NotImplementedError(msg)
 
     # Return the response
@@ -122,8 +278,8 @@ async def create_response(
     total_tokens_per_user.labels(str(developer.id)).inc(
         amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
     )
-    # End chat function
 
+    # End chat function
     return convert_chat_response_to_response(
         create_response=create_response_data,
         chat_response=chat_response,
