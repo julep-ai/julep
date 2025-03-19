@@ -33,7 +33,7 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
                 "indexName": arguments.index_name,
                 "query": arguments.query,
                 "hitsPerPage": arguments.hits_per_page,
-                **(arguments.attributes_to_retrieve or {}),
+                "attributesToRetrieve": arguments.attributes_to_retrieve or [],
             }
         ]
     }

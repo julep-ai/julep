@@ -40,7 +40,7 @@ See `CONTRIBUTING.md` for details on architecture and component relationships.
 - **sdks**: Client SDKs for Node.js and Python
 
 ## Directory-Specific Documentation
-When working in specific directories, check for CLAUDE.md files that contain detailed notes on architecture, patterns, and implementation details. These files are designed to be LLM-friendly and provide context for making changes.
+When working in specific directories, **ALWAYS check for CLAUDE.md files first**. These files contain detailed notes on architecture, patterns, and implementation details specific to that directory. They are designed to be LLM-friendly and provide essential context for understanding and making changes to the code.
 
 - **agents-api/CLAUDE.md**: Service-level overview for Agents API
 - **agents-api/agents_api/activities/CLAUDE.md**: Temporal activities for task execution
@@ -56,9 +56,20 @@ When working in specific directories, check for CLAUDE.md files that contain det
 - **cli/CLAUDE.md**: CLI architecture, workflows, and command structure
 - **typespec/CLAUDE.md**: API specifications and TypeSpec architecture
 
-Always refer to these files first when analyzing code or making changes in the corresponding directories to ensure consistency with architectural patterns and implementation details.
+### Important Instructions for Working with CLAUDE.md Files
+1. **ALWAYS read the directory's CLAUDE.md file first** before analyzing or modifying code in that directory.
+2. If you notice that information in a CLAUDE.md file is outdated, incorrect, or missing relative to the actual code, **update the CLAUDE.md file** to match the current state of the directory.
+3. If you make significant changes to a directory's structure, patterns, or important implementation details, **document these changes in the corresponding CLAUDE.md file**.
+4. If a directory doesn't have a CLAUDE.md file but you gather substantial information about its architecture and patterns, **suggest creating a new CLAUDE.md file** for that directory.
+
+This approach ensures that documentation remains current and useful for future development and analysis tasks.
 
 ## Important Developer Notes
+
+### Modifying API models
+- To modify auto-generated API models (in autogen/[A-Z]*.py files), always edit the corresponding TypeSpec files in `typespec/` directory
+- After modifying TypeSpec files, regenerate code with `bash scripts/generate_openapi_code.sh` from the root directory
+- Never modify the autogen files directly, as they will be overwritten during code generation
 
 ### Working with Python expressions in tasks
 - Python expressions in tasks are evaluated using `simpleeval` in a sandbox environment

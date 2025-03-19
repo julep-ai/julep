@@ -44,8 +44,12 @@ async def bulk_delete_docs(
         return query, []
 
     if not delete_all and metadata_filter:
+        # Using parameterized queries properly to prevent SQL injection
         for key, value in metadata_filter.items():
-            metadata_conditions += f" AND d.metadata->>${len(params) + 1} = ${len(params) + 2}"
+            # Calculate the next parameter indices safely
+            param_idx_key = len(params) + 1
+            param_idx_value = len(params) + 2
+            metadata_conditions += f" AND d.metadata->>${ param_idx_key } = ${ param_idx_value }"
             params.extend([key, value])
 
     query = f"""
