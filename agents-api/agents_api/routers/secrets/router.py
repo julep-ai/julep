@@ -394,9 +394,7 @@ async def delete_secret(
             )
 
         return ResourceDeletedResponse(
-            id=id,
-            deleted_at=datetime.datetime.now(datetime.UTC),
-            jobs=[]
+            id=id, deleted_at=datetime.datetime.now(datetime.UTC), jobs=[]
         )
 
     except HTTPException:
@@ -793,9 +791,7 @@ async def delete_agent_secret(
             )
 
         return ResourceDeletedResponse(
-            id=id,
-            deleted_at=datetime.datetime.now(datetime.UTC),
-            jobs=[]
+            id=id, deleted_at=datetime.datetime.now(datetime.UTC), jobs=[]
         )
 
     except HTTPException:
