@@ -142,9 +142,7 @@ async def list_secrets(
         )
 
 
-@router.get(
-    "/developers/{developer_id}/secrets/{id}"
-)
+@router.get("/developers/{developer_id}/secrets/{id}")
 async def get_secret_details(
     developer_id: UUID,
     id: UUID,
@@ -206,9 +204,7 @@ async def get_secret_details(
         )
 
 
-@router.put(
-    "/developers/{developer_id}/secrets/{id}"
-)
+@router.put("/developers/{developer_id}/secrets/{id}")
 async def update_secret(
     developer_id: UUID,
     id: UUID,
@@ -281,9 +277,7 @@ async def update_secret(
         )
 
 
-@router.patch(
-    "/developers/{developer_id}/secrets/{id}"
-)
+@router.patch("/developers/{developer_id}/secrets/{id}")
 async def patch_secret(
     developer_id: UUID,
     id: UUID,
@@ -356,9 +350,7 @@ async def patch_secret(
         )
 
 
-@router.delete(
-    "/developers/{developer_id}/secrets/{id}"
-)
+@router.delete("/developers/{developer_id}/secrets/{id}")
 async def delete_secret(
     developer_id: UUID,
     id: UUID,
@@ -413,6 +405,7 @@ async def delete_secret(
 
 
 # Agent-specific routes
+
 
 @router.post("/agents/{id}/secrets")
 async def create_agent_secret(
@@ -521,9 +514,7 @@ async def list_agent_secrets(
         )
 
 
-@router.get(
-    "/agents/{agent_id}/secrets/{id}"
-)
+@router.get("/agents/{agent_id}/secrets/{id}")
 async def get_agent_secret_details(
     agent_id: UUID,
     id: UUID,
@@ -585,9 +576,7 @@ async def get_agent_secret_details(
         )
 
 
-@router.put(
-    "/agents/{agent_id}/secrets/{id}"
-)
+@router.put("/agents/{agent_id}/secrets/{id}")
 async def update_agent_secret(
     agent_id: UUID,
     id: UUID,
@@ -656,9 +645,7 @@ async def update_agent_secret(
         )
 
 
-@router.patch(
-    "/agents/{agent_id}/secrets/{id}"
-)
+@router.patch("/agents/{agent_id}/secrets/{id}")
 async def patch_agent_secret(
     agent_id: UUID,
     id: UUID,
@@ -746,9 +733,7 @@ async def patch_agent_secret(
         )
 
 
-@router.delete(
-    "/agents/{agent_id}/secrets/{id}"
-)
+@router.delete("/agents/{agent_id}/secrets/{id}")
 async def delete_agent_secret(
     agent_id: UUID,
     id: UUID,

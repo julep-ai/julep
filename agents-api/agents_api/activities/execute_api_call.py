@@ -68,8 +68,7 @@ async def execute_api_call(
                     if isinstance(value, str) and "$" in value:
                         try:
                             rendered_value = await render_template(
-                                value,
-                                {"secrets": secrets_dict}
+                                value, {"secrets": secrets_dict}
                             )
                             processed_headers[key] = rendered_value
                         except Exception as e:

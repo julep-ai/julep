@@ -100,7 +100,7 @@ async def patch_secret(
         # Build and execute the query
         query = f"""
             UPDATE secrets
-            SET {', '.join(set_clauses)}
+            SET {", ".join(set_clauses)}
             WHERE id = ${len(params) + 1} AND developer_id = ${len(params) + 2}
             RETURNING
                 id,
