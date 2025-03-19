@@ -16,6 +16,94 @@ from pydantic import (
 )
 
 
+class AlgoliaSearchArguments(BaseModel):
+    """
+    Arguments for Algolia Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    index_name: str
+    """
+    The index name to search
+    """
+    query: str
+    """
+    The query to search for
+    """
+    attributes_to_retrieve: list[str] | None = None
+    """
+    Optional attributes to retrieve
+    """
+    hits_per_page: Annotated[int, Field(ge=1, le=1000)] = 10
+    """
+    Maximum number of hits to return
+    """
+
+
+class AlgoliaSearchArgumentsUpdate(BaseModel):
+    """
+    Arguments for Algolia Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    index_name: str | None = None
+    """
+    The index name to search
+    """
+    query: str | None = None
+    """
+    The query to search for
+    """
+    attributes_to_retrieve: list[str] | None = None
+    """
+    Optional attributes to retrieve
+    """
+    hits_per_page: Annotated[int, Field(ge=1, le=1000)] = 10
+    """
+    Maximum number of hits to return
+    """
+
+
+class AlgoliaSetup(BaseModel):
+    """
+    Integration definition for Algolia
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    algolia_application_id: str
+    """
+    The Algolia Application ID
+    """
+    algolia_api_key: str
+    """
+    The Algolia API Key
+    """
+
+
+class AlgoliaSetupUpdate(BaseModel):
+    """
+    Integration definition for Algolia
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    algolia_application_id: str | None = None
+    """
+    The Algolia Application ID
+    """
+    algolia_api_key: str | None = None
+    """
+    The Algolia API Key
+    """
+
+
 class ApiCallDef(BaseModel):
     """
     API call definition
@@ -270,6 +358,7 @@ class BaseIntegrationDef(BaseModel):
         "cloudinary",
         "arxiv",
         "unstructured",
+        "algolia",
     ]
     """
     The provider of the integration
@@ -311,6 +400,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "cloudinary",
             "arxiv",
             "unstructured",
+            "algolia",
         ]
         | None
     ) = None
@@ -947,6 +1037,7 @@ class CreateToolRequest(BaseModel):
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
+        | AlgoliaIntegrationDef
         | None
     ) = None
     """
@@ -1465,6 +1556,7 @@ class PatchToolRequest(BaseModel):
         | CloudinaryEditIntegrationDefUpdate
         | ArxivIntegrationDefUpdate
         | UnstructuredIntegrationDefUpdate
+        | AlgoliaIntegrationDefUpdate
         | None
     ) = None
     """
@@ -1897,6 +1989,7 @@ class Tool(BaseModel):
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
+        | AlgoliaIntegrationDef
         | None
     ) = None
     """
@@ -2155,6 +2248,7 @@ class UpdateToolRequest(BaseModel):
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
         | UnstructuredIntegrationDef
+        | AlgoliaIntegrationDef
         | None
     ) = None
     """
@@ -2369,6 +2463,58 @@ class WikipediaSearchArgumentsUpdate(BaseModel):
     load_max_docs: Annotated[int, Field(ge=1, le=10)] = 2
     """
     Maximum number of documents to load
+    """
+
+
+class AlgoliaIntegrationDef(BaseIntegrationDef):
+    """
+    Algolia integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["algolia"] = "algolia"
+    """
+    The provider must be "algolia"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: AlgoliaSetup | None = None
+    """
+    The setup parameters for Algolia
+    """
+    arguments: AlgoliaSearchArguments | None = None
+    """
+    The arguments for Algolia
+    """
+
+
+class AlgoliaIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Algolia integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["algolia"] = "algolia"
+    """
+    The provider must be "algolia"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: AlgoliaSetupUpdate | None = None
+    """
+    The setup parameters for Algolia
+    """
+    arguments: AlgoliaSearchArgumentsUpdate | None = None
+    """
+    The arguments for Algolia
     """
 
 

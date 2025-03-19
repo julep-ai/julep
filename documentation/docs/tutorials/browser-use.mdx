@@ -498,7 +498,7 @@ client = Client(api_key=JULEP_API_KEY)
 # Create the agent
 agent = client.agents.create(
   name="Julep Browser Use Agent",
-  description="A Julep agent that can use the computer tool to interact with the browser.",
+  about="A Julep agent that can use the computer tool to interact with the browser.",
 )
 
 # Load the task definition
@@ -545,7 +545,7 @@ const client = new Julep({
 // Create the agent
 const agent = await client.agents.create({
   name: "Julep Browser Use Agent",
-  description: "A Julep agent that can use the computer tool to interact with the browser.",
+  about: "A Julep agent that can use the computer tool to interact with the browser.",
 });
 
 // Parse the task definition
@@ -597,4 +597,5 @@ if (result.status === 'succeeded') {
 
 ## Next Steps
 
-Try this task yourself, check out the full example, see the [browser-use cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/06-browser-use.ipynb).
+- Try this task yourself, check out the full example, see the [browser-use cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/06-browser-use.ipynb).
+- To learn more about the integrations used in this task, check out the [integrations](/docs/integrations/supported-integrations) page.

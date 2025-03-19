@@ -305,6 +305,94 @@ async def _():
         )
 
 
+@test("task execution workflow: handle api_call tool call step with Method Override")
+async def _():
+    async def _resp():
+        return "api_call_tool_call_response"
+
+    wf = TaskExecutionWorkflow()
+    arguments = {
+        "method": "POST",
+        "url": "http://url1.com",
+    }
+    input_arguments = {
+        "method": "GET",
+        "url": "http://url1.com",
+    }
+    step = ToolCallStep(
+        tool="tool1",
+        arguments=input_arguments,
+    )
+    execution_input = ExecutionInput(
+        arguments=input_arguments,
+        developer_id=uuid.uuid4(),
+        agent=Agent(
+            id=uuid.uuid4(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
+            name="agent1",
+        ),
+        agent_tools=[],
+        task=TaskSpecDef(
+            name="task1",
+            tools=[
+                TaskToolDef(
+                    type="api_call",
+                    name="tool1",
+                    spec=arguments,
+                    inherited=False,
+                ),
+            ],
+            workflows=[Workflow(name="main", steps=[step])],
+        ),
+    )
+    context = StepContext(
+        execution_input=execution_input,
+        current_input="value 1",
+        cursor=TransitionTarget(
+            workflow="main",
+            step=0,
+            scope_id=uuid.uuid4(),
+        ),
+    )
+    outcome = StepOutcome(
+        output={
+            "type": "api_call",
+            "api_call": {
+                "arguments": input_arguments,
+                "name": "tool1",
+            },
+        },
+    )
+    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+        workflow.execute_activity.return_value = _resp()
+        wf.context = context
+        wf.outcome = outcome
+        result = await wf.handle_step(
+            step=step,
+        )
+        assert result == WorkflowResult(
+            state=PartialTransition(output="api_call_tool_call_response"),
+        )
+        api_call = ApiCallDef(
+            method="POST",
+            url="http://url1.com",
+            headers=None,
+            follow_redirects=None,
+        )
+        workflow.execute_activity.assert_called_once_with(
+            execute_api_call,
+            args=[
+                api_call,
+                input_arguments,
+            ],
+            schedule_to_close_timeout=timedelta(
+                seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
+            ),
+            heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+        )
+
+
 @test("task execution workflow: handle system tool call step")
 async def _():
     async def _resp():

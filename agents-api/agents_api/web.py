@@ -61,65 +61,187 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
     """
 
     async def _handler(request: Request, exc: Exception):
-        location = None
-        offending_input = None
-
-        # Return the deepest matching possibility
         if isinstance(exc, ValidationError | RequestValidationError):
             exc = cast(ValidationError | RequestValidationError, exc)
-            errors = exc.errors()
+            error_details = []
 
-            # Get the deepest matching errors
-            max_depth = max(len(error["loc"]) for error in errors)
-            errors = [error for error in errors if len(error["loc"]) == max_depth]
+            # Process each validation error
+            for error in exc.errors():
+                error_info = {
+                    "type": error.get("type", "validation_error"),
+                    "msg": error.get("msg", "Validation error"),
+                    "loc": _format_location(error.get("loc", [])),
+                }
 
-            # Get the common location
-            location = errors[0]["loc"]
-            for error in errors[1:]:
-                for a, b in zip(location, error["loc"]):
-                    if a == b:
-                        continue
-                    location = location[:-1]
-                    break
+                # Enhance with fixes/suggestions when possible
+                error_info.update(_get_error_suggestions(error))
 
-            location = location[1:]  # Skip the first element ("body")
+                # Add input value if available
+                if "input" in error:
+                    error_info["received"] = str(error["input"])
 
-            # Get the part of the input that caused the error
-            offending_input = exc.body
-            for loc in location:
-                match offending_input:
-                    case dict():
-                        if loc not in offending_input:
-                            break
-                    case list():
-                        if not (isinstance(loc, int) and 0 <= loc < len(offending_input)):
-                            break
-                    case _:
-                        break
+                error_details.append(error_info)
 
-                offending_input = offending_input[loc]
+            # Log the error with appropriate level
+            logger.warning(f"Validation error: {error_details}")
 
-                # Keep only the message from the error
-                errors = [
-                    error.get("msg", error)
-                    if isinstance(error, dict)
-                    else getattr(error, "msg", error)
-                    for error in errors
-                ]
+            return JSONResponse(
+                content={
+                    "error": {
+                        "message": "Validation error",
+                        "details": error_details,
+                        "code": "validation_error",
+                    }
+                },
+                status_code=status_code,
+            )
 
-            else:
-                errors = exc.errors() if hasattr(exc, "errors") else [exc]
-
+        # For non-validation errors, return a simpler error response
         return JSONResponse(
             content={
-                "errors": errors,
-                "offending_input": offending_input,
-                "location": location,
+                "error": {
+                    "message": str(exc),
+                    "code": getattr(exc, "code", "unknown_error"),
+                }
             },
             status_code=status_code,
         )
 
     return _handler
+
+
+def _format_location(loc: list) -> str:
+    """Format error location into a human-readable string."""
+    if not loc:
+        return ""
+
+    # Skip the initial 'body' element if present
+    if loc[0] == "body" and len(loc) > 1:
+        loc = loc[1:]
+
+    # Format the location
+    parts = []
+    for item in loc:
+        if isinstance(item, int):
+            parts.append(f"[{item}]")
+        else:
+            if parts:  # Add dot separator if not first element
+                parts.append(f".{item}")
+            else:
+                parts.append(str(item))
+
+    return "".join(parts)
+
+
+def _get_error_suggestions(error: dict) -> dict:
+    """Generate user-friendly suggestions based on the error type."""
+    error_type = error.get("type", "")
+    suggestions = {}
+
+    # Handle different validation error types
+    if error_type == "missing":
+        suggestions["fix"] = "Add this required field to your request"
+        suggestions["example"] = '{ "field_name": "value" }'
+
+    elif error_type == "type_error":
+        if "expected_type" in error:
+            suggestions["fix"] = f"Provide a value of type {error['expected_type']}"
+            if error["expected_type"] == "string":
+                suggestions["example"] = '"text value"'
+            elif error["expected_type"] == "integer":
+                suggestions["example"] = "42"
+            elif error["expected_type"] == "number":
+                suggestions["example"] = "3.14"
+            elif error["expected_type"] == "boolean":
+                suggestions["example"] = "true"
+            elif error["expected_type"] == "array":
+                suggestions["example"] = "[]"
+            elif error["expected_type"] == "object":
+                suggestions["example"] = "{}"
+        else:
+            suggestions["fix"] = "Provide a value of the correct type"
+
+    elif error_type == "value_error.missing":
+        suggestions["fix"] = "Provide a value for this required field"
+        suggestions["note"] = "This field cannot be null or undefined"
+
+    elif error_type == "value_error.extra":
+        suggestions["fix"] = "Remove this field as it is not expected"
+        suggestions["note"] = "Check the API documentation for the correct field names"
+
+    elif error_type == "value_error.const":
+        if "permitted" in error:
+            suggestions["fix"] = f"Value must be one of: {error['permitted']}"
+            suggestions["example"] = (
+                f"{error['permitted'][0] if error['permitted'] else 'appropriate_value'}"
+            )
+
+    elif "min_length" in error_type:
+        if "limit_value" in error:
+            suggestions["fix"] = f"Value must have at least {error['limit_value']} characters"
+            try:
+                limit = int(error["limit_value"])
+                suggestions["example"] = "x" * limit
+            except (ValueError, TypeError):
+                suggestions["example"] = "x" * 5  # Fallback example
+
+    elif "max_length" in error_type:
+        if "limit_value" in error:
+            suggestions["fix"] = f"Value must have at most {error['limit_value']} characters"
+            suggestions["note"] = (
+                f"Current value exceeds the maximum length of {error['limit_value']} characters"
+            )
+
+    # This case is now handled by the more general "min_length" check above
+
+    # This case is now handled by the more general "max_length" check above
+
+    elif "not_ge" in error_type:
+        if "limit_value" in error:
+            suggestions["fix"] = (
+                f"Value must be greater than or equal to {error['limit_value']}"
+            )
+            suggestions["example"] = f"{error['limit_value']}"
+
+    elif "not_le" in error_type:
+        if "limit_value" in error:
+            suggestions["fix"] = f"Value must be less than or equal to {error['limit_value']}"
+            suggestions["example"] = f"{error['limit_value']}"
+
+    elif "not_gt" in error_type:
+        if "limit_value" in error:
+            suggestions["fix"] = f"Value must be greater than {error['limit_value']}"
+            try:
+                suggestions["example"] = f"{float(error['limit_value']) + 1}"
+            except (ValueError, TypeError):
+                suggestions["example"] = "a value greater than the limit"
+
+    elif "not_lt" in error_type:
+        if "limit_value" in error:
+            suggestions["fix"] = f"Value must be less than {error['limit_value']}"
+            suggestions["example"] = f"{float(error['limit_value']) - 1}"
+
+    elif "enum" in error_type:
+        if "permitted" in error:
+            allowed_values = ", ".join([f'"{val}"' for val in error["permitted"]])
+            suggestions["fix"] = f"Value must be one of: {allowed_values}"
+
+    elif "json" in error_type:
+        suggestions["fix"] = "Provide valid JSON format"
+
+    elif "uuid" in error_type:
+        suggestions["fix"] = "Provide a valid UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)"
+
+    elif "datetime" in error_type:
+        suggestions["fix"] = "Provide a valid ISO 8601 datetime (e.g., 2023-01-01T12:00:00Z)"
+
+    elif "url" in error_type:
+        suggestions["fix"] = "Provide a valid URL (e.g., https://example.com)"
+
+    elif "email" in error_type:
+        suggestions["fix"] = "Provide a valid email address"
+
+    return suggestions
 
 
 def register_exceptions(app: FastAPI) -> None:
@@ -176,7 +298,13 @@ register_exceptions(app)
 async def http_exception_handler(request, exc: HTTPException):  # pylint: disable=unused-argument
     return JSONResponse(
         status_code=exc.status_code,
-        content={"error": {"message": str(exc)}},
+        content={
+            "error": {
+                "message": str(exc.detail),
+                "code": getattr(exc, "code", f"http_{exc.status_code}"),
+                "type": "http_error",
+            }
+        },
     )
 
 
@@ -184,7 +312,13 @@ async def http_exception_handler(request, exc: HTTPException):  # pylint: disabl
 async def validation_error_handler(request: Request, exc: RPCError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content={"error": {"message": "job not found or invalid", "code": exc.status.name}},
+        content={
+            "error": {
+                "message": "job not found or invalid",
+                "code": exc.status.name,
+                "type": "rpc_error",
+            }
+        },
     )
 
 
@@ -192,7 +326,13 @@ async def validation_error_handler(request: Request, exc: RPCError):
 async def session_not_found_error_handler(request: Request, exc: BaseCommonException):
     return JSONResponse(
         status_code=exc.http_code,
-        content={"error": {"message": str(exc)}},
+        content={
+            "error": {
+                "message": str(exc),
+                "code": getattr(exc, "code", "common_error"),
+                "type": exc.__class__.__name__,
+            }
+        },
     )
 
 
@@ -200,7 +340,14 @@ async def session_not_found_error_handler(request: Request, exc: BaseCommonExcep
 async def prompt_too_big_error(request: Request, exc: PromptTooBigError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content={"error": {"message": str(exc)}},
+        content={
+            "error": {
+                "message": str(exc),
+                "code": "prompt_too_big",
+                "type": "PromptTooBigError",
+                "fix": "Reduce the size of your prompt or use a model with a larger context window",
+            }
+        },
     )
 
 
@@ -208,7 +355,14 @@ async def prompt_too_big_error(request: Request, exc: PromptTooBigError):
 async def litellm_api_error(request: Request, exc: APIError):
     return JSONResponse(
         status_code=status.HTTP_502_BAD_GATEWAY,
-        content={"error": {"message": str(exc)}},
+        content={
+            "error": {
+                "message": str(exc),
+                "code": "llm_api_error",
+                "type": "LLMServiceError",
+                "fix": "Please check your API keys and model configurations or try again later",
+            }
+        },
     )
 
 

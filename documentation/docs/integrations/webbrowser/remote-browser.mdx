@@ -35,7 +35,7 @@ To get started with the Remote Browser integration, follow these steps to config
           provider: browserbase
           method: create_session
           setup:
-            project_id: {browserbase_project_id}
+            project_id: "BROWSERBASE_PROJECT_ID"
 
       - name: browser_tool
         type: integration
@@ -50,7 +50,7 @@ To get started with the Remote Browser integration, follow these steps to config
       - tool: browserbase_tool
         method: create_session
         arguments:
-          project_id: {browserbase_project_id}
+          project_id: BROWSERBASE_PROJECT_ID
 
       - evaluate:
           browser_session_id: $ _.id
@@ -59,8 +59,8 @@ To get started with the Remote Browser integration, follow these steps to config
       - tool: browser_tool
         arguments:
           connect_url: $ _.connect_url
-          action: "navigate"
-          text: "https://www.google.com"
+          action: navigate
+          text: https://www.google.com
     ```
   </Step>
 </Steps>
@@ -79,9 +79,6 @@ To get started with the Remote Browser integration, follow these steps to config
       - **_provider_**: Indicates the service provider, which is `remote_browser`.
       - **_method_**: Specifies the method to use, which is `perform_action`. Defaults to `perform_action` if not specified.
       - **_setup_**: Contains configuration details, which are the connection url and the browser size (width and height).
-    <Info type="info" title="Note">
-      If no data is 
-    </Info>
   </Accordion>
 
   <Accordion title="Workflow Configuration">
@@ -110,7 +107,8 @@ To get started with the Remote Browser integration, follow these steps to config
 </AccordionGroup>
 
 <Note>
-  Make sure to properly configure browser settings and action parameters for your use case.
+  - Remember to replace `BROWSERBASE_PROJECT_ID` with your actual project ID.
+  - Make sure to properly configure browser settings and action parameters for your use case.
 </Note>
 
 ## Conclusion

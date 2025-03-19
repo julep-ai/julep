@@ -1,3 +1,4 @@
+from .algolia import AlgoliaSearchOutput as AlgoliaSearchOutput
 from .arxiv import (
     ArxivSearchOutput as ArxivSearchOutput,
 )

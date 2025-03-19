@@ -166,11 +166,12 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
                 "message": output,
                 "tool_calls": [],
                 "created_at": 1,
-                # finish_reason="stop",
+                "finish_reason": "stop",
             },
         ],
         created=0,
         object="text_completion",
+        usage={"total_tokens": 10, "prompt_tokens": 5, "completion_tokens": 5},
     )
 
     with (
@@ -195,7 +196,7 @@ def patch_integration_service(output: dict = {"result": "ok"}):
 
 @contextmanager
 def get_pg_dsn(start_vectorizer: bool = False):
-    with PostgresContainer("timescale/timescaledb-ha:pg17") as postgres:
+    with PostgresContainer("timescale/timescaledb-ha:pg17-ts2.18-all") as postgres:
         test_psql_url = postgres.get_connection_url()
         pg_dsn = f"postgres://{test_psql_url[22:]}?sslmode=disable"
         command = f"migrate -database '{pg_dsn}' -path ../memory-store/migrations/ up"

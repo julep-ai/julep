@@ -18,6 +18,7 @@ Executions are comprised of several key components that work together to manage 
 - **Status**: The current state of the execution (e.g., queued, running, succeeded).
 - **Output**: The result produced by the execution upon completion.
 - **Transitions**: The sequence of state changes that the execution undergoes.
+- **Transition Count**: The number of transitions that have occurred in this execution.
 
 ### Execution Configuration options
 
@@ -26,6 +27,7 @@ Executions are comprised of several key components that work together to manage 
 | `task_id`            | `string`          | The ID of the task to execute                              | **Required**   |
 | `input`              | `object`          | The input to the task                                      | **Required**   |
 | `metadata`           | `object`          | Additional metadata for the execution instance             | `null`         |
+| `transition_count`   | `number`          | The number of transitions in this execution                | `null`         |
 
 
 ## Lifecycle of an Execution

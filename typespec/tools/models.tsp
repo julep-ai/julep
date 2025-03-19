@@ -28,6 +28,7 @@ alias integrationProvider = (
     | "cloudinary"
     | "arxiv"
     | "unstructured"
+    | "algolia"
 );
 
 enum ToolType {
@@ -124,6 +125,7 @@ alias IntegrationDef = (
     | CloudinaryIntegrationDef
     | ArxivIntegrationDef
     | UnstructuredIntegrationDef
+    | AlgoliaIntegrationDef
 );
 
 //
