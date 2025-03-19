@@ -1,0 +1,75 @@
+name: julep-agents-api
+
+# Shared environment variables
+x--shared-environment: &shared-environment
+  AGENTS_API_KEY: ${AGENTS_API_KEY}
+  AGENTS_API_KEY_HEADER_NAME: ${AGENTS_API_KEY_HEADER_NAME:-Authorization}
+  AGENTS_API_HOSTNAME: ${AGENTS_API_HOSTNAME:-localhost}
+  AGENTS_API_PUBLIC_PORT: ${AGENTS_API_PUBLIC_PORT:-80}
+  AGENTS_API_PROTOCOL: ${AGENTS_API_PROTOCOL:-http}
+  AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
+  ENABLE_RESPONSES: ${ENABLE_RESPONSES:-true}
+  PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
+  DEBUG: ${AGENTS_API_DEBUG:-False}
+  EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
+  INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
+  LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+  LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
+  SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}
+  AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE: ${AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE:-500}
+  TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}
+  WORKER_URL: ${WORKER_URL:-temporal:7233}
+  USE_BLOB_STORE_FOR_TEMPORAL: ${USE_BLOB_STORE_FOR_TEMPORAL:-false}
+  BLOB_STORE_CUTOFF_KB: ${BLOB_STORE_CUTOFF_KB:-128}
+  BLOB_STORE_BUCKET: ${BLOB_STORE_BUCKET:-agents-api}
+  S3_ENDPOINT: ${S3_ENDPOINT:-http://seaweedfs:8333}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+  S3_SECRET_KEY: ${S3_SECRET_KEY}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+  MAX_FREE_SESSIONS: ${MAX_FREE_SESSIONS:-50}
+  MAX_FREE_EXECUTIONS: ${MAX_FREE_EXECUTIONS:-50}
+  SENTRY_DSN: ${SENTRY_DSN}
+  SAPLING_API_KEY: ${SAPLING_API_KEY}
+  ZEROGPT_URL: ${ZEROGPT_URL:-https://api.zerogpt.com/api/detect/detectText}
+  DESKLIB_URL: ${DESKLIB_URL:-http://35.243.190.233/detect}
+  SAPLING_URL: ${SAPLING_URL:-https://api.sapling.ai/api/v1/aidetect}
+
+x--base-agents-api: &base-agents-api
+  image: julepai/agents-api:${TAG:-dev}
+  environment:
+    <<: *shared-environment
+  build:
+    platforms:
+      - linux/amd64
+    context: .
+    dockerfile: Dockerfile
+
+  restart: on-failure
+
+  ports:
+    - "8080:8080"
+
+  develop:
+    watch:
+      - action: sync+restart
+        path: ./agents_api
+        target: /app/agents_api
+        ignore:
+          - ./**/*.pyc
+      - action: sync+restart
+        path: ./gunicorn_conf.py
+        target: /app/gunicorn_conf.py
+        ignore:
+          - ./gunicorn_conf.pyc
+      - action: rebuild
+        path: uv.lock
+      - action: rebuild
+        path: Dockerfile
+
+
+services:
+  agents-api:
+    <<: *base-agents-api
+    profiles:
+      - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
+      - single-tenant
