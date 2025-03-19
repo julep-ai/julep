@@ -196,7 +196,7 @@ def patch_integration_service(output: dict = {"result": "ok"}):
 
 @contextmanager
 def get_pg_dsn(start_vectorizer: bool = False):
-    with PostgresContainer("timescale/timescaledb-ha:pg17") as postgres:
+    with PostgresContainer("timescale/timescaledb-ha:pg17-ts2.18-all") as postgres:
         test_psql_url = postgres.get_connection_url()
         pg_dsn = f"postgres://{test_psql_url[22:]}?sslmode=disable"
         command = f"migrate -database '{pg_dsn}' -path ../memory-store/migrations/ up"
