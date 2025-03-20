@@ -1,6 +1,5 @@
 import asyncio
 from typing import Annotated, Any
-from uuid import UUID
 
 from fastapi import Depends, HTTPException
 from fastapi.background import BackgroundTasks
@@ -17,8 +16,9 @@ from ...autogen.openapi_model import (
     Response,
 )
 from ...clients import litellm
+from ...common.protocol.developers import Developer
 from ...common.utils.datetime import utcnow
-from ...dependencies.developer_id import get_developer_data, get_developer_id
+from ...dependencies.developer_id import get_developer_data
 from ...queries.entries.create_entries import create_entries
 from ...routers.utils.model_converters import (
     convert_chat_response_to_response,
@@ -82,7 +82,7 @@ def is_reasoning_model(model: str) -> bool:
 
 @router.post("/responses", tags=["responses"])
 async def create_response(
-    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    developer: Annotated[Developer, Depends(get_developer_data)],
     create_response_data: CreateResponse,
     background_tasks: BackgroundTasks,
 ) -> Response:
@@ -93,10 +93,8 @@ async def create_response(
                     status_code=400, detail="Computer preview is not supported yet"
                 )
 
-    developer = await get_developer_data(x_developer_id)
-
     _agent, session, chat_input = await convert_create_response(
-        x_developer_id,
+        developer.id,
         create_response_data,
     )
     session_id = session.id
