@@ -1,5 +1,5 @@
 import spacy
-from agents_api.common.nlp import clean_keyword, extract_keywords, text_to_tsvector_query
+from agents_api.common.nlp import clean_keyword, extract_keywords, text_to_keywords
 from ward import test
 
 
@@ -50,142 +50,138 @@ async def _():
     }
 
 
-@test("utility: text_to_tsvector_query - split_chunks=False")
+@test("utility: text_to_keywords - split_chunks=False")
 async def _():
     test_cases = [
         # Single words
-        ("test", "test"),
+        ("test", {"test"}),
         # Multiple words in single sentence
         (
             "quick brown fox",
-            "quick brown fox",  # Now kept as a single phrase due to proximity
+            {"quick brown fox"},  # Now kept as a single phrase due to proximity
         ),
         # Technical terms and phrases
         (
             "Machine Learning algorithm",
-            "machine learning algorithm",  # Common technical phrase
+            {"Machine Learning algorithm"},  # Common technical phrase
         ),
         # Multiple sentences
         (
             "I love basketball especially Michael Jordan. LeBron James is also great.",
-            "basketball OR lebron james OR michael jordan",
+            {"basketball", "LeBron James", "Michael Jordan"},
         ),
         # Quoted phrases
         (
             '"quick brown fox"',
-            "quick brown fox",  # Quotes removed, phrase kept together
+            {"quick brown fox"},  # Quotes removed, phrase kept together
         ),
-        ('Find "machine learning" algorithms', "machine learning"),
+        ('Find "machine learning" algorithms', {"machine learning"}),
         # Multiple quoted phrases
-        ('"data science" and "machine learning"', "machine learning OR data science"),
+        ('"data science" and "machine learning"', {"machine learning", "data science"}),
         # Edge cases
-        ("", ""),
+        ("", set()),
         (
             "the and or",
-            "",  # All stop words should result in empty string
+            set(),  # All stop words should result in empty string
         ),
         (
             "a",
-            "",  # Single stop word should result in empty string
+            set(),  # Single stop word should result in empty string
         ),
-        ("X", "X"),
+        ("X", set()),
         # Empty quotes
-        ('""', ""),
-        ('test "" phrase', "phrase OR test"),
+        ('""', set()),
+        ('test "" phrase', {"phrase", "test"}),
         (
             "John Doe is a software engineer at Google.",
-            "google OR john doe OR a software engineer",
+            {"Google", "John Doe", "a software engineer"},
         ),
-        ("- google", "google"),
+        ("- Google", {"Google"}),
         # Test duplicate keyword handling
         (
             "John Doe is great. John Doe is awesome.",
-            "john doe",  # Should only include "John Doe" once
+            {"John Doe"},  # Should only include "John Doe" once
         ),
         (
             "Software Engineer at Google. Also, a Software Engineer.",
-            "Google OR Also a Software Engineer OR Software Engineer",  # Should only include "Software Engineer" once
+            {"Google", "Also a Software Engineer", "Software Engineer"},
         ),
     ]
 
     for input_text, expected_output in test_cases:
         print(f"Input: '{input_text}'")
-        result = text_to_tsvector_query(input_text, split_chunks=False)
+        result = text_to_keywords(input_text, split_chunks=False)
         print(f"Generated query: '{result}'")
         print(f"Expected: '{expected_output}'\n")
 
-        result_terms = {term.lower() for term in result.split(" OR ") if term}
-        expected_terms = {term.lower() for term in expected_output.split(" OR ") if term}
-        assert result_terms == expected_terms, (
-            f"Expected terms {expected_terms} but got {result_terms} for input '{input_text}'"
+        assert result == expected_output, (
+            f"Expected terms {expected_output} but got {result} for input '{input_text}'"
         )
 
 
-@test("utility: text_to_tsvector_query - split_chunks=True")
+@test("utility: text_to_keywords - split_chunks=True")
 async def _():
     test_cases = [
         # Single words
-        ("test", "test"),
+        ("test", {"test"}),
         # Multiple words in single sentence
         (
             "quick brown fox",
-            "quick OR brown OR fox",  # Now kept as a single phrase due to proximity
+            {"quick", "brown", "fox"},  # Now kept as a single phrase due to proximity
         ),
         # Technical terms and phrases
         (
             "Machine Learning algorithm",
-            "machine OR learning OR algorithm",  # Common technical phrase
+            {"Machine", "Learning", "algorithm"},  # Common technical phrase
         ),
         # Multiple sentences
         (
             "I love basketball especially Michael Jordan. LeBron James is also great.",
-            "basketball OR lebron james OR michael jordan",
+            {"basketball", "LeBron James", "Michael Jordan"},
         ),
         # Quoted phrases
         (
             '"quick brown fox"',
-            "quick OR brown OR fox",  # Quotes removed, phrase kept together
+            {"quick", "brown", "fox"},  # Quotes removed, phrase kept together
         ),
-        ('Find "machine learning" algorithms', "machine OR learning"),
+        ('Find "machine learning" algorithms', {"machine", "learning"}),
         # Multiple quoted phrases
-        ('"data science" and "machine learning"', "machine OR learning OR data OR science"),
+        ('"data science" and "machine learning"', {"machine", "learning", "data", "science"}),
         # Edge cases
-        ("", ""),
+        ("", set()),
         (
             "the and or",
-            "",  # All stop words should result in empty string
+            set(),  # All stop words should result in empty string
         ),
         (
             "a",
-            "",  # Single stop word should result in empty string
+            set(),  # Single stop word should result in empty string
         ),
-        ("X", "X"),
+        ("X", set()),
         # Empty quotes
-        ('""', ""),
-        ('test "" phrase', "phrase OR test"),
+        ('""', set()),
+        ('test "" phrase', {"phrase", "test"}),
         (
             "John Doe is a software engineer at Google.",
-            "google OR john doe OR a OR software OR engineer",
+            {"Google", "John Doe", "software", "engineer"},
         ),
         # Test duplicate keyword handling
         (
             "John Doe is great. John Doe is awesome.",
-            "john doe",  # Should only include "John Doe" once even with split_chunks=True
+            {"John Doe"},  # Should only include "John Doe" once even with split_chunks=True
         ),
         (
             "Software Engineer at Google. Also, a Software Engineer.",
-            "Also OR a OR google OR software OR engineer",  # When split, each word appears once
+            {"Also", "Google", "Software", "Engineer"},  # When split, each word appears once
         ),
     ]
 
     for input_text, expected_output in test_cases:
         print(f"Input: '{input_text}'")
-        result = text_to_tsvector_query(input_text, split_chunks=True)
+        result = text_to_keywords(input_text, split_chunks=True)
         print(f"Generated query: '{result}'")
         print(f"Expected: '{expected_output}'\n")
 
-        result_terms = {term.lower() for term in result.split(" OR ") if term}
-        expected_terms = {term.lower() for term in expected_output.split(" OR ") if term}
-        assert result_terms == expected_terms, (
-            f"Expected terms {expected_terms} but got {result_terms} for input '{input_text}'"
+        assert result == expected_output, (
+            f"Expected terms {expected_output} but got {result} for input '{input_text}'"
         )

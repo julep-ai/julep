@@ -19,11 +19,10 @@ from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
 from ...common.utils.get_doc_search import get_search_fn_and_params
-from ..docs.mmr import maximal_marginal_relevance
+from ...common.utils.mmr import apply_mmr_to_docs
 from ..entries.get_history import get_history
 from ..utils import rewrap_exceptions
 
-MIN_DOCS_WITH_EMBEDDINGS = 2
 T = TypeVar("T")
 
 
@@ -145,8 +144,12 @@ async def gather_messages(
         # Invalid mode, return early
         return past_messages, []
 
-    # Execute search
-    search_fn, params = get_search_fn_and_params(search_params)
+    # Execute search (extract keywords for FTS because the query is a conversation snippet)
+    extract_keywords: bool = True
+    search_fn, params = get_search_fn_and_params(
+        search_params, extract_keywords=extract_keywords
+    )
+
     doc_references: list[DocReference] = await search_fn(
         developer_id=developer.id,
         owners=owners,
@@ -156,28 +159,15 @@ async def gather_messages(
 
     # Apply MMR if enabled and applicable
     if (
-        recall_options.mmr_strength > 0
+        not isinstance(search_params, TextOnlyDocSearchRequest)
         and len(doc_references) > recall_options.limit
-        and recall_options.mode != "text"
+        and recall_options.mmr_strength > 0
     ):
-        # Filter docs with embeddings and extract embeddings in one pass
-        docs_with_embeddings = []
-        embeddings = []
-        for doc in doc_references:
-            if doc.snippet.embedding is not None:
-                docs_with_embeddings.append(doc)
-                embeddings.append(doc.snippet.embedding)
-
-        if len(docs_with_embeddings) >= MIN_DOCS_WITH_EMBEDDINGS:
-            # Apply MMR
-            indices = maximal_marginal_relevance(
-                np.asarray(query_embedding),
-                embeddings,
-                k=min(recall_options.limit, len(docs_with_embeddings)),
-                lambda_mult=1 - recall_options.mmr_strength,
-            )
-            doc_references = [
-                doc for i, doc in enumerate(docs_with_embeddings) if i in set(indices)
-            ]
+        doc_references = apply_mmr_to_docs(
+            docs=doc_references,
+            query_embedding=np.asarray(query_embedding),
+            limit=recall_options.limit,
+            mmr_strength=recall_options.mmr_strength,
+        )
 
     return past_messages, doc_references

@@ -1,5 +1,7 @@
 from typing import Any
 
+from beartype import beartype
+from fastapi import HTTPException
 from langcodes import Language
 
 from ...autogen.openapi_model import (
@@ -12,39 +14,39 @@ from ...queries.docs.search_docs_by_text import search_docs_by_text
 from ...queries.docs.search_docs_hybrid import search_docs_hybrid
 
 
+@beartype
 def get_language(lang: str) -> str:
-    if not lang or not isinstance(lang, str):
-        msg = "Invalid ISO 639-1 language code."
-        raise ValueError(msg)
+    error_msg = "Invalid ISO 639 language code."
 
     try:
         language_obj = Language.get(lang)
 
-        # Validate that it's a known language code
+        # Validate language code
         if not language_obj.is_valid():
-            msg = "Invalid ISO 639-1 language code."
-            raise ValueError(msg)
+            raise HTTPException(status_code=422, detail=error_msg)
 
-        # Additional validation for complex language tags
-        if "-" in lang and not language_obj.territory and not language_obj.script:
+        # Check for malformed complex language tags
+        if "-" in lang and not (language_obj.territory or language_obj.script):
             parts = lang.split("-")
             if len(parts) > 1 and any(len(part) > 3 for part in parts[1:]):
-                msg = "Invalid ISO 639-1 language code."
-                raise ValueError(msg)
+                raise HTTPException(status_code=422, detail=error_msg)
 
-        description = language_obj.describe()
-        language = description.get("language", "english")
+        # Get language name from description
+        language = language_obj.describe().get("language", "english")
         if not language:
-            msg = "Language description is empty"
-            raise KeyError(msg)
-        return language.lower()
+            raise HTTPException(status_code=422, detail="Language description is empty")
+
+        # Special case for English
+        return "english_unaccent" if language.lower() == "english" else language.lower()
+
     except (ValueError, AttributeError, KeyError):
-        msg = "Invalid ISO 639-1 language code."
-        raise ValueError(msg)
+        raise HTTPException(status_code=422, detail=error_msg)
 
 
 def get_search_fn_and_params(
     search_params,
+    *,
+    extract_keywords: bool = False,
 ) -> tuple[Any, dict[str, float | int | str | dict[str, float] | list[float]] | None]:
     search_fn, params = None, None
 
@@ -56,13 +58,13 @@ def get_search_fn_and_params(
             metadata_filter=metadata_filter,
         ):
             search_language = get_language(lang)
-
             search_fn = search_docs_by_text
             params = {
                 "query": query,
                 "k": k,
                 "metadata_filter": metadata_filter,
                 "search_language": search_language,
+                "extract_keywords": extract_keywords,
             }
 
         case VectorDocSearchRequest(
@@ -89,7 +91,6 @@ def get_search_fn_and_params(
             metadata_filter=metadata_filter,
         ):
             search_language = get_language(lang)
-
             search_fn = search_docs_hybrid
             params = {
                 "text_query": query,
@@ -99,6 +100,7 @@ def get_search_fn_and_params(
                 "alpha": alpha,
                 "metadata_filter": metadata_filter,
                 "search_language": search_language,
+                "extract_keywords": extract_keywords,
             }
 
     # Note: connection_pool will be passed separately by the caller

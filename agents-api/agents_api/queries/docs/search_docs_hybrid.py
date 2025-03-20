@@ -5,7 +5,7 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import DocReference
-from ...common.nlp import text_to_tsvector_query
+from ...common.nlp import text_to_keywords
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import (
     pg_query,
@@ -26,7 +26,9 @@ SELECT * FROM search_hybrid(
     $7, -- alpha
     $8, -- confidence
     $9, -- metadata_filter
-    $10 -- search_language
+    $10, -- search_language
+    $11, -- trigram_similarity_threshold
+    $12 -- k_multiplier
 )
 """
 
@@ -44,10 +46,13 @@ async def search_docs_hybrid(
     text_query: str = "",
     embedding: list[float] | None = None,
     k: int = 10,
-    alpha: float = 0.5,
+    alpha: float = 0.7,
     metadata_filter: dict[str, Any] = {},
-    search_language: str = "english",
+    search_language: str = "english_unaccent",
     confidence: int | float = 0.5,
+    trigram_similarity_threshold: float = 0.5,  # Lower threshold to catch more spelling errors
+    k_multiplier: int = 7,  # Higher multiplier to include more candidates with the enhanced fuzzy matching
+    extract_keywords: bool = False,
 ) -> tuple[str, list]:
     """
     Hybrid text-and-embedding doc search. We get top-K from each approach,
@@ -82,8 +87,10 @@ async def search_docs_hybrid(
     owner_types: list[str] = [owner[0] for owner in owners]
     owner_ids: list[str] = [str(owner[1]) for owner in owners]
 
-    # Pre-process rawtext query
-    text_query = text_to_tsvector_query(text_query, split_chunks=True)
+    # Pre-process rawtext query if extract_keywords is True
+    if extract_keywords:
+        keywords = text_to_keywords(text_query, split_chunks=True)
+        text_query = " OR ".join(keywords)
 
     return (
         search_docs_hybrid_query,
@@ -98,5 +105,7 @@ async def search_docs_hybrid(
             confidence,
             metadata_filter,
             search_language,
+            trigram_similarity_threshold,
+            k_multiplier,
         ],
     )

@@ -16,6 +16,94 @@ from pydantic import (
 )
 
 
+class AlgoliaSearchArguments(BaseModel):
+    """
+    Arguments for Algolia Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    index_name: str
+    """
+    The index name to search
+    """
+    query: str
+    """
+    The query to search for
+    """
+    attributes_to_retrieve: list[str] | None = None
+    """
+    Optional attributes to retrieve
+    """
+    hits_per_page: Annotated[int, Field(ge=1, le=1000)] = 10
+    """
+    Maximum number of hits to return
+    """
+
+
+class AlgoliaSearchArgumentsUpdate(BaseModel):
+    """
+    Arguments for Algolia Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    index_name: str | None = None
+    """
+    The index name to search
+    """
+    query: str | None = None
+    """
+    The query to search for
+    """
+    attributes_to_retrieve: list[str] | None = None
+    """
+    Optional attributes to retrieve
+    """
+    hits_per_page: Annotated[int, Field(ge=1, le=1000)] = 10
+    """
+    Maximum number of hits to return
+    """
+
+
+class AlgoliaSetup(BaseModel):
+    """
+    Integration definition for Algolia
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    algolia_application_id: str
+    """
+    The Algolia Application ID
+    """
+    algolia_api_key: str
+    """
+    The Algolia API Key
+    """
+
+
+class AlgoliaSetupUpdate(BaseModel):
+    """
+    Integration definition for Algolia
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    algolia_application_id: str | None = None
+    """
+    The Algolia Application ID
+    """
+    algolia_api_key: str | None = None
+    """
+    The Algolia API Key
+    """
+
+
 class ApiCallDef(BaseModel):
     """
     API call definition
@@ -269,6 +357,8 @@ class BaseIntegrationDef(BaseModel):
         "ffmpeg",
         "cloudinary",
         "arxiv",
+        "unstructured",
+        "algolia",
     ]
     """
     The provider of the integration
@@ -309,6 +399,8 @@ class BaseIntegrationDefUpdate(BaseModel):
             "ffmpeg",
             "cloudinary",
             "arxiv",
+            "unstructured",
+            "algolia",
         ]
         | None
     ) = None
@@ -429,7 +521,7 @@ class BraveSearchSetup(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    api_key: str
+    brave_api_key: str
     """
     The api key for Brave Search
     """
@@ -443,7 +535,7 @@ class BraveSearchSetupUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    api_key: str | None = None
+    brave_api_key: str | None = None
     """
     The api key for Brave Search
     """
@@ -944,6 +1036,8 @@ class CreateToolRequest(BaseModel):
         | CloudinaryUploadIntegrationDef
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
+        | UnstructuredIntegrationDef
+        | AlgoliaIntegrationDef
         | None
     ) = None
     """
@@ -1461,6 +1555,8 @@ class PatchToolRequest(BaseModel):
         | CloudinaryUploadIntegrationDefUpdate
         | CloudinaryEditIntegrationDefUpdate
         | ArxivIntegrationDefUpdate
+        | UnstructuredIntegrationDefUpdate
+        | AlgoliaIntegrationDefUpdate
         | None
     ) = None
     """
@@ -1892,6 +1988,8 @@ class Tool(BaseModel):
         | CloudinaryUploadIntegrationDef
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
+        | UnstructuredIntegrationDef
+        | AlgoliaIntegrationDef
         | None
     ) = None
     """
@@ -1930,6 +2028,170 @@ class ToolResponse(BaseModel):
     output: dict[str, Any]
     """
     The output of the tool
+    """
+
+
+class UnstructuredIntegrationDef(BaseIntegrationDef):
+    """
+    Unstructured integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["unstructured"] = "unstructured"
+    """
+    The provider must be "unstructured"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: UnstructuredSetup | None = None
+    """
+    The setup parameters for Unstructured
+    """
+    arguments: UnstructuredPartitionArguments | None = None
+    """
+    The arguments for Unstructured
+    """
+
+
+class UnstructuredIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Unstructured integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["unstructured"] = "unstructured"
+    """
+    The provider must be "unstructured"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: UnstructuredSetupUpdate | None = None
+    """
+    The setup parameters for Unstructured
+    """
+    arguments: UnstructuredPartitionArgumentsUpdate | None = None
+    """
+    The arguments for Unstructured
+    """
+
+
+class UnstructuredPartitionArguments(BaseModel):
+    """
+    Arguments for Unstructured partition integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filename: str | None = None
+    """
+    File Name. If not provided, a random name will be generated.
+    """
+    file: str
+    """
+    The base64 string of the file, which can be a single string or a list of strings
+    """
+    partition_params: dict[str, Any] | None = None
+    """
+    Additional partition parameters
+    """
+
+
+class UnstructuredPartitionArgumentsUpdate(BaseModel):
+    """
+    Arguments for Unstructured partition integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filename: str | None = None
+    """
+    File Name. If not provided, a random name will be generated.
+    """
+    file: str | None = None
+    """
+    The base64 string of the file, which can be a single string or a list of strings
+    """
+    partition_params: dict[str, Any] | None = None
+    """
+    Additional partition parameters
+    """
+
+
+class UnstructuredSetup(BaseModel):
+    """
+    Setup parameters for Unstructured integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    unstructured_api_key: str
+    """
+    The API key for Unstructured.io
+    """
+    server_url: str | None = None
+    """
+    Optional server endpoint URL
+    """
+    server: str | None = None
+    """
+    The server by name to use for all methods
+    """
+    url_params: dict[str, Any] | None = None
+    """
+    Parameters to optionally template the server URL with
+    """
+    retry_config: dict[str, Any] | None = None
+    """
+    The retry configuration to use for all supported methods
+    """
+    timeout_ms: int | None = None
+    """
+    Optional request timeout applied to each operation in milliseconds
+    """
+
+
+class UnstructuredSetupUpdate(BaseModel):
+    """
+    Setup parameters for Unstructured integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    unstructured_api_key: str | None = None
+    """
+    The API key for Unstructured.io
+    """
+    server_url: str | None = None
+    """
+    Optional server endpoint URL
+    """
+    server: str | None = None
+    """
+    The server by name to use for all methods
+    """
+    url_params: dict[str, Any] | None = None
+    """
+    Parameters to optionally template the server URL with
+    """
+    retry_config: dict[str, Any] | None = None
+    """
+    The retry configuration to use for all supported methods
+    """
+    timeout_ms: int | None = None
+    """
+    Optional request timeout applied to each operation in milliseconds
     """
 
 
@@ -1985,6 +2247,8 @@ class UpdateToolRequest(BaseModel):
         | CloudinaryUploadIntegrationDef
         | CloudinaryEditIntegrationDef
         | ArxivIntegrationDef
+        | UnstructuredIntegrationDef
+        | AlgoliaIntegrationDef
         | None
     ) = None
     """
@@ -2199,6 +2463,58 @@ class WikipediaSearchArgumentsUpdate(BaseModel):
     load_max_docs: Annotated[int, Field(ge=1, le=10)] = 2
     """
     Maximum number of documents to load
+    """
+
+
+class AlgoliaIntegrationDef(BaseIntegrationDef):
+    """
+    Algolia integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["algolia"] = "algolia"
+    """
+    The provider must be "algolia"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: AlgoliaSetup | None = None
+    """
+    The setup parameters for Algolia
+    """
+    arguments: AlgoliaSearchArguments | None = None
+    """
+    The arguments for Algolia
+    """
+
+
+class AlgoliaIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Algolia integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["algolia"] = "algolia"
+    """
+    The provider must be "algolia"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: AlgoliaSetupUpdate | None = None
+    """
+    The setup parameters for Algolia
+    """
+    arguments: AlgoliaSearchArgumentsUpdate | None = None
+    """
+    The arguments for Algolia
     """
 
 

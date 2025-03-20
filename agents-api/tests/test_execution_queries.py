@@ -209,3 +209,139 @@ async def _(
     assert result is not None
     assert result.type == "cancelled"
     assert result.output == {"result": "test"}
+
+
+@test("query: get execution with transitions count")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution_started):
+    pool = await create_db_pool(dsn=dsn)
+    result = await get_execution(
+        execution_id=execution.id,
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert isinstance(result, Execution)
+    assert result.status == "starting"
+    # Since we create one init transition in the test_execution_started fixture
+    assert result.transition_count == 1
+
+
+@test("query: list executions with latest_executions view")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    execution=test_execution_started,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+    result = await list_executions(
+        developer_id=developer_id,
+        task_id=task.id,
+        connection_pool=pool,
+    )
+
+    assert isinstance(result, list)
+    assert len(result) >= 1
+    assert result[0].status == "starting"
+    # Since we create one init transition in the test_execution_started fixture
+    assert hasattr(result[0], "transition_count")
+
+
+@test("query: execution with finish transition")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    execution=test_execution_started,
+):
+    pool = await create_db_pool(dsn=dsn)
+    scope_id = uuid7()
+
+    # Create a finish transition - this would have failed with the old query
+    # because there's no step definition for finish transitions
+    await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="finish",
+            output={"result": "completed successfully"},
+            current={"workflow": "main", "step": 1, "scope_id": scope_id},
+            next=None,
+        ),
+        connection_pool=pool,
+    )
+
+    # Get the execution and verify it has the correct status
+    result = await get_execution(
+        execution_id=execution.id,
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert result.status == "succeeded"
+    assert result.transition_count == 2  # init + finish
+
+
+@test("query: execution with error transition")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="error_test",
+    )
+
+    # Create a new execution
+    execution = await create_execution(
+        developer_id=developer_id,
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "error_test"}),
+        connection_pool=pool,
+    )
+    await create_temporal_lookup(
+        execution_id=execution.id,
+        workflow_handle=workflow_handle,
+        connection_pool=pool,
+    )
+
+    scope_id = uuid7()
+
+    # Add an init transition
+    await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="init",
+            output={},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
+            next={"workflow": "main", "step": 0, "scope_id": scope_id},
+        ),
+        connection_pool=pool,
+    )
+
+    # Add an error transition - this would have failed with the old query
+    # because there's no step definition for error transitions
+    await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="error",
+            output={"error": "Something went wrong"},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
+            next=None,
+        ),
+        connection_pool=pool,
+    )
+
+    # Get the execution and verify it has the correct status
+    result = await get_execution(
+        execution_id=execution.id,
+        connection_pool=pool,
+    )
+
+    assert result is not None
+    assert result.status == "failed"
+    assert result.error == "Something went wrong"
+    assert result.transition_count == 2  # init + error

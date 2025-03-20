@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 
 from ..autogen.Tools import (
+    AlgoliaSearchArguments,
+    AlgoliaSetup,
     ArxivSearchArguments,
     # Arguments
     BraveSearchArguments,
@@ -26,10 +28,12 @@ from ..autogen.Tools import (
     RemoteBrowserSetup,
     SpiderFetchArguments,
     SpiderSetup,
+    UnstructuredSetup,
     WeatherGetArguments,
     WeatherSetup,
     WikipediaSearchArguments,
 )
+from .algolia import AlgoliaSearchOutput
 from .arxiv import ArxivSearchOutput
 from .brave import BraveSearchOutput
 from .browserbase import (
@@ -47,6 +51,7 @@ from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
 from .remote_browser import RemoteBrowserOutput
 from .spider import SpiderOutput
+from .unstructured import UnstructuredParseOutput
 from .weather import WeatherGetOutput
 from .wikipedia import WikipediaSearchOutput
 
@@ -68,6 +73,8 @@ ExecutionSetup = (
     | RemoteBrowserSetup
     | LlamaParseSetup
     | CloudinarySetup
+    | UnstructuredSetup
+    | AlgoliaSetup
 )
 
 # Argument configurations
@@ -90,6 +97,7 @@ ExecutionArguments = (
     | CloudinaryUploadArguments
     | CloudinaryEditArguments
     | ArxivSearchArguments
+    | AlgoliaSearchArguments
 )
 
 ExecutionResponse = (
@@ -112,6 +120,8 @@ ExecutionResponse = (
     | ExecutionError
     | ArxivSearchOutput
     | SpiderOutput
+    | UnstructuredParseOutput
+    | AlgoliaSearchOutput
 )
 
 

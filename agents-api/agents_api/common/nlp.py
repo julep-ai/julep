@@ -43,14 +43,15 @@ def clean_keyword(kw: str) -> str:
 
 def extract_keywords(doc: Doc, top_n: int = 25, split_chunks: bool = True) -> list[str]:
     """Optimized keyword extraction with minimal behavior change."""
+
     excluded_labels = {
-        "DATE",  # Absolute or relative dates or periods.
         "TIME",  # Times smaller than a day.
         "PERCENT",  # Percentage, including ”%“.
-        "MONEY",  # Monetary values, including unit.
         "QUANTITY",  # Measurements, as of weight or distance.
         "ORDINAL",  # “first”, “second”, etc.
         "CARDINAL",  # Numerals that do not fall under another type.
+        "DATE",  # Absolute or relative dates or periods.
+        "MONEY",  # Monetary values, including unit.
         # "PERSON",      # People, including fictional.
         # "NORP",        # Nationalities or religious or political groups.
         # "FAC",         # Buildings, airports, highways, bridges, etc.
@@ -66,6 +67,7 @@ def extract_keywords(doc: Doc, top_n: int = 25, split_chunks: bool = True) -> li
 
     # Extract and filter spans in a single pass
     ent_spans = [ent for ent in doc.ents if ent.label_ not in excluded_labels]
+
     # Add more comprehensive stopword filtering for noun chunks
     chunk_spans = [
         chunk
@@ -116,18 +118,18 @@ def extract_keywords(doc: Doc, top_n: int = 25, split_chunks: bool = True) -> li
 
 
 @lru_cache(maxsize=1000)
-def text_to_tsvector_query(
+def text_to_keywords(
     paragraph: str,
     top_n: int = 25,
     min_keywords: int = 1,
     split_chunks: bool = True,
-) -> str:
+) -> set[str]:
     """
-    Extracts meaningful keywords/phrases from text and joins them with OR.
+    Extracts meaningful keywords/phrases from text.
 
     Example:
         Input: "I like basketball especially Michael Jordan"
-        Output: "basketball OR Michael Jordan"
+        Output: {"basketball", "Michael Jordan"}
 
     Args:
         paragraph (str): The input text to process
@@ -136,26 +138,26 @@ def text_to_tsvector_query(
         split_chunks (bool): If True, breaks multi-word noun chunks into individual words
 
     Returns:
-        str: Keywords/phrases joined by OR
+        set[str]: Set of keywords/phrases
     """
     if not paragraph or not paragraph.strip():
-        return ""
+        return set()
 
     doc = nlp(paragraph)
-    queries = set()  # Use set to avoid duplicates
+    all_keywords = set()  # Use set to avoid duplicates
 
     for sent in doc.sents:
         sent_doc = sent.as_doc()
 
         # Extract keywords
         keywords = extract_keywords(sent_doc, top_n, split_chunks=split_chunks)
+        keywords = [kw for kw in keywords if len(kw) > 1]
         if len(keywords) < min_keywords:
             continue
 
-        queries.update(keywords)
+        all_keywords.update(keywords)
 
-    # Join all terms with " OR "
-    return " OR ".join(queries) if queries else ""
+    return all_keywords
 
 
 # def batch_text_to_tsvector_queries(

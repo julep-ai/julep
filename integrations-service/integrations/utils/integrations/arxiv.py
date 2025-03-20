@@ -27,8 +27,6 @@ async def search(arguments: ArxivSearchArguments) -> ArxivSearchOutput:
     Returns:
         ArxivSearchOutput: The search results wrapped in an output object.
     """
-    assert isinstance(arguments, ArxivSearchArguments), "Invalid arguments"
-
     client = arxiv.Client()
     sort_criterion = {
         "submittedDate": arxiv.SortCriterion.SubmittedDate,

@@ -1,7 +1,5 @@
 # Git
 .git/
-.github/workflows/
-.gitmodules
 
 # Build and distribution directories
 **/dist/
@@ -29,8 +27,6 @@
 **/.env.production.local
 
 # Large data files
-**/*.csv
-**/*.json
 **/*.parquet
 **/*.arrow
 **/*.pickle
@@ -43,6 +39,7 @@
 **/docs/_build/
 **/site/
 **/public/
+documentation/openapi.yaml
 
 # Package-manager files
 **/yarn-error.log
@@ -95,7 +92,6 @@
 **/*.gif
 **/*.svg
 **/*.ico
-**/*.pdf
 
 # Container and deployment files
 **/*.tfvars
@@ -114,3 +110,30 @@ openapi.yaml
 openapi*.yaml
 openapi*.yml
 openapi*.json
+
+# Julep-specific
+# TypeSpec generated outputs
+**/tsp-output/
+typespec/node_modules/
+
+# Local database data
+data/
+
+# Testing fixtures and large example files
+**/tests/sample_tasks/*.base64
+**/tests/sample_tasks/*.png
+
+# Temporal scheduler certificates
+scheduler/cert/
+
+# Docker and container configuration
+**/.docker/
+**/docker-compose.override.yml
+
+# Generated files in gateway
+gateway/letsencrypt/
+
+# Monitoring data
+monitoring/grafana/dashboards/
+monitoring/prometheus/data/
+monitoring/grafana/storage/

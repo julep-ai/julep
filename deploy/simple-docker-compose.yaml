@@ -30,12 +30,19 @@ services:
     ports:
       - mode: ingress
         target: 8080
-        published: "8080"
+        published: "127.0.0.1:8080:8080"
         protocol: tcp
+    restart: unless-stopped
     deploy:
       resources:
         limits:
           memory: 4G
+          cpus: "2.0"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   integrations:
     image: julepai/integrations:${TAG:-dev}
@@ -135,7 +142,7 @@ services:
       POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:-postgres}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - memory_store_data:/home/postgres/pgdata/data
     healthcheck:
@@ -143,6 +150,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
 
   vectorizer:
     image: timescale/pgai-vectorizer-worker:v0.2.1

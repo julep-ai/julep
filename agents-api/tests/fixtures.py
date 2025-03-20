@@ -1,7 +1,6 @@
 import os
 import random
 import string
-import sys
 from unittest.mock import patch
 from uuid import UUID
 
@@ -17,6 +16,7 @@ from agents_api.autogen.openapi_model import (
     CreateUserRequest,
 )
 from agents_api.clients.pg import create_db_pool
+from agents_api.common.utils.memory import total_size
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
 from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.developers.create_developer import create_developer
@@ -455,7 +455,7 @@ async def make_request(client=client, developer_id=test_developer_id):
         if multi_tenant_mode:
             headers["X-Developer-Id"] = str(developer_id)
 
-        headers["Content-Length"] = str(sys.getsizeof(kwargs.get("json", {})))
+        headers["Content-Length"] = str(total_size(kwargs.get("json", {})))
 
         return client.request(method, url, headers=headers, **kwargs)
 

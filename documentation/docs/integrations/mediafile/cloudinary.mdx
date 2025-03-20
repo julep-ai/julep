@@ -34,17 +34,17 @@ To get started with the Cloudinary integration, follow these steps to configure 
           provider: cloudinary
           method: media_upload
           setup:
-            cloudinary_cloud_name: {cloudinary_cloud_name}
-            cloudinary_api_key: {cloudinary_api_key}
-            cloudinary_api_secret: {cloudinary_api_secret}
+            cloudinary_cloud_name: "CLOUDINARY_CLOUD_NAME"
+            cloudinary_api_key: "CLOUDINARY_API_KEY"
+            cloudinary_api_secret: "CLOUDINARY_API_SECRET"
             params: # Optional setup parameters
-              key1: value1 # these are placeholders for the actual parameters
-              key2: value2 # these are placeholders for the actual parameters
+              key1: "value1" # these are placeholders for the actual parameters
+              key2: "value2" # these are placeholders for the actual parameters
     main:
       - tool: cloudinary_tool
         arguments:
-          file: "https://example.com/image.jpg"
-          public_id: "my_image"
+          file: https://example.com/image.jpg # this is a placeholder for the actual file
+          public_id: my_image # this is a placeholder for the actual public id
           upload_params: # Optional upload parameters
             param1: value1 # these are placeholders for the actual parameters
             param2: value2 # these are placeholders for the actual parameters
@@ -92,7 +92,7 @@ To get started with the Cloudinary integration, follow these steps to configure 
 </AccordionGroup>
 
 <Note>
-  Remember to replace `{cloudinary_cloud_name}`, `{cloudinary_api_key}`, and `{cloudinary_api_secret}` with your actual credentials.
+  Remember to replace `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` with your actual credentials.
 </Note>
 <Note>
   The different parameters available for the Cloudinary integration can be found in the [Cloudinary API documentation](https://cloudinary.com/documentation/cloudinary_sdks#configuration_parameters).

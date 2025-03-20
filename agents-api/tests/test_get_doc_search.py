@@ -7,43 +7,26 @@ from agents_api.common.utils.get_doc_search import get_language, get_search_fn_a
 from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
+from fastapi import HTTPException
 from ward import raises, test
 
 
 @test("get_language: valid language code returns lowercase language name")
 def _():
     result = get_language("en")
-    assert result == "english"
+    assert result == "english_unaccent"
 
     result = get_language("fr")
     assert result == "french"
 
 
-@test("get_language: invalid language code raises ValueError")
+@test("get_language: empty language code raises HTTPException")
 def _():
-    with raises(ValueError) as exc:
-        # Cast None to str to satisfy type checking while still testing the behavior
-        get_language(None)  # type: ignore
-
-    assert str(exc.raised) == "Invalid ISO 639-1 language code."
-
-
-@test("get_language: empty language code raises ValueError")
-def _():
-    with raises(ValueError) as exc:
+    with raises(HTTPException) as exc:
         get_language("")
 
-    assert str(exc.raised) == "Invalid ISO 639-1 language code."
-
-
-@test("get_language: None language code raises ValueError")
-def _():
-    with raises(ValueError) as exc:
-        # Using a string variable set to None to test the behavior
-        none_lang = None  # type: ignore
-        get_language(none_lang)  # type: ignore
-
-    assert str(exc.raised) == "Invalid ISO 639-1 language code."
+    assert exc.raised.status_code == 422
+    assert exc.raised.detail == "Invalid ISO 639 language code."
 
 
 @test("get_search_fn_and_params: text-only search request")
@@ -62,7 +45,8 @@ def _():
         "query": "search query",
         "k": 10,
         "metadata_filter": {"field": "value"},
-        "search_language": "english",
+        "search_language": "english_unaccent",
+        "extract_keywords": False,
     }
 
 
@@ -131,7 +115,8 @@ def _():
         "confidence": 0.8,
         "alpha": 0.5,
         "metadata_filter": {"field": "value"},
-        "search_language": "english",
+        "search_language": "english_unaccent",
+        "extract_keywords": False,
     }
 
 
@@ -158,7 +143,8 @@ def _():
         "confidence": 0.8,
         "alpha": 0.5,
         "metadata_filter": {"field": "value"},
-        "search_language": "english",
+        "search_language": "english_unaccent",
+        "extract_keywords": False,
     }
 
 
@@ -175,7 +161,8 @@ def _():
         mmr_strength=0,
     )
 
-    with raises(ValueError) as exc:
+    with raises(HTTPException) as exc:
         _search_fn, _params = get_search_fn_and_params(request)
 
-    assert str(exc.raised) == "Invalid ISO 639-1 language code."
+    assert exc.raised.status_code == 422
+    assert exc.raised.detail == "Invalid ISO 639 language code."

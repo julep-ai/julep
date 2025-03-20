@@ -8,7 +8,7 @@ icon: 'display'
 
 The Tourist Plan task demonstrates how to:
 - Execute Julep workflow-steps in parallel
-- Integrate with external APIs ([Weather](/tools/available-integrations#weather) and [Brave Search](/tools/available-integrations#brave-search))
+- Integrate with external APIs ([Weather](/docs/integrations/communicationdata/weather) and [Brave Search](/docs/integrations/search/brave))
 - Combine data from multiple sources
 - Generate personalized itineraries using AI
 
@@ -297,6 +297,12 @@ import yaml
 # Initialize the client
 client = Client(api_key=JULEP_API_KEY)
 
+# Create the agent
+agent = client.agents.create(
+  name="Julep Trip Planning Agent",
+  about="A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.",
+)
+
 # Load the task definition
 with open('trip_planning_task.yaml', 'r') as file:
   task_definition = yaml.safe_load(file)
@@ -335,6 +341,12 @@ import yaml from 'yaml';
 // Initialize the client
 const client = new Julep({
   apiKey: 'your_julep_api_key'
+});
+
+// Create the agent
+const agent = await client.agents.create({
+  name: "Julep Trip Planning Agent",
+  about: "A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.",
 });
 
 // Load the task definition
@@ -624,4 +636,5 @@ With clear skies and mild temperatures, this itinerary offers a balanced mix of 
 
 ## Next Steps
 
-Try this task yourself, check out the full example, see the [trip-planning cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/03-trip-planning-assistant.ipynb).
+- Try this task yourself, check out the full example, see the [trip-planning cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/03-trip-planning-assistant.ipynb).
+- To learn more about the integrations used in this task, check out the [integrations](/docs/integrations/supported-integrations) page.

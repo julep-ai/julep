@@ -5,22 +5,23 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import DocReference
-from ...common.nlp import text_to_tsvector_query
+from ...common.nlp import text_to_keywords
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .utils import transform_to_doc_reference
 
-# Raw query for text search
+# SQL query for searching docs by text
 search_docs_text_query = """
 SELECT * FROM search_by_text(
-    $1, -- developer_id
-    $2, -- query
-    $3, -- owner_types
-    $4, -- owner_ids
-    $5, -- search_language
-    $6, -- k
-    $7 -- metadata_filter
-)
+    $1::uuid,    -- developer_id
+    $2::text,    -- query_text
+    $3::text[],  -- owner_types
+    $4::uuid[],  -- owner_ids
+    $5::text,    -- search_language
+    $6::int,     -- k
+    $7::jsonb,   -- metadata_filter
+    $8::float    -- similarity_threshold (default value)
+);
 """
 
 
@@ -38,7 +39,9 @@ async def search_docs_by_text(
     query: str,
     k: int = 3,
     metadata_filter: dict[str, Any] = {},
-    search_language: str | None = "english",
+    search_language: str | None = "english_unaccent",
+    trigram_similarity_threshold: float = 0.25,  # Lower threshold to catch more spelling errors
+    extract_keywords: bool = False,
 ) -> tuple[str, list]:
     """
     Full-text search on docs using the search_tsv column.
@@ -55,14 +58,18 @@ async def search_docs_by_text(
     Returns:
         tuple[str, list]: SQL query and parameters for searching the documents.
     """
+
     if k < 1:
         raise HTTPException(status_code=400, detail="k must be >= 1")
 
     # Extract owner types and IDs
     owner_types: list[str] = [owner[0] for owner in owners]
-    owner_ids: list[str] = [str(owner[1]) for owner in owners]
-    #  Pre-process rawtext query
-    query = text_to_tsvector_query(query, split_chunks=True)
+    owner_ids: list[UUID] = [owner[1] for owner in owners]
+
+    # Pre-process rawtext query if extract_keywords is True
+    if extract_keywords:
+        keywords = text_to_keywords(query, split_chunks=True)
+        query = " OR ".join(keywords)
 
     return (
         search_docs_text_query,
@@ -74,5 +81,6 @@ async def search_docs_by_text(
             search_language,
             k,
             metadata_filter,
+            trigram_similarity_threshold,
         ],
     )

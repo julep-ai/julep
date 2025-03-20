@@ -143,32 +143,35 @@
         {
           "group": "Communication & Data",
           "pages": [
-            "docs/integrations/communication_data/email",
-            "docs/integrations/communication_data/weather"
+            "docs/integrations/communicationdata/email",
+            "docs/integrations/communicationdata/weather"
           ]
         },
         {
           "group": "Media & File Processing", 
           "pages": [
-            "docs/integrations/media_file_processing/llama-parse",
-            "docs/integrations/media_file_processing/ffmpeg",
-            "docs/integrations/media_file_processing/cloudinary"
+            "docs/integrations/mediafile/llamaparse",
+            "docs/integrations/mediafile/ffmpeg",
+            "docs/integrations/mediafile/cloudinary",
+            "docs/integrations/mediafile/unstructured"
           ]
         },
         {
-          "group": "Search & Research",
+          "group": "Search",
           "pages": [
-            "docs/integrations/search_research/brave-search",
-            "docs/integrations/search_research/wikipedia", 
-            "docs/integrations/search_research/arxiv"
+            "docs/integrations/search/arxiv",
+            "docs/integrations/search/algolia",
+            "docs/integrations/search/brave",
+            "docs/integrations/search/wikipedia"
+            
           ]
         },
         {
           "group": "Web & Browser Automation",
           "pages": [
-            "docs/integrations/web_browser_automation/browserbase",
-            "docs/integrations/web_browser_automation/spider",
-            "docs/integrations/web_browser_automation/remote_browser"
+            "docs/integrations/webbrowser/browserbase",
+            "docs/integrations/webbrowser/spider",
+            "docs/integrations/webbrowser/remote-browser"
           ]
         }
       ]
