@@ -75,8 +75,91 @@ def _():
     assert result == html
 
 
-@test("evaluator: safe_extract_json")
+@test("evaluator: safe_extract_json basic")
 def _():
     e = get_evaluator({})
     result = e.eval('extract_json("""```json {"pp": "\thello"}```""")')
     assert result == {"pp": "\thello"}
+
+
+@test("safe_extract_json with various code block formats")
+def test_safe_extract_json_formats():
+    from agents_api.activities.utils import safe_extract_json
+
+    # Test with ```json format
+    json_block = """```json
+    {"key": "value", "num": 123}
+    ```"""
+    result = safe_extract_json(json_block)
+    assert result == {"key": "value", "num": 123}
+
+    # Test with plain ``` format containing JSON
+    plain_block = """```
+    {"key": "value", "num": 123}
+    ```"""
+    result = safe_extract_json(plain_block)
+    assert result == {"key": "value", "num": 123}
+
+    # Test with no code block, just JSON
+    plain_json = """{"key": "value", "num": 123}"""
+    result = safe_extract_json(plain_json)
+    assert result == {"key": "value", "num": 123}
+
+    # Test with nested JSON structure
+    nested_json = """```json
+    {
+        "name": "test",
+        "data": {
+            "items": [1, 2, 3],
+            "config": {"enabled": true}
+        }
+    }
+    ```"""
+    result = safe_extract_json(nested_json)
+    assert result["name"] == "test"
+    assert result["data"]["items"] == [1, 2, 3]
+    assert result["data"]["config"]["enabled"] is True
+
+
+@test("safe_extract_json handles marker validation correctly")
+def test_safe_extract_json_validation():
+    from agents_api.activities.utils import safe_extract_json
+
+    # Test invalid start marker validation for ```json format
+    invalid_json_marker = """``json
+    {"key": "value"}
+    ```"""
+    try:
+        safe_extract_json(invalid_json_marker)
+        assert False, "Expected ValueError was not raised"
+    except ValueError as e:
+        assert "Code block has invalid or missing markers" in str(e)
+
+    # Test invalid start marker validation for plain ``` format
+    invalid_plain_marker = """``
+    {"key": "value"}
+    ```"""
+    try:
+        safe_extract_json(invalid_plain_marker)
+        assert False, "Expected ValueError was not raised"
+    except ValueError as e:
+        assert "Code block has invalid or missing markers" in str(e)
+
+    # Test missing end marker validation
+    missing_end_marker = """```json
+    {"key": "value"}"""
+    try:
+        safe_extract_json(missing_end_marker)
+        assert False, "Expected ValueError was not raised"
+    except ValueError as e:
+        assert "Code block has invalid or missing markers" in str(e)
+
+    # Test with malformed JSON
+    malformed_json = """```json
+    {"key": "value", "missing": }
+    ```"""
+    try:
+        safe_extract_json(malformed_json)
+        assert False, "Expected ValueError was not raised"
+    except ValueError as e:
+        assert "Failed to parse JSON" in str(e)

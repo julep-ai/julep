@@ -22,7 +22,7 @@ model AlgoliaSearchArguments {
     query: string;
     
     /** Optional attributes to retrieve */
-    attributes_to_retrieve?: Record<unknown>;
+    attributes_to_retrieve?: string[];
     
     /** Maximum number of hits to return */
     @minValue(1)

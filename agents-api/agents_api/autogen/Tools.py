@@ -32,7 +32,7 @@ class AlgoliaSearchArguments(BaseModel):
     """
     The query to search for
     """
-    attributes_to_retrieve: dict[str, Any] | None = None
+    attributes_to_retrieve: list[str] | None = None
     """
     Optional attributes to retrieve
     """
@@ -58,7 +58,7 @@ class AlgoliaSearchArgumentsUpdate(BaseModel):
     """
     The query to search for
     """
-    attributes_to_retrieve: dict[str, Any] | None = None
+    attributes_to_retrieve: list[str] | None = None
     """
     Optional attributes to retrieve
     """

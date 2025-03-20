@@ -209,6 +209,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
+    delete:
+      operationId: AgentDocsRoute_deleteBulk
+      description: Bulk delete Docs owned by an Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Docs.BulkDeleteDocsRequest'
   /agents/{id}/docs/{child_id}:
     delete:
       operationId: AgentDocsRoute_delete
@@ -1311,6 +1336,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
+    delete:
+      operationId: UserDocsRoute_deleteBulk
+      description: Bulk delete Docs owned by a User
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Docs.BulkDeleteDocsRequest'
   /users/{id}/docs/{child_id}:
     delete:
       operationId: UserDocsRoute_delete
@@ -2971,6 +3021,21 @@ components:
           additionalProperties: {}
           description: Metadata filter to apply to the search
           default: {}
+    Docs.BulkDeleteDocsRequest:
+      type: object
+      required:
+        - metadata_filter
+        - delete_all
+      properties:
+        metadata_filter:
+          type: object
+          additionalProperties: {}
+          description: Metadata filter to apply to the search
+          default: {}
+        delete_all:
+          type: boolean
+          description: Delete all docs
+          default: false
     Docs.CreateDocRequest:
       type: object
       required:
@@ -7016,8 +7081,9 @@ components:
           type: string
           description: The query to search for
         attributes_to_retrieve:
-          type: object
-          additionalProperties: {}
+          type: array
+          items:
+            type: string
           description: Optional attributes to retrieve
         hits_per_page:
           type: integer
@@ -7037,8 +7103,9 @@ components:
           type: string
           description: The query to search for
         attributes_to_retrieve:
-          type: object
-          additionalProperties: {}
+          type: array
+          items:
+            type: string
           description: Optional attributes to retrieve
         hits_per_page:
           type: integer

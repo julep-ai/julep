@@ -1,7 +1,5 @@
 # Git
 .git/
-.github/workflows/
-.gitmodules
 
 # Build and distribution directories
 **/dist/
@@ -29,8 +27,6 @@
 **/.env.production.local
 
 # Large data files
-**/*.csv
-**/*.json
 **/*.parquet
 **/*.arrow
 **/*.pickle
@@ -96,7 +92,6 @@ documentation/openapi.yaml
 **/*.gif
 **/*.svg
 **/*.ico
-**/*.pdf
 
 # Container and deployment files
 **/*.tfvars
@@ -120,9 +115,6 @@ openapi*.json
 # TypeSpec generated outputs
 **/tsp-output/
 typespec/node_modules/
-
-# Memory store migrations (database structure is handled separately)
-memory-store/migrations/
 
 # Local database data
 data/

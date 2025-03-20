@@ -1,7 +1,7 @@
 import multiprocessing
 import os
 
-debug = os.getenv("AGENTS_API_DEBUG", "false").lower() == "true"
+debug = os.getenv("DEBUG", "false").lower() == "true"
 
 # Gunicorn config variables
 workers = (multiprocessing.cpu_count() // 2) if not debug else 1

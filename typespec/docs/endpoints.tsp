@@ -42,6 +42,24 @@ interface SearchEndpoints<DocString extends valueof string = "Search for documen
     ): DocSearchResponse;
 }
 
+interface BulkDeleteEndpoints<DocString extends valueof string = "Bulk delete documents"> {
+    @doc(DocString)
+    @delete
+    deleteBulk(
+        @path
+        @doc("ID of the parent")
+        id: uuid,
+
+        ...BulkDeleteDocsRequest,
+    ): {
+        @statusCode _: "202";
+
+        @body
+        @doc("Details of the resource deleted along with ID")
+        body: ResourceDeletedResponse[];
+    };
+}
+
 interface EmbedEndpoints {
     @doc("Embed a query for search")
     @post

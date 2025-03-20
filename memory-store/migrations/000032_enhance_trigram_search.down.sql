@@ -12,7 +12,11 @@ DROP INDEX IF EXISTS idx_docs_lookup;
 DROP INDEX IF EXISTS idx_doc_owners_search;
 
 -- Restore the original search_by_text function from 000031
-DROP FUNCTION IF EXISTS search_by_text;
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer, jsonb, float);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer, jsonb);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text, integer);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[], text);
+DROP FUNCTION IF EXISTS search_by_text(UUID, text, TEXT[], UUID[]);
 
 CREATE OR REPLACE FUNCTION search_by_text (
     developer_id UUID,

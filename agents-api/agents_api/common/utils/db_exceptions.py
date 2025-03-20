@@ -155,20 +155,15 @@ def common_db_exceptions(
             status_code=404,
             detail=get_operation_message(f"No {resource_name} found"),
         ),
-        # Pydantic validation errors
+        # Pydantic validation errors - note that FastAPI will handle these
+        # through its own exception handler for RequestValidationError
         pydantic.ValidationError: lambda e: partialclass(
             HTTPException,
             status_code=422,
             detail={
                 "message": get_operation_message(f"Validation failed for {resource_name}"),
-                "errors": [
-                    {
-                        "loc": list(error["loc"]),
-                        "msg": error["msg"],
-                        "type": error["type"],
-                    }
-                    for error in e.errors()
-                ],
+                "code": "validation_error",
+                "details": e.errors(),
             },
         )(e),
     }

@@ -175,3 +175,11 @@ model DocSearchResponse {
     @minValueExclusive(0)
     time: float;
 }
+
+model BulkDeleteDocsRequest {
+    /** Metadata filter to apply to the search */
+    metadata_filter: MetadataFilter = #{};
+
+    /** Delete all docs */
+    delete_all: boolean = false;
+}
