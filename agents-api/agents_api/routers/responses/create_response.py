@@ -95,7 +95,7 @@ async def create_response(
 
     _agent, session, chat_input = await convert_create_response(
         developer.id,
-        create_response_data.id,
+        create_response_data,
     )
     session_id = session.id
     x_custom_api_key = None
