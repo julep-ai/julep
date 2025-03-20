@@ -20,8 +20,8 @@ from ..utils import ALLOWED_FUNCTIONS, get_evaluator, stdlib
 def backwards_compatibility(expr: str) -> str:
     expr = expr.strip()
 
-    # Check if it already starts with $ (with or without space)
-    if expr.startswith("$"):
+    # Check if it already starts with $ followed by a space
+    if expr.startswith("$ "):
         return expr
 
     if "{{" in expr:
