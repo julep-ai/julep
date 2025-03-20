@@ -40,7 +40,7 @@ async def execute_api_call(
             url = arg_url or str(api_call.url)
 
             # Merge headers from both arguments and API call definition
-            merged_headers = {**(arg_headers or {}), **(api_call.headers or {})}
+            merged_headers = (arg_headers or {}) | (api_call.headers or {})
 
             # Allow follow_redirects to be overridden by request_args
             follow_redirects = request_args.pop("follow_redirects", api_call.follow_redirects)
