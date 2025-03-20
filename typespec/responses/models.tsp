@@ -48,9 +48,7 @@ model CreateResponse {
   user?: string;
   instructions?: string;
   previous_response_id?: string;
-  reasoning?: {
-    effort?: "low" | "medium" | "high";
-  };
+  reasoning?: Reasoning;
   text?: {
     format?: {
       type: "text" | "json_object";
@@ -67,12 +65,111 @@ model CreateResponse {
   metadata?: Record<unknown>;
 }
 
+alias TextResponseFormatConfiguration = ResponseFormatText | TextResponseFormatJsonSchema | ResponseFormatJsonObject;
+
+
+@doc("""
+JSON object response format. An older method of generating JSON responses.
+
+Using `json_schema` is recommended for models that support it. Note that the
+model will not generate JSON without a system or user message instructing it
+to do so.
+""")
+model ResponseFormatJsonObject {
+  @doc("The type of response format being defined. Always `json_object`.")
+  type: "json_object";
+}
+
+
+alias ResponseFormatJsonSchemaSchema = Record<unknown>;
+
+
+@doc("JSON Schema response format. Used to generate structured JSON responses. Learn more about [Structured Outputs](/docs/guides/structured-outputs).")
+model TextResponseFormatJsonSchema {
+  @doc("The type of response format being defined. Always `json_schema`.")
+  type: "json_schema";
+
+  @doc("A description of what the response format is for, used by the model to determine how to respond in the format.")
+  description?: string;
+
+  @doc("The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.")
+  name?: string;
+
+  @doc("The JSON schema that defines the structure of the response.")
+  schema: ResponseFormatJsonSchemaSchema;
+
+  @doc("Whether to enable strict schema adherence when generating the output. If set to true, the model will always follow the exact schema defined in the `schema` field. Only a subset of JSON Schema is supported when `strict` is `true`. To learn more, read the [Structured Outputs guide](/docs/guides/structured-outputs).")
+  strict?: boolean = false;
+}
+
+
+@doc("Default response format. Used to generate text responses.")
+model ResponseFormatText {
+  @doc("The type of response format being defined. Always `text`.")
+  type: "text";
+}
+
+
+@doc("Constraint effort on reasoning models.")
+enum ReasoningEffort {
+  low,
+  medium,
+  high,
+}
+
+@doc("Reasoning configuration options for o-series models.")
+model Reasoning {
+  effort: ReasoningEffort;
+  @doc("A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process. One of `concise` or `detailed`.")
+  generate_summary?: "concise" | "detailed";
+}
+
+enum ToolChoiceOptions {
+  auto,
+  none,
+  required,
+}
+
+@doc("""
+Indicates that the model should use a built-in tool to generate a response.
+
+[Learn more about built-in tools](/docs/guides/tools).
+""")
+model ToolChoiceTypes {
+  @doc("""
+  The type of hosted tool the model should to use. Learn more about
+  [built-in tools](/docs/guides/tools).
+
+  Allowed values are:
+  - `file_search`
+  - `web_search_preview` 
+  - `computer_use_preview`
+  """)
+  type: "file_search" | "web_search_preview" | "computer_use_preview" | "web_search_preview_2025_03_11";
+}
+
+@doc("Use this option to force the model to call a specific function.")
+model ToolChoiceFunction {
+  @doc("For function calling, the type is always `function`.")
+  type: "function";
+
+  @doc("The name of the function to call.")
+  name: string;
+}
+
+enum ResponseStatus {
+  completed,
+  failed,
+  in_progress,
+  incomplete,
+}
+
 // Model for response
 model Response {
   id: string;
   object: "response";
   created_at: int32;
-  status: "completed" | "failed" | "in_progress" | "incomplete";
+  status: ResponseStatus;
   error?: ResponseError;
   incomplete_details?: {
     reason: "max_output_tokens" | "content_filter";
@@ -83,23 +180,11 @@ model Response {
   output: OutputItem[];
   parallel_tool_calls: boolean = true;
   previous_response_id?: string;
-  reasoning?: {
-    effort?: "low" | "medium" | "high";
-    summary?: string;
-  };
+  reasoning?: Reasoning;
   store?: boolean = true;
   temperature: float = 1.0;
-  text?: {
-    format?: {
-      type: "text" | "json_object";
-    };
-  };
-  tool_choice: "auto" | "none" | {
-    type: "function";
-    function: {
-      name: string;
-    };
-  };
+  text?: TextResponseFormatConfiguration;
+  tool_choice: ToolChoiceOptions | ToolChoiceTypes | ToolChoiceFunction;
   tools: Tool[];
   top_p: float = 1.0;
   truncation: "disabled" | "auto";

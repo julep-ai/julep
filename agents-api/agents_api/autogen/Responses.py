@@ -515,10 +515,21 @@ class RankingOptions(BaseModel):
 
 
 class Reasoning(BaseModel):
+    """
+    Reasoning configuration options for o-series models.
+    """
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    effort: Literal["low", "medium", "high"] | None = None
+    effort: Literal["low", "medium", "high"]
+    """
+    Constraint effort on reasoning models.
+    """
+    generate_summary: Literal["concise", "detailed"] | None = None
+    """
+    A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process. One of `concise` or `detailed`.
+    """
 
 
 class ReasoningContent(BaseModel):
@@ -555,14 +566,6 @@ class ReasoningItem(BaseModel):
     """
     The status of the item. One of `in_progress`, `completed`, or `incomplete`. Populated when items are returned via API.
     """
-
-
-class ReasoningModel(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    effort: Literal["low", "medium", "high"] | None = None
-    summary: str | None = None
 
 
 class Refusal(BaseModel):
@@ -602,11 +605,13 @@ class Response(BaseModel):
     ]
     parallel_tool_calls: StrictBool = True
     previous_response_id: str | None = None
-    reasoning: ReasoningModel | None = None
+    reasoning: Reasoning | None = None
     store: StrictBool = True
     temperature: float = 1
-    text: Text | None = None
-    tool_choice: Literal["auto", "none"] | ToolChoice
+    text: (
+        ResponseFormatText | TextResponseFormatJsonSchema | ResponseFormatJsonObject | None
+    ) = None
+    tool_choice: ToolChoiceTypes | ToolChoiceFunction | Literal["auto", "none", "required"]
     tools: list[FunctionTool | WebSearchTool | FileSearchTool | ComputerTool]
     top_p: float = 1
     truncation: Literal["disabled", "auto"]
@@ -623,6 +628,38 @@ class ResponseError(BaseModel):
     type: str
     param: str | None = None
     code: str | None = None
+
+
+class ResponseFormatJsonObject(BaseModel):
+    """
+    JSON object response format. An older method of generating JSON responses.
+
+    Using `json_schema` is recommended for models that support it. Note that the
+    model will not generate JSON without a system or user message instructing it
+    to do so.
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["json_object"] = "json_object"
+    """
+    The type of response format being defined. Always `json_object`.
+    """
+
+
+class ResponseFormatText(BaseModel):
+    """
+    Default response format. Used to generate text responses.
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["text"] = "text"
+    """
+    The type of response format being defined. Always `text`.
+    """
 
 
 class ResponseUsage(BaseModel):
@@ -705,12 +742,87 @@ class Text(BaseModel):
     format: Format | None = None
 
 
+class TextResponseFormatJsonSchema(BaseModel):
+    """
+    JSON Schema response format. Used to generate structured JSON responses. Learn more about [Structured Outputs](/docs/guides/structured-outputs).
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["json_schema"] = "json_schema"
+    """
+    The type of response format being defined. Always `json_schema`.
+    """
+    description: str | None = None
+    """
+    A description of what the response format is for, used by the model to determine how to respond in the format.
+    """
+    name: str | None = None
+    """
+    The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+    """
+    schema_: Annotated[dict[str, Any], Field(alias="schema")]
+    """
+    The JSON schema that defines the structure of the response.
+    """
+    strict: StrictBool = False
+    """
+    Whether to enable strict schema adherence when generating the output. If set to true, the model will always follow the exact schema defined in the `schema` field. Only a subset of JSON Schema is supported when `strict` is `true`. To learn more, read the [Structured Outputs guide](/docs/guides/structured-outputs).
+    """
+
+
 class ToolChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
     type: Literal["function"] = "function"
     function: Function
+
+
+class ToolChoiceFunction(BaseModel):
+    """
+    Use this option to force the model to call a specific function.
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["function"] = "function"
+    """
+    For function calling, the type is always `function`.
+    """
+    name: str
+    """
+    The name of the function to call.
+    """
+
+
+class ToolChoiceTypes(BaseModel):
+    """
+    Indicates that the model should use a built-in tool to generate a response.
+
+    [Learn more about built-in tools](/docs/guides/tools).
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal[
+        "file_search",
+        "web_search_preview",
+        "computer_use_preview",
+        "web_search_preview_2025_03_11",
+    ]
+    """
+    The type of hosted tool the model should to use. Learn more about
+    [built-in tools](/docs/guides/tools).
+
+    Allowed values are:
+    - `file_search`
+    - `web_search_preview`
+    - `computer_use_preview`
+    """
 
 
 class Type(BaseModel):

@@ -5,3 +5,6 @@
 3. `cd memory-store` and `migrate -database "postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable" -path  ./migrations up` to apply the migrations
 4. `pip install --user -U pgcli`
 5. `pgcli "postgres://postgres:postgres@localhost:5432/postgres"`
+
+For creating a migration:
+`migrate -database "postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable" -path migrations create -ext sql -seq -dir migrations switch_to_hypercore`

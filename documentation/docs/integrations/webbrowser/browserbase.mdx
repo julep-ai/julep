@@ -39,12 +39,12 @@ To get started with the Browserbase integration, follow these steps to configure
           provider: browserbase
           method: create_session
           setup:
-            api_key: {browserbase_api_key}
-            project_id: {browserbase_project_id}
+            api_key: "BROWSERBASE_API_KEY"
+            project_id: "BROWSERBASE_PROJECT_ID"
     main:
       - tool: browserbase_tool
         arguments:
-          project_id: "1234567890" # Replace with your project ID
+          project_id: BROWSERBASE_PROJECT_ID
     ```
   </Step>
 </Steps>
@@ -102,8 +102,8 @@ To get started with the Browserbase integration, follow these steps to configure
 </AccordionGroup>
 
 <Note>
-  Remember to replace `{browserbase_api_key}` and `{browserbase_project_id}` with your actual API key and project ID. 
-  Customize the `arguments` based on the method you choose to use.
+  - Remember to replace `BROWSERBASE_API_KEY` and `BROWSERBASE_PROJECT_ID` with your actual API key and project ID. 
+  - Customize the `arguments` based on the method you choose to use.
 </Note>
 
 ## Conclusion

@@ -10,19 +10,19 @@ services:
     volumes:
       - ./prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
-    
+
     depends_on:
       agents-api-multi-tenant:
         condition: service_started
-    
+
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
 
   grafana:
     image: grafana/grafana
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-julep_grafana_admin}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
     container_name: grafana
     ports:
       - 3000:3000
@@ -33,20 +33,40 @@ services:
       - ./grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/main.yaml
     profiles:
       - multi-tenant
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
     ports:
-      - 8383:9000
+      - 127.0.0.1:8383:9000
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - portainer_data:/data
     environment:
       - ADMIN_USERNAME=${PORTAINER_ADMIN_USER}
       - ADMIN_PASSWORD=${PORTAINER_ADMIN_PASSWORD}
     profiles:
       - monitor
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
 volumes:
   prometheus_data:

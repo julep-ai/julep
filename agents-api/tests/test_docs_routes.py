@@ -290,3 +290,293 @@ async def _(
     assert "vectors" in result
 
     embed.assert_called()
+
+
+@test("route: bulk delete agent docs")
+async def _(make_request=make_request, agent=test_agent):
+    for i in range(3):
+        data = {
+            "title": f"Bulk Test Doc {i}",
+            "content": ["This is a test document for bulk deletion."],
+            "metadata": {"bulk_test": "true", "index": str(i)},
+        }
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+        assert response.status_code == 201
+
+    # Create a doc with different metadata
+    data = {
+        "title": "Non Bulk Test Doc",
+        "content": ["This document should not be deleted."],
+        "metadata": {"bulk_test": "false"},
+    }
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/docs",
+        json=data,
+    )
+    assert response.status_code == 201
+
+    # Verify all docs exist
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_before = response.json()["items"]
+    assert len(docs_before) >= 4
+
+    # Bulk delete docs with specific metadata
+    response = make_request(
+        method="DELETE",
+        url=f"/agents/{agent.id}/docs",
+        json={"metadata_filter": {"bulk_test": "true"}},
+    )
+    assert response.status_code == 202
+    deleted_response = response.json()
+    assert isinstance(deleted_response["items"], list)
+    assert len(deleted_response["items"]) == 3
+
+    # Verify that only the target docs were deleted
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_after = response.json()["items"]
+    assert len(docs_after) == len(docs_before) - 3
+
+
+@test("route: bulk delete user docs - metadata filter")
+async def _(make_request=make_request, user=test_user):
+    for i in range(2):
+        data = {
+            "title": f"User Bulk Test Doc {i}",
+            "content": ["This is a user test document for bulk deletion."],
+            "metadata": {"user_bulk_test": "true", "index": str(i)},
+        }
+        response = make_request(
+            method="POST",
+            url=f"/users/{user.id}/docs",
+            json=data,
+        )
+        assert response.status_code == 201
+
+    # Verify docs exist
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_before = response.json()["items"]
+
+    # Bulk delete docs with specific metadata
+    response = make_request(
+        method="DELETE",
+        url=f"/users/{user.id}/docs",
+        json={"metadata_filter": {"user_bulk_test": "true"}},
+    )
+    assert response.status_code == 202
+    deleted_response = response.json()
+    assert isinstance(deleted_response["items"], list)
+    assert len(deleted_response["items"]) == 2
+
+    # Verify that only the target docs were deleted
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_after = response.json()["items"]
+    assert len(docs_after) == len(docs_before) - 2
+
+
+@test("route: bulk delete agent docs - delete_all=true")
+async def _(make_request=make_request, agent=test_agent):
+    # Create several test docs
+    for i in range(3):
+        data = {
+            "title": f"Delete All Test Doc {i}",
+            "content": ["This is a test document for delete_all."],
+            "metadata": {"test_type": "delete_all_test", "index": str(i)},
+        }
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+        assert response.status_code == 201
+
+    # Verify docs exist
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_before = response.json()["items"]
+    initial_count = len(docs_before)
+    assert initial_count >= 3
+
+    # Bulk delete all docs with delete_all flag
+    response = make_request(
+        method="DELETE",
+        url=f"/agents/{agent.id}/docs",
+        json={"delete_all": True},
+    )
+    assert response.status_code == 202
+    deleted_response = response.json()
+    assert isinstance(deleted_response["items"], list)
+
+    # Verify all docs were deleted
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_after = response.json()["items"]
+    assert len(docs_after) == 0
+
+
+@test("route: bulk delete agent docs - delete_all=false")
+async def _(make_request=make_request, agent=test_agent):
+    # Create test docs
+    for i in range(2):
+        data = {
+            "title": f"Safety Test Doc {i}",
+            "content": ["This document should not be deleted by empty filter."],
+            "metadata": {"test_type": "safety_test"},
+        }
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+        assert response.status_code == 201
+
+    # Get initial doc count
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_before = response.json()["items"]
+    initial_count = len(docs_before)
+    assert initial_count >= 2
+
+    # Try to delete with empty metadata filter and delete_all=false
+    response = make_request(
+        method="DELETE",
+        url=f"/agents/{agent.id}/docs",
+        json={"metadata_filter": {}, "delete_all": False},
+    )
+    assert response.status_code == 202
+    deleted_response = response.json()
+    assert isinstance(deleted_response["items"], list)
+    # Should have deleted 0 items
+    assert len(deleted_response["items"]) == 0
+
+    # Verify no docs were deleted
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_after = response.json()["items"]
+    assert len(docs_after) == initial_count
+
+
+@test("route: bulk delete user docs - delete_all=true")
+async def _(make_request=make_request, user=test_user):
+    # Create test docs
+    for i in range(2):
+        data = {
+            "title": f"User Delete All Test {i}",
+            "content": ["This is a user test document for delete_all."],
+            "metadata": {"test_type": "user_delete_all_test"},
+        }
+        response = make_request(
+            method="POST",
+            url=f"/users/{user.id}/docs",
+            json=data,
+        )
+        assert response.status_code == 201
+
+    # Verify docs exist
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_before = response.json()["items"]
+    initial_count = len(docs_before)
+    assert initial_count >= 2
+
+    # Bulk delete all docs with delete_all flag
+    response = make_request(
+        method="DELETE",
+        url=f"/users/{user.id}/docs",
+        json={"delete_all": True},
+    )
+    assert response.status_code == 202
+    deleted_response = response.json()
+    assert isinstance(deleted_response["items"], list)
+
+    # Verify all docs were deleted
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_after = response.json()["items"]
+    assert len(docs_after) == 0
+
+
+@test("route: bulk delete user docs - delete_all=false")
+async def _(make_request=make_request, user=test_user):
+    # Create test docs
+    for i in range(2):
+        data = {
+            "title": f"User Safety Test Doc {i}",
+            "content": ["This user document should not be deleted by empty filter."],
+            "metadata": {"test_type": "user_safety_test"},
+        }
+        response = make_request(
+            method="POST",
+            url=f"/users/{user.id}/docs",
+            json=data,
+        )
+        assert response.status_code == 201
+
+    # Get initial doc count
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_before = response.json()["items"]
+    initial_count = len(docs_before)
+    assert initial_count >= 2
+
+    # Try to delete with empty metadata filter and delete_all=false
+    response = make_request(
+        method="DELETE",
+        url=f"/users/{user.id}/docs",
+        json={"metadata_filter": {}, "delete_all": False},
+    )
+    assert response.status_code == 202
+    deleted_response = response.json()
+    assert isinstance(deleted_response["items"], list)
+    # Should have deleted 0 items
+    assert len(deleted_response["items"]) == 0
+
+    # Verify no docs were deleted
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+    )
+    assert response.status_code == 200
+    docs_after = response.json()["items"]
+    assert len(docs_after) == initial_count

@@ -1,7 +1,7 @@
 import asyncio
 from typing import Annotated, Any
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi.background import BackgroundTasks
 from uuid_extensions import uuid7
 
@@ -11,6 +11,7 @@ from ...autogen.openapi_model import (
     ChunkChatResponse,
     CreateEntryRequest,
     CreateResponse,
+    FunctionToolCall,
     MessageChatResponse,
     Response,
 )
@@ -75,12 +76,23 @@ async def process_tool_calls(
     return current_messages
 
 
+def is_reasoning_model(model: str) -> bool:
+    return model in ["o1", "o1-mini", "o1-preview", "o3-mini"]
+
+
 @router.post("/responses", tags=["responses"])
 async def create_response(
     developer: Annotated[Developer, Depends(get_developer_data)],
     create_response_data: CreateResponse,
     background_tasks: BackgroundTasks,
 ) -> Response:
+    if create_response_data.tools:
+        for tool in create_response_data.tools:
+            if tool.type == "computer-preview":
+                raise HTTPException(
+                    status_code=400, detail="Computer preview is not supported yet"
+                )
+
     _agent, session, chat_input = await convert_create_response(
         developer.id,
         create_response_data,
@@ -107,6 +119,10 @@ async def create_response(
     # Prepare tools for the model - pass through tools as is
     tools_list = [tool.model_dump() for tool in chat_input.tools] if chat_input.tools else []
 
+    # top_p is not supported for reasoning models
+    if is_reasoning_model(model=settings["model"]) and settings.get("top_p"):
+        settings.pop("top_p")
+
     # Use litellm for the models
     params = {
         "messages": messages,
@@ -116,6 +132,19 @@ async def create_response(
         "custom_api_key": x_custom_api_key,
     }
     payload = {**settings, **params}
+
+    if create_response_data.reasoning:
+        if is_reasoning_model(model=payload["model"]):
+            # Enable reasoning for supported models
+            payload["reasoning_effort"] = create_response_data.reasoning.effort
+            if create_response_data.reasoning.generate_summary:
+                raise HTTPException(
+                    status_code=400, detail="Generate summary is not supported yet"
+                )
+        else:
+            raise HTTPException(
+                status_code=400, detail="Reasoning is not supported for this model"
+            )
 
     # Get initial model response
     model_response = await litellm.acompletion(**payload)
@@ -127,7 +156,7 @@ async def create_response(
     tool_call_requests = assistant_message.tool_calls
 
     performed_tool_calls = []
-
+    function_tool_requests: list[FunctionToolCall] = []
     # Process tool calls if present (including multiple recursive tool calls if needed)
     if tool_call_requests and tools_list:
         # Start with the original messages
@@ -147,11 +176,26 @@ async def create_response(
         while has_tool_calls and iterations < max_iterations:
             iterations += len(tool_call_requests)
 
-            performed_tool_calls.extend(tool_call_requests)
+            # Do not process original function tool calls. They will be sent to the user as is.
+            if (
+                tool_call_requests[0].type == "function"
+                and tool_call_requests[0].function.name != "web_search_preview"
+            ):
+                function_tool_requests.append(
+                    FunctionToolCall(
+                        id="fc_" + tool_call_requests[0].id,
+                        call_id=tool_call_requests[0].id,
+                        name=tool_call_requests[0].function.name,
+                        arguments=tool_call_requests[0].function.arguments,
+                        status="completed",
+                    )
+                )
+                break
 
             # Process tool calls and get updated messages
             current_messages = await process_tool_calls(current_messages, tool_call_requests)
 
+            performed_tool_calls.extend(tool_call_requests)
             # Make a follow-up call to the model with updated messages
             response_params = {
                 "messages": current_messages,
@@ -256,7 +300,6 @@ async def create_response(
 
         # jobs = [await start_adaptive_context_workflow]
         msg = "Adaptive context is not yet implemented"
-        print("Error: Adaptive context not implemented")
         raise NotImplementedError(msg)
 
     # Return the response
@@ -283,5 +326,6 @@ async def create_response(
         chat_input=chat_input,
         session_id=session_id,
         user_id=developer.id,
+        function_tool_requests=function_tool_requests,
         performed_tool_calls=performed_tool_calls,
     )

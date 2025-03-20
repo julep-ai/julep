@@ -1,0 +1,158 @@
+{
+  "meta": {
+    "description": "Julep project rules for LLMs",
+    "version": "1.0"
+  },
+  "codeStyle": {
+    "python": {
+      "version": "3.12+",
+      "framework": "fastAPI",
+      "async": true,
+      "lineLength": 96,
+      "indentation": 4,
+      "quotes": "double",
+      "imports": "ruff",
+      "typing": "strict",
+      "naming": {
+        "functions": "snake_case",
+        "variables": "snake_case",
+        "classes": "PascalCase"
+      },
+      "patterns": {
+        "errors": "typed_exceptions",
+        "resources": "context_managers",
+        "docs": "docstrings_public"
+      }
+    }
+  },
+  "commands": {
+    "format": "poe format",
+    "lint": "poe lint",
+    "typecheck": "poe typecheck",
+    "test": "poe test",
+    "testPattern": "poe test --search \"pattern_to_match\"",
+    "testFile": "PYTHONPATH=$PWD python tests/test_file.py",
+    "check": "poe check",
+    "codegen": "poe codegen"
+  },
+  "architecture": {
+    "components": {
+      "agents-api": "Main service for agent and task functionality",
+      "memory-store": "PostgreSQL with TimescaleDB for storage",
+      "blob-store": "S3-compatible object storage",
+      "scheduler": "Temporal workflow engine",
+      "integrations-service": "External service integrations",
+      "gateway": "API gateway and routing",
+      "llm-proxy": "LiteLLM proxy for models",
+      "monitoring": "Prometheus and Grafana",
+      "typespec": "API specifications",
+      "sdks": "Node.js and Python clients"
+    },
+    "patterns": {
+      "api": "RESTful endpoints with consistent CRUD operations",
+      "db": "PostgreSQL with pgvector, async queries",
+      "workflow": "Temporal for durable execution",
+      "expressions": "Python with simpleeval sandbox",
+      "multitenancy": "Developer-scoped entities",
+      "search": "Hybrid vector/text search"
+    }
+  },
+  "domainModels": {
+    "agents": "AI agent definitions with instructions and tools",
+    "tasks": "Workflow definitions with steps",
+    "tools": "Integrations and capabilities for agents",
+    "sessions": "Conversation containers with context",
+    "entries": "Message history tracking",
+    "executions": "Task execution state tracking",
+    "docs": "Document storage with vector search",
+    "files": "File storage and management",
+    "users": "User management and authentication"
+  },
+  "stepTypes": {
+    "tool": ["ToolCallStep", "PromptStep", "EvaluateStep", "PgQueryStep"],
+    "flow": ["IfElseStep", "SwitchStep", "ParallelStep", "ForeachStep", "MapReduceStep"],
+    "data": ["GetStep", "SetStep", "LogStep"],
+    "terminal": ["ReturnStep", "ErrorStep", "WaitForInputStep"]
+  },
+  "expressions": {
+    "syntax": "$expression",
+    "legacy": "{{variable}} → $f'''{{variable}}'''",
+    "validation": "validate_py_expression() in base_evaluate.py",
+    "context": "_ (current input), inputs, outputs, stdlibs",
+    "security": "simpleeval sandbox, limited functions/modules"
+  },
+  "testing": {
+    "framework": "ward",
+    "syntax": "@test(\"Description\")",
+    "search": "--search not -p",
+    "limits": "--fail-limit 1",
+    "env": "source .venv/bin/activate",
+    "path": "PYTHONPATH=$PWD"
+  },
+  "databases": {
+    "vectorSearch": {
+      "implementation": "pgvector + OpenAI embeddings",
+      "dimensions": 1024,
+      "methods": ["text", "vector", "hybrid"],
+      "indexing": "DiskANN for ANN search"
+    },
+    "textSearch": {
+      "features": ["tsquery", "trigram", "unaccent"],
+      "languages": "multi-language support"
+    },
+    "patterns": {
+      "keys": "compound (developer_id, entity_id)",
+      "metadata": "JSONB type",
+      "timeseries": "hypertables for transitions"
+    }
+  },
+  "errors": {
+    "common": {
+      "wardsyntax": "Using pytest fixtures/classes instead of @test()",
+      "venv": "Forgetting to activate virtualenv",
+      "paths": "Wrong PYTHONPATH or directory",
+      "expressions": "Missing _ context or improper validation"
+    }
+  },
+  "workflows": {
+    "execution": {
+      "steps": ["init", "wait", "error", "step", "cancelled", "init_branch", "finish"],
+      "transitions": "tracked in database",
+      "concurrency": "parallel for map/reduce",
+      "timeouts": "configurable per activity",
+      "heartbeats": "for long-running activities"
+    },
+    "activities": {
+      "stepExecution": ["prompt_step", "tool_call_step", "get_value_step", "transition_step"],
+      "external": ["execute_api_call", "execute_integration", "execute_system"],
+      "data": ["sync_items_remote"]
+    }
+  },
+  "cli": {
+    "structure": {
+      "config": "~/.config/julep/config.yml",
+      "state": "~/.config/julep/julep_state.db",
+      "project": "julep.yaml + julep-lock.json"
+    },
+    "commands": {
+      "initialization": "julep init",
+      "sync": "julep sync",
+      "entities": "julep [agents|tasks|tools] [action]",
+      "execution": "julep run --task <id>",
+      "monitoring": "julep logs --execution-id <id>"
+    }
+  },
+  "typeSpec": {
+    "structure": {
+      "domain": "[domain]/models.tsp + endpoints.tsp + main.tsp",
+      "steps": "tasks/steps.tsp",
+      "tools": "tools/*.tsp"
+    },
+    "patterns": {
+      "discriminated": "kind_ property for union types",
+      "mixins": "HasId, HasTimestamps, HasMetadata",
+      "aliases": "if_ to avoid keyword conflicts"
+    },
+    "pipeline": ["tsp compile", "openapi", "datamodel-codegen", "post-processing"]
+  }
+}
