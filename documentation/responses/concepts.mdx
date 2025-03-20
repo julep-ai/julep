@@ -89,7 +89,7 @@ The Responses API is under active development. Here's the current implementation
 
 - Streaming support
 - Response deletion endpoint
-- Computer tool call support (compatibility with OpenAI and Claude)
+- Computer tool call support (compatibility with OpenAI)
 - Truncation auto support
 - GET /responses/{response_id}/input_items endpoint
 - Pagination for input items
@@ -178,7 +178,7 @@ The Responses API supports tool usage, allowing the model to perform actions lik
         "country": "YOUR_COUNTRY",
         "region": "YOUR_REGION",
         "timezone": "YOUR_TIMEZONE"
-
+      }
     }
   ],
   "store": true
