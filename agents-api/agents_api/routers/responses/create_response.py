@@ -86,19 +86,16 @@ async def create_response(
     create_response_data: CreateResponse,
     background_tasks: BackgroundTasks,
 ) -> Response:
-
-  if create_response_data.tools:
+    if create_response_data.tools:
         for tool in create_response_data.tools:
             if tool.type == "computer-preview":
                 raise HTTPException(
                     status_code=400, detail="Computer preview is not supported yet"
                 )
 
-    developer = await get_developer_data(x_developer_id)
-
     _agent, session, chat_input = await convert_create_response(
         developer.id,
-        create_response_data,
+        create_response_data.id,
     )
     session_id = session.id
     x_custom_api_key = None
