@@ -216,6 +216,7 @@ def convert_chat_response_to_response(
     chat_input: ChatInput,
     session_id: UUID,
     user_id: UUID,
+    function_tool_requests: list[FunctionToolCall],
     performed_tool_calls: list[ChatCompletionMessageToolCall],
 ) -> Response:
     chat_response_usage: CompletionUsage | None = chat_response.usage
@@ -264,15 +265,18 @@ def convert_chat_response_to_response(
             pass
 
     output_text = chat_response.choices[0].message.content
-    output.append(
-        OutputMessage(
-            type="message",
-            id=str(chat_response.id),
-            status="completed",
-            role="assistant",
-            content=[OutputText(text=output_text, annotations=[])],
+    if output_text:
+        output.append(
+            OutputMessage(
+                type="message",
+                id=str(chat_response.id),
+                status="completed",
+                role="assistant",
+                content=[OutputText(text=output_text, annotations=[])],
+            )
         )
-    )
+
+    output.extend(function_tool_requests)
 
     return Response(
         id=str(session_id),

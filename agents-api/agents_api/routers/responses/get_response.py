@@ -11,10 +11,17 @@ from ...autogen.openapi_model import (
     OutputMessage,
     OutputText,
     OutputTokensDetails,
-    ReasoningModel,
-    Response,
     ResponseUsage,
     Text,
+)
+from ...autogen.Responses import (
+    ComputerToolCall,
+    FileSearchToolCall,
+    FunctionToolCall,
+    Reasoning,
+    ReasoningItem,
+    Response,
+    WebSearchToolCall,
 )
 from ...common.protocol.developers import Developer
 from ...dependencies.developer_id import get_developer_data
@@ -54,6 +61,55 @@ async def get_response(
 
     last_entry = last_entries[-1]
 
+    output: list[
+        OutputMessage
+        | FileSearchToolCall
+        | FunctionToolCall
+        | WebSearchToolCall
+        | ComputerToolCall
+        | ReasoningItem
+    ] = []
+
+    for entry in last_entries:
+        if entry.tool_calls:
+            for tool_call in entry.tool_calls:
+                if tool_call.type == "function":
+                    # Specific case of the mapped `web_search_preview` tool call
+                    if tool_call.function.name == "web_search_preview":
+                        output.append(
+                            WebSearchToolCall(
+                                id=tool_call.id,
+                                status="completed",
+                            )
+                        )
+                    else:
+                        # Generic case for all other `function` tool calls
+                        output.append(
+                            FunctionToolCall(
+                                id=tool_call.id,
+                                call_id=tool_call.id,  # FIXME: Check this
+                                name=tool_call.function.name,
+                                arguments=tool_call.function.arguments,
+                                status="completed",
+                            )
+                        )
+        else:
+            output.append(
+                OutputMessage(
+                    type="message",
+                    id=str(entry.id),
+                    status="completed",
+                    role=entry.role,
+                    content=[
+                        OutputText(
+                            type="output_text",
+                            text=entry.content[0].text,
+                            annotations=[],
+                        )
+                    ],
+                )
+            )
+
     return Response(
         id=str(response_id),
         object="response",
@@ -64,25 +120,12 @@ async def get_response(
         instructions=None,
         max_output_tokens=None,
         model=last_entry.model,
-        output=[
-            OutputMessage(
-                type="message",
-                id=str(entry.id),
-                status="completed",
-                role=entry.role,
-                content=[
-                    OutputText(
-                        type="output_text",
-                        text=entry.content[0].text,
-                        annotations=[],
-                    )
-                ],
-            )
-            for entry in last_entries
-        ],
+        output=output,
         parallel_tool_calls=True,
         previous_response_id=None,
-        reasoning=ReasoningModel(effort=None, summary=None),
+        reasoning=Reasoning(
+            effort=None, summary=None
+        ),  # FIXME: We are not storing reasoning. So returning None for now.
         store=True,
         temperature=1.0,
         text=Text(format=Format(type="text")),
