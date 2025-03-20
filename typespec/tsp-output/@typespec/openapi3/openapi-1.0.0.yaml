@@ -209,6 +209,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
+    delete:
+      operationId: AgentDocsRoute_deleteBulk
+      description: Bulk delete Docs owned by an Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Docs.BulkDeleteDocsRequest'
   /agents/{id}/docs/{child_id}:
     delete:
       operationId: AgentDocsRoute_delete
@@ -1356,6 +1381,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
+    delete:
+      operationId: UserDocsRoute_deleteBulk
+      description: Bulk delete Docs owned by a User
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Docs.BulkDeleteDocsRequest'
   /users/{id}/docs/{child_id}:
     delete:
       operationId: UserDocsRoute_delete
@@ -3016,6 +3066,21 @@ components:
           additionalProperties: {}
           description: Metadata filter to apply to the search
           default: {}
+    Docs.BulkDeleteDocsRequest:
+      type: object
+      required:
+        - metadata_filter
+        - delete_all
+      properties:
+        metadata_filter:
+          type: object
+          additionalProperties: {}
+          description: Metadata filter to apply to the search
+          default: {}
+        delete_all:
+          type: boolean
+          description: Delete all docs
+          default: false
     Docs.CreateDocRequest:
       type: object
       required:
@@ -3661,6 +3726,10 @@ components:
         error:
           type: string
           description: The error of the execution if it failed
+        transition_count:
+          type: integer
+          format: uint8
+          description: The number of transitions in this execution
         metadata:
           type: object
           additionalProperties: {}
@@ -3701,6 +3770,10 @@ components:
         error:
           type: string
           description: The error of the execution if it failed
+        transition_count:
+          type: integer
+          format: uint8
+          description: The number of transitions in this execution
         created_at:
           type: string
           format: date-time
@@ -8195,6 +8268,124 @@ components:
           discriminator:
             propertyName: kind_
             mapping: {}
+    Tools.AlgoliaIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - algolia
+          description: The provider must be "algolia"
+          default: algolia
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.AlgoliaSetup'
+          description: The setup parameters for Algolia
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.AlgoliaSearchArguments'
+          description: The arguments for Algolia
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Algolia integration definition
+    Tools.AlgoliaIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - algolia
+          description: The provider must be "algolia"
+          default: algolia
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.AlgoliaSetupUpdate'
+          description: The setup parameters for Algolia
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.AlgoliaSearchArgumentsUpdate'
+          description: The arguments for Algolia
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Algolia integration definition
+    Tools.AlgoliaSearchArguments:
+      type: object
+      required:
+        - index_name
+        - query
+      properties:
+        index_name:
+          type: string
+          description: The index name to search
+        query:
+          type: string
+          description: The query to search for
+        attributes_to_retrieve:
+          type: array
+          items:
+            type: string
+          description: Optional attributes to retrieve
+        hits_per_page:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+          description: Maximum number of hits to return
+          default: 10
+      description: Arguments for Algolia Search
+    Tools.AlgoliaSearchArgumentsUpdate:
+      type: object
+      properties:
+        index_name:
+          type: string
+          description: The index name to search
+        query:
+          type: string
+          description: The query to search for
+        attributes_to_retrieve:
+          type: array
+          items:
+            type: string
+          description: Optional attributes to retrieve
+        hits_per_page:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+          description: Maximum number of hits to return
+          default: 10
+      description: Arguments for Algolia Search
+    Tools.AlgoliaSetup:
+      type: object
+      required:
+        - algolia_application_id
+        - algolia_api_key
+      properties:
+        algolia_application_id:
+          type: string
+          description: The Algolia Application ID
+        algolia_api_key:
+          type: string
+          description: The Algolia API Key
+      description: Integration definition for Algolia
+    Tools.AlgoliaSetupUpdate:
+      type: object
+      properties:
+        algolia_application_id:
+          type: string
+          description: The Algolia Application ID
+        algolia_api_key:
+          type: string
+          description: The Algolia API Key
+      description: Integration definition for Algolia
     Tools.ApiCallDef:
       type: object
       required:
@@ -8593,6 +8784,7 @@ components:
             - cloudinary
             - arxiv
             - unstructured
+            - algolia
           description: The provider of the integration
         method:
           type: string
@@ -8616,6 +8808,7 @@ components:
           cloudinary: '#/components/schemas/Tools.BaseCloudinaryIntegrationDef'
           arxiv: '#/components/schemas/Tools.ArxivIntegrationDef'
           unstructured: '#/components/schemas/Tools.UnstructuredIntegrationDef'
+          algolia: '#/components/schemas/Tools.AlgoliaIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -8636,6 +8829,7 @@ components:
             - cloudinary
             - arxiv
             - unstructured
+            - algolia
           description: The provider of the integration
         method:
           type: string
@@ -8659,6 +8853,7 @@ components:
           cloudinary: '#/components/schemas/Tools.BaseCloudinaryIntegrationDefUpdate'
           arxiv: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
           unstructured: '#/components/schemas/Tools.UnstructuredIntegrationDefUpdate'
+          algolia: '#/components/schemas/Tools.AlgoliaIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -9506,6 +9701,7 @@ components:
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
+            - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -9938,6 +10134,7 @@ components:
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -10362,6 +10559,7 @@ components:
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
+            - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -10588,6 +10786,7 @@ components:
             - $ref: '#/components/schemas/Tools.CloudinaryEditIntegrationDef'
             - $ref: '#/components/schemas/Tools.ArxivIntegrationDef'
             - $ref: '#/components/schemas/Tools.UnstructuredIntegrationDef'
+            - $ref: '#/components/schemas/Tools.AlgoliaIntegrationDef'
           description: The integration to call
         system:
           allOf:

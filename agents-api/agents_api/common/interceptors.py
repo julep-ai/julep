@@ -5,7 +5,6 @@ certain types of errors that are known to be non-retryable.
 """
 
 import inspect
-import sys
 from asyncio.exceptions import CancelledError as AsyncioCancelledError
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
@@ -50,6 +49,7 @@ with workflow.unsafe.imports_passed_through():
     from ..worker.codec import RemoteObject
     from .exceptions.tasks import is_retryable_error
     from .protocol.tasks import ExecutionInput, StepContext, StepOutcome
+    from .utils.memory import total_size
 
 # Common exceptions that should be re-raised without modification
 PASSTHROUGH_EXCEPTIONS = (
@@ -65,54 +65,17 @@ PASSTHROUGH_EXCEPTIONS = (
 )
 
 
-def get_deep_size(obj: Any, seen: set | None = None) -> int:
+def is_too_large(result: Any) -> bool:
     """
-    Recursively calculate total size of an object and all its contents in bytes.
+    Determine if an object exceeds the size cutoff threshold.
 
     Args:
-        obj: The object to measure
-        seen: Set of object ids already processed to handle circular references
+        result: The object to check
 
     Returns:
-        Total size in bytes
+        True if the object is larger than the cutoff threshold, False otherwise
     """
-    if seen is None:
-        seen = set()
-
-    obj_id = id(obj)
-    if obj_id in seen:
-        return 0
-    seen.add(obj_id)
-
-    size = sys.getsizeof(obj)
-
-    if isinstance(obj, str | bytes | bytearray):
-        # These types already include their content size in getsizeof
-        pass
-
-    elif isinstance(obj, tuple | list | set | frozenset):
-        size += sum(get_deep_size(item, seen) for item in obj)
-
-    elif isinstance(obj, dict):
-        size += sum(get_deep_size(k, seen) + get_deep_size(v, seen) for k, v in obj.items())
-
-    elif hasattr(obj, "__dict__"):
-        # Handle custom objects
-        size += get_deep_size(obj.__dict__, seen)
-
-    elif hasattr(obj, "__slots__"):
-        # Handle objects using __slots__
-        size += sum(
-            get_deep_size(getattr(obj, attr), seen)
-            for attr in obj.__slots__
-            if hasattr(obj, attr)
-        )
-
-    return size
-
-
-def is_too_large(result: Any) -> bool:
-    return get_deep_size(result) > blob_store_cutoff_kb * 1024
+    return total_size(result) > blob_store_cutoff_kb * 1024
 
 
 def load_if_remote(arg: Any | RemoteObject) -> Any:

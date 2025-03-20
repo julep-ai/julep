@@ -318,8 +318,26 @@ async def execute_map_reduce_step_parallel(
     workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
     results = initial
 
-    parallelism = min(parallelism, task_max_parallelism)
-    assert parallelism > 1, "Parallelism must be greater than 1"
+    # Ensure parallelism is at least 1 and not greater than max
+    parallelism = max(1, min(parallelism, task_max_parallelism))
+
+    # If parallelism is 1, we're effectively running sequentially
+    if parallelism == 1:
+        workflow.logger.warning("Parallelism is set to 1, falling back to sequential execution")
+        # Fall back to sequential map-reduce
+        # Note: 'workflow' parameter is missing here, but it's not needed because
+        # 'workflow' is imported at the top of the file (`from temporalio import workflow`)
+        # and used directly as a module, not as a parameter
+        return await execute_map_reduce_step(
+            context=context,
+            execution_input=execution_input,
+            map_defn=map_defn,
+            items=items,
+            current_input=current_input,
+            user_state=user_state,
+            initial=initial,
+            reduce=reduce,
+        )
 
     # Modify reduce expression to use reduce function (since we are passing a list)
     reduce = "results + [_]" if reduce is None else reduce

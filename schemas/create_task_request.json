@@ -1975,6 +1975,22 @@
       "title": "BrowserbaseSetupUpdate",
       "type": "object"
     },
+    "BulkDeleteDocsRequest": {
+      "properties": {
+        "delete_all": {
+          "default": false,
+          "title": "Delete All",
+          "type": "boolean"
+        },
+        "metadata_filter": {
+          "default": {},
+          "title": "Metadata Filter",
+          "type": "object"
+        }
+      },
+      "title": "BulkDeleteDocsRequest",
+      "type": "object"
+    },
     "CaseThen-Input": {
       "properties": {
         "case": {
@@ -6776,6 +6792,22 @@
         "items"
       ],
       "title": "ListResponse[Execution]",
+      "type": "object"
+    },
+    "ListResponse_ResourceDeletedResponse_": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ResourceDeletedResponse"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "ListResponse[ResourceDeletedResponse]",
       "type": "object"
     },
     "ListResponse_Session_": {
