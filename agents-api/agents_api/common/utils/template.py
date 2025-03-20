@@ -59,7 +59,7 @@ async def render_template_string(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Template rendering error: {e!s}",
         )
 
