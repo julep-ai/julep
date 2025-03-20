@@ -49,7 +49,7 @@ CALL add_columnstore_policy(
     hypercore_use_access_method => true
 );
 
-CREATE INDEX IF NOT EXISTS idx_transitions_execution_id_hash ON transitions USING hash (execution_id);
+CREATE INDEX IF NOT EXISTS idx_transitions_execution_id_hash ON transitions USING btree (execution_id);
 
 ALTER MATERIALIZED VIEW latest_transitions
     SET (
