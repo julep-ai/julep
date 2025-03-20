@@ -1,0 +1,406 @@
+---
+title: 'API Concepts'
+description: 'Understanding Julep API concepts'
+icon: 'comment-dots'
+---
+
+## Overview
+
+In this section, we'll cover the key concepts and components of the Responses API. The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
+
+<Tip>
+The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
+</Tip>
+<Note>
+The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [ OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+</Note>
+<Warning>
+Julep doesn't host the Responses API. You need to host your own instance of the Responses API to use it. The instructions to host your own instance are [here](/responses/quickstart/#docker-setup).
+</Warning>
+
+## Components
+
+The Responses API offers a streamlined way to interact with language models with the following key components:
+
+- **Response ID**: A unique identifier (`uuid7`) for each response.
+- **Model**: The language model used to generate the response (e.g., "claude-3.5-haiku", "gpt-4o", etc.).
+- **Input**: The prompt or question sent to the model, which can be simple text or structured input.
+- **Output**: The generated content from the model, which can include text, tool outputs, or other structured data.
+- **Status**: The current status of the response (completed, failed, in_progress, incomplete).
+- **Tools**: Optional tools that the model can use to enhance its response.
+- **Usage**: Token consumption metrics for the response.
+
+### Response Configuration Options
+
+When creating a response, you can leverage these configuration options to tailor the experience:
+
+| Option                | Type                                     | Description                                                                                       | Default        | Status        |
+|-----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------|----------------|---------------|
+| `model`               | `string`                                 | The language model to use (e.g., "claude-3.5-haiku", "gpt-4o")                                    | Required       | Implemented   |
+| `input`               | `string` \| `array`                      | The prompt or structured input to send to the model                                               | Required       | Implemented   |
+| `include`             | `array` \| `null`                        | Types of content to include in the response (e.g., "file_search_call.results")                    | `null`         | Partially Implemented |
+| `parallel_tool_calls` | `boolean`                                | Whether to allow tools to be called in parallel                                                   | `true`         | Implemented   |
+| `store`               | `boolean`                                | Whether to store the response for later retrieval                                                 | `true`         | Implemented   |
+| `stream`              | `boolean`                                | Whether to stream the response as it's generated                                                  | `false`        | Planned       |
+| `max_tokens`          | `number` \| `null`                       | Maximum number of tokens to generate                                                              | `null`         | Implemented   |
+| `temperature`         | `number`                                 | Controls randomness in response generation (0 to 1)                                               | `1.0`          | Implemented   |
+| `top_p`               | `number`                                 | Controls diversity in token selection (0 to 1)                                                    | `1.0`          | Implemented   |
+| `n`                   | `number` \| `null`                       | Number of responses to generate                                                                   | `null`         | Implemented   |
+| `stop`                | `string` \| `string[]` \| `null`         | Sequence(s) where the model should stop generating                                               | `null`         | Implemented   |
+| `presence_penalty`    | `number` \| `null`                       | Penalty for new tokens based on presence in text so far                                           | `null`         | Implemented   |
+| `frequency_penalty`   | `number` \| `null`                       | Penalty for new tokens based on frequency in text so far                                          | `null`         | Implemented   |
+| `logit_bias`          | `object` \| `null`                       | Modify likelihood of specific tokens appearing                                                    | `null`         | Implemented   |
+| `user`                | `string` \| `null`                       | Unique identifier for the end-user                                                                | `null`         | Implemented   |
+| `instructions`        | `string` \| `null`                       | Additional instructions to guide the model's response                                             | `null`         | Implemented   |
+| `previous_response_id`| `string` \| `null`                       | ID of a previous response for context continuity                                                  | `null`         | Implemented   |
+| `reasoning`           | `object` \| `null`                       | Controls reasoning effort (low/medium/high)                                                       | `null`         | Partially Implemented |
+| `text`                | `object` \| `null`                       | Configures text format (text or JSON object)                                                      | `null`         | Implemented   |
+| `tool_choice`         | `"auto"` \| `"none"` \| `object`         | Controls how the model chooses which tools to use                                                 | `"auto"`       | Implemented   |
+| `tools`               | `array` \| `null`                        | List of tools the model can use for generating the response                                       | `null`         | Partially Implemented |
+| `truncation`          | `"disabled"` \| `"auto"`                 | How to handle context overflow                                                                    | `"disabled"`   | Planned       |
+| `metadata`            | `object` \| `null`                       | Additional metadata for the response                                                              | `null`         | Implemented   |
+
+<Info>
+The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
+</Info>
+
+## Implementation Status
+
+The Responses API is under active development. Here's the current implementation status:
+
+### Implemented Features ✅
+
+- Basic response creation and retrieval
+- Text and image input support
+- Function calling
+- Web search tool support
+- Response metadata
+- Reasoning support
+- Tool choice configuration
+- Multiple input and output formats
+
+### Partially Implemented Features 🔄
+
+- File search tool (in progress)
+- Reasoning effort (mapping to thinking budget)
+- Annotations for citations
+
+### Planned Features 🔜
+
+- Streaming support
+- Response deletion endpoint
+- Computer tool call support (compatibility with OpenAI and Claude)
+- Truncation auto support
+- GET /responses/{response_id}/input_items endpoint
+- Pagination for input items
+
+## Input Formats
+
+The Responses API supports various input formats to accommodate different use cases:
+
+### Simple Text Input
+
+The simplest way to interact with the Responses API is to provide a text string as input:
+
+<CodeGroup>
+```json Simple Text Input
+{
+  "model": "claude-3.5-haiku",
+  "input": "What are the top 5 skincare products?"
+}
+```
+</CodeGroup>
+
+### Structured Message Input
+
+For more complex interactions, you can provide a structured array of messages:
+
+<CodeGroup>
+```json Structured Message Input
+{
+  "model": "gpt-4o",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Please summarize the current market trends in renewable energy."
+    }
+  ]
+}
+```
+</CodeGroup>
+
+### Multi-modal Input
+
+The Responses API supports multi-modal inputs, allowing you to include images or files along with text:
+
+<CodeGroup>
+```json Multi-modal Input
+{
+  "model": "claude-3-sonnet",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "What's in this image?"
+        },
+        {
+          "type": "input_image",
+          "image_url": "https://example.com/image.jpg"
+        }
+      ]
+    }
+  ]
+}
+```
+</CodeGroup>
+
+## Tool Usage
+
+The Responses API supports tool usage, allowing the model to perform actions like web searches, function calls, and more to enhance its response.
+
+<CodeGroup>
+```json Web Search Tool Definition
+{
+  "model": "gpt-4o",
+  "input": "What are the latest advancements in quantum computing?",
+  "tools": [
+    {
+      "type": "web_search_preview",
+      "domains": ["https://www.google.com"], # Optional, defaults to None
+      "search_context_size": "small", # Optional, defaults to None
+      "user_location": { # Optional, defaults to None
+        "type": "approximate",
+        "city": "YOUR_CITY",
+        "country": "YOUR_COUNTRY",
+        "region": "YOUR_REGION",
+        "timezone": "YOUR_TIMEZONE"
+
+    }
+  ],
+  "store": true
+}
+```
+
+```json Sample Function Tool Call to get the weather
+{
+  "model": "gpt-4o",
+  "input": "What's the weather in San Francisco?",
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "Get the current weather in a location",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The city and state, e.g. San Francisco, CA"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["celsius", "fahrenheit"],
+            "description": "The unit of temperature to use"
+          }
+        },
+        "required": ["location"]
+      }
+    }
+  ],
+  "store": true
+}
+```
+</CodeGroup>
+
+## How to Use Responses
+
+The Responses API provides a straightforward way to interact with language models for quick, one-off interactions. Here's how to use it with OpenAI's SDKs:
+
+### Creating a Response
+
+<CodeGroup>
+```python Python
+from openai import OpenAI
+
+openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+response = openai_client.responses.create(
+    model="claude-3.5-haiku",
+    input="Generate a summary of the latest advancements in quantum computing in bullet points.",
+)
+
+print("Generated response:", response.output[0].content[0].text)
+```
+
+```javascript Node.js
+import { OpenAI } from 'openai';
+
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+const response = await openai_client.responses.create({
+    model: "claude-3.5-haiku",
+    input: "Generate a summary of the latest advancements in quantum computing in bullet points.",
+});
+
+console.log("Generated response:", response.output[0].content[0].text);
+```
+</CodeGroup>
+
+### Using Tools in Responses
+
+<CodeGroup>
+```python Python
+response = client.responses.create(
+    model="gpt-4o",
+    input="What's the weather in New York City?",
+    tools=[{
+        "type": "function",
+        "name": "get_weather",
+        "description": "Get the current weather in a location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "The city and state, e.g. New York, NY"
+                },
+                "unit": {
+                    "type": "string",
+                    "enum": ["celsius", "fahrenheit"],
+                    "description": "The unit of temperature to use"
+                }
+            },
+            "required": ["location"]
+        }
+    }]
+)
+
+# The output will include both the text response and any tool calls that were made
+```
+
+```javascript Node.js
+const response = await client.responses.create({
+    model: "gpt-4o",
+    input: "What's the weather in New York City?",
+    tools: [{
+        type: "function",
+        name: "get_weather",
+        description: "Get the current weather in a location",
+        parameters: {
+            type: "object",
+            properties: {
+                location: {
+                    type: "string",
+                    description: "The city and state, e.g. New York, NY"
+                },
+                unit: {
+                    type: "string",
+                    enum: ["celsius", "fahrenheit"],
+                    description: "The unit of temperature to use"
+                }
+            },
+            required: ["location"]
+        }
+    }]
+});
+
+// The output will include both the text response and any tool calls that were made
+```
+</CodeGroup>
+
+### Retrieving a Response
+
+<CodeGroup>
+```python Python
+from openai import OpenAI
+
+openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+response = openai_client.responses.retrieve(
+    response_id="response_id_here"
+)
+print("Retrieved response:", response.output[0].content[0].text)
+```
+
+```javascript Node.js
+import { OpenAI } from 'openai';
+
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+const response = await openai_client.responses.retrieve({
+    response_id: "response_id_here"
+});
+console.log("Retrieved response:", response.output[0].content[0].text);
+```
+</CodeGroup>
+
+<Tip>
+Check out the [API reference](/api-reference/responses) or SDK reference ([Python](/sdks/python/reference#responses) or [JavaScript](/sdks/nodejs/reference#responses)) for more details on different operations you can perform with the Responses API.
+</Tip>
+
+## Relationship to Other Concepts
+
+### Sessions vs. Responses
+
+While [Sessions](/docs/concepts/sessions) provide a persistent, stateful way to interact with agents over multiple turns, the Responses API offers a lightweight, stateless alternative for quick, one-off interactions with language models. Here's how they compare:
+
+| Feature | Sessions | Responses |
+|---------|----------|-----------|
+| **State Management** | Maintains conversation history | Stateless (with optional context from previous responses) |
+| **Persistence** | Long-lived, for ongoing conversations | Short-lived, for one-off interactions |
+| **Agent Integration** | Requires an agent | No agent needed |
+| **Setup Complexity** | Requires agent and session creation | Minimal setup (just model and input) |
+| **Use Case** | Multi-turn conversations, complex interactions | Quick content generation, processing, or reasoning |
+
+<Info>
+If you need to maintain context across multiple interactions but prefer the simplicity of the Responses API, you can use the `previous_response_id` parameter to link responses together.
+</Info>
+
+### Tools Integration
+
+The Responses API integrates with Julep's [Tools](/docs/concepts/tools) system, allowing models to:
+
+1. Call functions to gather information (weather, database queries, etc.)
+2. Search the web for real-time information
+3. Process data from various sources
+4. Execute a wide range of capabilities
+
+The key difference from tool usage in Sessions is that with Responses:
+
+- You specify the available tools with each individual response request
+- Tool selection is more dynamic and request-specific
+- There's no shared tool state across responses (unless explicitly managed)
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Optimize Input Prompts" icon="lightbulb">
+    <ul>
+      <li>**1. Be Specific**: Clearly define what you want the model to generate.</li>
+      <li>**2. Provide Context**: Include relevant background information in your prompt.</li>
+      <li>**3. Use Examples**: When appropriate, include examples of desired outputs in your prompt.</li>
+    </ul>
+  </Card>
+
+  <Card title="Model Selection" icon="robot">
+    <ul>
+      <li>**1. Match Complexity**: Use more capable models for complex tasks (e.g., reasoning, coding).</li>
+      <li>**2. Consider Latency**: Smaller models are faster for simple tasks.</li>
+      <li>**3. Test Different Models**: Compare results across models for optimal performance.</li>
+    </ul>
+  </Card>
+
+  <Card title="Tool Usage" icon="screwdriver-wrench">
+    <ul>
+      <li>**1. Provide Clear Tool Descriptions**: Help the model understand when and how to use tools.</li>
+      <li>**2. Only Include Relevant Tools**: Too many tools can confuse the model's selection process.</li>
+      <li>**3. Validate Tool Outputs**: Always verify the information returned from tool calls.</li>
+    </ul>
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Tool Integration](/docs/concepts/tools) - Learn about tools and how to use them with responses
+- [Sessions](/docs/concepts/sessions) - Explore stateful conversations when you need ongoing context
+- [Model Selection](/docs/integrations/supported-models) - Learn about available language models in Julep

@@ -1,0 +1,56 @@
+---
+title: 'Quickstart'
+description: 'Get started with the Julep Responses API for LLM interactions'
+icon: 'rocket'
+---
+
+## Introduction
+
+The Responses API provides a lightweight interface for generating content with Large Language Models (LLMs) without needing to create persistent agents or sessions. It's perfect for quick, one-off interactions like content generation, text processing, or question answering.
+
+<Tip>
+The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
+</Tip>
+<Note>
+The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [ OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+</Note>
+<Warning>
+Julep doesn't host the Responses API. You need to host your own instance of the Responses API to use it. See the [installation guide](/responses/quickstart/#docker-setup) for details.
+</Warning>
+
+## Quick Setup
+
+### 1. Install the OpenAI SDK
+
+<CodeGroup>
+```bash npm
+npm install openai
+```
+
+```bash pip
+pip install openai
+```
+</CodeGroup>
+
+### 2. Initialize the OpenAI client
+
+<CodeGroup>
+
+```python Python
+from openai import OpenAI
+openai_client = OpenAI(base_url="https://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+```
+
+```javascript Node.js
+import { OpenAI } from 'openai';
+const openai_client = new OpenAI({ baseURL: 'https://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+```
+
+</CodeGroup>
+
+### 3. Docker Setup
+
+This section will guide you through the steps to setup the Responses API using Docker.
+
+
+
