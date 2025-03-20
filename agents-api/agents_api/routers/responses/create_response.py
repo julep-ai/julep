@@ -1,6 +1,5 @@
 import asyncio
 from typing import Annotated, Any
-from uuid import UUID
 
 from fastapi import Depends
 from fastapi.background import BackgroundTasks
@@ -16,9 +15,9 @@ from ...autogen.openapi_model import (
     Response,
 )
 from ...clients import litellm
+from ...common.protocol.developers import Developer
 from ...common.utils.datetime import utcnow
 from ...dependencies.developer_id import get_developer_data
-from ...common.protocol.developers import Developer
 from ...queries.entries.create_entries import create_entries
 from ...routers.utils.model_converters import (
     convert_chat_response_to_response,
