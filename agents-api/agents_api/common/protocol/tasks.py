@@ -236,7 +236,9 @@ class StepContext(BaseModel):
 
         return dump | execution_input
 
-    async def get_inputs(self) -> tuple[list[Any], list[str | None], dict[str, Any]]:
+    async def get_inputs(
+        self, limit: int = 50
+    ) -> tuple[list[Any], list[str | None], dict[str, Any]]:
         if self.execution_input.execution is None:
             return [], [], {}
 
@@ -247,7 +249,7 @@ class StepContext(BaseModel):
 
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
-            limit=1000,
+            limit=limit,
             direction="asc",
             scope_id=scope_id,
         )  # type: ignore[not-callable]
@@ -263,7 +265,7 @@ class StepContext(BaseModel):
 
         return inputs, labels, state
 
-    async def prepare_for_step(self, *args, **kwargs) -> dict[str, Any]:
+    async def prepare_for_step(self, limit: int = 50, *args, **kwargs) -> dict[str, Any]:
         current_input = self.current_input
 
         if isinstance(current_input, RemoteObject):
@@ -271,7 +273,7 @@ class StepContext(BaseModel):
 
         current_input = serialize_model_data(current_input)
 
-        inputs, labels, state = await self.get_inputs()
+        inputs, labels, state = await self.get_inputs(limit=limit)
         labels = labels[1:]
         # Merge execution inputs into the dump dict
         dump = self.model_dump(*args, **kwargs)

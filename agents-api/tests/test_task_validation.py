@@ -1,7 +1,6 @@
-from agents_api.activities.task_steps.base_evaluate import validate_py_expression
 from agents_api.autogen.openapi_model import CreateTaskRequest
-from agents_api.common.utils.task_validation import validate_task
-from ward import fixture, test
+from agents_api.common.utils.task_validation import validate_py_expression, validate_task
+from ward import test
 
 
 @test("Python expression validator detects syntax errors")
@@ -60,50 +59,46 @@ def test_underscore_allowed():
     assert len(result["undefined_names"]) > 0
 
 
-@fixture
-def invalid_task_dict():
-    return {
-        "name": "Test Task",
-        "description": "A task with invalid expressions",
-        "inherit_tools": True,
-        "tools": [],
-        "main": [
-            {
-                "evaluate": {
-                    "result": "$ 1 + )"  # Syntax error
-                }
-            },
-            {
-                "if": "$ undefined_var == True",  # Undefined variable
-                "then": {"evaluate": {"value": "$ 'valid'"}},
-            },
-        ],
-    }
+invalid_task_dict = {
+    "name": "Test Task",
+    "description": "A task with invalid expressions",
+    "inherit_tools": True,
+    "tools": [],
+    "main": [
+        {
+            "evaluate": {
+                "result": "$ 1 + )"  # Syntax error
+            }
+        },
+        {
+            "if": "$ undefined_var == True",  # Undefined variable
+            "then": {"evaluate": {"value": "$ 'valid'"}},
+        },
+    ],
+}
 
 
-@fixture
-def valid_task_dict():
-    return {
-        "name": "Test Task",
-        "description": "A task with valid expressions",
-        "inherit_tools": True,
-        "tools": [],
-        "main": [
-            {
-                "evaluate": {
-                    "result": "$ 1 + 2"  # Valid expression
-                }
-            },
-            {
-                "if": "$ _ is not None",  # Valid expression
-                "then": {"evaluate": {"value": "$ str(_)"}},
-            },
-        ],
-    }
+valid_task_dict = {
+    "name": "Test Task",
+    "description": "A task with valid expressions",
+    "inherit_tools": True,
+    "tools": [],
+    "main": [
+        {
+            "evaluate": {
+                "result": "$ 1 + 2"  # Valid expression
+            }
+        },
+        {
+            "if": "$ _ is not None",  # Valid expression
+            "then": {"evaluate": {"value": "$ str(_)"}},
+        },
+    ],
+}
 
 
 @test("Task validator detects invalid Python expressions in tasks")
-def test_validation_of_task_with_invalid_expressions(invalid_task_dict=invalid_task_dict):
+def test_validation_of_task_with_invalid_expressions():
     # Convert dict to CreateTaskRequest
     task = CreateTaskRequest.model_validate(invalid_task_dict)
 
@@ -129,7 +124,7 @@ def test_validation_of_task_with_invalid_expressions(invalid_task_dict=invalid_t
 
 
 @test("Task validator accepts valid Python expressions in tasks")
-def test_validation_of_valid_task(valid_task_dict=valid_task_dict):
+def test_validation_of_valid_task():
     # Convert dict to CreateTaskRequest
     task = CreateTaskRequest.model_validate(valid_task_dict)
 
@@ -159,3 +154,163 @@ def _():
 
     # Should be valid since the expression is correct
     assert validation_result.is_valid
+
+
+nested_task_with_error_dict = {
+    "name": "Nested Error Task",
+    "description": "A task with invalid expressions in nested steps",
+    "inherit_tools": True,
+    "tools": [],
+    "main": [
+        {
+            "if": "$ _ is not None",  # Valid expression
+            "then": {
+                "evaluate": {
+                    "value": "$ undefined_nested_var"  # Invalid: undefined variable
+                }
+            },
+            "else": {
+                "if": "$ True",
+                "then": {
+                    "evaluate": {
+                        "result": "$ 1 + )"  # Invalid: syntax error
+                    }
+                },
+            },
+        },
+        {
+            "match": {
+                "case": "$ _.type",
+                "cases": [
+                    {
+                        "case": "$ 'text'",
+                        "then": {
+                            "evaluate": {
+                                "value": "$ 1 / 0"  # Invalid: division by zero
+                            }
+                        },
+                    }
+                ],
+            }
+        },
+        {
+            "foreach": {
+                "in": "$ range(3)",
+                "do": {
+                    "evaluate": {
+                        "result": "$ unknown_func()"  # Invalid: undefined function
+                    }
+                },
+            }
+        },
+    ],
+}
+
+
+@test("Task validator can identify issues in if/else nested branches")
+def test_recursive_validation_of_if_else_branches():
+    """Verify that the task validator can identify issues in nested if/else blocks."""
+    # Manually set up an if step with a nested step structure
+    step_with_nested_if = {
+        "if": {  # Note: Using this format for Pydantic validation
+            "if": "$ True",  # Valid expression
+            "then": {
+                "evaluate": {
+                    "value": "$ 1 + )"  # Deliberate syntax error in nested step
+                }
+            },
+        }
+    }
+
+    # Convert to task spec format
+    task_spec = {"workflows": [{"name": "main", "steps": [step_with_nested_if]}]}
+
+    # Check task validation using the full validator
+    from agents_api.common.utils.task_validation import validate_task_expressions
+
+    validation_results = validate_task_expressions(task_spec)
+
+    # Check that we found the issue in the nested structure
+    assert "main" in validation_results, "No validation results for main workflow"
+    assert "0" in validation_results["main"], "No validation results for step 0"
+
+    # Check specifically for syntax error in a nested structure
+    nested_error_found = False
+    for issue in validation_results["main"]["0"]:
+        if "Syntax error" in str(issue["issues"]):
+            nested_error_found = True
+
+    assert nested_error_found, "Did not detect syntax error in nested structure"
+
+
+@test("Task validator can identify issues in match statement nested blocks")
+def test_recursive_validation_of_match_branches():
+    """Verify that the task validator can identify issues in nested match/case blocks."""
+    # Set up a match step with a nested error
+    step_with_nested_match = {
+        "match": {
+            "case": "$ _.type",
+            "cases": [
+                {
+                    "case": "$ 'text'",
+                    "then": {
+                        "evaluate": {
+                            "value": "$ undefined_var"  # Deliberate undefined variable
+                        }
+                    },
+                }
+            ],
+        }
+    }
+
+    # Convert to task spec format
+    task_spec = {"workflows": [{"name": "main", "steps": [step_with_nested_match]}]}
+
+    # Check task validation using the full validator
+    from agents_api.common.utils.task_validation import validate_task_expressions
+
+    validation_results = validate_task_expressions(task_spec)
+
+    # Check that we found the issue in the nested structure
+    nested_error_found = False
+    for issue in validation_results["main"]["0"]:
+        if "undefined_var" in str(issue["expression"]) and "Undefined name" in str(
+            issue["issues"]
+        ):
+            nested_error_found = True
+
+    assert nested_error_found, "Did not detect undefined variable in nested case structure"
+
+
+@test("Task validator can identify issues in foreach nested blocks")
+def test_recursive_validation_of_foreach_blocks():
+    """Verify that the task validator can identify issues in nested foreach blocks."""
+    # Set up a foreach step with a nested error
+    step_with_nested_foreach = {
+        "foreach": {
+            "in": "$ range(3)",
+            "do": {
+                "evaluate": {
+                    "value": "$ unknown_func()"  # Deliberate undefined function
+                }
+            },
+        }
+    }
+
+    # Convert to task spec format
+    task_spec = {"workflows": [{"name": "main", "steps": [step_with_nested_foreach]}]}
+
+    # Check task validation using the full validator
+    from agents_api.common.utils.task_validation import validate_task_expressions
+
+    validation_results = validate_task_expressions(task_spec)
+
+    # Check that we found the issue in the nested structure
+    nested_error_found = False
+    for issue in validation_results["main"]["0"]:
+        if "unknown_func()" in str(issue["expression"]) and "Undefined name" in str(
+            issue["issues"]
+        ):
+            nested_error_found = True
+
+    assert nested_error_found, "Did not detect undefined function in nested foreach structure"

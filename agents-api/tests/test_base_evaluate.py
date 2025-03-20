@@ -1,11 +1,7 @@
 import uuid
 from unittest.mock import patch
 
-from agents_api.activities.task_steps.base_evaluate import (
-    backwards_compatibility,
-    base_evaluate,
-    validate_py_expression,
-)
+from agents_api.activities.task_steps.base_evaluate import base_evaluate
 from agents_api.autogen.openapi_model import (
     Agent,
     TaskSpecDef,
@@ -19,6 +15,10 @@ from agents_api.common.protocol.tasks import (
     StepContext,
 )
 from agents_api.common.utils.datetime import utcnow
+from agents_api.common.utils.task_validation import (
+    backwards_compatibility,
+    validate_py_expression,
+)
 from ward import raises, test
 
 
@@ -48,6 +48,15 @@ async def _():
     values = {"x": 5}
     result = await base_evaluate(exprs, values=values)
     assert result == 10
+
+    # Test with $ but no space - this should NOT be evaluated as Python
+    # but treated as a string with an f-string wrapper
+    exprs = "$x + 5"
+    values = {"x": 5}
+    result = await base_evaluate(exprs, values=values)
+    assert result == "$x + 5", (
+        "Expression with $ but no space should be treated as a regular string"
+    )
 
     exprs = "hello world"
     result = await base_evaluate(exprs, values={})
