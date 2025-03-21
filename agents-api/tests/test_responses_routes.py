@@ -10,8 +10,6 @@ from .fixtures import (
     # mock_openai_client,
     patch_embed_acompletion,
     pg_dsn,
-    test_agent,
-    test_developer,
     test_developer_id,
     test_session,
 )
@@ -54,7 +52,7 @@ async def _(
     acompletion.assert_called_once()
 
 
-@skip("Needs to be implemented")
+# @skip("Needs to be implemented")
 @test("routes: check image URL processing")
 async def _(
     # mock_openai_client=mock_openai_client,
@@ -63,7 +61,7 @@ async def _(
 ):
     """Test creating a response with image URL input."""
 
-    (_, acompletion) = mocks
+    (_, _acompletion) = mocks
 
     data = {
         "model": "gpt-4o-mini",
@@ -90,14 +88,14 @@ async def _(
     )
 
     response.raise_for_status()
-    # data = response.json()
-    # # Ensure common response fields are present
-    # assert "created_at" in data
-    # assert "status" in data
+    data = response.json()
+    # Ensure common response fields are present
+    assert "created_at" in data
+    assert "status" in data
 
-    # assert "id" in data
-    # assert "output" in data
-    # assert data["status"] == "completed"
+    assert "id" in data
+    assert "output" in data
+    assert data["status"] == "completed"
 
     # # Verify model was called with image content
     # acompletion.assert_called_once()
