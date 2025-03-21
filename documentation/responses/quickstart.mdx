@@ -8,7 +8,6 @@ icon: 'rocket'
 
 The Responses API provides a lightweight interface for generating content with Large Language Models (LLMs) without needing to create persistent agents or sessions. 
 It's perfect for quick, one-off interactions like content generation, text processing, or question answering.
-It's designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
 
 <Tip>
 The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
@@ -32,37 +31,37 @@ Install [Docker](https://docs.docker.com/get-docker/)
 
 </Step>
 
-<Step title="Clone the repository">
+<Step title="Create a directory for the project">
 
 ```bash
-git clone https://github.com/julep-ai/julep.git
+mkdir julep-responses-api
 ```
 
 </Step>
 
-<Step title="Navigate to the `julep/deploy` directory">
+<Step title="Navigate to the project directory">
 
 ```bash
-cd julep/deploy
+cd julep-responses-api
 ```
 
 </Step>
 
-<Step title="Set the environment variables">
+<Step title="Set up the environment variables">
 
-Copy the `.env.example` file to a `.env` file and set the environment variables.
+Copy the `.env.example` file from the [Julep Deploy](https://github.com/julep-ai/julep/tree/dev/deploy) repository to a `.env` file and set the environment variables.
 
-```bash
-cp .env.example .env
-```
-
-<Note>
-Please make sure to replace the placeholders with the actual values in the `.env` file.
-</Note>
 
 </Step>
 
-<Step title="Start the Docker containers">
+<Step title="Copy the Docker Compose file">
+
+Copy the `standalone-docker-compose.yaml` file from the [Julep Deploy](https://github.com/julep-ai/julep/tree/dev/deploy) repository to the current directory.
+
+
+</Step>
+
+<Step title="Run the Docker containers">
 
 ```bash
 docker compose -f standalone-docker-compose.yaml up
