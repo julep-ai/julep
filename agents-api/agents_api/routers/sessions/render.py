@@ -123,8 +123,14 @@ async def render_chat_input(
     # Combine the past messages with the new messages
     messages = past_messages + new_messages
 
-    # Get the tools
-    tools = settings.get("tools") or chat_context.get_active_tools()
+    # Get the agent tools
+    tools = chat_context.get_active_tools()
+    # If the user has provided tools, add them to the tools, but only if they are not already in the tools
+    if chat_input.tools:
+        existing_tool_names = {tool.name for tool in tools}
+        for tool in chat_input.tools:
+            if tool.name not in existing_tool_names:
+                tools.append(tool)
 
     # Check if using Claude model and has specific tool types
     is_claude_model = settings.get("model", "").lower().startswith("claude-3.5")

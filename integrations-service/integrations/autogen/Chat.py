@@ -51,7 +51,7 @@ class BaseChatResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    usage: CompetionUsage | None = None
+    usage: CompletionUsage | None = None
     """
     Usage statistics for the completion request
     """
@@ -124,7 +124,7 @@ class ChunkChatResponse(BaseChatResponse):
     """
 
 
-class CompetionUsage(BaseModel):
+class CompletionUsage(BaseModel):
     """
     Usage statistics for the completion request
     """
