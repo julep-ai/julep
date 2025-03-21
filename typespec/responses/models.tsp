@@ -50,9 +50,7 @@ model CreateResponse {
   previous_response_id?: string;
   reasoning?: Reasoning;
   text?: {
-    format?: {
-      type: "text" | "json_object";
-    };
+    format: TextResponseFormatConfiguration;
   };
   tool_choice?: "auto" | "none" | {
     type: "function";
@@ -183,7 +181,9 @@ model Response {
   reasoning?: Reasoning;
   store?: boolean = true;
   temperature: float = 1.0;
-  text?: TextResponseFormatConfiguration;
+  text?: {
+    format: TextResponseFormatConfiguration;
+  };
   tool_choice: ToolChoiceOptions | ToolChoiceTypes | ToolChoiceFunction;
   tools: Tool[];
   top_p: float = 1.0;
@@ -336,12 +336,16 @@ model Item {
 }
 
 // Item reference model
-model ItemReference {
-  @doc("The type of the item reference. Always `item_reference`.")
-  type: "item_reference";
-  
-  @doc("The ID of the referenced item.")
-  id: string;
+@doc("Content item used to generate a response.")
+union ItemReference {
+  InputMessageResource,
+  OutputMessage,
+  FileSearchToolCall,
+  ComputerToolCall,
+  ComputerToolCallOutputResource,
+  WebSearchToolCall,
+  FunctionToolCall,
+  FunctionToolCallOutputResource
 }
 
 // Content item in an input
@@ -805,7 +809,9 @@ model FunctionToolCall {
 // Function tool call output resource
 model FunctionToolCallOutputResource extends FunctionToolCallOutput {
   @doc("The unique ID of the function call tool output.")
-  id: string;
+  // NOTE: OpenAI's schema doesn't have this as optional. However, this is optional as we're
+  // mapping to `completion` format, which doesn't have `id` (fc_aaa) ids for function tool calls.
+  id?: string;
 }
 
 alias ItemResource = InputMessageResource

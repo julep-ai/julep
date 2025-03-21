@@ -5,7 +5,6 @@ from fastapi import Depends, HTTPException, Query
 
 from ...autogen.Entries import History
 from ...autogen.openapi_model import (
-    Format,
     Includable,
     InputTokensDetails,
     OutputMessage,
@@ -18,9 +17,9 @@ from ...autogen.Responses import (
     ComputerToolCall,
     FileSearchToolCall,
     FunctionToolCall,
-    Reasoning,
     ReasoningItem,
     Response,
+    ResponseFormatText,
     WebSearchToolCall,
 )
 from ...dependencies.developer_id import get_developer_id
@@ -35,8 +34,6 @@ async def get_response(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     include: Annotated[list[Includable], Query()] = [],
 ) -> Response:
-    # TODO: Continue the implementation of the logic to get a response by id
-
     developer = await get_developer_query(developer_id=x_developer_id)
 
     session_id = response_id
@@ -125,12 +122,11 @@ async def get_response(
         output=output,
         parallel_tool_calls=True,
         previous_response_id=None,
-        reasoning=Reasoning(
-            effort=None, summary=None
-        ),  # FIXME: We are not storing reasoning. So returning None for now.
+        # FIXME: We are not storing reasoning. So returning None for now.
+        reasoning=None,
         store=True,
         temperature=1.0,
-        text=Text(format=Format(type="text")),
+        text=Text(format=ResponseFormatText(type="text")),  # FIXME: Add the correct format
         tool_choice="auto",
         tools=[],
         top_p=1.0,

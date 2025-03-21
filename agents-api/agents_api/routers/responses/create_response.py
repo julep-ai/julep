@@ -183,7 +183,7 @@ async def create_response(
             ):
                 function_tool_requests.append(
                     FunctionToolCall(
-                        id="fc_" + tool_call_requests[0].id,
+                        id=tool_call_requests[0].id,
                         call_id=tool_call_requests[0].id,
                         name=tool_call_requests[0].function.name,
                         arguments=tool_call_requests[0].function.arguments,

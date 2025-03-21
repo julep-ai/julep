@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from fastapi import HTTPException
 from litellm import ChatCompletionMessageToolCall
 
 from ...autogen.Chat import (
@@ -13,11 +14,13 @@ from ...autogen.Chat import (
 from ...autogen.openapi_model import (
     Agent,
     ChatResponse,
+    ChosenFunctionCall,
     CompletionUsage,
     CreateAgentRequest,
     CreateEntryRequest,
     CreateResponse,
     CreateSessionRequest,
+    FunctionCallOption,
     InputTokensDetails,
     OutputTokensDetails,
     Response,
@@ -26,10 +29,16 @@ from ...autogen.openapi_model import (
 )
 from ...autogen.Responses import (
     ComputerToolCall,
+    ComputerToolCallOutputResource,
+    EasyInputMessage,
     FileSearchToolCall,
     FunctionToolCall,
+    FunctionToolCallOutput,
+    FunctionToolCallOutputResource,
     InputImage,
+    InputMessageResource,
     InputText,
+    Item,
     OutputMessage,
     OutputText,
     ReasoningItem,
@@ -71,11 +80,15 @@ async def convert_create_response(
     session_id = create_response.previous_response_id
     previous_session = None
     if session_id:
-        # TODO: Handle case where previous_response_id is provided, but session is not found
-        previous_session: Session = await get_session_query(
-            developer_id=developer_id,
-            session_id=UUID(session_id),
-        )
+        try:
+            previous_session: Session = await get_session_query(
+                developer_id=developer_id,
+                session_id=UUID(session_id),
+            )
+        except HTTPException as e:
+            if e.status_code == 404:
+                raise HTTPException(status_code=404, detail="previous_response_id not found")
+            raise e
 
     session = await create_session_query(
         developer_id=developer_id,
@@ -124,28 +137,132 @@ async def convert_create_response(
 
     messages: list[Message] = []
 
+    # Handle the case where the input is a string
     if isinstance(create_response.input, str):
         messages = [Message(role="user", content=[Content(text=create_response.input)])]
-    else:
+    elif isinstance(create_response.input, list):
         # Create a ChatInput object from each InputItem object in the input list
-        for item in create_response.input:
-            for content_item in item.content:
-                content = None
-                if content_item.type == "input_text" and isinstance(content_item, InputText):
-                    content = [Content(text=content_item.text)]
-                elif content_item.type == "input_image" and isinstance(
-                    content_item, InputImage
-                ):
-                    image_url = ImageUrl(
-                        url=content_item.image_url,
+        for input_item in create_response.input:
+            if isinstance(input_item, EasyInputMessage):
+                # Handle the case where the content inside the input item is a string
+                if isinstance(input_item.content, str):
+                    messages.append(
+                        Message(
+                            role=input_item.role, content=[Content(text=input_item.content)]
+                        )
                     )
-                    content = [ContentModel7(image_url=image_url)]
-
-                if content:
-                    messages.append(Message(role=item.role, content=content))
+                # Handle the case where the content inside the input item is a list of content items
                 else:
-                    msg = f"Unsupported content type: {content_item.type}. Content item: {content_item}"
-                    raise ValueError(msg)
+                    for content_item in input_item.content:
+                        content = None
+                        # Handle text content
+                        if (
+                            isinstance(content_item, InputText)
+                            and content_item.type == "input_text"
+                        ):
+                            content = [Content(text=content_item.text)]
+                        # Handle image content
+                        elif (
+                            isinstance(content_item, InputImage)
+                            and content_item.type == "input_image"
+                        ):
+                            image_url = ImageUrl(
+                                url=content_item.image_url,
+                            )
+                            content = [ContentModel7(image_url=image_url)]
+
+                        if content:
+                            messages.append(Message(role=input_item.role, content=content))
+                        else:
+                            msg = f"Unsupported content type: {content_item.type}. Content item: {content_item}"
+                            raise ValueError(msg)
+            elif isinstance(input_item, FunctionToolCall):
+                function_tool_call = input_item
+
+                messages.append(
+                    Message(
+                        role="assistant",
+                        tool_call_id=function_tool_call.id,
+                        tool_calls=[
+                            ChosenFunctionCall(
+                                id=function_tool_call.id,
+                                function=FunctionCallOption(
+                                    name=function_tool_call.name,
+                                    arguments=function_tool_call.arguments,
+                                ),
+                            )
+                        ],
+                    )
+                )
+            elif isinstance(
+                input_item, FunctionToolCallOutputResource | FunctionToolCallOutput
+            ):
+                function_tool_call_result = input_item
+
+                messages.append(
+                    # FIXME: litellm completion typically expects a `name`, but openai's response api doesn't have it when dev sends function tool call output
+                    Message(
+                        role="tool",
+                        tool_call_id=function_tool_call_result.call_id,
+                        content=[Content(text=function_tool_call_result.output)],
+                    )
+                )
+            # elif isinstance(input_item, WebSearchToolCall):
+            #     web_search_tool_call = input_item
+
+            #     messages.append(
+            #         Message(
+            #             role="assistant",
+            #             tool_call_id=web_search_tool_call.id,
+            #             tool_calls=[
+            #                 ChosenFunctionCall(
+            #                     id=web_search_tool_call.id,
+            #                     function=FunctionCallOption(
+            #                         name="web_search_preview",
+            #                         arguments={
+            #                             "query": web_search_tool_call.query,
+            #                             "domains": web_search_tool_call.domains,
+            #                             "search_context_size": web_search_tool_call.search_context_size,
+            #                         },
+            #                     ),
+            #                 )
+            #             ],
+            #         )
+            #     )
+            elif isinstance(input_item, InputMessageResource):
+                input_message_resource = input_item
+
+                messages.append(
+                    Message(
+                        role=input_message_resource.role,
+                        content=input_message_resource.content,
+                    )
+                )
+            elif isinstance(input_item, OutputMessage):
+                output_message = input_item
+
+                messages.append(
+                    Message(
+                        role=output_message.role,
+                        content=output_message.content,
+                    )
+                )
+            elif isinstance(
+                input_item,
+                (
+                    FileSearchToolCall
+                    | ComputerToolCall
+                    | ComputerToolCallOutputResource
+                    | Item
+                    | WebSearchToolCall
+                ),
+            ):
+                msg = f"Message type {input_item.type} is not supported"
+                raise NotImplementedError(msg)
+
+    else:
+        msg = f"Unsupported input type: {type(create_response.input)}. Input: {create_response.input}"
+        raise ValueError(msg)
 
     # TODO: Convert tools from `CreateResponse` to `ChatInput`
     tools: list[CreateToolRequest] = []
