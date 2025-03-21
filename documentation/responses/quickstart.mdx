@@ -1,0 +1,152 @@
+---
+title: 'Quickstart'
+description: 'Get started with the Julep Responses API for LLM interactions'
+icon: 'rocket'
+---
+
+## Introduction
+
+The Responses API provides a lightweight interface for generating content with Large Language Models (LLMs) without needing to create persistent agents or sessions. 
+It's perfect for quick, one-off interactions like content generation, text processing, or question answering.
+
+<Tip>
+The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
+</Tip>
+<Note>
+The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+</Note>
+<Warning>
+Julep doesn't host the Responses API. You need to host your own instance of the Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
+</Warning>
+
+## Local Installation
+
+This section will guide you through the steps to set up the Responses API using Docker.
+
+<Steps>
+
+<Step title="Prerequisites">
+
+Install [Docker](https://docs.docker.com/get-docker/)
+
+</Step>
+
+<Step title="Create a directory for the project">
+
+```bash
+mkdir julep-responses-api
+```
+
+</Step>
+
+<Step title="Navigate to the project directory">
+
+```bash
+cd julep-responses-api
+```
+
+</Step>
+
+<Step title="Set up the environment variables">
+
+Copy the `.env.example` file from the [Julep Deploy](https://github.com/julep-ai/julep/tree/dev/deploy) repository to a `.env` file and set the environment variables.
+
+
+</Step>
+
+<Step title="Copy the Docker Compose file">
+
+Copy the `standalone-docker-compose.yaml` file from the [Julep Deploy](https://github.com/julep-ai/julep/tree/dev/deploy) repository to the current directory.
+
+
+</Step>
+
+<Step title="Run the Docker containers">
+
+```bash
+docker compose -f standalone-docker-compose.yaml up -d --build 
+```
+
+</Step>
+
+<Step title="Verify that the containers are running">
+
+```bash
+docker ps
+```
+
+</Step>
+
+</Steps>
+
+## Quickstart Example
+
+With the OpenAI client initialized, you can now use the Responses API to generate content.
+
+### 1. Install the OpenAI SDK
+
+<CodeGroup>
+```bash pip
+pip install openai
+```
+
+```bash npm
+npm install openai
+```
+</CodeGroup>
+
+### 2. Initialize the OpenAI client
+
+<CodeGroup>
+
+```python Python
+from openai import OpenAI
+openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+```
+
+```javascript Node.js
+import { OpenAI } from 'openai';
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+```
+
+</CodeGroup>
+
+### 3. Generate a response
+
+<CodeGroup>
+
+```python Python
+import os
+from openai import OpenAI
+
+openai_client = OpenAI(base_url="http://localhost:8080/api", api_key=os.getenv("JULEP_API_KEY"))
+
+response = openai_client.responses.create(
+    model="gpt-4o-mini",
+    input="How many people live in the world?"
+)
+print("Generated response:", response.output[0].content[0].text)
+```
+
+```javascript Node.js
+
+import { OpenAI } from 'openai';
+
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: "JULEP_API_KEY" });
+
+const response = await openai_client.responses.create({
+    model: "gpt-4o-mini",
+    input: "How many people live in the world?"
+});
+
+console.log("Generated response:", response.output[0].content[0].text);
+```
+
+</CodeGroup>
+
+
+## Next Steps
+
+Now that you've seen the quickstart example, you can learn more about the Responses API by:
+- Exploring the [Concepts](/responses/concepts) page to understand the core components
+- Following the [Tutorials](/responses/tutorials) for more detailed code examples and use cases

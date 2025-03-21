@@ -22,8 +22,8 @@ from ...autogen.Responses import (
     ResponseFormatText,
     WebSearchToolCall,
 )
-from ...dependencies.developer_id import get_developer_id
-from ...queries.developers.get_developer import get_developer as get_developer_query
+from ...common.protocol.developers import Developer
+from ...dependencies.developer_id import get_developer_data
 from ...queries.entries.get_history import get_history as get_history_query
 from .router import router
 
@@ -31,10 +31,10 @@ from .router import router
 @router.get("/responses/{response_id}", tags=["responses"])
 async def get_response(
     response_id: UUID,
-    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    developer: Annotated[Developer, Depends(get_developer_data)],
     include: Annotated[list[Includable], Query()] = [],
 ) -> Response:
-    developer = await get_developer_query(developer_id=x_developer_id)
+    # TODO: Continue the implementation of the logic to get a response by id
 
     session_id = response_id
 
