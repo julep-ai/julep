@@ -1,5 +1,5 @@
 ---
-title: 'Responses API Concepts'
+title: 'Concepts'
 description: 'Understanding Julep Responses API concepts'
 icon: 'comment-dots'
 ---
@@ -12,10 +12,10 @@ In this section, we'll cover the key concepts and components of the Responses AP
 The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
 </Tip>
 <Note>
-The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [ OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
 </Note>
 <Warning>
-Julep doesn't host the Responses API. You need to host your own instance of the Responses API to use it. The instructions to host your own instance are [here](/responses/quickstart/#docker-setup).
+Julep doesn't host the Responses API. You need to host your own instance of the Responses API to use it. The instructions to host your own instance are [here](/responses/quickstart/#local-installation).
 </Warning>
 
 ## 2. Components
@@ -147,7 +147,7 @@ The Responses API supports multi-modal inputs, allowing you to include images or
 ```
 </CodeGroup>
 
-## 5. Tool Usage
+### 4.4. Tool Usage
 
 The Responses API supports tool usage, allowing the model to perform actions like web searches, function calls, and more to enhance its response.
 
@@ -201,314 +201,8 @@ The Responses API supports tool usage, allowing the model to perform actions lik
 ```
 </CodeGroup>
 
-## 6. How to Use Responses
 
-The Responses API provides a straightforward way to interact with language models for quick, one-off interactions. Here's how to use it with OpenAI's SDKs:
-
-### 6.1. Creating a Response
-
-<CodeGroup>
-```python Python
-from openai import OpenAI
-
-openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
-response = openai_client.responses.create(
-    model="claude-3.5-haiku",
-    input="Think about this math problem and try to solve it: If a train leaves Chicago at 2pm traveling west at 60mph, and another train leaves Denver at 3pm traveling east at 75mph, and the distance between Chicago and Denver is 1000 miles, at what time will the trains meet?",
-    tools=None, # Optional, defaults to None
-)
-
-print("Generated response:", response.output[0].content[0].text)
-```
-
-```javascript Node.js
-import { OpenAI } from 'openai';
-
-const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
-const response = await openai_client.responses.create({
-    model: "claude-3.5-haiku",
-    input: "Think about this math problem and try to solve it: If a train leaves Chicago at 2pm traveling west at 60mph, and another train leaves Denver at 3pm traveling east at 75mph, and the distance between Chicago and Denver is 1000 miles, at what time will the trains meet?",
-    tools: null, // Optional, defaults to None
-});
-
-console.log("Generated response:", response.output[0].content[0].text);
-```
-</CodeGroup>
-
-Follow the example below to see a sample response from the Responses API.
-
-<AccordionGroup>
-<Accordion title="Sample Response">
-
-```json JSON Response
-{'id': '067dca81-8c8a-7f8a-8000-5fd0beb5ef60',
- 'created_at': 1742514226.0,
- 'error': None,
- 'incomplete_details': None,
- 'instructions': None,
- 'metadata': {},
- 'model': 'o1',
- 'object': 'response',
- 'output': [{'id': '067dca83-29fe-7a04-8000-ef2ef8ca940e',
-   'content': [{'annotations': [],
-     'text': 'First, note that from 2 p.m. to 3 p.m., the train leaving Chicago travels for 1 hour at 60 mph, covering 60 miles. After this hour, the remaining distance between the two trains is 1000 − 60 = 940 miles.\n\nStarting at 3 p.m., the two trains approach each other. Their combined speed is 60 + 75 = 135 mph. Let T be the number of hours after 3 p.m. until they meet. Then:\n\n135 × T = 940  \nT = 940 ÷ 135  \nT ≈ 6.96 hours\n\nThis is about 6 hours and 57 minutes, so starting from 3 p.m., they meet at approximately 9:57 p.m.',
-     'type': 'output_text'}],
-   'role': 'assistant',
-   'status': 'completed',
-   'type': 'message'}],
- 'parallel_tool_calls': True,
- 'temperature': 1.0,
- 'tool_choice': 'auto',
- 'tools': [],
- 'top_p': 1.0,
- 'max_output_tokens': None,
- 'previous_response_id': None,
- 'reasoning': {'effort': 'medium', 'generate_summary': None},
- 'status': 'completed',
- 'text': {'format': None, 'type': 'text'},
- 'truncation': 'auto',
- 'usage': {'input_tokens': 80,
-  'output_tokens': 648,
-  'output_tokens_details': {'reasoning_tokens': 0},
-  'total_tokens': 728,
-  'input_tokens_details': {'cached_tokens': 0}},
- 'user': '00000000-0000-0000-0000-000000000000',
- 'store': True}
-```
-</Accordion>
-</AccordionGroup>
-
-#### 6.1.1. Using Function Calling Tools
-
-<CodeGroup>
-```python Python
-response = client.responses.create(
-    model="gpt-4o",
-    input="What's the weather in New York City?",
-    tools=[{
-        "type": "function",
-        "name": "get_weather",
-        "description": "Get the current weather in a location",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "The city and state, e.g. New York, NY"
-                },
-                "unit": {
-                    "type": "string",
-                    "enum": ["celsius", "fahrenheit"],
-                    "description": "The unit of temperature to use"
-                }
-            },
-            "required": ["location"]
-        }
-    }]
-)
-
-# The output will include both the text response and any tool calls that were made
-```
-
-```javascript Node.js
-const response = await client.responses.create({
-    model: "gpt-4o",
-    input: "What's the weather in New York City?",
-    tools: [{
-        type: "function",
-        name: "get_weather",
-        description: "Get the current weather in a location",
-        parameters: {
-            type: "object",
-            properties: {
-                location: {
-                    type: "string",
-                    description: "The city and state, e.g. New York, NY"
-                },
-                unit: {
-                    type: "string",
-                    enum: ["celsius", "fahrenheit"],
-                    description: "The unit of temperature to use"
-                }
-            },
-            required: ["location"]
-        }
-    }]
-});
-
-// The output will include both the text response and any tool calls that were made
-```
-</CodeGroup>
-
-Follow the example below to see a sample response from the Responses API.
-
-<AccordionGroup>
-<Accordion title="Sample Response">
-
-```bash Sample Response
-Response(id='067dca14-f985-7b38-8000-dbc22a251646', created_at=1742512464.0, error=None, incomplete_details=None, instructions=None, metadata={}, model='gpt-4o', object='response', output=[ResponseFunctionToolCall(id='call_djdaM8p0VI1AdHiUSdNwGN8l', arguments='{"location":"Paris, France","unit":"celsius"}', call_id='call_djdaM8p0VI1AdHiUSdNwGN8l', name='get_current_weather', type='function_call', status='completed')], parallel_tool_calls=True, temperature=1.0, tool_choice='auto', tools=[], top_p=1.0, max_output_tokens=None, previous_response_id=None, reasoning=None, status='completed', text=ResponseTextConfig(format=None, type='text'), truncation='auto', usage=ResponseUsage(input_tokens=88, output_tokens=23, output_tokens_details=OutputTokensDetails(reasoning_tokens=0), total_tokens=111, input_tokens_details={'cached_tokens': 0}), user='00000000-0000-0000-0000-000000000000', store=True)
-```
-</Accordion>
-</AccordionGroup>
-
-#### 6.1.2. Using Web Search Tool
-
-<CodeGroup>
-```python Python
-from openai import OpenAI
-
-openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
-
-response = openai_client.responses.create(
-    model="gpt-4o",
-    tools=[{"type": "web_search_preview"}],
-    input="What was a positive news story from today?",
-)
-```
-
-```javascript Node.js
-import { OpenAI } from 'openai';
-
-const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
-const response = await openai_client.responses.create({
-    model: "gpt-4o",
-    tools: [{type: "web_search_preview"}],
-    input: "What was a positive news story from today?",
-});
-```
-</CodeGroup>
-
-Follow the example below to see a sample response from the Responses API.
-
-<AccordionGroup>
-<Accordion title="Sample Response">
-
-```json JSON Response
-{'id': '067dcaec-e692-7fdb-8000-1a1cc88b7f2c',
- 'created_at': 1742515935.0,
- 'error': None,
- 'incomplete_details': None,
- 'instructions': None,
- 'metadata': {},
- 'model': 'gpt-4o',
- 'object': 'response',
- 'output': [{'id': 'call_egAEiEneIwGp3BvtEZzSxdpD',
-   'status': 'completed',
-   'type': 'web_search_call'},
-  {'id': '067dcaed-f2c4-71d3-8000-b7ebdf69f8ba',
-   'content': [{'annotations': [],
-     'text': 'To find a positive news story from today, you can check reliable sources such as [Good News Network](https://www.goodnewsnetwork.org/) or [Positive News](https://www.positive.news/). These platforms focus on uplifting and inspiring stories from around the world.',
-     'type': 'output_text'}],
-   'role': 'assistant',
-   'status': 'completed',
-   'type': 'message'}],
- 'parallel_tool_calls': True,
- 'temperature': 1.0,
- 'tool_choice': 'auto',
- 'tools': [],
- 'top_p': 1.0,
- 'max_output_tokens': None,
- 'previous_response_id': None,
- 'reasoning': None,
- 'status': 'completed',
- 'text': {'format': {'type': 'text'}},
- 'truncation': 'auto',
- 'usage': {'input_tokens': 328,
-  'output_tokens': 57,
-  'output_tokens_details': {'reasoning_tokens': 0},
-  'total_tokens': 385,
-  'input_tokens_details': {'cached_tokens': 0}},
- 'user': '00000000-0000-0000-0000-000000000000',
- 'store': True}
-```
-</Accordion>
-</AccordionGroup>
-
-<Tip>
-Currently our Responses API only supports the following functionality:
-
-- Text input
-- Image input
-- Function calling
-- Reasoning
-- Web search
-
-We are working on adding support for more functionality in the future.
-</Tip>
-
-### 6.2. Retrieving a Response
-
-<CodeGroup>
-```python Python
-from openai import OpenAI
-
-openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
-response = openai_client.responses.retrieve(
-    response_id="response_id_here"
-)
-print("Retrieved response:", response.output[0].content[0].text)
-```
-
-```javascript Node.js
-import { OpenAI } from 'openai';
-
-const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
-const response = await openai_client.responses.retrieve({
-    response_id: "response_id_here"
-});
-console.log("Retrieved response:", response.output[0].content[0].text);
-```
-</CodeGroup>
-
-Follow the example below to see a sample response from the Responses API.
-
-<AccordionGroup>
-<Accordion title="Sample Response"> 
-
-```json JSON Response
-{'id': '067dca81-8c8a-7f8a-8000-5fd0beb5ef60',
- 'created_at': 1742514226.0,
- 'error': None,
- 'incomplete_details': None,
- 'instructions': None,
- 'metadata': {},
- 'model': 'gpt-4o-mini',
- 'object': 'response',
- 'output': [{'id': '067dca83-2c61-74ff-8000-2ab58da8ec5f',
-   'content': [{'annotations': [],
-     'text': 'First, note that from 2 p.m. to 3 p.m., the train leaving Chicago travels for 1 hour at 60 mph, covering 60 miles. After this hour, the remaining distance between the two trains is 1000 − 60 = 940 miles.\n\nStarting at 3 p.m., the two trains approach each other. Their combined speed is 60 + 75 = 135 mph. Let T be the number of hours after 3 p.m. until they meet. Then:\n\n135 × T = 940  \nT = 940 ÷ 135  \nT ≈ 6.96 hours\n\nThis is about 6 hours and 57 minutes, so starting from 3 p.m., they meet at approximately 9:57 p.m.',
-     'type': 'output_text'}],
-   'role': 'assistant',
-   'status': 'completed',
-   'type': 'message'}],
- 'parallel_tool_calls': True,
- 'temperature': 1.0,
- 'tool_choice': 'auto',
- 'tools': [],
- 'top_p': 1.0,
- 'max_output_tokens': None,
- 'previous_response_id': None,
- 'reasoning': None,
- 'status': 'completed',
- 'text': {'format': {'type': 'text'}},
- 'truncation': 'disabled',
- 'usage': {'input_tokens': 0,
-  'output_tokens': 167,
-  'output_tokens_details': {'reasoning_tokens': 0},
-  'total_tokens': 167,
-  'input_tokens_details': {'cached_tokens': 0}},
- 'user': None,
- 'store': True}
-```
-</Accordion>
-</AccordionGroup>
-
-
-<Tip>
-Check out the [API reference](/api-reference/responses) or SDK reference ([Python](/sdks/python/reference#responses) or [JavaScript](/sdks/nodejs/reference#responses)) for more details on different operations you can perform with the Responses API.
-</Tip>
-
-## 7. Relationship to Sessions
+## 5. Relationship to Sessions
 
 While [Sessions](/docs/concepts/sessions) provide a persistent, stateful way to interact with agents over multiple turns, the Responses API offers a lightweight, stateless alternative for quick, one-off interactions with language models. Here's how they compare:
 
@@ -524,8 +218,40 @@ While [Sessions](/docs/concepts/sessions) provide a persistent, stateful way to 
 If you need to maintain context across multiple interactions but prefer the simplicity of the Responses API, you can use the `previous_response_id` parameter to link responses together.
 </Info>
 
+## 6. Output Formats
 
-## 8. Best Practices
+## 6. Response Object Structure
+
+The Response object is the core data structure returned by the Julep Responses API as a response to a request. It contains all the information about a generated response. It follows the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses). Following is the schema of the Response object:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier for the response |
+| `object` | string | Always "response" |
+| `created_at` | integer | Unix timestamp when the response was created |
+| `status` | string | Current status: "completed", "failed", "in_progress", or "incomplete" |
+| `error` | object or null | Error information if the response failed |
+| `incomplete_details` | object or null | Details about why a response is incomplete |
+| `instructions` | string or null | Optional instructions provided to the model |
+| `max_output_tokens` | integer or null | Maximum number of tokens to generate |
+| `model` | string | The model used to generate the response |
+| `output` | array | List of output items (messages, tool calls, reasoning) |
+| `parallel_tool_calls` | boolean | Whether tools can be called in parallel |
+| `previous_response_id` | string or null | ID of a previous response for context |
+| `reasoning` | object or null | Reasoning steps if reasoning was requested |
+| `store` | boolean | Whether the response is stored for later retrieval |
+| `temperature` | number | Sampling temperature used (0-1) |
+| `text` | object or null | Text formatting options |
+| `tool_choice` | string or object | How tools are selected ("auto", "none", "required") |
+| `tools` | array | List of tools available to the model |
+| `top_p` | number | Top-p sampling parameter (0-1) |
+| `truncation` | string | Truncation strategy ("disabled" or "auto") |
+| `usage` | object | Token usage statistics |
+| `user` | string or null | Optional user identifier |
+| `metadata` | object | Custom metadata associated with the response |
+
+The `output` array contains the actual content generated by the model, which can include text messages, tool calls (function, web search, file search, computer), and reasoning items.
+## 6. Best Practices
 
 <CardGroup cols={3}>
   <Card title="Optimize Input Prompts" icon="lightbulb">
@@ -553,8 +279,9 @@ If you need to maintain context across multiple interactions but prefer the simp
   </Card>
 </CardGroup>
 
-## 9. Next Steps
+## 7. Next Steps
 
-- [Tool Integration](/docs/concepts/tools) - Learn about tools and how to use them with responses
+- [Tutorials](/responses/tutorials) - Learn how to use the Responses API with code examples
+- [Quickstart](/responses/quickstart) - Return to the quickstart guide to set up your environment
 - [Sessions](/docs/concepts/sessions) - Explore stateful conversations when you need ongoing context
 - [Model Selection](/docs/integrations/supported-models) - Learn about available language models in Julep

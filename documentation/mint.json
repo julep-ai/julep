@@ -238,7 +238,8 @@
       "group": "Responses API (Beta)",
       "pages": [
         "responses/quickstart",
-        "responses/concepts"
+        "responses/concepts",
+        "responses/tutorials"
       ]
     },
     {

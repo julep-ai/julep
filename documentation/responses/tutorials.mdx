@@ -1,0 +1,339 @@
+---
+title: 'Tutorial'
+description: 'Tutorials for coding with the Julep Responses API using OpenAI SDKs'
+icon: 'code'
+---
+
+## 1. Overview
+
+The Responses API provides a straightforward way to interact with language models for quick, one-off interactions. This tutorial will guide you through leveraging the SDK to create and retrieve responses.
+
+<Note>
+Before you begin, make sure you've set up your environment by following the [Quickstart Guide](/responses/quickstart).
+</Note>
+
+## 2. Creating a Response
+
+To generate a response using the OpenAI SDKs, you'll use the `create` method. Here's how to do it with OpenAI's SDKs:
+
+<CodeGroup>
+```python Python
+from openai import OpenAI
+
+# Initialize the client with your Julep API key
+openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+
+# Create a simple response
+response = openai_client.responses.create(
+    model="claude-3.5-haiku",
+    input="Think about this math problem and try to solve it: If a train leaves Chicago at 2pm traveling west at 60mph, and another train leaves Denver at 3pm traveling east at 75mph, and the distance between Chicago and Denver is 1000 miles, at what time will the trains meet?",
+    tools=None, # Optional, defaults to None
+)
+
+# Extract and print the generated text
+print("Generated response:", response.output[0].content[0].text)
+```
+
+```javascript Node.js
+import { OpenAI } from 'openai';
+
+// Initialize the client with your Julep API key
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+
+// Create a simple response
+const response = await openai_client.responses.create({
+    model: "claude-3.5-haiku",
+    input: "Think about this math problem and try to solve it: If a train leaves Chicago at 2pm traveling west at 60mph, and another train leaves Denver at 3pm traveling east at 75mph, and the distance between Chicago and Denver is 1000 miles, at what time will the trains meet?",
+    tools: null, // Optional, defaults to None
+});
+
+// Extract and print the generated text
+console.log("Generated response:", response.output[0].content[0].text);
+```
+</CodeGroup>
+
+Follow the example below to see a sample response from the Responses API.
+
+<AccordionGroup>
+<Accordion title="Sample Response">
+
+```json JSON Response
+{'id': '067dca81-8c8a-7f8a-8000-5fd0beb5ef60',
+ 'created_at': 1742514226.0,
+ 'error': None,
+ 'incomplete_details': None,
+ 'instructions': None,
+ 'metadata': {},
+ 'model': 'o1',
+ 'object': 'response',
+ 'output': [{'id': '067dca83-29fe-7a04-8000-ef2ef8ca940e',
+   'content': [{'annotations': [],
+     'text': 'First, note that from 2 p.m. to 3 p.m., the train leaving Chicago travels for 1 hour at 60 mph, covering 60 miles. After this hour, the remaining distance between the two trains is 1000 − 60 = 940 miles.\n\nStarting at 3 p.m., the two trains approach each other. Their combined speed is 60 + 75 = 135 mph. Let T be the number of hours after 3 p.m. until they meet. Then:\n\n135 × T = 940  \nT = 940 ÷ 135  \nT ≈ 6.96 hours\n\nThis is about 6 hours and 57 minutes, so starting from 3 p.m., they meet at approximately 9:57 p.m.',
+     'type': 'output_text'}],
+   'role': 'assistant',
+   'status': 'completed',
+   'type': 'message'}],
+ 'parallel_tool_calls': True,
+ 'temperature': 1.0,
+ 'tool_choice': 'auto',
+ 'tools': [],
+ 'top_p': 1.0,
+ 'max_output_tokens': None,
+ 'previous_response_id': None,
+ 'reasoning': {'effort': 'medium', 'generate_summary': None},
+ 'status': 'completed',
+ 'text': {'format': None, 'type': 'text'},
+ 'truncation': 'auto',
+ 'usage': {'input_tokens': 80,
+  'output_tokens': 648,
+  'output_tokens_details': {'reasoning_tokens': 0},
+  'total_tokens': 728,
+  'input_tokens_details': {'cached_tokens': 0}},
+ 'user': '00000000-0000-0000-0000-000000000000',
+ 'store': True}
+```
+</Accordion>
+</AccordionGroup>
+
+#### 2.1. Using Function Calling Tools
+
+<CodeGroup>
+```python Python
+response = client.responses.create(
+    model="gpt-4o",
+    input="What's the weather in New York City?",
+    tools=[{
+        "type": "function",
+        "name": "get_weather",
+        "description": "Get the current weather in a location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "The city and state, e.g. New York, NY"
+                },
+                "unit": {
+                    "type": "string",
+                    "enum": ["celsius", "fahrenheit"],
+                    "description": "The unit of temperature to use"
+                }
+            },
+            "required": ["location"]
+        }
+    }]
+)
+
+# The output will include both the text response and any tool calls that were made
+```
+
+```javascript Node.js
+const response = await client.responses.create({
+    model: "gpt-4o",
+    input: "What's the weather in New York City?",
+    tools: [{
+        type: "function",
+        name: "get_weather",
+        description: "Get the current weather in a location",
+        parameters: {
+            type: "object",
+            properties: {
+                location: {
+                    type: "string",
+                    description: "The city and state, e.g. New York, NY"
+                },
+                unit: {
+                    type: "string",
+                    enum: ["celsius", "fahrenheit"],
+                    description: "The unit of temperature to use"
+                }
+            },
+            required: ["location"]
+        }
+    }]
+});
+
+// The output will include both the text response and any tool calls that were made
+```
+</CodeGroup>
+
+Follow the example below to see a sample response from the Responses API.
+
+<AccordionGroup>
+<Accordion title="Sample Response">
+
+```bash Sample Response
+Response(id='067dca14-f985-7b38-8000-dbc22a251646', created_at=1742512464.0, error=None, incomplete_details=None, instructions=None, metadata={}, model='gpt-4o', object='response', output=[ResponseFunctionToolCall(id='call_djdaM8p0VI1AdHiUSdNwGN8l', arguments='{"location":"Paris, France","unit":"celsius"}', call_id='call_djdaM8p0VI1AdHiUSdNwGN8l', name='get_current_weather', type='function_call', status='completed')], parallel_tool_calls=True, temperature=1.0, tool_choice='auto', tools=[], top_p=1.0, max_output_tokens=None, previous_response_id=None, reasoning=None, status='completed', text=ResponseTextConfig(format=None, type='text'), truncation='auto', usage=ResponseUsage(input_tokens=88, output_tokens=23, output_tokens_details=OutputTokensDetails(reasoning_tokens=0), total_tokens=111, input_tokens_details={'cached_tokens': 0}), user='00000000-0000-0000-0000-000000000000', store=True)
+```
+</Accordion>
+</AccordionGroup>
+
+<Note>
+- Please note that the model will generate a response with the Function tool call with the required arguments which can be found in the `Response` object. As a user, you need to manually run the custom function tool call with the required arguments to get the output and then feed it back to the model along with the original responses and the tool call to get the final response.
+- To learn more about Function Calling, please refer to the [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling?api-mode=responses) section.
+</Note>
+
+#### 2.2. Using Web Search Tool
+
+
+<CodeGroup>
+```python Python
+from openai import OpenAI
+
+openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+
+response = openai_client.responses.create(
+    model="gpt-4o",
+    tools=[{"type": "web_search_preview"}],
+    input="What was a positive news story from today?",
+)
+```
+
+```javascript Node.js
+import { OpenAI } from 'openai';
+
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+const response = await openai_client.responses.create({
+    model: "gpt-4o",
+    tools: [{type: "web_search_preview"}],
+    input: "What was a positive news story from today?",
+});
+```
+</CodeGroup>
+
+Follow the example below to see a sample response from the Responses API.
+
+<AccordionGroup>
+<Accordion title="Sample Response">
+
+```json JSON Response
+{'id': '067dcaec-e692-7fdb-8000-1a1cc88b7f2c',
+ 'created_at': 1742515935.0,
+ 'error': None,
+ 'incomplete_details': None,
+ 'instructions': None,
+ 'metadata': {},
+ 'model': 'gpt-4o',
+ 'object': 'response',
+ 'output': [{'id': 'call_egAEiEneIwGp3BvtEZzSxdpD',
+   'status': 'completed',
+   'type': 'web_search_call'},
+  {'id': '067dcaed-f2c4-71d3-8000-b7ebdf69f8ba',
+   'content': [{'annotations': [],
+     'text': 'To find a positive news story from today, you can check reliable sources such as [Good News Network](https://www.goodnewsnetwork.org/) or [Positive News](https://www.positive.news/). These platforms focus on uplifting and inspiring stories from around the world.',
+     'type': 'output_text'}],
+   'role': 'assistant',
+   'status': 'completed',
+   'type': 'message'}],
+ 'parallel_tool_calls': True,
+ 'temperature': 1.0,
+ 'tool_choice': 'auto',
+ 'tools': [],
+ 'top_p': 1.0,
+ 'max_output_tokens': None,
+ 'previous_response_id': None,
+ 'reasoning': None,
+ 'status': 'completed',
+ 'text': {'format': {'type': 'text'}},
+ 'truncation': 'auto',
+ 'usage': {'input_tokens': 328,
+  'output_tokens': 57,
+  'output_tokens_details': {'reasoning_tokens': 0},
+  'total_tokens': 385,
+  'input_tokens_details': {'cached_tokens': 0}},
+ 'user': '00000000-0000-0000-0000-000000000000',
+ 'store': True}
+```
+</Accordion>
+</AccordionGroup>
+
+<Tip>
+Currently our Responses API only supports the following functionality:
+
+- Text input
+- Image input
+- Function calling
+- Reasoning
+- Web search
+
+We are working on adding support for more functionality in the future.
+</Tip>
+
+## 3. Retrieving a Response
+
+<CodeGroup>
+```python Python
+from openai import OpenAI
+
+openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+response = openai_client.responses.retrieve(
+    response_id="response_id_here"
+)
+print("Retrieved response:", response.output[0].content[0].text)
+```
+
+```javascript Node.js
+import { OpenAI } from 'openai';
+
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+const response = await openai_client.responses.retrieve({
+    response_id: "response_id_here"
+});
+console.log("Retrieved response:", response.output[0].content[0].text);
+```
+</CodeGroup>
+
+Follow the example below to see a sample response from the Responses API.
+
+<AccordionGroup>
+<Accordion title="Sample Response"> 
+
+```json JSON Response
+{'id': '067dca81-8c8a-7f8a-8000-5fd0beb5ef60',
+ 'created_at': 1742514226.0,
+ 'error': None,
+ 'incomplete_details': None,
+ 'instructions': None,
+ 'metadata': {},
+ 'model': 'gpt-4o-mini',
+ 'object': 'response',
+ 'output': [{'id': '067dca83-2c61-74ff-8000-2ab58da8ec5f',
+   'content': [{'annotations': [],
+     'text': 'First, note that from 2 p.m. to 3 p.m., the train leaving Chicago travels for 1 hour at 60 mph, covering 60 miles. After this hour, the remaining distance between the two trains is 1000 − 60 = 940 miles.\n\nStarting at 3 p.m., the two trains approach each other. Their combined speed is 60 + 75 = 135 mph. Let T be the number of hours after 3 p.m. until they meet. Then:\n\n135 × T = 940  \nT = 940 ÷ 135  \nT ≈ 6.96 hours\n\nThis is about 6 hours and 57 minutes, so starting from 3 p.m., they meet at approximately 9:57 p.m.',
+     'type': 'output_text'}],
+   'role': 'assistant',
+   'status': 'completed',
+   'type': 'message'}],
+ 'parallel_tool_calls': True,
+ 'temperature': 1.0,
+ 'tool_choice': 'auto',
+ 'tools': [],
+ 'top_p': 1.0,
+ 'max_output_tokens': None,
+ 'previous_response_id': None,
+ 'reasoning': None,
+ 'status': 'completed',
+ 'text': {'format': {'type': 'text'}},
+ 'truncation': 'disabled',
+ 'usage': {'input_tokens': 0,
+  'output_tokens': 167,
+  'output_tokens_details': {'reasoning_tokens': 0},
+  'total_tokens': 167,
+  'input_tokens_details': {'cached_tokens': 0}},
+ 'user': None,
+ 'store': True}
+```
+</Accordion>
+</AccordionGroup>
+
+
+<Tip>
+Check out the [API reference](/api-reference/responses) or SDK reference ([Python](/sdks/python/reference#responses) or [JavaScript](/sdks/nodejs/reference#responses)) for more details on different operations you can perform with the Responses API.
+</Tip>
+
+## 4. Next Steps
+
+- [Learn more about Julep](/docs/concepts/overview)
+- [Learn more about the Responses API concepts](/responses/concepts)
+- [Return to the Quickstart guide](/responses/quickstart)
+- [Learn more about the OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses)
