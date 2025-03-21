@@ -81,7 +81,7 @@ max_free_executions: int = env.int("MAX_FREE_EXECUTIONS", default=50)
 
 # Litellm API
 # -----------
-litellm_url: str = env.str("LITELLM_URL", default="http://0.0.0.0:4000")
+litellm_url: str | None = env.str("LITELLM_URL", default=None)
 litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
 
 

@@ -1,23 +1,13 @@
 x--shared-environment: &shared-environment
   AGENTS_API_KEY: ${AGENTS_API_KEY}
-  AGENTS_API_KEY_HEADER_NAME: ${AGENTS_API_KEY_HEADER_NAME:-Authorization}
-  AGENTS_API_HOSTNAME: ${AGENTS_API_HOSTNAME:-localhost}
-  AGENTS_API_PUBLIC_PORT: ${AGENTS_API_PUBLIC_PORT:-80}
-  AGENTS_API_PROTOCOL: ${AGENTS_API_PROTOCOL:-http}
+  AGENTS_API_KEY_HEADER_NAME: "Authorization"
   AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
-  ENABLE_RESPONSES: ${ENABLE_RESPONSES:-true}
-  PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
-  DEBUG: ${DEBUG:-false}
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
-  INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
-  LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
-  LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
-  SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}
-  AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE: ${AGENTS_API_TRANSITION_REQUESTS_PER_MINUTE:-500}
   TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}
-  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-  MAX_FREE_SESSIONS: ${MAX_FREE_SESSIONS:-50}
-  MAX_FREE_EXECUTIONS: ${MAX_FREE_EXECUTIONS:-50}
+  ENABLE_RESPONSES: "True"
+  PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
+  MEMORY_STORE_PASSWORD: ${MEMORY_STORE_PASSWORD:-postgres}
+  INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
   INTEGRATIONS_SERVICE_PORT: ${INTEGRATIONS_SERVICE_PORT:-8000}
   BROWSERBASE_API_KEY: ${BROWSERBASE_API_KEY}
   BROWSERBASE_PROJECT_ID: ${BROWSERBASE_PROJECT_ID}
@@ -30,96 +20,26 @@ x--shared-environment: &shared-environment
   CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
   MAILGUN_PASSWORD: ${MAILGUN_PASSWORD}
   UNSTRUCTURED_API_KEY: ${UNSTRUCTURED_API_KEY}
-  SENTRY_DSN: ${INTEGRATIONS_SENTRY_DSN}
   SKIP_CHECK_DEVELOPER_HEADERS: "True"
-  POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:-postgres}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+  GEMINI_API_KEY: ${GEMINI_API_KEY}
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+  GROQ_API_KEY: ${GROQ_API_KEY}
+  VOYAGE_API_KEY: ${VOYAGE_API_KEY}
+  CEREBRAS_API_KEY: ${CEREBRAS_API_KEY}
+  CLOUDFLARE_API_KEY: ${CLOUDFLARE_API_KEY}
+  CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
+  NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY}
+  GITHUB_API_KEY: ${GITHUB_API_KEY}
+  GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
 
-x--litellm-base: &litellm-base
-  image: ghcr.io/berriai/litellm-database:main-v1.61.7
-  restart: unless-stopped
-  hostname: litellm
-  ports:
-    - 4000:4000
-  volumes:
-    - ./litellm-config.yaml:/app/config.yaml
-    - .keys:/app/.keys:ro
-  environment:
-    - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
-    - DATABASE_URL=${LITELLM_DATABASE_URL:-postgresql://${LITELLM_POSTGRES_USER:-llmproxy}:${LITELLM_POSTGRES_PASSWORD}@${LITELLM_POSTGRES_HOST:-litellm-db}:${LITELLM_POSTGRES_PORT:-5432}/${LITELLM_POSTGRES_DB:-litellm}?sslmode=${LITELLM_POSTGRES_SSLMODE:-prefer_ssl}}
-    - REDIS_URL=${LITELLM_REDIS_URL:-${LITELLM_REDIS_PROTOCOL:-redis}://${LITELLM_REDIS_USER:-default}:${LITELLM_REDIS_PASSWORD:-${LITELLM_REDIS_PASSWORD}}@${LITELLM_REDIS_HOST:-litellm-redis}:${LITELLM_REDIS_PORT:-6379}}
-    - GEMINI_API_KEY=${GEMINI_API_KEY}
-    - OPENAI_API_KEY=${OPENAI_API_KEY}
-    - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-    - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-    - GROQ_API_KEY=${GROQ_API_KEY}
-    - VOYAGE_API_KEY=${VOYAGE_API_KEY}
-    - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
-    - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY:-}
-    - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID:-}
-    - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY:-}
-    - GITHUB_API_KEY=${GITHUB_API_KEY:-}
-    - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
-  command:
-    [
-      "--config",
-      "/app/config.yaml",
-      "--port",
-      "4000",
-      "--num_workers",
-      "8",
-      "--telemetry",
-      "False"
-    ]
-
-  develop:
-    watch:
-      - action: sync+restart
-        path: ./litellm-config.yaml
-        target: /app/config.yaml
-
+# include:
+#   - ../agents-api/docker-compose-api.yml
 
 services:
-  litellm-managed:
-    <<: *litellm-base
-    profiles:
-      - managed-db
-
-  litellm:
-    <<: *litellm-base
-    profiles:
-      - self-hosted-db
-    platform: linux/amd64
-
-    depends_on:
-      - litellm-db
-      - litellm-redis
-
-  litellm-db:
-    image: postgres:16
-    restart: unless-stopped
-    volumes:
-      - litellm-db-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=${LITELLM_POSTGRES_DB:-litellm}
-      - POSTGRES_USER=${LITELLM_POSTGRES_USER:-llmproxy}
-      - POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD}
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d ${LITELLM_POSTGRES_DB:-litellm} -U ${LITELLM_POSTGRES_USER:-llmproxy}" ]
-
-      interval: 1s
-      timeout: 5s
-      retries: 10
-
-  litellm-redis:
-    image: redis/redis-stack-server
-    restart: unless-stopped
-    environment:
-      REDIS_ARGS: --requirepass ${LITELLM_REDIS_PASSWORD}
-    volumes:
-      - litellm-redis-data:/data
-
   agents-api:
-    image: julepai/agents-api:${TAG:-dev}
+    image: julepai/agents-api:${TAG:-latest-responses}
     environment:
       <<: *shared-environment
 
@@ -127,7 +47,7 @@ services:
       - "8080:8080"
 
   integrations: 
-    image: julepai/integrations:${TAG:-dev}
+    image: julepai/integrations:${TAG:-latest-responses}
     environment:
       <<: *shared-environment
     ports:
@@ -169,7 +89,4 @@ services:
         condition: service_healthy
 
 volumes:
-  litellm-db-data:
-  litellm-redis-data:
   memory_store_data:
-    external: true
