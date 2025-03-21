@@ -34,9 +34,6 @@ x--shared-environment: &shared-environment
   GITHUB_API_KEY: ${GITHUB_API_KEY}
   GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
 
-# include:
-#   - ../agents-api/docker-compose-api.yml
-
 services:
   agents-api:
     image: julepai/agents-api:${TAG:-latest-responses}
