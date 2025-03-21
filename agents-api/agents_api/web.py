@@ -21,7 +21,7 @@ from temporalio.service import RPCError
 from .app import app
 from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
-from .env import sentry_dsn
+from .env import enable_responses, sentry_dsn
 from .exceptions import PromptTooBigError
 from .routers import (
     agents,
@@ -274,7 +274,8 @@ app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(files.router, dependencies=[Depends(get_api_key)])
 app.include_router(docs.router, dependencies=[Depends(get_api_key)])
 app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
-app.include_router(responses.router, dependencies=[Depends(get_api_key)])
+if enable_responses:
+    app.include_router(responses.router, dependencies=[Depends(get_api_key)])
 app.include_router(internal.router)
 app.include_router(healthz.router)
 # TODO: CORS should be enabled only for JWT auth

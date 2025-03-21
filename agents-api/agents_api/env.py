@@ -156,6 +156,10 @@ zerogpt_url: str = env.str(
 desklib_url: str = env.str("DESKLIB_URL", default="http://35.243.190.233/detect")
 sapling_url: str = env.str("SAPLING_URL", default="https://api.sapling.ai/api/v1/aidetect")
 brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
+# Responses Flag
+# ---------------
+enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
+
 # Consolidate environment variables
 environment: dict[str, Any] = {
     "debug": debug,
@@ -177,6 +181,7 @@ environment: dict[str, Any] = {
     "s3_access_key": s3_access_key,
     "s3_secret_key": s3_secret_key,
     "testing": testing,
+    "enable_responses": enable_responses,
 }
 
 if debug or testing:
