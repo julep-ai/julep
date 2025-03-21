@@ -1,62 +1,58 @@
 BEGIN;
 
--- -- Make sure all extensions are up to date
--- ALTER EXTENSION timescaledb UPDATE;
--- ALTER EXTENSION vectorscale UPDATE;
--- ALTER EXTENSION ai UPDATE;
+DO $$
+BEGIN
+    BEGIN
+        ALTER TABLE entries
+            SET (
+                timescaledb.compress = TRUE,
+                timescaledb.compress_segmentby = 'session_id',
+                timescaledb.compress_orderby = 'created_at DESC, entry_id DESC',
+                timescaledb.compress_chunk_time_interval = '28 days'
+            );
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during entries.compress: %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
 
--- Entries: Switch to hypercore
-SELECT remove_compression_policy ('entries', if_exists => true);
+DO $$
+BEGIN
+    BEGIN
+        SELECT
+            add_compression_policy ('entries', INTERVAL '7 days');
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during add_compression_policy(entries): %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
 
-ALTER TABLE
-    entries
-SET
-    (
-        timescaledb.enable_columnstore = true,
-        timescaledb.segmentby = 'session_id',
-        timescaledb.compress_chunk_time_interval = '14 days'
-    ),
-SET
-    ACCESS METHOD hypercore;
+DO $$
+BEGIN
+    BEGIN
+        ALTER TABLE transitions
+        SET
+            (
+                timescaledb.compress = TRUE,
+                timescaledb.compress_segmentby = 'execution_id',
+                timescaledb.compress_orderby = 'created_at DESC, transition_id DESC',
+                timescaledb.compress_chunk_time_interval = '28 days'
+            );
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during transitions.compress: %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
 
-CALL add_columnstore_policy(
-    'entries',
-    after => interval '7 days',
-    if_not_exists => true,
-    hypercore_use_access_method => true
-);
-
-
--- Transitions: Switch to hypercore
-SELECT remove_compression_policy ('transitions', if_exists => true);
-
-ALTER TABLE
-    transitions
-SET
-    (
-        timescaledb.enable_columnstore = true,
-        timescaledb.segmentby = 'execution_id',
-        timescaledb.orderby = 'created_at DESC',
-        timescaledb.compress_chunk_time_interval = '14 days'
-    ),
-SET
-    ACCESS METHOD hypercore;
-
-CALL add_columnstore_policy(
-    'transitions',
-    after => interval '7 days',
-    if_not_exists => true,
-    hypercore_use_access_method => true
-);
-
-CREATE INDEX IF NOT EXISTS idx_transitions_execution_id_hash ON transitions USING btree (execution_id);
-
-ALTER MATERIALIZED VIEW latest_transitions
-    SET (
-        timescaledb.enable_columnstore = true,
-        timescaledb.orderby = 'bucket DESC',
-        timescaledb.segmentby = 'execution_id',
-        timescaledb.compress_chunk_time_interval = '14 days'
-    );
+DO $$
+BEGIN
+    BEGIN
+        SELECT
+            add_compression_policy ('transitions', INTERVAL '7 days');
+    EXCEPTION
+        WHEN others THEN
+            RAISE NOTICE 'An error occurred during add_compression_policy(transitions): %, %', SQLSTATE, SQLERRM;
+    END;
+END $$;
 
 COMMIT;
