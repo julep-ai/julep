@@ -4,11 +4,13 @@ import "@typespec/versioning";
 
 import "./agents";
 import "./chat";
+import "./developers";
 import "./docs";
 import "./entries";
 import "./executions";
 import "./files";
 import "./jobs";
+import "./secrets";
 import "./sessions";
 import "./tasks";
 import "./tools";
@@ -70,6 +72,9 @@ namespace Api {
 
     @route("/agents/{id}/tools")
     interface AgentToolsRoute extends Tools.AgentEndpoints {}
+    
+    @route("/developers")
+    interface DevelopersRoute extends Developers.Endpoints {}
 
     @route("/users")
     interface UsersRoute extends Users.Endpoints {}
@@ -124,4 +129,16 @@ namespace Api {
 
     @route("/files")
     interface FilesRoute extends Files.Endpoints {}
+
+    @route("/developers/{id}/secrets")
+    interface DeveloperSecretsRoute extends Secrets.DeveloperSecretsRoute {}
+
+    @route("/developers/{developer_id}/secrets/{id}")
+    interface DeveloperSecretRoute extends Secrets.DeveloperSecretRoute {}
+
+    @route("/agents/{id}/secrets")
+    interface AgentSecretsRoute extends Secrets.AgentSecretsRoute {}
+
+    @route("/agents/{agent_id}/secrets/{id}")
+    interface AgentSecretRoute extends Secrets.AgentSecretRoute {}
 }

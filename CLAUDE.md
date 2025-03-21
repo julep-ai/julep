@@ -70,6 +70,7 @@ This approach ensures that documentation remains current and useful for future d
 - To modify auto-generated API models (in autogen/[A-Z]*.py files), always edit the corresponding TypeSpec files in `typespec/` directory
 - After modifying TypeSpec files, regenerate code with `bash scripts/generate_openapi_code.sh` from the root directory
 - Never modify the autogen files directly, as they will be overwritten during code generation
+- Always run the generator after making any changes to TypeSpec files, even when adding new files or namespaces
 
 ### Working with Python expressions in tasks
 - Python expressions in tasks are evaluated using `simpleeval` in a sandbox environment

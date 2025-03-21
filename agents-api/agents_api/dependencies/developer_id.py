@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import Header
 
-from ..common.protocol.developers import Developer
+from ..autogen.Developers import Developer
 from ..env import multi_tenant_mode
 from ..queries.developers.get_developer import get_developer
 from .exceptions import InvalidHeaderFormat
