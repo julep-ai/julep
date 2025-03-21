@@ -1,7 +1,7 @@
 import os
 import random
 import string
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
@@ -482,3 +482,33 @@ async def s3_client():
         finally:
             await s3_client.close()
             app.state.s3_client = None
+
+
+@fixture(scope="global")
+def mock_openai_client(make_request=make_request):
+    # Create a mock OpenAI client that mimics the SDK
+    mock_openai_client = MagicMock(spec=OpenAI)
+    mock_openai_client.base_url = "http://localhost:8080"
+    mock_openai_client.api_key = api_key
+
+    # Add the 'responses' attribute to the mock client
+    mock_openai_client.responses = MagicMock()
+
+    # Mock the create method to make a request to our API
+    mock_openai_client.responses.create = MagicMock(
+        side_effect=lambda **kwargs: make_request(
+            method="POST",
+            url="/responses",
+            json=kwargs,
+        )
+    )
+
+    # Mock the get method to make a request to our API
+    mock_openai_client.responses.get = MagicMock(
+        side_effect=lambda **kwargs: make_request(
+            method="GET",
+            url=f"/responses/{kwargs['response_id']}",
+            json={k: v for k, v in kwargs.items() if k != "response_id"},
+        )
+    )
+    return mock_openai_client
