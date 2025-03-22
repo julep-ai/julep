@@ -8,4 +8,4 @@ WORKDIR /
 
 # Default command (can be overridden)
 ENTRYPOINT ["migrate"]
-CMD ["-path", "/migrations", "-database", "postgres://postgres:postgres@memory-store:5432/postgres?sslmode=disable", "up"]
+CMD ["-path", "/migrations", "-database", "postgres://postgres:obviously_not_a_safe_password@memory-store:5432/postgres?sslmode=disable", "up"]
