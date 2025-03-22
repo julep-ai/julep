@@ -80,6 +80,10 @@
       "url": "sdks"
     },
     {
+      "name": "Responses API (Beta)",
+      "url": "responses"
+    },
+    {
       "name": "API Reference",
       "url": "api-reference",
       "openapi": "https://api.julep.ai/api/openapi.json"
@@ -228,6 +232,14 @@
             "guides/cookbooks/community-examples"
           ]
         }
+      ]
+    },
+    {
+      "group": "Responses API (Beta)",
+      "pages": [
+        "responses/quickstart",
+        "responses/concepts",
+        "responses/tutorials"
       ]
     },
     {

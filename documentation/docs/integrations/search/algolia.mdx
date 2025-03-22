@@ -42,9 +42,7 @@ To get started with the Algolia integration, follow these steps to configure and
           index_name: your_index_name # this is a placeholder for the actual index name
           query: searchquery # this is a placeholder for the actual search query
           hits_per_page: 10
-          attributes_to_retrieve:
-            key1: value1 # these are placeholders for the actual parameters
-            key2: value2 # these are placeholders for the actual parameters
+          attributes_to_retrieve: $ ["attribute1", "attribute2"] # this is a placeholder for the actual attributes to retrieve
     ```
   </Step>
 </Steps>
@@ -74,7 +72,7 @@ To get started with the Algolia integration, follow these steps to configure and
         - **_index_name_**: The name of the Algolia index to search.
         - **_query_**: The search query to run against the index.
         - **_hits_per_page_** (optional): Maximum number of results to return (default: 20).
-        - **_attributes_to_retrieve_** (optional): Dictionary of specific attributes to retrieve from the search results.
+        - **_attributes_to_retrieve_** (optional): List of specific attributes to retrieve from the search results.
   </Accordion>
 </AccordionGroup>
 
