@@ -1,4 +1,4 @@
-name: julep-responses
+name: open-responses
 
 include:
   - ../agents-api/docker-compose-api.yml
