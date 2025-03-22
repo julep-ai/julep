@@ -4,6 +4,8 @@
 
 # An open-source self-hosted version of the new [OpenAI Responses API](https://community.openai.com/t/introducing-the-responses-api/1140929).
 
+name: open-responses
+
 ## ENVIRONMENT VARS ##
 # (Recommended way to set them is using `.env` file instead of here)
 
@@ -49,7 +51,7 @@ x--shared-environment: &shared-environment
 ## SERVICES ##
 
 services:
-  responses-api:
+  api:
     image: julepai/agents-api:${TAG:-latest-responses}
     environment:
       <<: *shared-environment
