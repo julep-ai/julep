@@ -99,7 +99,7 @@ Follow the example below to see a sample response from the Responses API.
 
 <CodeGroup>
 ```python Python
-response = client.responses.create(
+response = openai_client.responses.create(
     model="gpt-4o",
     input="What's the weather in New York City?",
     tools=[{
