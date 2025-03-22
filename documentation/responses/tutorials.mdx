@@ -4,7 +4,7 @@ description: 'Tutorials for coding with the Julep Responses API using OpenAI SDK
 icon: 'code'
 ---
 
-## 1. Overview
+## Overview
 
 The Responses API provides a straightforward way to interact with language models for quick, one-off interactions. This tutorial will guide you through leveraging the SDK to create and retrieve responses.
 
@@ -12,7 +12,7 @@ The Responses API provides a straightforward way to interact with language model
 Before you begin, make sure you've set up your environment by following the [Quickstart Guide](/responses/quickstart).
 </Note>
 
-## 2. Creating a Response
+## Creating a Response
 
 To generate a response using the OpenAI SDKs, you'll use the `create` method. Here's how to do it with OpenAI's SDKs:
 
@@ -95,7 +95,7 @@ Follow the example below to see a sample response from the Responses API.
 </Accordion>
 </AccordionGroup>
 
-#### 2.1. Using Function Calling Tools
+#### Using Function Calling Tools
 
 <CodeGroup>
 ```python Python
@@ -163,7 +163,7 @@ Follow the example below to see a sample response from the Responses API.
 <Accordion title="Sample Response">
 
 ```bash Sample Response
-Response(id='067dca14-f985-7b38-8000-dbc22a251646', created_at=1742512464.0, error=None, incomplete_details=None, instructions=None, metadata={}, model='gpt-4o', object='response', output=[ResponseFunctionToolCall(id='call_djdaM8p0VI1AdHiUSdNwGN8l', arguments='{"location":"Paris, France","unit":"celsius"}', call_id='call_djdaM8p0VI1AdHiUSdNwGN8l', name='get_current_weather', type='function_call', status='completed')], parallel_tool_calls=True, temperature=1.0, tool_choice='auto', tools=[], top_p=1.0, max_output_tokens=None, previous_response_id=None, reasoning=None, status='completed', text=ResponseTextConfig(format=None, type='text'), truncation='auto', usage=ResponseUsage(input_tokens=88, output_tokens=23, output_tokens_details=OutputTokensDetails(reasoning_tokens=0), total_tokens=111, input_tokens_details={'cached_tokens': 0}), user='00000000-0000-0000-0000-000000000000', store=True)
+Response(id='067dca14-f985-7b38-8000-dbc22a251646', created_at=1742512464.0, error=None, incomplete_details=None, instructions=None, metadata={}, model='gpt-4o', object='response', output=[ResponseFunctionToolCall(id='call_djdaM8p0VI1AdHiUSdNwGN8l', arguments='{"location":"Paris, France","unit":"celsius"}', call_id='call_djdaM8p0VI1AdHiUSdNwGN8l', name='get_weather', type='function_call', status='completed')], parallel_tool_calls=True, temperature=1.0, tool_choice='auto', tools=[], top_p=1.0, max_output_tokens=None, previous_response_id=None, reasoning=None, status='completed', text=ResponseTextConfig(format=None, type='text'), truncation='auto', usage=ResponseUsage(input_tokens=88, output_tokens=23, output_tokens_details=OutputTokensDetails(reasoning_tokens=0), total_tokens=111, input_tokens_details={'cached_tokens': 0}), user='00000000-0000-0000-0000-000000000000', store=True)
 ```
 </Accordion>
 </AccordionGroup>
@@ -173,7 +173,7 @@ Response(id='067dca14-f985-7b38-8000-dbc22a251646', created_at=1742512464.0, err
 - To learn more about Function Calling, please refer to the [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling?api-mode=responses) section.
 </Note>
 
-#### 2.2. Using Web Search Tool
+#### Using Web Search Tool
 
 
 <CodeGroup>
@@ -259,7 +259,7 @@ Currently our Responses API only supports the following functionality:
 We are working on adding support for more functionality in the future.
 </Tip>
 
-## 3. Retrieving a Response
+## Retrieving a Response
 
 <CodeGroup>
 ```python Python
@@ -331,7 +331,7 @@ Follow the example below to see a sample response from the Responses API.
 Check out the [API reference](/api-reference/responses) or SDK reference ([Python](/sdks/python/reference#responses) or [JavaScript](/sdks/nodejs/reference#responses)) for more details on different operations you can perform with the Responses API.
 </Tip>
 
-## 4. Next Steps
+## Next Steps
 
 - [Learn more about Julep](/docs/concepts/overview)
 - [Learn more about the Responses API concepts](/responses/concepts)
