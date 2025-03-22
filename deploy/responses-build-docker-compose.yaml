@@ -1,7 +1,7 @@
-name: julep-responses
+name: open-responses
 
 include:
   - ../agents-api/docker-compose-api.yml
   - ../memory-store/docker-compose.yml
   - ../integrations-service/docker-compose.yml
-  - ../llm-proxy/docker-compose.yml
+  # - ../llm-proxy/docker-compose.yml
