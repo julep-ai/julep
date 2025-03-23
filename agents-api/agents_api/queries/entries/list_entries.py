@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Literal
 from uuid import UUID
 
@@ -5,6 +6,7 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Entry
+from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
@@ -34,11 +36,12 @@ SELECT
     e.model,
     e.tokenizer
 FROM entries e
-JOIN developers d ON d.developer_id = $5
-LEFT JOIN entry_relations er ON er.head = e.entry_id AND er.session_id = e.session_id
+    JOIN developers d ON d.developer_id = $5
+    LEFT JOIN entry_relations er ON er.head = e.entry_id AND er.session_id = e.session_id
 WHERE e.session_id = $1
-AND e.source = ANY($2)
-AND (er.relation IS NULL OR er.relation != ALL($6))
+    AND e.source = ANY($2)
+    AND (er.relation IS NULL OR er.relation != ALL($6))
+    AND e.created_at >= $7
 ORDER BY e.{sort_by} {direction} -- safe to interpolate
 LIMIT $3
 OFFSET $4;
@@ -60,6 +63,7 @@ async def list_entries(
     sort_by: Literal["created_at", "timestamp"] = "timestamp",
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
+    search_window: timedelta = timedelta(weeks=2),
 ) -> list[tuple[str, list] | tuple[str, list, str]]:
     """List entries in a session.
 
@@ -94,7 +98,9 @@ async def list_entries(
         offset,  # $4
         developer_id,  # $5
         exclude_relations,  # $6
+        utcnow() - search_window,  # 7
     ]
+
     return [
         (
             session_exists_query,

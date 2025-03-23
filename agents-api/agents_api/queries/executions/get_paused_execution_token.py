@@ -1,8 +1,10 @@
+from datetime import timedelta
 from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
 
+from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
@@ -22,6 +24,7 @@ SELECT
 FROM latest_transitions
 WHERE
     execution_id = $1
+    AND created_at >= $2
     AND type = 'wait';
 """
 
@@ -33,6 +36,7 @@ WHERE
 async def get_paused_execution_token(
     *,
     execution_id: UUID,
+    search_window: timedelta = timedelta(weeks=4),
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     """
     Get a paused execution token for a given execution.
@@ -47,6 +51,6 @@ async def get_paused_execution_token(
 
     return (
         get_paused_execution_token_query,
-        [execution_id],
+        [execution_id, utcnow() - search_window],
         "fetchrow",
     )

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Literal
 from uuid import UUID
 
@@ -16,6 +17,7 @@ SELECT * FROM transitions
 WHERE
     execution_id = $1
     AND (current_step).scope_id = $6
+    AND created_at >= $7
 ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
@@ -82,6 +84,7 @@ async def list_execution_transitions(
     sort_by: Literal["created_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     scope_id: UUID | None = None,
+    search_window: timedelta = timedelta(weeks=2),
 ) -> tuple[str, list]:
     """
     List execution transitions for a given execution.
@@ -119,5 +122,7 @@ async def list_execution_transitions(
         query = query.replace("AND (current_step).scope_id = $6", "")
     else:
         params.append(str(scope_id))
+
+    params.append(utcnow() - search_window)
 
     return (query, params)

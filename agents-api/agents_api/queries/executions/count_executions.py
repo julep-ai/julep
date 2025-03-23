@@ -1,8 +1,10 @@
+from datetime import timedelta
 from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
 
+from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
@@ -11,6 +13,7 @@ execution_count_query = """
 SELECT COUNT(*) FROM latest_executions
 WHERE
     developer_id = $1
+    AND created_at >= $3
     AND task_id = $2;
 """
 
@@ -23,9 +26,10 @@ async def count_executions(
     *,
     developer_id: UUID,
     task_id: UUID,
+    search_window: timedelta = timedelta(weeks=4),
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     """
-    Count the number of executions for a given task.
+    Count the number of executions for a given task (restricted to one month by default).
 
     Parameters:
         developer_id (UUID): The ID of the developer.
@@ -36,6 +40,6 @@ async def count_executions(
     """
     return (
         execution_count_query,
-        [developer_id, task_id],
+        [developer_id, task_id, utcnow() - search_window],
         "fetchrow",
     )
