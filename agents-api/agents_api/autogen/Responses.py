@@ -61,7 +61,7 @@ class ComputerTool(BaseTool):
     )
     type: Literal["computer-preview"] = "computer-preview"
     """
-    The type of the computer use tool. Always `computer-preview`. 
+    The type of the computer use tool. Always `computer-preview`.
     """
     display_width: float
     """
