@@ -1,0 +1,148 @@
+---
+title: 'Roadmap'
+description: 'Current status and roadmap of the Julep Responses API implementation'
+icon: 'road'
+---
+
+## Overview
+
+The Julep Responses API is under active development. This page provides a comprehensive overview of implemented features, in-progress development, and planned enhancements.
+
+<Warning>
+- Please note that the Julep Responses API is not hosted by Julep. You need to host your own instance of the Julep Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
+- Being in beta, the Julep Responses API is subject to change. Please check back frequently for the latest updates on feature availability.
+- To learn more about the motivations and design principles behind the Julep Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+</Warning>
+
+## Current Implementation Status
+
+### 1. Implemented Features ✅
+
+This section lists the core functionalities that have been implemented.
+
+#### 1.1. Core Functionality
+- Basic Response Creation and Retrieval
+- Text and Image Input Support
+- Multiple Input and Output Formats
+- Response Metadata
+- Reasoning Support
+- Tool Choice Configuration
+
+#### 1.2. Advanced Features
+- **Function Calling**
+  - Dynamic function execution
+  - Parameter validation
+  - Error handling
+  - Function chaining support
+- **Web Search Tool Support**
+  - Real-time web queries
+  - Result filtering and ranking
+  - Source verification
+  - Search result caching
+- **Response Metadata**
+  - Creation timestamps
+  - Processing duration
+  - Resource usage metrics
+  - Performance analytics
+- **Reasoning Support**
+  - Step-by-step reasoning
+  - Logical deduction
+  - Context awareness
+  - Decision tracking
+- **Tool Choice Configuration**
+  - Tool selection criteria
+  - Priority-based routing
+  - Fallback mechanisms
+  - Tool-specific parameters
+
+### 2. Partially Implemented Features 🔄
+
+This section lists the features that are partially implemented.
+
+#### 2.1. File Search Tool
+- Basic file indexing
+- *[TODO]* Content search capabilities
+- *[TODO]* File type support
+- *[TODO]* Search result ranking
+- *[TODO]* Advanced filtering options
+- *[TODO]* Full-text search optimization
+
+#### 2.2. Reasoning Effort
+- *[TODO]* Basic thinking budget allocation
+- *[TODO]* Dynamic budget adjustment
+- *[TODO]* Resource optimization
+- Performance monitoring
+
+#### 2.3. Annotations for Citations
+- Basic citation format
+- *[TODO]* Source verification
+- *[TODO]* Citation style customization
+- *[TODO]* Automated citation generation
+
+### 3. Planned Features 🔜
+
+This section lists the features that are planned to be implemented in the future.
+
+#### 3.1. Streaming Support
+
+  - Real-time response streaming
+  - Progress indicators
+  - Partial response handling
+  - Connection management
+
+#### 3.2. Response Deletion Endpoint
+
+  - Secure deletion
+  - Cascade deletion options
+  - Deletion confirmation
+  - Audit logging
+
+#### 3.3. Integration Features
+
+- **Computer Tool Call Support**
+  - OpenAI compatibility layer
+  - Tool translation service
+  - Error handling
+  - Response mapping
+
+#### 3.4. Performance Optimizations
+- **Truncation Auto Support**
+  - Smart content truncation
+  - Context preservation
+  - Length optimization
+  - Quality maintenance
+
+#### 3.5. API Enhancements
+- **GET /responses/{response_id}/input_items**
+  - Input item retrieval
+  - Item metadata
+  - Version history
+  - Relationship mapping
+- **Pagination for Input Items**
+  - Page size configuration
+  - Cursor-based navigation
+  - Total count information
+  - Filtering options
+
+### 4. Future Considerations
+
+This section lists the features that are planned to be implemented in the future.
+
+#### 4.1. System Enhancements
+- Enhanced security features
+- Advanced analytics dashboard
+- Custom plugin system
+- Multi-language support
+
+#### 4.2. Performance & Scaling
+- Rate limiting and quotas
+- Advanced caching mechanisms
+- Load balancing improvements
+- Distributed processing support
+
+## Next Steps
+
+- [Quickstart Guide](/responses/quickstart) - Get started with the Responses API
+- [API Reference](/responses/api-reference) - Detailed API documentation
+- [Tutorials](/responses/tutorials) - Learn through practical examples
+- [Concepts](/responses/concepts) - Understand core concepts and components

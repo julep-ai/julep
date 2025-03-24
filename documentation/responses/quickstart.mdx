@@ -6,17 +6,22 @@ icon: 'rocket'
 
 ## Introduction
 
-The Responses API provides a lightweight interface for generating content with Large Language Models (LLMs) without needing to create persistent agents or sessions. 
+The Julep Responses API provides a lightweight interface for generating content with Large Language Models (LLMs) without needing to create persistent agents or sessions. 
 It's perfect for quick, one-off interactions like content generation, text processing, or question answering.
 
-<Tip>
-The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
-</Tip>
-<Note>
-- The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
-</Note>
+Unlike OpenAI's Responses API which is limited to their models, Julep's implementation serves as an open-source compatibility layer that allows you to use models from any provider, eliminating vendor lock-in and providing flexibility in AI product development. Being designed to be compatible with OpenAI's interface, it not only makes it easier to migrate existing applications that use OpenAI's interface, but also allows you to leverage model diversity, reduce dependency risks, future-proof your applications, and optimize costs.
+
+- **Leverage model diversity**: Choose the best models for specific tasks based on performance, cost, or specialized capabilities
+- **Reduce dependency risks**: Avoid being affected by outages or pricing changes from a single provider
+- **Future-proof your applications**: Easily adopt new models as they emerge without rewriting your integration code
+- **Optimize costs**: Select models based on the best price-performance ratio for each use case
+
+To conclude, the Julep Responses API provides a consistent experience across all supported models with standardized parameter handling and response formatting, making it easier to experiment with different models while maintaining application stability.
+
 <Warning>
-Julep doesn't host the Responses API. You need to host your own instance of the Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
+- Please note that the Julep Responses API is not hosted by Julep. You need to host your own instance of the Julep Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
+- Being in beta, the Julep Responses API is subject to change. Please check back frequently for the latest updates on feature availability.
+- To learn more about the motivations and design principles behind the Julep Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
 </Warning>
 
 ## Local Installation
@@ -47,25 +52,32 @@ cd julep-responses-api
 
 </Step>
 
-<Step title="Set up the environment variables">
+<Step title="Download and edit the environment variables">
 
-Copy the `.env.example` file from the [Julep Deploy](https://github.com/julep-ai/julep/tree/dev/deploy) repository to a `.env` file and set the environment variables.
+```bash
+wget https://u.julep.ai/responses-env.example -O .env
+```
 
+Edit the `.env` file with your own values.
 
 </Step>
 
-<Step title="Copy the Docker Compose file">
+<Step title="Download the Docker Compose file">
 
-Copy the `standalone-docker-compose.yaml` file from the [Julep Deploy](https://github.com/julep-ai/julep/tree/dev/deploy) repository to the current directory.
-
+```bash
+wget https://u.julep.ai/responses-compose.yaml
+```
+Download the file to the current directory with the name `responses-compose.yaml`. This is the file that will be used to run the Docker containers.
 
 </Step>
 
 <Step title="Run the Docker containers">
 
 ```bash
-docker compose -f standalone-docker-compose.yaml up -d --build 
+docker compose -f responses-compose.yaml up --watch
 ```
+
+This will start the containers in watch mode.
 
 </Step>
 
@@ -85,6 +97,8 @@ With the OpenAI client initialized, you can now use the Responses API to generat
 
 <Note>
 - RESPONSE_API_KEY is the API key that you set in the `.env` file.
+- While using the models other than OpenAI, please you might need to add the `provider/` prefix to the model name. To learn more about the supported providers, check out the [LiteLLM Providers](https://docs.litellm.ai/docs/providers) page.
+- Make sure to add the relvant Provider keys to the `.env` file as well to use the models from the supported providers.
 </Note>
 
 ### 1. Install the OpenAI SDK
