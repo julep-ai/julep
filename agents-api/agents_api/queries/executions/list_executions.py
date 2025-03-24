@@ -1,4 +1,3 @@
-from datetime import timedelta
 from typing import Literal
 from uuid import UUID
 
@@ -7,7 +6,6 @@ from beartype import beartype
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Execution
-from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 from .constants import OUTPUT_UNNEST_KEY
@@ -37,14 +35,12 @@ FROM
 WHERE
     developer_id = $1
     AND task_id = $2
-    AND created_at >= $6
 ORDER BY
-    CASE WHEN $3 = 'asc' THEN created_at END ASC NULLS LAST,
-    CASE WHEN $3 = 'desc' THEN created_at END DESC NULLS LAST
-    -- Add this back once we update the view to support sorting by updated_at
-    -- CASE WHEN $3 = 'updated_at' AND $4 = 'asc' THEN updated_at END ASC NULLS LAST,
-    -- CASE WHEN $3 = 'updated_at' AND $4 = 'desc' THEN updated_at END DESC NULLS LAST
-LIMIT $4 OFFSET $5;
+    CASE WHEN $3 = 'created_at' AND $4 = 'asc' THEN created_at END ASC NULLS LAST,
+    CASE WHEN $3 = 'created_at' AND $4 = 'desc' THEN created_at END DESC NULLS LAST,
+    CASE WHEN $3 = 'updated_at' AND $4 = 'asc' THEN updated_at END ASC NULLS LAST,
+    CASE WHEN $3 = 'updated_at' AND $4 = 'desc' THEN updated_at END DESC NULLS LAST
+LIMIT $5 OFFSET $6;
 """
 
 
@@ -81,7 +77,6 @@ async def list_executions(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-    search_window: timedelta = timedelta(weeks=4),
 ) -> tuple[str, list]:
     """
     List executions for a given task.
@@ -112,10 +107,9 @@ async def list_executions(
         [
             developer_id,
             task_id,
-            # sort_by,
+            sort_by,
             direction,
             limit,
             offset,
-            utcnow() - search_window,
         ],
     )

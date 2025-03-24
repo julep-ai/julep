@@ -42,6 +42,7 @@ WHERE e.session_id = $1
     AND e.source = ANY($2)
     AND (er.relation IS NULL OR er.relation != ALL($6))
     AND e.created_at >= $7
+    AND e.created_at >= (select created_at from sessions where session_id = $1)
 ORDER BY e.{sort_by} {direction} -- safe to interpolate
 LIMIT $3
 OFFSET $4;
@@ -63,7 +64,7 @@ async def list_entries(
     sort_by: Literal["created_at", "timestamp"] = "timestamp",
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
-    search_window: timedelta = timedelta(weeks=2),
+    search_window: timedelta = timedelta(weeks=4),
 ) -> list[tuple[str, list] | tuple[str, list, str]]:
     """List entries in a session.
 

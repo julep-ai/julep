@@ -1,10 +1,8 @@
-from datetime import timedelta
 from uuid import UUID
 
 from beartype import beartype
 
 from ...common.protocol.models import ExecutionInput
-from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
@@ -39,7 +37,6 @@ SELECT * FROM
             developer_id = $1
             AND task_id = $2
             AND execution_id = $3
-            AND created_at >= $4
         LIMIT 1
     ) e
 ) AS execution;
@@ -78,7 +75,6 @@ async def prepare_execution_input(
     developer_id: UUID,
     task_id: UUID,
     execution_id: UUID,
-    search_window: timedelta = timedelta(weeks=4),
 ) -> tuple[str, list]:
     """
     Prepare the execution input for a given task.
@@ -94,5 +90,5 @@ async def prepare_execution_input(
 
     return (
         prepare_execution_input_query,
-        [str(developer_id), str(task_id), str(execution_id), utcnow() - search_window],
+        [str(developer_id), str(task_id), str(execution_id)],
     )

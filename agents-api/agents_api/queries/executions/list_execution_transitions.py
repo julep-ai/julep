@@ -16,8 +16,9 @@ list_execution_transitions_query = """
 SELECT * FROM transitions
 WHERE
     execution_id = $1
-    AND (current_step).scope_id = $6
-    AND created_at >= $7
+    AND (current_step).scope_id = $7
+    AND created_at >= $6
+    AND created_at >= (select created_at from executions where execution_id = $1)
 ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
@@ -115,14 +116,13 @@ async def list_execution_transitions(
         offset,
         sort_by,
         direction,
+        utcnow() - search_window,
     ]
 
     query = list_execution_transitions_query
     if scope_id is None:
-        query = query.replace("AND (current_step).scope_id = $6", "")
+        query = query.replace("AND (current_step).scope_id = $7", "")
     else:
         params.append(str(scope_id))
-
-    params.append(utcnow() - search_window)
 
     return (query, params)

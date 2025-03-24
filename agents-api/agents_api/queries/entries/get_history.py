@@ -1,4 +1,3 @@
-import json
 from uuid import UUID
 
 from beartype import beartype
@@ -10,7 +9,7 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for getting history with a developer check and relations
 history_query = """
-WITH entries AS (
+WITH collected_entries AS (
     SELECT
         e.entry_id AS id,
         e.session_id,
@@ -23,13 +22,16 @@ WITH entries AS (
         e.timestamp,
         e.tool_calls,
         e.tool_call_id,
-        e.tokenizer
+        e.tokenizer,
+        s.created_at AS session_created_at
     FROM entries e
-    JOIN developers d ON d.developer_id = $3
-    WHERE e.session_id = $1
-    AND e.source = ANY($2)
+    JOIN sessions s ON s.session_id = e.session_id
+        AND s.session_id = $1
+        AND s.developer_id = $3
+    WHERE e.source = ANY($2)
+        AND e.created_at >= s.created_at
 ),
-relations AS (
+collected_relations AS (
     SELECT
         er.head,
         er.relation,
@@ -38,19 +40,20 @@ relations AS (
     WHERE er.session_id = $1
 )
 SELECT
-    (SELECT json_agg(e) FROM entries e) AS entries,
-    (SELECT json_agg(r) FROM relations r) AS relations,
+    (SELECT json_agg(e) FROM collected_entries e) AS entries,
+    (SELECT json_agg(r) FROM collected_relations r) AS relations,
+    (SELECT session_created_at FROM collected_entries) AS created_at,
     $1::uuid AS session_id
 """
 
 
-def _transform(d):
+def _transform(row):
     return {
         "entries": [
             {
                 **entry,
             }
-            for entry in json.loads(d.get("entries") or "[]")
+            for entry in (row["entries"] or [])
         ],
         "relations": [
             {
@@ -58,10 +61,10 @@ def _transform(d):
                 "relation": r["relation"],
                 "tail": r["tail"],
             }
-            for r in (d.get("relations") or [])
+            for r in (row["relations"] or [])
         ],
-        "session_id": d.get("session_id"),
-        "created_at": utcnow(),
+        "session_id": row["session_id"],
+        "created_at": row["created_at"] or utcnow(),
     }
 
 
@@ -79,7 +82,8 @@ async def get_history(
     session_id: UUID,
     allowed_sources: list[str] = ["api_request", "api_response"],
 ) -> tuple[str, list] | tuple[str, list, str]:
-    """Get the history of a session.
+    """
+    Get session history.
 
     Parameters:
         developer_id (UUID): The ID of the developer.
@@ -89,6 +93,7 @@ async def get_history(
     Returns:
         tuple[str, list] | tuple[str, list, str]: SQL query and parameters for getting the history.
     """
+
     return (
         history_query,
         [session_id, allowed_sources, developer_id],

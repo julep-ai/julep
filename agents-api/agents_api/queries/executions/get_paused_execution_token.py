@@ -25,6 +25,7 @@ FROM latest_transitions
 WHERE
     execution_id = $1
     AND created_at >= $2
+    AND created_at >= (select created_at from executions where execution_id = $1)
     AND type = 'wait';
 """
 
