@@ -55,8 +55,6 @@ services:
     image: julepai/agents-api:${TAG:-latest-responses}
     environment:
       <<: *shared-environment
-      POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}
-
     ports:
       - "${RESPONSES_API_PORT:-8080}:8080" # map host to container port
 
@@ -68,11 +66,9 @@ services:
   memory-store:
     image: timescale/timescaledb-ha:pg17
     environment:
-      <<: *shared-environment
-
+      POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}
     volumes:
       - memory_store_data:/home/postgres/pgdata/data
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
       interval: 10s
