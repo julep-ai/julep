@@ -49,7 +49,7 @@ async def acompletion(
     custom_api_key: str | None = None,
     **kwargs,
 ) -> ModelResponse | CustomStreamWrapper:
-    if not custom_api_key:
+    if not custom_api_key and litellm_url:
         model = f"openai/{model}"  # This is needed for litellm
 
     supported_params = get_supported_openai_params(model)
