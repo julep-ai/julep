@@ -6,12 +6,13 @@ from ..env import pg_dsn
 
 
 async def _init_conn(conn):
-    await conn.set_type_codec(
-        "jsonb",
-        encoder=json.dumps,
-        decoder=json.loads,
-        schema="pg_catalog",
-    )
+    for datatype in ["json", "jsonb"]:
+        await conn.set_type_codec(
+            datatype,
+            encoder=json.dumps,
+            decoder=json.loads,
+            schema="pg_catalog",
+        )
 
 
 async def create_db_pool(dsn: str | None = None, **kwargs):
