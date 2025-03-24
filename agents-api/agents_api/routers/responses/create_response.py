@@ -39,7 +39,7 @@ async def process_tool_calls(
 
     Args:
         current_messages: The current message history
-        tool_call_responses: The response from the model containing tool calls
+        tool_call_requests: The response from the model containing tool calls
 
     Returns:
         Updated messages with tool results appended

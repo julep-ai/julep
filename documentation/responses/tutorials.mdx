@@ -9,7 +9,8 @@ icon: 'code'
 The Responses API provides a straightforward way to interact with language models for quick, one-off interactions. This tutorial will guide you through leveraging the SDK to create and retrieve responses.
 
 <Note>
-Before you begin, make sure you've set up your environment by following the [Quickstart Guide](/responses/quickstart).
+- Before you begin, make sure you've set up your environment by following the [Quickstart Guide](/responses/quickstart).
+- RESPONSE_API_KEY is the API key that you set in the `.env` file.
 </Note>
 
 ## Creating a Response
@@ -21,7 +22,7 @@ To generate a response using the OpenAI SDKs, you'll use the `create` method. He
 from openai import OpenAI
 
 # Initialize the client with your Julep API key
-openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+openai_client = OpenAI(base_url="http://localhost:8080/", api_key="RESPONSE_API_KEY")
 
 # Create a simple response
 response = openai_client.responses.create(
@@ -38,7 +39,7 @@ print("Generated response:", response.output[0].content[0].text)
 import { OpenAI } from 'openai';
 
 // Initialize the client with your Julep API key
-const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/', apiKey: 'RESPONSE_API_KEY' });
 
 // Create a simple response
 const response = await openai_client.responses.create({
@@ -180,7 +181,7 @@ Response(id='067dca14-f985-7b38-8000-dbc22a251646', created_at=1742512464.0, err
 ```python Python
 from openai import OpenAI
 
-openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+openai_client = OpenAI(base_url="http://localhost:8080/", api_key="RESPONSE_API_KEY")
 
 response = openai_client.responses.create(
     model="gpt-4o",
@@ -192,7 +193,7 @@ response = openai_client.responses.create(
 ```javascript Node.js
 import { OpenAI } from 'openai';
 
-const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/', apiKey: 'RESPONSE_API_KEY' });
 const response = await openai_client.responses.create({
     model: "gpt-4o",
     tools: [{type: "web_search_preview"}],
@@ -265,7 +266,7 @@ We are working on adding support for more functionality in the future.
 ```python Python
 from openai import OpenAI
 
-openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+openai_client = OpenAI(base_url="http://localhost:8080/", api_key="RESPONSE_API_KEY")
 response = openai_client.responses.retrieve(
     response_id="response_id_here"
 )
@@ -275,7 +276,7 @@ print("Retrieved response:", response.output[0].content[0].text)
 ```javascript Node.js
 import { OpenAI } from 'openai';
 
-const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/', apiKey: 'RESPONSE_API_KEY' });
 const response = await openai_client.responses.retrieve({
     response_id: "response_id_here"
 });

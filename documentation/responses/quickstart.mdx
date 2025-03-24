@@ -13,7 +13,7 @@ It's perfect for quick, one-off interactions like content generation, text proce
 The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
 </Tip>
 <Note>
-The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+- The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
 </Note>
 <Warning>
 Julep doesn't host the Responses API. You need to host your own instance of the Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
@@ -83,6 +83,10 @@ docker ps
 
 With the OpenAI client initialized, you can now use the Responses API to generate content.
 
+<Note>
+- RESPONSE_API_KEY is the API key that you set in the `.env` file.
+</Note>
+
 ### 1. Install the OpenAI SDK
 
 <CodeGroup>
@@ -101,12 +105,12 @@ npm install openai
 
 ```python Python
 from openai import OpenAI
-openai_client = OpenAI(base_url="http://localhost:8080/api", api_key="YOUR_JULEP_API_KEY")
+openai_client = OpenAI(base_url="http://localhost:8080/", api_key="RESPONSE_API_KEY")
 ```
 
 ```javascript Node.js
 import { OpenAI } from 'openai';
-const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: 'YOUR_JULEP_API_KEY' });
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/', apiKey: 'RESPONSE_API_KEY' });
 ```
 
 </CodeGroup>
@@ -119,7 +123,7 @@ const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey:
 import os
 from openai import OpenAI
 
-openai_client = OpenAI(base_url="http://localhost:8080/api", api_key=os.getenv("JULEP_API_KEY"))
+openai_client = OpenAI(base_url="http://localhost:8080/", api_key=os.getenv("RESPONSE_API_KEY"))
 
 response = openai_client.responses.create(
     model="gpt-4o-mini",
@@ -132,7 +136,7 @@ print("Generated response:", response.output[0].content[0].text)
 
 import { OpenAI } from 'openai';
 
-const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/api', apiKey: "JULEP_API_KEY" });
+const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/', apiKey: "RESPONSE_API_KEY" });
 
 const response = await openai_client.responses.create({
     model: "gpt-4o-mini",
