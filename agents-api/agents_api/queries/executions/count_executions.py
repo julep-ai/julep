@@ -11,6 +11,7 @@ execution_count_query = """
 SELECT COUNT(*) FROM latest_executions
 WHERE
     developer_id = $1
+    AND created_at >= (select created_at from developers where developer_id = $1)
     AND task_id = $2;
 """
 

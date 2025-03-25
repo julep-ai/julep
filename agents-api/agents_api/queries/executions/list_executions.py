@@ -33,15 +33,14 @@ SELECT
 FROM
     latest_executions
 WHERE
-    developer_id = $1 AND
-    task_id = $2
+    developer_id = $1
+    AND task_id = $2
 ORDER BY
-    CASE WHEN $3 = 'asc' THEN created_at END ASC NULLS LAST,
-    CASE WHEN $3 = 'desc' THEN created_at END DESC NULLS LAST
-    -- Add this back once we update the view to support sorting by updated_at
-    -- CASE WHEN $3 = 'updated_at' AND $4 = 'asc' THEN updated_at END ASC NULLS LAST,
-    -- CASE WHEN $3 = 'updated_at' AND $4 = 'desc' THEN updated_at END DESC NULLS LAST
-LIMIT $4 OFFSET $5;
+    CASE WHEN $3 = 'created_at' AND $4 = 'asc' THEN created_at END ASC NULLS LAST,
+    CASE WHEN $3 = 'created_at' AND $4 = 'desc' THEN created_at END DESC NULLS LAST,
+    CASE WHEN $3 = 'updated_at' AND $4 = 'asc' THEN updated_at END ASC NULLS LAST,
+    CASE WHEN $3 = 'updated_at' AND $4 = 'desc' THEN updated_at END DESC NULLS LAST
+LIMIT $5 OFFSET $6;
 """
 
 
@@ -108,7 +107,7 @@ async def list_executions(
         [
             developer_id,
             task_id,
-            # sort_by,
+            sort_by,
             direction,
             limit,
             offset,

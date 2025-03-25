@@ -237,6 +237,8 @@ async def _(
     result = await list_executions(
         developer_id=developer_id,
         task_id=task.id,
+        sort_by="updated_at",
+        direction="asc",
         connection_pool=pool,
     )
 

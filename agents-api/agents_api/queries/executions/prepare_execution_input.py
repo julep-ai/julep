@@ -13,8 +13,8 @@ SELECT * FROM
     SELECT to_jsonb(a) AS agent FROM (
         SELECT * FROM agents
         WHERE
-            developer_id = $1  AND
-            agent_id = (
+            developer_id = $1
+            AND agent_id = (
                 SELECT agent_id FROM tasks
                 WHERE developer_id = $1 AND task_id = $2
                 LIMIT 1
@@ -26,17 +26,17 @@ SELECT * FROM
     SELECT COALESCE(jsonb_agg(r), '[]'::jsonb) AS tools FROM (
         SELECT * FROM tools
         WHERE
-            developer_id = $1 AND
-            task_id = $2
+            developer_id = $1
+            AND task_id = $2
     ) r
 ) AS tools,
 (
     SELECT to_jsonb(e) AS execution FROM (
         SELECT * FROM latest_executions
         WHERE
-            developer_id = $1 AND
-            task_id = $2 AND
-            execution_id = $3
+            developer_id = $1
+            AND task_id = $2
+            AND execution_id = $3
         LIMIT 1
     ) e
 ) AS execution;
@@ -87,11 +87,8 @@ async def prepare_execution_input(
     Returns:
         tuple[str, list]: SQL query and parameters for preparing the execution input.
     """
+
     return (
         prepare_execution_input_query,
-        [
-            str(developer_id),
-            str(task_id),
-            str(execution_id),
-        ],
+        [str(developer_id), str(task_id), str(execution_id)],
     )
