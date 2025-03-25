@@ -49,7 +49,7 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
     match data.type:
         case "finish_branch" | "finish":
             assert data.next is None, (
-                "Next target must be None for finish/finish_branch/error/cancelled"
+                "Next target must be None for finish/finish_branch"
             )
 
             # FIXME: HACK: Fix this and uncomment
