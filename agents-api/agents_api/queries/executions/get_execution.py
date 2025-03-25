@@ -31,7 +31,9 @@ SELECT
 FROM
     latest_executions
 WHERE
-    execution_id = $1;
+    execution_id = $1
+ORDER BY updated_at DESC
+LIMIT 1;
 """
 
 
