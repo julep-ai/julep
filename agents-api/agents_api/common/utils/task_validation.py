@@ -50,7 +50,7 @@ def backwards_compatibility(expr: str) -> str:
     if (
         (expr.startswith("[") and expr.endswith("]"))
         or (expr.startswith("_[") and expr.endswith("]"))
-        or (expr.startswith("_.") and expr.endswith("]"))
+        or expr.startswith("_.")
         or "outputs[" in expr
         or "inputs[" in expr
         or expr == "_"
