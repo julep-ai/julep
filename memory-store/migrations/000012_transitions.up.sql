@@ -85,7 +85,7 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_transitions_current') THEN
-        CREATE UNIQUE INDEX idx_transitions_current ON transitions USING btree (execution_id, current_step, created_at DESC)
+        CREATE UNIQUE INDEX idx_transitions_current ON transitions USING btree (execution_id, current_step, created_at DESC);
     END IF;
 END $$;
 
