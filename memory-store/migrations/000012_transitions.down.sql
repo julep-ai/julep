@@ -13,6 +13,8 @@ DROP INDEX IF EXISTS idx_transitions_next;
 
 DROP INDEX IF EXISTS idx_transitions_current;
 
+DROP INDEX IF EXISTS transitions_created_at_idx;
+
 -- Drop the transitions table (this will also remove it from hypertables)
 DO $$
 BEGIN
