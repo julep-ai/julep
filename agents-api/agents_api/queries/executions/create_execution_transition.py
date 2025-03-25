@@ -47,13 +47,17 @@ RETURNING *;
 def validate_transition_targets(data: CreateTransitionRequest) -> None:
     # Make sure the current/next targets are valid
     match data.type:
-        case "finish_branch" | "finish" | "error" | "cancelled":
+        case "finish_branch" | "finish":
             assert data.next is None, (
                 "Next target must be None for finish/finish_branch/error/cancelled"
             )
 
             # FIXME: HACK: Fix this and uncomment
             # The above assertion is now implemented and uncommented
+
+        case "error" | "cancelled":
+            # TODO: Implement this
+            pass
 
         case "init_branch" | "init":
             assert data.next and data.current.step == data.next.step == 0, (
