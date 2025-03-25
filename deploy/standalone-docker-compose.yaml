@@ -53,14 +53,14 @@ x--shared-environment: &shared-environment
 
 services:
   api:
-    image: julepai/agents-api:${TAG:-latest-responses}
+    image: julepai/agents-api:${TAG:-responses-latest}
     environment:
       <<: *shared-environment
     ports:
       - "${RESPONSES_API_PORT:-8080}:8080" # map host to container port
 
   integrations: 
-    image: julepai/integrations:${TAG:-latest-responses}
+    image: julepai/integrations:${TAG:-responses-latest}
     environment:
       <<: *shared-environment
 
