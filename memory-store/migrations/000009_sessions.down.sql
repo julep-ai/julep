@@ -14,6 +14,8 @@ DROP TABLE IF EXISTS session_lookup;
 -- Drop sessions table and its indexes
 DROP TRIGGER IF EXISTS trg_sessions_updated_at ON sessions;
 
+DROP INDEX IF EXISTS idx_sessions_metadata;
+
 DROP TABLE IF EXISTS sessions CASCADE;
 
 -- Drop the enum type
