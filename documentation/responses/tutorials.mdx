@@ -1,25 +1,31 @@
 ---
 title: 'Tutorial'
-description: 'Tutorials for coding with the Julep Responses API using OpenAI SDKs'
+description: 'Tutorials for Julep Open Responses API using OpenAI SDKs'
 icon: 'code'
 ---
 
 ## Overview
 
-The Julep Responses API provides a straightforward way to interact with language models for quick, one-off interactions. This tutorial will guide you through leveraging the SDK to create and retrieve responses.
+The Julep's Open Responses API provides a straightforward way to interact with language models for quick, one-off interactions. This tutorial will guide you through leveraging the SDK to create and retrieve responses.
 
 <Warning>
-- Please note that the Julep Responses API is not hosted by Julep. You need to host your own instance of the Julep Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
-- Being in beta, the Julep Responses API is subject to change. Please check back frequently for the latest updates on feature availability.
-- To learn more about the motivations and design principles behind the Julep Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+- The Open Responses API requires self-hosting. See the [installation guide](/responses/quickstart/#local-installation) below.
+- Being in Alpha, the API is subject to change. Check back frequently for updates.
+- For more context, see the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
 </Warning>
 
 <Note>
-- Before you begin, make sure you've set up your environment by following the [Quickstart Guide](/responses/quickstart).
-- RESPONSE_API_KEY is the API key that you set in the `.env` file.
-- While using the models other than OpenAI, please add the `provider/` prefix to the model name. To learn more about the supported providers, check out the [LiteLLM Providers](https://docs.litellm.ai/docs/providers) page.
-- Make sure to add the relvant Provider keys to the `.env` file as well to use the models from the supported providers.
+  <h4>API Key Configuration</h4>
+  - `RESPONSE_API_KEY` is the API key that you set in the `.env` file.
+  
+  <h4>Model Selection</h4>
+  - While using models other than OpenAI, one might need to add the `provider/` prefix to the model name.
+  - For supported providers, see the [LiteLLM Providers](https://docs.litellm.ai/docs/providers) documentation.
+  
+  <h4>Environment Setup</h4>
+  - Add the relevant provider keys to the `.env` file to use their respective models.
 </Note>
+
 
 ## Creating a Response
 
@@ -342,7 +348,8 @@ Check out the [API reference](/api-reference/responses) or SDK reference ([Pytho
 
 ## Next Steps
 
-- [Learn more about Julep](/docs/concepts/overview)
-- [Learn more about the Responses API concepts](/responses/concepts)
-- [Return to the Quickstart guide](/responses/quickstart)
-- [Learn more about the OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses)
+- [Return to the Quickstart guide](/responses/quickstart) - To get started with the Julep Open Responses API.
+- [Learn more about Julep](/docs/introduction/julep) - To learn more about Julep.
+- [Learn more about the Open Responses API concepts](/responses/concepts) - To learn more about the concepts of the Julep Open Responses API.
+- [Learn more about the Open Responses API Roadmap](/responses/roadmap) - To learn more about the roadmap of the Julep Open Responses API.
+- [GitHub](https://github.com/julep-ai/julep) - To contribute to the project
