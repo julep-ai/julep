@@ -6,16 +6,12 @@ icon: 'comment-dots'
 
 ## Overview
 
-In this section, we'll cover the key concepts and components of the Responses API. The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
+In this section, we'll cover the key concepts and components of the Julep Responses API. The Julep Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
 
-<Tip>
-The Responses API is designed to be compatible with OpenAI's interface, making it easy to migrate existing applications that use OpenAI's API to Julep.
-</Tip>
-<Note>
-The Responses API is currently in beta and subject to change. To learn more about the motivations and design principles behind the Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
-</Note>
 <Warning>
-Julep doesn't host the Responses API. You need to host your own instance of the Responses API to use it. The instructions to host your own instance are [here](/responses/quickstart/#local-installation).
+- Please note that the Julep Responses API is not hosted by Julep. You need to host your own instance of the Julep Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
+- Being in beta, the Julep Responses API is subject to change. Please check back frequently for the latest updates on feature availability.
+- To learn more about the motivations and design principles behind the Julep Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
 </Warning>
 
 ## Components
@@ -61,35 +57,7 @@ When creating a response, you can leverage these configuration options to tailor
 | `metadata`            | `object` \| `null`                       | Additional metadata for the response                                                              | `None`         | Implemented   |
 
 
-## Implementation Status
-
-The Responses API is under active development. Here's the current implementation status:
-
-### Implemented Features ✅
-
-- Basic response creation and retrieval
-- Text and image input support
-- Function calling
-- Web search tool support
-- Response metadata
-- Reasoning support
-- Tool choice configuration
-- Multiple input and output formats
-
-### Partially Implemented Features 🔄
-
-- File search tool (in progress)
-- Reasoning effort (mapping to thinking budget)
-- Annotations for citations
-
-### Planned Features 🔜
-
-- Streaming support
-- Response deletion endpoint
-- Computer tool call support (compatibility with OpenAI)
-- Truncation auto support
-- GET /responses/{response_id}/input_items endpoint
-- Pagination for input items
+To know more about the roadmap of the Responses API, check out the [Roadmap](/responses/roadmap) page.
 
 ## Input Formats
 

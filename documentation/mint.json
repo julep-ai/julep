@@ -59,8 +59,8 @@
       "url": "mailto:developers@julep.ai"
     },
     {
-      "name": "🚨 New Syntax Update",
-      "url": "/docs/advanced/new-syntax"
+      "name": "🚨 Julep Responses API (Beta)",
+      "url": "/responses"
     }
   ],
   "topbarCtaButton": {
@@ -239,7 +239,8 @@
       "pages": [
         "responses/quickstart",
         "responses/concepts",
-        "responses/tutorials"
+        "responses/tutorials",
+        "responses/roadmap"
       ]
     },
     {

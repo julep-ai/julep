@@ -6,11 +6,19 @@ icon: 'code'
 
 ## Overview
 
-The Responses API provides a straightforward way to interact with language models for quick, one-off interactions. This tutorial will guide you through leveraging the SDK to create and retrieve responses.
+The Julep Responses API provides a straightforward way to interact with language models for quick, one-off interactions. This tutorial will guide you through leveraging the SDK to create and retrieve responses.
+
+<Warning>
+- Please note that the Julep Responses API is not hosted by Julep. You need to host your own instance of the Julep Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
+- Being in beta, the Julep Responses API is subject to change. Please check back frequently for the latest updates on feature availability.
+- To learn more about the motivations and design principles behind the Julep Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+</Warning>
 
 <Note>
 - Before you begin, make sure you've set up your environment by following the [Quickstart Guide](/responses/quickstart).
 - RESPONSE_API_KEY is the API key that you set in the `.env` file.
+- While using the models other than OpenAI, please add the `provider/` prefix to the model name. To learn more about the supported providers, check out the [LiteLLM Providers](https://docs.litellm.ai/docs/providers) page.
+- Make sure to add the relvant Provider keys to the `.env` file as well to use the models from the supported providers.
 </Note>
 
 ## Creating a Response
@@ -26,7 +34,7 @@ openai_client = OpenAI(base_url="http://localhost:8080/", api_key="RESPONSE_API_
 
 # Create a simple response
 response = openai_client.responses.create(
-    model="claude-3.5-haiku",
+    model="gpt-4o-mini",
     input="Think about this math problem and try to solve it: If a train leaves Chicago at 2pm traveling west at 60mph, and another train leaves Denver at 3pm traveling east at 75mph, and the distance between Chicago and Denver is 1000 miles, at what time will the trains meet?",
     tools=None, # Optional, defaults to None
 )
@@ -43,7 +51,7 @@ const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/', apiKey: 'R
 
 // Create a simple response
 const response = await openai_client.responses.create({
-    model: "claude-3.5-haiku",
+    model: "gpt-4o-mini",
     input: "Think about this math problem and try to solve it: If a train leaves Chicago at 2pm traveling west at 60mph, and another train leaves Denver at 3pm traveling east at 75mph, and the distance between Chicago and Denver is 1000 miles, at what time will the trains meet?",
     tools: null, // Optional, defaults to None
 });
@@ -101,7 +109,7 @@ Follow the example below to see a sample response from the Responses API.
 <CodeGroup>
 ```python Python
 response = openai_client.responses.create(
-    model="gpt-4o",
+    model="gpt-4o-mini",
     input="What's the weather in New York City?",
     tools=[{
         "type": "function",
@@ -130,7 +138,7 @@ response = openai_client.responses.create(
 
 ```javascript Node.js
 const response = await openai_client.responses.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     input: "What's the weather in New York City?",
     tools: [{
         type: "function",
@@ -184,7 +192,7 @@ from openai import OpenAI
 openai_client = OpenAI(base_url="http://localhost:8080/", api_key="RESPONSE_API_KEY")
 
 response = openai_client.responses.create(
-    model="gpt-4o",
+    model="gpt-4o-mini",
     tools=[{"type": "web_search_preview"}],
     input="What was a positive news story from today?",
 )
@@ -195,7 +203,7 @@ import { OpenAI } from 'openai';
 
 const openai_client = new OpenAI({ baseURL: 'http://localhost:8080/', apiKey: 'RESPONSE_API_KEY' });
 const response = await openai_client.responses.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     tools: [{type: "web_search_preview"}],
     input: "What was a positive news story from today?",
 });
@@ -214,7 +222,7 @@ Follow the example below to see a sample response from the Responses API.
  'incomplete_details': None,
  'instructions': None,
  'metadata': {},
- 'model': 'gpt-4o',
+ 'model': 'gpt-4o-mini',
  'object': 'response',
  'output': [{'id': 'call_egAEiEneIwGp3BvtEZzSxdpD',
    'status': 'completed',
