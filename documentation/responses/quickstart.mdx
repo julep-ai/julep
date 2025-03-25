@@ -65,16 +65,16 @@ Edit the `.env` file with your own values.
 <Step title="Download the Docker Compose file">
 
 ```bash
-wget https://u.julep.ai/responses-compose.yaml
+wget https://u.julep.ai/responses-compose.yaml -O docker-compose.yml
 ```
-Download the file to the current directory with the name `responses-compose.yaml`. This is the file that will be used to run the Docker containers.
+Download the file to the current directory with the name `docker-compose.yml`. This is the file that will be used to run the Docker containers.
 
 </Step>
 
 <Step title="Run the Docker containers">
 
 ```bash
-docker compose -f responses-compose.yaml up --watch
+docker compose up --watch
 ```
 
 This will start the containers in watch mode.
