@@ -88,7 +88,7 @@ services:
         condition: service_healthy
 
   migration:
-    image: julepai/memory-store-migrations:latest
+    image: julepai/memory-store-migrations:${TAG:-responses-latest}
     command: [ "-path", "/migrations", "-database", "postgres://postgres:${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}@memory-store:5432/postgres?sslmode=disable" , "up"]
     restart: "no"
     depends_on:
