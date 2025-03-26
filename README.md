@@ -61,16 +61,16 @@ Whether you're building data pipelines or creating AI workflows, Julep makes it 
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 Table of Contents</h3>
 
-- [🎉 Announcing: Julep Open Responses API (Alpha)](#-announcing-julep-open-responses-api-alpha)
 - [✨ Key Features](#-key-features)
 - [🧠 Mental Model](#-mental-model)
 - [📦 Installation](#-installation)
-  - [🛠️ Julep CLI](#️-julep-cli)
+  - [🛠️ Julep SDKs](#-julep-sdks)
+  - [🛠️ Julep CLI](#-julep-cli)
 - [🚀 Quick Start](#-quick-start)
   - [What's Next?](#whats-next)
 - [🔍 Reference](#-reference)
   - [📚 SDK Reference](#-sdk-reference)
-  - [🛠️ API Reference](#️-api-reference)
+  - [🛠️ API Reference](#-api-reference)
 - [💻 Local Setup](#-local-setup)
   - [1. Clone the Repository](#1-clone-the-repository)
   - [2. Navigate to the Root Directory](#2-navigate-to-the-root-directory)
@@ -80,6 +80,7 @@ Whether you're building data pipelines or creating AI workflows, Julep makes it 
   - [6. Interaction](#6-interaction)
   - [7. Troubleshooting](#7-troubleshooting)
 - [👥 Contributors](#-contributors)
+  - [Join Our Community! 🌟](#join-our-community-)
 - [📄 License](#-license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
