@@ -1,7 +1,6 @@
 import os
 import random
 import string
-import sys
 from collections.abc import Callable
 from unittest.mock import patch
 from uuid import UUID
