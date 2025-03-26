@@ -32,11 +32,12 @@ Memory-store is Julep's PostgreSQL-based persistent storage layer for agents, se
 
 ### Schema Design Patterns
 1. **Timescale Hypertables**: Time-partitioned tables for high-volume data
-2. **Compound Keys**: (developer_id, entity_id) pattern for multi-tenancy
-3. **JSON Metadata**: Flexible metadata fields as JSONB type
-4. **Triggers**: Automatic timestamp and validation management
-5. **Domain Validation**: Constraints and triggers enforce data integrity
-6. **Deferred Constraints**: Handles circular references between tools and tasks
+2. **Compound Keys**: (developer_id, entity_id) pattern for multi-tenancy 
+3. **Primary Key Naming**: All primary keys use the pattern `{table_singular}_id` (e.g., `agent_id`, `developer_id`, `secret_id`)
+4. **JSON Metadata**: Flexible metadata fields as JSONB type
+5. **Triggers**: Automatic timestamp and validation management
+6. **Domain Validation**: Constraints and triggers enforce data integrity
+7. **Deferred Constraints**: Handles circular references between tools and tasks
 
 ## Search Implementation
 - **Text-based**: Uses tsvector/tsquery with custom language configurations and unaccent
