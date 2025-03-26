@@ -243,6 +243,7 @@
       "pages": [
         "responses/quickstart",
         "responses/concepts",
+        "responses/examples",
         "responses/tutorials",
         "responses/roadmap"
       ]
