@@ -8,163 +8,267 @@ icon: 'code-branch'
 
 Below are practical examples showing how to use the Julep Open Responses API for various use cases.
 
-## Basic Setup
+<Tabs>
+  <Tab title="OpenAI's SDK">
+    ## Setup
 
-First, set up your environment and create a client:
+    First, set up your environment and create a client:
 
-```python
-from openai import OpenAI
+    ```python
+    from openai import OpenAI
 
-# Create an OpenAI client pointing to Julep's Open Responses API
-client = OpenAI(base_url="http://localhost:8080/", api_key="your_api_key")
-```
+    # Create an OpenAI client pointing to Julep's Open Responses API
+    client = OpenAI(base_url="http://localhost:8080/", api_key="your_api_key")
+    ```
 
-## Using Reasoning Features
+    ## Using Reasoning Features
 
-Enhance your model's reasoning capabilities for solving complex problems:
+    Enhance your model's reasoning capabilities for solving complex problems:
 
-```python
-# Create a response with explicit reasoning
-reasoning_response = client.responses.create(
-    model="o1",
-    input="If Sarah has 3 apples and John has 5, and they combine their apples, then how many apples do they have in total? Explain your approach.",
-    reasoning={
-        "effort": "medium"  # Control reasoning depth with "low", "medium", or "high"
-    }
-)
-
-# Access the final answer
-print(reasoning_response.output_text)
-# Output: They would have 8 apples in total. The approach is straightforward: you simply add the number of apples Sarah has (3) to the number of apples John has (5), giving 3 + 5 = 8..
-```
-
-## Maintaining Conversation History
-
-Create a continuous conversation by referencing previous responses:
-
-```python
-# Reference a previous response to continue a conversation
-follow_up_response = client.responses.create(
-    model="gpt-4o-mini",
-    input="What was the final answer?",
-    previous_response_id=reasoning_response.id
-)
-
-print(follow_up_response.output_text)
-```
-
-## Processing Images
-
-Analyze images with multimodal models:
-
-```python
-# Create a response that analyzes an image
-image_response = client.responses.create(
-    # Note: note the use of the Claude 3.5 Haiku model here.
-    model="claude-3-5-haiku-20241022",
-    input=[
-        {
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": "What is in this image?"},
-                {
-                    "type": "input_image",
-                    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
-                }
-            ]
+    ```python
+    # Create a response with explicit reasoning
+    reasoning_response = client.responses.create(
+        model="o1",
+        input="If Sarah has 3 apples and John has 5, and they combine their apples, then how many apples do they have in total? Explain your approach.",
+        reasoning={
+            "effort": "medium"  # Control reasoning depth with "low", "medium", or "high"
         }
-    ]
-)
+    )
 
-print(image_response.output_text)
-# Output: The image shows a wooden boardwalk path through a lush green meadow or grassland. The boardwalk is made of wooden planks and stretches straight ahead, cutting through tall green grass on both sides. In the background, there are trees and vegetation forming a treeline, and the sky is a beautiful blue with wispy white and light blue clouds. The scene appears to be on a bright, sunny day with vibrant colors, suggesting it might be during spring or summer. The landscape looks peaceful and serene, with the boardwalk inviting viewers to explore the natural environment.
-```
+    # Access the final answer
+    print(reasoning_response.output_text)
+    # Output: They would have 8 apples in total. The approach is straightforward: you simply add the number of apples Sarah has (3) to the number of apples John has (5), giving 3 + 5 = 8..
+    ```
 
-## Tool Integration with Function Calls
+    ## Maintaining Conversation History
 
-Connect your model to external tools and functions:
+    Create a continuous conversation by referencing previous responses:
 
-```python
-# Define tool specifications
-tools = [
-    {
-        "type": "function",
-        "name": "get_current_weather",
-        "description": "Get the current weather in a given location",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "The city and state, e.g. San Francisco, CA",
-                },
-                "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-            },
-            "required": ["location", "unit"],
-        }
-    }
-]
+    ```python
+    # Reference a previous response to continue a conversation
+    follow_up_response = client.responses.create(
+        model="gpt-4o-mini",
+        input="What was the final answer?",
+        previous_response_id=reasoning_response.id
+    )
 
-# Initial user query
-input_messages = [
-    {"role": "user", "content": "What's the weather like in Paris today in Celsius?"}]
+    print(follow_up_response.output_text)
+    ```
 
-# Create a response that calls the function
-response = client.responses.create(
-    model="claude-3-5-haiku-20241022",
-    tools=tools,
-    input=input_messages,
-    tool_choice="auto"
-)
+    ## Retrieving Past Responses
 
-# Extract the tool call.
-# Note: Use output[0] for openai models, and output[1] for claude models (as claude models return a normal message before the tool call)
-tool_call = response.output[1]
+    Access previously created responses by their ID:
 
-# Provide function result back to the model
-input_messages.append(tool_call)  # Append model's function call
-input_messages.append({           # Append function result
-    "type": "function_call_output",
-    "call_id": tool_call.call_id,
-    "output": str({
-        "temperature": 3,
-    })
-})
+    ```python
+    # Retrieve a response by ID
+    retrieved_response = client.responses.retrieve(response_id="your-response-id")
+    ```
+  </Tab>
+  
+  <Tab title="Agents SDK">
+    ## Setup
 
-# Get final response with weather information
-final_response = client.responses.create(
-    model="claude-3-5-haiku-20241022",
-    input=input_messages,
-    tools=tools,
-)
+    First, set up your environment and create an async client:
 
-print(final_response.output_text)
-# Output: It's quite cold in Paris today, with a temperature of 3°C. Make sure to bundle up if you're heading out! The weather is chilly, so a warm coat, scarf, and gloves would be a good idea.
-```
+    ```python
+    from openai import AsyncOpenAI
+    from agents import set_default_openai_client
 
-## Web Search Integration
+    # Create and configure the OpenAI client
+    custom_client = AsyncOpenAI(base_url="http://localhost:8080/", api_key="your_api_key")
+    set_default_openai_client(custom_client)
+    ```
 
-Enable your model to search the web for recent information:
+    ## Creating a Simple Agent
 
-```python
-# Create a response with web search capability
-web_search_response = client.responses.create(
-    model="gpt-4o",
-    tools=[{"type": "web_search_preview"}],
-    input="What was a positive news story from today?",
-)
+    Build a basic agent that can respond to user queries:
 
-print(web_search_response.output_text)
-```
+    ```python
+    from agents import Agent, Runner
 
-## Retrieving Past Responses
+    # For Jupyter notebooks:
+    agent = Agent(
+        name="Test Agent",
+        instructions="You are a helpful assistant that provides concise responses.",
+        model="openrouter/deepseek/deepseek-r1",
+    )
 
-Access previously created responses by their ID:
+    result = await Runner.run(agent, "Hello! Are you working correctly?")
+    print(result.final_output)
 
-```python
-# Retrieve a response by ID
-retrieved_response = client.responses.retrieve(response_id="your-response-id")
-```
+    # For Python scripts, you'd use:
+    # async def test_installation():
+    #     agent = Agent(
+    #         name="Test Agent",
+    #         instructions="You are a helpful assistant that provides concise responses."
+    #         model="openrouter/deepseek/deepseek-r1",
+    #     )
+    #     result = await Runner.run(agent, "Hello! Are you working correctly?")
+    #     print(result.final_output)
+    #
+    # if __name__ == "__main__":
+    #     asyncio.run(test_installation())
+
+    # Output: Great to hear! Let me know how I can help you today—whether it's answering questions, solving problems, or just chatting. 😊
+    ```
+
+    ## Web Search Integration
+
+    Create an agent with web search capabilities:
+
+    ```python
+    from agents import Agent, Runner, WebSearchTool
+
+    # Create a research assistant with web search capability
+    research_assistant = Agent(
+        name="Research Assistant",
+        instructions="""You are a research assistant that helps users find and summarize information.
+        When asked about a topic:
+        1. Search the web for relevant, up-to-date information
+        2. Synthesize the information into a clear, concise summary
+        3. Structure your response with headings and bullet points when appropriate
+        4. Always cite your sources at the end of your response
+       
+        If the information might be time-sensitive or rapidly changing, mention when the search was performed.
+        """,
+        tools=[WebSearchTool()]
+    )
+
+
+    async def research_topic(topic):
+        result = await Runner.run(research_assistant, f"Please research and summarize: {topic}. Only return the found links with very minimal text.")
+        return result.final_output
+
+    # Usage example (in Jupyter notebook)
+    summary = await research_topic("Latest developments in personal productivity apps.")
+    print(summary)
+
+    # Output: Here are some links to the latest developments in personal productivity apps:
+    # - [10 Hot Productivity Apps for 2024](https://francescod.medium.com/10-hot-productivity-apps-for-2024-e45e68f2ee22) - Medium
+    # - [The Best Productivity Apps in 2025](https://zapier.com/blog/best-productivity-apps/) - Zapier
+    # - [The Best Productivity Apps for 2025](https://www.pcmag.com/picks/best-productivity-apps) - PCMag
+    ```
+
+    ## Custom Function Tools
+
+    Create an agent with a custom function tool:
+
+    ```python
+    import os
+    import requests
+    from datetime import datetime
+    from typing import Optional, List
+    from dataclasses import dataclass
+
+    from agents import Agent, Runner, function_tool
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+
+    @dataclass
+    class WeatherInfo:
+        temperature: float
+        feels_like: float
+        humidity: int
+        description: str
+        wind_speed: float
+        pressure: int
+        location_name: str
+        rain_1h: Optional[float] = None
+        visibility: Optional[int] = None
+
+
+    @function_tool
+    def get_weather(lat: float, lon: float) -> str:
+        """Get the current weather for a specified location using OpenWeatherMap API.
+
+        Args:
+            lat: Latitude of the location (-90 to 90)
+            lon: Longitude of the location (-180 to 180)
+        """
+        # Get API key from environment variables
+        WEATHER_API_KEY = os.getenv("OPENWEATHERMAP_API_KEY")
+
+        # Build URL with parameters
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_API_KEY}&units=metric"
+
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            # Extract weather data from the response
+            weather_info = WeatherInfo(
+                temperature=data["main"]["temp"],
+                feels_like=data["main"]["feels_like"],
+                humidity=data["main"]["humidity"],
+                description=data["weather"][0]["description"],
+                wind_speed=data["wind"]["speed"],
+                pressure=data["main"]["pressure"],
+                location_name=data["name"],
+                visibility=data.get("visibility"),
+                rain_1h=data.get("rain", {}).get("1h"),
+            )
+
+            # Build the response string
+            weather_report = f"""
+            Weather in {weather_info.location_name}:
+            - Temperature: {weather_info.temperature}°C (feels like {weather_info.feels_like}°C)
+            - Conditions: {weather_info.description}
+            - Humidity: {weather_info.humidity}%
+            - Wind speed: {weather_info.wind_speed} m/s
+            - Pressure: {weather_info.pressure} hPa
+            """
+            return weather_report
+
+        except requests.exceptions.RequestException as e:
+            return f"Error fetching weather data: {str(e)}"
+    ```
+
+    ## Using the Tool with an Agent
+
+    Create an agent that uses the custom function tool:
+
+    ```python
+    # Create a weather assistant
+    weather_assistant = Agent(
+        name="Weather Assistant",
+        instructions="""You are a weather assistant that can provide current weather information.
+       
+        When asked about weather, use the get_weather tool to fetch accurate data.
+        If the user doesn't specify a country code and there might be ambiguity,
+        ask for clarification (e.g., Paris, France vs. Paris, Texas).
+       
+        Provide friendly commentary along with the weather data, such as clothing suggestions
+        or activity recommendations based on the conditions.
+        """,
+        tools=[get_weather]
+    )
+
+    async def main():
+        runner = Runner()
+
+        simple_request = await runner.run(weather_assistant, "What are your capabilities?")
+        request_with_location = await runner.run(weather_assistant, "What's the weather like in Tashkent right now?")
+
+        print(simple_request.final_output)
+        print("-"*70)
+        print(request_with_location.final_output)
+
+    await main()
+
+    # Output: 
+    # I'm a weather assistant that can provide you with current weather information. If you ask about the weather for a specific location, I can use a tool to fetch accurate and up-to-date weather data for that place. 
+    # 
+    # Additionally, I can offer friendly suggestions based on the weather, like what to wear or what activities might be suitable. If the location you mention is ambiguous (like Paris, which could be in France or Texas), I might ask for clarification to ensure I provide you with the correct weather information.
+    # ----------------------------------------------------------------------
+    # Right now in Tashkent, it's a bit cool with a temperature of 8.84°C, feeling slightly cooler at 7.06°C. The sky is overcast with lots of clouds, and the humidity is at 76%, so you might feel a bit of dampness in the air. There's a gentle breeze with the wind blowing at 3.09 m/s.
+    # 
+    # With these conditions, I'd recommend wearing a warm jacket if you're heading out. It's a great day to enjoy indoor activities or perhaps a warm drink at a cozy café! Stay comfortable!
+    ```
+  </Tab>
+</Tabs>
 
 ## Next Steps
 
@@ -173,5 +277,7 @@ You've got Open Responses running – here's what to explore next:
 - [Learn more about the Open Responses API Concepts](/responses/concepts) – To learn more about core concepts and how Open Responses structures these building blocks in your applications.
 - [Learn more about the Open Responses API Tutorials](/responses/tutorials) – To follow step-by-step guides to build your first agent and integrate tools.
 - [Learn more about the Open Responses API Roadmap](/responses/roadmap) – To see upcoming features including:
+- [OpenAI's Responses API Documentation](https://platform.openai.com/docs/api-reference/responses) - For more insight into the original API that inspired Julep's Responses
+- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) - Explore OpenAI's Agents SDK that works with Julep's Open Responses API
 - [Learn more about Julep](/docs/introduction/julep) - To learn more about Julep and its features
-- [GitHub](https://github.com/julep-ai/julep) - To contribute to the project
+- [Julep's GitHub Repository](https://github.com/julep-ai/julep) - To contribute to the project
