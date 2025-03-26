@@ -156,7 +156,7 @@
           ]
         },
         {
-          "group": "Media & File Processing", 
+          "group": "Media & File Processing",
           "pages": [
             "docs/integrations/mediafile/llamaparse",
             "docs/integrations/mediafile/ffmpeg",
@@ -171,7 +171,7 @@
             "docs/integrations/search/algolia",
             "docs/integrations/search/brave",
             "docs/integrations/search/wikipedia"
-            
+
           ]
         },
         {
@@ -245,6 +245,7 @@
         "responses/concepts",
         "responses/examples",
         "responses/tutorials",
+        "responses/cli",
         "responses/roadmap"
       ]
     },
