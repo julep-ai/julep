@@ -1,40 +1,62 @@
 ---
 title: 'Quickstart'
-description: 'Get started with the Julep Responses API for LLM interactions'
+description: 'Get started with Julep Open Responses API for LLM interactions'
 icon: 'rocket'
 ---
 
 ## Introduction
 
-The Julep Responses API provides a lightweight interface for generating content with Large Language Models (LLMs) without needing to create persistent agents or sessions. 
-It's perfect for quick, one-off interactions like content generation, text processing, or question answering.
+Julep's Open Responses is a self-hosted, open-source implementation of OpenAI's Responses API that works with any LLM backend. It provides a lightweight interface for generating content with Large Language Models (LLMs) without needing to create persistent agents or sessions.
 
-Unlike OpenAI's Responses API which is limited to their models, Julep's implementation serves as an open-source compatibility layer that allows you to use models from any provider, eliminating vendor lock-in and providing flexibility in AI product development. Being designed to be compatible with OpenAI's interface, it not only makes it easier to migrate existing applications that use OpenAI's interface, but also allows you to leverage model diversity, reduce dependency risks, future-proof your applications, and optimize costs.
+### What is Open Responses?
 
-- **Leverage model diversity**: Choose the best models for specific tasks based on performance, cost, or specialized capabilities
-- **Reduce dependency risks**: Avoid being affected by outages or pricing changes from a single provider
-- **Future-proof your applications**: Easily adopt new models as they emerge without rewriting your integration code
-- **Optimize costs**: Select models based on the best price-performance ratio for each use case
+Julep's Open Responses lets you run your own server that is compatible with OpenAI's Responses API, while giving you the freedom to use alternative models like:
+- Anthropic's Claude
+- Alibaba's Qwen
+- Deepseek R1
+- and many others ...
 
-To conclude, the Julep Responses API provides a consistent experience across all supported models with standardized parameter handling and response formatting, making it easier to experiment with different models while maintaining application stability.
+It's essentially a drop-in replacement that you control, with a permissive Apache-2.0 license. As an early release, we welcome your feedback and contributions to help improve it.
+
+<Frame caption="Open Responses API Overview"> 
+  <img
+    src="/images/open-responses.jpg"
+    alt="Open Responses API Diagram"
+  />
+</Frame>
+
+### Why Open Responses?
+
+- **Model Flexibility**: Use any LLM backend without vendor lock-in, including local model deployment
+- **Self-hosted & Private**: Maintain full control over your deployment on your own infrastructure (cloud or on-premise)
+- **Drop-in Compatibility**: Seamlessly integrates with the official Agents SDK by simply pointing to your self-hosted URL
+- **Easy Deployment**: Quick setup via docker-compose or our CLI with minimal configuration
+- **Built-in Tools**: Automatic execution of tool calls (like web_search) using open & pluggable alternatives
 
 <Warning>
-- Please note that the Julep Responses API is not hosted by Julep. You need to host your own instance of the Julep Responses API to use it. See the [installation guide](/responses/quickstart/#local-installation) for details.
-- Being in beta, the Julep Responses API is subject to change. Please check back frequently for the latest updates on feature availability.
-- To learn more about the motivations and design principles behind the Julep Responses API, check out the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+- The Open Responses API requires self-hosting. See the [installation guide](#local-installation) below.
+- Being in Alpha, the API is subject to change. Check back frequently for updates.
+- For more context, see the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
 </Warning>
 
 ## Local Installation
 
-This section will guide you through the steps to set up the Responses API using Docker.
+This section will guide you through the steps to set up the Julep's Open Responses API.
 
-<Steps>
-
-<Step title="Prerequisites">
+### Prerequisites
 
 Install [Docker](https://docs.docker.com/get-docker/)
 
-</Step>
+### Installation
+
+The Julep's Open Responses API is a fully microservice-based architecture. It is fully dockerized and can be easily deployed on any infrastructure that supports Docker. There are two ways to install the API:
+
+- [Docker Installation](#docker-installation)
+- [CLI Installation](#cli-installation)
+
+#### Docker Installation
+
+<Steps>
 
 <Step title="Create a directory for the project">
 
@@ -91,14 +113,77 @@ docker ps
 
 </Steps>
 
+#### CLI Installation
+
+The CLI is a lightweight alternative to Docker for those who prefer not to use Docker directly. 
+
+<Info>
+Internally, it uses Docker to run the containers.
+</Info>
+
+<Steps>
+
+<Step title="Download the CLI">
+<CodeGroup>
+```bash npx
+npx install open-responses
+```
+
+```bash uvx
+uvx install open-responses
+```
+
+</CodeGroup>
+
+</Step>
+
+<Step title="Setup the Environment Variables">
+
+<CodeGroup>
+```bash npx
+npx open-responses setup
+```
+
+```bash uvx
+uvx open-responses setup
+```
+</CodeGroup>
+
+</Step>
+
+<Step title="Run the CLI">
+
+<CodeGroup>
+```bash npx
+npx open-responses up
+```
+
+```bash uvx
+uvx open-responses up
+```
+</CodeGroup>
+</Step>
+
+</Steps>
+
+<Info>
+To learn more about the CLI one can use the `npx open-responses --help` or `uvx open-responses --help` command.
+</Info>
+
 ## Quickstart Example
 
-With the OpenAI client initialized, you can now use the Responses API to generate content.
+With the OpenAI SDK initialized, you can now use the Responses API to generate content.
 
 <Note>
-- RESPONSE_API_KEY is the API key that you set in the `.env` file.
-- While using the models other than OpenAI, you might need to add the `provider/` prefix to the model name. To learn more about the supported providers, check out the [LiteLLM Providers](https://docs.litellm.ai/docs/providers) page.
-- Make sure to add the relevant Provider keys to the `.env` file as well to use the models from the supported providers.
+  <h4>API Key Configuration</h4>
+  - `RESPONSE_API_KEY` is the API key that you set in the `.env` file.
+  
+  <h4>Model Selection</h4>
+  - While using models other than OpenAI, one might need to add the `provider/` prefix to the model name.
+  - For supported providers, see the [LiteLLM Providers](https://docs.litellm.ai/docs/providers) documentation.
+  
+  <h4>Environment Setup</h4>
+  - Add the relevant provider keys to the `.env` file to use their respective models.
 </Note>
 
 ### 1. Install the OpenAI SDK
@@ -165,6 +250,10 @@ console.log("Generated response:", response.output[0].content[0].text);
 
 ## Next Steps
 
-Now that you've seen the quickstart example, you can learn more about the Responses API by:
-- Exploring the [Concepts](/responses/concepts) page to understand the core components
-- Following the [Tutorials](/responses/tutorials) for more detailed code examples and use cases
+You've got Open Responses running – here's what to explore next:
+
+- [Learn more about the Open Responses API Concepts](/responses/concepts) – To learn more about core concepts and how Open Responses structures these building blocks in your applications.
+- [Learn more about the Open Responses API Tutorials](/responses/tutorials) – To follow step-by-step guides to build your first agent and integrate tools.
+- [Learn more about the Open Responses API Roadmap](/responses/roadmap) – To see upcoming features including:
+- [Learn more about Julep](/docs/introduction/julep) - To learn more about Julep and its features
+- [GitHub](https://github.com/julep-ai/julep) - To contribute to the project

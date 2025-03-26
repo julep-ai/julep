@@ -59,7 +59,11 @@
       "url": "mailto:developers@julep.ai"
     },
     {
-      "name": "🚨 Julep Responses API (Beta)",
+      "name": "GitHub",
+      "url": "https://github.com/julep-ai/julep"
+    },
+    {
+      "name": "🚨 Open Responses API (Alpha)",
       "url": "/responses"
     }
   ],
@@ -76,11 +80,11 @@
       "url": "guides"
     },
     {
-      "name": "SDKs",
+      "name": "SDK",
       "url": "sdks"
     },
     {
-      "name": "Responses API (Beta)",
+      "name": "Open Responses API (Alpha)",
       "url": "responses"
     },
     {
@@ -235,7 +239,7 @@
       ]
     },
     {
-      "group": "Responses API (Beta)",
+      "group": "Responses API (Alpha)",
       "pages": [
         "responses/quickstart",
         "responses/concepts",
