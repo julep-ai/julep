@@ -9,6 +9,7 @@ from ...clients import (
 )
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
 from ...env import debug
+from ...routers.utils.tools import ToolCallsEvaluator
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -168,7 +169,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         "cache": {"no-cache": debug or context.current_step.disable_cache},
     }
 
-    response: ModelResponse = await litellm.acompletion(
+    evaluator = ToolCallsEvaluator(completion_func=litellm.acompletion)
+    response: ModelResponse = await evaluator.completion(
+        developer_id=context.execution_input.developer_id,
         **completion_data,
         extra_body=extra_body,
     )
