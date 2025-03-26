@@ -8,6 +8,25 @@ icon: 'code-branch'
 
 Below are practical examples showing how to use the Julep Open Responses API for various use cases.
 
+<Warning>
+- The Open Responses API requires self-hosting. See the [installation guide](/responses/quickstart/#local-installation) below.
+- Being in Alpha, the API is subject to change. Check back frequently for updates.
+- For more context, see the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+</Warning>
+
+<Note>
+  <h4>API Key Configuration</h4>
+  - `RESPONSE_API_KEY` is the API key that you set in the `.env` file.
+  
+  <h4>Model Selection</h4>
+  - While using models other than OpenAI, one might need to add the `provider/` prefix to the model name.
+  - For supported providers, see the [LiteLLM Providers](https://docs.litellm.ai/docs/providers) documentation.
+  
+  <h4>Environment Setup</h4>
+  - Add the relevant provider keys to the `.env` file to use their respective models.
+</Note>
+
+
 <Tabs>
   <Tab title="OpenAI's SDK">
     ## Setup
@@ -18,7 +37,7 @@ Below are practical examples showing how to use the Julep Open Responses API for
     from openai import OpenAI
 
     # Create an OpenAI client pointing to Julep's Open Responses API
-    client = OpenAI(base_url="http://localhost:8080/", api_key="your_api_key")
+    client = OpenAI(base_url="http://localhost:8080/", api_key="RESPONSE_API_KEY")
     ```
 
     ## Using Reasoning Features
@@ -38,6 +57,16 @@ Below are practical examples showing how to use the Julep Open Responses API for
     # Access the final answer
     print(reasoning_response.output_text)
     # Output: They would have 8 apples in total. The approach is straightforward: you simply add the number of apples Sarah has (3) to the number of apples John has (5), giving 3 + 5 = 8..
+    ```
+
+    ## Using Web Search Tool
+    ```python Python
+    web_search_response = openai_client.responses.create(
+    model="gpt-4o-mini",
+    tools=[{"type": "web_search_preview"}],
+        input="What was a positive news story from today?",
+    )
+    # The output will include both the text response and any tool calls that were made
     ```
 
     ## Maintaining Conversation History
@@ -75,7 +104,7 @@ Below are practical examples showing how to use the Julep Open Responses API for
     from agents import set_default_openai_client
 
     # Create and configure the OpenAI client
-    custom_client = AsyncOpenAI(base_url="http://localhost:8080/", api_key="your_api_key")
+    custom_client = AsyncOpenAI(base_url="http://localhost:8080/", api_key="RESPONSE_API_KEY")
     set_default_openai_client(custom_client)
     ```
 
@@ -275,7 +304,6 @@ Below are practical examples showing how to use the Julep Open Responses API for
 You've got Open Responses running – here's what to explore next:
 
 - [Learn more about the Open Responses API Concepts](/responses/concepts) – To learn more about core concepts and how Open Responses structures these building blocks in your applications.
-- [Learn more about the Open Responses API Tutorials](/responses/tutorials) – To follow step-by-step guides to build your first agent and integrate tools.
 - [Learn more about the Open Responses API Roadmap](/responses/roadmap) – To see upcoming features.
 - [OpenAI's Responses API Documentation](https://platform.openai.com/docs/api-reference/responses) - For more insight into the original API that inspired Julep's Responses
 - [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) - Explore OpenAI's Agents SDK that works with Julep's Open Responses API
