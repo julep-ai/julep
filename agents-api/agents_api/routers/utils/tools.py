@@ -1,3 +1,4 @@
+import asyncio
 import json
 from collections.abc import Awaitable, Callable
 from functools import partial
@@ -70,10 +71,10 @@ class ToolCallsEvaluator:
         "agent.create": create_agent_query,
         "agent.update": update_agent_query,
         "agent.delete": delete_agent_query,
-        "user.doc.list": list_docs_query,
-        "user.doc.create": create_user_doc,
-        "user.doc.delete": delete_doc_query,
-        "user.doc.search": search_user_docs,
+        "user.docs.list": list_docs_query,
+        "user.docs.create": create_user_doc,
+        "user.docs.delete": delete_doc_query,
+        "user.docs.search": search_user_docs,
         "user.list": list_users_query,
         "user.get": get_user_query,
         "user.create": create_user_query,
@@ -294,6 +295,30 @@ class ToolCallsEvaluator:
             _response_headers=response._response_headers,  # noqa: SLF001
         )
 
+    async def _get_tool_result(
+        self, tool: ChatCompletionMessageToolCall | dict, developer_id: UUID
+    ):
+        tool_name = (
+            tool.function.name
+            if isinstance(tool, ChatCompletionMessageToolCall)
+            else tool["function"]["name"]
+        )
+        tool_args = json.loads(
+            tool.function.arguments
+            if isinstance(tool, ChatCompletionMessageToolCall)
+            else tool["function"]["arguments"]
+        )
+        tool_response = await self._call_tool(developer_id, tool_name, tool_args)
+
+        return {
+            "tool_call_id": tool.id
+            if isinstance(tool, ChatCompletionMessageToolCall)
+            else tool["id"],
+            "role": "tool",
+            "name": tool_name,
+            "content": tool_response,
+        }
+
     async def completion(
         self, developer_id: UUID, **kwargs
     ) -> ModelResponse | CustomStreamWrapper:
@@ -342,26 +367,6 @@ class ToolCallsEvaluator:
                             if tool_call.function.arguments:
                                 tc["function"]["arguments"] += tool_call.function.arguments
 
-            for tool in tool_calls:
-                # call a tool
-                tool_name = (
-                    tool.function.name
-                    if isinstance(tool, ChatCompletionMessageToolCall)
-                    else tool["function"]["name"]
-                )
-                tool_args = json.loads(
-                    tool.function.arguments
-                    if isinstance(tool, ChatCompletionMessageToolCall)
-                    else tool["function"]["arguments"]
-                )
-                tool_response = await self._call_tool(developer_id, tool_name, tool_args)
-
-                # append result to messages from previous step
-                kwargs["messages"].append({
-                    "tool_call_id": tool.id
-                    if isinstance(tool, ChatCompletionMessageToolCall)
-                    else tool["id"],
-                    "role": "tool",
-                    "name": tool_name,
-                    "content": tool_response,
-                })
+            kwargs["messages"] = await asyncio.gather(*[
+                self._get_tool_result(tool, developer_id) for tool in tool_calls
+            ])

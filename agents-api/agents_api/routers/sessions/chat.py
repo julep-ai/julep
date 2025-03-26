@@ -48,7 +48,7 @@ async def chat(
     background_tasks: BackgroundTasks,
     x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
     connection_pool: Any = None,  # FIXME: Placeholder that should be removed
-) -> ChatResponse | StreamingResponse:  # FIXME: Update type to include StreamingResponse
+) -> ChatResponse | StreamingResponse:
     """
     Initiates a chat session.
 

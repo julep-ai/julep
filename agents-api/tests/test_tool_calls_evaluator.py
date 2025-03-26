@@ -41,7 +41,7 @@ agent_doc_list = make_acompletion_multiple_outputs([
 ])
 
 agent_doc_create = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, **_: [
         {
             "role": "assistant",
             "content": "Creating agent doc",
@@ -68,7 +68,7 @@ agent_doc_create = make_acompletion_multiple_outputs(
 )
 
 agent_doc_delete = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, doc, **_: [
         {
             "role": "assistant",
             "content": "Deleting agent doc",
@@ -96,7 +96,7 @@ agent_doc_delete = make_acompletion_multiple_outputs(
 )
 
 agent_doc_search = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, **_: [
         {
             "role": "assistant",
             "content": "Searching agent docs",
@@ -146,7 +146,7 @@ agent_list = make_acompletion_multiple_outputs([
 ])
 
 agent_get = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, **_: [
         {
             "role": "assistant",
             "content": "Getting agent details",
@@ -203,7 +203,7 @@ agent_create = make_acompletion_multiple_outputs([
 ])
 
 agent_update = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, **_: [
         {
             "role": "assistant",
             "content": "Updating agent",
@@ -230,7 +230,7 @@ agent_update = make_acompletion_multiple_outputs(
 )
 
 agent_delete = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, **_: [
         {
             "role": "assistant",
             "content": "Deleting agent",
@@ -264,7 +264,7 @@ user_doc_list = make_acompletion_multiple_outputs([
                 "id": "call_user_doc_list",
                 "type": "system",
                 "function": {
-                    "name": "user.doc.list",
+                    "name": "user.docs.list",
                     "arguments": {
                         "owner_id": str(uuid7()),
                         "developer_id": str(UUID(int=0)),
@@ -281,7 +281,7 @@ user_doc_list = make_acompletion_multiple_outputs([
 ])
 
 user_doc_create = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda user, **_: [
         {
             "role": "assistant",
             "content": "Creating user doc",
@@ -290,7 +290,7 @@ user_doc_create = make_acompletion_multiple_outputs(
                     "id": "call_user_doc_create",
                     "type": "system",
                     "function": {
-                        "name": "user.doc.create",
+                        "name": "user.docs.create",
                         "arguments": {
                             "user_id": str(user.id),
                             "x_developer_id": str(UUID(int=0)),
@@ -308,7 +308,7 @@ user_doc_create = make_acompletion_multiple_outputs(
 )
 
 user_doc_delete = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda user, user_doc, **_: [
         {
             "role": "assistant",
             "content": "Deleting user doc",
@@ -317,7 +317,7 @@ user_doc_delete = make_acompletion_multiple_outputs(
                     "id": "call_user_doc_delete",
                     "type": "system",
                     "function": {
-                        "name": "user.doc.delete",
+                        "name": "user.docs.delete",
                         "arguments": {
                             "doc_id": str(user_doc.id),
                             "developer_id": str(UUID(int=0)),
@@ -344,7 +344,7 @@ user_doc_search = make_acompletion_multiple_outputs([
                 "id": "call_user_doc_search",
                 "type": "system",
                 "function": {
-                    "name": "user.doc.search",
+                    "name": "user.docs.search",
                     "arguments": {
                         "user_id": str(uuid7()),
                         "x_developer_id": str(UUID(int=0)),
@@ -382,7 +382,7 @@ user_list = make_acompletion_multiple_outputs([
 ])
 
 user_get = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda user, **_: [
         {
             "role": "assistant",
             "content": "Getting user details",
@@ -432,7 +432,7 @@ user_create = make_acompletion_multiple_outputs([
 ])
 
 user_update = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda user, **_: [
         {
             "role": "assistant",
             "content": "Updating user",
@@ -462,7 +462,7 @@ user_update = make_acompletion_multiple_outputs(
 )
 
 user_delete = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda user, **_: [
         {
             "role": "assistant",
             "content": "Deleting user",
@@ -509,7 +509,7 @@ session_list = make_acompletion_multiple_outputs([
 ])
 
 session_get = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda session, **_: [
         {
             "role": "assistant",
             "content": "Getting session details",
@@ -535,7 +535,7 @@ session_get = make_acompletion_multiple_outputs(
 )
 
 session_create = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, **_: [
         {
             "role": "assistant",
             "content": "Creating session",
@@ -631,7 +631,7 @@ task_list = make_acompletion_multiple_outputs([
 ])
 
 task_get = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda task, **_: [
         {
             "role": "assistant",
             "content": "Getting task details",
@@ -657,7 +657,7 @@ task_get = make_acompletion_multiple_outputs(
 )
 
 task_create = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, **_: [
         {
             "role": "assistant",
             "content": "Creating task",
@@ -684,7 +684,7 @@ task_create = make_acompletion_multiple_outputs(
 )
 
 task_update = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda agent, task, **_: [
         {
             "role": "assistant",
             "content": "Updating task",
@@ -715,7 +715,7 @@ task_update = make_acompletion_multiple_outputs(
 )
 
 task_delete = make_acompletion_multiple_outputs(
-    lambda agent, doc, user, task, user_doc, session: [
+    lambda task, **_: [
         {
             "role": "assistant",
             "content": "Deleting task",
@@ -1083,7 +1083,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate user.doc.list tool call")
+@test("chat: evaluate user.docs.list tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -1121,7 +1121,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate user.doc.create tool call")
+@test("chat: evaluate user.docs.create tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -1159,7 +1159,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate user.doc.delete tool call")
+@test("chat: evaluate user.docs.delete tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -1199,7 +1199,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate user.doc.search tool call")
+@test("chat: evaluate user.docs.search tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
