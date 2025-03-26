@@ -59,8 +59,12 @@
       "url": "mailto:developers@julep.ai"
     },
     {
-      "name": "🚨 New Syntax Update",
-      "url": "/docs/advanced/new-syntax"
+      "name": "GitHub",
+      "url": "https://github.com/julep-ai/julep"
+    },
+    {
+      "name": "🚨 Open Responses API (Alpha)",
+      "url": "/responses"
     }
   ],
   "topbarCtaButton": {
@@ -76,8 +80,12 @@
       "url": "guides"
     },
     {
-      "name": "SDKs",
+      "name": "SDK",
       "url": "sdks"
+    },
+    {
+      "name": "Open Responses API (Alpha)",
+      "url": "responses"
     },
     {
       "name": "API Reference",
@@ -148,7 +156,7 @@
           ]
         },
         {
-          "group": "Media & File Processing", 
+          "group": "Media & File Processing",
           "pages": [
             "docs/integrations/mediafile/llamaparse",
             "docs/integrations/mediafile/ffmpeg",
@@ -163,7 +171,7 @@
             "docs/integrations/search/algolia",
             "docs/integrations/search/brave",
             "docs/integrations/search/wikipedia"
-            
+
           ]
         },
         {
@@ -228,6 +236,17 @@
             "guides/cookbooks/community-examples"
           ]
         }
+      ]
+    },
+    {
+      "group": "Responses API (Alpha)",
+      "pages": [
+        "responses/quickstart",
+        "responses/concepts",
+        "responses/examples",
+        "responses/tutorials",
+        "responses/cli",
+        "responses/roadmap"
       ]
     },
     {

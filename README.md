@@ -36,6 +36,21 @@
   <h3><i>Serverless AI Workflows for Data & ML Teams</i></h3>
 </div>
 
+## 🎉 Announcing: Julep Open Responses API (Alpha)
+
+<div style="padding: 15px; border-left: 4px solid #4CAF50; margin: 20px 0;">
+
+We're excited to announce the launch of our Open Responses API! This new API offers:
+
+1. **OpenAI-compatible interface** - A drop-in replacement for your existing code
+2. **Self-hosted, open-source implementation** - Works with any LLM backend
+3. **Model Provider Agnostic** - Connect to any LLM provider (OpenAI, Anthropic, etc.)
+
+The Open Responses API makes it easy to integrate with your existing applications while adding powerful new capabilities.
+
+Ready to try it out? Check out our [Open Responses API documentation](https://docs.julep.ai/responses/quickstart) to get started!
+</div>
+
 Julep is a serverless platform that helps data and ML teams build sophisticated AI workflows. It provides a robust foundation for orchestrating complex AI operations, managing state across interactions, and integrating with your existing data infrastructure and tools.
 
 Whether you're building data pipelines or creating AI workflows, Julep makes it easy to compose and scale LLM-powered workflows without managing infrastructure. Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Our platform handles the heavy lifting so you can focus on building intelligent solutions for your business.
@@ -46,16 +61,16 @@ Whether you're building data pipelines or creating AI workflows, Julep makes it 
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 Table of Contents</h3>
 
+- [🎉 Announcing: Julep Open Responses API (Alpha)](#-announcing-julep-open-responses-api-alpha)
 - [✨ Key Features](#-key-features)
 - [🧠 Mental Model](#-mental-model)
 - [📦 Installation](#-installation)
-  - [🛠️ Julep SDKs](#-julep-sdks)
-  - [🛠️ Julep CLI](#-julep-cli)
+  - [🛠️ Julep CLI](#️-julep-cli)
 - [🚀 Quick Start](#-quick-start)
   - [What's Next?](#whats-next)
 - [🔍 Reference](#-reference)
   - [📚 SDK Reference](#-sdk-reference)
-  - [🛠️ API Reference](#-api-reference)
+  - [🛠️ API Reference](#️-api-reference)
 - [💻 Local Setup](#-local-setup)
   - [1. Clone the Repository](#1-clone-the-repository)
   - [2. Navigate to the Root Directory](#2-navigate-to-the-root-directory)
@@ -65,7 +80,6 @@ Whether you're building data pipelines or creating AI workflows, Julep makes it 
   - [6. Interaction](#6-interaction)
   - [7. Troubleshooting](#7-troubleshooting)
 - [👥 Contributors](#-contributors)
-  - [Join Our Community! 🌟](#join-our-community-)
 - [📄 License](#-license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->

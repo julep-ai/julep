@@ -1,0 +1,99 @@
+##########################
+### OPEN RESPONSES API ###
+##########################
+
+# An open-source self-hosted version of the new [OpenAI Responses API](https://community.openai.com/t/introducing-the-responses-api/1140929).
+
+name: open-responses
+
+## ENVIRONMENT VARS ##
+# (Recommended way to set them is using `.env` file instead of here)
+
+x--shared-environment: &shared-environment
+  ### REQUIRED ###
+  # Responses API Key
+  AGENTS_API_KEY: ${RESPONSES_API_KEY:?RESPONSES_API_KEY is required}
+  AGENTS_API_KEY_HEADER_NAME: ${RESPONSES_API_KEY_HEADER_NAME:-Authorization}
+  AGENTS_API_PUBLIC_PORT: ${AGENTS_API_PUBLIC_PORT:-8080}
+
+  # TODO: Make these required after enabling doc search
+  # OpenAI & Unstructured API key (needed for embeddings and file parsing)
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  UNSTRUCTURED_API_KEY: ${UNSTRUCTURED_API_KEY}
+  
+  # Brave Search API Key (For web search tool
+  BRAVE_API_KEY: ${BRAVE_API_KEY}
+
+  ### OPTIONAL ###
+  # Service settings
+  RESPONSES_API_PORT: ${RESPONSES_API_PORT:-8080}
+  MEMORY_STORE_PASSWORD: ${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}
+
+  # Provider API Keys (Enable one or more as needed)
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+  GEMINI_API_KEY: ${GEMINI_API_KEY}
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+  VOYAGE_API_KEY: ${VOYAGE_API_KEY}
+  GROQ_API_KEY: ${GROQ_API_KEY}
+  CEREBRAS_API_KEY: ${CEREBRAS_API_KEY}
+  CLOUDFLARE_API_KEY: ${CLOUDFLARE_API_KEY}
+  CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
+  LLAMA_API_KEY: ${LLAMA_API_KEY}
+  GITHUB_API_KEY: ${GITHUB_API_KEY}
+  NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY}
+  GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+
+  ### INTERNAL ###
+  # Change **ONLY** if you know what you're doing
+  EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
+  ENABLE_RESPONSES: "True"
+  PG_DSN: postgres://postgres:${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}@memory-store:5432/postgres
+  INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
+
+## SERVICES ##
+
+services:
+  api:
+    image: julepai/agents-api:${TAG:-responses-latest}
+    environment:
+      <<: *shared-environment
+    ports:
+      - "${RESPONSES_API_PORT:-8080}:8080" # map host to container port
+
+  integrations: 
+    image: julepai/integrations:${TAG:-responses-latest}
+    environment:
+      <<: *shared-environment
+
+  memory-store:
+    image: timescale/timescaledb-ha:pg17
+    environment:
+      POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}
+    volumes:
+      - memory_store_data:/home/postgres/pgdata/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vectorizer-worker:
+    image: timescale/pgai-vectorizer-worker:latest
+    environment:
+      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}@memory-store:5432/postgres
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    command: [ "--poll-interval", "5s" ]
+    depends_on:
+      memory-store:
+        condition: service_healthy
+
+  migration:
+    image: julepai/memory-store-migrations:${TAG:-responses-latest}
+    command: [ "-path", "/migrations", "-database", "postgres://postgres:${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}@memory-store:5432/postgres?sslmode=disable" , "up"]
+    restart: "no"
+    depends_on:
+      memory-store:
+        condition: service_healthy
+
+volumes:
+  memory_store_data:
