@@ -86,25 +86,10 @@ async def chat(
     }
     payload = {**settings, **params}
 
-    try:
-        evaluator = ToolCallsEvaluator(
-            completion_func=litellm.acompletion,
-        )
-        model_response = await evaluator.completion(developer.id, **payload)
-    except Exception as e:
-        import logging
-
-        logging.error(f"LLM completion error: {e!s}")
-        # Create basic error response
-        return ChatResponse(
-            id=uuid7(),
-            created_at=utcnow(),
-            jobs=[],
-            docs=doc_references,
-            usage=None,
-            choices=[],
-            error=f"Error getting model completion: {e!s}",
-        )
+    evaluator = ToolCallsEvaluator(
+        completion_func=litellm.acompletion,
+    )
+    model_response = await evaluator.completion(developer.id, **payload)
 
     # Save the input messages to the session history
     if chat_input.save:

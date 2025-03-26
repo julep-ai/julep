@@ -62,10 +62,10 @@ from ...routers.docs.search_docs import search_agent_docs, search_user_docs
 class ToolCallsEvaluator:
     min_tool_name_segments: int = 2
     system_tool_handlers: ClassVar[dict[str, Any]] = {
-        "agent.doc.list": list_docs_query,
-        "agent.doc.create": create_agent_doc,
-        "agent.doc.delete": delete_doc_query,
-        "agent.doc.search": search_agent_docs,
+        "agent.docs.list": list_docs_query,
+        "agent.docs.create": create_agent_doc,
+        "agent.docs.delete": delete_doc_query,
+        "agent.docs.search": search_agent_docs,
         "agent.list": list_agents_query,
         "agent.get": get_agent_query,
         "agent.create": create_agent_query,
@@ -153,7 +153,7 @@ class ToolCallsEvaluator:
         if len(parts) > self.min_tool_name_segments:
             subresource = parts[1]
 
-        if subresource == "doc" and operation not in ["create", "search"]:
+        if subresource == "docs" and operation not in ["create", "search"]:
             owner_id_field = f"{resource}_id"
             if owner_id_field in arguments:
                 doc_args = {
@@ -165,7 +165,7 @@ class ToolCallsEvaluator:
                 arguments = doc_args
 
         # Handle special cases for doc operations
-        if operation == "create" and subresource == "doc":
+        if operation == "create" and subresource == "docs":
             arguments["x_developer_id"] = arguments.pop("developer_id")
             return await tool_handler(
                 data=CreateDocRequest(**data),
@@ -173,7 +173,7 @@ class ToolCallsEvaluator:
             )
 
         # Handle search operations
-        if operation == "search" and subresource == "doc":
+        if operation == "search" and subresource == "docs":
             arguments["x_developer_id"] = arguments.pop("developer_id")
             search_params = self._create_search_request(arguments.pop("search_params"))
             return await tool_handler(search_params=search_params, **arguments)

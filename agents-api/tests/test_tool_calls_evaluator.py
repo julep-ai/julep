@@ -24,7 +24,7 @@ agent_doc_list = make_acompletion_multiple_outputs([
                 "id": "call_agent_doc_list",
                 "type": "system",
                 "function": {
-                    "name": "agent.doc.list",
+                    "name": "agent.docs.list",
                     "arguments": {
                         "owner_id": str(uuid7()),
                         "developer_id": str(UUID(int=0)),
@@ -50,7 +50,7 @@ agent_doc_create = make_acompletion_multiple_outputs(
                     "id": "call_agent_doc_create",
                     "type": "system",
                     "function": {
-                        "name": "agent.doc.create",
+                        "name": "agent.docs.create",
                         "arguments": {
                             "agent_id": str(agent.id),
                             "x_developer_id": str(UUID(int=0)),
@@ -77,7 +77,7 @@ agent_doc_delete = make_acompletion_multiple_outputs(
                     "id": "call_agent_doc_delete",
                     "type": "system",
                     "function": {
-                        "name": "agent.doc.delete",
+                        "name": "agent.docs.delete",
                         "arguments": {
                             "doc_id": str(doc.id),
                             "developer_id": str(UUID(int=0)),
@@ -105,7 +105,7 @@ agent_doc_search = make_acompletion_multiple_outputs(
                     "id": "call_agent_doc_search",
                     "type": "system",
                     "function": {
-                        "name": "agent.doc.search",
+                        "name": "agent.docs.search",
                         "arguments": {
                             "agent_id": str(agent.id),
                             "x_developer_id": str(UUID(int=0)),
@@ -741,7 +741,7 @@ task_delete = make_acompletion_multiple_outputs(
 )
 
 
-@test("chat: evaluate agent.doc.list tool call")
+@test("chat: evaluate agent.docs.list tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -779,7 +779,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate agent.doc.create tool call")
+@test("chat: evaluate agent.docs.create tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -817,7 +817,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate agent.doc.delete tool call")
+@test("chat: evaluate agent.docs.delete tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -855,7 +855,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate agent.doc.search tool call")
+@test("chat: evaluate agent.docs.search tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
