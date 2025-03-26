@@ -8,6 +8,10 @@ icon: 'rocket'
 
 Julep's Open Responses is a self-hosted, open-source implementation of OpenAI's Responses API that works with any LLM backend. It provides a lightweight interface for generating content with Large Language Models (LLMs) without needing to create persistent agents or sessions.
 
+<Info>
+To try it out, just run `npx -y open-responses init` (or `uvx`) and that's it! :)
+</Info>
+
 ### What is Open Responses?
 
 Julep's Open Responses lets you run your own server that is compatible with OpenAI's Responses API, while giving you the freedom to use alternative models like:
@@ -123,14 +127,26 @@ Internally, it uses Docker to run the containers.
 
 <Steps>
 
-<Step title="Download the CLI">
+<Step title="Install the CLI">
+You can install the CLI using several package managers:
+
 <CodeGroup>
+
 ```bash npx
-npx install open-responses
+# Using npx directly
+npx open-responses
+
+# Or install globally
+npm install -g open-responses
 ```
 
-```bash uvx
-uvx install open-responses
+```bash uv
+# Install using uv
+uvx open-responses
+
+# Install using pip globally
+pip install open-responses
+open-responses
 ```
 
 </CodeGroup>
@@ -144,10 +160,12 @@ uvx install open-responses
 npx open-responses setup
 ```
 
-```bash uvx
+```bash uv
 uvx open-responses setup
 ```
 </CodeGroup>
+
+Before using any commands, you must run the setup command
 
 </Step>
 
@@ -155,19 +173,22 @@ uvx open-responses setup
 
 <CodeGroup>
 ```bash npx
-npx open-responses up
+npx open-responses start
 ```
 
-```bash uvx
-uvx open-responses up
+```bash uv
+uvx open-responses start
 ```
 </CodeGroup>
+
+This will start the API in watch mode
+
 </Step>
 
 </Steps>
 
 <Info>
-To learn more about the CLI one can use the `npx open-responses --help` or `uvx open-responses --help` command.
+To learn more about the CLI one can use the checkout the [CLI Documentation](/responses/cli).
 </Info>
 
 ## Quickstart Example
@@ -252,7 +273,7 @@ console.log("Generated response:", response.output[0].content[0].text);
 
 You've got Open Responses running – here's what to explore next:
 
-- [Learn more about the Open Responses API Concepts](/responses/concepts) – To learn more about core concepts and how Open Responses structures these building blocks in your applications.
+- [Learn more about the Open Responses API Examples](/responses/examples) – To learn how to use the Responses API with code examples
 - [Learn more about the Open Responses API Tutorials](/responses/tutorials) – To follow step-by-step guides to build your first agent and integrate tools.
 - [Learn more about the Open Responses API Roadmap](/responses/roadmap) – To see upcoming features including:
 - [Learn more about Julep](/docs/introduction/julep) - To learn more about Julep and its features
