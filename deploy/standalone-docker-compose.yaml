@@ -14,6 +14,7 @@ x--shared-environment: &shared-environment
   # Responses API Key
   AGENTS_API_KEY: ${RESPONSES_API_KEY:?RESPONSES_API_KEY is required}
   AGENTS_API_KEY_HEADER_NAME: ${RESPONSES_API_KEY_HEADER_NAME:-Authorization}
+  AGENTS_API_PUBLIC_PORT: ${AGENTS_API_PUBLIC_PORT:-8080}
 
   # TODO: Make these required after enabling doc search
   # OpenAI & Unstructured API key (needed for embeddings and file parsing)
