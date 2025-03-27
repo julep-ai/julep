@@ -1,10 +1,18 @@
-from uuid import UUID
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import UUID, uuid4
 
-from agents_api.autogen.openapi_model import CreateSessionRequest
+from agents_api.autogen.openapi_model import (
+    CreateSessionRequest,
+    HybridDocSearchRequest,
+    TextOnlyDocSearchRequest,
+    UpdateSessionRequest,
+    VectorDocSearchRequest,
+)
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.sessions.create_session import create_session
+from agents_api.routers.utils.tools import ToolCallsEvaluator
 from uuid_extensions import uuid7
-from ward import test
+from ward import raises, test
 
 from tests.fixtures import (
     make_acompletion_multiple_outputs,
@@ -1805,3 +1813,330 @@ async def _(
 
     assert response.status_code == 201
     assert acompletion.call_count == 2
+
+
+@test("ToolCallsEvaluator: test _create_search_request for hybrid search")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    search_params = {
+        "text": "test query",
+        "vector": [0.1, 0.2, 0.3],
+        "mmr_strength": 0.5,
+        "alpha": 0.8,
+        "confidence": 0.6,
+        "limit": 5,
+    }
+    result = evaluator._create_search_request(search_params)
+    assert isinstance(result, HybridDocSearchRequest)
+    assert result.text == "test query"
+    assert result.vector == [0.1, 0.2, 0.3]
+    assert result.mmr_strength == 0.5
+    assert result.alpha == 0.8
+    assert result.confidence == 0.6
+    assert result.limit == 5
+
+
+@test("ToolCallsEvaluator: test _create_search_request for text-only search")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    search_params = {
+        "text": "test query",
+        "mmr_strength": 0.5,
+        "limit": 5,
+    }
+    result = evaluator._create_search_request(search_params)
+    assert isinstance(result, TextOnlyDocSearchRequest)
+    assert result.text == "test query"
+    assert result.mmr_strength == 0.5
+    assert result.limit == 5
+
+
+@test("ToolCallsEvaluator: test _create_search_request for vector-only search")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    search_params = {
+        "vector": [0.1, 0.2, 0.3],
+        "mmr_strength": 0.5,
+        "confidence": 0.6,
+        "limit": 5,
+    }
+    result = evaluator._create_search_request(search_params)
+    assert isinstance(result, VectorDocSearchRequest)
+    assert result.vector == [0.1, 0.2, 0.3]
+    assert result.mmr_strength == 0.5
+    assert result.confidence == 0.6
+    assert result.limit == 5
+
+
+@test("ToolCallsEvaluator: test _create_search_request with no valid parameters")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    search_params = {"invalid": "params"}
+    result = evaluator._create_search_request(search_params)
+    assert result is None
+
+
+@test("ToolCallsEvaluator: test _call_tool for agent.create")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    tool_name = "agent.create"
+    arguments = {
+        "x_developer_id": str(developer_id),
+        "data": {
+            "name": "Test Agent",
+            "model": "gpt-4",
+            "instructions": "Test instructions",
+            "metadata": {"key": "value"},
+            "settings": {"setting1": "value1"}
+        }
+    }
+    mock_handler = AsyncMock(return_value={"id": "agent_id"})
+
+    with patch.dict(evaluator.system_tool_handlers, {"agent.create": mock_handler}):
+        result = await evaluator._call_tool(developer_id, tool_name, arguments)
+        assert result == {"id": "agent_id"}
+        mock_handler.assert_called_once()
+        call_args = mock_handler.call_args[1]
+        assert isinstance(call_args["data"], dict)
+        assert call_args["x_developer_id"] == developer_id
+        assert call_args["data"]["name"] == "Test Agent"
+        assert call_args["data"]["model"] == "gpt-4"
+        assert call_args["data"]["instructions"] == "Test instructions"
+        assert call_args["data"]["metadata"] == {"key": "value"}
+        assert call_args["data"]["settings"] == {"setting1": "value1"}
+
+
+@test("ToolCallsEvaluator: test _call_tool for agent.docs.search")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    tool_name = "agent.docs.search"
+    arguments = {
+        "developer_id": developer_id,
+        "agent_id": str(uuid4()),
+        "search_params": {
+            "text": "test query",
+            "vector": [0.1, 0.2, 0.3],
+        },
+    }
+    mock_handler = AsyncMock(return_value={"results": []})
+    with patch.dict(evaluator.system_tool_handlers, {"agent.docs.search": mock_handler}):
+        result = await evaluator._call_tool(developer_id, tool_name, arguments)
+        assert result == {"results": []}
+        mock_handler.assert_called_once()
+        call_args = mock_handler.call_args[1]
+        assert isinstance(call_args["search_params"], HybridDocSearchRequest)
+        assert call_args["x_developer_id"] == developer_id
+
+
+@test("ToolCallsEvaluator: test _call_tool for session.chat")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    session_id = uuid4()
+    tool_name = "session.chat"
+    arguments = {
+        "x_developer_id": str(developer_id),
+        "session_id": str(session_id),
+        "messages": [
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi there!"}
+        ]
+    }
+    mock_handler = AsyncMock(return_value={"response": "test"})
+
+    with patch.dict(evaluator.system_tool_handlers, {"session.chat": mock_handler}):
+        result = await evaluator._call_tool(developer_id, tool_name, arguments)
+        assert result == {"response": "test"}
+        mock_handler.assert_called_once()
+        call_args = mock_handler.call_args[1]
+        assert isinstance(call_args["messages"], list)
+        assert call_args["x_developer_id"] == developer_id
+        assert call_args["session_id"] == session_id
+        assert len(call_args["messages"]) == 2
+        assert call_args["messages"][0]["role"] == "user"
+        assert call_args["messages"][0]["content"] == "Hello"
+        assert call_args["messages"][1]["role"] == "assistant"
+        assert call_args["messages"][1]["content"] == "Hi there!"
+
+
+@test("ToolCallsEvaluator: test _call_tool for session.create")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    tool_name = "session.create"
+    arguments = {
+        "developer_id": developer_id,
+        "session_id": str(uuid4()),
+        "data": {
+            "name": "test session",
+            "metadata": {"key": "value"},
+        },
+    }
+    mock_handler = AsyncMock(return_value={"id": "session_id"})
+    with patch.dict(evaluator.system_tool_handlers, {"session.create": mock_handler}):
+        result = await evaluator._call_tool(developer_id, tool_name, arguments)
+        assert result == {"id": "session_id"}
+        mock_handler.assert_called_once()
+        call_args = mock_handler.call_args[1]
+        assert isinstance(call_args["data"], CreateSessionRequest)
+        assert call_args["developer_id"] == developer_id
+
+
+@test("ToolCallsEvaluator: test _call_tool for session.update")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    tool_name = "session.update"
+    arguments = {
+        "developer_id": developer_id,
+        "session_id": str(uuid4()),
+        "name": "updated session",
+        "metadata": {"key": "value"},
+    }
+    mock_handler = AsyncMock(return_value={"id": "session_id"})
+    with patch.dict(evaluator.system_tool_handlers, {"session.update": mock_handler}):
+        result = await evaluator._call_tool(developer_id, tool_name, arguments)
+        assert result == {"id": "session_id"}
+        mock_handler.assert_called_once()
+        call_args = mock_handler.call_args[1]
+        assert isinstance(call_args["data"], UpdateSessionRequest)
+        assert call_args["developer_id"] == developer_id
+
+
+@test("ToolCallsEvaluator: test _call_tool for agent.update")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    agent_id = uuid4()
+    tool_name = "agent.update"
+    arguments = {
+        "x_developer_id": str(developer_id),
+        "agent_id": str(agent_id),
+        "data": {
+            "name": "Updated Agent",
+            "model": "gpt-4-turbo",
+            "instructions": "Updated instructions",
+            "metadata": {"key": "updated_value"},
+            "settings": {"setting1": "updated_value1"}
+        }
+    }
+    mock_handler = AsyncMock(return_value={"id": "agent_id"})
+
+    with patch.dict(evaluator.system_tool_handlers, {"agent.update": mock_handler}):
+        result = await evaluator._call_tool(developer_id, tool_name, arguments)
+        assert result == {"id": "agent_id"}
+        mock_handler.assert_called_once()
+        call_args = mock_handler.call_args[1]
+        assert isinstance(call_args["data"], dict)
+        assert call_args["x_developer_id"] == developer_id
+        assert call_args["agent_id"] == agent_id
+        assert call_args["data"]["name"] == "Updated Agent"
+        assert call_args["data"]["model"] == "gpt-4-turbo"
+        assert call_args["data"]["instructions"] == "Updated instructions"
+        assert call_args["data"]["metadata"] == {"key": "updated_value"}
+        assert call_args["data"]["settings"] == {"setting1": "updated_value1"}
+
+
+@test("ToolCallsEvaluator: test _call_tool for agent.delete")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    agent_id = uuid4()
+    tool_name = "agent.delete"
+    arguments = {
+        "x_developer_id": str(developer_id),
+        "agent_id": str(agent_id)
+    }
+    mock_handler = AsyncMock(return_value={"success": True})
+
+    with patch.dict(evaluator.system_tool_handlers, {"agent.delete": mock_handler}):
+        result = await evaluator._call_tool(developer_id, tool_name, arguments)
+        assert result == {"success": True}
+        mock_handler.assert_called_once()
+        call_args = mock_handler.call_args[1]
+        assert call_args["x_developer_id"] == developer_id
+        assert call_args["agent_id"] == agent_id
+
+
+@test("ToolCallsEvaluator: test _call_tool for session.delete")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    session_id = uuid4()
+    tool_name = "session.delete"
+    arguments = {
+        "x_developer_id": str(developer_id),
+        "session_id": str(session_id)
+    }
+    mock_handler = AsyncMock(return_value={"success": True})
+
+    with patch.dict(evaluator.system_tool_handlers, {"session.delete": mock_handler}):
+        result = await evaluator._call_tool(developer_id, tool_name, arguments)
+        assert result == {"success": True}
+        mock_handler.assert_called_once()
+        call_args = mock_handler.call_args[1]
+        assert call_args["x_developer_id"] == developer_id
+        assert call_args["session_id"] == session_id
+
+
+@test("ToolCallsEvaluator: test _call_tool with invalid tool name format")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    developer_id = uuid4()
+    tool_name = "invalid"
+    arguments = {"x_developer_id": str(developer_id)}
+    with raises(NameError) as exc:
+        await evaluator._call_tool(developer_id, tool_name, arguments)
+    assert str(exc.raised) == "invalid system tool name: invalid"
+
+
+@test("ToolCallsEvaluator: test peek_first_chunk with valid stream")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    mock_chunk1 = MagicMock()
+    mock_chunk1.choices = [MagicMock()]
+    mock_chunk2 = MagicMock()
+    mock_chunk2.choices = [MagicMock()]
+    mock_stream = AsyncMock()
+    mock_stream.__anext__.return_value = mock_chunk1
+    mock_stream.__aiter__.return_value = [mock_chunk1, mock_chunk2]
+
+    result, gen = await evaluator.peek_first_chunk(mock_stream)
+    assert result == mock_chunk1
+    assert gen is not None
+
+    # Verify generator yields chunks in correct order
+    chunks = [chunk async for chunk in gen]
+    assert len(chunks) == 2
+    assert chunks[0] == mock_chunk1
+    assert chunks[1] == mock_chunk2
+
+
+@test("ToolCallsEvaluator: test peek_first_chunk with empty stream")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    mock_stream = AsyncMock()
+    mock_stream.__anext__.side_effect = StopAsyncIteration
+    result, gen = await evaluator.peek_first_chunk(mock_stream)
+    assert result is None
+    assert gen == mock_stream
+
+
+@test("ToolCallsEvaluator: test peek_first_chunk with single chunk stream")
+async def _():
+    evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
+    mock_chunk = MagicMock()
+
+    async def gen():
+        yield mock_chunk
+
+    result, gen = await evaluator.peek_first_chunk(gen())
+    assert result == mock_chunk
+    assert gen is not None
+
+    # Verify generator yields only one chunk
+    chunks = [chunk async for chunk in gen]
+    assert len(chunks) == 1
+    assert chunks[0] == mock_chunk

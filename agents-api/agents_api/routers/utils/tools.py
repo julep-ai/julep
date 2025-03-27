@@ -2,7 +2,7 @@ import asyncio
 import json
 from collections.abc import Awaitable, Callable
 from functools import partial
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 from uuid import UUID
 
 from beartype import beartype
@@ -285,15 +285,7 @@ class ToolCallsEvaluator:
             async for chunk in response:
                 yield chunk
 
-        return first_chunk, CustomStreamWrapper(
-            completion_stream=gen(),
-            model=response.model,
-            logging_obj=response.logging_obj,
-            custom_llm_provider=response.custom_llm_provider,
-            stream_options=response.stream_options,
-            make_call=response.make_call,
-            _response_headers=response._response_headers,  # noqa: SLF001
-        )
+        return first_chunk, gen()
 
     async def _get_tool_result(
         self, tool: ChatCompletionMessageToolCall | dict, developer_id: UUID
@@ -348,7 +340,7 @@ class ToolCallsEvaluator:
                 if not delta.tool_calls:
                     return response
 
-                async for chunk in cast(CustomStreamWrapper, response):
+                async for chunk in response:
                     delta = chunk.choices[0].delta
                     if delta.tool_calls:
                         for tool_call in delta.tool_calls:
