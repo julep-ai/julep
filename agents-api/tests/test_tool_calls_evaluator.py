@@ -32,7 +32,7 @@ agent_doc_list = make_acompletion_multiple_outputs([
                 "id": "call_agent_doc_list",
                 "type": "system",
                 "function": {
-                    "name": "agent.docs.list",
+                    "name": "agent.doc.list",
                     "arguments": {
                         "owner_id": str(uuid7()),
                         "developer_id": str(UUID(int=0)),
@@ -58,7 +58,7 @@ agent_doc_create = make_acompletion_multiple_outputs(
                     "id": "call_agent_doc_create",
                     "type": "system",
                     "function": {
-                        "name": "agent.docs.create",
+                        "name": "agent.doc.create",
                         "arguments": {
                             "agent_id": str(agent.id),
                             "x_developer_id": str(UUID(int=0)),
@@ -85,7 +85,7 @@ agent_doc_delete = make_acompletion_multiple_outputs(
                     "id": "call_agent_doc_delete",
                     "type": "system",
                     "function": {
-                        "name": "agent.docs.delete",
+                        "name": "agent.doc.delete",
                         "arguments": {
                             "doc_id": str(doc.id),
                             "developer_id": str(UUID(int=0)),
@@ -113,7 +113,7 @@ agent_doc_search = make_acompletion_multiple_outputs(
                     "id": "call_agent_doc_search",
                     "type": "system",
                     "function": {
-                        "name": "agent.docs.search",
+                        "name": "agent.doc.search",
                         "arguments": {
                             "agent_id": str(agent.id),
                             "x_developer_id": str(UUID(int=0)),
@@ -272,7 +272,7 @@ user_doc_list = make_acompletion_multiple_outputs([
                 "id": "call_user_doc_list",
                 "type": "system",
                 "function": {
-                    "name": "user.docs.list",
+                    "name": "user.doc.list",
                     "arguments": {
                         "owner_id": str(uuid7()),
                         "developer_id": str(UUID(int=0)),
@@ -298,7 +298,7 @@ user_doc_create = make_acompletion_multiple_outputs(
                     "id": "call_user_doc_create",
                     "type": "system",
                     "function": {
-                        "name": "user.docs.create",
+                        "name": "user.doc.create",
                         "arguments": {
                             "user_id": str(user.id),
                             "x_developer_id": str(UUID(int=0)),
@@ -325,7 +325,7 @@ user_doc_delete = make_acompletion_multiple_outputs(
                     "id": "call_user_doc_delete",
                     "type": "system",
                     "function": {
-                        "name": "user.docs.delete",
+                        "name": "user.doc.delete",
                         "arguments": {
                             "doc_id": str(user_doc.id),
                             "developer_id": str(UUID(int=0)),
@@ -352,7 +352,7 @@ user_doc_search = make_acompletion_multiple_outputs([
                 "id": "call_user_doc_search",
                 "type": "system",
                 "function": {
-                    "name": "user.docs.search",
+                    "name": "user.doc.search",
                     "arguments": {
                         "user_id": str(uuid7()),
                         "x_developer_id": str(UUID(int=0)),
@@ -749,7 +749,7 @@ task_delete = make_acompletion_multiple_outputs(
 )
 
 
-@test("chat: evaluate agent.docs.list tool call")
+@test("chat: evaluate agent.doc.list tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -787,7 +787,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate agent.docs.create tool call")
+@test("chat: evaluate agent.doc.create tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -825,7 +825,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate agent.docs.delete tool call")
+@test("chat: evaluate agent.doc.delete tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -863,7 +863,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate agent.docs.search tool call")
+@test("chat: evaluate agent.doc.search tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -1091,7 +1091,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate user.docs.list tool call")
+@test("chat: evaluate user.doc.list tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -1129,7 +1129,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate user.docs.create tool call")
+@test("chat: evaluate user.doc.create tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -1167,7 +1167,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate user.docs.delete tool call")
+@test("chat: evaluate user.doc.delete tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -1207,7 +1207,7 @@ async def _(
     assert acompletion.call_count == 2
 
 
-@test("chat: evaluate user.docs.search tool call")
+@test("chat: evaluate user.doc.search tool call")
 async def _(
     make_request=make_request,
     developer_id=test_developer_id,
@@ -1907,11 +1907,11 @@ async def _():
         assert call_args["data"]["settings"] == {"setting1": "value1"}
 
 
-@test("ToolCallsEvaluator: test _call_tool for agent.docs.search")
+@test("ToolCallsEvaluator: test _call_tool for agent.doc.search")
 async def _():
     evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
     developer_id = uuid4()
-    tool_name = "agent.docs.search"
+    tool_name = "agent.doc.search"
     arguments = {
         "developer_id": developer_id,
         "agent_id": str(uuid4()),
@@ -1921,7 +1921,7 @@ async def _():
         },
     }
     mock_handler = AsyncMock(return_value={"results": []})
-    with patch.dict(evaluator.system_tool_handlers, {"agent.docs.search": mock_handler}):
+    with patch.dict(evaluator.system_tool_handlers, {"agent.doc.search": mock_handler}):
         result = await evaluator._call_tool(developer_id, tool_name, arguments)
         assert result == {"results": []}
         mock_handler.assert_called_once()
@@ -2056,7 +2056,7 @@ async def _():
         assert result == {"success": True}
         mock_handler.assert_called_once()
         call_args = mock_handler.call_args[1]
-        assert call_args["x_developer_id"] == developer_id
+        assert call_args["x_developer_id"] == str(developer_id)
         assert call_args["agent_id"] == agent_id
 
 
@@ -2077,7 +2077,7 @@ async def _():
         assert result == {"success": True}
         mock_handler.assert_called_once()
         call_args = mock_handler.call_args[1]
-        assert call_args["x_developer_id"] == developer_id
+        assert call_args["x_developer_id"] == str(developer_id)
         assert call_args["session_id"] == session_id
 
 
@@ -2087,23 +2087,22 @@ async def _():
     developer_id = uuid4()
     tool_name = "invalid"
     arguments = {"x_developer_id": str(developer_id)}
-    with raises(NameError) as exc:
+    with raises(NotImplementedError) as exc:
         await evaluator._call_tool(developer_id, tool_name, arguments)
-    assert str(exc.raised) == "invalid system tool name: invalid"
+    assert str(exc.raised) == "System call not implemented for invalid"
 
 
 @test("ToolCallsEvaluator: test peek_first_chunk with valid stream")
 async def _():
     evaluator = ToolCallsEvaluator(completion_func=AsyncMock())
     mock_chunk1 = MagicMock()
-    mock_chunk1.choices = [MagicMock()]
     mock_chunk2 = MagicMock()
-    mock_chunk2.choices = [MagicMock()]
-    mock_stream = AsyncMock()
-    mock_stream.__anext__.return_value = mock_chunk1
-    mock_stream.__aiter__.return_value = [mock_chunk1, mock_chunk2]
 
-    result, gen = await evaluator.peek_first_chunk(mock_stream)
+    async def gen():
+        yield mock_chunk1
+        yield mock_chunk2
+
+    result, gen = await evaluator.peek_first_chunk(gen())
     assert result == mock_chunk1
     assert gen is not None
 
