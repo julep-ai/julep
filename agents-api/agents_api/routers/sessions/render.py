@@ -172,7 +172,23 @@ async def render_chat_input(
                     else {},
                 },
             }
-            formatted_tools.append(tool)
+        elif tool.type == "system" and tool.system:
+            system_def = tool.system
+            tool_name = ".".join([t for t in [system_def.resource, system_def.subresource, system_def.operation] if t is not None])
+            tool = {
+                "type": "function",
+                "function": {
+                    "name": tool_name,
+                    "parameters": {
+                        k: v
+                        for k, v in system_def.model_dump().items()
+                        if k not in ["name", "type"]
+                    }
+                    if system_def is not None
+                    else {},
+                },
+            }
+        formatted_tools.append(tool)
 
     # If not using Claude model
     # FIXME: Enable formatted_tools once format-tools PR is merged.
