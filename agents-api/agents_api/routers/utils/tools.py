@@ -2,7 +2,7 @@ import asyncio
 import json
 from collections.abc import Awaitable, Callable
 from functools import partial
-from typing import Any, ClassVar
+from typing import Any, ClassVar, AsyncGenerator, cast
 from uuid import UUID
 
 from beartype import beartype
@@ -62,19 +62,19 @@ from ...routers.docs.search_docs import search_agent_docs, search_user_docs
 class ToolCallsEvaluator:
     min_tool_name_segments: int = 2
     system_tool_handlers: ClassVar[dict[str, Any]] = {
-        "agent.docs.list": list_docs_query,
-        "agent.docs.create": create_agent_doc,
-        "agent.docs.delete": delete_doc_query,
-        "agent.docs.search": search_agent_docs,
+        "agent.doc.list": list_docs_query,
+        "agent.doc.create": create_agent_doc,
+        "agent.doc.delete": delete_doc_query,
+        "agent.doc.search": search_agent_docs,
         "agent.list": list_agents_query,
         "agent.get": get_agent_query,
         "agent.create": create_agent_query,
         "agent.update": update_agent_query,
         "agent.delete": delete_agent_query,
-        "user.docs.list": list_docs_query,
-        "user.docs.create": create_user_doc,
-        "user.docs.delete": delete_doc_query,
-        "user.docs.search": search_user_docs,
+        "user.doc.list": list_docs_query,
+        "user.doc.create": create_user_doc,
+        "user.doc.delete": delete_doc_query,
+        "user.doc.search": search_user_docs,
         "user.list": list_users_query,
         "user.get": get_user_query,
         "user.create": create_user_query,
@@ -153,7 +153,7 @@ class ToolCallsEvaluator:
         if len(parts) > self.min_tool_name_segments:
             subresource = parts[1]
 
-        if subresource == "docs" and operation not in ["create", "search"]:
+        if subresource == "doc" and operation not in ["create", "search"]:
             owner_id_field = f"{resource}_id"
             if owner_id_field in arguments:
                 doc_args = {
@@ -165,7 +165,7 @@ class ToolCallsEvaluator:
                 arguments = doc_args
 
         # Handle special cases for doc operations
-        if operation == "create" and subresource == "docs":
+        if operation == "create" and subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
             return await tool_handler(
                 data=CreateDocRequest(**data),
@@ -173,7 +173,7 @@ class ToolCallsEvaluator:
             )
 
         # Handle search operations
-        if operation == "search" and subresource == "docs":
+        if operation == "search" and subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
             search_params = self._create_search_request(arguments.pop("search_params"))
             return await tool_handler(search_params=search_params, **arguments)
@@ -272,9 +272,7 @@ class ToolCallsEvaluator:
         return await tool_handler(**arguments)
 
     @staticmethod
-    async def peek_first_chunk(
-        response: CustomStreamWrapper,
-    ) -> tuple[ModelResponseStream, CustomStreamWrapper]:
+    async def peek_first_chunk[T](response: AsyncGenerator[T, None]) -> tuple[T, AsyncGenerator[T, None]]:
         try:
             first_chunk = await response.__anext__()
         except StopAsyncIteration:
@@ -329,7 +327,7 @@ class ToolCallsEvaluator:
                 if not tool_calls:
                     return response
             else:
-                first_chunk, response = await self.peek_first_chunk(response)
+                first_chunk, response = await self.peek_first_chunk(cast(AsyncGenerator[ModelResponseStream], response))
                 if first_chunk and not first_chunk.choices:
                     return response
 
