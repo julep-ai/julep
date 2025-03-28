@@ -40,7 +40,7 @@ async def search_docs_by_text(
     k: int = 3,
     metadata_filter: dict[str, Any] = {},
     search_language: str | None = "english_unaccent",
-    trigram_similarity_threshold: float = 0.25,  # Lower threshold to catch more spelling errors
+    trigram_similarity_threshold: float = 0.5,  # Lower threshold to catch more spelling errors
     extract_keywords: bool = False,
 ) -> tuple[str, list]:
     """
@@ -53,6 +53,8 @@ async def search_docs_by_text(
         k (int): Maximum number of results to return.
         search_language (str): Language for text search (default: "english").
         metadata_filter (dict): Metadata filter criteria.
+        trigram_similarity_threshold (float): Similarity threshold for trigram search.
+        extract_keywords (bool): Whether to extract keywords from the query.
         connection_pool (asyncpg.Pool): Database connection pool.
 
     Returns:

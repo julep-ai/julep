@@ -85,6 +85,7 @@ Our full-text search functionality leverages Timescale's powerful indexing to ef
 | `metadata_filter`| `object`| Filters to apply based on document metadata.     | `None` |
 | `lang`           | `str`   | The language to use for full-text search processing. | `'english'` |
 | `limit`          | `int`   | The maximum number of documents to return.        | `10` |
+| `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (higher values require closer matches) | `0.6` |
 
 **Example:**
 
@@ -157,7 +158,7 @@ Our embedding (vector) search functionality leverages machine learning to conver
 | `lang`           | `string`        | The language for the search query.                                                            | `en-US` |
 | `metadata_filter`| `object`        | Filters to apply based on document metadata.                                                  | None    |
 | `mmr_strength`   | `number`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1).         | `0.5`     |
-| `confidence`     | `number`        | The confidence threshold for embedding similarity (must be between -1 and 1).                 | `0`     |
+| `confidence`     | `number`        | The confidence threshold for embedding similarity (must be between -1 and 1).                 | `0.5`     |
 
 <CodeGroup>
     ```python Python
@@ -254,14 +255,14 @@ Julep's trigram search capabilities include:
 |-------------------|----------------|---------------------------------------------------------------------------------|-------------|
 | `text`            | `str`          | The textual query to search within documents.                                   | **Required** |
 | `vector`          | `List[float]`  | The embedding vector representing the semantic meaning of the query.            | **Required** |
-| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results.       | `0.7`       |
-| `confidence`      | `float`        | The confidence threshold for embedding similarity.                              | `0.5`       |
+| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results (must be between 0 and 1).     | `0.7`       |
+| `confidence`      | `float`        | The confidence threshold for embedding similarity (must be between -1 and 1).            | `0.5`       |
 | `metadata_filter` | `object`       | Filters to apply based on document metadata.                                    | `None`      |
 | `limit`           | `int`          | The number of top results to return.                                            | `3`         |
 | `lang`            | `str`          | The language to use for full-text search processing.                            | `english_unaccent` |
 | `mmr_strength`    | `float`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1). | `0.5`       |
-| `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (higher values require closer matches). | `0.6`       |
-| `k_multiplier`    | `int`          | Controls how many intermediate results to fetch before final scoring.           | `5`         |
+| `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (must be between 0 and 1). | `0.6`       |
+| `k_multiplier`    | `int`          | Controls how many intermediate results to fetch before final scoring.           | `7`         |
 
 **Example:**
 
