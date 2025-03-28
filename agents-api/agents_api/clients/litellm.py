@@ -53,7 +53,7 @@ async def acompletion(
         model = f"openai/{model}"  # This is needed for litellm
 
     supported_params = get_supported_openai_params(model)
-    settings = {k: v for k, v in kwargs.items() if k in supported_params}
+    settings = {k: v for k, v in kwargs.items() if k in supported_params or k == "user"}
 
     # NOTE: This is a fix for Mistral API, which expects a different message format
     if model[7:].startswith("mistral"):

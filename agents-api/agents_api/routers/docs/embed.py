@@ -22,6 +22,7 @@ async def embed(
     vectors = await litellm.aembedding(
         inputs=text_to_embed,
         embed_instruction=data.embed_instruction,
+        user=str(x_developer_id),
     )
 
     return EmbedQueryResponse(vectors=vectors)

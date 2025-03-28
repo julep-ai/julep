@@ -101,6 +101,7 @@ async def gather_messages(
         [query_embedding, *_] = await litellm.aembedding(
             inputs=embed_text[-(recall_options.max_query_length) :],
             embed_instruction="Represent the query for retrieving supporting documents: ",
+            user=str(developer.id),
         )
 
     # Get query text from last message

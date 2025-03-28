@@ -97,6 +97,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         exclude_unset=True,
     )
     passed_settings.update(passed_settings.pop("settings", {}) or {})
+    passed_settings["user"] = str(context.execution_input.developer_id)
 
     if not passed_settings.get("tools"):
         passed_settings.pop("tool_choice", None)
