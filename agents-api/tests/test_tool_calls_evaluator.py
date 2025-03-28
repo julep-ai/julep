@@ -18,7 +18,13 @@ from agents_api.autogen.openapi_model import (
     VectorDocSearchRequest,
 )
 from agents_api.routers.utils.tools import ToolCallsEvaluator
-from litellm.types.utils import ChatCompletionMessageToolCall, Function, ModelResponse, Choices, Message
+from litellm.types.utils import (
+    ChatCompletionMessageToolCall,
+    Choices,
+    Function,
+    Message,
+    ModelResponse,
+)
 from ward import raises, skip, test
 
 from .fixtures import (
@@ -808,10 +814,7 @@ async def _():
     response = ModelResponse(
         choices=[
             Choices(
-                message=Message(
-                    content="Simple response with no tool calls",
-                    role="assistant"
-                ),
+                message=Message(content="Simple response with no tool calls", role="assistant"),
                 index=0,
             )
         ]
@@ -819,16 +822,16 @@ async def _():
     mock_completion_func = AsyncMock(return_value=response)
     evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)
     developer_id = uuid4()
-    
+
     # Call the method
     kwargs = {"stream": False}
     result = await evaluator.completion(developer_id, **kwargs)
-    
+
     # Verify results
     assert result.choices[0].message.content == "Simple response with no tool calls"
     assert result.choices[0].message.role == "assistant"
     assert not result.choices[0].message.tool_calls
-    
+
     # Verify the completion function was called with the correct arguments
     mock_completion_func.assert_called_once()
     assert "messages" not in kwargs
@@ -851,33 +854,28 @@ async def _(dsn=pg_dsn, developer=test_developer):
     tool_call = ChatCompletionMessageToolCall(
         id="tool-123",
         type="function",
-        function=Function(name="agent.create", arguments=json.dumps(arguments))
+        function=Function(name="agent.create", arguments=json.dumps(arguments)),
     )
     response = ModelResponse(
         choices=[
             Choices(
-                message=Message(
-                    content=None,
-                    role="assistant",
-                    tool_calls=[tool_call]
-                ),
+                message=Message(content=None, role="assistant", tool_calls=[tool_call]),
                 index=0,
             )
         ]
     )
     mock_completion_func = AsyncMock(return_value=response)
-    evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)    
-    messages = [{"role": "user", "content": "Use an agent.create tool"}]
+    evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)
     developer_id = uuid4()
-    
+
     # Call the method
     kwargs = {"stream": False}
     result = await evaluator.completion(developer_id, **kwargs)
-    
+
     # Verify results
     assert result.choices[0].message.role == "assistant"
     assert result.choices[0].message.tool_calls == [tool_call]
-    
+
     # Verify the completion function was called with updated messages
     assert mock_completion_func.call_count == 2
 
@@ -897,7 +895,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
 #             function=Function(name="second_tool", arguments='{"arg2": "value2"}')
 #         )
 #     ]
-    
+
 #     mock_completion_func = AsyncMock(return_value=ModelResponse(
 #         choices=[
 #             Choice(
@@ -910,9 +908,9 @@ async def _(dsn=pg_dsn, developer=test_developer):
 #             )
 #         ]
 #     ))
-    
+
 #     evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)
-    
+
 #     # Mock the _get_tool_result method to return different results for each tool
 #     tool_results = [
 #         {
@@ -928,22 +926,22 @@ async def _(dsn=pg_dsn, developer=test_developer):
 #             "content": "Second tool result"
 #         }
 #     ]
-    
+
 #     evaluator._get_tool_result = AsyncMock(side_effect=tool_results)
-    
+
 #     messages = [{"role": "user", "content": "Use multiple tools"}]
 #     developer_id = uuid4()
-    
+
 #     # Call the method
 #     result = await evaluator.completion(developer_id, **{"messages": messages})
-    
+
 #     # Verify results
 #     assert result.choices[0].message.role == "assistant"
 #     assert result.choices[0].message.tool_calls == tool_calls
-    
+
 #     # Verify the tool results were added to messages
 #     assert evaluator._get_tool_result.call_count == 2
-    
+
 #     # Verify the completion function was called with updated messages
 #     assert mock_completion_func.call_count == 2
 #     second_call_args = mock_completion_func.call_args[0][0]
@@ -997,24 +995,24 @@ async def _(dsn=pg_dsn, developer=test_developer):
 
 #     mock_completion_func = AsyncMock(return_value=mock_stream())
 #     evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)
-    
+
 #     messages = [{"role": "user", "content": "Hello"}]
 #     developer_id = uuid4()
-    
+
 #     # Call the method
 #     result = await evaluator.completion(developer_id, **{"messages": messages, "stream": True})
-    
+
 #     # Verify the completion function was called with the correct arguments
 #     mock_completion_func.assert_called_once()
 #     call_args = mock_completion_func.call_args[0][0]
 #     assert call_args["messages"] == messages
 #     assert call_args["stream"] is True
-    
+
 #     # Verify we get back the stream
 #     chunks = []
 #     async for chunk in result:
 #         chunks.append(chunk)
-    
+
 #     assert chunks == mock_stream_chunks
 
 
@@ -1039,7 +1037,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
 #             )
 #         ]
 #     )
-    
+
 #     argument_chunks = [
 #         ModelResponseStream(
 #             choices=[
@@ -1072,7 +1070,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
 #             ]
 #         ),
 #     ]
-    
+
 #     # Mock the stream generator
 #     async def mock_stream():
 #         yield first_chunk
@@ -1081,7 +1079,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
 
 #     mock_completion_func = AsyncMock(return_value=mock_stream())
 #     evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)
-    
+
 #     # Mock the tool result
 #     tool_result = {
 #         "tool_call_id": "tool-123",
@@ -1090,7 +1088,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
 #         "content": "Tool execution result"
 #     }
 #     evaluator._get_tool_result = AsyncMock(return_value=tool_result)
-    
+
 #     # Mock the second completion after tool execution
 #     second_response_chunks = [
 #         ModelResponseStream(
@@ -1116,36 +1114,36 @@ async def _(dsn=pg_dsn, developer=test_developer):
 #             ]
 #         ),
 #     ]
-    
+
 #     async def mock_second_stream():
 #         for chunk in second_response_chunks:
 #             yield chunk
-    
+
 #     # Set up the mock to return different values on subsequent calls
 #     mock_completion_func.side_effect = [mock_stream(), mock_second_stream()]
-    
+
 #     messages = [{"role": "user", "content": "Use a tool"}]
 #     developer_id = uuid4()
-    
+
 #     # Call the method
 #     result = await evaluator.completion(developer_id, **{"messages": messages, "stream": True})
-    
+
 #     # Verify the completion function was called twice
 #     assert mock_completion_func.call_count == 2
-    
+
 #     # Verify the first call had the original messages
 #     first_call_args = mock_completion_func.call_args_list[0][0][0]
 #     assert first_call_args["messages"] == messages
 #     assert first_call_args["stream"] is True
-    
+
 #     # Verify the second call included the tool result
 #     second_call_args = mock_completion_func.call_args_list[1][0][0]
 #     assert len(second_call_args["messages"]) == 3  # Original + assistant + tool result
 #     assert second_call_args["messages"][2] == tool_result
-    
+
 #     # Verify we get back the second stream
 #     chunks = []
 #     async for chunk in result:
 #         chunks.append(chunk)
-    
+
 #     assert chunks == second_response_chunks
