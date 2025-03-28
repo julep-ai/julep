@@ -359,6 +359,7 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
             query=query,
             k=3,
             search_language="english",
+            trigram_similarity_threshold=0.4,
             connection_pool=pool,
         )
 
@@ -423,6 +424,8 @@ async def _(
         embedding=query_embedding,
         k=3,  # Add k parameter
         metadata_filter={"test": "test"},  # Add metadata filter
+        trigram_similarity_threshold=0.4,
+        k_multiplier=7,
         connection_pool=pool,
     )
 
@@ -442,10 +445,10 @@ async def _(
 #     # Test with different confidence levels
 #     confidence_tests = [
 #         (0.99, 0),  # Very high similarity threshold - should find no results
-#         (0.7, 1),   # High similarity - should find 1 result (the embedding with all 1.0s)
-#         (0.3, 2),   # Medium similarity - should find 2 results (including 0.3-0.7 embedding)
+#         (0.7, 1),  # High similarity - should find 1 result (the embedding with all 1.0s)
+#         (0.3, 2),  # Medium similarity - should find 2 results (including 0.3-0.7 embedding)
 #         (-0.8, 3),  # Low similarity - should find 3 results (including -0.8 to 0.8 embedding)
-#         (-1.0, 4)   # Lowest similarity - should find all 4 results (including alternating -1/1)
+#         (-1.0, 4),  # Lowest similarity - should find all 4 results (including alternating -1/1)
 #     ]
 
 #     for confidence, expected_min_results in confidence_tests:

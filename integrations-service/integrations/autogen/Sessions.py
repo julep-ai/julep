@@ -104,7 +104,7 @@ class HybridDocSearch(BaseDocSearch):
     """
     The mode to use for the search.
     """
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
     """
     The confidence cutoff level
     """
@@ -115,6 +115,14 @@ class HybridDocSearch(BaseDocSearch):
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
+    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    """
+    The trigram_similarity_threshold cutoff level
+    """
+    k_multiplier: Annotated[int, Field(ge=0)] = 7
+    """
+    The k_multiplier cutoff level to control how many intermediate results to fetch before final scoring
     """
 
 
@@ -126,7 +134,7 @@ class HybridDocSearchUpdate(BaseDocSearchUpdate):
     """
     The mode to use for the search.
     """
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
     """
     The confidence cutoff level
     """
@@ -137,6 +145,14 @@ class HybridDocSearchUpdate(BaseDocSearchUpdate):
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
+    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    """
+    The trigram_similarity_threshold cutoff level
+    """
+    k_multiplier: Annotated[int, Field(ge=0)] = 7
+    """
+    The k_multiplier cutoff level to control how many intermediate results to fetch before final scoring
     """
 
 
@@ -280,6 +296,10 @@ class TextOnlyDocSearch(BaseDocSearch):
     """
     The mode to use for the search.
     """
+    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    """
+    The trigram_similarity_threshold cutoff level
+    """
 
 
 class TextOnlyDocSearchUpdate(BaseDocSearchUpdate):
@@ -289,6 +309,10 @@ class TextOnlyDocSearchUpdate(BaseDocSearchUpdate):
     mode: Literal["text"] = "text"
     """
     The mode to use for the search.
+    """
+    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    """
+    The trigram_similarity_threshold cutoff level
     """
 
 
@@ -347,7 +371,7 @@ class VectorDocSearch(BaseDocSearch):
     """
     The mode to use for the search.
     """
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
     """
     The confidence cutoff level
     """
@@ -365,7 +389,7 @@ class VectorDocSearchUpdate(BaseDocSearchUpdate):
     """
     The mode to use for the search.
     """
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
     """
     The confidence cutoff level
     """

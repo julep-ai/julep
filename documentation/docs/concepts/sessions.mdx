@@ -51,7 +51,7 @@ When configuring a session, you can specify recall options to control how contex
     | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
     | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
-    | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0`     |
+    | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0.5`     |
     | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
   </Tab>
 
@@ -64,6 +64,7 @@ When configuring a session, you can specify recall options to control how contex
     | `max_query_length`| `int`     | The maximum query length (100-10000 characters)                                            | `1000`  |
     | `metadata_filter` | `object`  | Metadata filter to apply to the search                                                     | `{}`    |
     | `num_search_messages` | `int`    | The number of search messages to use for the search (1-50)                                 | `4`     |
+    | `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (must be between 0 and 1) | `0.6` |
   </Tab>
 
   <Tab title="Hybrid Search (HybridDocSearch)">
@@ -78,8 +79,8 @@ When configuring a session, you can specify recall options to control how contex
     | `alpha`           | `float`   | Weight between text-based and vector-based search (0=pure text, 1=pure vector)            | `0.7`  |
     | `confidence`      | `float`   | The confidence cutoff level (-1 to 1)                                                      | `0.5`     |
     | `mmr_strength`    | `float`   | MMR Strength (mmr_strength = 1 - mmr_lambda) (0 to 1)                                     | `0.5`     |
-    | `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (higher values require closer matches) | `0.6` |
-    | `k_multiplier`    | `int`     | Controls how many intermediate results to fetch before final scoring                        | `5`     |
+    | `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (must be between 0 and 1) | `0.6` |
+    | `k_multiplier`    | `int`     | Controls how many intermediate results to fetch before final scoring                        | `7`     |
   </Tab>
 </Tabs>
 

@@ -36,6 +36,7 @@ def _():
         limit=10,
         lang="en",
         metadata_filter={"field": "value"},
+        trigram_similarity_threshold=0.4,
     )
 
     search_fn, params = get_search_fn_and_params(request)
@@ -47,6 +48,7 @@ def _():
         "metadata_filter": {"field": "value"},
         "search_language": "english_unaccent",
         "extract_keywords": False,
+        "trigram_similarity_threshold": 0.4,
     }
 
 
@@ -103,6 +105,8 @@ def _():
         alpha=0.5,
         metadata_filter={"field": "value"},
         mmr_strength=0,
+        trigram_similarity_threshold=0.4,
+        k_multiplier=7,
     )
 
     search_fn, params = get_search_fn_and_params(request)
@@ -117,6 +121,8 @@ def _():
         "metadata_filter": {"field": "value"},
         "search_language": "english_unaccent",
         "extract_keywords": False,
+        "trigram_similarity_threshold": 0.4,
+        "k_multiplier": 7,
     }
 
 
@@ -131,6 +137,8 @@ def _():
         alpha=0.5,
         metadata_filter={"field": "value"},
         mmr_strength=0.5,
+        trigram_similarity_threshold=0.4,
+        k_multiplier=7,
     )
 
     search_fn, params = get_search_fn_and_params(request)
@@ -145,6 +153,8 @@ def _():
         "metadata_filter": {"field": "value"},
         "search_language": "english_unaccent",
         "extract_keywords": False,
+        "trigram_similarity_threshold": 0.4,
+        "k_multiplier": 7,
     }
 
 
@@ -159,6 +169,8 @@ def _():
         alpha=0.5,
         metadata_filter={"field": "value"},
         mmr_strength=0,
+        trigram_similarity_threshold=0.4,
+        k_multiplier=7,
     )
 
     with raises(HTTPException) as exc:
