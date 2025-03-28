@@ -414,7 +414,7 @@ model FileSearchTool extends BaseTool {
 // Computer tool
 model ComputerTool extends BaseTool {
   @doc("The type of the computer use tool. Always `computer_use_preview`.")
-  type: "computer-preview";
+  type: "computer_use_preview";
 
   @doc("The width of the computer display.")
   display_width: float32;

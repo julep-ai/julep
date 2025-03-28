@@ -59,7 +59,7 @@ class ComputerTool(BaseTool):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["computer-preview"] = "computer-preview"
+    type: Literal["computer_use_preview"] = "computer_use_preview"
     """
     The type of the computer use tool. Always `computer_use_preview`.
     """

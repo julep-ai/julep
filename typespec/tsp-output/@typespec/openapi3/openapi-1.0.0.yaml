@@ -4170,7 +4170,7 @@ components:
         type:
           type: string
           enum:
-            - computer-preview
+            - computer_use_preview
           description: The type of the computer use tool. Always `computer_use_preview`.
         display_width:
           type: number
