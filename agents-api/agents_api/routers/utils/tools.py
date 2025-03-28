@@ -1,8 +1,8 @@
 import asyncio
 import json
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from functools import partial
-from typing import Any, ClassVar, AsyncGenerator, cast
+from typing import Any, ClassVar, cast
 from uuid import UUID
 
 from beartype import beartype
@@ -100,16 +100,17 @@ class ToolCallsEvaluator:
 
     def _create_search_request(self, search_params: dict) -> Any:
         """Create appropriate search request based on available parameters."""
-        if "text" in search_params and "vector" in search_params:
-            return HybridDocSearchRequest(
-                text=search_params.pop("text"),
-                mmr_strength=search_params.pop("mmr_strength", 0),
-                vector=search_params.pop("vector"),
-                alpha=search_params.pop("alpha", 0.75),
-                confidence=search_params.pop("confidence", 0.5),
-                limit=search_params.get("limit", 10),
-            )
         if "text" in search_params:
+            if "vector" in search_params:
+                return HybridDocSearchRequest(
+                    text=search_params.pop("text"),
+                    mmr_strength=search_params.pop("mmr_strength", 0),
+                    vector=search_params.pop("vector"),
+                    alpha=search_params.pop("alpha", 0.75),
+                    confidence=search_params.pop("confidence", 0.5),
+                    limit=search_params.get("limit", 10),
+                )
+
             return TextOnlyDocSearchRequest(
                 text=search_params.pop("text"),
                 mmr_strength=search_params.pop("mmr_strength", 0),
@@ -125,7 +126,7 @@ class ToolCallsEvaluator:
         return None
 
     @beartype
-    async def _call_tool(self, developer_id: UUID, tool_name: str, arguments: dict):
+    async def prepare_tool_call(self, developer_id: UUID, tool_name: str, arguments: dict):
         tool_handler = self.system_tool_handlers.get(tool_name)
         if not tool_handler:
             msg = f"System call not implemented for {tool_name}"
@@ -176,6 +177,9 @@ class ToolCallsEvaluator:
         if operation == "search" and subresource == "doc":
             arguments["x_developer_id"] = arguments.pop("developer_id")
             search_params = self._create_search_request(arguments.pop("search_params"))
+            if not search_params:
+                msg = "Invalid search parameters"
+                raise ValueError(msg)
             return await tool_handler(search_params=search_params, **arguments)
 
         # Handle chat operations
@@ -215,7 +219,7 @@ class ToolCallsEvaluator:
         if operation == "update" and resource == "session":
             developer_id = arguments.pop("developer_id")
             session_id = arguments.pop("session_id")
-            update_session_request = UpdateSessionRequest(**arguments)
+            update_session_request = UpdateSessionRequest(**data)
 
             return await tool_handler(
                 developer_id=developer_id,
@@ -272,7 +276,9 @@ class ToolCallsEvaluator:
         return await tool_handler(**arguments)
 
     @staticmethod
-    async def peek_first_chunk[T](response: AsyncGenerator[T, None]) -> tuple[T, AsyncGenerator[T, None]]:
+    async def peek_first_chunk[T](
+        response: AsyncGenerator[T, None],
+    ) -> tuple[T, AsyncGenerator[T, None]]:
         try:
             first_chunk = await response.__anext__()
         except StopAsyncIteration:
@@ -298,7 +304,7 @@ class ToolCallsEvaluator:
             if isinstance(tool, ChatCompletionMessageToolCall)
             else tool["function"]["arguments"]
         )
-        tool_response = await self._call_tool(developer_id, tool_name, tool_args)
+        tool_response = await self.prepare_tool_call(developer_id, tool_name, tool_args)
 
         return {
             "tool_call_id": tool.id
@@ -327,7 +333,9 @@ class ToolCallsEvaluator:
                 if not tool_calls:
                     return response
             else:
-                first_chunk, response = await self.peek_first_chunk(cast(AsyncGenerator[ModelResponseStream], response))
+                first_chunk, response = await self.peek_first_chunk(
+                    cast(AsyncGenerator[ModelResponseStream], response)
+                )
                 if first_chunk and not first_chunk.choices:
                     return response
 
