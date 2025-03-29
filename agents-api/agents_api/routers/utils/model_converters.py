@@ -303,7 +303,35 @@ async def convert_create_response(
                         ),
                     )
                 )
-            elif tool.type == "file_search" or tool.type == "computer-preview":
+
+            elif tool.type == "file_search":
+                tools.append(
+                    CreateToolRequest(
+                        name="file_search",
+                        type="function",
+                        function=FunctionDef(
+                            name="file_search",
+                            description="Search for files",
+                            parameters={
+                                "type": "object",
+                                "properties": {
+                                    "filters": {"type": "Any", "default": None},
+                                    "max_num_results": {"type": "int", "default": None},
+                                    "ranking_options": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ranker": {"type": "string", "default": None},
+                                            "score_threshold": {"type": "float", "default": None},
+                                        },
+                                    },
+                                    "vector_store_ids": {"type": "list[str]", "default": None},
+                                },
+                                "required": ["vector_store_ids"],
+                            },
+                        ),
+                    )
+                )
+            elif tool.type == "computer-preview":
                 pass
 
     chat_input = ChatInput(

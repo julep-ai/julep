@@ -89,14 +89,6 @@ async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
         if "function" in tool_call and isinstance(tool_call["function"], dict):
             tool_name = tool_call["function"].get("name")
 
-        # Handle web search tools
-        if tool_type == "web_search_preview":
-            # Extract query directly for web_search_preview type
-            query = tool_call.get("query", "")
-
-            web_search_call = WebPreviewToolCall(id=tool_id, query=query, name=tool_name)
-            return await execute_web_search_tool(web_search_call)
-
         if tool_type == "function":
             # Extract function data
             func_data = tool_call.get("function", {})
