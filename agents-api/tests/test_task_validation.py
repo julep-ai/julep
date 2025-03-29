@@ -22,7 +22,7 @@ def test_undefined_name_detection():
     assert "Undefined name: 'undefined_var'" in result["undefined_names"]
 
 
-@test("task_validation: Python expression validator detects undefined names")
+@test("task_validation: Python expression validator allows steps variable access")
 def test_allow_steps_var():
     # Test with accessing steps
     expression = "$ steps[0].output"
