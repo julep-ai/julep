@@ -52,7 +52,9 @@ async def acompletion(
     if not custom_api_key and litellm_url:
         model = f"openai/{model}"  # This is needed for litellm
 
-    supported_params: list[str] = get_supported_openai_params(model) or []  # Supported params returns Optional[list[str]]
+    supported_params: list[str] = (
+        get_supported_openai_params(model) or []
+    )  # Supported params returns Optional[list[str]]
     supported_params += ["user"]
     settings = {k: v for k, v in kwargs.items() if k in supported_params}
 
