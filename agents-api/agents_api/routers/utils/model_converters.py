@@ -321,7 +321,10 @@ async def convert_create_response(
                                         "type": "object",
                                         "properties": {
                                             "ranker": {"type": "string", "default": None},
-                                            "score_threshold": {"type": "float", "default": None},
+                                            "score_threshold": {
+                                                "type": "float",
+                                                "default": None,
+                                            },
                                         },
                                     },
                                     "vector_store_ids": {"type": "list[str]", "default": None},
