@@ -81,7 +81,7 @@ max_free_executions: int = env.int("MAX_FREE_EXECUTIONS", default=50)
 
 # Litellm API
 # -----------
-litellm_url: str = env.str("LITELLM_URL", default="http://0.0.0.0:4000")
+litellm_url: str | None = env.str("LITELLM_URL", default=None)
 litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
 
 
@@ -148,13 +148,17 @@ temporal_max_task_queue_activities_per_second: int | None = _parse_optional_int(
 
 # API Keys needed for the `humanize_text` method in `evaluate` step
 # ------------
-sapling_api_key: str = env.str("SAPLING_API_KEY", default="")
-zerogpt_api_key: str = env.str("ZEROGPT_API_KEY", default="")
+sapling_api_key: str = env.str("SAPLING_API_KEY", default=None)
+zerogpt_api_key: str = env.str("ZEROGPT_API_KEY", default=None)
 zerogpt_url: str = env.str(
     "ZEROGPT_URL", default="https://api.zerogpt.com/api/detect/detectText"
 )
 desklib_url: str = env.str("DESKLIB_URL", default="http://35.243.190.233/detect")
 sapling_url: str = env.str("SAPLING_URL", default="https://api.sapling.ai/api/v1/aidetect")
+brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
+# Responses Flag
+# ---------------
+enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
 
 # Consolidate environment variables
 environment: dict[str, Any] = {
@@ -177,6 +181,7 @@ environment: dict[str, Any] = {
     "s3_access_key": s3_access_key,
     "s3_secret_key": s3_secret_key,
     "testing": testing,
+    "enable_responses": enable_responses,
 }
 
 if debug or testing:

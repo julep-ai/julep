@@ -11,7 +11,11 @@ from fastapi import HTTPException
 
 from ...autogen.openapi_model import Agent
 from ...common.utils.db_exceptions import common_db_exceptions
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import (
+    pg_query,
+    rewrap_exceptions,
+    wrap_in_class,
+)
 
 # Define the raw SQL query
 raw_query = """
@@ -73,12 +77,7 @@ async def list_agents(
     if direction.lower() not in ["asc", "desc"]:
         raise HTTPException(status_code=400, detail="Invalid sort direction")
 
-    # Build metadata filter clause if needed
-
-    agent_query = raw_query.format(
-        metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else "",
-    )
-
+    # Initialize parameters
     params = [
         developer_id,
         limit,
@@ -87,6 +86,12 @@ async def list_agents(
         direction,
     ]
 
+    # Handle metadata filter differently - using JSONB containment
+    agent_query = raw_query.format(
+        metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else "",
+    )
+
+    # If we have metadata filters, safely add them as a parameter
     if metadata_filter:
         params.append(metadata_filter)
 

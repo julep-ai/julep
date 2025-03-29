@@ -196,7 +196,10 @@
         "attributes_to_retrieve": {
           "anyOf": [
             {
-              "type": "object"
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             },
             {
               "type": "null"
@@ -233,7 +236,10 @@
         "attributes_to_retrieve": {
           "anyOf": [
             {
-              "type": "object"
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             },
             {
               "type": "null"
