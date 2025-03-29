@@ -21,6 +21,7 @@ with workflow.unsafe.imports_passed_through():
     )
     from ...worker.codec import RemoteObject
 
+from ...env import max_steps_accessible_in_tasks
 from ...queries.executions import list_execution_transitions
 from ...queries.utils import serialize_model_data
 from .models import ExecutionInput
@@ -265,7 +266,9 @@ class StepContext(BaseModel):
 
         return inputs, labels, state
 
-    async def prepare_for_step(self, limit: int = 50, *args, **kwargs) -> dict[str, Any]:
+    async def prepare_for_step(
+        self, limit: int = max_steps_accessible_in_tasks, *args, **kwargs
+    ) -> dict[str, Any]:
         current_input = self.current_input
 
         if isinstance(current_input, RemoteObject):

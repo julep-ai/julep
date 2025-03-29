@@ -3,8 +3,10 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from ...activities.utils import ALLOWED_FUNCTIONS, stdlib
 from ...autogen.openapi_model import CreateTaskRequest, PatchTaskRequest, UpdateTaskRequest
 from ...common.protocol.models import task_to_spec
+from ...env import enable_backwards_compatibility_for_syntax
 
 
 class ValidationIssue(BaseModel):
@@ -60,9 +62,17 @@ def backwards_compatibility(expr: str) -> str:
     return expr
 
 
+# Build the set of allowed names
+allowed_names = (
+    set(ALLOWED_FUNCTIONS.keys())
+    | set(stdlib.keys())
+    | {"true", "false", "null", "NEWLINE", "hasattr"}  # helpers
+    | {"_", "inputs", "outputs", "state", "steps"}  # Special vars
+)
+
+
 def validate_py_expression(
     expr: str | None,
-    allow_placeholder_variables: bool = True,
     expected_variables: set[str] | None = None,
 ) -> dict[str, list[str]]:
     """
@@ -70,7 +80,6 @@ def validate_py_expression(
 
     Args:
         expr: The Python expression to validate (or None)
-        allow_placeholder_variables: Whether to allow _ and placeholders like _.attr in expression
         expected_variables: Optional set of expected variable names that should be available
 
     Returns:
@@ -84,38 +93,25 @@ def validate_py_expression(
     }
 
     # Skip None or empty expressions
-    if expr is None or not expr or not expr.strip():
+    if expr is None or not expr:
         return issues
-
-    # Apply backwards compatibility transformation first
-    expr = backwards_compatibility(expr)
 
     # Ensure the expression is stripped before checking prefix
     expr = expr.strip()
 
-    # Handle expressions with $ prefix - return early if it doesn't start with $
-    if not expr.startswith("$"):
-        return issues
+    # Apply backwards compatibility transformation first
+    if enable_backwards_compatibility_for_syntax:
+        expr = backwards_compatibility(expr)
 
     # The space after $ is required for expressions to be evaluated as Python code
     if not expr.startswith("$ "):
         return issues
 
     # Remove $ and strip any leading space after $
-    expr = expr[1:].strip()
+    expr = expr[1:].lstrip()
 
     # Special case: just a $ sign with nothing after it
     if not expr:
-        return issues
-
-    # Handle f-string expressions (these are often used in templates)
-    expr = expr.strip()
-    if expr.startswith(("f'''", 'f"""')):
-        # Just basic syntax check for f-strings, can't do much static analysis
-        try:
-            ast.parse(expr)
-        except SyntaxError as e:
-            issues["syntax_errors"].append(f"F-string syntax error: {e!s}")
         return issues
 
     # Try to parse the expression to check for syntax errors
@@ -124,6 +120,8 @@ def validate_py_expression(
     except SyntaxError as e:
         issues["syntax_errors"].append(f"Syntax error: {e!s}")
         return issues  # Return early if we can't even parse the expression
+
+    expected_variables: set[str] = expected_variables or set()
 
     # Get all name references in the expression
     name_nodes = [node for node in ast.walk(tree) if isinstance(node, ast.Name)]
@@ -135,28 +133,8 @@ def validate_py_expression(
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
     }
 
-    # Import ALLOWED_FUNCTIONS and stdlib from where they're defined
-    from ...activities.utils import ALLOWED_FUNCTIONS, stdlib
-
-    # Build the set of allowed names
-    allowed_names = (
-        set(ALLOWED_FUNCTIONS.keys())
-        | set(stdlib.keys())
-        | {"true", "false", "null", "NEWLINE", "hasattr"}
-    )
-
-    # Add standard placeholder variable names if allowed
-    if allow_placeholder_variables:
-        allowed_names.add("_")  # Special underscore variable
-        # Some common inputs that might be accessed via _
-        allowed_names.update({"inputs", "outputs", "state"})
-
-    # Add expected variables if provided
-    if expected_variables:
-        allowed_names.update(expected_variables)
-
     # Find undefined names
-    undefined_names = referenced_names - allowed_names
+    undefined_names = referenced_names - allowed_names - expected_variables
     if undefined_names:
         issues["undefined_names"].extend([
             f"Undefined name: '{name}'" for name in undefined_names
@@ -168,19 +146,19 @@ def validate_py_expression(
         if isinstance(node, ast.Attribute):
             # Allow specific attributes on known objects
             attr_name = node.attr
+
+            # Check for dunder attributes which are potentially dangerous
+            if attr_name.startswith("__") and attr_name.endswith("__"):
+                issues["unsafe_operations"].append(
+                    f"Potentially unsafe dunder attribute access: {attr_name}"
+                )
+                continue
+
             if isinstance(node.value, ast.Name):
                 obj_name = node.value.id
 
-                # Allow accessing attributes on the underscore variable
-                if obj_name == "_" and allow_placeholder_variables:
-                    continue
-
-                # Allow accessing attributes on stdlib modules
-                if obj_name in stdlib:
-                    continue
-
                 # Allow accessing attributes on allowed names
-                if obj_name in allowed_names:
+                if obj_name in (expected_variables | allowed_names):
                     continue
 
                 # Otherwise flag unexpected attribute access
@@ -191,7 +169,7 @@ def validate_py_expression(
         # Check for function calls to make sure they're allowed
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
             func_name = node.func.id
-            if func_name not in ALLOWED_FUNCTIONS and func_name not in allowed_names:
+            if func_name not in (expected_variables | allowed_names):
                 issues["unsafe_operations"].append(
                     f"Call to potentially unsafe function: {func_name}"
                 )

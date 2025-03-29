@@ -1,9 +1,10 @@
 from agents_api.autogen.openapi_model import CreateTaskRequest
 from agents_api.common.utils.task_validation import validate_py_expression, validate_task
+from agents_api.env import enable_backwards_compatibility_for_syntax
 from ward import test
 
 
-@test("Python expression validator detects syntax errors")
+@test("task_validation: Python expression validator detects syntax errors")
 def test_syntax_error_detection():
     # Test with a syntax error
     expression = "$ 1 + )"
@@ -12,7 +13,7 @@ def test_syntax_error_detection():
     assert "Syntax error" in result["syntax_errors"][0]
 
 
-@test("Python expression validator detects undefined names")
+@test("task_validation: Python expression validator detects undefined names")
 def test_undefined_name_detection():
     # Test with undefined variable
     expression = "$ undefined_var + 10"
@@ -21,7 +22,15 @@ def test_undefined_name_detection():
     assert "Undefined name: 'undefined_var'" in result["undefined_names"]
 
 
-@test("Python expression validator detects unsafe operations")
+@test("task_validation: Python expression validator detects undefined names")
+def test_allow_steps_var():
+    # Test with accessing steps
+    expression = "$ steps[0].output"
+    result = validate_py_expression(expression)
+    assert all(len(issues) == 0 for issues in result.values())
+
+
+@test("task_validation: Python expression validator detects unsafe operations")
 def test_unsafe_operations_detection():
     # Test with unsafe attribute access
     expression = "$ some_obj.dangerous_method()"
@@ -30,7 +39,28 @@ def test_unsafe_operations_detection():
     assert "Potentially unsafe attribute access" in result["unsafe_operations"][0]
 
 
-@test("Python expression validator detects potential runtime errors")
+@test("task_validation: Python expression validator detects unsafe dunder attributes")
+def test_dunder_attribute_detection():
+    # Test with dangerous dunder attribute access
+    expression = "$ obj.__class__"
+    result = validate_py_expression(expression)
+    assert len(result["unsafe_operations"]) > 0
+    assert (
+        "Potentially unsafe dunder attribute access: __class__"
+        in result["unsafe_operations"][0]
+    )
+
+    # Test with another dangerous dunder attribute
+    expression = "$ obj.__import__('os')"
+    result = validate_py_expression(expression)
+    assert len(result["unsafe_operations"]) > 0
+    assert (
+        "Potentially unsafe dunder attribute access: __import__"
+        in result["unsafe_operations"][0]
+    )
+
+
+@test("task_validation: Python expression validator detects potential runtime errors")
 def test_runtime_error_detection():
     # Test division by zero
     expression = "$ 10 / 0"
@@ -39,7 +69,17 @@ def test_runtime_error_detection():
     assert "Division by zero" in result["potential_runtime_errors"][0]
 
 
-@test("Python expression validator accepts valid expressions")
+@test("task_validation: Python expression backwards_compatibility")
+def test_backwards_compatibility():
+    if enable_backwards_compatibility_for_syntax:
+        # Test division by zero
+        expression = "{{ 10 / 0 }}"
+        result = validate_py_expression(expression)
+        assert len(result["potential_runtime_errors"]) > 0
+        assert "Division by zero" in result["potential_runtime_errors"][0]
+
+
+@test("task_validation: Python expression validator accepts valid expressions")
 def test_valid_expression():
     # Test a valid expression
     expression = "$ _.topic if hasattr(_, 'topic') else 'default'"
@@ -47,16 +87,12 @@ def test_valid_expression():
     assert all(len(issues) == 0 for issues in result.values())
 
 
-@test("Python expression validator handles special underscore variable")
+@test("task_validation: Python expression validator handles special underscore variable")
 def test_underscore_allowed():
     # Test that _ is allowed by default
     expression = "$ _.attribute"
     result = validate_py_expression(expression)
     assert all(len(issues) == 0 for issues in result.values())
-
-    # Test that _ is not allowed when allow_placeholder_variables is False
-    result = validate_py_expression(expression, allow_placeholder_variables=False)
-    assert len(result["undefined_names"]) > 0
 
 
 invalid_task_dict = {
@@ -97,7 +133,7 @@ valid_task_dict = {
 }
 
 
-@test("Task validator detects invalid Python expressions in tasks")
+@test("task_validation: Task validator detects invalid Python expressions in tasks")
 def test_validation_of_task_with_invalid_expressions():
     # Convert dict to CreateTaskRequest
     task = CreateTaskRequest.model_validate(invalid_task_dict)
@@ -123,7 +159,7 @@ def test_validation_of_task_with_invalid_expressions():
     assert undefined_var_found
 
 
-@test("Task validator accepts valid Python expressions in tasks")
+@test("task_validation: Task validator accepts valid Python expressions in tasks")
 def test_validation_of_valid_task():
     # Convert dict to CreateTaskRequest
     task = CreateTaskRequest.model_validate(valid_task_dict)
@@ -136,7 +172,7 @@ def test_validation_of_valid_task():
     assert len(validation_result.python_expression_issues) == 0
 
 
-@test("Simple test of validation integration")
+@test("task_validation: Simple test of validation integration")
 def _():
     # Create a simple valid task
     task_dict = {
@@ -207,7 +243,7 @@ nested_task_with_error_dict = {
 }
 
 
-@test("Task validator can identify issues in if/else nested branches")
+@test("task_validation: Task validator can identify issues in if/else nested branches")
 def test_recursive_validation_of_if_else_branches():
     """Verify that the task validator can identify issues in nested if/else blocks."""
     # Manually set up an if step with a nested step structure
@@ -243,7 +279,7 @@ def test_recursive_validation_of_if_else_branches():
     assert nested_error_found, "Did not detect syntax error in nested structure"
 
 
-@test("Task validator can identify issues in match statement nested blocks")
+@test("task_validation: Task validator can identify issues in match statement nested blocks")
 def test_recursive_validation_of_match_branches():
     """Verify that the task validator can identify issues in nested match/case blocks."""
     # Set up a match step with a nested error
@@ -282,7 +318,7 @@ def test_recursive_validation_of_match_branches():
     assert nested_error_found, "Did not detect undefined variable in nested case structure"
 
 
-@test("Task validator can identify issues in foreach nested blocks")
+@test("task_validation: Task validator can identify issues in foreach nested blocks")
 def test_recursive_validation_of_foreach_blocks():
     """Verify that the task validator can identify issues in nested foreach blocks."""
     # Set up a foreach step with a nested error

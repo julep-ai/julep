@@ -55,10 +55,8 @@ def test_expression_validation_basic():
 
     assert all(len(issues) == 0 for issues in result.values())
 
-    # Test that _ is not allowed when allow_placeholder_variables is False
-    result = validate_py_expression(expression, allow_placeholder_variables=False)
-
-    assert len(result["undefined_names"]) > 0
+    # This test is no longer relevant since allow_placeholder_variables parameter was removed
+    # Special variables are now always allowed by default
 
 
 def test_expression_without_dollar_prefix():
