@@ -23,6 +23,7 @@ from ...queries.entries.create_entries import create_entries
 from ...routers.utils.model_converters import (
     convert_chat_response_to_response,
     convert_create_response,
+    extract_function_tool_call_arguments,
 )
 from ..sessions.metrics import total_tokens_per_user
 from ..sessions.render import render_chat_input
@@ -32,6 +33,7 @@ from .router import router
 async def process_tool_calls(
     current_messages: list[dict[str, Any]],
     tool_call_requests: list[dict[str, Any]] | None,
+    **kwargs: Any,
 ) -> list[dict[str, Any]]:
     """
     Process any tool calls from the model response, execute them, and prepare
@@ -40,6 +42,7 @@ async def process_tool_calls(
     Args:
         current_messages: The current message history
         tool_call_requests: The response from the model containing tool calls
+        **kwargs: Any additional arguments
 
     Returns:
         Updated messages with tool results appended
@@ -62,7 +65,7 @@ async def process_tool_calls(
     # Execute all tool calls in parallel
     async def execute_tool_calls_async(tool_call: dict[str, Any]):
         # Execute the tool call
-        tool_result = await execute_tool_call(tool_call)
+        tool_result = await execute_tool_call(tool_call, **kwargs)
         # Format results for the LLM
         return format_tool_results_for_llm(tool_result)
 
@@ -92,7 +95,10 @@ async def create_response(
                 raise HTTPException(
                     status_code=400, detail="Computer preview is not supported yet"
                 )
+    # extract the built-in tool parameters from the create_response_data
+    user_tool_params = extract_function_tool_call_arguments(create_response_data)
 
+    # Convert the create_response_data to a chat_input
     _agent, session, chat_input = await convert_create_response(
         developer.id,
         create_response_data,
@@ -155,6 +161,9 @@ async def create_response(
     # Extract web search tool call if it exists
     tool_call_requests = assistant_message.tool_calls
 
+    # Initialize kwargs for additional parameters
+    kwargs = {"developer_id": developer.id, "user_tool_params": user_tool_params}
+
     performed_tool_calls = []
     function_tool_requests: list[FunctionToolCall] = []
     # Process tool calls if present (including multiple recursive tool calls if needed)
@@ -172,28 +181,15 @@ async def create_response(
         max_iterations = 20
         iterations = 0
 
+        # Pass the user parameters to the execute_tool_call function
         # Process tool calls in a loop until no more calls or max iterations reached
         while has_tool_calls and iterations < max_iterations:
             iterations += len(tool_call_requests)
 
-            # Do not process original function tool calls. They will be sent to the user as is.
-            if (
-                tool_call_requests[0].type == "function"
-                and tool_call_requests[0].function.name != "web_search_preview"
-            ):
-                function_tool_requests.append(
-                    FunctionToolCall(
-                        id=tool_call_requests[0].id,
-                        call_id=tool_call_requests[0].id,
-                        name=tool_call_requests[0].function.name,
-                        arguments=tool_call_requests[0].function.arguments,
-                        status="completed",
-                    )
-                )
-                break
-
             # Process tool calls and get updated messages
-            current_messages = await process_tool_calls(current_messages, tool_call_requests)
+            current_messages = await process_tool_calls(
+                current_messages, tool_call_requests, **kwargs
+            )
 
             performed_tool_calls.extend(tool_call_requests)
             # Make a follow-up call to the model with updated messages

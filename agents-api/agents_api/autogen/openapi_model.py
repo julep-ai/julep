@@ -385,9 +385,22 @@ class WebPreviewToolCall(BaseModel):
     """Represents a WebPreviewTool call from the model"""
 
     id: str
-    name: str | None = None
-    type: Literal["web_search_preview"] = "web_search_preview"
+    name: Literal["web_search_preview"] = "web_search_preview"
     query: str = Field(default="")
+
+
+class FileToolCall(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    developer_id: UUID
+    name: Literal["file_search"] = "file_search"
+    query: str = Field(default="")
+    filters: Any | None = None
+    max_num_results: int | None = None
+    ranker: Literal["auto", "none"] = "auto"
+    score_threshold: float | None = None
+    vector_store_ids: list[str]
 
 
 class CreateEntryRequest(BaseEntry):

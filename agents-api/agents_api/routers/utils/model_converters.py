@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -50,6 +51,29 @@ from ...queries.agents.list_agents import list_agents as list_agents_query
 from ...queries.entries import add_entry_relations, create_entries, get_history
 from ...queries.sessions.create_session import create_session as create_session_query
 from ...queries.sessions.get_session import get_session as get_session_query
+
+
+def extract_function_tool_call_arguments(
+    create_response_data: CreateResponse,
+) -> dict[str, Any]:
+    # Extract user-provided file search parameters if present
+    user_tool_params = {}
+    if create_response_data.tools:
+        for tool in create_response_data.tools:
+            if tool.type == "file_search":
+                user_tool_params["file_search_params"] = {
+                    "filters": tool.filters,
+                    "max_num_results": tool.max_num_results,
+                    "ranking_options": tool.ranking_options.model_dump(),
+                    "vector_store_ids": tool.vector_store_ids,
+                }
+            elif tool.type == "web_search_preview":
+                user_tool_params["web_search_params"] = {
+                    "domains": tool.domains,
+                    "search_context_size": tool.search_context_size,
+                    "user_location": tool.user_location.model_dump(),
+                }
+    return user_tool_params
 
 
 async def convert_create_response(
@@ -294,9 +318,6 @@ async def convert_create_response(
                                 "type": "object",
                                 "properties": {
                                     "query": {"type": "string"},
-                                    "domains": {"type": "array", "items": {"type": "string"}},
-                                    "search_context_size": {"type": "integer"},
-                                    "user_location": {"type": "string"},
                                 },
                                 "required": ["query"],
                             },
@@ -315,26 +336,17 @@ async def convert_create_response(
                             parameters={
                                 "type": "object",
                                 "properties": {
-                                    "filters": {"type": "Any", "default": None},
-                                    "max_num_results": {"type": "int", "default": None},
-                                    "ranking_options": {
-                                        "type": "object",
-                                        "properties": {
-                                            "ranker": {"type": "string", "default": None},
-                                            "score_threshold": {
-                                                "type": "float",
-                                                "default": None,
-                                            },
-                                        },
+                                    "query": {
+                                        "type": "string",
+                                        "description": "The query to search for",
                                     },
-                                    "vector_store_ids": {"type": "list[str]", "default": None},
                                 },
-                                "required": ["vector_store_ids"],
+                                "required": ["query"],
                             },
                         ),
                     )
                 )
-            elif tool.type == "computer-preview":
+            elif tool.type == "computer_use_preview":
                 pass
 
     chat_input = ChatInput(
