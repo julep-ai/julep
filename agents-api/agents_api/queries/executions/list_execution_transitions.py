@@ -18,7 +18,7 @@ WHERE
     execution_id = $1
     AND (current_step).scope_id = $7
     AND created_at >= $6
-    AND created_at >= (select created_at from executions where execution_id = $1)
+    AND created_at >= (select created_at from executions where execution_id = $1 LIMIT 1)
 ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST

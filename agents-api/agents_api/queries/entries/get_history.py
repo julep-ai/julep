@@ -42,7 +42,7 @@ collected_relations AS (
 SELECT
     (SELECT json_agg(e) FROM collected_entries e) AS entries,
     (SELECT json_agg(r) FROM collected_relations r) AS relations,
-    (SELECT session_created_at FROM collected_entries) AS created_at,
+    (SELECT session_created_at FROM collected_entries LIMIT 1) AS created_at,
     $1::uuid AS session_id
 """
 
