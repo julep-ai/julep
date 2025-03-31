@@ -810,7 +810,7 @@ async def _():
 
 
 @test("ToolCallsEvaluator: test completion method with no tool calls")
-async def _():
+async def _(developer=test_developer):
     response = ModelResponse(
         choices=[
             Choices(
@@ -821,11 +821,10 @@ async def _():
     )
     mock_completion_func = AsyncMock(return_value=response)
     evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)
-    developer_id = uuid4()
 
     # Call the method
     kwargs = {"stream": False}
-    result = await evaluator.completion(developer_id, **kwargs)
+    result = await evaluator.completion(developer.id, **kwargs)
 
     # Verify results
     assert result.choices[0].message.content == "Simple response with no tool calls"
@@ -856,7 +855,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
         type="function",
         function=Function(name="agent.create", arguments=json.dumps(arguments)),
     )
-    response = ModelResponse(
+    response_with_tool_call = ModelResponse(
         choices=[
             Choices(
                 message=Message(content=None, role="assistant", tool_calls=[tool_call]),
@@ -864,18 +863,23 @@ async def _(dsn=pg_dsn, developer=test_developer):
             )
         ]
     )
-    mock_completion_func = AsyncMock(return_value=response)
+    response_without_tool_call = ModelResponse(
+        choices=[
+            Choices(
+                message=Message(content="Simple response with no tool calls", role="assistant"),
+                index=0,
+            )
+        ]
+    )
+    mock_completion_func = AsyncMock(side_effect=[response_with_tool_call, response_without_tool_call])
     evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)
-    developer_id = uuid4()
-
     # Call the method
     kwargs = {"stream": False}
-    result = await evaluator.completion(developer_id, **kwargs)
-
+    result = await evaluator.completion(developer.id, **kwargs)
     # Verify results
+    assert result.choices[0].message.content == "Simple response with no tool calls"
     assert result.choices[0].message.role == "assistant"
-    assert result.choices[0].message.tool_calls == [tool_call]
-
+    assert not result.choices[0].message.tool_calls
     # Verify the completion function was called with updated messages
     assert mock_completion_func.call_count == 2
 
