@@ -42,7 +42,7 @@ WHERE e.session_id = $1
     AND e.source = ANY($2)
     AND (er.relation IS NULL OR er.relation != ALL($6))
     AND e.created_at >= $7
-    AND e.created_at >= (select created_at from sessions where session_id = $1)
+    AND e.created_at >= (select created_at from sessions where session_id = $1 LIMIT 1)
 ORDER BY e.{sort_by} {direction} -- safe to interpolate
 LIMIT $3
 OFFSET $4;

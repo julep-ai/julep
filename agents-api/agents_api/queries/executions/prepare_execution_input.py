@@ -17,6 +17,7 @@ SELECT * FROM
             AND agent_id = (
                 SELECT agent_id FROM tasks
                 WHERE developer_id = $1 AND task_id = $2
+                ORDER BY created_at DESC
                 LIMIT 1
             )
         LIMIT 1
