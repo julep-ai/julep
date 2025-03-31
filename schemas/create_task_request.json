@@ -2714,7 +2714,7 @@
         "usage": {
           "anyOf": [
             {
-              "$ref": "#/$defs/CompetionUsage"
+              "$ref": "#/$defs/CompletionUsage"
             },
             {
               "type": "null"
@@ -3122,7 +3122,7 @@
       "title": "CloudinaryUploadIntegrationDefUpdate",
       "type": "object"
     },
-    "CompetionUsage": {
+    "CompletionUsage": {
       "description": "Usage statistics for the completion request",
       "properties": {
         "completion_tokens": {
@@ -3162,7 +3162,7 @@
           "title": "Total Tokens"
         }
       },
-      "title": "CompetionUsage",
+      "title": "CompletionUsage",
       "type": "object"
     },
     "Computer20241022Def": {
@@ -7654,7 +7654,7 @@
         "usage": {
           "anyOf": [
             {
-              "$ref": "#/$defs/CompetionUsage"
+              "$ref": "#/$defs/CompletionUsage"
             },
             {
               "type": "null"
