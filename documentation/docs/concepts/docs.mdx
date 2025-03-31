@@ -87,6 +87,10 @@ Our full-text search functionality leverages Timescale's powerful indexing to ef
 | `limit`          | `int`   | The maximum number of documents to return.        | `10` |
 | `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (higher values require closer matches) | `0.6` |
 
+<Note>
+The default parameters for full-text search are based on our internal benchmarking. These values provide a good starting point, but you may need to adjust them depending on your specific use case to achieve optimal results.
+</Note>
+
 **Example:**
 
 <CodeGroup>
@@ -159,6 +163,10 @@ Our embedding (vector) search functionality leverages machine learning to conver
 | `metadata_filter`| `object`        | Filters to apply based on document metadata.                                                  | None    |
 | `mmr_strength`   | `number`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1).         | `0.5`     |
 | `confidence`     | `number`        | The confidence threshold for embedding similarity (must be between -1 and 1).                 | `0.5`     |
+
+<Note>
+The default parameters for embedding search are based on our internal benchmarking. These values provide a good starting point, but you may need to adjust them depending on your specific use case to achieve optimal results.
+</Note>
 
 <CodeGroup>
     ```python Python
@@ -263,6 +271,10 @@ Julep's trigram search capabilities include:
 | `mmr_strength`    | `float`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1). | `0.5`       |
 | `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (must be between 0 and 1). | `0.6`       |
 | `k_multiplier`    | `int`          | Controls how many intermediate results to fetch before final scoring.           | `7`         |
+
+<Note>
+The default parameters for hybrid search are based on our internal benchmarking. These values provide a good starting point, but you may need to adjust them depending on your specific use case to achieve optimal results.
+</Note>
 
 **Example:**
 
