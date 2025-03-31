@@ -255,7 +255,7 @@ Julep's trigram search capabilities include:
 |-------------------|----------------|---------------------------------------------------------------------------------|-------------|
 | `text`            | `str`          | The textual query to search within documents.                                   | **Required** |
 | `vector`          | `List[float]`  | The embedding vector representing the semantic meaning of the query.            | **Required** |
-| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results (must be between 0 and 1).     | `0.7`       |
+| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results (must be between 0 and 1).     | `0.5`       |
 | `confidence`      | `float`        | The confidence threshold for embedding similarity (must be between -1 and 1).            | `0.5`       |
 | `metadata_filter` | `object`       | Filters to apply based on document metadata.                                    | `None`      |
 | `limit`           | `int`          | The number of top results to return.                                            | `3`         |

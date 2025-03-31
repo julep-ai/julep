@@ -167,7 +167,7 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     """
     The confidence cutoff level
     """
-    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.7
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     """
     The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """

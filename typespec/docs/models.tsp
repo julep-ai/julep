@@ -156,7 +156,7 @@ model HybridDocSearchRequest extends BaseDocSearchRequest {
     /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
     @minValue(0)
     @maxValue(1)
-    alpha: float = 0.7;
+    alpha: float = 0.5;
 
     /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
     text: string;
