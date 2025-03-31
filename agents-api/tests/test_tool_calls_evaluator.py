@@ -871,7 +871,9 @@ async def _(dsn=pg_dsn, developer=test_developer):
             )
         ]
     )
-    mock_completion_func = AsyncMock(side_effect=[response_with_tool_call, response_without_tool_call])
+    mock_completion_func = AsyncMock(
+        side_effect=[response_with_tool_call, response_without_tool_call]
+    )
     evaluator = ToolCallsEvaluator(completion_func=mock_completion_func)
     # Call the method
     kwargs = {"stream": False}
