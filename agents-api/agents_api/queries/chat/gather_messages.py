@@ -101,6 +101,7 @@ async def gather_messages(
         [query_embedding, *_] = await litellm.aembedding(
             inputs=embed_text[-(recall_options.max_query_length) :],
             embed_instruction="Represent the query for retrieving supporting documents: ",
+            user=str(developer.id),
         )
 
     # Get query text from last message
@@ -132,6 +133,8 @@ async def gather_messages(
             alpha=recall_options.alpha,
             text=query_text,
             vector=query_embedding,
+            trigram_similarity_threshold=recall_options.trigram_similarity_threshold,
+            k_multiplier=recall_options.k_multiplier,
         )
     elif recall_options.mode == "text":
         search_params = TextOnlyDocSearchRequest(
@@ -139,6 +142,7 @@ async def gather_messages(
             limit=recall_options.limit,
             metadata_filter=recall_options.metadata_filter,
             text=query_text,
+            trigram_similarity_threshold=recall_options.trigram_similarity_threshold,
         )
     else:
         # Invalid mode, return early

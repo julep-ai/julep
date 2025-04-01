@@ -14,38 +14,24 @@ from temporalio import activity
 
 from ...common.exceptions.executions import EvaluateError
 from ...common.protocol.tasks import StepContext
+from ...common.utils.task_validation import backwards_compatibility
 from ..utils import get_evaluator
-
-
-def backwards_compatibility(expr: str) -> str:
-    expr = expr.strip()
-
-    if expr.startswith("$ "):
-        return expr
-
-    if "{{" in expr:
-        return "$ f'''" + expr.replace("{{", "{").replace("}}", "}") + "'''"
-
-    if (
-        (expr.startswith("[") and expr.endswith("]"))
-        or (expr.startswith("_[") and expr.endswith("]"))
-        or (expr.startswith("_.") and expr.endswith("]"))
-        or "outputs[" in expr
-        or "inputs[" in expr
-        or expr == "_"
-    ):
-        return "$ " + expr
-
-    return expr
 
 
 # Recursive evaluation helper function
 def _recursive_evaluate(expr, evaluator: SimpleEval):
+    # Handle PyExpression type from the model
+    if hasattr(expr, "root") and isinstance(expr.root, str):
+        # Extract the string from the RootModel
+        expr = expr.root
+
     if isinstance(expr, str):
         try:
             expr = backwards_compatibility(expr)
+            expr = expr.strip()
             if isinstance(expr, str) and expr.startswith("$ "):
-                expr = expr[2:].strip()
+                # Remove $ and any space after it
+                expr = expr[1:].strip()
             else:
                 expr = f"f'''{expr}'''"
             return evaluator.eval(expr)
@@ -79,10 +65,16 @@ async def base_evaluate(
 
     values = values or {}
     if context:
-        values.update(await context.prepare_for_step())
+        # NOTE: We limit the number of inputs to 50 to avoid excessive memory usage
+        values.update(await context.prepare_for_step(limit=50))
 
-    input_len = 1 if isinstance(exprs, str) else len(exprs)
-    assert input_len > 0, "exprs must be a non-empty string, list or dict"
+    # Handle PyExpression objects and strings similarly
+    if isinstance(exprs, str) or (hasattr(exprs, "root") and isinstance(exprs.root, str)):
+        input_len = 1
+    else:
+        input_len = len(exprs)
+
+    assert input_len > 0, "exprs must be a non-empty string, PyExpression, list or dict"
 
     extra_lambdas = {}
     if extra_lambda_strs:

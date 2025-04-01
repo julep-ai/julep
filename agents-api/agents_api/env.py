@@ -30,6 +30,10 @@ max_payload_size: int = env.int(
     "AGENTS_API_MAX_PAYLOAD_SIZE",
     default=50 * 1024 * 1024,  # 50MB
 )
+enable_backwards_compatibility_for_syntax: bool = env.bool(
+    "ENABLE_BACKWARDS_COMPATIBILITY_FOR_SYNTAX", default=True
+)
+max_steps_accessible_in_tasks: int = env.int("MAX_STEPS_ACCESSIBLE_IN_TASKS", default=250)
 
 # Tasks
 # -----
