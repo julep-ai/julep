@@ -14,7 +14,7 @@ services:
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:-hasura}
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
-      HASURA_GRAPHQL_JWT_SECRET: ${HASURA_JWT_SECRET:-{"type":"HS512", "key":"${JWT_SHARED_KEY:-secret}"}}
+      HASURA_GRAPHQL_JWT_SECRET: ${HASURA_JWT_SECRET:-{"type":"HS512", "key":"${JWT_SHARED_KEY:-secret}", "claims_map":${HASURA_CLAIMS_MAP}}}
       HASURA_GRAPHQL_CORS_DOMAIN: "*"
     restart: unless-stopped
     depends_on:
