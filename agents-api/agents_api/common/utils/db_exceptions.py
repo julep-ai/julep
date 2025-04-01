@@ -60,7 +60,7 @@ def common_db_exceptions(
 
         return HTTPException(
             status_code=409,
-            detail=get_operation_message(f"Invalid {entity} reference, entity not found"),
+            detail=get_operation_message(f"Reference to {entity} not found"),
         )
 
     exceptions = {
