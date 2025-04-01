@@ -54,7 +54,7 @@ def common_db_exceptions(
         op_str = " or ".join(operations)
         return f"{base_msg} during {op_str}"
 
-    def _invalid_reference_error(e: BaseException) -> bool:
+    def _invalid_reference_error(e: BaseException) -> HTTPException:
         m = invalid_ref_re.match(str(e))
         entity = "" if m is None else m.group(1)
 
