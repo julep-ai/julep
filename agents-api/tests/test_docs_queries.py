@@ -1,4 +1,5 @@
 from uuid import uuid4
+
 from agents_api.autogen.openapi_model import CreateDocRequest, Doc
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.docs.create_doc import create_doc
@@ -9,7 +10,7 @@ from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embe
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
 from fastapi import HTTPException
-from ward import test, raises
+from ward import raises, test
 
 from .fixtures import (
     pg_dsn,
