@@ -3,6 +3,7 @@ Common database exception handling utilities.
 """
 
 import inspect
+import re
 import socket
 from collections.abc import Callable
 from functools import partialmethod, wraps
@@ -10,6 +11,8 @@ from functools import partialmethod, wraps
 import asyncpg
 import pydantic
 from fastapi import HTTPException
+
+invalid_ref_re = re.compile(r"invalid (\w+) reference", re.IGNORECASE)
 
 
 def partialclass(cls, *args, **kwargs):
@@ -51,6 +54,15 @@ def common_db_exceptions(
         op_str = " or ".join(operations)
         return f"{base_msg} during {op_str}"
 
+    def _invalid_reference_error(e: BaseException) -> bool:
+        m = invalid_ref_re.match(str(e))
+        entity = "" if m is None else m.group(1)
+
+        return HTTPException(
+            status_code=409,
+            detail=get_operation_message(f"Invalid {entity} reference, entity not found"),
+        )
+
     exceptions = {
         # Unique constraint violations - usually means a resource with same unique key exists
         lambda e: isinstance(e, asyncpg.RaiseError)
@@ -59,6 +71,8 @@ def common_db_exceptions(
             status_code=409,
             detail=get_operation_message(f"A {resource_name} with this content already exists"),
         ),
+        lambda e: isinstance(e, asyncpg.RaiseError)
+        and invalid_ref_re.match(str(e)): _invalid_reference_error,
         # Foreign key violations - usually means a referenced resource doesn't exist
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
