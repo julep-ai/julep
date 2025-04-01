@@ -28,9 +28,13 @@ Julep provides a robust chat system with various features for dynamic interactio
   </Step>
 </Steps>
 
-<Info>  
-  - To use the Document(RAG) with the chat API, you need to create a session with the `recall_options` parameter set to appropriate search parameters. To learn more about the `recall_options` parameter, check out the [Session](/concepts/sessions#recall-options) page.
-  - To use the chat API, you need to create a session first. To learn more about the session object, check out the [Session](/concepts/sessions) page.
+<Info>
+  <h4>Prerequisites for Using Chat API</h4>
+  
+  <ul>
+    <li><strong>Session Creation</strong>: Before using the chat API, you must create a session first. Learn more about the session object on the <a href="/docs/concepts/sessions">Session</a> page.</li>
+    <li><strong>Document (RAG) Integration</strong>: To use Document (RAG) capabilities with the chat API, create a session with the <code>recall_options</code> parameter configured with appropriate search parameters. For details on configuring <code>recall_options</code>, see the <a href="/docs/concepts/sessions#recall-options-rag-search">Session: Recall Options</a> documentation.</li>
+  </ul>
 </Info>
 
 ## Input Structure
@@ -158,10 +162,10 @@ Here's an example of how to use the chat API in Julep using the SDKs:
     ```
 </CodeGroup>
 
-To learn more about the Session object, check out the [Session](/concepts/sessions) page.
+To learn more about the Session object, check out the [Session](/docs/concepts/sessions) page.
 
 <Tip>
-    Check out the [API reference](api-reference/sessions/chat) or SDK reference ([Python](/sdks/python/reference#sessions) or [JavaScript](/sdks/nodejs/reference#sessions)) for more details on different operations you can perform on sessions.
+    Check out the [API reference](/api-reference/sessions/chat) or SDK reference ([Python](/sdks/python/reference#sessions) or [JavaScript](/sdks/nodejs/reference#sessions)) for more details on different operations you can perform on sessions.
 </Tip>
 
 ## Response
