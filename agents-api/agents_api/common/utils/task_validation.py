@@ -126,7 +126,7 @@ def validate_py_expression(
 
     # Track locally defined variables to avoid flagging them as undefined
     local_vars: set[str] = set()
-    
+
     # NOTE: if we update the evaluator to support these features, we can remove the 3 checks below
     # Check for unsupported language features
     for node in ast.walk(tree):
@@ -135,7 +135,7 @@ def validate_py_expression(
             issues["unsupported_features"].append(
                 "Set comprehensions are not supported in this evaluator"
             )
-        
+
         # Check for lambda functions
         elif isinstance(node, ast.Lambda):
             issues["unsupported_features"].append(
@@ -147,11 +147,11 @@ def validate_py_expression(
             issues["unsupported_features"].append(
                 "Assignment expressions (walrus operator) are not supported in this evaluator"
             )
-    
+
     # Find all comprehension variables and other locally defined variables
     for node in ast.walk(tree):
         # List, dict, and set comprehensions
-        if isinstance(node, (ast.ListComp, ast.DictComp, ast.SetComp)):
+        if isinstance(node, ast.ListComp | ast.DictComp | ast.SetComp):
             for generator in node.generators:
                 # Add target names from comprehensions
                 if isinstance(generator.target, ast.Name):
@@ -160,7 +160,7 @@ def validate_py_expression(
                     for elt in generator.target.elts:
                         if isinstance(elt, ast.Name):
                             local_vars.add(elt.id)
-        
+
         # Generator expressions
         elif isinstance(node, ast.GeneratorExp):
             for generator in node.generators:
@@ -170,21 +170,20 @@ def validate_py_expression(
                     for elt in generator.target.elts:
                         if isinstance(elt, ast.Name):
                             local_vars.add(elt.id)
-        
+
         # Lambda functions
         elif isinstance(node, ast.Lambda):
             for arg in node.args.args:
                 local_vars.add(arg.arg)
-            
+
             # Handle args with default values
             if node.args.kwonlyargs:
                 for arg in node.args.kwonlyargs:
                     local_vars.add(arg.arg)
-        
+
         # Assignment expressions (walrus operator)
-        elif isinstance(node, ast.NamedExpr):
-            if isinstance(node.target, ast.Name):
-                local_vars.add(node.target.id)
+        elif isinstance(node, ast.NamedExpr) and isinstance(node.target, ast.Name):
+            local_vars.add(node.target.id)
 
     # Get all name references in the expression
     name_nodes = [node for node in ast.walk(tree) if isinstance(node, ast.Name)]
@@ -525,7 +524,12 @@ def validate_task(
                                     location=f"workflows.{workflow_name}.steps[{step_idx}].{issue['location']}",
                                     message=message,
                                     severity="error"
-                                    if issue_type in ["syntax_errors", "undefined_names", "unsupported_features"]
+                                    if issue_type
+                                    in [
+                                        "syntax_errors",
+                                        "undefined_names",
+                                        "unsupported_features",
+                                    ]
                                     else "warning",
                                     details={
                                         "issue_type": issue_type,
