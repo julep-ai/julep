@@ -3,16 +3,17 @@ This module contains the functionality for listing documents from the PostgreSQL
 It constructs and executes SQL queries to fetch document details based on various filters.
 """
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
+from beartype.vale import Is
 
 from ...autogen.openapi_model import Doc
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import (
     build_metadata_filter_conditions,
+    make_num_validator,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
@@ -60,8 +61,17 @@ async def list_docs(
     developer_id: UUID,
     owner_id: UUID,
     owner_type: Literal["user", "agent"],
-    limit: int = 100,
-    offset: int = 0,
+    limit: Annotated[
+        int,
+        Is[
+            make_num_validator(
+                min_value=1, max_value=100, err_msg="Limit must be between 1 and 100"
+            )
+        ],
+    ] = 100,
+    offset: Annotated[
+        int, Is[make_num_validator(min_value=0, err_msg="Offset must be >= 0")]
+    ] = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
@@ -87,17 +97,11 @@ async def list_docs(
     Raises:
         HTTPException: If invalid parameters are provided.
     """
-    if direction.lower() not in ["asc", "desc"]:
-        raise HTTPException(status_code=400, detail="Invalid sort direction")
+    # if direction.lower() not in ["asc", "desc"]:
+    #     raise HTTPException(status_code=400, detail="Invalid sort direction")
 
-    if sort_by not in ["created_at", "updated_at"]:
-        raise HTTPException(status_code=400, detail="Invalid sort field")
-
-    if limit > 100 or limit < 1:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
-
-    if offset < 0:
-        raise HTTPException(status_code=400, detail="Offset must be >= 0")
+    # if sort_by not in ["created_at", "updated_at"]:
+    #     raise HTTPException(status_code=400, detail="Invalid sort field")
 
     # Start with the base query
     query = base_docs_query

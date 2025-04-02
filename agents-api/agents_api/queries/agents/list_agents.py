@@ -7,7 +7,6 @@ from typing import Any, Literal
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
 
 from ...autogen.openapi_model import Agent
 from ...common.utils.db_exceptions import common_db_exceptions
@@ -73,9 +72,6 @@ async def list_agents(
     Returns:
         Tuple of (query, params)
     """
-    # Validate sort direction
-    if direction.lower() not in ["asc", "desc"]:
-        raise HTTPException(status_code=400, detail="Invalid sort direction")
 
     # Initialize parameters
     params = [

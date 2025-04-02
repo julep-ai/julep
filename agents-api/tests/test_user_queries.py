@@ -23,6 +23,7 @@ from agents_api.queries.users import (
     patch_user,
     update_user,
 )
+from fastapi.exceptions import HTTPException
 from uuid_extensions import uuid7
 from ward import raises, test
 
@@ -124,7 +125,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
 
 
 @test("query: list users sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     """Test that listing users returns a collection of user information."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -136,6 +137,80 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert isinstance(result, list)
     assert len(result) >= 1
     assert all(isinstance(user, User) for user in result)
+
+
+@test("query: list users sql, invalid limit")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing users with an invalid limit raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_users(
+            developer_id=developer_id,
+            limit=101,
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+    with raises(HTTPException) as exc:
+        await list_users(
+            developer_id=developer_id,
+            limit=0,
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+
+@test("query: list users sql, invalid offset")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing users with an invalid offset raises an exception."""
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_users(
+            developer_id=developer_id,
+            connection_pool=pool,
+            offset=-1,
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Offset must be non-negative"
+
+
+@test("query: list users sql, invalid sort by")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing users with an invalid sort by raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_users(
+            developer_id=developer_id,
+            connection_pool=pool,
+            sort_by="invalid",
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort field"
+
+
+@test("query: list users sql, invalid sort direction")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing users with an invalid sort direction raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_users(
+            developer_id=developer_id,
+            connection_pool=pool,
+            sort_by="created_at",
+            direction="invalid",
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort direction"
 
 
 @test("query: patch user sql")
