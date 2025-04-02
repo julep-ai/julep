@@ -478,7 +478,7 @@ paths:
         '201':
           description: The request has succeeded and a new resource has been created as a result.
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
                 enum:
@@ -510,7 +510,7 @@ paths:
         '200':
           description: The request has succeeded.
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
                 enum:
@@ -541,7 +541,7 @@ paths:
         '200':
           description: The request has succeeded.
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
                 enum:
@@ -3012,9 +3012,9 @@ components:
       type: integer
       format: uint16
       minimum: 1
+      description: Limit the number of results
       maximum: 1000
       exclusiveMaximum: true
-      description: Limit the number of results
     Common.logit_bias:
       type: number
       format: float
@@ -3233,9 +3233,9 @@ components:
           description: The documents that were found
         time:
           type: number
+          description: The time taken to search in seconds
           minimum: 0
           exclusiveMinimum: true
-          description: The time taken to search in seconds
     Docs.EmbedQueryResponse:
       type: object
       required:
@@ -3281,9 +3281,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
         trigram_similarity_threshold:
           type: number
@@ -3381,9 +3381,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Docs.BaseDocSearchRequest'
@@ -3979,7 +3979,8 @@ components:
           description: Description of the file
           default: ''
         mime_type:
-          oneOf:
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Common.mimeType'
           nullable: true
           description: MIME type of the file
@@ -4018,7 +4019,8 @@ components:
           description: Description of the file
           default: ''
         mime_type:
-          oneOf:
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Common.mimeType'
           nullable: true
           description: MIME type of the file
@@ -4118,7 +4120,7 @@ components:
         - type
         - button
         - x
-        - y
+        - 'y'
       properties:
         type:
           type: string
@@ -4139,7 +4141,7 @@ components:
           type: integer
           format: int32
           description: The x-coordinate where the click occurred.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate where the click occurred.
@@ -4296,13 +4298,13 @@ components:
       type: object
       required:
         - x
-        - y
+        - 'y'
       properties:
         x:
           type: integer
           format: int32
           description: The x-coordinate.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate.
@@ -4342,7 +4344,7 @@ components:
         top_p:
           type: number
           default: 1
-        n:
+        'n':
           type: integer
           format: int32
         stop:
@@ -4415,7 +4417,7 @@ components:
       required:
         - type
         - x
-        - y
+        - 'y'
       properties:
         type:
           type: string
@@ -4427,7 +4429,7 @@ components:
           type: integer
           format: int32
           description: The x-coordinate where the double click occurred.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate where the double click occurred.
@@ -4837,7 +4839,7 @@ components:
       required:
         - type
         - x
-        - y
+        - 'y'
       properties:
         type:
           type: string
@@ -4849,7 +4851,7 @@ components:
           type: integer
           format: int32
           description: The x-coordinate to move to.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate to move to.
@@ -5182,7 +5184,7 @@ components:
       required:
         - type
         - x
-        - y
+        - 'y'
         - scroll_x
         - scroll_y
       properties:
@@ -5196,7 +5198,7 @@ components:
           type: integer
           format: int32
           description: The x-coordinate where the scroll occurred.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate where the scroll occurred.
@@ -5510,22 +5512,6 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/Common.uuid'
-        user:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: User ID of user associated with this session
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/Common.uuid'
-        agent:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: Agent ID of agent associated with this session
-        agents:
-          type: array
-          items:
-            $ref: '#/components/schemas/Common.uuid'
         situation:
           type: string
           nullable: true
@@ -5545,7 +5531,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -5565,10 +5551,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearch'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearch'
+              nullable: true
           description: Recall options for the session
           default: null
         metadata:
@@ -5621,7 +5615,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -5641,10 +5635,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearch'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearch'
+              nullable: true
           description: Recall options for the session
           default: null
         metadata:
@@ -5681,9 +5683,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
         trigram_similarity_threshold:
           type: number
@@ -5723,9 +5725,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
         trigram_similarity_threshold:
           type: number
@@ -5808,7 +5810,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -5828,10 +5830,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearchUpdate'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearchUpdate'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearchUpdate'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearchUpdate'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearchUpdate'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearchUpdate'
+              nullable: true
           description: Recall options for the session
           default: null
         metadata:
@@ -5851,6 +5861,7 @@ components:
         - id
         - created_at
         - updated_at
+        - kind
       properties:
         situation:
           type: string
@@ -5877,7 +5888,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -5897,10 +5908,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearch'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearch'
+              nullable: true
           description: Recall options for the session
           default: null
         id:
@@ -6034,7 +6053,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -6054,10 +6073,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearch'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearch'
+              nullable: true
           description: Recall options for the session
           default: null
         metadata:
@@ -6085,9 +6112,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
@@ -6109,9 +6136,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
@@ -6531,6 +6558,8 @@ components:
           description: The steps to run for each iteration
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -6672,21 +6701,66 @@ components:
           description: The steps to run if the condition is true
         else:
           anyOf:
-            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
-            - $ref: '#/components/schemas/Tasks.EvaluateStep'
-            - $ref: '#/components/schemas/Tasks.ToolCallStep'
-            - $ref: '#/components/schemas/Tasks.PromptStep'
-            - $ref: '#/components/schemas/Tasks.GetStep'
-            - $ref: '#/components/schemas/Tasks.SetStep'
-            - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
-            - $ref: '#/components/schemas/Tasks.ReturnStep'
-            - $ref: '#/components/schemas/Tasks.SleepStep'
-            - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.SwitchStep'
-            - $ref: '#/components/schemas/Tasks.ForeachStep'
-            - $ref: '#/components/schemas/Tasks.ParallelStep'
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.WaitForInputStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.EvaluateStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ToolCallStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.PromptStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.GetStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SetStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.LogStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.YieldStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ReturnStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SleepStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SwitchStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ForeachStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ParallelStep'
+              nullable: true
             - type: object
               required:
                 - kind_
@@ -6746,7 +6820,7 @@ components:
                       description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
-          nullable: true
+              nullable: true
           description: The steps to run if the condition is false
           default: null
       allOf:
@@ -6832,6 +6906,8 @@ components:
                   description: Whether to run the reduce expression in parallel and how many items to run in each batch
               allOf:
                 - type: object
+                  required:
+                    - kind_
                   properties:
                     label:
                       allOf:
@@ -6845,21 +6921,66 @@ components:
           description: The steps to run if the condition is true
         else:
           anyOf:
-            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
-            - $ref: '#/components/schemas/Tasks.EvaluateStep'
-            - $ref: '#/components/schemas/Tasks.ToolCallStep'
-            - $ref: '#/components/schemas/Tasks.PromptStepUpdateItem'
-            - $ref: '#/components/schemas/Tasks.GetStep'
-            - $ref: '#/components/schemas/Tasks.SetStep'
-            - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
-            - $ref: '#/components/schemas/Tasks.ReturnStep'
-            - $ref: '#/components/schemas/Tasks.SleepStep'
-            - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.IfElseWorkflowStepUpdateItem'
-            - $ref: '#/components/schemas/Tasks.SwitchStepUpdateItem'
-            - $ref: '#/components/schemas/Tasks.ForeachStepUpdateItem'
-            - $ref: '#/components/schemas/Tasks.ParallelStepUpdateItem'
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.WaitForInputStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.EvaluateStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ToolCallStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.PromptStepUpdateItem'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.GetStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SetStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.LogStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.YieldStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ReturnStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SleepStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.IfElseWorkflowStepUpdateItem'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SwitchStepUpdateItem'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ForeachStepUpdateItem'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ParallelStepUpdateItem'
+              nullable: true
             - type: object
               required:
                 - over
@@ -6897,6 +7018,8 @@ components:
                   description: Whether to run the reduce expression in parallel and how many items to run in each batch
               allOf:
                 - type: object
+                  required:
+                    - kind_
                   properties:
                     label:
                       allOf:
@@ -6907,11 +7030,13 @@ components:
                       description: Discriminator property for BaseWorkflowStep.
                   discriminator:
                     propertyName: kind_
-          nullable: true
+              nullable: true
           description: The steps to run if the condition is false
           default: null
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -7020,6 +7145,8 @@ components:
           description: The steps to run in parallel. Max concurrency will depend on the platform.
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -7102,6 +7229,8 @@ components:
                     description: Whether to run the reduce expression in parallel and how many items to run in each batch
                 allOf:
                   - type: object
+                    required:
+                      - kind_
                     properties:
                       label:
                         allOf:
@@ -7189,6 +7318,8 @@ components:
                   description: Whether to run the reduce expression in parallel and how many items to run in each batch
               allOf:
                 - type: object
+                  required:
+                    - kind_
                   properties:
                     label:
                       allOf:
@@ -7233,10 +7364,14 @@ components:
                     type: string
                   content:
                     anyOf:
-                      - $ref: '#/components/schemas/Common.JinjaTemplate'
+                      - type: object
+                        allOf:
+                          - $ref: '#/components/schemas/Common.JinjaTemplate'
+                        nullable: true
                       - type: array
                         items:
                           $ref: '#/components/schemas/Common.JinjaTemplate'
+                        nullable: true
                       - type: array
                         items:
                           anyOf:
@@ -7338,7 +7473,7 @@ components:
                                               data:
                                                 $ref: '#/components/schemas/Common.JinjaTemplate'
                               description: Anthropic image content part
-                    nullable: true
+                        nullable: true
                     description: The content parts of the message
                   name:
                     type: string
@@ -7443,10 +7578,14 @@ components:
                     type: string
                   content:
                     anyOf:
-                      - $ref: '#/components/schemas/Common.JinjaTemplate'
+                      - type: object
+                        allOf:
+                          - $ref: '#/components/schemas/Common.JinjaTemplate'
+                        nullable: true
                       - type: array
                         items:
                           $ref: '#/components/schemas/Common.JinjaTemplate'
+                        nullable: true
                       - type: array
                         items:
                           anyOf:
@@ -7548,7 +7687,7 @@ components:
                                               data:
                                                 $ref: '#/components/schemas/Common.JinjaTemplate'
                               description: Anthropic image content part
-                    nullable: true
+                        nullable: true
                     description: The content parts of the message
                   name:
                     type: string
@@ -7611,6 +7750,8 @@ components:
           default: false
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -7826,6 +7967,8 @@ components:
           description: The cond tree
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -8991,6 +9134,8 @@ components:
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
+      required:
+        - provider
       properties:
         provider:
           type: string
@@ -9508,6 +9653,68 @@ components:
           type: string
           description: The connect URL. Defaults to wss://connect.browserbase.com
       description: The setup parameters for the browserbase integration
+    Tools.ChatSessionSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ChatSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - chat
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            message:
+              type: string
+            tool_choice:
+              type: string
+          required:
+            - message
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Chat Session System Definition
+    Tools.ChatSessionSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ChatSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - chat
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            message:
+              type: string
+            tool_choice:
+              type: string
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Chat Session System Definition
     Tools.ChosenBash20241022:
       type: object
       properties:
@@ -9837,6 +10044,422 @@ components:
           description: The display number to use
           default: 1
       description: Anthropic new tools
+    Tools.CreateAgentSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            instructions:
+              type: string
+            tools:
+              type: array
+              items: {}
+          required:
+            - name
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Create Agent System Definition
+    Tools.CreateAgentSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            instructions:
+              type: string
+            tools:
+              type: array
+              items: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Create Agent System Definition
+    Tools.CreateAgentToolSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - subresource
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateAgentToolSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - create
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        subresource:
+          type: string
+          enum:
+            - tool
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            type:
+              type: string
+            description:
+              type: string
+            function: {}
+            integration: {}
+            system: {}
+            api_call: {}
+          required:
+            - name
+            - type
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Create Agent Tool System Definition
+    Tools.CreateAgentToolSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateAgentToolSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - create
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        subresource:
+          type: string
+          enum:
+            - tool
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            type:
+              type: string
+            description:
+              type: string
+            function: {}
+            integration: {}
+            system: {}
+            api_call: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Create Agent Tool System Definition
+    Tools.CreateDocSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateDocSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            content:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+          required:
+            - name
+            - content
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Create Doc System Definition
+    Tools.CreateDocSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateDocSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            content:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Create Doc System Definition
+    Tools.CreateSessionSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            user_id:
+              $ref: '#/components/schemas/Common.uuid'
+            agent_id:
+              $ref: '#/components/schemas/Common.uuid'
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Create Session System Definition
+    Tools.CreateSessionSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            user_id:
+              $ref: '#/components/schemas/Common.uuid'
+            agent_id:
+              $ref: '#/components/schemas/Common.uuid'
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Create Session System Definition
+    Tools.CreateTaskExecutionSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - subresource
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateTaskExecutionSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - create
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        subresource:
+          type: string
+          enum:
+            - execution
+        arguments:
+          type: object
+          properties:
+            input: {}
+            async:
+              type: boolean
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Create Task Execution System Definition
+    Tools.CreateTaskExecutionSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateTaskExecutionSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - create
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        subresource:
+          type: string
+          enum:
+            - execution
+        arguments:
+          type: object
+          properties:
+            input: {}
+            async:
+              type: boolean
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Create Task Execution System Definition
+    Tools.CreateTaskSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            steps:
+              type: array
+              items: {}
+            metadata:
+              type: object
+              additionalProperties: {}
+          required:
+            - name
+            - steps
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Create Task System Definition
+    Tools.CreateTaskSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            steps:
+              type: array
+              items: {}
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Create Task System Definition
     Tools.CreateToolRequest:
       type: object
       required:
@@ -9899,6 +10522,361 @@ components:
         bash_20241022:
           $ref: '#/components/schemas/Tools.Bash20241022Def'
       description: Payload for creating a tool
+    Tools.CreateUserSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            user_id:
+              type: string
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+          required:
+            - user_id
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Create User System Definition
+    Tools.CreateUserSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - CreateUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - create
+        arguments:
+          type: object
+          properties:
+            user_id:
+              type: string
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Create User System Definition
+    Tools.DeleteAgentSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Delete Agent System Definition
+    Tools.DeleteAgentSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Delete Agent System Definition
+    Tools.DeleteAgentToolSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - subresource
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteAgentToolSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        subresource:
+          type: string
+          enum:
+            - tool
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+          required:
+            - name
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Delete Agent Tool System Definition
+    Tools.DeleteAgentToolSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteAgentToolSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        subresource:
+          type: string
+          enum:
+            - tool
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Delete Agent Tool System Definition
+    Tools.DeleteDocSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteDocSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Delete Doc System Definition
+    Tools.DeleteDocSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteDocSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Delete Doc System Definition
+    Tools.DeleteSessionSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Delete Session System Definition
+    Tools.DeleteSessionSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Delete Session System Definition
+    Tools.DeleteTaskSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Delete Task System Definition
+    Tools.DeleteTaskSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Delete Task System Definition
+    Tools.DeleteUserSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Delete User System Definition
+    Tools.DeleteUserSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - DeleteUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - delete
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Delete User System Definition
     Tools.DummyIntegrationDef:
       type: object
       required:
@@ -10045,6 +11023,51 @@ components:
           type: string
           description: The password of the email server
       description: Setup parameters for Email integration
+    Tools.EmbedDocSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - EmbedDocSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - embed
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Embed Doc System Definition
+    Tools.EmbedDocSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - EmbedDocSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - embed
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Embed Doc System Definition
     Tools.FfmpegIntegrationDef:
       type: object
       required:
@@ -10150,6 +11173,647 @@ components:
           additionalProperties: {}
           description: The parameters the function accepts
       description: Function definition
+    Tools.GetAgentSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Get Agent System Definition
+    Tools.GetAgentSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Get Agent System Definition
+    Tools.GetDocSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetDocSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Get Doc System Definition
+    Tools.GetDocSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetDocSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Get Doc System Definition
+    Tools.GetSessionHistorySystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetSessionHistorySystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - history
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            limit:
+              type: integer
+              format: int32
+            before:
+              type: string
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Get Session History System Definition
+    Tools.GetSessionHistorySystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetSessionHistorySystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - history
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            limit:
+              type: integer
+              format: int32
+            before:
+              type: string
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Get Session History System Definition
+    Tools.GetSessionSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Get Session System Definition
+    Tools.GetSessionSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Get Session System Definition
+    Tools.GetTaskExecutionSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetTaskExecutionSystemDef
+        resource:
+          type: string
+          enum:
+            - execution
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Get Task Execution System Definition
+    Tools.GetTaskExecutionSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetTaskExecutionSystemDef
+        resource:
+          type: string
+          enum:
+            - execution
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Get Task Execution System Definition
+    Tools.GetTaskSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Get Task System Definition
+    Tools.GetTaskSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Get Task System Definition
+    Tools.GetUserSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Get User System Definition
+    Tools.GetUserSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - GetUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - get
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Get User System Definition
+    Tools.ListAgentsSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListAgentsSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: List Agents System Definition
+    Tools.ListAgentsSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListAgentsSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: List Agents System Definition
+    Tools.ListDocsSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListDocsSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: List Docs System Definition
+    Tools.ListDocsSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListDocsSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: List Docs System Definition
+    Tools.ListSessionsSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListSessionsSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: List Sessions System Definition
+    Tools.ListSessionsSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListSessionsSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: List Sessions System Definition
+    Tools.ListTasksSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListTasksSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: List Tasks System Definition
+    Tools.ListTasksSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListTasksSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: List Tasks System Definition
+    Tools.ListUsersSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListUsersSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: List Users System Definition
+    Tools.ListUsersSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - ListUsersSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - list
+        arguments:
+          type: object
+          properties:
+            filter:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            offset:
+              type: integer
+              format: int32
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: List Users System Definition
     Tools.LlamaParseFetchArguments:
       type: object
       required:
@@ -10273,6 +11937,198 @@ components:
       properties:
         function:
           $ref: '#/components/schemas/Tools.FunctionCallOption'
+    Tools.PatchAgentSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - PatchAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - patch
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            instructions:
+              type: string
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Patch Agent System Definition
+    Tools.PatchAgentSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - PatchAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - patch
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            instructions:
+              type: string
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Patch Agent System Definition
+    Tools.PatchSessionSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - PatchSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - patch
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Patch Session System Definition
+    Tools.PatchSessionSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - PatchSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - patch
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Patch Session System Definition
+    Tools.PatchTaskSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - PatchTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - patch
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Patch Task System Definition
+    Tools.PatchTaskSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - PatchTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - patch
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Patch Task System Definition
     Tools.PatchToolRequest:
       type: object
       properties:
@@ -10332,6 +12188,68 @@ components:
         bash_20241022:
           $ref: '#/components/schemas/Tools.Bash20241022DefUpdate'
       description: Payload for patching a tool
+    Tools.PatchUserSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - PatchUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - patch
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Patch User System Definition
+    Tools.PatchUserSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - PatchUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - patch
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Patch User System Definition
     Tools.RemoteBrowserArguments:
       type: object
       required:
@@ -10453,6 +12371,77 @@ components:
           format: uint16
           description: The height of the browser
       description: The setup parameters for the remote browser
+    Tools.SearchDocsSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - SearchDocsSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - search
+        arguments:
+          type: object
+          properties:
+            query:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            search_type:
+              type: string
+              enum:
+                - text
+                - embedding
+                - hybrid
+          required:
+            - query
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Search Docs System Definition
+    Tools.SearchDocsSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - SearchDocsSystemDef
+        resource:
+          type: string
+          enum:
+            - doc
+        operation:
+          type: string
+          enum:
+            - search
+        arguments:
+          type: object
+          properties:
+            query:
+              type: string
+            limit:
+              type: integer
+              format: int32
+            search_type:
+              type: string
+              enum:
+                - text
+                - embedding
+                - hybrid
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Search Docs System Definition
     Tools.SpiderFetchArguments:
       type: object
       required:
@@ -10574,9 +12563,13 @@ components:
     Tools.SystemDef:
       type: object
       required:
+        - systemDefType
         - resource
         - operation
       properties:
+        systemDefType:
+          type: string
+          description: The discriminator that tells the system which type this is
         resource:
           type: string
           enum:
@@ -10620,10 +12613,55 @@ components:
           type: object
           additionalProperties: {}
           description: The arguments to pre-apply to the system call
-      description: System definition
+      discriminator:
+        propertyName: systemDefType
+        mapping:
+          CreateAgentSystemDef: '#/components/schemas/Tools.CreateAgentSystemDef'
+          UpdateAgentSystemDef: '#/components/schemas/Tools.UpdateAgentSystemDef'
+          PatchAgentSystemDef: '#/components/schemas/Tools.PatchAgentSystemDef'
+          GetAgentSystemDef: '#/components/schemas/Tools.GetAgentSystemDef'
+          ListAgentsSystemDef: '#/components/schemas/Tools.ListAgentsSystemDef'
+          DeleteAgentSystemDef: '#/components/schemas/Tools.DeleteAgentSystemDef'
+          CreateAgentToolSystemDef: '#/components/schemas/Tools.CreateAgentToolSystemDef'
+          UpdateAgentToolSystemDef: '#/components/schemas/Tools.UpdateAgentToolSystemDef'
+          DeleteAgentToolSystemDef: '#/components/schemas/Tools.DeleteAgentToolSystemDef'
+          CreateDocSystemDef: '#/components/schemas/Tools.CreateDocSystemDef'
+          EmbedDocSystemDef: '#/components/schemas/Tools.EmbedDocSystemDef'
+          GetDocSystemDef: '#/components/schemas/Tools.GetDocSystemDef'
+          ListDocsSystemDef: '#/components/schemas/Tools.ListDocsSystemDef'
+          DeleteDocSystemDef: '#/components/schemas/Tools.DeleteDocSystemDef'
+          SearchDocsSystemDef: '#/components/schemas/Tools.SearchDocsSystemDef'
+          CreateSessionSystemDef: '#/components/schemas/Tools.CreateSessionSystemDef'
+          UpdateSessionSystemDef: '#/components/schemas/Tools.UpdateSessionSystemDef'
+          PatchSessionSystemDef: '#/components/schemas/Tools.PatchSessionSystemDef'
+          GetSessionSystemDef: '#/components/schemas/Tools.GetSessionSystemDef'
+          ListSessionsSystemDef: '#/components/schemas/Tools.ListSessionsSystemDef'
+          DeleteSessionSystemDef: '#/components/schemas/Tools.DeleteSessionSystemDef'
+          ChatSessionSystemDef: '#/components/schemas/Tools.ChatSessionSystemDef'
+          GetSessionHistorySystemDef: '#/components/schemas/Tools.GetSessionHistorySystemDef'
+          CreateTaskSystemDef: '#/components/schemas/Tools.CreateTaskSystemDef'
+          UpdateTaskSystemDef: '#/components/schemas/Tools.UpdateTaskSystemDef'
+          PatchTaskSystemDef: '#/components/schemas/Tools.PatchTaskSystemDef'
+          GetTaskSystemDef: '#/components/schemas/Tools.GetTaskSystemDef'
+          ListTasksSystemDef: '#/components/schemas/Tools.ListTasksSystemDef'
+          DeleteTaskSystemDef: '#/components/schemas/Tools.DeleteTaskSystemDef'
+          CreateTaskExecutionSystemDef: '#/components/schemas/Tools.CreateTaskExecutionSystemDef'
+          GetTaskExecutionSystemDef: '#/components/schemas/Tools.GetTaskExecutionSystemDef'
+          CreateUserSystemDef: '#/components/schemas/Tools.CreateUserSystemDef'
+          UpdateUserSystemDef: '#/components/schemas/Tools.UpdateUserSystemDef'
+          PatchUserSystemDef: '#/components/schemas/Tools.PatchUserSystemDef'
+          GetUserSystemDef: '#/components/schemas/Tools.GetUserSystemDef'
+          ListUsersSystemDef: '#/components/schemas/Tools.ListUsersSystemDef'
+          DeleteUserSystemDef: '#/components/schemas/Tools.DeleteUserSystemDef'
+      description: Base System definition
     Tools.SystemDefUpdate:
       type: object
+      required:
+        - systemDefType
       properties:
+        systemDefType:
+          type: string
+          description: The discriminator that tells the system which type this is
         resource:
           type: string
           enum:
@@ -10667,7 +12705,47 @@ components:
           type: object
           additionalProperties: {}
           description: The arguments to pre-apply to the system call
-      description: System definition
+      discriminator:
+        propertyName: systemDefType
+        mapping:
+          CreateAgentSystemDef: '#/components/schemas/Tools.CreateAgentSystemDefUpdate'
+          UpdateAgentSystemDef: '#/components/schemas/Tools.UpdateAgentSystemDefUpdate'
+          PatchAgentSystemDef: '#/components/schemas/Tools.PatchAgentSystemDefUpdate'
+          GetAgentSystemDef: '#/components/schemas/Tools.GetAgentSystemDefUpdate'
+          ListAgentsSystemDef: '#/components/schemas/Tools.ListAgentsSystemDefUpdate'
+          DeleteAgentSystemDef: '#/components/schemas/Tools.DeleteAgentSystemDefUpdate'
+          CreateAgentToolSystemDef: '#/components/schemas/Tools.CreateAgentToolSystemDefUpdate'
+          UpdateAgentToolSystemDef: '#/components/schemas/Tools.UpdateAgentToolSystemDefUpdate'
+          DeleteAgentToolSystemDef: '#/components/schemas/Tools.DeleteAgentToolSystemDefUpdate'
+          CreateDocSystemDef: '#/components/schemas/Tools.CreateDocSystemDefUpdate'
+          EmbedDocSystemDef: '#/components/schemas/Tools.EmbedDocSystemDefUpdate'
+          GetDocSystemDef: '#/components/schemas/Tools.GetDocSystemDefUpdate'
+          ListDocsSystemDef: '#/components/schemas/Tools.ListDocsSystemDefUpdate'
+          DeleteDocSystemDef: '#/components/schemas/Tools.DeleteDocSystemDefUpdate'
+          SearchDocsSystemDef: '#/components/schemas/Tools.SearchDocsSystemDefUpdate'
+          CreateSessionSystemDef: '#/components/schemas/Tools.CreateSessionSystemDefUpdate'
+          UpdateSessionSystemDef: '#/components/schemas/Tools.UpdateSessionSystemDefUpdate'
+          PatchSessionSystemDef: '#/components/schemas/Tools.PatchSessionSystemDefUpdate'
+          GetSessionSystemDef: '#/components/schemas/Tools.GetSessionSystemDefUpdate'
+          ListSessionsSystemDef: '#/components/schemas/Tools.ListSessionsSystemDefUpdate'
+          DeleteSessionSystemDef: '#/components/schemas/Tools.DeleteSessionSystemDefUpdate'
+          ChatSessionSystemDef: '#/components/schemas/Tools.ChatSessionSystemDefUpdate'
+          GetSessionHistorySystemDef: '#/components/schemas/Tools.GetSessionHistorySystemDefUpdate'
+          CreateTaskSystemDef: '#/components/schemas/Tools.CreateTaskSystemDefUpdate'
+          UpdateTaskSystemDef: '#/components/schemas/Tools.UpdateTaskSystemDefUpdate'
+          PatchTaskSystemDef: '#/components/schemas/Tools.PatchTaskSystemDefUpdate'
+          GetTaskSystemDef: '#/components/schemas/Tools.GetTaskSystemDefUpdate'
+          ListTasksSystemDef: '#/components/schemas/Tools.ListTasksSystemDefUpdate'
+          DeleteTaskSystemDef: '#/components/schemas/Tools.DeleteTaskSystemDefUpdate'
+          CreateTaskExecutionSystemDef: '#/components/schemas/Tools.CreateTaskExecutionSystemDefUpdate'
+          GetTaskExecutionSystemDef: '#/components/schemas/Tools.GetTaskExecutionSystemDefUpdate'
+          CreateUserSystemDef: '#/components/schemas/Tools.CreateUserSystemDefUpdate'
+          UpdateUserSystemDef: '#/components/schemas/Tools.UpdateUserSystemDefUpdate'
+          PatchUserSystemDef: '#/components/schemas/Tools.PatchUserSystemDefUpdate'
+          GetUserSystemDef: '#/components/schemas/Tools.GetUserSystemDefUpdate'
+          ListUsersSystemDef: '#/components/schemas/Tools.ListUsersSystemDefUpdate'
+          DeleteUserSystemDef: '#/components/schemas/Tools.DeleteUserSystemDefUpdate'
+      description: Base System definition
     Tools.TextEditor20241022Def:
       type: object
       required:
@@ -10922,6 +13000,293 @@ components:
           format: int16
           description: Optional request timeout applied to each operation in milliseconds
       description: Setup parameters for Unstructured integration
+    Tools.UpdateAgentSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            instructions:
+              type: string
+            tools:
+              type: array
+              items: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Update Agent System Definition
+    Tools.UpdateAgentSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateAgentSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            instructions:
+              type: string
+            tools:
+              type: array
+              items: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Update Agent System Definition
+    Tools.UpdateAgentToolSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - subresource
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateAgentToolSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        subresource:
+          type: string
+          enum:
+            - tool
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            type:
+              type: string
+            description:
+              type: string
+            function: {}
+            integration: {}
+            system: {}
+            api_call: {}
+          required:
+            - name
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Update Agent Tool System Definition
+    Tools.UpdateAgentToolSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateAgentToolSystemDef
+        resource:
+          type: string
+          enum:
+            - agent
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        subresource:
+          type: string
+          enum:
+            - tool
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            type:
+              type: string
+            description:
+              type: string
+            function: {}
+            integration: {}
+            system: {}
+            api_call: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Update Agent Tool System Definition
+    Tools.UpdateSessionSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Update Session System Definition
+    Tools.UpdateSessionSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateSessionSystemDef
+        resource:
+          type: string
+          enum:
+            - session
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Update Session System Definition
+    Tools.UpdateTaskSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            steps:
+              type: array
+              items: {}
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Update Task System Definition
+    Tools.UpdateTaskSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateTaskSystemDef
+        resource:
+          type: string
+          enum:
+            - task
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            steps:
+              type: array
+              items: {}
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Update Task System Definition
     Tools.UpdateToolRequest:
       type: object
       required:
@@ -10984,6 +13349,72 @@ components:
         bash_20241022:
           $ref: '#/components/schemas/Tools.Bash20241022Def'
       description: Payload for updating a tool
+    Tools.UpdateUserSystemDef:
+      type: object
+      required:
+        - systemDefType
+        - resource
+        - operation
+        - resource_id
+        - arguments
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            user_id:
+              type: string
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDef'
+      description: Update User System Definition
+    Tools.UpdateUserSystemDefUpdate:
+      type: object
+      properties:
+        systemDefType:
+          type: string
+          enum:
+            - UpdateUserSystemDef
+        resource:
+          type: string
+          enum:
+            - user
+        operation:
+          type: string
+          enum:
+            - update
+        resource_id:
+          $ref: '#/components/schemas/Common.uuid'
+        arguments:
+          type: object
+          properties:
+            user_id:
+              type: string
+            name:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: {}
+      allOf:
+        - $ref: '#/components/schemas/Tools.SystemDefUpdate'
+      description: Update User System Definition
     Tools.WeatherGetArguments:
       type: object
       required:

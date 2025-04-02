@@ -235,6 +235,250 @@ class ApiCallDefUpdate(BaseModel):
     """
 
 
+class Arguments(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    message: str
+    tool_choice: str | None = None
+
+
+class ArgumentsModel(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    message: str | None = None
+    tool_choice: str | None = None
+
+
+class ArgumentsModel1(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    description: str | None = None
+    instructions: str | None = None
+    tools: list | None = None
+
+
+class ArgumentsModel10(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    description: str | None = None
+    steps: list | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class ArgumentsModel11(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    user_id: str
+    name: str | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class ArgumentsModel12(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    user_id: str | None = None
+    name: str | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class ArgumentsModel13(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+
+
+class ArgumentsModel14(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+
+
+class ArgumentsModel15(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    limit: int | None = None
+    before: str | None = None
+
+
+class ArgumentsModel16(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filter: str | None = None
+    limit: int | None = None
+    offset: int | None = None
+
+
+class ArgumentsModel17(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    description: str | None = None
+    instructions: str | None = None
+
+
+class ArgumentsModel18(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class ArgumentsModel19(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    description: str | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class ArgumentsModel2(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    description: str | None = None
+    instructions: str | None = None
+    tools: list | None = None
+
+
+class ArgumentsModel20(ArgumentsModel18):
+    pass
+
+
+class ArgumentsModel21(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    query: str
+    limit: int | None = None
+    search_type: Literal["text", "embedding", "hybrid"] | None = None
+
+
+class ArgumentsModel22(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    query: str | None = None
+    limit: int | None = None
+    search_type: Literal["text", "embedding", "hybrid"] | None = None
+
+
+class ArgumentsModel23(ArgumentsModel2):
+    pass
+
+
+class ArgumentsModel24(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    type: str | None = None
+    description: str | None = None
+    function: Any | None = None
+    integration: Any | None = None
+    system: Any | None = None
+    api_call: Any | None = None
+
+
+class ArgumentsModel26(ArgumentsModel18):
+    pass
+
+
+class ArgumentsModel27(ArgumentsModel10):
+    pass
+
+
+class ArgumentsModel28(ArgumentsModel12):
+    pass
+
+
+class ArgumentsModel3(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    type: str
+    description: str | None = None
+    function: Any | None = None
+    integration: Any | None = None
+    system: Any | None = None
+    api_call: Any | None = None
+
+
+class ArgumentsModel4(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    type: str | None = None
+    description: str | None = None
+    function: Any | None = None
+    integration: Any | None = None
+    system: Any | None = None
+    api_call: Any | None = None
+
+
+class ArgumentsModel5(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    content: str
+    metadata: dict[str, Any] | None = None
+
+
+class ArgumentsModel6(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    content: str | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class ArgumentsModel7(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    user_id: UUID | None = None
+    agent_id: UUID | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class ArgumentsModel8(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    input: Any | None = None
+    async_: Annotated[StrictBool | None, Field(alias="async")] = None
+
+
+class ArgumentsModel9(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    description: str | None = None
+    steps: list
+    metadata: dict[str, Any] | None = None
+
+
 class ArxivSearchArguments(BaseModel):
     """
     Arguments for Arxiv Search
@@ -377,47 +621,9 @@ class BaseIntegrationDef(BaseModel):
     """
 
 
-class BaseIntegrationDefUpdate(BaseModel):
+class BaseIntegrationDefUpdate(BaseIntegrationDef):
     """
     Integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    provider: (
-        Literal[
-            "dummy",
-            "weather",
-            "wikipedia",
-            "spider",
-            "brave",
-            "browserbase",
-            "email",
-            "remote_browser",
-            "llama_parse",
-            "ffmpeg",
-            "cloudinary",
-            "arxiv",
-            "unstructured",
-            "algolia",
-        ]
-        | None
-    ) = None
-    """
-    The provider of the integration
-    """
-    method: str | None = None
-    """
-    The specific method of the integration to call
-    """
-    setup: Any | None = None
-    """
-    The setup parameters the integration accepts
-    """
-    arguments: Any | None = None
-    """
-    The arguments to pre-apply to the integration call
     """
 
 
@@ -1839,12 +2045,16 @@ class SpiderSetupUpdate(BaseModel):
 
 class SystemDef(BaseModel):
     """
-    System definition
+    Base System definition
     """
 
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    system_def_type: Annotated[str, Field(alias="systemDefType")]
+    """
+    The discriminator that tells the system which type this is
+    """
     resource: Literal["agent", "user", "task", "execution", "doc", "session", "job"]
     """
     Resource is the name of the resource to use
@@ -1882,12 +2092,16 @@ class SystemDef(BaseModel):
 
 class SystemDefUpdate(BaseModel):
     """
-    System definition
+    Base System definition
     """
 
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    system_def_type: Annotated[str, Field(alias="systemDefType")]
+    """
+    The discriminator that tells the system which type this is
+    """
     resource: Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None = (
         None
     )
@@ -2195,6 +2409,144 @@ class UnstructuredSetupUpdate(BaseModel):
     """
 
 
+class UpdateAgentSystemDef(SystemDef):
+    """
+    Update Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["UpdateAgentSystemDef"], Field(alias="systemDefType")
+    ] = "UpdateAgentSystemDef"
+    resource: Literal["agent"] = "agent"
+    operation: Literal["update"] = "update"
+    resource_id: UUID
+    arguments: ArgumentsModel23
+
+
+class UpdateAgentSystemDefUpdate(SystemDefUpdate):
+    """
+    Update Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["UpdateAgentSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["update"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel23 | None = None
+
+
+class UpdateAgentToolSystemDef(SystemDef):
+    """
+    Update Agent Tool System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["UpdateAgentToolSystemDef"], Field(alias="systemDefType")
+    ] = "UpdateAgentToolSystemDef"
+    resource: Literal["agent"] = "agent"
+    operation: Literal["update"] = "update"
+    resource_id: UUID
+    subresource: Literal["tool"] = "tool"
+    arguments: ArgumentsModel24
+
+
+class UpdateAgentToolSystemDefUpdate(SystemDefUpdate):
+    """
+    Update Agent Tool System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["UpdateAgentToolSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["update"] | None = None
+    resource_id: UUID | None = None
+    subresource: Literal["tool"] | None = None
+    arguments: ArgumentsModel25 | None = None
+
+
+class UpdateSessionSystemDef(SystemDef):
+    """
+    Update Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["UpdateSessionSystemDef"], Field(alias="systemDefType")
+    ] = "UpdateSessionSystemDef"
+    resource: Literal["session"] = "session"
+    operation: Literal["update"] = "update"
+    resource_id: UUID
+    arguments: ArgumentsModel26
+
+
+class UpdateSessionSystemDefUpdate(SystemDefUpdate):
+    """
+    Update Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["UpdateSessionSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["session"] | None = None
+    operation: Literal["update"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel26 | None = None
+
+
+class UpdateTaskSystemDef(SystemDef):
+    """
+    Update Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["UpdateTaskSystemDef"], Field(alias="systemDefType")] = (
+        "UpdateTaskSystemDef"
+    )
+    resource: Literal["task"] = "task"
+    operation: Literal["update"] = "update"
+    resource_id: UUID
+    arguments: ArgumentsModel27
+
+
+class UpdateTaskSystemDefUpdate(SystemDefUpdate):
+    """
+    Update Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["UpdateTaskSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["task"] | None = None
+    operation: Literal["update"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel27 | None = None
+
+
 class UpdateToolRequest(BaseModel):
     """
     Payload for updating a tool
@@ -2268,6 +2620,40 @@ class UpdateToolRequest(BaseModel):
     """
     text_editor_20241022: TextEditor20241022Def | None = None
     bash_20241022: Bash20241022Def | None = None
+
+
+class UpdateUserSystemDef(SystemDef):
+    """
+    Update User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["UpdateUserSystemDef"], Field(alias="systemDefType")] = (
+        "UpdateUserSystemDef"
+    )
+    resource: Literal["user"] = "user"
+    operation: Literal["update"] = "update"
+    resource_id: UUID
+    arguments: ArgumentsModel28
+
+
+class UpdateUserSystemDefUpdate(SystemDefUpdate):
+    """
+    Update User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["UpdateUserSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["user"] | None = None
+    operation: Literal["update"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel28 | None = None
 
 
 class WeatherGetArguments(BaseModel):
@@ -2516,6 +2902,10 @@ class AlgoliaIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The arguments for Algolia
     """
+
+
+class ArgumentsModel25(ArgumentsModel4):
+    pass
 
 
 class ArxivIntegrationDef(BaseIntegrationDef):
@@ -2864,6 +3254,40 @@ class BrowserbaseListSessionsIntegrationDefUpdate(BaseBrowserbaseIntegrationDefU
     """
 
 
+class ChatSessionSystemDef(SystemDef):
+    """
+    Chat Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["ChatSessionSystemDef"], Field(alias="systemDefType")
+    ] = "ChatSessionSystemDef"
+    resource: Literal["session"] = "session"
+    operation: Literal["chat"] = "chat"
+    resource_id: UUID
+    arguments: Arguments
+
+
+class ChatSessionSystemDefUpdate(SystemDefUpdate):
+    """
+    Chat Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["ChatSessionSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["session"] | None = None
+    operation: Literal["chat"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel | None = None
+
+
 class CloudinaryEditIntegrationDef(BaseCloudinaryIntegrationDef):
     """
     Cloudinary edit integration definition
@@ -2910,3 +3334,1017 @@ class CloudinaryUploadIntegrationDefUpdate(BaseCloudinaryIntegrationDefUpdate):
     )
     method: Literal["media_upload"] = "media_upload"
     arguments: CloudinaryUploadArgumentsUpdate | None = None
+
+
+class CreateAgentSystemDef(SystemDef):
+    """
+    Create Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateAgentSystemDef"], Field(alias="systemDefType")
+    ] = "CreateAgentSystemDef"
+    resource: Literal["agent"] = "agent"
+    operation: Literal["create"] = "create"
+    arguments: ArgumentsModel1
+
+
+class CreateAgentSystemDefUpdate(SystemDefUpdate):
+    """
+    Create Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateAgentSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["create"] | None = None
+    arguments: ArgumentsModel2 | None = None
+
+
+class CreateAgentToolSystemDef(SystemDef):
+    """
+    Create Agent Tool System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateAgentToolSystemDef"], Field(alias="systemDefType")
+    ] = "CreateAgentToolSystemDef"
+    resource: Literal["agent"] = "agent"
+    operation: Literal["create"] = "create"
+    resource_id: UUID
+    subresource: Literal["tool"] = "tool"
+    arguments: ArgumentsModel3
+
+
+class CreateAgentToolSystemDefUpdate(SystemDefUpdate):
+    """
+    Create Agent Tool System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateAgentToolSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["create"] | None = None
+    resource_id: UUID | None = None
+    subresource: Literal["tool"] | None = None
+    arguments: ArgumentsModel4 | None = None
+
+
+class CreateDocSystemDef(SystemDef):
+    """
+    Create Doc System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["CreateDocSystemDef"], Field(alias="systemDefType")] = (
+        "CreateDocSystemDef"
+    )
+    resource: Literal["doc"] = "doc"
+    operation: Literal["create"] = "create"
+    arguments: ArgumentsModel5
+
+
+class CreateDocSystemDefUpdate(SystemDefUpdate):
+    """
+    Create Doc System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateDocSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["doc"] | None = None
+    operation: Literal["create"] | None = None
+    arguments: ArgumentsModel6 | None = None
+
+
+class CreateSessionSystemDef(SystemDef):
+    """
+    Create Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateSessionSystemDef"], Field(alias="systemDefType")
+    ] = "CreateSessionSystemDef"
+    resource: Literal["session"] = "session"
+    operation: Literal["create"] = "create"
+    arguments: ArgumentsModel7
+
+
+class CreateSessionSystemDefUpdate(SystemDefUpdate):
+    """
+    Create Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateSessionSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["session"] | None = None
+    operation: Literal["create"] | None = None
+    arguments: ArgumentsModel7 | None = None
+
+
+class CreateTaskExecutionSystemDef(SystemDef):
+    """
+    Create Task Execution System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateTaskExecutionSystemDef"], Field(alias="systemDefType")
+    ] = "CreateTaskExecutionSystemDef"
+    resource: Literal["task"] = "task"
+    operation: Literal["create"] = "create"
+    resource_id: UUID
+    subresource: Literal["execution"] = "execution"
+    arguments: ArgumentsModel8 | None = None
+
+
+class CreateTaskExecutionSystemDefUpdate(SystemDefUpdate):
+    """
+    Create Task Execution System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateTaskExecutionSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["task"] | None = None
+    operation: Literal["create"] | None = None
+    resource_id: UUID | None = None
+    subresource: Literal["execution"] | None = None
+    arguments: ArgumentsModel8 | None = None
+
+
+class CreateTaskSystemDef(SystemDef):
+    """
+    Create Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["CreateTaskSystemDef"], Field(alias="systemDefType")] = (
+        "CreateTaskSystemDef"
+    )
+    resource: Literal["task"] = "task"
+    operation: Literal["create"] = "create"
+    arguments: ArgumentsModel9
+
+
+class CreateTaskSystemDefUpdate(SystemDefUpdate):
+    """
+    Create Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateTaskSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["task"] | None = None
+    operation: Literal["create"] | None = None
+    arguments: ArgumentsModel10 | None = None
+
+
+class CreateUserSystemDef(SystemDef):
+    """
+    Create User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["CreateUserSystemDef"], Field(alias="systemDefType")] = (
+        "CreateUserSystemDef"
+    )
+    resource: Literal["user"] = "user"
+    operation: Literal["create"] = "create"
+    arguments: ArgumentsModel11
+
+
+class CreateUserSystemDefUpdate(SystemDefUpdate):
+    """
+    Create User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["CreateUserSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["user"] | None = None
+    operation: Literal["create"] | None = None
+    arguments: ArgumentsModel12 | None = None
+
+
+class DeleteAgentSystemDef(SystemDef):
+    """
+    Delete Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteAgentSystemDef"], Field(alias="systemDefType")
+    ] = "DeleteAgentSystemDef"
+    resource: Literal["agent"] = "agent"
+    operation: Literal["delete"] = "delete"
+    resource_id: UUID
+
+
+class DeleteAgentSystemDefUpdate(SystemDefUpdate):
+    """
+    Delete Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteAgentSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["delete"] | None = None
+    resource_id: UUID | None = None
+
+
+class DeleteAgentToolSystemDef(SystemDef):
+    """
+    Delete Agent Tool System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteAgentToolSystemDef"], Field(alias="systemDefType")
+    ] = "DeleteAgentToolSystemDef"
+    resource: Literal["agent"] = "agent"
+    operation: Literal["delete"] = "delete"
+    resource_id: UUID
+    subresource: Literal["tool"] = "tool"
+    arguments: ArgumentsModel13
+
+
+class DeleteAgentToolSystemDefUpdate(SystemDefUpdate):
+    """
+    Delete Agent Tool System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteAgentToolSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["delete"] | None = None
+    resource_id: UUID | None = None
+    subresource: Literal["tool"] | None = None
+    arguments: ArgumentsModel14 | None = None
+
+
+class DeleteDocSystemDef(SystemDef):
+    """
+    Delete Doc System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["DeleteDocSystemDef"], Field(alias="systemDefType")] = (
+        "DeleteDocSystemDef"
+    )
+    resource: Literal["doc"] = "doc"
+    operation: Literal["delete"] = "delete"
+    resource_id: UUID
+
+
+class DeleteDocSystemDefUpdate(SystemDefUpdate):
+    """
+    Delete Doc System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteDocSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["doc"] | None = None
+    operation: Literal["delete"] | None = None
+    resource_id: UUID | None = None
+
+
+class DeleteSessionSystemDef(SystemDef):
+    """
+    Delete Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteSessionSystemDef"], Field(alias="systemDefType")
+    ] = "DeleteSessionSystemDef"
+    resource: Literal["session"] = "session"
+    operation: Literal["delete"] = "delete"
+    resource_id: UUID
+
+
+class DeleteSessionSystemDefUpdate(SystemDefUpdate):
+    """
+    Delete Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteSessionSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["session"] | None = None
+    operation: Literal["delete"] | None = None
+    resource_id: UUID | None = None
+
+
+class DeleteTaskSystemDef(SystemDef):
+    """
+    Delete Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["DeleteTaskSystemDef"], Field(alias="systemDefType")] = (
+        "DeleteTaskSystemDef"
+    )
+    resource: Literal["task"] = "task"
+    operation: Literal["delete"] = "delete"
+    resource_id: UUID
+
+
+class DeleteTaskSystemDefUpdate(SystemDefUpdate):
+    """
+    Delete Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteTaskSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["task"] | None = None
+    operation: Literal["delete"] | None = None
+    resource_id: UUID | None = None
+
+
+class DeleteUserSystemDef(SystemDef):
+    """
+    Delete User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["DeleteUserSystemDef"], Field(alias="systemDefType")] = (
+        "DeleteUserSystemDef"
+    )
+    resource: Literal["user"] = "user"
+    operation: Literal["delete"] = "delete"
+    resource_id: UUID
+
+
+class DeleteUserSystemDefUpdate(SystemDefUpdate):
+    """
+    Delete User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["DeleteUserSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["user"] | None = None
+    operation: Literal["delete"] | None = None
+    resource_id: UUID | None = None
+
+
+class EmbedDocSystemDef(SystemDef):
+    """
+    Embed Doc System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["EmbedDocSystemDef"], Field(alias="systemDefType")] = (
+        "EmbedDocSystemDef"
+    )
+    resource: Literal["doc"] = "doc"
+    operation: Literal["embed"] = "embed"
+    resource_id: UUID
+
+
+class EmbedDocSystemDefUpdate(SystemDefUpdate):
+    """
+    Embed Doc System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["EmbedDocSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["doc"] | None = None
+    operation: Literal["embed"] | None = None
+    resource_id: UUID | None = None
+
+
+class GetAgentSystemDef(SystemDef):
+    """
+    Get Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["GetAgentSystemDef"], Field(alias="systemDefType")] = (
+        "GetAgentSystemDef"
+    )
+    resource: Literal["agent"] = "agent"
+    operation: Literal["get"] = "get"
+    resource_id: UUID
+
+
+class GetAgentSystemDefUpdate(SystemDefUpdate):
+    """
+    Get Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetAgentSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["get"] | None = None
+    resource_id: UUID | None = None
+
+
+class GetDocSystemDef(SystemDef):
+    """
+    Get Doc System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["GetDocSystemDef"], Field(alias="systemDefType")] = (
+        "GetDocSystemDef"
+    )
+    resource: Literal["doc"] = "doc"
+    operation: Literal["get"] = "get"
+    resource_id: UUID
+
+
+class GetDocSystemDefUpdate(SystemDefUpdate):
+    """
+    Get Doc System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetDocSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["doc"] | None = None
+    operation: Literal["get"] | None = None
+    resource_id: UUID | None = None
+
+
+class GetSessionHistorySystemDef(SystemDef):
+    """
+    Get Session History System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetSessionHistorySystemDef"], Field(alias="systemDefType")
+    ] = "GetSessionHistorySystemDef"
+    resource: Literal["session"] = "session"
+    operation: Literal["history"] = "history"
+    resource_id: UUID
+    arguments: ArgumentsModel15 | None = None
+
+
+class GetSessionHistorySystemDefUpdate(SystemDefUpdate):
+    """
+    Get Session History System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetSessionHistorySystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["session"] | None = None
+    operation: Literal["history"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel15 | None = None
+
+
+class GetSessionSystemDef(SystemDef):
+    """
+    Get Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["GetSessionSystemDef"], Field(alias="systemDefType")] = (
+        "GetSessionSystemDef"
+    )
+    resource: Literal["session"] = "session"
+    operation: Literal["get"] = "get"
+    resource_id: UUID
+
+
+class GetSessionSystemDefUpdate(SystemDefUpdate):
+    """
+    Get Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetSessionSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["session"] | None = None
+    operation: Literal["get"] | None = None
+    resource_id: UUID | None = None
+
+
+class GetTaskExecutionSystemDef(SystemDef):
+    """
+    Get Task Execution System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetTaskExecutionSystemDef"], Field(alias="systemDefType")
+    ] = "GetTaskExecutionSystemDef"
+    resource: Literal["execution"] = "execution"
+    operation: Literal["get"] = "get"
+    resource_id: UUID
+
+
+class GetTaskExecutionSystemDefUpdate(SystemDefUpdate):
+    """
+    Get Task Execution System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetTaskExecutionSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["execution"] | None = None
+    operation: Literal["get"] | None = None
+    resource_id: UUID | None = None
+
+
+class GetTaskSystemDef(SystemDef):
+    """
+    Get Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["GetTaskSystemDef"], Field(alias="systemDefType")] = (
+        "GetTaskSystemDef"
+    )
+    resource: Literal["task"] = "task"
+    operation: Literal["get"] = "get"
+    resource_id: UUID
+
+
+class GetTaskSystemDefUpdate(SystemDefUpdate):
+    """
+    Get Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetTaskSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["task"] | None = None
+    operation: Literal["get"] | None = None
+    resource_id: UUID | None = None
+
+
+class GetUserSystemDef(SystemDef):
+    """
+    Get User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["GetUserSystemDef"], Field(alias="systemDefType")] = (
+        "GetUserSystemDef"
+    )
+    resource: Literal["user"] = "user"
+    operation: Literal["get"] = "get"
+    resource_id: UUID
+
+
+class GetUserSystemDefUpdate(SystemDefUpdate):
+    """
+    Get User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["GetUserSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["user"] | None = None
+    operation: Literal["get"] | None = None
+    resource_id: UUID | None = None
+
+
+class ListAgentsSystemDef(SystemDef):
+    """
+    List Agents System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["ListAgentsSystemDef"], Field(alias="systemDefType")] = (
+        "ListAgentsSystemDef"
+    )
+    resource: Literal["agent"] = "agent"
+    operation: Literal["list"] = "list"
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListAgentsSystemDefUpdate(SystemDefUpdate):
+    """
+    List Agents System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["ListAgentsSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["list"] | None = None
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListDocsSystemDef(SystemDef):
+    """
+    List Docs System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["ListDocsSystemDef"], Field(alias="systemDefType")] = (
+        "ListDocsSystemDef"
+    )
+    resource: Literal["doc"] = "doc"
+    operation: Literal["list"] = "list"
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListDocsSystemDefUpdate(SystemDefUpdate):
+    """
+    List Docs System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["ListDocsSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["doc"] | None = None
+    operation: Literal["list"] | None = None
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListSessionsSystemDef(SystemDef):
+    """
+    List Sessions System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["ListSessionsSystemDef"], Field(alias="systemDefType")
+    ] = "ListSessionsSystemDef"
+    resource: Literal["session"] = "session"
+    operation: Literal["list"] = "list"
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListSessionsSystemDefUpdate(SystemDefUpdate):
+    """
+    List Sessions System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["ListSessionsSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["session"] | None = None
+    operation: Literal["list"] | None = None
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListTasksSystemDef(SystemDef):
+    """
+    List Tasks System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["ListTasksSystemDef"], Field(alias="systemDefType")] = (
+        "ListTasksSystemDef"
+    )
+    resource: Literal["task"] = "task"
+    operation: Literal["list"] = "list"
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListTasksSystemDefUpdate(SystemDefUpdate):
+    """
+    List Tasks System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["ListTasksSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["task"] | None = None
+    operation: Literal["list"] | None = None
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListUsersSystemDef(SystemDef):
+    """
+    List Users System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["ListUsersSystemDef"], Field(alias="systemDefType")] = (
+        "ListUsersSystemDef"
+    )
+    resource: Literal["user"] = "user"
+    operation: Literal["list"] = "list"
+    arguments: ArgumentsModel16 | None = None
+
+
+class ListUsersSystemDefUpdate(SystemDefUpdate):
+    """
+    List Users System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["ListUsersSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["user"] | None = None
+    operation: Literal["list"] | None = None
+    arguments: ArgumentsModel16 | None = None
+
+
+class PatchAgentSystemDef(SystemDef):
+    """
+    Patch Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["PatchAgentSystemDef"], Field(alias="systemDefType")] = (
+        "PatchAgentSystemDef"
+    )
+    resource: Literal["agent"] = "agent"
+    operation: Literal["patch"] = "patch"
+    resource_id: UUID
+    arguments: ArgumentsModel17
+
+
+class PatchAgentSystemDefUpdate(SystemDefUpdate):
+    """
+    Patch Agent System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["PatchAgentSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["agent"] | None = None
+    operation: Literal["patch"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel17 | None = None
+
+
+class PatchSessionSystemDef(SystemDef):
+    """
+    Patch Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["PatchSessionSystemDef"], Field(alias="systemDefType")
+    ] = "PatchSessionSystemDef"
+    resource: Literal["session"] = "session"
+    operation: Literal["patch"] = "patch"
+    resource_id: UUID
+    arguments: ArgumentsModel18
+
+
+class PatchSessionSystemDefUpdate(SystemDefUpdate):
+    """
+    Patch Session System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["PatchSessionSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["session"] | None = None
+    operation: Literal["patch"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel18 | None = None
+
+
+class PatchTaskSystemDef(SystemDef):
+    """
+    Patch Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["PatchTaskSystemDef"], Field(alias="systemDefType")] = (
+        "PatchTaskSystemDef"
+    )
+    resource: Literal["task"] = "task"
+    operation: Literal["patch"] = "patch"
+    resource_id: UUID
+    arguments: ArgumentsModel19
+
+
+class PatchTaskSystemDefUpdate(SystemDefUpdate):
+    """
+    Patch Task System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["PatchTaskSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["task"] | None = None
+    operation: Literal["patch"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel19 | None = None
+
+
+class PatchUserSystemDef(SystemDef):
+    """
+    Patch User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["PatchUserSystemDef"], Field(alias="systemDefType")] = (
+        "PatchUserSystemDef"
+    )
+    resource: Literal["user"] = "user"
+    operation: Literal["patch"] = "patch"
+    resource_id: UUID
+    arguments: ArgumentsModel20
+
+
+class PatchUserSystemDefUpdate(SystemDefUpdate):
+    """
+    Patch User System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["PatchUserSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["user"] | None = None
+    operation: Literal["patch"] | None = None
+    resource_id: UUID | None = None
+    arguments: ArgumentsModel20 | None = None
+
+
+class SearchDocsSystemDef(SystemDef):
+    """
+    Search Docs System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[Literal["SearchDocsSystemDef"], Field(alias="systemDefType")] = (
+        "SearchDocsSystemDef"
+    )
+    resource: Literal["doc"] = "doc"
+    operation: Literal["search"] = "search"
+    arguments: ArgumentsModel21
+
+
+class SearchDocsSystemDefUpdate(SystemDefUpdate):
+    """
+    Search Docs System Definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system_def_type: Annotated[
+        Literal["SearchDocsSystemDef"] | None, Field(alias="systemDefType")
+    ] = None
+    resource: Literal["doc"] | None = None
+    operation: Literal["search"] | None = None
+    arguments: ArgumentsModel22 | None = None

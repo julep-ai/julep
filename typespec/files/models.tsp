@@ -25,17 +25,17 @@ model File {
     content: string;
 
     /** Size of the file in bytes */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     @minValue(1)
     size: uint64;
 
     /** Hash of the file */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     hash: string;
 }
 
 /** Payload for creating a file */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateFileRequest {
     ...File;
 }

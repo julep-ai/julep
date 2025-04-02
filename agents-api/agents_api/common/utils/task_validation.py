@@ -438,8 +438,7 @@ def validate_task(
     Returns:
         TaskValidationResult with validation issues
     """
-    validation_result = TaskValidationResult(is_valid=True)
-    return validation_result
+    return TaskValidationResult(is_valid=True)
 
     # Convert to task spec (this will exclude version, developer_id etc.)
     try:

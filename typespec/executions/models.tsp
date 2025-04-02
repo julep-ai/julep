@@ -40,11 +40,11 @@ alias ExecutionStatus = (
 
 model Execution {
     /** The ID of the task that the execution is running */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     task_id: Task.id;
 
     /** The status of the execution */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     status: ExecutionStatus;
 
     /** The input to the execution */
@@ -65,7 +65,7 @@ model Execution {
 }
 
 /** Payload for creating an execution */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateExecutionRequest {
     ...Execution;
 }
@@ -127,26 +127,26 @@ model TransitionTarget {
 }
 
 model TransitionEvent {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     type: TransitionType;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     output: unknown;
 
     ...HasTimestamps;
 }
 
 model Transition extends TransitionEvent {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     execution_id: Execution.id;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     current: TransitionTarget;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     next: TransitionTarget | null;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     step_label?: stepLabel;
 
     ...HasId;

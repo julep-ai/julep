@@ -26,32 +26,32 @@ model Workflow {
 
 model TaskTool extends CreateToolRequest {
     /** Read-only: Whether the tool was inherited or not. Only applies within tasks. */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     inherited?: boolean = false;
 }
 
 /** Reference to a tool by id */
 model ToolRefById {
-    @visibility("read", "create")
+    @visibility(Lifecycle.Read, Lifecycle.Create)
     id?: string;
 }
 
 /** Reference to a tool by name */
 model ToolRefByName {
-    @visibility("read", "create")
+    @visibility(Lifecycle.Read, Lifecycle.Create)
     name?: validPythonIdentifier;
 }
 
 /** Reference to a tool */
 model ToolRef {
-    @visibility("read", "create")
+    @visibility(Lifecycle.Read, Lifecycle.Create)
     ref: ToolRefById | ToolRefByName;
 }
 
 /** Object describing a Task */
 model Task {
     /** The name of the task. */
-    @visibility("read", "create", "update")
+    @visibility(Lifecycle.Read, Lifecycle.Create, Lifecycle.Update)
     name: displayName;
 
     /** The canonical name of the task. */
@@ -80,7 +80,7 @@ model Task {
 }
 
 /** Payload for updating a task */
-@withVisibility("update")
+@withVisibility(Lifecycle.Update)
 model UpdateTaskRequest {
     ...Task;
 }
@@ -89,7 +89,7 @@ model UpdateTaskRequest {
 model PatchTaskRequest is UpdateTaskRequest;
 
 /** Payload for creating a task */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateTaskRequest {
     ...Task;
 }
