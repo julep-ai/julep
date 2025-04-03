@@ -221,6 +221,9 @@ model ApiCallDef {
 
     /** The timeout for the request */
     timeout?: uint8;
+
+    /** Whether to include the content in the response */
+    include_response_content?: boolean = true;
 }
 
 

@@ -393,6 +393,28 @@ async def _():
         )
 
 
+@test(
+    "task execution workflow: handle api call tool call step, do not include response content"
+)
+async def _():
+    # TODO: mock http server
+    input_arguments = {
+        "method": "POST",
+        "url": "http://127.0.0.1:9123",
+        "include_response_content": False,
+    }
+    api_call = ApiCallDef(
+        method="POST",
+        url="http://127.0.0.1:9123",
+        headers=None,
+        follow_redirects=None,
+        include_response_content=False,
+    )
+
+    result = await execute_api_call(api_call, input_arguments)
+    assert "content" not in result
+
+
 @test("task execution workflow: handle system tool call step")
 async def _():
     async def _resp():
