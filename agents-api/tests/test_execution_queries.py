@@ -15,9 +15,10 @@ from agents_api.queries.executions.create_temporal_lookup import create_temporal
 from agents_api.queries.executions.get_execution import get_execution
 from agents_api.queries.executions.list_executions import list_executions
 from agents_api.queries.executions.lookup_temporal_data import lookup_temporal_data
+from fastapi import HTTPException
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
-from ward import test
+from ward import raises, test
 
 from tests.fixtures import (
     pg_dsn,
@@ -98,6 +99,101 @@ async def _(
     assert isinstance(result, list)
     assert len(result) >= 1
     assert result[0].status == "starting"
+
+
+@test("query: list executions, invalid limit")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    """Test that listing executions with an invalid limit raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_executions(
+            developer_id=developer_id,
+            task_id=task.id,
+            connection_pool=pool,
+            limit=101,
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+    with raises(HTTPException) as exc:
+        await list_executions(
+            developer_id=developer_id,
+            task_id=task.id,
+            connection_pool=pool,
+            limit=0,
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+
+@test("query: list executions, invalid offset")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    """Test that listing executions with an invalid offset raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_executions(
+            developer_id=developer_id,
+            task_id=task.id,
+            connection_pool=pool,
+            offset=-1,
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Offset must be >= 0"
+
+
+@test("query: list executions, invalid sort by")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    """Test that listing executions with an invalid sort by raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_executions(
+            developer_id=developer_id,
+            task_id=task.id,
+            connection_pool=pool,
+            sort_by="invalid",
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort field"
+
+
+@test("query: list executions, invalid sort direction")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    """Test that listing executions with an invalid sort direction raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_executions(
+            developer_id=developer_id,
+            task_id=task.id,
+            connection_pool=pool,
+            direction="invalid",
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort direction"
 
 
 @test("query: count executions")

@@ -3,15 +3,15 @@ This module contains the functionality for listing files from the PostgreSQL dat
 It constructs and executes SQL queries to fetch a list of files based on developer ID with pagination.
 """
 
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
+from beartype.vale import Is
 
 from ...autogen.openapi_model import File
 from ...common.utils.db_exceptions import common_db_exceptions
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import make_num_validator, pg_query, rewrap_exceptions, wrap_in_class
 
 # Base query for listing files
 base_files_query = """
@@ -40,8 +40,17 @@ async def list_files(
     developer_id: UUID,
     owner_id: UUID | None = None,
     owner_type: Literal["user", "agent"] | None = None,
-    limit: int = 100,
-    offset: int = 0,
+    limit: Annotated[
+        int,
+        Is[
+            make_num_validator(
+                min_value=1, max_value=100, err_msg="Limit must be between 1 and 100"
+            )
+        ],
+    ] = 100,
+    offset: Annotated[
+        int, Is[make_num_validator(min_value=0, err_msg="Offset must be >= 0")]
+    ] = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> tuple[str, list]:
@@ -49,17 +58,11 @@ async def list_files(
     Lists files with optional owner filtering, pagination, and sorting.
     """
     # Validate parameters
-    if direction.lower() not in ["asc", "desc"]:
-        raise HTTPException(status_code=400, detail="Invalid sort direction")
+    # if direction.lower() not in ["asc", "desc"]:
+    #     raise HTTPException(status_code=400, detail="Invalid sort direction")
 
-    if sort_by not in ["created_at", "updated_at"]:
-        raise HTTPException(status_code=400, detail="Invalid sort field")
-
-    if limit > 100 or limit < 1:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
-
-    if offset < 0:
-        raise HTTPException(status_code=400, detail="Offset must be non-negative")
+    # if sort_by not in ["created_at", "updated_at"]:
+    #     raise HTTPException(status_code=400, detail="Invalid sort field")
 
     # Start with the base query
     query = base_files_query

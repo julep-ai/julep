@@ -21,6 +21,8 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
+from agents_api.common.exceptions.validation import QueryParamsValidationError
+
 from ..app import app
 from ..env import query_timeout
 
@@ -376,3 +378,24 @@ def build_metadata_filter_conditions(
         sql_conditions = " AND " + sql_conditions
 
     return sql_conditions, params
+
+
+def make_num_validator(
+    min_value: int | float | None = None,
+    max_value: int | float | None = None,
+    err_msg: str | None = None,
+):
+    def validator(v: int | float):
+        nonlocal err_msg
+
+        if min_value is not None and v < min_value:
+            err_msg = err_msg or f"Number must be greater than or equal to {min_value}"
+            raise QueryParamsValidationError(err_msg)
+
+        if max_value is not None and v > max_value:
+            err_msg = err_msg or f"Number must be less than or equal to {max_value}"
+            raise QueryParamsValidationError(err_msg)
+
+        return True
+
+    return validator
