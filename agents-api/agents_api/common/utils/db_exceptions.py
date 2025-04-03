@@ -12,8 +12,8 @@ import asyncpg
 import pydantic
 from beartype.roar import BeartypeCallHintParamViolation
 from fastapi import HTTPException
-from agents_api.common.exceptions.validation import QueryParamsValidationError
 
+from agents_api.common.exceptions.validation import QueryParamsValidationError
 
 invalid_ref_re = re.compile(r"invalid (\w+) reference", re.IGNORECASE)
 
