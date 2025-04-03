@@ -162,6 +162,10 @@ class ApiCallDef(BaseModel):
     """
     The timeout for the request
     """
+    include_response_content: StrictBool = True
+    """
+    Whether to include the content in the response
+    """
 
 
 class ApiCallDefUpdate(BaseModel):
@@ -232,6 +236,10 @@ class ApiCallDefUpdate(BaseModel):
     timeout: int | None = None
     """
     The timeout for the request
+    """
+    include_response_content: StrictBool = True
+    """
+    Whether to include the content in the response
     """
 
 

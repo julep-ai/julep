@@ -1,8 +1,8 @@
-import base64
+from base64 import b64encode
 from typing import Any, TypedDict
 
-import httpx
 from beartype import beartype
+from httpx import AsyncClient, HTTPStatusError, RequestError, TimeoutException
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
@@ -20,6 +20,7 @@ class RequestArgs(TypedDict):
     files: dict[str, Any] | None
     method: str | None
     follow_redirects: bool | None
+    include_response_content: bool = True
 
 
 @beartype
@@ -29,7 +30,7 @@ async def execute_api_call(
 ) -> Any:
     try:
         # Use client with timeout and proper error handling
-        async with httpx.AsyncClient(timeout=600) as client:
+        async with AsyncClient(timeout=600) as client:
             # Extract URL, method, and headers from arguments
             arg_url = request_args.pop("url", None)
             arg_headers = request_args.pop("headers", None)
@@ -49,6 +50,8 @@ async def execute_api_call(
             if activity.in_activity():
                 activity.logger.debug(f"Making API call: {method} to {url}")
 
+            include_response_content = request_args.pop("include_response_content", None)
+
             # Execute the HTTP request
             response = await client.request(
                 method=method,
@@ -61,7 +64,7 @@ async def execute_api_call(
             # Raise for HTTP errors
             try:
                 response.raise_for_status()
-            except httpx.HTTPStatusError as e:
+            except HTTPStatusError as e:
                 # For HTTP errors, include response body in the error for debugging
                 error_body = e.response.text[:500] if e.response.text else "(empty body)"
                 if activity.in_activity():
@@ -71,15 +74,14 @@ async def execute_api_call(
                     )
                 raise
 
-            # Encode content as base64 for safety
-            content_base64 = base64.b64encode(response.content).decode("ascii")
-
             # Prepare response dictionary
             response_dict = {
                 "status_code": response.status_code,
                 "headers": dict(response.headers),
-                "content": content_base64,
             }
+
+            if include_response_content or api_call.include_response_content:
+                response_dict.update({"content": b64encode(response.content).decode("ascii")})
 
             # Try to parse JSON response if possible
             try:
@@ -96,11 +98,11 @@ async def execute_api_call(
 
         return response_dict
 
-    except httpx.TimeoutException as e:
+    except TimeoutException as e:
         if activity.in_activity():
             activity.logger.error(f"Timeout in API call: {e!s}")
         raise
-    except httpx.RequestError as e:
+    except RequestError as e:
         # Network-level errors
         if activity.in_activity():
             activity.logger.error(f"Request error in API call: {e!s}")
