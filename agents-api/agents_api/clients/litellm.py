@@ -6,11 +6,12 @@ from beartype import beartype
 from litellm import acompletion as _acompletion
 from litellm import aembedding as _aembedding
 from litellm import get_supported_openai_params
-from litellm.utils import CustomStreamWrapper, ModelResponse
+from litellm.utils import CustomStreamWrapper, ModelResponse, get_valid_models
 
 from ..env import (
     embedding_dimensions,
     embedding_model_id,
+    enable_responses,
     litellm_master_key,
     litellm_url,
 )
@@ -48,10 +49,13 @@ async def acompletion(
     custom_api_key: str | None = None,
     **kwargs,
 ) -> ModelResponse | CustomStreamWrapper:
-    if not custom_api_key:
+    if not custom_api_key and litellm_url:
         model = f"openai/{model}"  # This is needed for litellm
 
-    supported_params = get_supported_openai_params(model)
+    supported_params: list[str] = (
+        get_supported_openai_params(model) or []
+    )  # Supported params returns Optional[list[str]]
+    supported_params += ["user"]
     settings = {k: v for k, v in kwargs.items() if k in supported_params}
 
     # NOTE: This is a fix for Mistral API, which expects a different message format
@@ -128,6 +132,10 @@ async def get_model_list(*, custom_api_key: str | None = None) -> list[dict]:
     Returns:
         list[dict]: A list of model information dictionaries
     """
+
+    if enable_responses:
+        ret = get_valid_models()
+        return [{"id": model_name} for model_name in ret]
 
     headers = {"accept": "application/json", "x-api-key": custom_api_key or litellm_master_key}
 

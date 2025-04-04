@@ -163,11 +163,11 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
     """
     The confidence cutoff level
     """
-    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.75
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     """
     The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
@@ -182,6 +182,14 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
+    """
+    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    """
+    The trigram_similarity_threshold cutoff level
+    """
+    k_multiplier: Annotated[int, Field(ge=0)] = 7
+    """
+    The k_multiplier cutoff level to control how many intermediate results to fetch before final scoring
     """
 
 
@@ -230,13 +238,17 @@ class TextOnlyDocSearchRequest(BaseDocSearchRequest):
     """
     Text to use in the search.
     """
+    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    """
+    The trigram_similarity_threshold cutoff level
+    """
 
 
 class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
     """
     The confidence cutoff level
     """

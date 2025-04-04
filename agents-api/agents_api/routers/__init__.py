@@ -22,6 +22,7 @@ from .docs import router as docs_router
 from .files import router as files_router
 from .internal import router as internal_router
 from .jobs import router as jobs_router
+from .responses import router as responses_router
 from .sessions import router as sessions_router
 from .tasks import router as tasks_router
 from .users import router as users_router

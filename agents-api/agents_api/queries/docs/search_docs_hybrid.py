@@ -66,6 +66,10 @@ async def search_docs_hybrid(
         alpha (float): The weight for the embedding results.
         owner_type (Literal["user", "agent", "org"] | None): The type of the owner.
         owner_id (UUID | None): The ID of the owner.
+        confidence (int | float): The confidence threshold for the embedding results.
+        trigram_similarity_threshold (float): Similarity threshold for trigram search.
+        k_multiplier (int): The multiplier to control how many intermediate results to fetch before final scoring.
+        extract_keywords (bool): Whether to extract keywords from the query.
 
     Returns:
         tuple[str, list]: The SQL query and parameters for the search.

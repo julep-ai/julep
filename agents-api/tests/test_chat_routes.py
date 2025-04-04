@@ -146,6 +146,8 @@ async def _(
                 "confidence": 0.6,
                 "limit": 5,
                 "mmr_strength": 0.5,
+                "trigram_similarity_threshold": 0.4,
+                "k_multiplier": 7,
             },
         ),
         connection_pool=pool,
@@ -186,6 +188,8 @@ async def _(
                 "confidence": 0.6,
                 "limit": 5,
                 "mmr_strength": 0.5,
+                "trigram_similarity_threshold": 0.4,
+                "k_multiplier": 7,
             },
         ),
         connection_pool=pool,
@@ -371,6 +375,8 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
             "lang": "en-US",
             "alpha": 0.75,
             "metadata_filter": {"hybridsearch": "hybridsearch"},
+            "trigram_similarity_threshold": 0.4,
+            "k_multiplier": 7,
         },
     )
 
@@ -402,6 +408,11 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
         chat_context.session.recall_options.metadata_filter
         == data.recall_options.metadata_filter
     )
+    assert (
+        chat_context.session.recall_options.trigram_similarity_threshold
+        == data.recall_options.trigram_similarity_threshold
+    )
+    assert chat_context.session.recall_options.k_multiplier == data.recall_options.k_multiplier
 
     # Update session to have a new recall options to text mode
     data = CreateSessionRequest(
@@ -415,6 +426,7 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
             "metadata_filter": {"textsearch": "textsearch"},
             "limit": 10,
             "lang": "en-US",
+            "trigram_similarity_threshold": 0.4,
         },
     )
 
@@ -445,6 +457,10 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
     assert (
         chat_context.session.recall_options.metadata_filter
         == data.recall_options.metadata_filter
+    )
+    assert (
+        chat_context.session.recall_options.trigram_similarity_threshold
+        == data.recall_options.trigram_similarity_threshold
     )
 
     # Update session to have a new recall options to vector mode

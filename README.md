@@ -36,6 +36,21 @@
   <h3><i>Serverless AI Workflows for Data & ML Teams</i></h3>
 </div>
 
+## 🎉 Announcing: Julep Open Responses API (Alpha)
+
+<div style="padding: 15px; border-left: 4px solid #4CAF50; margin: 20px 0;">
+
+We're excited to announce the launch of our Open Responses API! This new API offers:
+
+1. **OpenAI-compatible interface** - A drop-in replacement for your existing code
+2. **Self-hosted, open-source implementation** - Works with any LLM backend
+3. **Model Provider Agnostic** - Connect to any LLM provider (OpenAI, Anthropic, etc.)
+
+The Open Responses API makes it easy to integrate with your existing applications while adding powerful new capabilities.
+
+Ready to try it out? Check out our [Open Responses API documentation](https://docs.julep.ai/responses/quickstart) to get started!
+</div>
+
 Julep is a serverless platform that helps data and ML teams build sophisticated AI workflows. It provides a robust foundation for orchestrating complex AI operations, managing state across interactions, and integrating with your existing data infrastructure and tools.
 
 Whether you're building data pipelines or creating AI workflows, Julep makes it easy to compose and scale LLM-powered workflows without managing infrastructure. Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Our platform handles the heavy lifting so you can focus on building intelligent solutions for your business.

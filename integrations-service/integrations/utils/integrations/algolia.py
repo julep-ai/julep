@@ -27,16 +27,18 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
         application_id = algolia_application_id
 
     # Build the search request
-    search_request = {
-        "requests": [
-            {
-                "indexName": arguments.index_name,
-                "query": arguments.query,
-                "hitsPerPage": arguments.hits_per_page,
-                "attributesToRetrieve": arguments.attributes_to_retrieve or [],
-            }
-        ]
+    search_params = {
+        "indexName": arguments.index_name,
+        "query": arguments.query,
+        "hitsPerPage": arguments.hits_per_page,
     }
+
+    # Add attributes to retrieve if provided
+    if arguments.attributes_to_retrieve is not None:
+        search_params["attributesToRetrieve"] = arguments.attributes_to_retrieve
+
+    # Finalize the search request
+    search_request = {"requests": [search_params]}
 
     # Initialize the Algolia client
     async with SearchClient(application_id, api_key) as client:

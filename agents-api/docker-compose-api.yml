@@ -1,0 +1,68 @@
+name: julep-agents-api
+
+# Shared environment variables
+x--shared-environment: &shared-environment
+  AGENTS_API_KEY: ${AGENTS_API_KEY}
+  AGENTS_API_KEY_HEADER_NAME: "Authorization"
+  AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
+  ENABLE_RESPONSES: "True"
+  PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
+  EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
+  INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
+  TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}
+  SAPLING_API_KEY: ${SAPLING_API_KEY}
+  ZEROGPT_URL: ${ZEROGPT_URL:-https://api.zerogpt.com/api/detect/detectText}
+  DESKLIB_URL: ${DESKLIB_URL:-http://35.243.190.233/detect}
+  SAPLING_URL: ${SAPLING_URL:-https://api.sapling.ai/api/v1/aidetect}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+  GEMINI_API_KEY: ${GEMINI_API_KEY}
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+  GROQ_API_KEY: ${GROQ_API_KEY}
+  VOYAGE_API_KEY: ${VOYAGE_API_KEY}
+  CEREBRAS_API_KEY: ${CEREBRAS_API_KEY}
+  CLOUDFLARE_API_KEY: ${CLOUDFLARE_API_KEY}
+  CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
+  NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY}
+  GITHUB_API_KEY: ${GITHUB_API_KEY}
+  GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+
+x--base-agents-api: &base-agents-api
+  image: julepai/agents-api:${TAG:-dev}
+  environment:
+    <<: *shared-environment
+  build:
+    platforms:
+      - linux/amd64
+    context: .
+    dockerfile: Dockerfile
+
+  restart: on-failure
+
+  ports:
+    - "8080:8080"
+
+  develop:
+    watch:
+      - action: sync+restart
+        path: ./agents_api
+        target: /app/agents_api
+        ignore:
+          - ./**/*.pyc
+      - action: sync+restart
+        path: ./gunicorn_conf.py
+        target: /app/gunicorn_conf.py
+        ignore:
+          - ./gunicorn_conf.pyc
+      - action: rebuild
+        path: uv.lock
+      - action: rebuild
+        path: Dockerfile
+
+
+services:
+  agents-api:
+    <<: *base-agents-api
+    profiles:
+      - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
+      - single-tenant

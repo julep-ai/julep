@@ -21,7 +21,11 @@ x--shared-environment: &shared-environment
 services:
   integrations:
     image: julepai/integrations:${TAG:-dev}
-    build: .
+    build:
+      platforms:
+        - linux/amd64
+      context: .
+      dockerfile: Dockerfile
 
     environment:
       <<: *shared-environment

@@ -142,7 +142,7 @@ model InputChatSettings extends InputDefaultChatSettings {
 }
 
 /** Usage statistics for the completion request */
-model CompetionUsage {
+model CompletionUsage {
     /** Number of tokens in the generated completion */
     @visibility("read")
     completion_tokens?: uint32;
@@ -230,7 +230,7 @@ model ChatOutputChunk extends BaseChatOutput {
 
 model BaseChatResponse {
     /** Usage statistics for the completion request */
-    usage?: CompetionUsage;
+    usage?: CompletionUsage;
 
     /** Background job IDs that may have been spawned from this interaction. */
     @visibility("read")

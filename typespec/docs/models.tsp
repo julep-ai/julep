@@ -122,7 +122,7 @@ model VectorDocSearchRequest extends BaseDocSearchRequest {
     /** The confidence cutoff level */
     @minValue(-1)
     @maxValue(1)
-    confidence: float = 0;
+    confidence: float = 0.5;
 
     /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
     vector: float[];
@@ -140,18 +140,23 @@ model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
     text: string;
 
     vector?: never;
+
+    /** The trigram_similarity_threshold cutoff level */
+    @minValue(0)
+    @maxValue(1)
+    trigram_similarity_threshold: float = 0.6;
 }
 
 model HybridDocSearchRequest extends BaseDocSearchRequest {
     /** The confidence cutoff level */
     @minValue(-1)
     @maxValue(1)
-    confidence: float = 0;
+    confidence: float = 0.5;
 
     /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
     @minValue(0)
     @maxValue(1)
-    alpha: float = 0.75;
+    alpha: float = 0.5;
 
     /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
     text: string;
@@ -163,6 +168,15 @@ model HybridDocSearchRequest extends BaseDocSearchRequest {
     @minValue(0)
     @maxValueExclusive(1)
     mmr_strength?: float = 0.5;
+
+    /** The trigram_similarity_threshold cutoff level */
+    @minValue(0)
+    @maxValue(1)
+    trigram_similarity_threshold: float = 0.6;
+
+    /** The k_multiplier cutoff level to control how many intermediate results to fetch before final scoring */
+    @minValue(0)
+    k_multiplier: int8 = 7;
 }
 
 alias DocSearchRequest = VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest;
