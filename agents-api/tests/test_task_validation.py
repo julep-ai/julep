@@ -350,3 +350,47 @@ def test_recursive_validation_of_foreach_blocks():
             nested_error_found = True
 
     assert nested_error_found, "Did not detect undefined function in nested foreach structure"
+
+
+@test(
+    "task_validation: Python expression validator correctly handles list comprehension variables"
+)
+def test_list_comprehension_variables():
+    # Test with a list comprehension that uses a local variable
+    expression = "$ [item['text'] for item in _['content']]"
+    result = validate_py_expression(expression)
+
+    # Should not have any undefined name issues for 'item'
+    assert all(len(issues) == 0 for issues in result.values()), (
+        f"Found issues in valid list comprehension: {result}"
+    )
+
+
+@test("task_validation: Python expression validator detects unsupported features")
+def test_unsupported_features_detection():
+    # Test with a set comprehension (unsupported)
+    expression = "$ {x for x in range(10)}"
+    result = validate_py_expression(expression)
+
+    # Should detect the set comprehension as unsupported
+    assert len(result["unsupported_features"]) > 0
+    assert "Set comprehensions are not supported" in result["unsupported_features"][0]
+
+    # Test with a lambda function (unsupported)
+    expression = "$ (lambda x: x + 1)(5)"
+    result = validate_py_expression(expression)
+
+    # Should detect the lambda function as unsupported
+    assert len(result["unsupported_features"]) > 0
+    assert "Lambda functions are not supported" in result["unsupported_features"][0]
+
+    # Test with a walrus operator (unsupported)
+    expression = "$ (x := 10) + x"
+    result = validate_py_expression(expression)
+
+    # Should detect the walrus operator as unsupported
+    assert len(result["unsupported_features"]) > 0
+    assert (
+        "Assignment expressions (walrus operator) are not supported"
+        in result["unsupported_features"][0]
+    )

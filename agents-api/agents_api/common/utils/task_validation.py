@@ -90,6 +90,7 @@ def validate_py_expression(
         "undefined_names": [],
         "unsafe_operations": [],
         "potential_runtime_errors": [],
+        "unsupported_features": [],
     }
 
     # Skip None or empty expressions
@@ -123,6 +124,67 @@ def validate_py_expression(
 
     expected_variables: set[str] = expected_variables or set()
 
+    # Track locally defined variables to avoid flagging them as undefined
+    local_vars: set[str] = set()
+
+    # NOTE: if we update the evaluator to support these features, we can remove the 3 checks below
+    # Check for unsupported language features
+    for node in ast.walk(tree):
+        # Check for set comprehensions
+        if isinstance(node, ast.SetComp):
+            issues["unsupported_features"].append(
+                "Set comprehensions are not supported in this evaluator"
+            )
+
+        # Check for lambda functions
+        elif isinstance(node, ast.Lambda):
+            issues["unsupported_features"].append(
+                "Lambda functions are not supported in this evaluator"
+            )
+
+        # Check for assignment expressions (walrus operator)
+        elif isinstance(node, ast.NamedExpr):
+            issues["unsupported_features"].append(
+                "Assignment expressions (walrus operator) are not supported in this evaluator"
+            )
+
+    # Find all comprehension variables and other locally defined variables
+    for node in ast.walk(tree):
+        # List, dict, and set comprehensions
+        if isinstance(node, ast.ListComp | ast.DictComp | ast.SetComp):
+            for generator in node.generators:
+                # Add target names from comprehensions
+                if isinstance(generator.target, ast.Name):
+                    local_vars.add(generator.target.id)
+                elif isinstance(generator.target, ast.Tuple):
+                    for elt in generator.target.elts:
+                        if isinstance(elt, ast.Name):
+                            local_vars.add(elt.id)
+
+        # Generator expressions
+        elif isinstance(node, ast.GeneratorExp):
+            for generator in node.generators:
+                if isinstance(generator.target, ast.Name):
+                    local_vars.add(generator.target.id)
+                elif isinstance(generator.target, ast.Tuple):
+                    for elt in generator.target.elts:
+                        if isinstance(elt, ast.Name):
+                            local_vars.add(elt.id)
+
+        # Lambda functions
+        elif isinstance(node, ast.Lambda):
+            for arg in node.args.args:
+                local_vars.add(arg.arg)
+
+            # Handle args with default values
+            if node.args.kwonlyargs:
+                for arg in node.args.kwonlyargs:
+                    local_vars.add(arg.arg)
+
+        # Assignment expressions (walrus operator)
+        elif isinstance(node, ast.NamedExpr) and isinstance(node.target, ast.Name):
+            local_vars.add(node.target.id)
+
     # Get all name references in the expression
     name_nodes = [node for node in ast.walk(tree) if isinstance(node, ast.Name)]
 
@@ -133,8 +195,8 @@ def validate_py_expression(
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
     }
 
-    # Find undefined names
-    undefined_names = referenced_names - allowed_names - expected_variables
+    # Find undefined names, excluding locally defined variables
+    undefined_names = referenced_names - allowed_names - expected_variables - local_vars
     if undefined_names:
         issues["undefined_names"].extend([
             f"Undefined name: '{name}'" for name in undefined_names
@@ -439,7 +501,6 @@ def validate_task(
         TaskValidationResult with validation issues
     """
     validation_result = TaskValidationResult(is_valid=True)
-    return validation_result
 
     # Convert to task spec (this will exclude version, developer_id etc.)
     try:
@@ -463,7 +524,12 @@ def validate_task(
                                     location=f"workflows.{workflow_name}.steps[{step_idx}].{issue['location']}",
                                     message=message,
                                     severity="error"
-                                    if issue_type in ["syntax_errors", "undefined_names"]
+                                    if issue_type
+                                    in [
+                                        "syntax_errors",
+                                        "undefined_names",
+                                        "unsupported_features",
+                                    ]
                                     else "warning",
                                     details={
                                         "issue_type": issue_type,
