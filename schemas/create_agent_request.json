@@ -6198,11 +6198,17 @@
           "type": "number"
         },
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "k_multiplier": {
+          "default": 7,
+          "minimum": 0.0,
+          "title": "K Multiplier",
+          "type": "integer"
         },
         "lang": {
           "default": "en-US",
@@ -6247,6 +6253,13 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "title": "HybridDocSearch",
@@ -6255,18 +6268,24 @@
     "HybridDocSearchRequest": {
       "properties": {
         "alpha": {
-          "default": 0.75,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": 0.0,
           "title": "Alpha",
           "type": "number"
         },
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "k_multiplier": {
+          "default": 7,
+          "minimum": 0.0,
+          "title": "K Multiplier",
+          "type": "integer"
         },
         "lang": {
           "default": "en-US",
@@ -6296,6 +6315,13 @@
           "title": "Text",
           "type": "string"
         },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
+        },
         "vector": {
           "items": {
             "type": "number"
@@ -6321,11 +6347,17 @@
           "type": "number"
         },
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "k_multiplier": {
+          "default": 7,
+          "minimum": 0.0,
+          "title": "K Multiplier",
+          "type": "integer"
         },
         "lang": {
           "default": "en-US",
@@ -6370,6 +6402,13 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "title": "HybridDocSearchUpdate",
@@ -10801,6 +10840,13 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "title": "TextOnlyDocSearch",
@@ -10828,6 +10874,13 @@
         "text": {
           "title": "Text",
           "type": "string"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "required": [
@@ -10874,6 +10927,13 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "title": "TextOnlyDocSearchUpdate",
@@ -12318,7 +12378,7 @@
     "VectorDocSearch": {
       "properties": {
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
@@ -12375,7 +12435,7 @@
     "VectorDocSearchRequest": {
       "properties": {
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
@@ -12422,7 +12482,7 @@
     "VectorDocSearchUpdate": {
       "properties": {
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",

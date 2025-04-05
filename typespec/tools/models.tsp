@@ -128,62 +128,6 @@ alias IntegrationDef = (
     | AlgoliaIntegrationDef
 );
 
-//
-// SYSTEM TOOL MODELS
-//
-
-alias resourceType = (
-    | "agent"
-    | "user"
-    | "task"
-    | "execution"
-    | "doc"
-    | "session"
-    | "job"
-);
-
-alias subresourceType = (
-    | "tool"
-    | "doc"
-    | "execution"
-    | "transition"
-);
-
-alias operationType = (
-    | "create"
-    | "update"
-    | "patch"
-    | "create_or_update"
-    | "embed"
-    | "change_status"
-    | "search"
-    | "chat"
-    | "history"
-    | "delete"
-    | "get"
-    | "list"
-);
-
-// TODO: Add granular definitions for each system call
-
-/** System definition */
-model SystemDef {
-    /** Resource is the name of the resource to use */
-    resource: resourceType;
-
-    /** Operation is the name of the operation to perform */
-    operation: operationType;
-
-    /** Resource id (if applicable) */
-    resource_id?: uuid;
-
-    /** Sub-resource type (if applicable) */
-    subresource?: subresourceType;
-
-    /** The arguments to pre-apply to the system call */
-    arguments?: FunctionParameters;
-}
-
 /** API call definition */
 model ApiCallDef {
     /** The HTTP method to use */
@@ -222,7 +166,6 @@ model ApiCallDef {
     /** The timeout for the request */
     timeout?: uint8;
 }
-
 
 model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
@@ -278,13 +221,13 @@ model ToolResponse {
 }
 
 /** Payload for creating a tool */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateToolRequest {
     ...Tool;
 }
 
 /** Payload for updating a tool */
-@withVisibility("update")
+@withVisibility(Lifecycle.Update)
 model UpdateToolRequest {
     ...Tool;
 }
@@ -307,7 +250,7 @@ model BaseChosenToolCall {
     text_editor_20241022?: ChosenTextEditor20241022;
     bash_20241022?: ChosenBash20241022;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     id?: string;
 }
 
@@ -318,10 +261,17 @@ model ChosenFunctionCall extends BaseChosenToolCall {
     function: FunctionCallOption;
 }
 
+model ChosenSystemCall extends BaseChosenToolCall {
+    type: ToolType.system;
+
+    /** The system call to make */
+    system: ChosenSystemCallOption;
+}
+
 alias ChosenToolCall = (
     | ChosenFunctionCall
     // | ChosenIntegrationCall
-    // | ChosenSystemCall
+    | ChosenSystemCall
     // | ChosenApiCall
     | ChosenComputer20241022
     | ChosenTextEditor20241022

@@ -39,7 +39,7 @@ alias NestedExpressionObject<T> = NestedExpression<T> | NestedExpression<T>[];
 @discriminator("kind_")
 model BaseWorkflowStep<T extends valueof WorkflowStepKind> {
     /** The kind of step */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: (typeof T);
 
     /** The label of this step for referencing it from other steps */
@@ -77,7 +77,7 @@ alias CreateWorkflowStep = WorkflowStep;
 ////////////////////
 
 model ToolCallStep extends BaseWorkflowStep<"tool_call"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "tool_call" = "tool_call";
 
     ...ToolCallStepDef;
@@ -92,7 +92,7 @@ model ToolCallStepDef {
 }
 
 model PromptStep extends BaseWorkflowStep<"prompt"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "prompt" = "prompt";
 
     ...PromptStepDef;
@@ -126,7 +126,7 @@ model PromptStepDef {
 }
 
 model EvaluateStep extends BaseWorkflowStep<"evaluate"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "evaluate" = "evaluate";
 
     ...EvaluateStepDef;
@@ -138,7 +138,7 @@ model EvaluateStepDef {
 }
 
 model WaitForInputStep extends BaseWorkflowStep<"wait_for_input"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "wait_for_input" = "wait_for_input";
 
     ...WaitForInputStepDef;
@@ -155,7 +155,7 @@ model WaitForInputStepDef {
 }
 
 model LogStep extends BaseWorkflowStep<"log"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "log" = "log";
 
     ...LogStepDef;
@@ -171,7 +171,7 @@ model LogStepDef {
 ///////////////////////
 
 model GetStep extends BaseWorkflowStep<"get"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "get" = "get";
 
     ...GetStepDef;
@@ -183,7 +183,7 @@ model GetStepDef {
 }
 
 model SetStep extends BaseWorkflowStep<"set"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "set" = "set";
 
     ...SetStepDef;
@@ -199,7 +199,7 @@ model SetStepDef {
 ///////////////////////
 
 model ParallelStep extends BaseWorkflowStep<"parallel"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "parallel" = "parallel";
 
     ...ParallelStepDef;
@@ -221,7 +221,7 @@ model ForeachDo {
 }
 
 model ForeachStep extends BaseWorkflowStep<"foreach"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "foreach" = "foreach";
 
     ...ForeachStepDef;
@@ -233,7 +233,7 @@ model ForeachStepDef {
 }
 
 model MapReduceStep<Value = unknown, Accumulator = Array<Value>> extends BaseWorkflowStep<"map_reduce"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "map_reduce" = "map_reduce";
 
     /** The variable to iterate over */
@@ -261,7 +261,7 @@ model MapReduceStep<Value = unknown, Accumulator = Array<Value>> extends BaseWor
 /////////////////////////
 
 model IfElseWorkflowStep extends BaseWorkflowStep<"if_else"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "if_else" = "if_else";
 
     ...IfElseWorkflowStepDef;
@@ -318,7 +318,7 @@ model CaseThen {
 }
 
 model SwitchStep extends BaseWorkflowStep<"switch"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "switch" = "switch";
 
     ...SwitchStepDef;
@@ -335,7 +335,7 @@ model SwitchStepDef {
 //////////////////////////
 
 model YieldStep extends BaseWorkflowStep<"yield"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "yield" = "yield";
 
     ...YieldStepDef;
@@ -352,7 +352,7 @@ model YieldStepDef {
 }
 
 model ErrorWorkflowStep extends BaseWorkflowStep<"error"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "error" = "error";
 
     ...ErrorWorkflowStepDef;
@@ -386,7 +386,7 @@ model SleepFor {
 }
 
 model SleepStep extends BaseWorkflowStep<"sleep"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "sleep" = "sleep";
 
     ...SleepStepDef;
@@ -398,7 +398,7 @@ model SleepStepDef {
 }
 
 model ReturnStep extends BaseWorkflowStep<"return"> {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     kind_: "return" = "return";
 
     ...ReturnStepDef;

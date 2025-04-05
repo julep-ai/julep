@@ -1,4 +1,5 @@
 import "../../common";
+import "../models.tsp";
 import "./contexts.tsp";
 import "./extensions.tsp";
 import "./sessions.tsp";
