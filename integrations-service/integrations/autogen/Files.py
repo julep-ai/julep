@@ -31,7 +31,13 @@ class CreateFileRequest(BaseModel):
     """
     Description of the file
     """
-    mime_type: str | None = None
+    mime_type: Annotated[
+        str | None,
+        Field(
+            max_length=120,
+            pattern="^(application|audio|font|example|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)$",
+        ),
+    ] = None
     """
     MIME type of the file
     """
@@ -64,7 +70,13 @@ class File(BaseModel):
     """
     Description of the file
     """
-    mime_type: str | None = None
+    mime_type: Annotated[
+        str | None,
+        Field(
+            max_length=120,
+            pattern="^(application|audio|font|example|image|message|model|multipart|text|video|x-(?:[0-9A-Za-z!#$%&'*+.^_`|~-]+))\\/([0-9A-Za-z!#$%&'*+.^_`|~-]+)$",
+        ),
+    ] = None
     """
     MIME type of the file
     """

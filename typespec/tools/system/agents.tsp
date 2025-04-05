@@ -7,7 +7,7 @@ namespace Tools;
 
 /** Create Agent System Definition */
 model CreateAgentSystemDef extends SystemDef {
-    systemDefType: "CreateAgentSystemDef";
+    system_def_type: "CreateAgentSystemDef" = "CreateAgentSystemDef";
     resource: "agent";
     operation: "create";
     arguments: {
@@ -20,7 +20,7 @@ model CreateAgentSystemDef extends SystemDef {
 
 /** Update Agent System Definition */
 model UpdateAgentSystemDef extends SystemDef {
-    systemDefType: "UpdateAgentSystemDef";
+    system_def_type: "UpdateAgentSystemDef" = "UpdateAgentSystemDef";
     resource: "agent";
     operation: "update";
     resource_id: uuid;
@@ -34,7 +34,7 @@ model UpdateAgentSystemDef extends SystemDef {
 
 /** Patch Agent System Definition */
 model PatchAgentSystemDef extends SystemDef {
-    systemDefType: "PatchAgentSystemDef";
+    system_def_type: "PatchAgentSystemDef" = "PatchAgentSystemDef";
     resource: "agent";
     operation: "patch";
     resource_id: uuid;
@@ -47,7 +47,7 @@ model PatchAgentSystemDef extends SystemDef {
 
 /** Get Agent System Definition */
 model GetAgentSystemDef extends SystemDef {
-    systemDefType: "GetAgentSystemDef";
+    system_def_type: "GetAgentSystemDef" = "GetAgentSystemDef";
     resource: "agent";
     operation: "get";
     resource_id: uuid;
@@ -55,7 +55,7 @@ model GetAgentSystemDef extends SystemDef {
 
 /** List Agents System Definition */
 model ListAgentsSystemDef extends SystemDef {
-    systemDefType: "ListAgentsSystemDef";
+    system_def_type: "ListAgentsSystemDef" = "ListAgentsSystemDef";
     resource: "agent";
     operation: "list";
     arguments?: {
@@ -67,7 +67,7 @@ model ListAgentsSystemDef extends SystemDef {
 
 /** Delete Agent System Definition */
 model DeleteAgentSystemDef extends SystemDef {
-    systemDefType: "DeleteAgentSystemDef";
+    system_def_type: "DeleteAgentSystemDef" = "DeleteAgentSystemDef";
     resource: "agent";
     operation: "delete";
     resource_id: uuid;
@@ -75,7 +75,7 @@ model DeleteAgentSystemDef extends SystemDef {
 
 /** Create Agent Tool System Definition */
 model CreateAgentToolSystemDef extends SystemDef {
-    systemDefType: "CreateAgentToolSystemDef";
+    system_def_type: "CreateAgentToolSystemDef" = "CreateAgentToolSystemDef";
     resource: "agent";
     operation: "create";
     resource_id: uuid;
@@ -93,7 +93,7 @@ model CreateAgentToolSystemDef extends SystemDef {
 
 /** Update Agent Tool System Definition */
 model UpdateAgentToolSystemDef extends SystemDef {
-    systemDefType: "UpdateAgentToolSystemDef";
+    system_def_type: "UpdateAgentToolSystemDef" = "UpdateAgentToolSystemDef";
     resource: "agent";
     operation: "update";
     resource_id: uuid;
@@ -111,7 +111,7 @@ model UpdateAgentToolSystemDef extends SystemDef {
 
 /** Delete Agent Tool System Definition */
 model DeleteAgentToolSystemDef extends SystemDef {
-    systemDefType: "DeleteAgentToolSystemDef";
+    system_def_type: "DeleteAgentToolSystemDef" = "DeleteAgentToolSystemDef";
     resource: "agent";
     operation: "delete";
     resource_id: uuid;

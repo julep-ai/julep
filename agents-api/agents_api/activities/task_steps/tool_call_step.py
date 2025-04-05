@@ -28,6 +28,7 @@ def construct_tool_call(tool: CreateToolRequest | Tool, arguments: dict, call_id
             "resource_id": tool.system and tool.system.resource_id,
             "subresource": tool.system and tool.system.subresource,
             "arguments": arguments,
+            "systemDefType": tool.system and tool.system.system_def_type,
         },
         "id": call_id,
         "type": tool.type,

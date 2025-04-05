@@ -167,7 +167,6 @@ model ApiCallDef {
     timeout?: uint8;
 }
 
-
 model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
@@ -262,10 +261,17 @@ model ChosenFunctionCall extends BaseChosenToolCall {
     function: FunctionCallOption;
 }
 
+model ChosenSystemCall extends BaseChosenToolCall {
+    type: ToolType.system;
+
+    /** The system call to make */
+    system: ChosenSystemCallOption;
+}
+
 alias ChosenToolCall = (
     | ChosenFunctionCall
     // | ChosenIntegrationCall
-    // | ChosenSystemCall
+    | ChosenSystemCall
     // | ChosenApiCall
     | ChosenComputer20241022
     | ChosenTextEditor20241022

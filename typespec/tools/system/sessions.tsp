@@ -7,7 +7,7 @@ namespace Tools;
 
 /** Create Session System Definition */
 model CreateSessionSystemDef extends SystemDef {
-    systemDefType: "CreateSessionSystemDef";
+    system_def_type: "CreateSessionSystemDef" = "CreateSessionSystemDef";
     resource: "session";
     operation: "create";
     arguments: {
@@ -20,7 +20,7 @@ model CreateSessionSystemDef extends SystemDef {
 
 /** Update Session System Definition */
 model UpdateSessionSystemDef extends SystemDef {
-    systemDefType: "UpdateSessionSystemDef";
+    system_def_type: "UpdateSessionSystemDef" = "UpdateSessionSystemDef";
     resource: "session";
     operation: "update";
     resource_id: uuid;
@@ -32,7 +32,7 @@ model UpdateSessionSystemDef extends SystemDef {
 
 /** Patch Session System Definition */
 model PatchSessionSystemDef extends SystemDef {
-    systemDefType: "PatchSessionSystemDef";
+    system_def_type: "PatchSessionSystemDef" = "PatchSessionSystemDef";
     resource: "session";
     operation: "patch";
     resource_id: uuid;
@@ -44,7 +44,7 @@ model PatchSessionSystemDef extends SystemDef {
 
 /** Get Session System Definition */
 model GetSessionSystemDef extends SystemDef {
-    systemDefType: "GetSessionSystemDef";
+    system_def_type: "GetSessionSystemDef" = "GetSessionSystemDef";
     resource: "session";
     operation: "get";
     resource_id: uuid;
@@ -52,7 +52,7 @@ model GetSessionSystemDef extends SystemDef {
 
 /** List Sessions System Definition */
 model ListSessionsSystemDef extends SystemDef {
-    systemDefType: "ListSessionsSystemDef";
+    system_def_type: "ListSessionsSystemDef" = "ListSessionsSystemDef";
     resource: "session";
     operation: "list";
     arguments?: {
@@ -64,7 +64,7 @@ model ListSessionsSystemDef extends SystemDef {
 
 /** Delete Session System Definition */
 model DeleteSessionSystemDef extends SystemDef {
-    systemDefType: "DeleteSessionSystemDef";
+    system_def_type: "DeleteSessionSystemDef" = "DeleteSessionSystemDef";
     resource: "session";
     operation: "delete";
     resource_id: uuid;
@@ -72,19 +72,23 @@ model DeleteSessionSystemDef extends SystemDef {
 
 /** Chat Session System Definition */
 model ChatSessionSystemDef extends SystemDef {
-    systemDefType: "ChatSessionSystemDef";
+    system_def_type: "ChatSessionSystemDef" = "ChatSessionSystemDef";
     resource: "session";
     operation: "chat";
     resource_id: uuid;
     arguments: {
+        /** The chat message to send */
         message: string;
+        /** Optional tool choice specification */
         tool_choice?: string;
+        /** Optional API key for custom model */
+        x_custom_api_key?: string;
     };
 }
 
 /** Get Session History System Definition */
 model GetSessionHistorySystemDef extends SystemDef {
-    systemDefType: "GetSessionHistorySystemDef";
+    system_def_type: "GetSessionHistorySystemDef" = "GetSessionHistorySystemDef";
     resource: "session";
     operation: "history";
     resource_id: uuid;

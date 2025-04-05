@@ -7,7 +7,7 @@ namespace Tools;
 
 /** Create Task System Definition */
 model CreateTaskSystemDef extends SystemDef {
-    systemDefType: "CreateTaskSystemDef";
+    system_def_type: "CreateTaskSystemDef" = "CreateTaskSystemDef";
     resource: "task";
     operation: "create";
     arguments: {
@@ -20,7 +20,7 @@ model CreateTaskSystemDef extends SystemDef {
 
 /** Update Task System Definition */
 model UpdateTaskSystemDef extends SystemDef {
-    systemDefType: "UpdateTaskSystemDef";
+    system_def_type: "UpdateTaskSystemDef" = "UpdateTaskSystemDef";
     resource: "task";
     operation: "update";
     resource_id: uuid;
@@ -34,7 +34,7 @@ model UpdateTaskSystemDef extends SystemDef {
 
 /** Patch Task System Definition */
 model PatchTaskSystemDef extends SystemDef {
-    systemDefType: "PatchTaskSystemDef";
+    system_def_type: "PatchTaskSystemDef" = "PatchTaskSystemDef";
     resource: "task";
     operation: "patch";
     resource_id: uuid;
@@ -47,7 +47,7 @@ model PatchTaskSystemDef extends SystemDef {
 
 /** Get Task System Definition */
 model GetTaskSystemDef extends SystemDef {
-    systemDefType: "GetTaskSystemDef";
+    system_def_type: "GetTaskSystemDef" = "GetTaskSystemDef";
     resource: "task";
     operation: "get";
     resource_id: uuid;
@@ -55,7 +55,7 @@ model GetTaskSystemDef extends SystemDef {
 
 /** List Tasks System Definition */
 model ListTasksSystemDef extends SystemDef {
-    systemDefType: "ListTasksSystemDef";
+    system_def_type: "ListTasksSystemDef" = "ListTasksSystemDef";
     resource: "task";
     operation: "list";
     arguments?: {
@@ -67,7 +67,7 @@ model ListTasksSystemDef extends SystemDef {
 
 /** Delete Task System Definition */
 model DeleteTaskSystemDef extends SystemDef {
-    systemDefType: "DeleteTaskSystemDef";
+    system_def_type: "DeleteTaskSystemDef" = "DeleteTaskSystemDef";
     resource: "task";
     operation: "delete";
     resource_id: uuid;
@@ -75,7 +75,7 @@ model DeleteTaskSystemDef extends SystemDef {
 
 /** Create Task Execution System Definition */
 model CreateTaskExecutionSystemDef extends SystemDef {
-    systemDefType: "CreateTaskExecutionSystemDef";
+    system_def_type: "CreateTaskExecutionSystemDef" = "CreateTaskExecutionSystemDef";
     resource: "task";
     operation: "create";
     resource_id: uuid;
@@ -88,7 +88,7 @@ model CreateTaskExecutionSystemDef extends SystemDef {
 
 /** Get Task Execution System Definition */
 model GetTaskExecutionSystemDef extends SystemDef {
-    systemDefType: "GetTaskExecutionSystemDef";
+    system_def_type: "GetTaskExecutionSystemDef" = "GetTaskExecutionSystemDef";
     resource: "execution";
     operation: "get";
     resource_id: uuid;

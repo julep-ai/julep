@@ -12,6 +12,7 @@ from .Tools import (
     ChosenBash20241022,
     ChosenComputer20241022,
     ChosenFunctionCall,
+    ChosenSystemCall,
     ChosenTextEditor20241022,
     CreateToolRequest,
     NamedToolChoice,
@@ -857,6 +858,7 @@ class PromptItem(BaseModel):
     tool_calls: (
         list[
             ChosenFunctionCall
+            | ChosenSystemCall
             | ChosenComputer20241022
             | ChosenTextEditor20241022
             | ChosenBash20241022

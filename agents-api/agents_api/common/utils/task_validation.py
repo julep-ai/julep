@@ -422,7 +422,7 @@ def _validate_step_expressions(
             nested_issues = _validate_step_expressions(nested_step, nested_location)
             step_issues.extend(nested_issues)
 
-    elif step_type == "tool" and "arguments" in step_data:
+    elif step_type == "tool_call" and "arguments" in step_data:
         # Check arguments that might be expressions
         for arg_key, arg_value in step_data["arguments"].items():
             if isinstance(arg_value, str) and (

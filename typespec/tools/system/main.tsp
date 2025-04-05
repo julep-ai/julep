@@ -44,11 +44,13 @@ alias operationType = (
     | "list"
 );
 
+model SystemDefArguments extends Record<unknown> {}
+
 /** Base System definition */
-@discriminator("systemDefType")
+@discriminator("system_def_type")
 model SystemDef {
     /** The discriminator that tells the system which type this is */
-    systemDefType: string;
+    system_def_type: string;
 
     /** Resource is the name of the resource to use */
     resource: resourceType;
@@ -63,5 +65,29 @@ model SystemDef {
     subresource?: subresourceType;
 
     /** The arguments to pre-apply to the system call */
-    arguments?: Record<unknown>;
+    arguments?: SystemDefArguments;
+}
+
+/** Model for chosen system call arguments */
+model SystemCallArguments {
+    /** The arguments to pass to the system call */
+    arguments: string; // JSON string of arguments
+}
+
+/** Model for the system call option in a tool call */
+model ChosenSystemCallOption {
+    /** The resource type to operate on */
+    resource: resourceType;
+    
+    /** The operation to perform */
+    operation: operationType;
+    
+    /** The resource id (if applicable) */
+    resource_id?: uuid;
+    
+    /** The subresource type (if applicable) */
+    subresource?: subresourceType;
+    
+    /** The arguments for the system call */
+    arguments?: string; // May be a JSON string
 }

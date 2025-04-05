@@ -8,6 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from ...autogen.openapi_model import CreateOrUpdateTaskRequest, Task
 from ...common.utils.task_validation import validate_task
+from ...common.utils.tools_construction import system_tool_type_cast, system_args_type_cast
 from ...dependencies.developer_id import get_developer_id
 from ...queries.tasks.create_or_update_task import (
     create_or_update_task as create_or_update_task_query,
@@ -30,6 +31,21 @@ async def create_or_update_task(
         raise HTTPException(detail="Invalid input schema", status_code=HTTP_400_BAD_REQUEST)
     except ValidationError:
         pass
+
+    # Process system tools with proper error handling
+    try:
+        data.tools = system_tool_type_cast(data.tools)
+        data.main = system_args_type_cast(data.main, data.tools)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Invalid system tool configuration: {e!s}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Error processing system tools: {e!s}",
+        )
 
     # Validate Python expressions in the task spec
     validation_result = validate_task(data)

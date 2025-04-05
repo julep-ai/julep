@@ -7,7 +7,7 @@ namespace Tools;
 
 /** Create User System Definition */
 model CreateUserSystemDef extends SystemDef {
-    systemDefType: "CreateUserSystemDef";
+    system_def_type: "CreateUserSystemDef" = "CreateUserSystemDef";
     resource: "user";
     operation: "create";
     arguments: {
@@ -19,7 +19,7 @@ model CreateUserSystemDef extends SystemDef {
 
 /** Update User System Definition */
 model UpdateUserSystemDef extends SystemDef {
-    systemDefType: "UpdateUserSystemDef";
+    system_def_type: "UpdateUserSystemDef" = "UpdateUserSystemDef";
     resource: "user";
     operation: "update";
     resource_id: uuid;
@@ -32,7 +32,7 @@ model UpdateUserSystemDef extends SystemDef {
 
 /** Patch User System Definition */
 model PatchUserSystemDef extends SystemDef {
-    systemDefType: "PatchUserSystemDef";
+    system_def_type: "PatchUserSystemDef" = "PatchUserSystemDef";
     resource: "user";
     operation: "patch";
     resource_id: uuid;
@@ -44,7 +44,7 @@ model PatchUserSystemDef extends SystemDef {
 
 /** Get User System Definition */
 model GetUserSystemDef extends SystemDef {
-    systemDefType: "GetUserSystemDef";
+    system_def_type: "GetUserSystemDef" = "GetUserSystemDef";
     resource: "user";
     operation: "get";
     resource_id: uuid;
@@ -52,7 +52,7 @@ model GetUserSystemDef extends SystemDef {
 
 /** List Users System Definition */
 model ListUsersSystemDef extends SystemDef {
-    systemDefType: "ListUsersSystemDef";
+    system_def_type: "ListUsersSystemDef" = "ListUsersSystemDef";
     resource: "user";
     operation: "list";
     arguments?: {
@@ -64,7 +64,7 @@ model ListUsersSystemDef extends SystemDef {
 
 /** Delete User System Definition */
 model DeleteUserSystemDef extends SystemDef {
-    systemDefType: "DeleteUserSystemDef";
+    system_def_type: "DeleteUserSystemDef" = "DeleteUserSystemDef";
     resource: "user";
     operation: "delete";
     resource_id: uuid;
