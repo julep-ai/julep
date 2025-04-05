@@ -8,7 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from ...autogen.openapi_model import CreateOrUpdateTaskRequest, Task
 from ...common.utils.task_validation import validate_task
-from ...common.utils.tools_construction import system_tool_type_cast, system_args_type_cast
+from ...common.utils.tools_construction import system_args_type_cast, system_tool_type_cast
 from ...dependencies.developer_id import get_developer_id
 from ...queries.tasks.create_or_update_task import (
     create_or_update_task as create_or_update_task_query,

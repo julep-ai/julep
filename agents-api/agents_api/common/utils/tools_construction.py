@@ -1,14 +1,15 @@
 import logging
+from typing import Any
 
 from pydantic import ValidationError
-from typing import Any
-from ...common.protocol.models import task_to_spec
+
 from ...autogen.openapi_model import (
     ChatSessionSystemDef,
     CreateAgentSystemDef,
     CreateAgentToolSystemDef,
     CreateDocSystemDef,
     CreateOwnerDocSystemDef,
+    CreateOwnerDocSystemDefArguments,
     CreateSessionSystemDef,
     CreateTaskExecutionSystemDef,
     CreateTaskSystemDef,
@@ -47,8 +48,6 @@ from ...autogen.openapi_model import (
     UpdateTaskSystemDef,
     UpdateUserSystemDef,
     VectorSearchOwnerDocsSystemDef,
-
-    CreateOwnerDocSystemDefArguments,
 )
 
 # Create a logger for this module
@@ -106,6 +105,7 @@ SYSTEM_DEF_TYPES: dict[str, type[SystemDef]] = {
 SYSTEM_ARGS_TYPES: dict[str] = {
     "CreateOwnerDocSystemDefArguments": CreateOwnerDocSystemDefArguments,
 }
+
 
 def system_tool_type_cast(tools: list[Tool]) -> list[Tool]:
     """
@@ -173,8 +173,8 @@ def system_tool_type_cast(tools: list[Tool]) -> list[Tool]:
 
     return tools
 
-def system_args_type_cast(steps: list[Any], tools: list[Tool]) -> list[Any]:
 
+def system_args_type_cast(steps: list[Any], tools: list[Tool]) -> list[Any]:
     for step in steps:
         step_type = getattr(step, "kind_")
         if step_type == "tool_call":
