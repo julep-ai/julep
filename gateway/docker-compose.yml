@@ -8,6 +8,7 @@ services:
       - JWT_SHARED_KEY=${JWT_SHARED_KEY}
       - AGENTS_API_URL=${AGENTS_API_URL:-http://agents-api-multi-tenant:8080}
       - TEMPORAL_UI_PUBLIC_URL=${TEMPORAL_UI_PUBLIC_URL:-http://temporal-ui-public:8080}
+      - HASURA_URL=${HASURA_URL:-http://hasura:8080}
       - AGENTS_API_KEY=${AGENTS_API_KEY}
       - AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME:-Authorization}
       - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL:-INFO}
