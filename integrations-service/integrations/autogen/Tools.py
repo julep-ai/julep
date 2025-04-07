@@ -235,226 +235,6 @@ class ApiCallDefUpdate(BaseModel):
     """
 
 
-class Arguments(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    message: str
-    """
-    The chat message to send
-    """
-    tool_choice: str | None = None
-    """
-    Optional tool choice specification
-    """
-    x_custom_api_key: str | None = None
-    """
-    Optional API key for custom model
-    """
-
-
-class ArgumentsModel(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    message: str | None = None
-    """
-    The chat message to send
-    """
-    tool_choice: str | None = None
-    """
-    Optional tool choice specification
-    """
-    x_custom_api_key: str | None = None
-    """
-    Optional API key for custom model
-    """
-
-
-class ArgumentsModel1(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str
-    description: str | None = None
-    instructions: str | None = None
-    tools: list | None = None
-
-
-class ArgumentsModel10(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    user_id: str | None = None
-    name: str | None = None
-    metadata: dict[str, Any] | None = None
-
-
-class ArgumentsModel11(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str
-
-
-class ArgumentsModel12(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str | None = None
-
-
-class ArgumentsModel13(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    limit: int | None = None
-    before: str | None = None
-
-
-class ArgumentsModel14(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    filter: str | None = None
-    limit: int | None = None
-    offset: int | None = None
-
-
-class ArgumentsModel15(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str | None = None
-    description: str | None = None
-    instructions: str | None = None
-
-
-class ArgumentsModel16(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str | None = None
-    metadata: dict[str, Any] | None = None
-
-
-class ArgumentsModel17(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str | None = None
-    description: str | None = None
-    metadata: dict[str, Any] | None = None
-
-
-class ArgumentsModel18(ArgumentsModel16):
-    pass
-
-
-class ArgumentsModel2(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str | None = None
-    description: str | None = None
-    instructions: str | None = None
-    tools: list | None = None
-
-
-class ArgumentsModel20(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str
-    type: str | None = None
-    description: str | None = None
-    function: Any | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
-
-
-class ArgumentsModel22(ArgumentsModel16):
-    pass
-
-
-class ArgumentsModel24(ArgumentsModel10):
-    pass
-
-
-class ArgumentsModel3(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str
-    type: str
-    description: str | None = None
-    function: Any | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
-
-
-class ArgumentsModel4(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str | None = None
-    type: str | None = None
-    description: str | None = None
-    function: Any | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
-
-
-class ArgumentsModel5(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str | None = None
-    user_id: UUID | None = None
-    agent_id: UUID | None = None
-    metadata: dict[str, Any] | None = None
-
-
-class ArgumentsModel6(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    input: Any | None = None
-    async_: Annotated[StrictBool | None, Field(alias="async")] = None
-
-
-class ArgumentsModel7(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str
-    description: str | None = None
-    steps: list
-    metadata: dict[str, Any] | None = None
-
-
-class ArgumentsModel8(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: str | None = None
-    description: str | None = None
-    steps: list | None = None
-    metadata: dict[str, Any] | None = None
-
-
-class ArgumentsModel9(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    user_id: str
-    name: str | None = None
-    metadata: dict[str, Any] | None = None
-
-
 class ArxivSearchArguments(BaseModel):
     """
     Arguments for Arxiv Search
@@ -901,6 +681,58 @@ class BrowserbaseSetupUpdate(BaseModel):
     """
 
 
+class ChatSessionSystemDefArguments(BaseModel):
+    """
+    Chat Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The session ID to chat with
+    """
+    message: str
+    """
+    The chat message to send
+    """
+    tool_choice: str | None = None
+    """
+    Optional tool choice specification
+    """
+    x_custom_api_key: str | None = None
+    """
+    Optional API key for custom model
+    """
+
+
+class ChatSessionSystemDefArgumentsUpdate(BaseModel):
+    """
+    Chat Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The session ID to chat with
+    """
+    message: str | None = None
+    """
+    The chat message to send
+    """
+    tool_choice: str | None = None
+    """
+    Optional tool choice specification
+    """
+    x_custom_api_key: str | None = None
+    """
+    Optional API key for custom model
+    """
+
+
 class ChosenBash20241022(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1220,6 +1052,142 @@ class Computer20241022DefUpdate(Computer20241022Def):
     """
 
 
+class CreateAgentSystemDefArguments(BaseModel):
+    """
+    Create Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    """
+    Name of the agent
+    """
+    description: str | None = None
+    """
+    Optional description for the agent
+    """
+    instructions: str | None = None
+    """
+    Optional instructions for the agent
+    """
+    tools: list | None = None
+    """
+    Optional tools for the agent
+    """
+
+
+class CreateAgentSystemDefArgumentsUpdate(BaseModel):
+    """
+    Create Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    """
+    Name of the agent
+    """
+    description: str | None = None
+    """
+    Optional description for the agent
+    """
+    instructions: str | None = None
+    """
+    Optional instructions for the agent
+    """
+    tools: list | None = None
+    """
+    Optional tools for the agent
+    """
+
+
+class CreateAgentToolSystemDefArguments(BaseModel):
+    """
+    Create Agent Tool System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The agent ID to add the tool to
+    """
+    name: str
+    """
+    Name of the tool
+    """
+    type: str
+    """
+    Type of the tool
+    """
+    description: str | None = None
+    """
+    Optional description for the tool
+    """
+    function: Any | None = None
+    """
+    Optional function specification
+    """
+    integration: Any | None = None
+    """
+    Optional integration specification
+    """
+    system: Any | None = None
+    """
+    Optional system specification
+    """
+    api_call: Any | None = None
+    """
+    Optional API call specification
+    """
+
+
+class CreateAgentToolSystemDefArgumentsUpdate(BaseModel):
+    """
+    Create Agent Tool System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The agent ID to add the tool to
+    """
+    name: str | None = None
+    """
+    Name of the tool
+    """
+    type: str | None = None
+    """
+    Type of the tool
+    """
+    description: str | None = None
+    """
+    Optional description for the tool
+    """
+    function: Any | None = None
+    """
+    Optional function specification
+    """
+    integration: Any | None = None
+    """
+    Optional integration specification
+    """
+    system: Any | None = None
+    """
+    Optional system specification
+    """
+    api_call: Any | None = None
+    """
+    Optional API call specification
+    """
+
+
 class CreateDocSystemDefArguments(BaseModel):
     """
     Create Doc System Definition Arguments
@@ -1272,13 +1240,21 @@ class CreateOwnerDocSystemDefArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    resource_id: UUID | None = None
+    resource_id: UUID
     """
     The resource ID (if applicable)
     """
-    data: DocData
+    title: str
     """
-    The document data to create
+    The title of the document
+    """
+    content: str
+    """
+    The content of the document
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the document
     """
 
 
@@ -1294,9 +1270,139 @@ class CreateOwnerDocSystemDefArgumentsUpdate(BaseModel):
     """
     The resource ID (if applicable)
     """
-    data: DocDataUpdate | None = None
+    title: str | None = None
     """
-    The document data to create
+    The title of the document
+    """
+    content: str | None = None
+    """
+    The content of the document
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the document
+    """
+
+
+class CreateSessionSystemDefArguments(BaseModel):
+    """
+    Create Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    """
+    Optional name for the session
+    """
+    user_id: UUID | None = None
+    """
+    Optional user ID for the session
+    """
+    agent_id: UUID | None = None
+    """
+    Optional agent ID for the session
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the session
+    """
+
+
+class CreateTaskExecutionSystemDefArguments(BaseModel):
+    """
+    Create Task Execution System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The task ID to execute
+    """
+    input: Any | None = None
+    """
+    Optional input data for the task execution
+    """
+    async_: Annotated[StrictBool | None, Field(alias="async")] = None
+    """
+    Whether to execute the task asynchronously
+    """
+
+
+class CreateTaskExecutionSystemDefArgumentsUpdate(BaseModel):
+    """
+    Create Task Execution System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The task ID to execute
+    """
+    input: Any | None = None
+    """
+    Optional input data for the task execution
+    """
+    async_: Annotated[StrictBool | None, Field(alias="async")] = None
+    """
+    Whether to execute the task asynchronously
+    """
+
+
+class CreateTaskSystemDefArguments(BaseModel):
+    """
+    Create Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    """
+    Name of the task
+    """
+    description: str | None = None
+    """
+    Optional description for the task
+    """
+    steps: list
+    """
+    Steps that define the task workflow
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the task
+    """
+
+
+class CreateTaskSystemDefArgumentsUpdate(BaseModel):
+    """
+    Create Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    """
+    Name of the task
+    """
+    description: str | None = None
+    """
+    Optional description for the task
+    """
+    steps: list | None = None
+    """
+    Steps that define the task workflow
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the task
     """
 
 
@@ -1375,6 +1481,114 @@ class CreateToolRequest(BaseModel):
     bash_20241022: Bash20241022Def | None = None
 
 
+class CreateUserSystemDefArguments(BaseModel):
+    """
+    Create User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    user_id: str
+    """
+    User identifier
+    """
+    name: str | None = None
+    """
+    Optional name for the user
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the user
+    """
+
+
+class CreateUserSystemDefArgumentsUpdate(BaseModel):
+    """
+    Create User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    user_id: str | None = None
+    """
+    User identifier
+    """
+    name: str | None = None
+    """
+    Optional name for the user
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the user
+    """
+
+
+class DeleteAgentSystemDefArguments(BaseModel):
+    """
+    Delete Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The agent ID to delete
+    """
+
+
+class DeleteAgentSystemDefArgumentsUpdate(BaseModel):
+    """
+    Delete Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The agent ID to delete
+    """
+
+
+class DeleteAgentToolSystemDefArguments(BaseModel):
+    """
+    Delete Agent Tool System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The agent ID that owns the tool
+    """
+    name: str
+    """
+    Name of the tool to delete
+    """
+
+
+class DeleteAgentToolSystemDefArgumentsUpdate(BaseModel):
+    """
+    Delete Agent Tool System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The agent ID that owns the tool
+    """
+    name: str | None = None
+    """
+    Name of the tool to delete
+    """
+
+
 class DeleteDocSystemDefArguments(BaseModel):
     """
     Delete Doc System Definition Arguments
@@ -1403,71 +1617,87 @@ class DeleteDocSystemDefArgumentsUpdate(BaseModel):
     """
 
 
-class DocData(BaseModel):
+class DeleteSessionSystemDefArguments(BaseModel):
     """
-    Document data for creating a document
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["text", "embedding", "image", "audio", "video", "other"]
-    """
-    The type of document
-    """
-    name: str | None = None
-    """
-    Optional name for the document
-    """
-    content: str
-    """
-    The content of the document
-    """
-    metadata: dict[str, Any] | None = None
-    """
-    Optional metadata for the document
-    """
-    vector: list | None = None
-    """
-    Optional vector embedding for the document
-    """
-    allow_duplicate: StrictBool | None = None
-    """
-    Whether to allow duplicate documents
-    """
-
-
-class DocDataUpdate(BaseModel):
-    """
-    Document data for creating a document
+    Delete Session System Definition Arguments
     """
 
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["text", "embedding", "image", "audio", "video", "other"] | None = None
+    resource_id: UUID
     """
-    The type of document
+    The session ID to delete
     """
-    name: str | None = None
+
+
+class DeleteSessionSystemDefArgumentsUpdate(BaseModel):
     """
-    Optional name for the document
+    Delete Session System Definition Arguments
     """
-    content: str | None = None
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
     """
-    The content of the document
+    The session ID to delete
     """
-    metadata: dict[str, Any] | None = None
+
+
+class DeleteTaskSystemDefArguments(BaseModel):
     """
-    Optional metadata for the document
+    Delete Task System Definition Arguments
     """
-    vector: list | None = None
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
     """
-    Optional vector embedding for the document
+    The task ID to delete
     """
-    allow_duplicate: StrictBool | None = None
+
+
+class DeleteTaskSystemDefArgumentsUpdate(BaseModel):
     """
-    Whether to allow duplicate documents
+    Delete Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The task ID to delete
+    """
+
+
+class DeleteUserSystemDefArguments(BaseModel):
+    """
+    Delete User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The user ID to delete
+    """
+
+
+class DeleteUserSystemDefArgumentsUpdate(BaseModel):
+    """
+    Delete User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The user ID to delete
     """
 
 
@@ -1793,6 +2023,34 @@ class FunctionDef(BaseModel):
     """
 
 
+class GetAgentSystemDefArguments(BaseModel):
+    """
+    Get Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The agent ID to get
+    """
+
+
+class GetAgentSystemDefArgumentsUpdate(BaseModel):
+    """
+    Get Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The agent ID to get
+    """
+
+
 class GetDocSystemDefArguments(BaseModel):
     """
     Get Doc System Definition Arguments
@@ -1821,6 +2079,162 @@ class GetDocSystemDefArgumentsUpdate(BaseModel):
     """
 
 
+class GetSessionHistorySystemDefArguments(BaseModel):
+    """
+    Get Session History System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The session ID to get history for
+    """
+    limit: int | None = None
+    """
+    Maximum number of results
+    """
+    before: str | None = None
+    """
+    Get entries before this cursor
+    """
+
+
+class GetSessionHistorySystemDefArgumentsUpdate(BaseModel):
+    """
+    Get Session History System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The session ID to get history for
+    """
+    limit: int | None = None
+    """
+    Maximum number of results
+    """
+    before: str | None = None
+    """
+    Get entries before this cursor
+    """
+
+
+class GetSessionSystemDefArguments(BaseModel):
+    """
+    Get Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The session ID to get
+    """
+
+
+class GetSessionSystemDefArgumentsUpdate(BaseModel):
+    """
+    Get Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The session ID to get
+    """
+
+
+class GetTaskExecutionSystemDefArguments(BaseModel):
+    """
+    Get Task Execution System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The execution ID to get
+    """
+
+
+class GetTaskExecutionSystemDefArgumentsUpdate(BaseModel):
+    """
+    Get Task Execution System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The execution ID to get
+    """
+
+
+class GetTaskSystemDefArguments(BaseModel):
+    """
+    Get Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The task ID to get
+    """
+
+
+class GetTaskSystemDefArgumentsUpdate(BaseModel):
+    """
+    Get Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The task ID to get
+    """
+
+
+class GetUserSystemDefArguments(BaseModel):
+    """
+    Get User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The user ID to get
+    """
+
+
+class GetUserSystemDefArgumentsUpdate(BaseModel):
+    """
+    Get User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The user ID to get
+    """
+
+
 class HybridSearchOwnerDocsSystemDefArguments(BaseModel):
     """
     Hybrid Search Owner Docs System Definition Arguments
@@ -1837,9 +2251,9 @@ class HybridSearchOwnerDocsSystemDefArguments(BaseModel):
     """
     Text to search for
     """
-    vector: list
+    vector: list[float]
     """
-    Vector to search for similarity
+    Vector to search for similarity - should be 1024-dimensional vector
     """
     alpha: float | None = None
     """
@@ -1875,9 +2289,9 @@ class HybridSearchOwnerDocsSystemDefArgumentsUpdate(BaseModel):
     """
     Text to search for
     """
-    vector: list | None = None
+    vector: list[float] | None = None
     """
-    Vector to search for similarity
+    Vector to search for similarity - should be 1024-dimensional vector
     """
     alpha: float | None = None
     """
@@ -1897,9 +2311,97 @@ class HybridSearchOwnerDocsSystemDefArgumentsUpdate(BaseModel):
     """
 
 
+class ListAgentsSystemDefArguments(BaseModel):
+    """
+    List Agents System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filter: str | None = None
+    """
+    Filter string
+    """
+    limit: int | None = None
+    """
+    Maximum number of results
+    """
+    offset: int | None = None
+    """
+    Offset for pagination
+    """
+
+
 class ListDocsSystemDefArguments(BaseModel):
     """
     List Docs System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filter: str | None = None
+    """
+    Filter string
+    """
+    limit: int | None = None
+    """
+    Maximum number of results
+    """
+    offset: int | None = None
+    """
+    Offset for pagination
+    """
+
+
+class ListSessionsSystemDefArguments(BaseModel):
+    """
+    List Sessions System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filter: str | None = None
+    """
+    Filter string
+    """
+    limit: int | None = None
+    """
+    Maximum number of results
+    """
+    offset: int | None = None
+    """
+    Offset for pagination
+    """
+
+
+class ListTasksSystemDefArguments(BaseModel):
+    """
+    List Tasks System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    filter: str | None = None
+    """
+    Filter string
+    """
+    limit: int | None = None
+    """
+    Maximum number of results
+    """
+    offset: int | None = None
+    """
+    Offset for pagination
+    """
+
+
+class ListUsersSystemDefArguments(BaseModel):
+    """
+    List Users System Definition Arguments
     """
 
     model_config = ConfigDict(
@@ -2066,6 +2568,154 @@ class NamedToolChoice(BaseModel):
     function: FunctionCallOption | None = None
 
 
+class PatchAgentSystemDefArguments(BaseModel):
+    """
+    Patch Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The agent ID to patch
+    """
+    name: str | None = None
+    """
+    Optional name for the agent
+    """
+    description: str | None = None
+    """
+    Optional description for the agent
+    """
+    instructions: str | None = None
+    """
+    Optional instructions for the agent
+    """
+
+
+class PatchAgentSystemDefArgumentsUpdate(BaseModel):
+    """
+    Patch Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The agent ID to patch
+    """
+    name: str | None = None
+    """
+    Optional name for the agent
+    """
+    description: str | None = None
+    """
+    Optional description for the agent
+    """
+    instructions: str | None = None
+    """
+    Optional instructions for the agent
+    """
+
+
+class PatchSessionSystemDefArguments(BaseModel):
+    """
+    Patch Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The session ID to patch
+    """
+    name: str | None = None
+    """
+    Optional name for the session
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the session
+    """
+
+
+class PatchSessionSystemDefArgumentsUpdate(BaseModel):
+    """
+    Patch Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The session ID to patch
+    """
+    name: str | None = None
+    """
+    Optional name for the session
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the session
+    """
+
+
+class PatchTaskSystemDefArguments(BaseModel):
+    """
+    Patch Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The task ID to patch
+    """
+    name: str | None = None
+    """
+    Optional name for the task
+    """
+    description: str | None = None
+    """
+    Optional description for the task
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the task
+    """
+
+
+class PatchTaskSystemDefArgumentsUpdate(BaseModel):
+    """
+    Patch Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The task ID to patch
+    """
+    name: str | None = None
+    """
+    Optional name for the task
+    """
+    description: str | None = None
+    """
+    Optional description for the task
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the task
+    """
+
+
 class PatchToolRequest(BaseModel):
     """
     Payload for patching a tool
@@ -2142,6 +2792,50 @@ class PatchToolRequest(BaseModel):
     """
     text_editor_20241022: TextEditor20241022DefUpdate | None = None
     bash_20241022: Bash20241022DefUpdate | None = None
+
+
+class PatchUserSystemDefArguments(BaseModel):
+    """
+    Patch User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The user ID to patch
+    """
+    name: str | None = None
+    """
+    Optional name for the user
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the user
+    """
+
+
+class PatchUserSystemDefArgumentsUpdate(BaseModel):
+    """
+    Patch User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The user ID to patch
+    """
+    name: str | None = None
+    """
+    Optional name for the user
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the user
+    """
 
 
 class RemoteBrowserArguments(BaseModel):
@@ -2573,10 +3267,10 @@ class TextSearchOwnerDocsSystemDef(SystemDef):
         populate_by_name=True,
     )
     system_def_type: Literal["TextSearchOwnerDocsSystemDef"] = "TextSearchOwnerDocsSystemDef"
-    resource: Literal["agent", "user", "task", "session"]
+    resource: Literal["agent", "user"]
     operation: Literal["search"] = "search"
     subresource: Literal["doc"] = "doc"
-    arguments: TextSearchOwnerDocsSystemDefArguments
+    arguments: TextSearchOwnerDocsSystemDefArguments | None = None
 
 
 class TextSearchOwnerDocsSystemDefArguments(BaseModel):
@@ -2640,7 +3334,7 @@ class TextSearchOwnerDocsSystemDefUpdate(SystemDefUpdate):
         populate_by_name=True,
     )
     system_def_type: Literal["TextSearchOwnerDocsSystemDef"] = "TextSearchOwnerDocsSystemDef"
-    resource: Literal["agent", "user", "task", "session"] | None = None
+    resource: Literal["agent", "user"] | None = None
     operation: Literal["search"] | None = None
     subresource: Literal["doc"] | None = None
     arguments: TextSearchOwnerDocsSystemDefArgumentsUpdate | None = None
@@ -2912,8 +3606,67 @@ class UpdateAgentSystemDef(SystemDef):
     system_def_type: Literal["UpdateAgentSystemDef"] = "UpdateAgentSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["update"] = "update"
+    arguments: UpdateAgentSystemDefArguments | None = None
+
+
+class UpdateAgentSystemDefArguments(BaseModel):
+    """
+    Update Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     resource_id: UUID
-    arguments: ArgumentsModel19
+    """
+    The agent ID to update
+    """
+    name: str | None = None
+    """
+    Optional name for the agent
+    """
+    description: str | None = None
+    """
+    Optional description for the agent
+    """
+    instructions: str | None = None
+    """
+    Optional instructions for the agent
+    """
+    tools: list | None = None
+    """
+    Optional tools for the agent
+    """
+
+
+class UpdateAgentSystemDefArgumentsUpdate(BaseModel):
+    """
+    Update Agent System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The agent ID to update
+    """
+    name: str | None = None
+    """
+    Optional name for the agent
+    """
+    description: str | None = None
+    """
+    Optional description for the agent
+    """
+    instructions: str | None = None
+    """
+    Optional instructions for the agent
+    """
+    tools: list | None = None
+    """
+    Optional tools for the agent
+    """
 
 
 class UpdateAgentSystemDefUpdate(SystemDefUpdate):
@@ -2927,8 +3680,7 @@ class UpdateAgentSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["UpdateAgentSystemDef"] = "UpdateAgentSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["update"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel19 | None = None
+    arguments: UpdateAgentSystemDefArgumentsUpdate | None = None
 
 
 class UpdateAgentToolSystemDef(SystemDef):
@@ -2942,9 +3694,92 @@ class UpdateAgentToolSystemDef(SystemDef):
     system_def_type: Literal["UpdateAgentToolSystemDef"] = "UpdateAgentToolSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["update"] = "update"
-    resource_id: UUID
     subresource: Literal["tool"] = "tool"
-    arguments: ArgumentsModel20
+    arguments: UpdateAgentToolSystemDefArguments | None = None
+
+
+class UpdateAgentToolSystemDefArguments(BaseModel):
+    """
+    Update Agent Tool System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID
+    """
+    The agent ID that owns the tool
+    """
+    name: str
+    """
+    Name of the tool to update
+    """
+    type: str | None = None
+    """
+    Optional type of the tool
+    """
+    description: str | None = None
+    """
+    Optional description for the tool
+    """
+    function: Any | None = None
+    """
+    Optional function specification
+    """
+    integration: Any | None = None
+    """
+    Optional integration specification
+    """
+    system: Any | None = None
+    """
+    Optional system specification
+    """
+    api_call: Any | None = None
+    """
+    Optional API call specification
+    """
+
+
+class UpdateAgentToolSystemDefArgumentsUpdate(BaseModel):
+    """
+    Update Agent Tool System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The agent ID that owns the tool
+    """
+    name: str | None = None
+    """
+    Name of the tool to update
+    """
+    type: str | None = None
+    """
+    Optional type of the tool
+    """
+    description: str | None = None
+    """
+    Optional description for the tool
+    """
+    function: Any | None = None
+    """
+    Optional function specification
+    """
+    integration: Any | None = None
+    """
+    Optional integration specification
+    """
+    system: Any | None = None
+    """
+    Optional system specification
+    """
+    api_call: Any | None = None
+    """
+    Optional API call specification
+    """
 
 
 class UpdateAgentToolSystemDefUpdate(SystemDefUpdate):
@@ -2958,9 +3793,8 @@ class UpdateAgentToolSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["UpdateAgentToolSystemDef"] = "UpdateAgentToolSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["update"] | None = None
-    resource_id: UUID | None = None
     subresource: Literal["tool"] | None = None
-    arguments: ArgumentsModel21 | None = None
+    arguments: UpdateAgentToolSystemDefArgumentsUpdate | None = None
 
 
 class UpdateSessionSystemDef(SystemDef):
@@ -2974,8 +3808,51 @@ class UpdateSessionSystemDef(SystemDef):
     system_def_type: Literal["UpdateSessionSystemDef"] = "UpdateSessionSystemDef"
     resource: Literal["session"] = "session"
     operation: Literal["update"] = "update"
+    arguments: UpdateSessionSystemDefArguments | None = None
+
+
+class UpdateSessionSystemDefArguments(BaseModel):
+    """
+    Update Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     resource_id: UUID
-    arguments: ArgumentsModel22
+    """
+    The session ID to update
+    """
+    name: str | None = None
+    """
+    Optional name for the session
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the session
+    """
+
+
+class UpdateSessionSystemDefArgumentsUpdate(BaseModel):
+    """
+    Update Session System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The session ID to update
+    """
+    name: str | None = None
+    """
+    Optional name for the session
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the session
+    """
 
 
 class UpdateSessionSystemDefUpdate(SystemDefUpdate):
@@ -2989,8 +3866,7 @@ class UpdateSessionSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["UpdateSessionSystemDef"] = "UpdateSessionSystemDef"
     resource: Literal["session"] | None = None
     operation: Literal["update"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel22 | None = None
+    arguments: UpdateSessionSystemDefArgumentsUpdate | None = None
 
 
 class UpdateTaskSystemDef(SystemDef):
@@ -3004,8 +3880,67 @@ class UpdateTaskSystemDef(SystemDef):
     system_def_type: Literal["UpdateTaskSystemDef"] = "UpdateTaskSystemDef"
     resource: Literal["task"] = "task"
     operation: Literal["update"] = "update"
+    arguments: UpdateTaskSystemDefArguments | None = None
+
+
+class UpdateTaskSystemDefArguments(BaseModel):
+    """
+    Update Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     resource_id: UUID
-    arguments: ArgumentsModel23
+    """
+    The task ID to update
+    """
+    name: str | None = None
+    """
+    Optional name for the task
+    """
+    description: str | None = None
+    """
+    Optional description for the task
+    """
+    steps: list | None = None
+    """
+    Optional steps that define the task workflow
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the task
+    """
+
+
+class UpdateTaskSystemDefArgumentsUpdate(BaseModel):
+    """
+    Update Task System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The task ID to update
+    """
+    name: str | None = None
+    """
+    Optional name for the task
+    """
+    description: str | None = None
+    """
+    Optional description for the task
+    """
+    steps: list | None = None
+    """
+    Optional steps that define the task workflow
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the task
+    """
 
 
 class UpdateTaskSystemDefUpdate(SystemDefUpdate):
@@ -3019,8 +3954,7 @@ class UpdateTaskSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["UpdateTaskSystemDef"] = "UpdateTaskSystemDef"
     resource: Literal["task"] | None = None
     operation: Literal["update"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel23 | None = None
+    arguments: UpdateTaskSystemDefArgumentsUpdate | None = None
 
 
 class UpdateToolRequest(BaseModel):
@@ -3109,8 +4043,59 @@ class UpdateUserSystemDef(SystemDef):
     system_def_type: Literal["UpdateUserSystemDef"] = "UpdateUserSystemDef"
     resource: Literal["user"] = "user"
     operation: Literal["update"] = "update"
+    arguments: UpdateUserSystemDefArguments | None = None
+
+
+class UpdateUserSystemDefArguments(BaseModel):
+    """
+    Update User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     resource_id: UUID
-    arguments: ArgumentsModel24
+    """
+    The user ID to update
+    """
+    user_id: str | None = None
+    """
+    Optional user identifier
+    """
+    name: str | None = None
+    """
+    Optional name for the user
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the user
+    """
+
+
+class UpdateUserSystemDefArgumentsUpdate(BaseModel):
+    """
+    Update User System Definition Arguments
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource_id: UUID | None = None
+    """
+    The user ID to update
+    """
+    user_id: str | None = None
+    """
+    Optional user identifier
+    """
+    name: str | None = None
+    """
+    Optional name for the user
+    """
+    metadata: dict[str, Any] | None = None
+    """
+    Optional metadata for the user
+    """
 
 
 class UpdateUserSystemDefUpdate(SystemDefUpdate):
@@ -3124,8 +4109,7 @@ class UpdateUserSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["UpdateUserSystemDef"] = "UpdateUserSystemDef"
     resource: Literal["user"] | None = None
     operation: Literal["update"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel24 | None = None
+    arguments: UpdateUserSystemDefArgumentsUpdate | None = None
 
 
 class VectorSearchOwnerDocsSystemDef(SystemDef):
@@ -3139,10 +4123,10 @@ class VectorSearchOwnerDocsSystemDef(SystemDef):
     system_def_type: Literal["VectorSearchOwnerDocsSystemDef"] = (
         "VectorSearchOwnerDocsSystemDef"
     )
-    resource: Literal["agent", "user", "task", "session"]
+    resource: Literal["agent", "user"]
     operation: Literal["search"] = "search"
     subresource: Literal["doc"] = "doc"
-    arguments: VectorSearchOwnerDocsSystemDefArguments
+    arguments: VectorSearchOwnerDocsSystemDefArguments | None = None
 
 
 class VectorSearchOwnerDocsSystemDefArguments(BaseModel):
@@ -3157,9 +4141,9 @@ class VectorSearchOwnerDocsSystemDefArguments(BaseModel):
     """
     The resource ID to search within
     """
-    vector: list
+    vector: list[float]
     """
-    Vector to search for similarity
+    Vector to search for similarity - should be 1024-dimensional vector
     """
     mmr_strength: float | None = None
     """
@@ -3187,9 +4171,9 @@ class VectorSearchOwnerDocsSystemDefArgumentsUpdate(BaseModel):
     """
     The resource ID to search within
     """
-    vector: list | None = None
+    vector: list[float] | None = None
     """
-    Vector to search for similarity
+    Vector to search for similarity - should be 1024-dimensional vector
     """
     mmr_strength: float | None = None
     """
@@ -3216,7 +4200,7 @@ class VectorSearchOwnerDocsSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["VectorSearchOwnerDocsSystemDef"] = (
         "VectorSearchOwnerDocsSystemDef"
     )
-    resource: Literal["agent", "user", "task", "session"] | None = None
+    resource: Literal["agent", "user"] | None = None
     operation: Literal["search"] | None = None
     subresource: Literal["doc"] | None = None
     arguments: VectorSearchOwnerDocsSystemDefArgumentsUpdate | None = None
@@ -3468,18 +4452,6 @@ class AlgoliaIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The arguments for Algolia
     """
-
-
-class ArgumentsModel19(ArgumentsModel2):
-    pass
-
-
-class ArgumentsModel21(ArgumentsModel4):
-    pass
-
-
-class ArgumentsModel23(ArgumentsModel8):
-    pass
 
 
 class ArxivIntegrationDef(BaseIntegrationDef):
@@ -3839,8 +4811,7 @@ class ChatSessionSystemDef(SystemDef):
     system_def_type: Literal["ChatSessionSystemDef"] = "ChatSessionSystemDef"
     resource: Literal["session"] = "session"
     operation: Literal["chat"] = "chat"
-    resource_id: UUID
-    arguments: Arguments
+    arguments: ChatSessionSystemDefArguments | None = None
 
 
 class ChatSessionSystemDefUpdate(SystemDefUpdate):
@@ -3854,8 +4825,7 @@ class ChatSessionSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["ChatSessionSystemDef"] = "ChatSessionSystemDef"
     resource: Literal["session"] | None = None
     operation: Literal["chat"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel | None = None
+    arguments: ChatSessionSystemDefArgumentsUpdate | None = None
 
 
 class CloudinaryEditIntegrationDef(BaseCloudinaryIntegrationDef):
@@ -3917,7 +4887,7 @@ class CreateAgentSystemDef(SystemDef):
     system_def_type: Literal["CreateAgentSystemDef"] = "CreateAgentSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["create"] = "create"
-    arguments: ArgumentsModel1
+    arguments: CreateAgentSystemDefArguments | None = None
 
 
 class CreateAgentSystemDefUpdate(SystemDefUpdate):
@@ -3931,7 +4901,7 @@ class CreateAgentSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["CreateAgentSystemDef"] = "CreateAgentSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["create"] | None = None
-    arguments: ArgumentsModel2 | None = None
+    arguments: CreateAgentSystemDefArgumentsUpdate | None = None
 
 
 class CreateAgentToolSystemDef(SystemDef):
@@ -3945,9 +4915,8 @@ class CreateAgentToolSystemDef(SystemDef):
     system_def_type: Literal["CreateAgentToolSystemDef"] = "CreateAgentToolSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["create"] = "create"
-    resource_id: UUID
     subresource: Literal["tool"] = "tool"
-    arguments: ArgumentsModel3
+    arguments: CreateAgentToolSystemDefArguments | None = None
 
 
 class CreateAgentToolSystemDefUpdate(SystemDefUpdate):
@@ -3961,9 +4930,8 @@ class CreateAgentToolSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["CreateAgentToolSystemDef"] = "CreateAgentToolSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["create"] | None = None
-    resource_id: UUID | None = None
     subresource: Literal["tool"] | None = None
-    arguments: ArgumentsModel4 | None = None
+    arguments: CreateAgentToolSystemDefArgumentsUpdate | None = None
 
 
 class CreateDocSystemDef(SystemDef):
@@ -3977,7 +4945,7 @@ class CreateDocSystemDef(SystemDef):
     system_def_type: Literal["CreateDocSystemDef"] = "CreateDocSystemDef"
     resource: Literal["doc"] = "doc"
     operation: Literal["create"] = "create"
-    arguments: CreateDocSystemDefArguments
+    arguments: CreateDocSystemDefArguments | None = None
 
 
 class CreateDocSystemDefUpdate(SystemDefUpdate):
@@ -4003,7 +4971,7 @@ class CreateOwnerDocSystemDef(SystemDef):
         populate_by_name=True,
     )
     system_def_type: Literal["CreateOwnerDocSystemDef"] = "CreateOwnerDocSystemDef"
-    resource: Literal["agent", "user", "task", "session"]
+    resource: Literal["agent", "user"]
     operation: Literal["create"] = "create"
     subresource: Literal["doc"] = "doc"
     arguments: CreateOwnerDocSystemDefArguments | None = None
@@ -4018,7 +4986,7 @@ class CreateOwnerDocSystemDefUpdate(SystemDefUpdate):
         populate_by_name=True,
     )
     system_def_type: Literal["CreateOwnerDocSystemDef"] = "CreateOwnerDocSystemDef"
-    resource: Literal["agent", "user", "task", "session"] | None = None
+    resource: Literal["agent", "user"] | None = None
     operation: Literal["create"] | None = None
     subresource: Literal["doc"] | None = None
     arguments: CreateOwnerDocSystemDefArgumentsUpdate | None = None
@@ -4035,7 +5003,7 @@ class CreateSessionSystemDef(SystemDef):
     system_def_type: Literal["CreateSessionSystemDef"] = "CreateSessionSystemDef"
     resource: Literal["session"] = "session"
     operation: Literal["create"] = "create"
-    arguments: ArgumentsModel5
+    arguments: CreateSessionSystemDefArguments | None = None
 
 
 class CreateSessionSystemDefUpdate(SystemDefUpdate):
@@ -4049,7 +5017,7 @@ class CreateSessionSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["CreateSessionSystemDef"] = "CreateSessionSystemDef"
     resource: Literal["session"] | None = None
     operation: Literal["create"] | None = None
-    arguments: ArgumentsModel5 | None = None
+    arguments: CreateSessionSystemDefArguments | None = None
 
 
 class CreateTaskExecutionSystemDef(SystemDef):
@@ -4063,9 +5031,8 @@ class CreateTaskExecutionSystemDef(SystemDef):
     system_def_type: Literal["CreateTaskExecutionSystemDef"] = "CreateTaskExecutionSystemDef"
     resource: Literal["task"] = "task"
     operation: Literal["create"] = "create"
-    resource_id: UUID
     subresource: Literal["execution"] = "execution"
-    arguments: ArgumentsModel6 | None = None
+    arguments: CreateTaskExecutionSystemDefArguments | None = None
 
 
 class CreateTaskExecutionSystemDefUpdate(SystemDefUpdate):
@@ -4079,9 +5046,8 @@ class CreateTaskExecutionSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["CreateTaskExecutionSystemDef"] = "CreateTaskExecutionSystemDef"
     resource: Literal["task"] | None = None
     operation: Literal["create"] | None = None
-    resource_id: UUID | None = None
     subresource: Literal["execution"] | None = None
-    arguments: ArgumentsModel6 | None = None
+    arguments: CreateTaskExecutionSystemDefArgumentsUpdate | None = None
 
 
 class CreateTaskSystemDef(SystemDef):
@@ -4095,7 +5061,7 @@ class CreateTaskSystemDef(SystemDef):
     system_def_type: Literal["CreateTaskSystemDef"] = "CreateTaskSystemDef"
     resource: Literal["task"] = "task"
     operation: Literal["create"] = "create"
-    arguments: ArgumentsModel7
+    arguments: CreateTaskSystemDefArguments | None = None
 
 
 class CreateTaskSystemDefUpdate(SystemDefUpdate):
@@ -4109,7 +5075,7 @@ class CreateTaskSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["CreateTaskSystemDef"] = "CreateTaskSystemDef"
     resource: Literal["task"] | None = None
     operation: Literal["create"] | None = None
-    arguments: ArgumentsModel8 | None = None
+    arguments: CreateTaskSystemDefArgumentsUpdate | None = None
 
 
 class CreateUserSystemDef(SystemDef):
@@ -4123,7 +5089,7 @@ class CreateUserSystemDef(SystemDef):
     system_def_type: Literal["CreateUserSystemDef"] = "CreateUserSystemDef"
     resource: Literal["user"] = "user"
     operation: Literal["create"] = "create"
-    arguments: ArgumentsModel9
+    arguments: CreateUserSystemDefArguments | None = None
 
 
 class CreateUserSystemDefUpdate(SystemDefUpdate):
@@ -4137,7 +5103,7 @@ class CreateUserSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["CreateUserSystemDef"] = "CreateUserSystemDef"
     resource: Literal["user"] | None = None
     operation: Literal["create"] | None = None
-    arguments: ArgumentsModel10 | None = None
+    arguments: CreateUserSystemDefArgumentsUpdate | None = None
 
 
 class DeleteAgentSystemDef(SystemDef):
@@ -4151,7 +5117,7 @@ class DeleteAgentSystemDef(SystemDef):
     system_def_type: Literal["DeleteAgentSystemDef"] = "DeleteAgentSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["delete"] = "delete"
-    resource_id: UUID
+    arguments: DeleteAgentSystemDefArguments | None = None
 
 
 class DeleteAgentSystemDefUpdate(SystemDefUpdate):
@@ -4165,7 +5131,7 @@ class DeleteAgentSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["DeleteAgentSystemDef"] = "DeleteAgentSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["delete"] | None = None
-    resource_id: UUID | None = None
+    arguments: DeleteAgentSystemDefArgumentsUpdate | None = None
 
 
 class DeleteAgentToolSystemDef(SystemDef):
@@ -4179,9 +5145,8 @@ class DeleteAgentToolSystemDef(SystemDef):
     system_def_type: Literal["DeleteAgentToolSystemDef"] = "DeleteAgentToolSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["delete"] = "delete"
-    resource_id: UUID
     subresource: Literal["tool"] = "tool"
-    arguments: ArgumentsModel11
+    arguments: DeleteAgentToolSystemDefArguments | None = None
 
 
 class DeleteAgentToolSystemDefUpdate(SystemDefUpdate):
@@ -4195,9 +5160,8 @@ class DeleteAgentToolSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["DeleteAgentToolSystemDef"] = "DeleteAgentToolSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["delete"] | None = None
-    resource_id: UUID | None = None
     subresource: Literal["tool"] | None = None
-    arguments: ArgumentsModel12 | None = None
+    arguments: DeleteAgentToolSystemDefArgumentsUpdate | None = None
 
 
 class DeleteDocSystemDef(SystemDef):
@@ -4211,7 +5175,7 @@ class DeleteDocSystemDef(SystemDef):
     system_def_type: Literal["DeleteDocSystemDef"] = "DeleteDocSystemDef"
     resource: Literal["doc"] = "doc"
     operation: Literal["delete"] = "delete"
-    arguments: DeleteDocSystemDefArguments
+    arguments: DeleteDocSystemDefArguments | None = None
 
 
 class DeleteDocSystemDefUpdate(SystemDefUpdate):
@@ -4239,7 +5203,7 @@ class DeleteSessionSystemDef(SystemDef):
     system_def_type: Literal["DeleteSessionSystemDef"] = "DeleteSessionSystemDef"
     resource: Literal["session"] = "session"
     operation: Literal["delete"] = "delete"
-    resource_id: UUID
+    arguments: DeleteSessionSystemDefArguments | None = None
 
 
 class DeleteSessionSystemDefUpdate(SystemDefUpdate):
@@ -4253,7 +5217,7 @@ class DeleteSessionSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["DeleteSessionSystemDef"] = "DeleteSessionSystemDef"
     resource: Literal["session"] | None = None
     operation: Literal["delete"] | None = None
-    resource_id: UUID | None = None
+    arguments: DeleteSessionSystemDefArgumentsUpdate | None = None
 
 
 class DeleteTaskSystemDef(SystemDef):
@@ -4267,7 +5231,7 @@ class DeleteTaskSystemDef(SystemDef):
     system_def_type: Literal["DeleteTaskSystemDef"] = "DeleteTaskSystemDef"
     resource: Literal["task"] = "task"
     operation: Literal["delete"] = "delete"
-    resource_id: UUID
+    arguments: DeleteTaskSystemDefArguments | None = None
 
 
 class DeleteTaskSystemDefUpdate(SystemDefUpdate):
@@ -4281,7 +5245,7 @@ class DeleteTaskSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["DeleteTaskSystemDef"] = "DeleteTaskSystemDef"
     resource: Literal["task"] | None = None
     operation: Literal["delete"] | None = None
-    resource_id: UUID | None = None
+    arguments: DeleteTaskSystemDefArgumentsUpdate | None = None
 
 
 class DeleteUserSystemDef(SystemDef):
@@ -4295,7 +5259,7 @@ class DeleteUserSystemDef(SystemDef):
     system_def_type: Literal["DeleteUserSystemDef"] = "DeleteUserSystemDef"
     resource: Literal["user"] = "user"
     operation: Literal["delete"] = "delete"
-    resource_id: UUID
+    arguments: DeleteUserSystemDefArguments | None = None
 
 
 class DeleteUserSystemDefUpdate(SystemDefUpdate):
@@ -4309,7 +5273,7 @@ class DeleteUserSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["DeleteUserSystemDef"] = "DeleteUserSystemDef"
     resource: Literal["user"] | None = None
     operation: Literal["delete"] | None = None
-    resource_id: UUID | None = None
+    arguments: DeleteUserSystemDefArgumentsUpdate | None = None
 
 
 class EmbedDocSystemDef(SystemDef):
@@ -4323,7 +5287,7 @@ class EmbedDocSystemDef(SystemDef):
     system_def_type: Literal["EmbedDocSystemDef"] = "EmbedDocSystemDef"
     resource: Literal["doc"] = "doc"
     operation: Literal["embed"] = "embed"
-    arguments: EmbedDocSystemDefArguments
+    arguments: EmbedDocSystemDefArguments | None = None
 
 
 class EmbedDocSystemDefUpdate(SystemDefUpdate):
@@ -4351,7 +5315,7 @@ class GetAgentSystemDef(SystemDef):
     system_def_type: Literal["GetAgentSystemDef"] = "GetAgentSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["get"] = "get"
-    resource_id: UUID
+    arguments: GetAgentSystemDefArguments | None = None
 
 
 class GetAgentSystemDefUpdate(SystemDefUpdate):
@@ -4365,7 +5329,7 @@ class GetAgentSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["GetAgentSystemDef"] = "GetAgentSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["get"] | None = None
-    resource_id: UUID | None = None
+    arguments: GetAgentSystemDefArgumentsUpdate | None = None
 
 
 class GetDocSystemDef(SystemDef):
@@ -4379,7 +5343,7 @@ class GetDocSystemDef(SystemDef):
     system_def_type: Literal["GetDocSystemDef"] = "GetDocSystemDef"
     resource: Literal["doc"] = "doc"
     operation: Literal["get"] = "get"
-    arguments: GetDocSystemDefArguments
+    arguments: GetDocSystemDefArguments | None = None
 
 
 class GetDocSystemDefUpdate(SystemDefUpdate):
@@ -4407,8 +5371,7 @@ class GetSessionHistorySystemDef(SystemDef):
     system_def_type: Literal["GetSessionHistorySystemDef"] = "GetSessionHistorySystemDef"
     resource: Literal["session"] = "session"
     operation: Literal["history"] = "history"
-    resource_id: UUID
-    arguments: ArgumentsModel13 | None = None
+    arguments: GetSessionHistorySystemDefArguments | None = None
 
 
 class GetSessionHistorySystemDefUpdate(SystemDefUpdate):
@@ -4422,8 +5385,7 @@ class GetSessionHistorySystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["GetSessionHistorySystemDef"] = "GetSessionHistorySystemDef"
     resource: Literal["session"] | None = None
     operation: Literal["history"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel13 | None = None
+    arguments: GetSessionHistorySystemDefArgumentsUpdate | None = None
 
 
 class GetSessionSystemDef(SystemDef):
@@ -4437,7 +5399,7 @@ class GetSessionSystemDef(SystemDef):
     system_def_type: Literal["GetSessionSystemDef"] = "GetSessionSystemDef"
     resource: Literal["session"] = "session"
     operation: Literal["get"] = "get"
-    resource_id: UUID
+    arguments: GetSessionSystemDefArguments | None = None
 
 
 class GetSessionSystemDefUpdate(SystemDefUpdate):
@@ -4451,7 +5413,7 @@ class GetSessionSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["GetSessionSystemDef"] = "GetSessionSystemDef"
     resource: Literal["session"] | None = None
     operation: Literal["get"] | None = None
-    resource_id: UUID | None = None
+    arguments: GetSessionSystemDefArgumentsUpdate | None = None
 
 
 class GetTaskExecutionSystemDef(SystemDef):
@@ -4465,7 +5427,7 @@ class GetTaskExecutionSystemDef(SystemDef):
     system_def_type: Literal["GetTaskExecutionSystemDef"] = "GetTaskExecutionSystemDef"
     resource: Literal["execution"] = "execution"
     operation: Literal["get"] = "get"
-    resource_id: UUID
+    arguments: GetTaskExecutionSystemDefArguments | None = None
 
 
 class GetTaskExecutionSystemDefUpdate(SystemDefUpdate):
@@ -4479,7 +5441,7 @@ class GetTaskExecutionSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["GetTaskExecutionSystemDef"] = "GetTaskExecutionSystemDef"
     resource: Literal["execution"] | None = None
     operation: Literal["get"] | None = None
-    resource_id: UUID | None = None
+    arguments: GetTaskExecutionSystemDefArgumentsUpdate | None = None
 
 
 class GetTaskSystemDef(SystemDef):
@@ -4493,7 +5455,7 @@ class GetTaskSystemDef(SystemDef):
     system_def_type: Literal["GetTaskSystemDef"] = "GetTaskSystemDef"
     resource: Literal["task"] = "task"
     operation: Literal["get"] = "get"
-    resource_id: UUID
+    arguments: GetTaskSystemDefArguments | None = None
 
 
 class GetTaskSystemDefUpdate(SystemDefUpdate):
@@ -4507,7 +5469,7 @@ class GetTaskSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["GetTaskSystemDef"] = "GetTaskSystemDef"
     resource: Literal["task"] | None = None
     operation: Literal["get"] | None = None
-    resource_id: UUID | None = None
+    arguments: GetTaskSystemDefArgumentsUpdate | None = None
 
 
 class GetUserSystemDef(SystemDef):
@@ -4521,7 +5483,7 @@ class GetUserSystemDef(SystemDef):
     system_def_type: Literal["GetUserSystemDef"] = "GetUserSystemDef"
     resource: Literal["user"] = "user"
     operation: Literal["get"] = "get"
-    resource_id: UUID
+    arguments: GetUserSystemDefArguments | None = None
 
 
 class GetUserSystemDefUpdate(SystemDefUpdate):
@@ -4535,7 +5497,7 @@ class GetUserSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["GetUserSystemDef"] = "GetUserSystemDef"
     resource: Literal["user"] | None = None
     operation: Literal["get"] | None = None
-    resource_id: UUID | None = None
+    arguments: GetUserSystemDefArgumentsUpdate | None = None
 
 
 class HybridSearchOwnerDocsSystemDef(SystemDef):
@@ -4549,10 +5511,10 @@ class HybridSearchOwnerDocsSystemDef(SystemDef):
     system_def_type: Literal["HybridSearchOwnerDocsSystemDef"] = (
         "HybridSearchOwnerDocsSystemDef"
     )
-    resource: Literal["agent", "user", "task", "session"]
+    resource: Literal["agent", "user"]
     operation: Literal["search"] = "search"
     subresource: Literal["doc"] = "doc"
-    arguments: HybridSearchOwnerDocsSystemDefArguments
+    arguments: HybridSearchOwnerDocsSystemDefArguments | None = None
 
 
 class HybridSearchOwnerDocsSystemDefUpdate(SystemDefUpdate):
@@ -4566,7 +5528,7 @@ class HybridSearchOwnerDocsSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["HybridSearchOwnerDocsSystemDef"] = (
         "HybridSearchOwnerDocsSystemDef"
     )
-    resource: Literal["agent", "user", "task", "session"] | None = None
+    resource: Literal["agent", "user"] | None = None
     operation: Literal["search"] | None = None
     subresource: Literal["doc"] | None = None
     arguments: HybridSearchOwnerDocsSystemDefArgumentsUpdate | None = None
@@ -4583,7 +5545,7 @@ class ListAgentsSystemDef(SystemDef):
     system_def_type: Literal["ListAgentsSystemDef"] = "ListAgentsSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["list"] = "list"
-    arguments: ArgumentsModel14 | None = None
+    arguments: ListAgentsSystemDefArguments | None = None
 
 
 class ListAgentsSystemDefUpdate(SystemDefUpdate):
@@ -4597,7 +5559,7 @@ class ListAgentsSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["ListAgentsSystemDef"] = "ListAgentsSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["list"] | None = None
-    arguments: ArgumentsModel14 | None = None
+    arguments: ListAgentsSystemDefArguments | None = None
 
 
 class ListDocsSystemDef(SystemDef):
@@ -4639,7 +5601,7 @@ class ListSessionsSystemDef(SystemDef):
     system_def_type: Literal["ListSessionsSystemDef"] = "ListSessionsSystemDef"
     resource: Literal["session"] = "session"
     operation: Literal["list"] = "list"
-    arguments: ArgumentsModel14 | None = None
+    arguments: ListSessionsSystemDefArguments | None = None
 
 
 class ListSessionsSystemDefUpdate(SystemDefUpdate):
@@ -4653,7 +5615,7 @@ class ListSessionsSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["ListSessionsSystemDef"] = "ListSessionsSystemDef"
     resource: Literal["session"] | None = None
     operation: Literal["list"] | None = None
-    arguments: ArgumentsModel14 | None = None
+    arguments: ListSessionsSystemDefArguments | None = None
 
 
 class ListTasksSystemDef(SystemDef):
@@ -4667,7 +5629,7 @@ class ListTasksSystemDef(SystemDef):
     system_def_type: Literal["ListTasksSystemDef"] = "ListTasksSystemDef"
     resource: Literal["task"] = "task"
     operation: Literal["list"] = "list"
-    arguments: ArgumentsModel14 | None = None
+    arguments: ListTasksSystemDefArguments | None = None
 
 
 class ListTasksSystemDefUpdate(SystemDefUpdate):
@@ -4681,7 +5643,7 @@ class ListTasksSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["ListTasksSystemDef"] = "ListTasksSystemDef"
     resource: Literal["task"] | None = None
     operation: Literal["list"] | None = None
-    arguments: ArgumentsModel14 | None = None
+    arguments: ListTasksSystemDefArguments | None = None
 
 
 class ListUsersSystemDef(SystemDef):
@@ -4695,7 +5657,7 @@ class ListUsersSystemDef(SystemDef):
     system_def_type: Literal["ListUsersSystemDef"] = "ListUsersSystemDef"
     resource: Literal["user"] = "user"
     operation: Literal["list"] = "list"
-    arguments: ArgumentsModel14 | None = None
+    arguments: ListUsersSystemDefArguments | None = None
 
 
 class ListUsersSystemDefUpdate(SystemDefUpdate):
@@ -4709,7 +5671,7 @@ class ListUsersSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["ListUsersSystemDef"] = "ListUsersSystemDef"
     resource: Literal["user"] | None = None
     operation: Literal["list"] | None = None
-    arguments: ArgumentsModel14 | None = None
+    arguments: ListUsersSystemDefArguments | None = None
 
 
 class PatchAgentSystemDef(SystemDef):
@@ -4723,8 +5685,7 @@ class PatchAgentSystemDef(SystemDef):
     system_def_type: Literal["PatchAgentSystemDef"] = "PatchAgentSystemDef"
     resource: Literal["agent"] = "agent"
     operation: Literal["patch"] = "patch"
-    resource_id: UUID
-    arguments: ArgumentsModel15
+    arguments: PatchAgentSystemDefArguments | None = None
 
 
 class PatchAgentSystemDefUpdate(SystemDefUpdate):
@@ -4738,8 +5699,7 @@ class PatchAgentSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["PatchAgentSystemDef"] = "PatchAgentSystemDef"
     resource: Literal["agent"] | None = None
     operation: Literal["patch"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel15 | None = None
+    arguments: PatchAgentSystemDefArgumentsUpdate | None = None
 
 
 class PatchSessionSystemDef(SystemDef):
@@ -4753,8 +5713,7 @@ class PatchSessionSystemDef(SystemDef):
     system_def_type: Literal["PatchSessionSystemDef"] = "PatchSessionSystemDef"
     resource: Literal["session"] = "session"
     operation: Literal["patch"] = "patch"
-    resource_id: UUID
-    arguments: ArgumentsModel16
+    arguments: PatchSessionSystemDefArguments | None = None
 
 
 class PatchSessionSystemDefUpdate(SystemDefUpdate):
@@ -4768,8 +5727,7 @@ class PatchSessionSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["PatchSessionSystemDef"] = "PatchSessionSystemDef"
     resource: Literal["session"] | None = None
     operation: Literal["patch"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel16 | None = None
+    arguments: PatchSessionSystemDefArgumentsUpdate | None = None
 
 
 class PatchTaskSystemDef(SystemDef):
@@ -4783,8 +5741,7 @@ class PatchTaskSystemDef(SystemDef):
     system_def_type: Literal["PatchTaskSystemDef"] = "PatchTaskSystemDef"
     resource: Literal["task"] = "task"
     operation: Literal["patch"] = "patch"
-    resource_id: UUID
-    arguments: ArgumentsModel17
+    arguments: PatchTaskSystemDefArguments | None = None
 
 
 class PatchTaskSystemDefUpdate(SystemDefUpdate):
@@ -4798,8 +5755,7 @@ class PatchTaskSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["PatchTaskSystemDef"] = "PatchTaskSystemDef"
     resource: Literal["task"] | None = None
     operation: Literal["patch"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel17 | None = None
+    arguments: PatchTaskSystemDefArgumentsUpdate | None = None
 
 
 class PatchUserSystemDef(SystemDef):
@@ -4813,8 +5769,7 @@ class PatchUserSystemDef(SystemDef):
     system_def_type: Literal["PatchUserSystemDef"] = "PatchUserSystemDef"
     resource: Literal["user"] = "user"
     operation: Literal["patch"] = "patch"
-    resource_id: UUID
-    arguments: ArgumentsModel18
+    arguments: PatchUserSystemDefArguments | None = None
 
 
 class PatchUserSystemDefUpdate(SystemDefUpdate):
@@ -4828,8 +5783,7 @@ class PatchUserSystemDefUpdate(SystemDefUpdate):
     system_def_type: Literal["PatchUserSystemDef"] = "PatchUserSystemDef"
     resource: Literal["user"] | None = None
     operation: Literal["patch"] | None = None
-    resource_id: UUID | None = None
-    arguments: ArgumentsModel18 | None = None
+    arguments: PatchUserSystemDefArgumentsUpdate | None = None
 
 
 class SimpleSearchDocsSystemDef(SystemDef):
@@ -4843,7 +5797,7 @@ class SimpleSearchDocsSystemDef(SystemDef):
     system_def_type: Literal["SimpleSearchDocsSystemDef"] = "SimpleSearchDocsSystemDef"
     resource: Literal["doc"] = "doc"
     operation: Literal["search"] = "search"
-    arguments: SimpleSearchDocsSystemDefArguments
+    arguments: SimpleSearchDocsSystemDefArguments | None = None
 
 
 class SimpleSearchDocsSystemDefUpdate(SystemDefUpdate):

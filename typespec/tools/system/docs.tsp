@@ -7,23 +7,14 @@ namespace Tools;
 
 /** Document data for creating a document */
 model DocData {
-    /** The type of document */
-    type: "text" | "embedding" | "image" | "audio" | "video" | "other";
-    
-    /** Optional name for the document */
-    name?: string;
-    
+    /** The title of the document */
+    title: string;
+
     /** The content of the document */
     content: string;
     
     /** Optional metadata for the document */
     metadata?: Record<unknown>;
-    
-    /** Optional vector embedding for the document */
-    vector?: unknown[];
-    
-    /** Whether to allow duplicate documents */
-    allow_duplicate?: boolean;
 }
 
 /** Create Doc System Definition Arguments */
@@ -43,22 +34,22 @@ model CreateDocSystemDef extends SystemDef {
     system_def_type: "CreateDocSystemDef" = "CreateDocSystemDef";
     resource: "doc";
     operation: "create";
-    arguments: CreateDocSystemDefArguments;
+    arguments?: CreateDocSystemDefArguments;
 }
 
 /** Create Owner Doc System Definition Arguments */
 model CreateOwnerDocSystemDefArguments {
     /** The resource ID (if applicable) */
-    resource_id?: uuid;
+    resource_id: uuid;
     
     /** The document data to create */
-    data: DocData;
+    ...DocData;
 }
 
 /** Create Owner Doc System Definition */
 model CreateOwnerDocSystemDef extends SystemDef {
     system_def_type: "CreateOwnerDocSystemDef" = "CreateOwnerDocSystemDef";
-    resource: "agent" | "user" | "task" | "session";
+    resource: "agent" | "user";
     operation: "create";
     subresource: "doc";
     arguments?: CreateOwnerDocSystemDefArguments;
@@ -75,7 +66,7 @@ model EmbedDocSystemDef extends SystemDef {
     system_def_type: "EmbedDocSystemDef" = "EmbedDocSystemDef";
     resource: "doc";
     operation: "embed";
-    arguments: EmbedDocSystemDefArguments;
+    arguments?: EmbedDocSystemDefArguments;
 }
 
 /** Get Doc System Definition Arguments */
@@ -89,7 +80,7 @@ model GetDocSystemDef extends SystemDef {
     system_def_type: "GetDocSystemDef" = "GetDocSystemDef";
     resource: "doc";
     operation: "get";
-    arguments: GetDocSystemDefArguments;
+    arguments?: GetDocSystemDefArguments;
 }
 
 /** List Docs System Definition Arguments */
@@ -123,7 +114,7 @@ model DeleteDocSystemDef extends SystemDef {
     system_def_type: "DeleteDocSystemDef" = "DeleteDocSystemDef";
     resource: "doc";
     operation: "delete";
-    arguments: DeleteDocSystemDefArguments;
+    arguments?: DeleteDocSystemDefArguments;
 }
 
 /** Simple Search Docs System Definition Arguments */
@@ -143,7 +134,7 @@ model SimpleSearchDocsSystemDef extends SystemDef {
     system_def_type: "SimpleSearchDocsSystemDef" = "SimpleSearchDocsSystemDef";
     resource: "doc";
     operation: "search";
-    arguments: SimpleSearchDocsSystemDefArguments;
+    arguments?: SimpleSearchDocsSystemDefArguments;
 }
 
 /** Text Search Owner Docs System Definition Arguments */
@@ -164,10 +155,10 @@ model TextSearchOwnerDocsSystemDefArguments {
 /** Text Search Documents System Definition - For owner resources */
 model TextSearchOwnerDocsSystemDef extends SystemDef {
     system_def_type: "TextSearchOwnerDocsSystemDef" = "TextSearchOwnerDocsSystemDef";
-    resource: "agent" | "user" | "task" | "session";
+    resource: "agent" | "user";
     operation: "search";
     subresource: "doc";
-    arguments: TextSearchOwnerDocsSystemDefArguments;
+    arguments?: TextSearchOwnerDocsSystemDefArguments;
 }
 
 /** Vector Search Owner Docs System Definition Arguments */
@@ -175,8 +166,8 @@ model VectorSearchOwnerDocsSystemDefArguments {
     /** The resource ID to search within */
     resource_id: uuid;
     
-    /** Vector to search for similarity */
-    vector: unknown[];
+    /** Vector to search for similarity - should be 1024-dimensional vector */
+    vector: float32[];
     
     /** Maximal Marginal Relevance strength (0-1) */
     mmr_strength?: float32;
@@ -191,10 +182,10 @@ model VectorSearchOwnerDocsSystemDefArguments {
 /** Vector Search Documents System Definition - For owner resources */
 model VectorSearchOwnerDocsSystemDef extends SystemDef {
     system_def_type: "VectorSearchOwnerDocsSystemDef" = "VectorSearchOwnerDocsSystemDef";
-    resource: "agent" | "user" | "task" | "session";
+    resource: "agent" | "user";
     operation: "search";
     subresource: "doc";
-    arguments: VectorSearchOwnerDocsSystemDefArguments;
+    arguments?: VectorSearchOwnerDocsSystemDefArguments;
 }
 
 /** Hybrid Search Owner Docs System Definition Arguments */
@@ -205,8 +196,8 @@ model HybridSearchOwnerDocsSystemDefArguments {
     /** Text to search for */
     text: string;
     
-    /** Vector to search for similarity */
-    vector: unknown[];
+    /** Vector to search for similarity - should be 1024-dimensional vector */
+    vector: float32[];
     
     /** Alpha parameter controlling blend of text vs vector search (0-1) */
     alpha?: float32;
@@ -224,8 +215,8 @@ model HybridSearchOwnerDocsSystemDefArguments {
 /** Hybrid Search Documents System Definition - For owner resources */
 model HybridSearchOwnerDocsSystemDef extends SystemDef {
     system_def_type: "HybridSearchOwnerDocsSystemDef" = "HybridSearchOwnerDocsSystemDef";
-    resource: "agent" | "user" | "task" | "session";
+    resource: "agent" | "user";
     operation: "search";
     subresource: "doc";
-    arguments: HybridSearchOwnerDocsSystemDefArguments;
+    arguments?: HybridSearchOwnerDocsSystemDefArguments;
 }
