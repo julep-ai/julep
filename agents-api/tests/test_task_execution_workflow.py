@@ -1,7 +1,9 @@
 import uuid
+from base64 import b64decode
 from datetime import timedelta
 from unittest.mock import Mock, call, patch
 
+import aiohttp
 from agents_api.activities import task_steps
 from agents_api.activities.execute_api_call import execute_api_call
 from agents_api.activities.execute_integration import execute_integration
@@ -52,6 +54,7 @@ from agents_api.env import (
     testing,
 )
 from agents_api.workflows.task_execution import TaskExecutionWorkflow
+from aiohttp import test_utils
 from temporalio.exceptions import ApplicationError
 from ward import raises, test
 
@@ -397,22 +400,113 @@ async def _():
     "task execution workflow: handle api call tool call step, do not include response content"
 )
 async def _():
-    # TODO: mock http server
-    input_arguments = {
-        "method": "POST",
-        "url": "http://127.0.0.1:9123",
-        "include_response_content": False,
-    }
-    api_call = ApiCallDef(
-        method="POST",
-        url="http://127.0.0.1:9123",
-        headers=None,
-        follow_redirects=None,
-        include_response_content=False,
-    )
+    # Create application with route
+    app = aiohttp.web.Application()
 
-    result = await execute_api_call(api_call, input_arguments)
-    assert "content" not in result
+    async def handler(request):
+        return aiohttp.web.json_response({"test": "data"})
+
+    app.router.add_post("/", handler)
+
+    # Set up mock HTTP server with the pre-configured app
+    async with test_utils.TestServer(app) as server:
+        # Use the actual server URL
+        server_url = str(server.make_url("/"))
+
+        input_arguments = {
+            "method": "POST",
+            "url": server_url,
+            "include_response_content": False,
+        }
+        api_call = ApiCallDef(
+            method="POST",
+            url=server_url,
+            headers=None,
+            follow_redirects=None,
+            include_response_content=False,
+        )
+
+        result = await execute_api_call(api_call, input_arguments)
+        assert "content" not in result
+        assert result["status_code"] == 200
+
+
+@test("task execution workflow: handle api call tool call step, include response content")
+async def _():
+    # Create application with route
+    app = aiohttp.web.Application()
+
+    async def handler(request):
+        return aiohttp.web.json_response({"test": "data"})
+
+    app.router.add_post("/", handler)
+
+    # Set up mock HTTP server with the pre-configured app
+    async with test_utils.TestServer(app) as server:
+        # Use the actual server URL
+        server_url = str(server.make_url("/"))
+
+        input_arguments = {
+            "method": "POST",
+            "url": server_url,
+            "include_response_content": True,
+        }
+        api_call = ApiCallDef(
+            method="POST",
+            url=server_url,
+            headers=None,
+            follow_redirects=None,
+            include_response_content=False,
+        )
+
+        result = await execute_api_call(api_call, input_arguments)
+        assert "content" in result
+        assert b64decode(result["content"]).decode("utf-8") == '{"test": "data"}'
+        assert result["status_code"] == 200
+
+    async with test_utils.TestServer(app) as server:
+        # Use the actual server URL
+        server_url = str(server.make_url("/"))
+
+        input_arguments = {
+            "method": "POST",
+            "url": server_url,
+            "include_response_content": False,
+        }
+        api_call = ApiCallDef(
+            method="POST",
+            url=server_url,
+            headers=None,
+            follow_redirects=None,
+            include_response_content=True,
+        )
+
+        result = await execute_api_call(api_call, input_arguments)
+        assert "content" in result
+        assert b64decode(result["content"]).decode("utf-8") == '{"test": "data"}'
+        assert result["status_code"] == 200
+
+    async with test_utils.TestServer(app) as server:
+        # Use the actual server URL
+        server_url = str(server.make_url("/"))
+
+        input_arguments = {
+            "method": "POST",
+            "url": server_url,
+            "include_response_content": True,
+        }
+        api_call = ApiCallDef(
+            method="POST",
+            url=server_url,
+            headers=None,
+            follow_redirects=None,
+            include_response_content=True,
+        )
+
+        result = await execute_api_call(api_call, input_arguments)
+        assert "content" in result
+        assert b64decode(result["content"]).decode("utf-8") == '{"test": "data"}'
+        assert result["status_code"] == 200
 
 
 @test("task execution workflow: handle system tool call step")

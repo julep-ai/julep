@@ -54,6 +54,7 @@ dependencies = [
   "deep-translator>=1.11.4",
   "markdownify>=1.0.0",
   "markdown2>=2.5.3",
+  "aiohttp>=3.11.13",
 ]
 
 [dependency-groups]
