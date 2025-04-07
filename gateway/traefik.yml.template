@@ -85,6 +85,15 @@ http:
       service: service-temporal-ui-public
       priority: 2
 
+    hasura:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/v1/graphql`)
+      middlewares:
+        - corsHeaders
+      service: service-hasura
+      priority: 3
+
   middlewares:
     corsHeaders:
       headers:
@@ -149,6 +158,12 @@ http:
         passHostHeader: false
         servers:
           - url: $TEMPORAL_UI_PUBLIC_URL
+
+    service-hasura:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $HASURA_URL
 
 experimental:
   localPlugins:
