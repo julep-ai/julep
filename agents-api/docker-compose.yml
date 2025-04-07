@@ -8,6 +8,7 @@ x--shared-environment: &shared-environment
   AGENTS_API_PUBLIC_PORT: ${AGENTS_API_PUBLIC_PORT:-80}
   AGENTS_API_PROTOCOL: ${AGENTS_API_PROTOCOL:-http}
   AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
+  ENABLE_RESPONSES: ${ENABLE_RESPONSES:-false}
   PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
   DEBUG: ${AGENTS_API_DEBUG:-False}
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
@@ -47,6 +48,7 @@ x--shared-environment: &shared-environment
   ZEROGPT_URL: ${ZEROGPT_URL:-https://api.zerogpt.com/api/detect/detectText}
   DESKLIB_URL: ${DESKLIB_URL:-http://35.243.190.233/detect}
   SAPLING_URL: ${SAPLING_URL:-https://api.sapling.ai/api/v1/aidetect}
+  BRAVE_API_KEY: ${BRAVE_API_KEY}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}

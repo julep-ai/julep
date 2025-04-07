@@ -56,6 +56,7 @@ def get_search_fn_and_params(
             limit=k,
             lang=lang,
             metadata_filter=metadata_filter,
+            trigram_similarity_threshold=trigram_similarity_threshold,
         ):
             search_language = get_language(lang)
             search_fn = search_docs_by_text
@@ -64,6 +65,7 @@ def get_search_fn_and_params(
                 "k": k,
                 "metadata_filter": metadata_filter,
                 "search_language": search_language,
+                "trigram_similarity_threshold": trigram_similarity_threshold,
                 "extract_keywords": extract_keywords,
             }
 
@@ -89,6 +91,8 @@ def get_search_fn_and_params(
             confidence=confidence,
             alpha=alpha,
             metadata_filter=metadata_filter,
+            trigram_similarity_threshold=trigram_similarity_threshold,
+            k_multiplier=k_multiplier,
         ):
             search_language = get_language(lang)
             search_fn = search_docs_hybrid
@@ -101,6 +105,8 @@ def get_search_fn_and_params(
                 "metadata_filter": metadata_filter,
                 "search_language": search_language,
                 "extract_keywords": extract_keywords,
+                "trigram_similarity_threshold": trigram_similarity_threshold,
+                "k_multiplier": k_multiplier,
             }
 
     # Note: connection_pool will be passed separately by the caller

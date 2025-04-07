@@ -1,0 +1,149 @@
+---
+title: 'Roadmap'
+description: 'Roadmap for the Julep Open Responses API'
+icon: 'road'
+---
+
+## Overview
+
+The Julep's Open Responses API is under active development. This page provides a comprehensive overview of implemented features, in-progress development, and planned enhancements.
+
+<Warning>
+- The Open Responses API requires self-hosting. See the [installation guide](/responses/quickstart/#local-installation) below.
+- Being in Alpha, the API is subject to change. Check back frequently for updates.
+- For more context, see the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) documentation.
+</Warning>
+
+## Current Implementation Status
+
+### 1. Implemented Features ✅
+
+This section lists the core functionalities that have been implemented.
+
+#### 1.1. Core Functionality
+- Basic Response Creation and Retrieval
+- Text and Image Input Support
+- Multiple Input and Output Formats
+- Response Metadata
+- Reasoning Support
+- Tool Choice Configuration
+
+#### 1.2. Advanced Features
+- **Function Calling**
+  - Dynamic function execution
+  - Parameter validation
+  - Error handling
+  - Function chaining support
+- **Web Search Tool Support**
+  - Real-time web queries
+  - Result filtering and ranking
+  - Source verification
+  - Search result caching
+- **Response Metadata**
+  - Creation timestamps
+  - Processing duration
+  - Resource usage metrics
+  - Performance analytics
+- **Reasoning Support**
+  - Step-by-step reasoning
+  - Logical deduction
+  - Context awareness
+  - Decision tracking
+- **Tool Choice Configuration**
+  - Tool selection criteria
+  - Priority-based routing
+  - Fallback mechanisms
+  - Tool-specific parameters
+
+### 2. Partially Implemented Features 🔄
+
+This section lists the features that are partially implemented.
+
+#### 2.1. File Search Tool
+- Basic file indexing
+- *[TODO]* Content search capabilities
+- *[TODO]* File type support
+- *[TODO]* Search result ranking
+- *[TODO]* Advanced filtering options
+- *[TODO]* Full-text search optimization
+
+#### 2.2. Reasoning Effort
+- *[TODO]* Basic thinking budget allocation
+- *[TODO]* Dynamic budget adjustment
+- *[TODO]* Resource optimization
+- Performance monitoring
+
+#### 2.3. Annotations for Citations
+- Basic citation format
+- *[TODO]* Source verification
+- *[TODO]* Citation style customization
+- *[TODO]* Automated citation generation
+
+### 3. Planned Features 🔜
+
+This section lists the features that are planned to be implemented in the future.
+
+#### 3.1. Streaming Support
+
+  - Real-time response streaming
+  - Progress indicators
+  - Partial response handling
+  - Connection management
+
+#### 3.2. Response Deletion Endpoint
+
+  - Secure deletion
+  - Cascade deletion options
+  - Deletion confirmation
+  - Audit logging
+
+#### 3.3. Integration Features
+
+- **Computer Tool Call Support**
+  - OpenAI compatibility layer
+  - Tool translation service
+  - Error handling
+  - Response mapping
+
+#### 3.4. Performance Optimizations
+- **Truncation Auto Support**
+  - Smart content truncation
+  - Context preservation
+  - Length optimization
+  - Quality maintenance
+
+#### 3.5. API Enhancements
+- **GET /responses/{response_id}/input_items**
+  - Input item retrieval
+  - Item metadata
+  - Version history
+  - Relationship mapping
+- **Pagination for Input Items**
+  - Page size configuration
+  - Cursor-based navigation
+  - Total count information
+  - Filtering options
+
+### 4. Future Considerations
+
+This section lists the features that are planned to be implemented in the future.
+
+#### 4.1. System Enhancements
+- Enhanced security features
+- Advanced analytics dashboard
+- Custom plugin system
+- Multi-language support
+
+#### 4.2. Performance & Scaling
+- Rate limiting and quotas
+- Advanced caching mechanisms
+- Load balancing improvements
+- Distributed processing support
+
+## Next Steps
+
+- [Return to the Responses API Quickstart](/responses/quickstart) - To get started with the Responses API
+- [Return to the Responses API Examples](/responses/examples) - To learn through practical examples
+- [Return to the Responses API Concepts](/responses/concepts) - To understand core concepts and components
+- [Learn more about Julep](/docs/introduction/julep) - To learn more about Julep and its features
+- [GitHub](https://github.com/julep-ai/julep) - To contribute to the project

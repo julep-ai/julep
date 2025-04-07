@@ -1,6 +1,6 @@
 # ruff: noqa: F401, F403, F405
 import ast
-from typing import Annotated, Any, Generic, Self, TypeVar, get_args
+from typing import Annotated, Any, Generic, Literal, Self, TypeVar, get_args
 from uuid import UUID
 
 import jinja2
@@ -23,6 +23,7 @@ from .Entries import *
 from .Executions import *
 from .Files import *
 from .Jobs import *
+from .Responses import *
 from .Sessions import *
 from .Tasks import *
 from .Tools import *
@@ -371,6 +372,24 @@ class CreateTransitionRequest(Transition):
     task_token: str | None = None
 
 
+class ToolExecutionResult(BaseModel):
+    """Represents the result of executing a tool"""
+
+    id: str
+    name: str | None = None
+    output: dict[str, Any]
+    error: str | None = None
+
+
+class WebPreviewToolCall(BaseModel):
+    """Represents a WebPreviewTool call from the model"""
+
+    id: str
+    name: str | None = None
+    type: Literal["web_search_preview"] = "web_search_preview"
+    query: str = Field(default="")
+
+
 class CreateEntryRequest(BaseEntry):
     timestamp: Annotated[AwareDatetime, Field(default_factory=lambda: utcnow())]
 
@@ -516,3 +535,10 @@ class UpdateTaskRequest(_UpdateTaskRequest):
         **_UpdateTaskRequest.model_config,
         "extra": "allow",
     })
+
+
+Includable = Literal[
+    "file_search_call.results",
+    "message.input_image.image_url",
+    "computer_call_output.output.image_url",
+]
