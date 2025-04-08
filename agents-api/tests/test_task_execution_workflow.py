@@ -485,7 +485,7 @@ async def _():
         assert "content" in result
         assert b64decode(result["content"]).decode("utf-8") == '{"test": "data"}'
         assert result["status_code"] == 200
-    
+
     async with test_utils.TestServer(app) as server:
         # Use the actual server URL
         server_url = str(server.make_url("/"))
