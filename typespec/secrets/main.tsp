@@ -1,15 +1,8 @@
-import "@typespec/rest";
-import "@typespec/openapi";
-import "@typespec/versioning";
-import "@typespec/http";
-import "./models.tsp";
 import "./endpoints.tsp";
-import "../versions.tsp";
+import "./models.tsp";
 
-using TypeSpec.Http;
-using TypeSpec.Rest;
-using TypeSpec.Versioning;
-using Versions;
+namespace Secrets;
 
-@versioned(ApiVersions)
-namespace Julep.Secrets; 
+//
+// SECRETS
+//

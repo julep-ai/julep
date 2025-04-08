@@ -1,9 +1,12 @@
+import asyncio
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from starlette.status import HTTP_200_OK
 
+from ...activities.task_steps.base_evaluate import base_evaluate
+from ...activities.task_steps.secret_storage import SecretStorage
 from ...autogen.openapi_model import (
     ChatInput,
     DocReference,
@@ -162,6 +165,7 @@ async def render_chat_input(
     # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
     # but we don't allow that (spec should match type).
     formatted_tools = []
+    secrets = SecretStorage()
     for i, tool in enumerate(tools):
         if tool.type == "computer_20241022" and tool.computer_20241022:
             function = tool.computer_20241022
@@ -170,7 +174,7 @@ async def render_chat_input(
                 "function": {
                     "name": tool.name,
                     "parameters": {
-                        k: v
+                        k: asyncio.run(base_evaluate(v, values=secrets))
                         for k, v in function.model_dump().items()
                         if k not in ["name", "type"]
                     }

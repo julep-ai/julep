@@ -1,9 +1,9 @@
 """List secrets endpoint."""
 
 from typing import Annotated
-
-from fastapi import APIRouter, Depends
 from uuid import UUID
+
+from fastapi import Depends
 
 from ...dependencies.auth import get_api_key
 from ...dependencies.db import get_db_connection
@@ -39,4 +39,4 @@ async def list_secrets(
         limit=limit,
         offset=offset,
         name_prefix=name_prefix,
-    ) 
+    )

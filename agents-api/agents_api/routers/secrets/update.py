@@ -1,9 +1,9 @@
 """Update secret endpoint."""
 
 from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException, status
 from uuid import UUID
+
+from fastapi import Depends, HTTPException, status
 
 from ...dependencies.auth import get_api_key
 from ...dependencies.db import get_db_connection
@@ -46,4 +46,4 @@ async def update_secret(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        ) from e 
+        ) from e
