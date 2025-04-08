@@ -12,4 +12,4 @@ __all__ = [
     "get_secret",
     "list_secrets",
     "update_secret",
-] 
+]

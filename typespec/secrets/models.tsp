@@ -11,8 +11,11 @@ using TypeSpec.Versioning;
 using Common;
 using Versions;
 
-@versioned(ApiVersions)
-namespace Julep.Secrets;
+namespace Secrets;
+
+//
+// SECRET MODELS
+//
 
 /** A secret that can be used in tasks and sessions */
 model Secret {
@@ -28,6 +31,9 @@ model Secret {
 
   /** Description of what the secret is used for */
   description?: string;
+
+  /** The decrypted secret value */
+  value: string;
 
   ...HasTimestamps;
   ...HasMetadata;
@@ -56,38 +62,9 @@ model SecretUpdate {
   /** New description for the secret */
   description?: string;
 
+  /** The secret value to store */
+  value: string;
+
   /** New metadata for the secret */
   metadata?: Record<string>;
 }
-
-/** Response containing a secret's decrypted value */
-model SecretValue {
-  /** The decrypted secret value */
-  value: string;
-}
-
-/** Error when a secret with the same name already exists */
-@error
-model DuplicateSecretError {
-  @statusCode
-  _: 409;
-
-  /** Error code */
-  code: "duplicate_secret";
-
-  /** Error message */
-  message: string;
-}
-
-/** Error when a secret is not found */
-@error
-model SecretNotFoundError {
-  @statusCode
-  _: 404;
-
-  /** Error code */
-  code: "secret_not_found";
-
-  /** Error message */
-  message: string;
-} 

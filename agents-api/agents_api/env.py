@@ -172,13 +172,16 @@ brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
 # ---------------
 enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
 
+
 # Secrets
 # -------
 def _validate_master_key(key: str) -> str:
     """Validate that the master key is the correct length for encryption."""
     if len(key) != 32:
-        raise ValueError("SECRETS_MASTER_KEY must be exactly 32 characters long")
+        msg = "SECRETS_MASTER_KEY must be exactly 32 characters long"
+        raise ValueError(msg)
     return key
+
 
 secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY"))
 

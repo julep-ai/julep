@@ -896,6 +896,105 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Responses.Response'
+  /secrets:
+    get:
+      operationId: SecretsRoute_list
+      description: List secrets (paginated)
+      parameters:
+        - $ref: '#/components/parameters/Common.PaginationOptions.limit'
+        - $ref: '#/components/parameters/Common.PaginationOptions.offset'
+        - $ref: '#/components/parameters/Common.PaginationOptions.sort_by'
+        - $ref: '#/components/parameters/Common.PaginationOptions.direction'
+        - $ref: '#/components/parameters/Common.PaginationOptions.metadata_filter'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Secrets.Secret'
+                required:
+                  - items
+    post:
+      operationId: SecretsRoute_create
+      description: Create a new secret
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.SecretCreate'
+  /secrets/{id}:
+    put:
+      operationId: SecretsRoute_update
+      description: Update an existing secret by id (overwrites existing values)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.SecretUpdate'
+    delete:
+      operationId: SecretsRoute_delete
+      description: Delete a secret by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+    get:
+      operationId: SecretsRoute_get
+      description: Get a secret by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
   /sessions:
     get:
       operationId: SessionsRoute_list
@@ -5452,6 +5551,88 @@ components:
           allOf:
             - $ref: '#/components/schemas/Responses.WebSearchStatus'
           description: The status of the web search tool call.
+    Secrets.Secret:
+      type: object
+      required:
+        - secret_id
+        - developer_id
+        - name
+        - value
+        - created_at
+        - updated_at
+      properties:
+        secret_id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: Unique identifier for the secret
+        developer_id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          description: ID of the developer who owns this secret
+        name:
+          type: string
+          description: Name of the secret
+        description:
+          type: string
+          description: Description of what the secret is used for
+        value:
+          type: string
+          description: The decrypted secret value
+        created_at:
+          type: string
+          format: date-time
+          description: When this resource was created as UTC date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          description: When this resource was updated as UTC date-time
+          readOnly: true
+        metadata:
+          type: object
+          additionalProperties: {}
+      description: A secret that can be used in tasks and sessions
+    Secrets.SecretCreate:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+          description: Name of the secret
+        description:
+          type: string
+          description: Description of what the secret is used for
+        value:
+          type: string
+          description: The secret value to store
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Additional metadata about the secret
+      description: Input for creating a new secret
+    Secrets.SecretUpdate:
+      type: object
+      required:
+        - value
+      properties:
+        name:
+          type: string
+          description: New name for the secret
+        description:
+          type: string
+          description: New description for the secret
+        value:
+          type: string
+          description: The secret value to store
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: New metadata for the secret
+      description: Input for updating a secret
     Sessions.BaseDocSearch:
       type: object
       required:

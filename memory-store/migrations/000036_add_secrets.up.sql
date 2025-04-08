@@ -2,27 +2,19 @@ BEGIN;
 
 -- Create secrets table with encryption at rest
 CREATE TABLE IF NOT EXISTS secrets (
-    secret_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    developer_id UUID NOT NULL REFERENCES developers(developer_id) ON DELETE CASCADE,
+    secret_id UUID NOT NULL,
+    developer_id UUID NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     value_encrypted BYTEA NOT NULL,
-    encryption_key_id TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB DEFAULT '{}'::jsonb,
-    UNIQUE(developer_id, name)
+    CONSTRAINT pk_secrets PRIMARY KEY (developer_id, secret_id),
+    CONSTRAINT uq_secrets_unique UNIQUE(developer_id, name),
+    CONSTRAINT ct_secrets_canonical_name_valid_identifier CHECK (canonical_name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
+    CONSTRAINT ct_secrets_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object')
 );
-
--- Add RLS policy
-ALTER TABLE secrets ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY access_secrets_policy
-    ON secrets
-    FOR ALL
-    TO postgraphile
-    USING (developer_id = current_developer_id())
-    WITH CHECK (developer_id = current_developer_id());
 
 -- Add indexes
 CREATE INDEX idx_secrets_developer_id ON secrets(developer_id);
@@ -38,11 +30,12 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_secrets_updated_at
-    BEFORE UPDATE
-    ON secrets
-    FOR EACH ROW
-    EXECUTE FUNCTION update_secrets_updated_at();
+-- Drop trigger if exists and recreate
+DROP TRIGGER IF EXISTS trg_secrets_updated_at ON secrets;
+
+CREATE TRIGGER trg_secrets_updated_at BEFORE
+UPDATE ON secrets FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column ();
 
 -- Add encryption/decryption functions using pgcrypto
 CREATE OR REPLACE FUNCTION encrypt_secret(
