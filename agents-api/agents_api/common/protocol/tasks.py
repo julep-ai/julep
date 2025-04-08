@@ -1,3 +1,4 @@
+import asyncio
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -20,6 +21,8 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
     )
     from ...worker.codec import RemoteObject
+    from ...activities.task_steps.base_evaluate import base_evaluate
+    from ...activities.task_steps.secret_storage import SecretStorage
 
 from ...env import max_steps_accessible_in_tasks
 from ...queries.executions import list_execution_transitions
@@ -167,6 +170,7 @@ class StepContext(BaseModel):
     @computed_field
     @property
     def tools(self) -> list[Tool | CreateToolRequest]:
+        secrets = SecretStorage()
         execution_input = self.execution_input
         task = execution_input.task
         agent_tools = execution_input.agent_tools
@@ -188,8 +192,10 @@ class StepContext(BaseModel):
         task_tools = []
         for tool in task.tools:
             tool_def = tool.model_dump()
+            spec = tool_def.pop("spec", {}) or {}
+            evaluated_spec = asyncio.run(base_evaluate(spec, values={"secrets": secrets}))
             task_tools.append(
-                CreateToolRequest(**{tool_def["type"]: tool_def.pop("spec"), **tool_def}),
+                CreateToolRequest(**{tool_def["type"]: evaluated_spec, **tool_def}),
             )
 
         if not task.inherit_tools:
