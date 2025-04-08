@@ -485,6 +485,28 @@ async def _():
         assert "content" in result
         assert b64decode(result["content"]).decode("utf-8") == '{"test": "data"}'
         assert result["status_code"] == 200
+    
+    async with test_utils.TestServer(app) as server:
+        # Use the actual server URL
+        server_url = str(server.make_url("/"))
+
+        input_arguments = {
+            "method": "POST",
+            "url": server_url,
+            "include_response_content": None,
+        }
+        api_call = ApiCallDef(
+            method="POST",
+            url=server_url,
+            headers=None,
+            follow_redirects=None,
+            include_response_content=True,
+        )
+
+        result = await execute_api_call(api_call, input_arguments)
+        assert "content" in result
+        assert b64decode(result["content"]).decode("utf-8") == '{"test": "data"}'
+        assert result["status_code"] == 200
 
     async with test_utils.TestServer(app) as server:
         # Use the actual server URL
