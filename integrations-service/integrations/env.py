@@ -1,4 +1,5 @@
 import multiprocessing
+
 from environs import Env
 
 # Initialize the Env object for environment variable parsing.
