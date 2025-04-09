@@ -1,13 +1,14 @@
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 import asyncpg
 from beartype import beartype
+from beartype.vale import Is
 from fastapi import HTTPException
 
 from ...autogen.openapi_model import Execution
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import make_num_validator, pg_query, rewrap_exceptions, wrap_in_class
 from .constants import OUTPUT_UNNEST_KEY
 
 # Query to list executions using the latest_executions view
@@ -73,8 +74,17 @@ async def list_executions(
     *,
     developer_id: UUID,
     task_id: UUID,
-    limit: int = 100,
-    offset: int = 0,
+    limit: Annotated[
+        int,
+        Is[
+            make_num_validator(
+                min_value=1, max_value=100, err_msg="Limit must be between 1 and 100"
+            )
+        ],
+    ] = 100,
+    offset: Annotated[
+        int, Is[make_num_validator(min_value=0, err_msg="Offset must be >= 0")]
+    ] = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> tuple[str, list]:
@@ -93,14 +103,8 @@ async def list_executions(
         tuple[str, list]: SQL query and parameters for listing executions.
     """
 
-    if sort_by not in ["created_at", "updated_at"]:
-        raise HTTPException(status_code=400, detail="Invalid sort field")
-
-    if limit > 100 or limit < 1:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
-
-    if offset < 0:
-        raise HTTPException(status_code=400, detail="Offset must be >= 0")
+    # if sort_by not in ["created_at", "updated_at"]:
+    #     raise HTTPException(status_code=400, detail="Invalid sort field")
 
     return (
         list_executions_query,

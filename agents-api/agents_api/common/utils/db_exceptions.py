@@ -10,7 +10,10 @@ from functools import partialmethod, wraps
 
 import asyncpg
 import pydantic
+from beartype.roar import BeartypeCallHintParamViolation
 from fastapi import HTTPException
+
+from agents_api.common.exceptions.validation import QueryParamsValidationError
 
 invalid_ref_re = re.compile(r"invalid (\w+) reference", re.IGNORECASE)
 
@@ -180,6 +183,26 @@ def common_db_exceptions(
                 "details": e.errors(),
             },
         )(e),
+        QueryParamsValidationError: lambda e: partialclass(
+            HTTPException,
+            status_code=400,
+            detail=str(e),
+        ),
+        lambda e: isinstance(e, BeartypeCallHintParamViolation)
+        and "typing.Literal['asc', 'desc']" in str(e): partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid sort direction",
+        ),
+        lambda e: isinstance(e, BeartypeCallHintParamViolation)
+        and (
+            "typing.Literal['created_at', 'updated_at']" in str(e)
+            or "typing.Literal['created_at', 'timestamp']" in str(e)
+        ): partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid sort field",
+        ),
     }
 
     # Add operation-specific exceptions

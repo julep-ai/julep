@@ -192,6 +192,126 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert any(d.metadata == {"test": "test2"} for d in docs_list_metadata)
 
 
+@test("query: list user docs, invalid limit")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+
+    await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="User List Test",
+            content="Some user doc content",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    with raises(HTTPException) as exc:
+        await list_docs(
+            developer_id=developer.id,
+            owner_type="user",
+            owner_id=user.id,
+            connection_pool=pool,
+            limit=101,
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+
+@test("query: list user docs, invalid offset")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+
+    await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="User List Test",
+            content="Some user doc content",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    with raises(HTTPException) as exc:
+        await list_docs(
+            developer_id=developer.id,
+            owner_type="user",
+            owner_id=user.id,
+            connection_pool=pool,
+            offset=-1,
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Offset must be >= 0"
+
+
+@test("query: list user docs, invalid sort by")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+
+    await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="User List Test",
+            content="Some user doc content",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    with raises(HTTPException) as exc:
+        await list_docs(
+            developer_id=developer.id,
+            owner_type="user",
+            owner_id=user.id,
+            connection_pool=pool,
+            sort_by="invalid",
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort field"
+
+
+@test("query: list user docs, invalid sort direction")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+    pool = await create_db_pool(dsn=dsn)
+
+    await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="User List Test",
+            content="Some user doc content",
+            metadata={"test": "test"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    with raises(HTTPException) as exc:
+        await list_docs(
+            developer_id=developer.id,
+            owner_type="user",
+            owner_id=user.id,
+            connection_pool=pool,
+            direction="invalid",
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort direction"
+
+
 @test("query: list agent docs")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
@@ -246,6 +366,80 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert len(docs_list_metadata) >= 1
     assert any(d.id == doc_agent_different_metadata.id for d in docs_list_metadata)
     assert any(d.metadata == {"test": "test2"} for d in docs_list_metadata)
+
+
+@test("query: list agent docs, invalid limit")
+async def _(dsn=pg_dsn):
+    """Test that listing agent docs with an invalid limit raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc:
+        await list_docs(
+            developer_id=uuid4(),
+            owner_type="agent",
+            owner_id=uuid4(),
+            connection_pool=pool,
+            limit=101,
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+
+@test("query: list agent docs, invalid offset")
+async def _(dsn=pg_dsn):
+    """Test that listing agent docs with an invalid offset raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc:
+        await list_docs(
+            developer_id=uuid4(),
+            owner_type="agent",
+            owner_id=uuid4(),
+            connection_pool=pool,
+            offset=-1,
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Offset must be >= 0"
+
+
+@test("query: list agent docs, invalid sort by")
+async def _(dsn=pg_dsn):
+    """Test that listing agent docs with an invalid sort by raises an exception."""
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc:
+        await list_docs(
+            developer_id=uuid4(),
+            owner_type="agent",
+            owner_id=uuid4(),
+            connection_pool=pool,
+            sort_by="invalid",
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort field"
+
+
+@test("query: list agent docs, invalid sort direction")
+async def _(dsn=pg_dsn):
+    """Test that listing agent docs with an invalid sort direction raises an exception."""
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc:
+        await list_docs(
+            developer_id=uuid4(),
+            owner_type="agent",
+            owner_id=uuid4(),
+            connection_pool=pool,
+            direction="invalid",
+        )
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort direction"
 
 
 @test("query: delete user doc")
