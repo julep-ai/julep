@@ -1,4 +1,4 @@
-import base64
+from base64 import b64encode
 from typing import Any, TypedDict
 
 import httpx
@@ -20,6 +20,7 @@ class RequestArgs(TypedDict):
     files: dict[str, Any] | None
     method: str | None
     follow_redirects: bool | None
+    include_response_content: bool = True
 
 
 @beartype
@@ -49,6 +50,8 @@ async def execute_api_call(
             if activity.in_activity():
                 activity.logger.debug(f"Making API call: {method} to {url}")
 
+            include_response_content = request_args.pop("include_response_content", None)
+
             # Execute the HTTP request
             response = await client.request(
                 method=method,
@@ -71,15 +74,14 @@ async def execute_api_call(
                     )
                 raise
 
-            # Encode content as base64 for safety
-            content_base64 = base64.b64encode(response.content).decode("ascii")
-
             # Prepare response dictionary
             response_dict = {
                 "status_code": response.status_code,
                 "headers": dict(response.headers),
-                "content": content_base64,
             }
+
+            if include_response_content or api_call.include_response_content:
+                response_dict.update({"content": b64encode(response.content).decode("ascii")})
 
             # Try to parse JSON response if possible
             try:
