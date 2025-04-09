@@ -12,6 +12,7 @@ from .Tools import (
     ChosenBash20241022,
     ChosenComputer20241022,
     ChosenFunctionCall,
+    ChosenSystemCall,
     ChosenTextEditor20241022,
     Tool,
     ToolResponse,
@@ -31,6 +32,7 @@ class BaseEntry(BaseModel):
         list[Content | ContentModel3 | ContentModel]
         | Tool
         | ChosenFunctionCall
+        | ChosenSystemCall
         | ChosenComputer20241022
         | ChosenTextEditor20241022
         | ChosenBash20241022
@@ -40,6 +42,7 @@ class BaseEntry(BaseModel):
             list[ContentModel1 | ContentModel3 | ContentModel2]
             | Tool
             | ChosenFunctionCall
+            | ChosenSystemCall
             | ChosenComputer20241022
             | ChosenTextEditor20241022
             | ChosenBash20241022
@@ -56,6 +59,7 @@ class BaseEntry(BaseModel):
     tool_calls: (
         list[
             ChosenFunctionCall
+            | ChosenSystemCall
             | ChosenComputer20241022
             | ChosenTextEditor20241022
             | ChosenBash20241022
