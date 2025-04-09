@@ -29,4 +29,4 @@ raw_workers: str | None = env.str("GUNICORN_WORKERS", default=None)
 if raw_workers and raw_workers.strip():
     gunicorn_workers: int = int(raw_workers)
 else:
-    gunicorn_workers: int = multiprocessing.cpu_count() // gunicorn_cpu_divisor
+    gunicorn_workers: int = max(multiprocessing.cpu_count() // gunicorn_cpu_divisor, 1)
