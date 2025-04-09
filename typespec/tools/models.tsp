@@ -281,13 +281,13 @@ model ToolResponse {
 }
 
 /** Payload for creating a tool */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateToolRequest {
     ...Tool;
 }
 
 /** Payload for updating a tool */
-@withVisibility("update")
+@withVisibility(Lifecycle.Update)
 model UpdateToolRequest {
     ...Tool;
 }
@@ -310,7 +310,7 @@ model BaseChosenToolCall {
     text_editor_20241022?: ChosenTextEditor20241022;
     bash_20241022?: ChosenBash20241022;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     id?: string;
 }
 

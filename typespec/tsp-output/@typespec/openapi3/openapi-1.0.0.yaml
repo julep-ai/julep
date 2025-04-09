@@ -478,7 +478,7 @@ paths:
         '201':
           description: The request has succeeded and a new resource has been created as a result.
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
                 enum:
@@ -510,7 +510,7 @@ paths:
         '200':
           description: The request has succeeded.
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
                 enum:
@@ -541,7 +541,7 @@ paths:
         '200':
           description: The request has succeeded.
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
                 enum:
@@ -3012,9 +3012,9 @@ components:
       type: integer
       format: uint16
       minimum: 1
+      description: Limit the number of results
       maximum: 1000
       exclusiveMaximum: true
-      description: Limit the number of results
     Common.logit_bias:
       type: number
       format: float
@@ -3233,9 +3233,9 @@ components:
           description: The documents that were found
         time:
           type: number
+          description: The time taken to search in seconds
           minimum: 0
           exclusiveMinimum: true
-          description: The time taken to search in seconds
     Docs.EmbedQueryResponse:
       type: object
       required:
@@ -3281,9 +3281,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
         trigram_similarity_threshold:
           type: number
@@ -3381,9 +3381,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Docs.BaseDocSearchRequest'
@@ -3979,7 +3979,8 @@ components:
           description: Description of the file
           default: ''
         mime_type:
-          oneOf:
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Common.mimeType'
           nullable: true
           description: MIME type of the file
@@ -4018,7 +4019,8 @@ components:
           description: Description of the file
           default: ''
         mime_type:
-          oneOf:
+          type: object
+          allOf:
             - $ref: '#/components/schemas/Common.mimeType'
           nullable: true
           description: MIME type of the file
@@ -4118,7 +4120,7 @@ components:
         - type
         - button
         - x
-        - y
+        - 'y'
       properties:
         type:
           type: string
@@ -4139,7 +4141,7 @@ components:
           type: integer
           format: int32
           description: The x-coordinate where the click occurred.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate where the click occurred.
@@ -4296,13 +4298,13 @@ components:
       type: object
       required:
         - x
-        - y
+        - 'y'
       properties:
         x:
           type: integer
           format: int32
           description: The x-coordinate.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate.
@@ -4342,7 +4344,7 @@ components:
         top_p:
           type: number
           default: 1
-        n:
+        'n':
           type: integer
           format: int32
         stop:
@@ -4415,7 +4417,7 @@ components:
       required:
         - type
         - x
-        - y
+        - 'y'
       properties:
         type:
           type: string
@@ -4427,7 +4429,7 @@ components:
           type: integer
           format: int32
           description: The x-coordinate where the double click occurred.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate where the double click occurred.
@@ -4837,7 +4839,7 @@ components:
       required:
         - type
         - x
-        - y
+        - 'y'
       properties:
         type:
           type: string
@@ -4849,7 +4851,7 @@ components:
           type: integer
           format: int32
           description: The x-coordinate to move to.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate to move to.
@@ -5182,7 +5184,7 @@ components:
       required:
         - type
         - x
-        - y
+        - 'y'
         - scroll_x
         - scroll_y
       properties:
@@ -5196,7 +5198,7 @@ components:
           type: integer
           format: int32
           description: The x-coordinate where the scroll occurred.
-        y:
+        'y':
           type: integer
           format: int32
           description: The y-coordinate where the scroll occurred.
@@ -5510,22 +5512,6 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/Common.uuid'
-        user:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: User ID of user associated with this session
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/Common.uuid'
-        agent:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: Agent ID of agent associated with this session
-        agents:
-          type: array
-          items:
-            $ref: '#/components/schemas/Common.uuid'
         situation:
           type: string
           nullable: true
@@ -5545,7 +5531,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -5565,10 +5551,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearch'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearch'
+              nullable: true
           description: Recall options for the session
           default: null
         metadata:
@@ -5621,7 +5615,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -5641,10 +5635,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearch'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearch'
+              nullable: true
           description: Recall options for the session
           default: null
         metadata:
@@ -5681,9 +5683,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
         trigram_similarity_threshold:
           type: number
@@ -5723,9 +5725,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
         trigram_similarity_threshold:
           type: number
@@ -5808,7 +5810,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -5828,10 +5830,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearchUpdate'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearchUpdate'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearchUpdate'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearchUpdate'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearchUpdate'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearchUpdate'
+              nullable: true
           description: Recall options for the session
           default: null
         metadata:
@@ -5851,6 +5861,7 @@ components:
         - id
         - created_at
         - updated_at
+        - kind
       properties:
         situation:
           type: string
@@ -5877,7 +5888,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -5897,10 +5908,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearch'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearch'
+              nullable: true
           description: Recall options for the session
           default: null
         id:
@@ -6034,7 +6053,7 @@ components:
           description: Threshold value for the adaptive context functionality
           default: null
         context_overflow:
-          oneOf:
+          allOf:
             - $ref: '#/components/schemas/Sessions.ContextOverflowType'
           nullable: true
           description: Action to start on context window overflow
@@ -6054,10 +6073,18 @@ components:
           default: false
         recall_options:
           anyOf:
-            - $ref: '#/components/schemas/Sessions.VectorDocSearch'
-            - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
-            - $ref: '#/components/schemas/Sessions.HybridDocSearch'
-          nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.VectorDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.TextOnlyDocSearch'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Sessions.HybridDocSearch'
+              nullable: true
           description: Recall options for the session
           default: null
         metadata:
@@ -6085,9 +6112,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearch'
@@ -6109,9 +6136,9 @@ components:
         mmr_strength:
           type: number
           minimum: 0
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           maximum: 1
           exclusiveMaximum: true
-          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
       allOf:
         - $ref: '#/components/schemas/Sessions.BaseDocSearchUpdate'
@@ -6531,6 +6558,8 @@ components:
           description: The steps to run for each iteration
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -6672,21 +6701,66 @@ components:
           description: The steps to run if the condition is true
         else:
           anyOf:
-            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
-            - $ref: '#/components/schemas/Tasks.EvaluateStep'
-            - $ref: '#/components/schemas/Tasks.ToolCallStep'
-            - $ref: '#/components/schemas/Tasks.PromptStep'
-            - $ref: '#/components/schemas/Tasks.GetStep'
-            - $ref: '#/components/schemas/Tasks.SetStep'
-            - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
-            - $ref: '#/components/schemas/Tasks.ReturnStep'
-            - $ref: '#/components/schemas/Tasks.SleepStep'
-            - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.SwitchStep'
-            - $ref: '#/components/schemas/Tasks.ForeachStep'
-            - $ref: '#/components/schemas/Tasks.ParallelStep'
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.WaitForInputStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.EvaluateStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ToolCallStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.PromptStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.GetStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SetStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.LogStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.YieldStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ReturnStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SleepStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SwitchStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ForeachStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ParallelStep'
+              nullable: true
             - type: object
               required:
                 - kind_
@@ -6746,7 +6820,7 @@ components:
                       description: The label of this step for referencing it from other steps
                   discriminator:
                     propertyName: kind_
-          nullable: true
+              nullable: true
           description: The steps to run if the condition is false
           default: null
       allOf:
@@ -6832,6 +6906,8 @@ components:
                   description: Whether to run the reduce expression in parallel and how many items to run in each batch
               allOf:
                 - type: object
+                  required:
+                    - kind_
                   properties:
                     label:
                       allOf:
@@ -6845,21 +6921,66 @@ components:
           description: The steps to run if the condition is true
         else:
           anyOf:
-            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
-            - $ref: '#/components/schemas/Tasks.EvaluateStep'
-            - $ref: '#/components/schemas/Tasks.ToolCallStep'
-            - $ref: '#/components/schemas/Tasks.PromptStepUpdateItem'
-            - $ref: '#/components/schemas/Tasks.GetStep'
-            - $ref: '#/components/schemas/Tasks.SetStep'
-            - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
-            - $ref: '#/components/schemas/Tasks.ReturnStep'
-            - $ref: '#/components/schemas/Tasks.SleepStep'
-            - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.IfElseWorkflowStepUpdateItem'
-            - $ref: '#/components/schemas/Tasks.SwitchStepUpdateItem'
-            - $ref: '#/components/schemas/Tasks.ForeachStepUpdateItem'
-            - $ref: '#/components/schemas/Tasks.ParallelStepUpdateItem'
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.WaitForInputStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.EvaluateStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ToolCallStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.PromptStepUpdateItem'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.GetStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SetStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.LogStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.YieldStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ReturnStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SleepStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.IfElseWorkflowStepUpdateItem'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.SwitchStepUpdateItem'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ForeachStepUpdateItem'
+              nullable: true
+            - type: object
+              allOf:
+                - $ref: '#/components/schemas/Tasks.ParallelStepUpdateItem'
+              nullable: true
             - type: object
               required:
                 - over
@@ -6897,6 +7018,8 @@ components:
                   description: Whether to run the reduce expression in parallel and how many items to run in each batch
               allOf:
                 - type: object
+                  required:
+                    - kind_
                   properties:
                     label:
                       allOf:
@@ -6907,11 +7030,13 @@ components:
                       description: Discriminator property for BaseWorkflowStep.
                   discriminator:
                     propertyName: kind_
-          nullable: true
+              nullable: true
           description: The steps to run if the condition is false
           default: null
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -7020,6 +7145,8 @@ components:
           description: The steps to run in parallel. Max concurrency will depend on the platform.
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -7102,6 +7229,8 @@ components:
                     description: Whether to run the reduce expression in parallel and how many items to run in each batch
                 allOf:
                   - type: object
+                    required:
+                      - kind_
                     properties:
                       label:
                         allOf:
@@ -7189,6 +7318,8 @@ components:
                   description: Whether to run the reduce expression in parallel and how many items to run in each batch
               allOf:
                 - type: object
+                  required:
+                    - kind_
                   properties:
                     label:
                       allOf:
@@ -7233,10 +7364,14 @@ components:
                     type: string
                   content:
                     anyOf:
-                      - $ref: '#/components/schemas/Common.JinjaTemplate'
+                      - type: object
+                        allOf:
+                          - $ref: '#/components/schemas/Common.JinjaTemplate'
+                        nullable: true
                       - type: array
                         items:
                           $ref: '#/components/schemas/Common.JinjaTemplate'
+                        nullable: true
                       - type: array
                         items:
                           anyOf:
@@ -7338,7 +7473,7 @@ components:
                                               data:
                                                 $ref: '#/components/schemas/Common.JinjaTemplate'
                               description: Anthropic image content part
-                    nullable: true
+                        nullable: true
                     description: The content parts of the message
                   name:
                     type: string
@@ -7443,10 +7578,14 @@ components:
                     type: string
                   content:
                     anyOf:
-                      - $ref: '#/components/schemas/Common.JinjaTemplate'
+                      - type: object
+                        allOf:
+                          - $ref: '#/components/schemas/Common.JinjaTemplate'
+                        nullable: true
                       - type: array
                         items:
                           $ref: '#/components/schemas/Common.JinjaTemplate'
+                        nullable: true
                       - type: array
                         items:
                           anyOf:
@@ -7548,7 +7687,7 @@ components:
                                               data:
                                                 $ref: '#/components/schemas/Common.JinjaTemplate'
                               description: Anthropic image content part
-                    nullable: true
+                        nullable: true
                     description: The content parts of the message
                   name:
                     type: string
@@ -7611,6 +7750,8 @@ components:
           default: false
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -7826,6 +7967,8 @@ components:
           description: The cond tree
       allOf:
         - type: object
+          required:
+            - kind_
           properties:
             label:
               allOf:
@@ -8999,6 +9142,8 @@ components:
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
+      required:
+        - provider
       properties:
         provider:
           type: string

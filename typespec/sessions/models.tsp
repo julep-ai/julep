@@ -105,7 +105,7 @@ enum ContextOverflowType {
 
 @discriminator("kind")
 model Session {
-    @visibility("none")
+    @invisible(Lifecycle)
     kind:  (
         | "single_agent_no_user"
         | "single_agent_single_user"
@@ -116,17 +116,17 @@ model Session {
     );
 
     /** User ID of user associated with this session */
-    @visibility("create")
+    @visibility(Lifecycle.Create)
     user?: uuid;
 
-    @visibility("create")
+    @visibility(Lifecycle.Create)
     users?: uuid[];
 
     /** Agent ID of agent associated with this session */
-    @visibility("create")
+    @visibility(Lifecycle.Create)
     agent?: uuid;
 
-    @visibility("create")
+    @visibility(Lifecycle.Create)
     agents?: uuid[];
 
     /** Session situation */
@@ -136,7 +136,7 @@ model Session {
     system_template?: string;
 
     /** Summary (null at the beginning) - generated automatically after every interaction */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     summary: string | null = null;
 
     /** Render system and assistant message content as jinja templates */
@@ -166,7 +166,7 @@ model Session {
 }
 
 model SingleAgentNoUserSession extends Session {
-    @visibility("none")
+    @invisible(Lifecycle)
     kind: "single_agent_no_user" = "single_agent_no_user";
 
     user?: never;
@@ -177,7 +177,7 @@ model SingleAgentNoUserSession extends Session {
 }
 
 model SingleAgentSingleUserSession extends Session {
-    @visibility("none")
+    @invisible(Lifecycle)
     kind: "single_agent_single_user" = "single_agent_single_user";
 
     users?: never;
@@ -188,7 +188,7 @@ model SingleAgentSingleUserSession extends Session {
 }
 
 model SingleAgentMultiUserSession extends Session {
-    @visibility("none")
+    @invisible(Lifecycle)
     kind: "single_agent_multi_user" = "single_agent_multi_user";
 
     user?: never;
@@ -201,7 +201,7 @@ model SingleAgentMultiUserSession extends Session {
 }
 
 model MultiAgentNoUserSession extends Session {
-    @visibility("none")
+    @invisible(Lifecycle)
     kind: "multi_agent_no_user" = "multi_agent_no_user";
 
     user?: never;
@@ -213,7 +213,7 @@ model MultiAgentNoUserSession extends Session {
 }
 
 model MultiAgentSingleUserSession extends Session {
-    @visibility("none")
+    @invisible(Lifecycle)
     kind: "multi_agent_single_user" = "multi_agent_single_user";
 
     users?: never;
@@ -225,7 +225,7 @@ model MultiAgentSingleUserSession extends Session {
 }
 
 model MultiAgentMultiUserSession extends Session {
-    @visibility("none")
+    @invisible(Lifecycle)
     kind: "multi_agent_multi_user" = "multi_agent_multi_user";
 
     user?: never;
@@ -240,7 +240,7 @@ model MultiAgentMultiUserSession extends Session {
 
 
 /** Payload for updating a session */
-@withVisibility("update")
+@withVisibility(Lifecycle.Update)
 model UpdateSessionRequest {
     ...Session;
 }
@@ -249,12 +249,12 @@ model UpdateSessionRequest {
 model PatchSessionRequest is UpdateSessionRequest {}
 
 /** Payload for creating a session */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateSessionRequest {
     ...Session;
 }
 
-@withVisibility("create", "update")
+@withVisibility(Lifecycle.Create, Lifecycle.Update)
 model CreateOrUpdateSessionRequest extends CreateSessionRequest {
     @path
     id: uuid;
