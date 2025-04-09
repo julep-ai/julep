@@ -34,6 +34,8 @@ dependencies = [
   "pyjwt>=2.10.1",
   "watchdog>=6.0.0",
   "requests>=2.32.3",
+  "pygithub>=2.6.1",
+  "joblib>=1.4.2",
 ]
 
 [project.scripts]
