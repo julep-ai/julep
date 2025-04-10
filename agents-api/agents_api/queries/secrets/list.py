@@ -1,22 +1,27 @@
 """Query functions for listing secrets."""
 
-from typing import Any
 from uuid import UUID
 
-from asyncpg import Connection
+from beartype import beartype
 
 from ...autogen.openapi_model import Secret
 from ...common.utils.db_exceptions import common_db_exceptions
-from ..utils import pg_query, wrap_in_class, rewrap_exceptions
-from beartype import beartype
-
+from ...env import secrets_master_key
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 query = """
 SELECT
-    secret_id, developer_id, name, description,
-    encryption_key_id, created_at, updated_at, metadata
+    secret_id, developer_id, agent_id, name, description,
+    created_at, updated_at, metadata,
+    decrypt_secret(value_encrypted, $5) as value
 FROM secrets
-WHERE developer_id = $1
+WHERE (
+    (developer_id = $1 AND $1 IS NOT NULL) OR
+    (agent_id = $2 AND $2 IS NOT NULL)
+)
+ORDER BY created_at DESC
+LIMIT $3
+OFFSET $4
 """
 
 
@@ -28,12 +33,19 @@ WHERE developer_id = $1
 @pg_query
 @beartype
 async def list_secrets(
-    conn: Connection,
-    developer_id: UUID,
     *,
+    developer_id: UUID | None,
+    agent_id: UUID | None,
     limit: int = 100,
     offset: int = 0,
-    name_prefix: str | None = None,
-    metadata_filter: dict[str, Any] | None = None,
 ) -> tuple[str, list]:
-    return []
+    return (
+        query,
+        [
+            developer_id,
+            agent_id,
+            limit,
+            offset,
+            secrets_master_key,
+        ],
+    )

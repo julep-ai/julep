@@ -1,24 +1,31 @@
 """Query functions for updating secrets."""
 
-from typing import Any
 from uuid import UUID
 
-from asyncpg import Connection
-
-from ...autogen.openapi_model import Secret
-from ...common.utils.db_exceptions import common_db_exceptions
-from ...metrics.counters import query_metrics
-from ..utils import pg_query, wrap_in_class, rewrap_exceptions
 from beartype import beartype
 
+from ...autogen.openapi_model import Secret, UpdateSecretRequest
+from ...common.utils.db_exceptions import common_db_exceptions
+from ...env import secrets_master_key
+from ...metrics.counters import query_metrics
+from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-query = f"""
+query = """
     UPDATE secrets
-    SET {", ".join(updates)}, updated_at = NOW()
-    WHERE secret_id = $1 AND developer_id = $2
-    RETURNING
-        secret_id, developer_id, name, description,
-        encryption_key_id, created_at, updated_at, metadata
+    SET updated_at = NOW(),
+        name = COALESCE($4, name),
+        description = COALESCE($5, description),
+        metadata = COALESCE($6, metadata),
+        value_encrypted = CASE
+            WHEN $7 IS NOT NULL THEN encrypt_secret($7, $8)
+            ELSE value_encrypted
+        END
+    WHERE secret_id = $1
+    AND (
+        (developer_id = $2 AND $2 IS NOT NULL) OR
+        (agent_id = $3 AND $3 IS NOT NULL)
+    )
+    RETURNING *;
 """
 
 
@@ -32,12 +39,22 @@ query = f"""
 @pg_query
 @beartype
 async def update_secret(
-    conn: Connection,
-    secret_id: UUID,
-    developer_id: UUID,
     *,
-    name: str | None = None,
-    description: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    secret_id: UUID,
+    developer_id: UUID | None,
+    agent_id: UUID | None,
+    data: UpdateSecretRequest,
 ) -> tuple[str, list]:
-    return []
+    return (
+        query,
+        [
+            secret_id,
+            developer_id,
+            agent_id,
+            data.name,
+            data.description,
+            data.metadata,
+            data.value,
+            secrets_master_key,
+        ],
+    )

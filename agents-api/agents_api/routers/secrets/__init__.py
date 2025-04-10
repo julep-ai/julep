@@ -1,6 +1,11 @@
-from .create import create_secret as create_secret
-from .delete import delete_secret as delete_secret
-from .get import get_secret as get_secret
-from .list import list_secrets as list_secrets
+from .create_secret import create_agent_secret as create_agent_secret
+from .create_secret import create_developer_secret as create_developer_secret
+from .delete_secret import delete_agent_secret as delete_agent_secret
+from .delete_secret import delete_developer_secret as delete_developer_secret
+from .get_secret import get_agent_secret as get_agent_secret
+from .get_secret import get_developer_secret as get_developer_secret
+from .list_secrets import list_agent_secrets as list_agent_secrets
+from .list_secrets import list_developer_secrets as list_developer_secrets
 from .router import router as router
-from .update import update_secret as update_secret
+from .update_secret import update_agent_secret as update_agent_secret
+from .update_secret import update_developer_secret as update_developer_secret

@@ -1,15 +1,6 @@
-import "@typespec/rest";
-import "@typespec/openapi";
-import "@typespec/versioning";
-import "@typespec/http";
 import "../common";
-import "../versions.tsp";
 
-using TypeSpec.Http;
-using TypeSpec.Rest;
-using TypeSpec.Versioning;
 using Common;
-using Versions;
 
 namespace Secrets;
 
@@ -19,12 +10,15 @@ namespace Secrets;
 
 /** A secret that can be used in tasks and sessions */
 model Secret {
-  /** Unique identifier for the secret */
-  @key
-  secret_id: uuid;
+  ...HasId;
+  ...HasTimestamps;
+  ...HasMetadata;
 
   /** ID of the developer who owns this secret */
-  developer_id: uuid;
+  developer_id?: uuid;
+
+  /** ID of the agent this secret is associated with (optional) */
+  agent_id?: uuid;
 
   /** Name of the secret */
   name: string;
@@ -34,37 +28,24 @@ model Secret {
 
   /** The decrypted secret value */
   value: string;
-
-  ...HasTimestamps;
-  ...HasMetadata;
 }
 
-/** Input for creating a new secret */
-model SecretCreate {
-  /** Name of the secret */
-  name: string;
-
-  /** Description of what the secret is used for */
-  description?: string;
-
-  /** The secret value to store */
-  value: string;
-
-  /** Additional metadata about the secret */
-  metadata?: Record<string>;
+@withVisibility("create", "update")
+model UpdateSecretRequest {
+    ...Secret;
 }
 
-/** Input for updating a secret */
-model SecretUpdate {
-  /** New name for the secret */
-  name?: string;
+@withVisibility("create")
+model CreateSecretRequest {
+    ...UpdateSecretRequest;
+}
 
-  /** New description for the secret */
-  description?: string;
+model PatchSecretRequest is UpdateSecretRequest {}
 
-  /** The secret value to store */
-  value: string;
+model GetSecretRequest {
+    name: string;
+}
 
-  /** New metadata for the secret */
-  metadata?: Record<string>;
+model GetSecretResponse {
+    ...Secret;
 }
