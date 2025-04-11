@@ -34,7 +34,7 @@ class SecretStorage:
         self._developer_id = developer_id
         self._agent_id = agent_id
 
-    def __getattribute__(self, name: str) -> str:
+    def __getattr__(self, name: str) -> str:
         """Get a secret by name.
 
         This method is called when an attribute is accessed on the SecretStorage instance.
