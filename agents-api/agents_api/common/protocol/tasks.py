@@ -192,7 +192,7 @@ class StepContext(BaseModel):
         for tool in task.tools:
             tool_def = tool.model_dump()
             spec = tool_def.pop("spec", {}) or {}
-            evaluated_spec = evaluate_expressions(spec, values={"secrets": secrets})
+            evaluated_spec = evaluate_expressions(spec, values={"secrets": secrets}) if spec else {}
             task_tools.append(
                 CreateToolRequest(**{tool_def["type"]: evaluated_spec, **tool_def}),
             )

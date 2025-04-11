@@ -37,8 +37,8 @@ WHERE name = $1 AND (
 @beartype
 async def get_secret_query(
     *,
-    developer_id: UUID,
-    agent_id: UUID,
+    developer_id: UUID | None,
+    agent_id: UUID | None,
     data: GetSecretRequest,
 ) -> tuple[str, list]:
     return (
