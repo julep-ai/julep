@@ -170,10 +170,10 @@ class StepContext(BaseModel):
     @computed_field
     @property
     def tools(self) -> list[Tool | CreateToolRequest]:
-        secrets = SecretStorage()
         execution_input = self.execution_input
         task = execution_input.task
         agent_tools = execution_input.agent_tools
+        secrets = SecretStorage(developer_id=self.execution_input.developer_id)
 
         step_tools: Literal["all"] | list[ToolRef | CreateToolRequest] = getattr(
             self.current_step,
