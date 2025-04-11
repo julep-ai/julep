@@ -1,5 +1,6 @@
 from functools import wraps
 from typing import Literal
+from uuid import UUID
 
 import aiohttp
 from beartype import beartype
@@ -8,6 +9,7 @@ from litellm import aembedding as _aembedding
 from litellm import get_supported_openai_params
 from litellm.utils import CustomStreamWrapper, ModelResponse, get_valid_models
 
+from ..common.utils.usage import track_usage, track_embedding_usage
 from ..env import (
     embedding_dimensions,
     embedding_model_id,
@@ -76,7 +78,26 @@ async def acompletion(
         api_key=custom_api_key or litellm_master_key,
     )
 
-    return patch_litellm_response(model_response)
+    response = patch_litellm_response(model_response)
+    
+    # Track usage in database if we have a user ID (which should be the developer ID)
+    user = settings.get("user")
+    if user and isinstance(response, ModelResponse):
+        try:
+            model = response.model
+            await track_usage(
+                developer_id=UUID(user),
+                model=model,
+                messages=messages,
+                response=response,
+                custom_api_used= custom_api_key is not None,
+                metadata={"tags": kwargs.get("tags", [])},
+            )
+        except Exception as e:
+            # Log error but don't fail the request if usage tracking fails
+            print(f"Error tracking usage: {e}")
+
+    return response
 
 
 @wraps(_aembedding)
@@ -113,6 +134,27 @@ async def aembedding(
         drop_params=True,
         **settings,
     )
+    
+    # Track embedding usage if we have a user ID
+    user = settings.get("user")
+    if user:
+        try:
+            model = response.model
+            await track_embedding_usage(
+                developer_id=UUID(user),
+                model=model,
+                inputs=input,
+                response=response,
+                custom_api_used=bool(custom_api_key),
+                metadata={
+                    "request_id": response.id if hasattr(response, "id") else None,
+                    "embedding_count": len(input),
+                    "tags": settings.get("tags", []),
+                },
+            )
+        except Exception as e:
+            # Log error but don't fail the request if usage tracking fails
+            print(f"Error tracking embedding usage: {e}")
 
     embedding_list: list[dict[Literal["embedding"], list[float]]] = response.data
 
