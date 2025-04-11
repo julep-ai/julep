@@ -130,6 +130,10 @@ class ApiCallDef(BaseModel):
     """
     The headers to send with the request
     """
+    secrets: dict[str, SecretRef] | None = None
+    """
+    Secret references to use in templates (available only at setup time, not during execution)
+    """
     content: str | None = None
     """
     The content as base64 to send with the request
@@ -204,6 +208,10 @@ class ApiCallDefUpdate(BaseModel):
     headers: dict[str, str] | None = None
     """
     The headers to send with the request
+    """
+    secrets: dict[str, SecretRefUpdate] | None = None
+    """
+    Secret references to use in templates (available only at setup time, not during execution)
     """
     content: str | None = None
     """
@@ -379,6 +387,10 @@ class BaseIntegrationDef(BaseModel):
     """
     The setup parameters the integration accepts
     """
+    secrets: dict[str, SecretRef] | None = None
+    """
+    Secret references to use in templates (available only at setup time, not during execution)
+    """
     arguments: Any | None = None
     """
     The arguments to pre-apply to the integration call
@@ -422,6 +434,10 @@ class BaseIntegrationDefUpdate(BaseModel):
     setup: Any | None = None
     """
     The setup parameters the integration accepts
+    """
+    secrets: dict[str, SecretRefUpdate] | None = None
+    """
+    Secret references to use in templates (available only at setup time, not during execution)
     """
     arguments: Any | None = None
     """
@@ -1714,6 +1730,26 @@ class RemoteBrowserSetup(BaseModel):
     height: int | None = None
     """
     The height of the browser
+    """
+
+
+class SecretRef(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    """
+    The name of the secret to reference
+    """
+
+
+class SecretRefUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    """
+    The name of the secret to reference
     """
 
 

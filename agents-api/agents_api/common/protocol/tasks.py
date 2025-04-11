@@ -19,6 +19,8 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
+    from ...common.utils.expressions import evaluate_expressions
+    from ...common.utils.secret_storage import SecretStorage
     from ...worker.codec import RemoteObject
 
 from ...env import max_steps_accessible_in_tasks
@@ -170,6 +172,7 @@ class StepContext(BaseModel):
         execution_input = self.execution_input
         task = execution_input.task
         agent_tools = execution_input.agent_tools
+        secrets = SecretStorage(developer_id=self.execution_input.developer_id)
 
         step_tools: Literal["all"] | list[ToolRef | CreateToolRequest] = getattr(
             self.current_step,
@@ -188,8 +191,12 @@ class StepContext(BaseModel):
         task_tools = []
         for tool in task.tools:
             tool_def = tool.model_dump()
+            spec = tool_def.pop("spec", {}) or {}
+            evaluated_spec = (
+                evaluate_expressions(spec, values={"secrets": secrets}) if spec else {}
+            )
             task_tools.append(
-                CreateToolRequest(**{tool_def["type"]: tool_def.pop("spec"), **tool_def}),
+                CreateToolRequest(**{tool_def["type"]: evaluated_spec, **tool_def}),
             )
 
         if not task.inherit_tools:

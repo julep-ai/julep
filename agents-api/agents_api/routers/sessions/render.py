@@ -11,6 +11,8 @@ from ...autogen.openapi_model import (
 )
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
+from ...common.utils.expressions import evaluate_expressions
+from ...common.utils.secret_storage import SecretStorage
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
 from ...env import max_free_sessions
@@ -162,6 +164,7 @@ async def render_chat_input(
     # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
     # but we don't allow that (spec should match type).
     formatted_tools = []
+    secrets = SecretStorage(developer_id=developer.id)
     for i, tool in enumerate(tools):
         if tool.type == "computer_20241022" and tool.computer_20241022:
             function = tool.computer_20241022
@@ -170,7 +173,7 @@ async def render_chat_input(
                 "function": {
                     "name": tool.name,
                     "parameters": {
-                        k: v
+                        k: evaluate_expressions(v, values=secrets)
                         for k, v in function.model_dump().items()
                         if k not in ["name", "type"]
                     }
