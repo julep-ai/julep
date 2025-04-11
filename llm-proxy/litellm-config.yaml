@@ -19,6 +19,18 @@ model_list:
     api_key: os.environ/GEMINI_API_KEY
     tags: ["paid"]
 
+- model_name: gemini-2.0-flash
+  litellm_params:
+    model: gemini/gemini-2.0-flash
+    api_key: os.environ/GEMINI_API_KEY
+    tags: ["paid"]
+
+- model_name: gemini-2.5-pro-preview-03-25
+  litellm_params:
+    model: gemini/gemini-2.5-pro-preview-03-25
+    api_key: os.environ/GEMINI_API_KEY
+    tags: ["paid"]
+
 # OpenAI models
 - model_name: "gpt-4-turbo"
   litellm_params:
@@ -173,6 +185,31 @@ model_list:
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["paid"]
 
+- model_name: "openrouter/meta-llama/llama-4-scout"
+  litellm_params:
+    model: "openrouter/meta-llama/llama-4-scout"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "openrouter/meta-llama/llama-4-scout:free"
+  litellm_params:
+    model: "openrouter/meta-llama/llama-4-scout:free"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["free"]
+
+- model_name: "openrouter/meta-llama/llama-4-maverick"
+  litellm_params:
+    model: "openrouter/meta-llama/llama-4-maverick"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["paid"]
+
+- model_name: "openrouter/meta-llama/llama-4-maverick:free"
+  litellm_params:
+    model: "openrouter/meta-llama/llama-4-maverick:free"
+    api_key: os.environ/OPENROUTER_API_KEY
+    tags: ["free"]
+
+
 # Cerebras Models
 - model_name: "cerebras/llama-3.1-8b"
   litellm_params:
@@ -183,6 +220,12 @@ model_list:
 - model_name: "cerebras/llama-3.3-70b"
   litellm_params:
     model: "cerebras/llama-3.3-70b"
+    api_key: os.environ/CEREBRAS_API_KEY
+    tags: ["paid"]
+  
+- model_name: "cerebras/llama-4-scout-17b-16e-instruct"
+  litellm_params:
+    model: "cerebras/llama-4-scout-17b-16e-instruct"
     api_key: os.environ/CEREBRAS_API_KEY
     tags: ["paid"]
 

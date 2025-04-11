@@ -1,3 +1,5 @@
+import multiprocessing
+
 from environs import Env
 
 # Initialize the Env object for environment variable parsing.
@@ -19,3 +21,12 @@ sentry_dsn: str = env.str("SENTRY_DSN", default=None)
 unstructured_api_key = env.str("UNSTRUCTURED_API_KEY", default=None)
 algolia_api_key = env.str("ALGOLIA_API_KEY", default=None)
 algolia_application_id = env.str("ALGOLIA_APPLICATION_ID", default=None)
+
+# Gunicorn
+gunicorn_cpu_divisor: int = env.int("GUNICORN_CPU_DIVISOR", default=4)
+
+raw_workers: str | None = env.str("GUNICORN_WORKERS", default=None)
+if raw_workers and raw_workers.strip():
+    gunicorn_workers: int = int(raw_workers)
+else:
+    gunicorn_workers: int = max(multiprocessing.cpu_count() // gunicorn_cpu_divisor, 1)

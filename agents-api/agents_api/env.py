@@ -34,6 +34,14 @@ enable_backwards_compatibility_for_syntax: bool = env.bool(
     "ENABLE_BACKWARDS_COMPATIBILITY_FOR_SYNTAX", default=True
 )
 max_steps_accessible_in_tasks: int = env.int("MAX_STEPS_ACCESSIBLE_IN_TASKS", default=250)
+gunicorn_cpu_divisor: int = env.int("GUNICORN_CPU_DIVISOR", default=4)
+
+raw_workers: str | None = env.str("GUNICORN_WORKERS", default=None)
+if raw_workers and raw_workers.strip():
+    gunicorn_workers: int = int(raw_workers)
+else:
+    gunicorn_workers: int = max(multiprocessing.cpu_count() // gunicorn_cpu_divisor, 1)
+
 
 # Tasks
 # -----

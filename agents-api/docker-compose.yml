@@ -49,6 +49,8 @@ x--shared-environment: &shared-environment
   DESKLIB_URL: ${DESKLIB_URL:-http://35.243.190.233/detect}
   SAPLING_URL: ${SAPLING_URL:-https://api.sapling.ai/api/v1/aidetect}
   BRAVE_API_KEY: ${BRAVE_API_KEY}
+  GUNICORN_CPU_DIVISOR: ${GUNICORN_CPU_DIVISOR:-4}
+  GUNICORN_WORKERS: ${GUNICORN_WORKERS}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}
