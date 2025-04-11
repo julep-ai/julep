@@ -1,4 +1,3 @@
-import asyncio
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -9,8 +8,8 @@ with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
     from pydantic_partial import create_partial_model
 
-    from ...activities.task_steps.base_evaluate import base_evaluate
-    from ...activities.task_steps.secret_storage import SecretStorage
+    from ...common.utils.expressions import evaluate_expressions
+    from ...common.utils.secret_storage import SecretStorage
     from ...autogen.openapi_model import (
         CreateToolRequest,
         CreateTransitionRequest,
@@ -193,7 +192,7 @@ class StepContext(BaseModel):
         for tool in task.tools:
             tool_def = tool.model_dump()
             spec = tool_def.pop("spec", {}) or {}
-            evaluated_spec = asyncio.run(base_evaluate(spec, values={"secrets": secrets}))
+            evaluated_spec = evaluate_expressions(spec, values={"secrets": secrets})
             task_tools.append(
                 CreateToolRequest(**{tool_def["type"]: evaluated_spec, **tool_def}),
             )

@@ -22,7 +22,7 @@ from ..autogen.openapi_model import (
 from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
 from ..queries import developers
-from .utils import get_handler
+from ..common.utils.evaluator import get_handler
 
 
 @beartype

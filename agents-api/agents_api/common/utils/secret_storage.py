@@ -1,5 +1,6 @@
 """Secret storage class for accessing secrets in expressions."""
 
+import asyncio
 import logging
 from uuid import UUID
 
@@ -33,7 +34,7 @@ class SecretStorage:
         self._developer_id = developer_id
         self._agent_id = agent_id
 
-    async def __getattribute__(self, name: str) -> str:
+    def __getattribute__(self, name: str) -> str:
         """Get a secret by name.
 
         This method is called when an attribute is accessed on the SecretStorage instance.
@@ -49,10 +50,12 @@ class SecretStorage:
             AttributeError: If the secret doesn't exist or cannot be retrieved
         """
         try:
-            return await get_secret_query(
-                developer_id=self._developer_id,
-                agent_id=self._agent_id,
-                data=GetSecretRequest(name=name),
+            return asyncio.run(
+                get_secret_query(
+                    developer_id=self._developer_id,
+                    agent_id=self._agent_id,
+                    data=GetSecretRequest(name=name),
+                ),
             )
         except asyncpg.PostgresError as e:
             logger.exception("Error retrieving secret: %s", e)
