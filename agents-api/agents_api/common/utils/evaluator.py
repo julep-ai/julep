@@ -23,9 +23,9 @@ import re2
 from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
 
-from ..autogen.openapi_model import SystemDef
-from ..common.nlp import nlp
-from ..common.utils import yaml
+from ...autogen.openapi_model import SystemDef
+from ...common.nlp import nlp
+from .yaml import yaml
 from .humanization_utils import humanize_paragraph, reassemble_markdown, split_with_langchain
 
 # Security limits
@@ -694,36 +694,36 @@ def get_handler(system: SystemDef) -> Callable:
         The base handler function.
     """
 
-    from ..queries.agents.create_agent import create_agent as create_agent_query
-    from ..queries.agents.delete_agent import delete_agent as delete_agent_query
-    from ..queries.agents.get_agent import get_agent as get_agent_query
-    from ..queries.agents.list_agents import list_agents as list_agents_query
-    from ..queries.agents.update_agent import update_agent as update_agent_query
-    from ..queries.docs.delete_doc import delete_doc as delete_doc_query
-    from ..queries.docs.list_docs import list_docs as list_docs_query
-    from ..queries.entries.get_history import get_history as get_history_query
-    from ..queries.sessions.create_or_update_session import (
+    from ...queries.agents.create_agent import create_agent as create_agent_query
+    from ...queries.agents.delete_agent import delete_agent as delete_agent_query
+    from ...queries.agents.get_agent import get_agent as get_agent_query
+    from ...queries.agents.list_agents import list_agents as list_agents_query
+    from ...queries.agents.update_agent import update_agent as update_agent_query
+    from ...queries.docs.delete_doc import delete_doc as delete_doc_query
+    from ...queries.docs.list_docs import list_docs as list_docs_query
+    from ...queries.entries.get_history import get_history as get_history_query
+    from ...queries.sessions.create_or_update_session import (
         create_or_update_session as create_or_update_session_query,
     )
-    from ..queries.sessions.create_session import create_session as create_session_query
-    from ..queries.sessions.get_session import get_session as get_session_query
-    from ..queries.sessions.list_sessions import list_sessions as list_sessions_query
-    from ..queries.sessions.update_session import update_session as update_session_query
-    from ..queries.tasks.create_task import create_task as create_task_query
-    from ..queries.tasks.delete_task import delete_task as delete_task_query
-    from ..queries.tasks.get_task import get_task as get_task_query
-    from ..queries.tasks.list_tasks import list_tasks as list_tasks_query
-    from ..queries.tasks.update_task import update_task as update_task_query
-    from ..queries.users.create_user import create_user as create_user_query
-    from ..queries.users.delete_user import delete_user as delete_user_query
-    from ..queries.users.get_user import get_user as get_user_query
-    from ..queries.users.list_users import list_users as list_users_query
-    from ..queries.users.update_user import update_user as update_user_query
+    from ...queries.sessions.create_session import create_session as create_session_query
+    from ...queries.sessions.get_session import get_session as get_session_query
+    from ...queries.sessions.list_sessions import list_sessions as list_sessions_query
+    from ...queries.sessions.update_session import update_session as update_session_query
+    from ...queries.tasks.create_task import create_task as create_task_query
+    from ...queries.tasks.delete_task import delete_task as delete_task_query
+    from ...queries.tasks.get_task import get_task as get_task_query
+    from ...queries.tasks.list_tasks import list_tasks as list_tasks_query
+    from ...queries.tasks.update_task import update_task as update_task_query
+    from ...queries.users.create_user import create_user as create_user_query
+    from ...queries.users.delete_user import delete_user as delete_user_query
+    from ...queries.users.get_user import get_user as get_user_query
+    from ...queries.users.list_users import list_users as list_users_query
+    from ...queries.users.update_user import update_user as update_user_query
 
     # FIXME: Do not use routes directly;
-    from ..routers.docs.create_doc import create_agent_doc, create_user_doc
-    from ..routers.docs.search_docs import search_agent_docs, search_user_docs
-    from ..routers.sessions.chat import chat
+    from ...routers.docs.create_doc import create_agent_doc, create_user_doc
+    from ...routers.docs.search_docs import search_agent_docs, search_user_docs
+    from ...routers.sessions.chat import chat
 
     match (system.resource, system.subresource, system.operation):
         # AGENTS

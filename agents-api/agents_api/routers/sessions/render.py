@@ -1,12 +1,11 @@
-import asyncio
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from starlette.status import HTTP_200_OK
 
-from ...activities.task_steps.base_evaluate import base_evaluate
-from ...activities.task_steps.secret_storage import SecretStorage
+from ...common.utils.expressions import evaluate_expressions
+from ...common.utils.secret_storage import SecretStorage
 from ...autogen.openapi_model import (
     ChatInput,
     DocReference,
@@ -174,7 +173,7 @@ async def render_chat_input(
                 "function": {
                     "name": tool.name,
                     "parameters": {
-                        k: asyncio.run(base_evaluate(v, values=secrets))
+                        k: evaluate_expressions(v, values=secrets)
                         for k, v in function.model_dump().items()
                         if k not in ["name", "type"]
                     }

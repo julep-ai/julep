@@ -8,7 +8,7 @@ from deep_translator import GoogleTranslator
 from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 
-from ..env import (
+from ...env import (
     desklib_url,
     litellm_master_key,
     litellm_url,
