@@ -8,8 +8,6 @@ with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
     from pydantic_partial import create_partial_model
 
-    from ...common.utils.expressions import evaluate_expressions
-    from ...common.utils.secret_storage import SecretStorage
     from ...autogen.openapi_model import (
         CreateToolRequest,
         CreateTransitionRequest,
@@ -21,6 +19,8 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
+    from ...common.utils.expressions import evaluate_expressions
+    from ...common.utils.secret_storage import SecretStorage
     from ...worker.codec import RemoteObject
 
 from ...env import max_steps_accessible_in_tasks

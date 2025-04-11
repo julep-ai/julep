@@ -5,8 +5,8 @@ from pydantic import BaseModel, ValidationError
 
 from ...autogen.openapi_model import CreateTaskRequest, PatchTaskRequest, UpdateTaskRequest
 from ...common.protocol.models import task_to_spec
-from ...env import enable_backwards_compatibility_for_syntax
 from ...common.utils.evaluator import ALLOWED_FUNCTIONS, stdlib
+from ...env import enable_backwards_compatibility_for_syntax
 
 
 class ValidationIssue(BaseModel):

@@ -25,8 +25,8 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 
 from ...autogen.openapi_model import SystemDef
 from ...common.nlp import nlp
-from .yaml import yaml
 from .humanization_utils import humanize_paragraph, reassemble_markdown, split_with_langchain
+from .yaml import yaml
 
 # Security limits
 MAX_STRING_LENGTH = 1_000_000  # 1MB

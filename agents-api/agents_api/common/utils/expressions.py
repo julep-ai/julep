@@ -1,5 +1,5 @@
 import ast
-from typing import Any, Callable
+from typing import Any
 
 import simpleeval
 from beartype import beartype
@@ -11,7 +11,7 @@ simpleeval.MAX_STRING_LENGTH = 2048000
 
 MAX_COLLECTION_SIZE = 1000  # Maximum number of variables allowed in evaluator
 
-from simpleeval import EvalWithCompoundTypes, SimpleEval
+from simpleeval import SimpleEval
 from temporalio import activity
 
 from ..exceptions.executions import EvaluateError
