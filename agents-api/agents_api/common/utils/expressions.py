@@ -58,6 +58,8 @@ def evaluate_expressions(
     values: dict[str, Any] | None = None,
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
+    if values is None:
+        values = {}
     # Handle PyExpression objects and strings similarly
     if isinstance(exprs, str) or (hasattr(exprs, "root") and isinstance(exprs.root, str)):
         input_len = 1
