@@ -22,20 +22,21 @@ To get started with the Wikipedia integration, follow these steps to configure a
   <Step title="Define Your Search Parameters">
     Use the following YAML configuration to define your search parameters and request data from Wikipedia:
 
-    ```yaml Wikipedia Search Example
-    name: Wikipedia Search
-    tools:
-      - name: wikipedia_search
-        type: integration
-        integration:
-          provider: wikipedia
-          method: search
-    main:
-      - tool: wikipedia_search
-        arguments:
-          query: Artificial Intelligence
-          load_max_docs: 5
-    ```
+```yaml Wikipedia Search Example
+name: Wikipedia Search
+tools:
+- name: wikipedia_search
+  type: integration
+  integration:
+    provider: wikipedia
+    method: search
+
+main:
+- tool: wikipedia_search
+  arguments:
+    query: Artificial Intelligence
+    load_max_docs: 5
+```
   </Step>
 </Steps>
 

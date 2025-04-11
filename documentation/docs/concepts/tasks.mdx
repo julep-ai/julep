@@ -57,14 +57,14 @@ Learn more about tools [here](/docs/concepts/tools).
 
 ```yaml YAML
 tools:
-  - name: internet_search
-    description: Performs an internet search using Brave
-    type: integration
-    integration:
-      provider: brave
-      method: search
-      setup:
-        api_key: <BRAVE_API_KEY>
+- name: internet_search
+  description: Performs an internet search using Brave
+  type: integration
+  integration:
+    provider: brave
+    method: search
+    setup:
+      api_key: <BRAVE_API_KEY>
 ```
 
 ### Sub-Workflows
@@ -76,8 +76,8 @@ name: Summarize Document
 description: Create a concise summary of any document
 
 sample_sub_workflow:
-  - prompt: |-
-      $ f'Tell me a joke about {steps[0].input.topic}:'
+- prompt: |-
+    $ f'Tell me a joke about {steps[0].input.topic}:'
 
 main:
 - workflow: sample_sub_workflow

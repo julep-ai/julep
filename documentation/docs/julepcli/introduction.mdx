@@ -23,10 +23,10 @@ Note: While the package name is `julep-cli`, the installed command is simply `ju
 The CLI stores configuration data in `~/.config/julep/config.yml`. This file is created automatically after authenticating using `julep auth` (see [Authentication](/docs/julepcli/commands#authentication) section).
 
 <CodeGroup>
-  ```yaml config.yml
-  api_key: "your_api_key_here"
-  environment: "production"
-  ```
+```yaml config.yml
+api_key: "your_api_key_here"
+environment: "production"
+```
 </CodeGroup>
 
 ## Project Structure
@@ -50,23 +50,23 @@ project-name/
 The `julep.yaml` file defines your project configuration:
 
 <CodeGroup>
-  ```yaml julep.yaml
-  agents:
-  - definition: src/agents/agent.yaml
-  - definition: src/agents/another-agent.yaml
+```yaml julep.yaml
+agents:
+- definition: src/agents/agent.yaml
+- definition: src/agents/another-agent.yaml
 
-  tasks:
-  - agent_id: "{agents[0].id}"
-    definition: src/tasks/task.yaml
-  - agent_id: "{agents[1].id}"
-    definition: src/tasks/another-task.yaml
+tasks:
+- agent_id: "{agents[0].id}"
+  definition: src/tasks/task.yaml
+- agent_id: "{agents[1].id}"
+  definition: src/tasks/another-task.yaml
 
-  tools:
-  - agent_id: "{agents[0].id}"
-    definition: src/tools/tool.yaml
-  - agent_id: "{agents[1].id}"
-    definition: src/tools/another-tool.yaml
-  ```
+tools:
+- agent_id: "{agents[0].id}"
+  definition: src/tools/tool.yaml
+- agent_id: "{agents[1].id}"
+  definition: src/tools/another-tool.yaml
+```
 </CodeGroup>
 
 The `julep-lock.json` file tracks the state of your project on the Julep platform, mapping local files to their remote counterparts and maintaining relationships between components. This file should be committed to version control to ensure consistent state across team members.

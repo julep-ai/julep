@@ -79,14 +79,14 @@ We're using three main integrations:
 
 <Steps>
   <Step title="Initial Video Upload">
-    ```yaml
-  - tool: cloudinary_upload
-    arguments:
-      file: $ steps[0].input.video_url
-      public_id: $ steps[0].input.public_id
-      upload_params:
-        resource_type: video
-    ```
+```yaml
+- tool: cloudinary_upload
+  arguments:
+    file: $ steps[0].input.video_url
+    public_id: $ steps[0].input.public_id
+    upload_params:
+      resource_type: video
+```
 
     <Accordion title="Understanding the use of the steps[0].input variable">
       The `steps[0].input` variable refers to the initial input object passed to the task. It's used to access the input parameters defined in the input schema.
@@ -99,17 +99,17 @@ We're using three main integrations:
   </Step>
 
   <Step title="Create Video Preview">
-    ```yaml
-    - tool: cloudinary_upload
-      arguments:
-        file: $ steps[0].input.upload_file
-        public_id: $ steps[0].input.public_id
-        upload_params:
-          resource_type: video
-          transformation:
-            - start_offset: 0
-              end_offset: 30
-    ```
+```yaml
+- tool: cloudinary_upload
+  arguments:
+    file: $ steps[0].input.upload_file
+    public_id: $ steps[0].input.public_id
+    upload_params:
+      resource_type: video
+      transformation:
+        - start_offset: 0
+          end_offset: 30
+```
 
     This step:
     - Creates a 30-second preview of the video
@@ -117,17 +117,17 @@ We're using three main integrations:
   </Step>
 
   <Step title="Analyze Video Content">
-    ```yaml
-    - prompt:
-      - role: user
-        content: 
-          - type: image_url
-            image_url:
-              url: trimmed_video_url
-          - type: text
-            text: |-
-              Which speakers are speaking in the video? And where does each of them sit?
-    ```
+```yaml
+- prompt:
+  - role: user
+    content: 
+      - type: image_url
+        image_url:
+          url: trimmed_video_url
+      - type: text
+        text: |-
+          Which speakers are speaking in the video? And where does each of them sit?
+```
 
     This step:
     - Analyzes the video content
@@ -136,28 +136,28 @@ We're using three main integrations:
   </Step>
 
   <Step title="Generate Speaker Transformations">
-    ```yaml
-    - evaluate:
-        speakers_transformations: |-
-          $ [
-          transform
-          for speaker in _.speakers_json
-            for transform in [
-            {
-              "overlay": {"font_family": "Arial", "font_size": 32, "text": speaker.speaker},
-              "color": "white"
-            },
-            {
-              "duration": 5,
-              "flags": "layer_apply",
-              "gravity": "south_east" if speaker.position == "right" else "south_west",
-              "start_offset": speaker.timestamps[0].start,
-              "y": 80,
-              "x": 80
-            }
-            ]
-          ]
-    ```
+```yaml
+- evaluate:
+    speakers_transformations: |-
+      $ [
+      transform
+      for speaker in _.speakers_json
+        for transform in [
+        {
+          "overlay": {"font_family": "Arial", "font_size": 32, "text": speaker.speaker},
+          "color": "white"
+        },
+        {
+          "duration": 5,
+          "flags": "layer_apply",
+          "gravity": "south_east" if speaker.position == "right" else "south_west",
+          "start_offset": speaker.timestamps[0].start,
+          "y": 80,
+          "x": 80
+        }
+        ]
+      ]
+```
 
     This step:
     - Creates transformations for each speaker
@@ -166,15 +166,15 @@ We're using three main integrations:
   </Step>
 
   <Step title="Apply Transformations">
-    ```yaml
-    - tool: cloudinary_upload
-      arguments:
-        file: $ steps[0].input.upload_file
-        public_id: $ steps[0].input.public_id
-        upload_params:
-          resource_type: video
-          transformation: _.speakers_transformations
-    ```
+```yaml
+- tool: cloudinary_upload
+  arguments:
+    file: $ steps[0].input.upload_file
+    public_id: $ steps[0].input.public_id
+    upload_params:
+      resource_type: video
+      transformation: _.speakers_transformations
+```
 
     This step:
     - Uses the Cloudinary upload tool to apply the generated transformations
@@ -184,121 +184,121 @@ We're using three main integrations:
 </Steps>
 
 <Accordion title="Complete Task YAML" icon="code">
-  ```yaml YAML
-  # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
-  name: Julep Video Processing Task
-  description: A Julep agent that can process and analyze videos using Cloudinary
+```yaml YAML
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Julep Video Processing Task
+description: A Julep agent that can process and analyze videos using Cloudinary
 
-  ########################################################
-  ################### INPUT SCHEMA #######################
-  ########################################################
+########################################################
+################### INPUT SCHEMA #######################
+########################################################
 
-  input_schema:
-    type: object
-    properties:
-      video_url:
-        type: string
-        description: The url of the file to upload
-      public_id:
-        type: string
-        description: The public id of the file to upload
-      transformation_prompt:
-        type: string
-        description: The prompt for the transformations to apply to the file
+input_schema:
+  type: object
+  properties:
+    video_url:
+      type: string
+      description: The url of the file to upload
+    public_id:
+      type: string
+      description: The public id of the file to upload
+    transformation_prompt:
+      type: string
+      description: The prompt for the transformations to apply to the file
 
-  ########################################################
-  ################### TOOLS ##############################
-  ########################################################
+########################################################
+################### TOOLS ##############################
+########################################################
 
-  tools:
-  - name: cloudinary_upload
-    type: integration
-    integration:
-      provider: cloudinary
-      method: media_upload
-      setup:
-        cloudinary_api_key: "YOUR_CLOUDINARY_API_KEY"
-        cloudinary_api_secret: "YOUR_CLOUDINARY_API_SECRET"
-        cloudinary_cloud_name: "YOUR_CLOUDINARY_CLOUD_NAME"
+tools:
+- name: cloudinary_upload
+  type: integration
+  integration:
+    provider: cloudinary
+    method: media_upload
+    setup:
+      cloudinary_api_key: "YOUR_CLOUDINARY_API_KEY"
+      cloudinary_api_secret: "YOUR_CLOUDINARY_API_SECRET"
+      cloudinary_cloud_name: "YOUR_CLOUDINARY_CLOUD_NAME"
 
-  ########################################################
-  ################### MAIN WORKFLOW ######################
-  ########################################################
-  
-  main:
-  # Step #0 - Upload the video to cloudinary
-  - tool: cloudinary_upload
-    arguments:
-      file: $ steps[0].input.video_url
-      public_id: $ steps[0].input.public_id
-      upload_params:
-        resource_type: video
+########################################################
+################### MAIN WORKFLOW ######################
+########################################################
 
-  # Step #1 - Analyze the video content with a prompt
-  - prompt:
-    - role: user
-      content:
+main:
+# Step #0 - Upload the video to cloudinary
+- tool: cloudinary_upload
+  arguments:
+    file: $ steps[0].input.video_url
+    public_id: $ steps[0].input.public_id
+    upload_params:
+      resource_type: video
 
-        - type: text
-          text: |-
-            You are a Cloudinary expert. You are given a medial url. it might be an image or a video.
-            You need to come up with a json of transformations to apply to the given media.
-            Overall the json could have multiple transformation json objects.
-            Each transformation json object can have the multiple key value pairs.
-            Each key value pair should have the key as the transformation name like "aspect_ratio", "crop", "width" etc and the value as the transformation parameter value.
-            Given below is an example of a transformation json list. Don't provide explanations and/or comments in the json.
-            ``json
-            [
+# Step #1 - Analyze the video content with a prompt
+- prompt:
+  - role: user
+    content:
+
+      - type: text
+        text: |-
+          You are a Cloudinary expert. You are given a medial url. it might be an image or a video.
+          You need to come up with a json of transformations to apply to the given media.
+          Overall the json could have multiple transformation json objects.
+          Each transformation json object can have the multiple key value pairs.
+          Each key value pair should have the key as the transformation name like "aspect_ratio", "crop", "width" etc and the value as the transformation parameter value.
+          Given below is an example of a transformation json list. Don't provide explanations and/or comments in the json.
+          ``json
+          [
+            {{
+              "aspect_ratio": "1.0",
+              "width": 250,
+            }},
+            {{
+              "fetch_format": "auto"
+            }},
+            {{
+              "overlay":
               {{
-                "aspect_ratio": "1.0",
-                "width": 250,
-              }},
-              {{
-                "fetch_format": "auto"
-              }},
-              {{
-                "overlay":
-                {{
-                  "url": "<image_url>"
-                }}
-              }},
-              {{
-                "flags": "layer_apply"
+                "url": "<image_url>"
               }}
-            ]
-            ``
-        - type: image_url
-          image_url:
-            url: $ _.url
+            }},
+            {{
+              "flags": "layer_apply"
+            }}
+          ]
+          ``
+      - type: image_url
+        image_url:
+          url: $ _.url
 
-        - type: text
-          text: |-
-            $ f'''Hey, check the video above, I need to apply the following transformations using cloudinary.
-            {steps[0].input.transformation_prompt}'''
+      - type: text
+        text: |-
+          $ f'''Hey, check the video above, I need to apply the following transformations using cloudinary.
+          {steps[0].input.transformation_prompt}'''
 
-    unwrap: true
-    settings:
-      model: gemini/gemini-1.5-pro
+  unwrap: true
+  settings:
+    model: gemini/gemini-1.5-pro
 
-  # Step #2 - Extract the json from the model's response
-  - evaluate:
-      model_transformation: >-
-        $ load_json(
-          _[_.find("```json")+7:][:_[_.find("```json")+7:].find("```")])
+# Step #2 - Extract the json from the model's response
+- evaluate:
+    model_transformation: >-
+      $ load_json(
+        _[_.find("```json")+7:][:_[_.find("```json")+7:].find("```")])
 
-  # Step #3 - Upload the video to cloudinary
-  - tool: cloudinary_upload
-    arguments:
-      file: $ steps[0].input.video_url
-      public_id: $ steps[0].input.public_id
-      upload_params:
-        transformation: $ _.model_transformation
-        resource_type: video
+# Step #3 - Upload the video to cloudinary
+- tool: cloudinary_upload
+  arguments:
+    file: $ steps[0].input.video_url
+    public_id: $ steps[0].input.public_id
+    upload_params:
+      transformation: $ _.model_transformation
+      resource_type: video
 
-  # Step #4 - Evaluate the transformed video url
-  - evaluate:
-      transformed_video_url: $ _.url
-  ```
+# Step #4 - Evaluate the transformed video url
+- evaluate:
+    transformed_video_url: $ _.url
+```
 </Accordion>
 
 ## Usage

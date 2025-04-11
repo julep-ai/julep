@@ -378,33 +378,33 @@ By leveraging [System Tools](/docs/concepts/tools#system-tools), Julep [Tasks](/
 **Example:**
 
 <CodeGroup>
-    ```yaml
-    input_schema:
-      type: object
-      properties:
-        user_id:
-          type: string
-          description: The id of the user to list documents for
+```yaml
+input_schema:
+    type: object
+    properties:
+    user_id:
+        type: string
+        description: The id of the user to list documents for
 
-    tools:
-    - name: "list_user_docs"
-      description: "List all documents for the current user"
-      type: "system"
-      system:
-        resource: user
-        subresource: doc
-        operation: list
-    
-    main:
-    # Step that lists all documents for the current user
-    - tool: "list_user_docs"
-      arguments:
-        user_id: $ _.user_id
+tools:
+- name: "list_user_docs"
+    description: "List all documents for the current user"
+    type: "system"
+    system:
+    resource: user
+    subresource: doc
+    operation: list
 
-    # Step that evaluates the textual contents of all documents for the current user
-    - evaluate:
-        all_user_docs_contents: $ [doc.content for doc in _.items]
-    ```
+main:
+# Step that lists all documents for the current user
+- tool: "list_user_docs"
+    arguments:
+    user_id: $ _.user_id
+
+# Step that evaluates the textual contents of all documents for the current user
+- evaluate:
+    all_user_docs_contents: $ [doc.content for doc in _.items]
+```
 </CodeGroup>
 
 <Info>

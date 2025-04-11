@@ -25,27 +25,29 @@ To get started with the Email integration, follow these steps to configure and c
   <Step title="Create Task Definition">
     Use the following YAML configuration to define your email sending task:
 
-    ```yaml Email Example
-    name: Email Task
-    tools:
-      - name: email_tool
-        type: integration
-        integration:
-          provider: email
-          method: send
-          setup:
-            host: "smtp.example.com"
-            port: 587
-            user: "YOUR_USERNAME"
-            password: "YOUR_PASSWORD"
-    main:
-      - tool: email_tool
-        arguments:
-          to: recipient@example.com # this is a placeholder for the actual recipient email
-          from: sender@example.com # this is a placeholder for the actual sender email
-          subject: Hello from Julep # this is a placeholder for the actual subject
-          body: This is a test email sent using Julep's Email integration. # this is a placeholder for the actual body
-    ```
+```yaml Email Example
+name: Email Task
+
+tools:
+- name: email_tool
+  type: integration
+  integration:
+    provider: email
+    method: send
+    setup:
+      host: "smtp.example.com"
+      port: 587
+      user: "YOUR_USERNAME"
+      password: "YOUR_PASSWORD"
+
+main:
+- tool: email_tool
+  arguments:
+    to: recipient@example.com # this is a placeholder for the actual recipient email
+    from: sender@example.com # this is a placeholder for the actual sender email
+    subject: Hello from Julep # this is a placeholder for the actual subject
+    body: This is a test email sent using Julep's Email integration. # this is a placeholder for the actual body
+```
   </Step>
 </Steps>
 

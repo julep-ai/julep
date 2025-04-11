@@ -30,22 +30,22 @@ To get started with the Browserbase integration, follow these steps to configure
   <Step title="Create Task Definition">
     Use the following YAML configuration to define your browser automation task:
 
-    ```yaml Browser Base Example
-    name: Browser Base Task
-    tools:
-      - name: browserbase_tool
-        type: integration
-        integration:
-          provider: browserbase
-          method: create_session
-          setup:
-            api_key: "BROWSERBASE_API_KEY"
-            project_id: "BROWSERBASE_PROJECT_ID"
-    main:
-      - tool: browserbase_tool
-        arguments:
-          project_id: BROWSERBASE_PROJECT_ID
-    ```
+```yaml Browser Base Example
+name: Browser Base Task
+tools:
+- name: browserbase_tool
+  type: integration
+  integration:
+    provider: browserbase
+    method: create_session
+    setup:
+      api_key: "BROWSERBASE_API_KEY"
+      project_id: "BROWSERBASE_PROJECT_ID"
+main:
+- tool: browserbase_tool
+  arguments:
+    project_id: BROWSERBASE_PROJECT_ID
+```
   </Step>
 </Steps>
 

@@ -26,42 +26,43 @@ To get started with the Remote Browser integration, follow these steps to config
   <Step title="Create Task Definition">
     Use the following YAML configuration to perform browser actions in your task definition:
 
-    ```yaml Remote Browser Example
-    name: Browser Automation Task
-    tools:
-      - name: browserbase_tool
-        type: integration
-        integration:
-          provider: browserbase
-          method: create_session
-          setup:
-            project_id: "BROWSERBASE_PROJECT_ID"
+```yaml Remote Browser Example
+name: Browser Automation Task
+tools:
+- name: browserbase_tool
+  type: integration
+  integration:
+    provider: browserbase
+    method: create_session
+    setup:
+      project_id: "BROWSERBASE_PROJECT_ID"
 
-      - name: browser_tool
-        type: integration
-        integration:
-          provider: remote_browser
-          method: perform_action
-          setup:
-            width: 1920
-            height: 1080
-    main:
+- name: browser_tool
+  type: integration
+  integration:
+    provider: remote_browser
+    method: perform_action
+    setup:
+      width: 1920
+      height: 1080
 
-      - tool: browserbase_tool
-        method: create_session
-        arguments:
-          project_id: BROWSERBASE_PROJECT_ID
+main:
 
-      - evaluate:
-          browser_session_id: $ _.id
-          connect_url: $ _.connect_url
+- tool: browserbase_tool
+  method: create_session
+  arguments:
+    project_id: BROWSERBASE_PROJECT_ID
 
-      - tool: browser_tool
-        arguments:
-          connect_url: $ _.connect_url
-          action: navigate
-          text: https://www.google.com
-    ```
+- evaluate:
+    browser_session_id: $ _.id
+    connect_url: $ _.connect_url
+
+- tool: browser_tool
+  arguments:
+    connect_url: $ _.connect_url
+    action: navigate
+    text: https://www.google.com
+```
   </Step>
 </Steps>
 

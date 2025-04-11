@@ -25,25 +25,26 @@ To get started with the Unstructured.io integration, follow these steps to confi
   <Step title="Create Task Definition">
     Use the following YAML configuration to define your document parsing task:
 
-    ```yaml Unstructured Example
-    name: Unstructured Document Processing Task
-    tools:
-      - name: unstructured_processor
-        type: integration
-        integration:
-          provider: unstructured
-          method: parse
-          setup:
-            unstructured_api_key: "UNSTRUCTURED_API_KEY"
-    main:
-      - tool: unstructured_processor
-        arguments:
-          file: document_base64 # this is a placeholder for the actual file
-          filename: document.pdf # this is a placeholder for the actual filename
-          partition_params:
-            key1: value1 # these are placeholders for the actual parameters
-            key2: value2 # these are placeholders for the actual parameters
-    ```
+```yaml Unstructured Example
+name: Unstructured Document Processing Task
+tools:
+- name: unstructured_processor
+  type: integration
+  integration:
+    provider: unstructured
+    method: parse
+    setup:
+      unstructured_api_key: "UNSTRUCTURED_API_KEY"
+
+main:
+- tool: unstructured_processor
+  arguments:
+    file: document_base64 # this is a placeholder for the actual file
+    filename: document.pdf # this is a placeholder for the actual filename
+    partition_params:
+      key1: value1 # these are placeholders for the actual parameters
+      key2: value2 # these are placeholders for the actual parameters
+```
   </Step>
   <Step title="Run Task">
     Deploy your task by creating a new execution.

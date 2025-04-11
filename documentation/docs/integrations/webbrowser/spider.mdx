@@ -25,25 +25,25 @@ To get started with the Spider integration, follow these steps to configure and 
   <Step title="Create Task Definition">
     Use the following YAML configuration to define your web crawling task:
 
-    ```yaml Spider Example
-    name: Spider Task
-    tools:
-      - name: spider_tool
-        type: integration
-        integration:
-          provider: spider
-          method: crawl
-          setup:
-            spider_api_key: "SPIDER_API_KEY"
-    main:
-      - tool: spider_tool
-        method: crawl
-        arguments:
-          url: $ _.url
-          params: # Optional parameters
-            key1: value1 # this a placeholder for the actual parameters
-          content_type: application/json
-    ```
+```yaml Spider Example
+name: Spider Task
+tools:
+- name: spider_tool
+  type: integration
+  integration:
+    provider: spider
+    method: crawl
+    setup:
+      spider_api_key: "SPIDER_API_KEY"
+main:
+- tool: spider_tool
+  method: crawl
+  arguments:
+    url: $ _.url
+    params: # Optional parameters
+      key1: value1 # this a placeholder for the actual parameters
+    content_type: application/json
+```
   </Step>
 </Steps>
 

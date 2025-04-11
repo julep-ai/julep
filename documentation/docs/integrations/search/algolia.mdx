@@ -25,25 +25,27 @@ To get started with the Algolia integration, follow these steps to configure and
   <Step title="Create Task Definition">
     Use the following YAML configuration to define your search task:
 
-    ```yaml Algolia Search Example
-    name: Algolia Search Task
-    tools:
-      - name: algolia_search
-        type: integration
-        integration:
-          provider: algolia
-          method: search
-          setup:
-            algolia_application_id: "ALGOLIA_APPLICATION_ID"
-            algolia_api_key: "ALGOLIA_API_KEY"
-    main:
-      - tool: algolia_search
-        arguments:
-          index_name: your_index_name # this is a placeholder for the actual index name
-          query: searchquery # this is a placeholder for the actual search query
-          hits_per_page: 10
-          attributes_to_retrieve: $ ["attribute1", "attribute2"] # this is a placeholder for the actual attributes to retrieve
-    ```
+```yaml Algolia Search Example
+name: Algolia Search Task
+
+tools:
+- name: algolia_search
+  type: integration
+  integration:
+    provider: algolia
+    method: search
+    setup:
+      algolia_application_id: "ALGOLIA_APPLICATION_ID"
+      algolia_api_key: "ALGOLIA_API_KEY"
+
+main:
+- tool: algolia_search
+  arguments:
+    index_name: your_index_name # this is a placeholder for the actual index name
+    query: searchquery # this is a placeholder for the actual search query
+    hits_per_page: 10
+    attributes_to_retrieve: $ ["attribute1", "attribute2"] # this is a placeholder for the actual attributes to retrieve
+```
   </Step>
 </Steps>
 
