@@ -165,7 +165,7 @@ async def render_chat_input(
     # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
     # but we don't allow that (spec should match type).
     formatted_tools = []
-    secrets = SecretStorage()
+    secrets = SecretStorage(developer_id=developer.id)
     for i, tool in enumerate(tools):
         if tool.type == "computer_20241022" and tool.computer_20241022:
             function = tool.computer_20241022
