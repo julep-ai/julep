@@ -16,20 +16,22 @@ To get started with the FFmpeg integration, follow these steps to configure and 
   <Step title="Define Your FFmpeg Command">
     Use the following YAML configuration to define your FFmpeg command and process media files:
 
-    ```yaml FFmpeg Example
-    name: FFmpeg Task
-    tools:
-      - name: ffmpeg_tool
-        type: integration
-        integration:
-          provider: ffmpeg
-          method: bash_cmd
-    main:
-      - tool: ffmpeg_tool
-        arguments:
-          cmd: $ "ffmpeg -i input.mp4 -vn -acodec copy output.aac"
-          file: base64_encoded_file # this is a placeholder for the actual file
-    ```
+```yaml FFmpeg Example
+name: FFmpeg Task
+
+tools:
+- name: ffmpeg_tool
+  type: integration
+  integration:
+    provider: ffmpeg
+    method: bash_cmd
+
+main:
+- tool: ffmpeg_tool
+  arguments:
+    cmd: $ "ffmpeg -i input.mp4 -vn -acodec copy output.aac"
+    file: base64_encoded_file # this is a placeholder for the actual file
+```
 
     <Info>
       The `base64_encoded_file` is the base64 encoded file to process which in this case is the `input.mp4` file.

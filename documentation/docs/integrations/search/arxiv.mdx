@@ -16,23 +16,23 @@ To get started with the ArXiv integration, follow these steps to configure and c
   <Step title="Define Your Search Parameters">
     Use the following YAML configuration to define your search parameters and request data from ArXiv:
 
-    ```yaml ArXiv Search Example
-    name: ArXiv Search
-    tools:
-      - name: arxiv_search
-        type: integration
-        integration:
-          provider: arxiv
-          method: search
-    main:
-      - tool: arxiv_search
-        arguments:
-          query: machine learning
-          max_results: 10
-          download_pdf: False
-          sort_by: relevance
-          sort_order: descending
-    ```
+```yaml ArXiv Search Example
+name: ArXiv Search
+tools:
+- name: arxiv_search
+  type: integration
+  integration:
+    provider: arxiv
+    method: search
+main:
+- tool: arxiv_search
+  arguments:
+    query: machine learning
+    max_results: 10
+    download_pdf: False
+    sort_by: relevance
+    sort_order: descending
+```
   </Step>
 </Steps>
 

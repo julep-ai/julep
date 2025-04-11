@@ -63,18 +63,18 @@ name: Example system tool task
 description: List agents using system call
 
 tools:
-  - name: list_agent_docs
-    description: List all docs for the given agent
-    type: system
-    system:
-      resource: agent
-      subresource: doc
-      operation: list
+- name: list_agent_docs
+  description: List all docs for the given agent
+  type: system
+  system:
+    resource: agent
+    subresource: doc
+    operation: list
 
 main:
-  - tool: list_agents
-    arguments:
-      limit: $ 10
+- tool: list_agents
+  arguments:
+    limit: $ 10
 ```
 
 <Accordion title="Available system resources and operations">
@@ -146,16 +146,16 @@ name: Example integration tool task
 description: Search wikipedia for a query
 
 tools:
-  - name: wikipedia_search
-    description: Search wikipedia for a query
-    type: integration
-    integration:
-      provider: wikipedia
+- name: wikipedia_search
+  description: Search wikipedia for a query
+  type: integration
+  integration:
+    provider: wikipedia
 
 main:
-  - tool: wikipedia_search
-    arguments:
-      query: "Julep"
+- tool: wikipedia_search
+  arguments:
+    query: "Julep"
 ```
 
 <Info>
@@ -169,18 +169,18 @@ Julep can also directly make `api_call` during workflow executions as tool calls
 ```yaml YAML
 name: Example api_call task
 tools:
-  - type: api_call
-    name: hello
-    api_call:
-      method: GET  # Required - HTTP method must be specified
-      url: https://httpbin.org/get  # Required - URL must be specified
-      # Optional parameters can be added here (headers, follow_redirects, etc.)
+- type: api_call
+  name: hello
+  api_call:
+    method: GET  # Required - HTTP method must be specified
+    url: https://httpbin.org/get  # Required - URL must be specified
+    # Optional parameters can be added here (headers, follow_redirects, etc.)
 
 main:
-  - tool: hello
-    arguments:
-      json:
-        test: $ _.input # <-- python expression
+- tool: hello
+  arguments:
+    json:
+      test: $ _.input # <-- python expression
 ```
 
 <AccordionGroup>
@@ -273,21 +273,21 @@ async function createAgent() {
 To create a tool for a task, you can use the `client.tasks.create` method and define the tool in that `task` definitions.
 
 <CodeGroup>
-  ```yaml YAML
+```yaml YAML
 name: Example integration tool task
 description: Search wikipedia for a query
 
 tools:
-  - name: wikipedia_search
-    description: Search wikipedia for a query
-    type: integration
-    integration:
-      provider: wikipedia
+- name: wikipedia_search
+  description: Search wikipedia for a query
+  type: integration
+  integration:
+    provider: wikipedia
 main:
-  - tool: wikipedia_search
-    arguments:
-      query: "Julep"
-  ```
+- tool: wikipedia_search
+  arguments:
+    query: "Julep"
+```
 
   ```python Python
   # Create a task

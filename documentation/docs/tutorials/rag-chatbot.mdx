@@ -23,12 +23,12 @@ First, we define what inputs our task expects:
 
 ```yaml
 input_schema:
-    type: object
-    properties:
-        url:
-            type: string
-        reducing_strength:
-            type: integer
+  type: object
+  properties:
+    url:
+      type: string
+    reducing_strength:
+      type: integer
 ```
 
 This schema specifies that our task expects:
@@ -70,20 +70,20 @@ We're using two tools:
 
 <Steps>
   <Step title="Crawl Website">
-    ```yaml
-    - tool: get_page
-      arguments:
-        url: $ "https://r.jina.ai/" + steps[0].input.url
-      
-    - evaluate:
-        result: $ chunk_doc(_.json.data.content.strip())
+```yaml
+- tool: get_page
+  arguments:
+    url: $ "https://r.jina.ai/" + steps[0].input.url
+  
+- evaluate:
+    result: $ chunk_doc(_.json.data.content.strip())
 
-    - workflow: index_page
-      arguments:
-        content: $ _.result
-        document: $ steps[0].output.json.data.content.strip()
-        reducing_strength: $ steps[0].input.reducing_strength
-    ```
+- workflow: index_page
+  arguments:
+    content: $ _.result
+    document: $ steps[0].output.json.data.content.strip()
+    reducing_strength: $ steps[0].input.reducing_strength
+```
 
     <Accordion title="Understanding the use of the _ variable">
       The `_` variable refers to the current context object. When accessing properties like `_['url']`, it's retrieving values from the input parameters passed to the task.
@@ -97,44 +97,44 @@ We're using two tools:
   </Step>
 
   <Step title="Process and Index Content">
-    ```yaml
-    - evaluate:
-        document: $ _.document
-        chunks: |
-          $ [" ".join(_.content[i:i + max(_.reducing_strength, len(_.content) // 9)]) 
-            for i in range(0, len(_.content), max(_.reducing_strength, len(_.content) // 9))]
-      label: docs
+```yaml
+- evaluate:
+    document: $ _.document
+    chunks: |
+      $ [" ".join(_.content[i:i + max(_.reducing_strength, len(_.content) // 9)]) 
+        for i in range(0, len(_.content), max(_.reducing_strength, len(_.content) // 9))]
+  label: docs
 
-    # Step 1: Create a new document and add it to the agent docs store
-    - over: $ [(steps[0].input.document, chunk.strip()) for chunk in _.chunks]
-      parallelism: 3
-      map:
-        prompt: 
-        - role: user
-          content: >-
-            $ f'''
-            <document>
-            {_[0]}  
-            </document>
+# Step 1: Create a new document and add it to the agent docs store
+- over: $ [(steps[0].input.document, chunk.strip()) for chunk in _.chunks]
+  parallelism: 3
+  map:
+    prompt: 
+    - role: user
+      content: >-
+        $ f'''
+        <document>
+        {_[0]}  
+        </document>
 
-            Here is the chunk we want to situate within the whole document
-            <chunk>
-            {_[1]}
-            </chunk>
+        Here is the chunk we want to situate within the whole document
+        <chunk>
+        {_[1]}
+        </chunk>
 
-            Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. 
-            Answer only with the succinct context and nothing else.
-            '''
-        unwrap: true
-        settings:
-          max_tokens: 16000
+        Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. 
+        Answer only with the succinct context and nothing else.
+        '''
+    unwrap: true
+    settings:
+      max_tokens: 16000
 
-    - evaluate:
-        final_chunks: |
-          $ [
-            NEWLINE.join([succint, chunk.strip()]) for chunk, succint in zip(steps['docs'].output.chunks, _)
-          ]
-        ```
+- evaluate:
+    final_chunks: |
+      $ [
+        NEWLINE.join([succint, chunk.strip()]) for chunk, succint in zip(steps['docs'].output.chunks, _)
+      ]
+```
 
     This step:
     - Processes each content chunk in parallel
@@ -143,19 +143,19 @@ We're using two tools:
   </Step>
 
   <Step title="Store Documents">
-    ```yaml
-    - over: $ _['final_chunks']
-      parallelism: 3
-      map:
-        tool: create_agent_doc
-        arguments:
-          agent_id: $ agent.id
-          data:
-            metadata:
-              source: jina_crawler
-            title: Website Document
-            content: $ _
-    ```
+```yaml
+- over: $ _['final_chunks']
+  parallelism: 3
+  map:
+    tool: create_agent_doc
+    arguments:
+      agent_id: $ agent.id
+      data:
+        metadata:
+          source: jina_crawler
+        title: Website Document
+        content: $ _
+```
 
     This step:
     - Stores processed content in the document store
@@ -165,131 +165,131 @@ We're using two tools:
 </Steps>
 
 <Accordion title="Complete Task YAML" icon="code">
-  ```yaml YAML
-  # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
-  name: Julep Jina Crawler Task
-  description: A Julep agent that can crawl a website and store the content in the document store.
+```yaml YAML
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Julep Jina Crawler Task
+description: A Julep agent that can crawl a website and store the content in the document store.
 
-  ########################################################
-  ################### INPUT SCHEMA #######################
-  ########################################################
+########################################################
+################### INPUT SCHEMA #######################
+########################################################
 
-  input_schema:
-    type: object
-    properties:
-      url:
-        type: string
-      reducing_strength:
-        type: integer
-        
-  ########################################################
-  ################### TOOLS ##############################
-  ########################################################
-
-  tools:
-  - name: get_page
-    type: api_call
-    api_call:
-      method: GET
-      url: https://r.jina.ai/
-      headers:
-        accept: application/json
-      x-return-format: markdown
-      x-with-images-summary: "true"
-      x-with-links-summary: "true"
-      x-retain-images: "none"
-      x-no-cache: "true"
-      Authorization: "Bearer JINA_API_KEY"
-
-  - name : create_agent_doc
-    description: Create an agent doc
-    type: system
-    system:
-      resource: agent
-      subresource: doc
-      operation: create
-
-  ########################################################
-  ################### INDEX PAGE SUBWORKFLOW ##############
-  ########################################################
-
-  index_page:
-
-  # Step #0 - Evaluate the content
-  - evaluate:
-      document: $ _.document
-      chunks: |
-        $ [" ".join(_.content[i:i + max(_.reducing_strength, len(_.content) // 9)]) 
-          for i in range(0, len(_.content), max(_.reducing_strength, len(_.content) // 9))]
-      label: docs
-
-  # Step #1 - Process each content chunk in parallel
-  - over: $ "[(steps[0].input.content, chunk) for chunk in _['documents']]"
-    parallelism: 3
-    map:
-      prompt: 
-      - role: user
-        content: >-
-          $ f'''
-          <document>
-          {_[0]}
-          </document>
-
-          Here is the chunk we want to situate within the whole document
-          <chunk>
-          {_[1]}
-          </chunk>
-
-          Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. 
-          Answer only with the succinct context and nothing else.'''
+input_schema:
+  type: object
+  properties:
+    url:
+      type: string
+    reducing_strength:
+      type: integer
       
-      unwrap: true
-      settings:
-        max_tokens: 16000
+########################################################
+################### TOOLS ##############################
+########################################################
 
-  # Step #2 - Create a new document and add it to the agent docs store
-  - evaluate:
-      final_chunks: |
-        $ [
-          NEWLINE.join([chunk, succint]) for chunk, succint in zip(steps[1].input.documents, _)
-        ]
+tools:
+- name: get_page
+  type: api_call
+  api_call:
+    method: GET
+    url: https://r.jina.ai/
+    headers:
+      accept: application/json
+    x-return-format: markdown
+    x-with-images-summary: "true"
+    x-with-links-summary: "true"
+    x-retain-images: "none"
+    x-no-cache: "true"
+    Authorization: "Bearer JINA_API_KEY"
 
-  # Step #3 - Create a new document and add it to the agent docs store
-  - over: $ _['final_chunks']
-    parallelism: 3
-    map:
-      tool: create_agent_doc
-      arguments:
-        agent_id: "00000000-0000-0000-0000-000000000000" # <--- This is the agent id of the agent you want to add the document to
-        data:
-          metadata:
-            source: "jina_crawler"
+- name : create_agent_doc
+  description: Create an agent doc
+  type: system
+  system:
+    resource: agent
+    subresource: doc
+    operation: create
 
-          title: "Website Document"
-          content: $ _
+########################################################
+################### INDEX PAGE SUBWORKFLOW ##############
+########################################################
 
-  ########################################################
-  ################### MAIN WORKFLOW ######################
-  ########################################################
+index_page:
 
-  main:
+# Step #0 - Evaluate the content
+- evaluate:
+    document: $ _.document
+    chunks: |
+      $ [" ".join(_.content[i:i + max(_.reducing_strength, len(_.content) // 9)]) 
+        for i in range(0, len(_.content), max(_.reducing_strength, len(_.content) // 9))]
+    label: docs
 
-  # Step 0: Get the content of the product page
-  - tool: get_page
+# Step #1 - Process each content chunk in parallel
+- over: $ "[(steps[0].input.content, chunk) for chunk in _['documents']]"
+  parallelism: 3
+  map:
+    prompt: 
+    - role: user
+      content: >-
+        $ f'''
+        <document>
+        {_[0]}
+        </document>
+
+        Here is the chunk we want to situate within the whole document
+        <chunk>
+        {_[1]}
+        </chunk>
+
+        Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. 
+        Answer only with the succinct context and nothing else.'''
+    
+    unwrap: true
+    settings:
+      max_tokens: 16000
+
+# Step #2 - Create a new document and add it to the agent docs store
+- evaluate:
+    final_chunks: |
+      $ [
+        NEWLINE.join([chunk, succint]) for chunk, succint in zip(steps[1].input.documents, _)
+      ]
+
+# Step #3 - Create a new document and add it to the agent docs store
+- over: $ _['final_chunks']
+  parallelism: 3
+  map:
+    tool: create_agent_doc
     arguments:
-    url: $ "https://r.jina.ai/" + steps[0].input.url
-  
-  # Step 1: Chunk the content
-  - evaluate:
-      result: $ chunk_doc(_.json.data.content.strip())
+      agent_id: "00000000-0000-0000-0000-000000000000" # <--- This is the agent id of the agent you want to add the document to
+      data:
+        metadata:
+          source: "jina_crawler"
 
-  # Step 2: Evaluate step to document chunks
-  - workflow: index_page
-    arguments:
-      content: $ _.result
-      document: $ steps[0].output.json.data.content.strip()
-      reducing_strength: $ steps[0].input.reducing_strength
-  ```
+        title: "Website Document"
+        content: $ _
+
+########################################################
+################### MAIN WORKFLOW ######################
+########################################################
+
+main:
+
+# Step 0: Get the content of the product page
+- tool: get_page
+  arguments:
+  url: $ "https://r.jina.ai/" + steps[0].input.url
+
+# Step 1: Chunk the content
+- evaluate:
+    result: $ chunk_doc(_.json.data.content.strip())
+
+# Step 2: Evaluate step to document chunks
+- workflow: index_page
+  arguments:
+    content: $ _.result
+    document: $ steps[0].output.json.data.content.strip()
+    reducing_strength: $ steps[0].input.reducing_strength
+```
 </Accordion>
 
 ## Usage
