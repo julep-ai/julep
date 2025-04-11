@@ -1,7 +1,6 @@
 from typing import Any
 
 from beartype import beartype
-
 from temporalio import activity
 
 from ...common.protocol.tasks import StepContext

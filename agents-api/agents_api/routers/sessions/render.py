@@ -4,8 +4,6 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from starlette.status import HTTP_200_OK
 
-from ...common.utils.expressions import evaluate_expressions
-from ...common.utils.secret_storage import SecretStorage
 from ...autogen.openapi_model import (
     ChatInput,
     DocReference,
@@ -13,6 +11,8 @@ from ...autogen.openapi_model import (
 )
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
+from ...common.utils.expressions import evaluate_expressions
+from ...common.utils.secret_storage import SecretStorage
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
 from ...env import max_free_sessions
