@@ -63,7 +63,7 @@ async def create_usage_record(
         completion_tokens (int): Number of tokens in the completion.
         custom_api_used (bool): Whether a custom API key was used.
         estimated (bool): Whether the token count is estimated.
-        metadata (dict): Additional metadata about the usage.
+        metadata (dict | None): Additional metadata about the usage.
 
     Returns:
         tuple[str, list]: SQL query and parameters for creating the usage record.
