@@ -68,6 +68,7 @@ VALUES (
 RETURNING *;
 """
 
+
 @rewrap_exceptions(common_db_exceptions("usage", ["create"]))
 @query_metrics("create_usage_record")
 @pg_query
