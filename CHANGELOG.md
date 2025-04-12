@@ -28,7 +28,9 @@
     ·
     <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow">LinkedIn</a>
   </h3>
-</div># **Changelog for 27 October 2023** ✨
+</div>
+
+# **Changelog for 11 Apri 2025** ✨
 
 - **Major Feature**: Introduced support for Gemini models in `litellm-config.yaml` ✨
 - **Minor Feature**: Added environment configuration for Open Responses API ✨
