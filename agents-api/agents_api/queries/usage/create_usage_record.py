@@ -51,7 +51,7 @@ async def create_usage_record(
     completion_tokens: int,
     custom_api_used: bool = False,
     estimated: bool = False,
-    metadata: dict[str, Any] = {},
+    metadata: dict[str, Any] | None = None,
 ) -> tuple[str, list]:
     """
     Creates a usage record to track token usage and costs.
