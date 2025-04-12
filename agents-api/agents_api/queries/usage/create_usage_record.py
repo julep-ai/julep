@@ -13,7 +13,7 @@ from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions
 
-fallback_pricing = {
+FALLBACK_PRICING = {
     # Meta Llama models
     "meta-llama/llama-4-scout": {
         "api_request": 0.08 / 1000,
@@ -112,10 +112,10 @@ async def create_usage_record(
         except Exception:
             estimated = True
 
-            if model in fallback_pricing:
+            if model in FALLBACK_PRICING:
                 total_cost = (
-                    fallback_pricing[model]["api_request"] * prompt_tokens
-                    + fallback_pricing[model]["api_response"] * completion_tokens
+                    FALLBACK_PRICING[model]["api_request"] * prompt_tokens
+                    + FALLBACK_PRICING[model]["api_response"] * completion_tokens
                 )
             else:
                 print(f"No fallback pricing found for model {model}")
