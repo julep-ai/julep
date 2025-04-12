@@ -9,7 +9,7 @@ from litellm import aembedding as _aembedding
 from litellm import get_supported_openai_params
 from litellm.utils import CustomStreamWrapper, ModelResponse, get_valid_models
 
-from ..common.utils.usage import track_usage, track_embedding_usage
+from ..common.utils.usage import track_embedding_usage, track_usage
 from ..env import (
     embedding_dimensions,
     embedding_model_id,
@@ -79,7 +79,7 @@ async def acompletion(
     )
 
     response = patch_litellm_response(model_response)
-    
+
     # Track usage in database if we have a user ID (which should be the developer ID)
     user = settings.get("user")
     if user and isinstance(response, ModelResponse):
@@ -90,7 +90,7 @@ async def acompletion(
                 model=model,
                 messages=messages,
                 response=response,
-                custom_api_used= custom_api_key is not None,
+                custom_api_used=custom_api_key is not None,
                 metadata={"tags": kwargs.get("tags", [])},
             )
         except Exception as e:
@@ -134,7 +134,7 @@ async def aembedding(
         drop_params=True,
         **settings,
     )
-    
+
     # Track embedding usage if we have a user ID
     user = settings.get("user")
     if user:

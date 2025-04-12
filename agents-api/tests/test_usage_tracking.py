@@ -2,21 +2,19 @@
 Tests for usage tracking functionality.
 """
 
-import io
-from contextlib import redirect_stdout
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from unittest.mock import patch
 
+from agents_api.clients.pg import create_db_pool
+from agents_api.common.utils.usage import track_embedding_usage, track_usage
+from agents_api.queries.usage.create_usage_record import create_usage_record
+from litellm import cost_per_token
+from litellm.utils import Message, ModelResponse, Usage, token_counter
 from ward import test
 
-from agents_api.common.utils.usage import track_usage, track_embedding_usage
-from agents_api.queries.usage.create_usage_record import create_usage_record
-from litellm.utils import ModelResponse, Usage, Choices, Message
-from agents_api.clients.pg import create_db_pool
 from .fixtures import pg_dsn, test_developer_id
-from litellm import cost_per_token
-from litellm.utils import token_counter
+
 
 @test("query: create_usage_record creates a record with correct parameters")
 async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
@@ -31,10 +29,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert len(response) == 1
     record = response[0]
     assert record["developer_id"] == developer_id
-    assert record["model"] == 'gpt-4o-mini'
+    assert record["model"] == "gpt-4o-mini"
     assert record["prompt_tokens"] == 100
     assert record["completion_tokens"] == 100
-    assert record["cost"] == Decimal('0.000075')
+    assert record["cost"] == Decimal("0.000075")
     assert record["estimated"] is False
     assert record["custom_api_used"] is False
     assert record["metadata"] == {}
@@ -60,7 +58,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
         "meta-llama/llama-4-maverick:free",
         "qwen/qwen-2.5-72b-instruct",
         "sao10k/l3.3-euryale-70b",
-        "sao10k/l3.1-euryale-70b"
+        "sao10k/l3.1-euryale-70b",
     ]
     for model in models:
         response = await create_usage_record(
@@ -86,9 +84,11 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
         connection_pool=pool,
     )
 
-    input_cost, completion_cost = cost_per_token("gpt-4o-mini", prompt_tokens=2041, completion_tokens=34198)
+    input_cost, completion_cost = cost_per_token(
+        "gpt-4o-mini", prompt_tokens=2041, completion_tokens=34198
+    )
     cost = input_cost + completion_cost
-    cost = Decimal(str(cost)).quantize(Decimal('0.000001'))
+    cost = Decimal(str(cost)).quantize(Decimal("0.000001"))
 
     assert len(response) == 1
     record = response[0]
@@ -125,13 +125,14 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
 
     assert len(response) == 1
     record = response[0]
-    assert record["cost"] == Decimal('0.000000')
+    assert record["cost"] == Decimal("0.000000")
     assert record["estimated"] is True
+
 
 @test("query: create_usage_record with fallback pricing with model not in fallback pricing")
 async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     pool = await create_db_pool(dsn=dsn)
-    
+
     with patch("builtins.print") as mock_print:
         unknown_model = "unknown-model-name"
         response = await create_usage_record(
@@ -146,7 +147,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
 
     assert len(response) == 1
     record = response[0]
-    assert record["cost"] == Decimal('0.000000')
+    assert record["cost"] == Decimal("0.000000")
     assert record["estimated"] is True
     assert expected_call == actual_call
 
@@ -171,23 +172,28 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["prompt_tokens"] == 100
         assert call_args["completion_tokens"] == 100
 
-        
+
 @test("utils: track_usage without response.usage")
 async def _(developer_id=test_developer_id) -> None:
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse(
             usage=None,
-            choices=[{
-                "finish_reason": "stop",
-                "index": 0,
-                "message": Message(content="Hello, world!", role="assistant")
-            }]
+            choices=[
+                {
+                    "finish_reason": "stop",
+                    "index": 0,
+                    "message": Message(content="Hello, world!", role="assistant"),
+                }
+            ],
         )
         response.usage = None
         messages = [{"role": "user", "content": "Hello, world!"}]
 
         prompt_tokens = token_counter(model="gpt-4o-mini", messages=messages)
-        completion_tokens = token_counter(model="gpt-4o-mini", messages=[{"content": choice.message.content} for choice in response.choices])
+        completion_tokens = token_counter(
+            model="gpt-4o-mini",
+            messages=[{"content": choice.message.content} for choice in response.choices],
+        )
 
         await track_usage(
             developer_id=developer_id,
@@ -210,16 +216,16 @@ async def _(developer_id=test_developer_id) -> None:
                 completion_tokens=0,
             ),
         )
-        
+
         inputs = ["This is a test input for embedding"]
-        
+
         await track_embedding_usage(
             developer_id=developer_id,
             model="text-embedding-3-large",
             inputs=inputs,
             response=response,
         )
-        
+
         call_args = mock_create_usage_record.call_args[1]
         assert call_args["prompt_tokens"] == 150
         assert call_args["completion_tokens"] == 0
@@ -231,19 +237,22 @@ async def _(developer_id=test_developer_id) -> None:
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse()
         response.usage = None
-        
+
         inputs = ["First test input", "Second test input"]
-        
+
         # Calculate expected tokens manually
-        expected_tokens = sum(token_counter(model="text-embedding-3-large", text=input_text) for input_text in inputs)
-        
+        expected_tokens = sum(
+            token_counter(model="text-embedding-3-large", text=input_text)
+            for input_text in inputs
+        )
+
         await track_embedding_usage(
             developer_id=developer_id,
             model="text-embedding-3-large",
             inputs=inputs,
             response=response,
         )
-        
+
         call_args = mock_create_usage_record.call_args[1]
         assert call_args["prompt_tokens"] == expected_tokens
         assert call_args["completion_tokens"] == 0

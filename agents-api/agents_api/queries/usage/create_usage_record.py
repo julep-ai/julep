@@ -71,30 +71,51 @@ async def create_usage_record(
     # Calculate cost based on token usage
     # For custom API keys, we still track usage but mark it as such
     total_cost = 0.0
-    
+
     if not custom_api_used:
         # Calculate cost using litellm's cost_per_token function
         try:
-            prompt_cost, completion_cost = cost_per_token(model, prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+            prompt_cost, completion_cost = cost_per_token(
+                model, prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+            )
             total_cost = prompt_cost + completion_cost
-        except Exception as e:
+        except Exception:
             estimated = True
             fallback_pricing = {
-            # Meta Llama models
-            'meta-llama/llama-4-scout': {'api_request': 0.08/1000, 'api_response': 0.45/1000},
-            'meta-llama/llama-4-maverick': {'api_request': 0.19/1000, 'api_response': 0.85/1000},
-            'meta-llama/llama-4-maverick:free': {'api_request': 0.0/1000, 'api_response': 0.0/1000},
-            
-            # Qwen model
-            'qwen/qwen-2.5-72b-instruct': {'api_request': 0.7/1000, 'api_response': 0.7/1000},
-            
-            # Sao10k model
-            'sao10k/l3.3-euryale-70b': {'api_request': 0.7/1000, 'api_response': 0.8/1000},
-            'sao10k/l3.1-euryale-70b': {'api_request': 0.7/1000, 'api_response': 0.8/1000}
+                # Meta Llama models
+                "meta-llama/llama-4-scout": {
+                    "api_request": 0.08 / 1000,
+                    "api_response": 0.45 / 1000,
+                },
+                "meta-llama/llama-4-maverick": {
+                    "api_request": 0.19 / 1000,
+                    "api_response": 0.85 / 1000,
+                },
+                "meta-llama/llama-4-maverick:free": {
+                    "api_request": 0.0 / 1000,
+                    "api_response": 0.0 / 1000,
+                },
+                # Qwen model
+                "qwen/qwen-2.5-72b-instruct": {
+                    "api_request": 0.7 / 1000,
+                    "api_response": 0.7 / 1000,
+                },
+                # Sao10k model
+                "sao10k/l3.3-euryale-70b": {
+                    "api_request": 0.7 / 1000,
+                    "api_response": 0.8 / 1000,
+                },
+                "sao10k/l3.1-euryale-70b": {
+                    "api_request": 0.7 / 1000,
+                    "api_response": 0.8 / 1000,
+                },
             }
-        
+
             if model in fallback_pricing:
-                total_cost = fallback_pricing[model]['api_request'] * prompt_tokens + fallback_pricing[model]['api_response'] * completion_tokens
+                total_cost = (
+                    fallback_pricing[model]["api_request"] * prompt_tokens
+                    + fallback_pricing[model]["api_response"] * completion_tokens
+                )
             else:
                 print(f"No fallback pricing found for model {model}")
 
@@ -112,4 +133,4 @@ async def create_usage_record(
     return (
         usage_query,
         params,
-    ) 
+    )

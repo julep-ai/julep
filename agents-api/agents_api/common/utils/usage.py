@@ -2,15 +2,14 @@
 Utilities for tracking token usage and costs for LLM API calls.
 """
 
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from beartype import beartype
-from litellm import cost_per_token
-from litellm.utils import ModelResponse, _select_tokenizer as select_tokenizer
-from litellm.utils import token_counter
+from litellm.utils import ModelResponse, token_counter
 
 from ...queries.usage.create_usage_record import create_usage_record
+
 
 @beartype
 async def track_usage(
@@ -36,7 +35,7 @@ async def track_usage(
     Returns:
         None
     """
-    
+
     # Try to get token counts from response.usage
     if response.usage:
         prompt_tokens = response.usage.prompt_tokens
@@ -44,19 +43,20 @@ async def track_usage(
     else:
         # Calculate tokens manually if usage is not available
         prompt_tokens = token_counter(model=model, messages=messages)
-        
+
         # Calculate completion tokens from the response
-        completion_content = []
-        for choice in response.choices:
-            if hasattr(choice, "message") and choice.message:
-                if hasattr(choice.message, "content") and choice.message.content:
-                    completion_content.append({"content": choice.message.content})
-        
-        completion_tokens = token_counter(
-            model=model, 
-            messages=completion_content
-        ) if completion_content else 0
-    
+        completion_content = [
+            {"content": choice.message.content}
+            for choice in response.choices
+            if hasattr(choice, "message")
+            and choice.message
+            and hasattr(choice.message, "content")
+            and choice.message.content
+        ]
+
+        completion_tokens = (
+            token_counter(model=model, messages=completion_content) if completion_content else 0
+        )
 
     # Map the model name to the actual model name
     actual_model = model
@@ -99,13 +99,15 @@ async def track_embedding_usage(
     Returns:
         None
     """
-    
+
     # Try to get token count from response.usage
     if hasattr(response, "usage") and response.usage:
         prompt_tokens = response.usage.prompt_tokens
     else:
         # Calculate tokens manually if usage is not available
-        prompt_tokens = sum(token_counter(model=model, text=input_text) for input_text in inputs)
+        prompt_tokens = sum(
+            token_counter(model=model, text=input_text) for input_text in inputs
+        )
 
     # Map the model name to the actual model name
     actual_model = model
