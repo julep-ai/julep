@@ -96,7 +96,7 @@ async def create_usage_record(
             if model in fallback_pricing:
                 total_cost = fallback_pricing[model]['api_request'] * prompt_tokens + fallback_pricing[model]['api_response'] * completion_tokens
             else:
-                print("No fallback pricing found for model", model)
+                print(f"No fallback pricing found for model {model}")
 
     params = [
         developer_id,
