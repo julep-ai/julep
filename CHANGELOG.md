@@ -30,7 +30,7 @@
   </h3>
 </div>
 
-# **Changelog for 11 Apri 2025** ✨
+# **Julep AI Changelog for 11 Apri 2025** ✨
 
 - **Major Feature**: Introduced support for Gemini models in `litellm-config.yaml` ✨
 - **Minor Feature**: Added environment configuration for Open Responses API ✨
