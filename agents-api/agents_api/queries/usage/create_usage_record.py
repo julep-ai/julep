@@ -13,6 +13,36 @@ from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions
 
+fallback_pricing = {
+    # Meta Llama models
+    "meta-llama/llama-4-scout": {
+        "api_request": 0.08 / 1000,
+        "api_response": 0.45 / 1000,
+    },
+    "meta-llama/llama-4-maverick": {
+        "api_request": 0.19 / 1000,
+        "api_response": 0.85 / 1000,
+    },
+    "meta-llama/llama-4-maverick:free": {
+        "api_request": 0.0 / 1000,
+        "api_response": 0.0 / 1000,
+    },
+    # Qwen model
+    "qwen/qwen-2.5-72b-instruct": {
+        "api_request": 0.7 / 1000,
+        "api_response": 0.7 / 1000,
+    },
+    # Sao10k model
+    "sao10k/l3.3-euryale-70b": {
+        "api_request": 0.7 / 1000,
+        "api_response": 0.8 / 1000,
+    },
+    "sao10k/l3.1-euryale-70b": {
+        "api_request": 0.7 / 1000,
+        "api_response": 0.8 / 1000,
+    },
+}
+
 # Define the raw SQL query
 usage_query = """
 INSERT INTO usage (
@@ -37,7 +67,6 @@ VALUES (
 )
 RETURNING *;
 """
-
 
 @rewrap_exceptions(common_db_exceptions("usage", ["create"]))
 @query_metrics("create_usage_record")
@@ -81,35 +110,6 @@ async def create_usage_record(
             total_cost = prompt_cost + completion_cost
         except Exception:
             estimated = True
-            fallback_pricing = {
-                # Meta Llama models
-                "meta-llama/llama-4-scout": {
-                    "api_request": 0.08 / 1000,
-                    "api_response": 0.45 / 1000,
-                },
-                "meta-llama/llama-4-maverick": {
-                    "api_request": 0.19 / 1000,
-                    "api_response": 0.85 / 1000,
-                },
-                "meta-llama/llama-4-maverick:free": {
-                    "api_request": 0.0 / 1000,
-                    "api_response": 0.0 / 1000,
-                },
-                # Qwen model
-                "qwen/qwen-2.5-72b-instruct": {
-                    "api_request": 0.7 / 1000,
-                    "api_response": 0.7 / 1000,
-                },
-                # Sao10k model
-                "sao10k/l3.3-euryale-70b": {
-                    "api_request": 0.7 / 1000,
-                    "api_response": 0.8 / 1000,
-                },
-                "sao10k/l3.1-euryale-70b": {
-                    "api_request": 0.7 / 1000,
-                    "api_response": 0.8 / 1000,
-                },
-            }
 
             if model in fallback_pricing:
                 total_cost = (
