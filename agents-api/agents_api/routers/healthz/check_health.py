@@ -3,10 +3,11 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from httpx import AsyncClient
+
 from ...clients import litellm
 from ...clients.temporal import get_client
-from ...queries.agents.list_agents import list_agents as list_agents_query
 from ...env import integration_service_url
+from ...queries.agents.list_agents import list_agents as list_agents_query
 from .router import router
 
 
@@ -14,7 +15,12 @@ from .router import router
 async def check_health() -> dict:
     health_status = {
         "status": "ok",
-        "services": {"postgres": "ok", "temporal": "ok", "litellm": "ok", "integration_service": "ok"},
+        "services": {
+            "postgres": "ok",
+            "temporal": "ok",
+            "litellm": "ok",
+            "integration_service": "ok",
+        },
     }
 
     # Check TimescaleDB connection
@@ -47,7 +53,7 @@ async def check_health() -> dict:
         logging.error("LiteLLM health check failed: %s", str(e))
         health_status["services"]["litellm"] = "error"
         health_status["status"] = "degraded"
-    
+
     # Check integration service connection
     try:
         async with AsyncClient(timeout=600) as client:
