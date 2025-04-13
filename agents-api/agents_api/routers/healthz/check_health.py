@@ -1,5 +1,6 @@
 import logging
 from uuid import UUID
+import asyncio
 
 from fastapi import HTTPException
 from httpx import AsyncClient
@@ -23,51 +24,62 @@ async def check_health() -> dict:
         },
     }
 
-    # Check TimescaleDB connection
-    try:
-        await list_agents_query(
-            developer_id=UUID("00000000-0000-0000-0000-000000000000"),
-        )
-    except Exception as e:
-        logging.error("Postgres health check failed: %s", str(e))
-        health_status["services"]["postgres"] = "error"
-        health_status["status"] = "degraded"
-
-    # Check Temporal connection
-    try:
-        # Use the existing pattern to get the temporal client
-        # This checks if the connection can be established
-        client = await get_client()
-        # Get system info to verify the connection is working
-        client.get_workflow_handle("non-existent-workflow-id")
-    except Exception as e:
-        logging.error("Temporal health check failed: %s", str(e))
-        health_status["services"]["temporal"] = "error"
-        health_status["status"] = "degraded"
-
-    # Check LiteLLM connection
-    try:
-        # Use the get_model_list function to validate connectivity
-        await litellm.get_model_list()
-    except Exception as e:
-        logging.error("LiteLLM health check failed: %s", str(e))
-        health_status["services"]["litellm"] = "error"
-        health_status["status"] = "degraded"
-
-    # Check integration service connection
-    try:
-        async with AsyncClient(timeout=60) as client:
-            response = await client.get(
-                f"{integration_service_url}/integrations",
+    async def check_postgres():
+        try:
+            await list_agents_query(
+                developer_id=UUID("00000000-0000-0000-0000-000000000000"),
             )
-            response.raise_for_status()
-    except Exception as e:
-        logging.error("Integration service health check failed: %s", str(e))
-        health_status["services"]["integration_service"] = "error"
-        health_status["status"] = "degraded"
+            return "ok"
+        except Exception as e:
+            logging.error("Postgres health check failed: %s", str(e))
+            return "error"
 
-    # If any service is down, return 500 status code
-    if health_status["status"] != "ok":
+    async def check_temporal():
+        try:
+            client = await get_client()
+            client.get_workflow_handle("non-existent-workflow-id")
+            return "ok"
+        except Exception as e:
+            logging.error("Temporal health check failed: %s", str(e))
+            return "error"
+
+    async def check_litellm():
+        try:
+            await litellm.get_model_list()
+            return "ok"
+        except Exception as e:
+            logging.error("LiteLLM health check failed: %s", str(e))
+            return "error"
+
+    async def check_integration_service():
+        try:
+            async with AsyncClient(timeout=60) as client:
+                response = await client.get(
+                    f"{integration_service_url}/integrations",
+                )
+                response.raise_for_status()
+            return "ok"
+        except Exception as e:
+            logging.error("Integration service health check failed: %s", str(e))
+            return "error"
+
+    # Run all health checks concurrently
+    postgres_status, temporal_status, litellm_status, integration_status = await asyncio.gather(
+        check_postgres(),
+        check_temporal(),
+        check_litellm(),
+        check_integration_service(),
+    )
+
+    # Update health status with results
+    health_status["services"]["postgres"] = postgres_status
+    health_status["services"]["temporal"] = temporal_status
+    health_status["services"]["litellm"] = litellm_status
+    health_status["services"]["integration_service"] = integration_status
+
+    # If any service is down, mark overall status as degraded
+    if any(status == "error" for status in health_status["services"].values()):
+        health_status["status"] = "degraded"
         raise HTTPException(status_code=500, detail=health_status)
 
     return health_status
