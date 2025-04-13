@@ -56,7 +56,7 @@ async def check_health() -> dict:
 
     # Check integration service connection
     try:
-        async with AsyncClient(timeout=600) as client:
+        async with AsyncClient(timeout=60) as client:
             response = await client.get(
                 f"{integration_service_url}/integrations",
             )
