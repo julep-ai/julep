@@ -1,6 +1,6 @@
+import asyncio
 import logging
 from uuid import UUID
-import asyncio
 
 from fastapi import HTTPException
 from httpx import AsyncClient
