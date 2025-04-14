@@ -50,7 +50,7 @@ async def execute_system(
             arguments[key] = value.to_list()
 
     # Convert all UUIDs to UUID objects
-    uuid_fields = ["agent_id", "user_id", "task_id", "session_id", "doc_id"]
+    uuid_fields = ["agent_id", "user_id", "task_id", "session_id", "doc_id", "resource_id"]
     for field in uuid_fields:
         if field in arguments:
             arguments[field] = UUID(arguments[field])
@@ -63,7 +63,7 @@ async def execute_system(
         # Transform arguments for doc-related operations (except create and search
         # as we're calling the endpoint function rather than the model method)
         if system.subresource == "doc" and system.operation not in ["create", "search"]:
-            owner_id_field = f"{system.resource}_id"
+            owner_id_field = "resource_id"
             if owner_id_field in arguments:
                 doc_args = {
                     "owner_type": system.resource,
@@ -75,10 +75,11 @@ async def execute_system(
 
         # Handle special cases for doc operations
         if system.operation == "create" and system.subresource == "doc":
-            arguments["x_developer_id"] = arguments.pop("developer_id")
+            resource_type = f"{system.resource}_id"
             return await handler(
-                data=CreateDocRequest(**arguments.pop("data")),
-                **arguments,
+                data=CreateDocRequest(**arguments),
+                x_developer_id=arguments["developer_id"],
+                **{resource_type: arguments["resource_id"]},
             )
 
         # Handle search operations

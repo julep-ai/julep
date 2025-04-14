@@ -89,7 +89,7 @@ class CreateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch = None
     """
     Recall options for the session
     """
@@ -196,9 +196,9 @@ class PatchSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: (
-        VectorDocSearchUpdate | TextOnlyDocSearchUpdate | HybridDocSearchUpdate | None
-    ) = None
+    recall_options: VectorDocSearchUpdate | TextOnlyDocSearchUpdate | HybridDocSearchUpdate = (
+        None
+    )
     """
     Recall options for the session
     """
@@ -245,7 +245,7 @@ class Session(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch = None
     """
     Recall options for the session
     """
@@ -259,7 +259,7 @@ class Session(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
-    kind: str | None = None
+    kind: str
     """
     Discriminator property for Session.
     """
@@ -356,7 +356,7 @@ class UpdateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch = None
     """
     Recall options for the session
     """
@@ -404,16 +404,6 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
         populate_by_name=True,
     )
     id: UUID
-    user: UUID | None = None
-    """
-    User ID of user associated with this session
-    """
-    users: list[UUID] | None = None
-    agent: UUID | None = None
-    """
-    Agent ID of agent associated with this session
-    """
-    agents: list[UUID] | None = None
     situation: str | None = None
     """
     Session situation
@@ -446,7 +436,7 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch = None
     """
     Recall options for the session
     """
