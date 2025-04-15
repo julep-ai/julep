@@ -160,7 +160,7 @@ tools:
     messages:
     - role: "user"
       content: |-
-        $ """
+        $ f"""
         <SYSTEM_CAPABILITY>
         * You are utilising a headless chrome browser to interact with the internet.
         * You can use the computer tool to interact with the browser.
@@ -172,7 +172,7 @@ tools:
         * YOU CANNOT WRITE TO THE SEARCH BAR OF THE BROWSER.
         </SYSTEM_CAPABILITY>
         <GOAL>
-        *""" + steps[0].input.goal + NEWLINE + "</GOAL>"
+        * + {steps[0].input.goal} + NEWLINE + </GOAL> """
 ```
     Finally, we initiate the interactive browser workflow with system capabilities and user goal.
   </Step>
@@ -189,7 +189,19 @@ The `run_browser` subworkflow is a crucial component that handles the interactiv
   arguments:
     session_id: $ _.julep_session_id
     messages: $ _.messages
-    recall: 'False'
+    recall: $ False
+
+- evaluate:
+    content: $ _.choices[0].message.content
+    tool_calls: |-
+      $ [ 
+        { 
+          'tool_call_id': tool_call.id, 
+          'action': load_json(tool_call.function.arguments)['action'], 
+          'text': load_json(tool_call.function.arguments).get('text'), 
+          'coordinate': load_json(tool_call.function.arguments).get('coordinate') 
+        } 
+        for tool_call in _.choices[0].message.tool_calls or [] if tool_call.type == 'function']
 ```
     This step engages the AI agent in conversation, allowing it to:
     - Process and understand the user's goal
@@ -219,11 +231,29 @@ The `run_browser` subworkflow is a crucial component that handles the interactiv
 
   <Step title="Goal Evaluation">
 ```yaml
+- evaluate:
+    contents: >-
+      $ [ \
+        { \
+          'type': 'image_url', \
+          'image_url': { \
+            'url': result['base64_image'], \
+          } \
+        } if result['base64_image'] is not None else \
+        { \
+          'type': 'text', \
+          'text': result['output'] if result['output'] is not None else 'done' \
+        } \
+        for result in _]
+
+- evaluate:
+    messages: "$ [{'content': [_.contents[i]], 'role': 'tool', 'name': 'computer', 'tool_call_id': steps[1].output.tool_calls[i].tool_call_id} for i in range(len(_.contents))]"
+
 - workflow: check_goal_status
   arguments:
     messages: $ _.messages
-    julep_session_id: $ _.julep_session_id
-    cdp_url: $ _.cdp_url
+    julep_session_id: $ steps[0].input.julep_session_id
+    cdp_url: $ steps[0].input.cdp_url
 ```
     This final part:
     - Assesses progress toward the user's goal
@@ -379,7 +409,7 @@ main:
     messages:
     - role: "user"
       content: |-
-        $ """
+        $ f"""
         <SYSTEM_CAPABILITY>
         * You are utilising a headless chrome browser to interact with the internet.
         * You can use the computer tool to interact with the browser.
@@ -391,7 +421,7 @@ main:
         * YOU CANNOT WRITE TO THE SEARCH BAR OF THE BROWSER.
         </SYSTEM_CAPABILITY>
         <GOAL>
-        *""" + steps[0].input.goal + NEWLINE + "</GOAL>"
+        * + {steps[0].input.goal} + NEWLINE + </GOAL> """
 
 
 ########################################################
@@ -405,7 +435,7 @@ run_browser:
   arguments:
     session_id: $ _.julep_session_id
     messages: $ _.messages
-    recall: 'False'
+    recall: $ False
 
 # Step #1 - Evaluate the response from the agent
 - evaluate:
@@ -419,7 +449,6 @@ run_browser:
           'coordinate': load_json(tool_call.function.arguments).get('coordinate') 
         } 
         for tool_call in _.choices[0].message.tool_calls or [] if tool_call.type == 'function']
-
 
 # Step #2 - Perform the actions requested by the agent
 - foreach:
