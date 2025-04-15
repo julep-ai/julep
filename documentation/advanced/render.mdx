@@ -1,0 +1,204 @@
+---
+title: 'Render Endpoint in Julep'
+description: 'Learn about the render endpoint for previewing chat inputs before sending them to the model'
+icon: 'eye'
+---
+
+## Overview
+
+Julep provides a render endpoint that allows you to preview how chat inputs will be processed before actually sending them to the model. This is useful for debugging, testing templates, and understanding how the system processes your messages.
+
+## Purpose
+
+<Steps>
+  <Step title="Preview Processing">
+    The render endpoint processes chat inputs exactly as the chat endpoint would, but stops short of sending them to the model.
+  </Step>
+  <Step title="Template Rendering">
+    See how templates in your messages and system prompts will be rendered with the current environment variables.
+  </Step>
+  <Step title="Document Retrieval">
+    Preview which documents will be retrieved from your knowledge base for a given input.
+  </Step>
+  <Step title="Tool Configuration">
+    Examine how tools will be formatted and made available to the model.
+  </Step>
+  <Step title="Debugging">
+    Useful for debugging complex prompts and understanding the exact input that would be sent to the model.
+  </Step>
+</Steps>
+
+<Info>  
+  - The render endpoint uses the same input format as the chat endpoint but returns the processed messages without actually calling the model.
+  - To use the render endpoint, you need to create a session first. To learn more about the session object, check out the [Session](/concepts/sessions) page.
+</Info>
+
+## Input Structure
+
+The render endpoint accepts the same input structure as the chat endpoint:
+
+- **Messages**: An array of input messages representing the conversation so far.
+- **Tools**: (Advanced) Additional tools provided for this specific interaction.
+- **Tool Choice**: Specifies which tool the agent should use.
+- **Memory Access**: Controls how the session accesses history and memories (`recall` parameter).
+- **Additional Parameters**: Various parameters to control the behavior of the rendering.
+
+Here's an example of how a typical message object might be structured in a render request:
+
+<Accordion title="Message Object Structure">
+  ```python Python
+    """
+    Attributes for the Message object:
+        role (Literal["user", "assistant", "system", "tool"]): The role of the message sender.
+        tool_call_id (str | None): Optional identifier for a tool call associated with this message.
+        content (Annotated[str | list[str] | list[Content | ContentModel7 | ContentModel] | None, Field(...)]): The main content of the message, which can be a string, a list of strings, or a list of content models.
+        name (str | None): Optional name associated with the message.
+        continue_ (Annotated[StrictBool | None, Field(alias="continue")]): Flag to indicate whether to continue the conversation without interruption.
+        tool_calls (list[ChosenFunctionCall | ChosenComputer20241022 | ChosenTextEditor20241022 | ChosenBash20241022] | None): List of tool calls generated during the message creation, if any.
+    """
+    # Example of a simple message structure
+    messages = [{"role": "user", "content": "Your query here"}]
+  ```
+  <p>This object represents a message in the chat system, detailing the structure and types of data it can hold.</p>
+</Accordion>
+
+## Additional Parameters
+
+The render endpoint accepts the same parameters as the chat endpoint:
+
+| Parameter           | Type    | Description                                      | Default  |
+|---------------------|---------|--------------------------------------------------|----------|
+| `model`             | `str`   | The model to use for validation (though no actual model call is made). | `None` |
+| `agent`             | `UUID`  | Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions) | `None` |
+| `recall`            | `bool`  | Whether previous memories and docs should be recalled or not. | `True` |
+| `response_format`   | `str`   | Response format specification (used for validation only). | `None` |
+| `temperature`       | `float` | Not used in rendering but validated for format. | `None` |
+| `top_p`             | `float` | Not used in rendering but validated for format. | `1.0` |
+| `max_tokens`        | `int`   | Not used in rendering but validated for format. | `None` |
+| `stop`              | `list[str]` | Not used in rendering but validated for format. | `[]` |
+
+## Response Structure
+
+The render endpoint returns a `RenderResponse` object with the following structure:
+
+```json
+{
+  "messages": [
+    // Array of processed messages that would be sent to the model
+  ],
+  "docs": [
+    // Array of document references that would be used for this request
+  ],
+  "tools": [
+    // Array of formatted tools that would be available to the model
+  ]
+}
+```
+
+<Info>
+  The render response includes:
+  - `messages`: The fully processed messages, including rendered templates and system messages.
+  - `docs`: List of document references that would be used for this request, intended for citation purposes.
+  - `tools`: The formatted tools that would be available to the model.
+</Info>
+
+## Usage
+
+Here's an example of how to use the render endpoint in Julep using the SDKs:
+
+<Info>
+  To use the render endpoint, you always have to create a session first.
+</Info>
+
+<CodeGroup>
+    ```python Python
+    # Create a session with custom recall options
+    client.sessions.create(
+        agent=agent.id,
+        user=user.id,
+        recall=True,
+        recall_options={
+            "mode": "hybrid", # or "vector", "text"
+            "num_search_messages": 4, # number of messages to search for documents
+            "max_query_length": 1000, # maximum query length
+            "alpha": 0.7, # weight to apply to BM25 vs Vector search results (ranges from 0 to 1)
+            "confidence": 0.6, # confidence cutoff level (ranges from -1 to 1)
+            "limit": 10, # limit of documents to return
+            "lang": "en-US", # language to be used for text-only search
+            "metadata_filter": {}, # metadata filter to apply to the search
+            "mmr_strength": 0, # MMR Strength (ranges from 0 to 1)
+        }
+    )
+
+    # Render the chat input without sending to the model
+    render_response = client.sessions.render(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "Tell me about Julep"
+            }
+        ],
+        recall=True
+    )
+    print("Processed messages:", render_response.messages)
+    print("Retrieved documents:", render_response.docs)
+    print("Available tools:", render_response.tools)
+    ```
+
+    ```javascript Node.js
+    client.sessions.create({
+        agent: agent.id,
+        user: user.id,
+        recall: true,
+        recall_options: {
+            mode: "hybrid", // or "vector", "text"
+            num_search_messages: 4, // number of messages to search for documents
+            max_query_length: 1000, // maximum query length
+            alpha: 0.7, // weight to apply to BM25 vs Vector search results (ranges from 0 to 1)
+            confidence: 0.6, // confidence cutoff level (ranges from -1 to 1)
+            limit: 10, // limit of documents to return
+            lang: "en-US", // language to be used for text-only search
+            metadata_filter: {}, // metadata filter to apply to the search
+            mmr_strength: 0, // MMR Strength (ranges from 0 to 1)
+        }
+    });
+
+    // Render the chat input without sending to the model
+    const renderResponse = await client.sessions.render({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "Tell me about Julep"
+            }
+        ],
+        recall: true
+    });
+    ```
+</CodeGroup>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Template Debugging" icon="bug">
+    Test how your templates will be rendered with the current environment variables.
+  </Card>
+  <Card title="RAG Preview" icon="magnifying-glass">
+    Preview which documents will be retrieved for a given query.
+  </Card>
+  <Card title="Tool Configuration" icon="wrench">
+    Verify that tools are properly configured before sending to the model.
+  </Card>
+  <Card title="System Prompt Testing" icon="terminal">
+    Test how system prompts will be processed and combined with user messages.
+  </Card>
+</CardGroup>
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)

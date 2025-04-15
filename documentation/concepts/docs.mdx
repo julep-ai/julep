@@ -1,0 +1,539 @@
+---
+title: 'Documents (RAG)'
+description: 'Working with documents in Julep'
+icon: 'database'
+---
+
+## Overview
+
+Documents in Julep provide a way to store and retrieve information that can be used by agents. This section covers how to work with documents effectively.
+
+## Components
+
+Documents in Julep consist of several key components that enable efficient storage and retrieval of information.
+
+- **Title**: The title component helps identify and organize documents.
+- **Content**: The textual content of the document.
+- **Embeddings** (automatically generated): The vector representations of text that enable semantic search capabilities. Generated using the `text-embedding-3-large` model from OpenAI.
+- **Metadata**: Metadata provides additional context and filtering capabilities for documents.
+
+### Docs Configuration Options
+
+When creating a doc, the following attributes can be specified:
+
+| **Field**  | **Type** | **Description**                                                           | **Default** |
+|------------|----------|---------------------------------------------------------------------------|-------------|
+| `title`    | `string`   | The title of the document.                                                | Required    |
+| `content`  | `string`   | The content of the document.                                              | Required    |
+| `metadata` | `object`   | Additional metadata for the document, such as preferences or settings.    | `null`      |
+
+## How to Use Docs
+
+### Creating a Doc
+
+Documents are attached to either an agent or a user. This is how you can create a doc using Julep's SDKs.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Creating a doc
+    client.agents.docs.create(
+        agent_id=agent.id,
+        title="Old World",
+        content="The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.",
+        metadata={"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+    )
+    ```
+
+    ```javascript Node.js
+    // Creating a doc
+    const doc = await client.agents.docs.create({
+        agent_id: "agent_id",
+        title: "Old World",
+        content: "The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.",
+        metadata: {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+    });
+    ```
+</CodeGroup>
+
+<Info>
+    To create a user doc, replace `client.agents.docs.create` with `client.users.docs.create`, and the `agent_id` argument with `user_id`.
+</Info>
+
+<Tip>
+    Check out the [API reference](/api-reference/create-user-doc) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
+
+### Chunking
+
+In Julep, documents are not automatically chunked. We recommend that developers handle chunking based on their specific use case requirements, as different applications may have unique needs for how documents should be divided. 
+
+For those who need assistance with chunking, we provide a utility function `chunk_doc` that can be used directly in task steps. For implementation details, you can check the source code for this method in [this file](https://github.com/julep-ai/julep/blob/main/agents-api/agents_api/activities/utils.py).
+
+### Search
+
+#### Full Text Search
+
+Our full-text search functionality leverages Timescale's powerful indexing to efficiently match user-provided keywords and phrases against document content, delivering relevant results even with variations in text. Key features include prefix and infix searching, morphology processing (stemming and lemmatization), fuzzy searching to handle typos, and exact result counts.
+
+**Parameters:**
+
+| Parameter        | Type    | Description                                      | Default  |
+|------------------|---------|--------------------------------------------------|----------|
+| `text`           | `str`   | The textual query to search within documents.    | **Required** |
+| `metadata_filter`| `object`| Filters to apply based on document metadata.     | `None` |
+| `lang`           | `str`   | The language to use for full-text search processing. | `'english'` |
+| `limit`          | `int`   | The maximum number of documents to return.        | `10` |
+| `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (higher values require closer matches) | `0.6` |
+
+<Note>
+The default parameters for full-text search are based on our internal benchmarking. These values provide a good starting point, but you may need to adjust them depending on your specific use case to achieve optimal results.
+</Note>
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Define the query
+    text_query = "Medieval times in Europe"
+
+    # Search for docs
+    matched_docs = client.agents.docs.search(
+        agent_id="agent_id",
+        text=text_query,
+        limit=10, # the maximum number of docs to return
+    )
+
+    print(matched_docs.model_dump())
+    ```
+
+    ```javascript Node.js
+    // Define the query
+    const text_query = "Medieval times in Europe";
+
+    // Search for docs
+    const matched_docs = await client.agents.docs.search({
+        agent_id: "agent_id",
+        text: text_query,
+        limit: 10, // the maximum number of docs to return
+    });
+
+    console.log(matched_docs);
+    ```
+</CodeGroup>
+
+<Accordion title="Sample Output">
+    ```
+    {'docs': [{'id': '06791e86-6dcf-7816-8000-e4c3b781d05b',
+   'owner': {'id': '06791e82-46b7-739c-8000-3428f9d4e40f', 'role': 'agent'},
+   'snippet': {'content': 'The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.',
+    'index': 0,
+    'embedding': [
+     -0.036940154,
+     0.021077264,
+     -0.03274468,
+     0.016222501,
+     -0.05038565,
+     0.012776218,
+     ...
+     ...]},
+   'distance': 0.6666666865348816,
+   'metadata': {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+   'title': 'Old World'}],
+   'time': 0.0522150993347168}
+    ```
+</Accordion>
+
+<Tip>
+    Check out the [API reference](/api-reference/search-agent-docs) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
+
+#### Embedding (vector) Search
+
+Our embedding (vector) search functionality leverages machine learning to convert search queries and documents into numerical vectors, enabling semantic matching based on vector similarity. It utilizes an embedding space where similar vectors indicate related content and employs algorithms like k-nearest neighbors (KNN) to retrieve the most relevant documents. Key features include context awareness, flexibility for natural language queries, multi-modal search across various content types, and effective handling of synonyms.
+
+**Parameters:**
+
+| Parameter        | Type            | Description                                                                                   | Default |
+|------------------|-----------------|-----------------------------------------------------------------------------------------------|---------|
+| `vector`         | `number[]`      | The embedding vector representing the semantic meaning of the query.                          | **Required** |
+| `limit`          | `integer`       | The number of top results to return (must be between 1 and 50).                               | `10`    |
+| `lang`           | `string`        | The language for the search query.                                                            | `en-US` |
+| `metadata_filter`| `object`        | Filters to apply based on document metadata.                                                  | None    |
+| `mmr_strength`   | `number`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1).         | `0.5`     |
+| `confidence`     | `number`        | The confidence threshold for embedding similarity (must be between -1 and 1).                 | `0.5`     |
+
+<Note>
+The default parameters for embedding search are based on our internal benchmarking. These values provide a good starting point, but you may need to adjust them depending on your specific use case to achieve optimal results.
+</Note>
+
+<CodeGroup>
+    ```python Python
+    # Define the vector query
+    vector_query = client.docs.embed(text="Medieval times in Europe").vectors[0]
+
+    # Search for docs
+    matched_docs = client.agents.docs.search(
+        agent_id="agent_id",
+        vector=vector_query,
+        limit=10, # the maximum number of docs to return
+        confidence=-0.3, # confidence range is -1 to 1
+    )
+
+    print(matched_docs.model_dump())
+    ```
+
+    ```javascript Node.js
+    // Define the vector query
+    const embedding_result = client.docs.embed({ text: "Medieval times in Europe" });
+    const vector_query = embedding_result.vectors[0];
+
+    // Search for docs
+    const matched_docs = await client.agents.docs.search({
+        agent_id: "agent_id",
+        vector: vector_query,
+        limit: 10, // the maximum number of docs to return
+        confidence: -0.3, // confidence range is -1 to 1
+    });
+
+    console.log(matched_docs);
+    ```
+</CodeGroup>
+
+<Accordion title="Sample Output">
+    ```
+    {'docs': [{'id': '06791e86-6dcf-7816-8000-e4c3b781d05b',
+   'owner': {'id': '06791e82-46b7-739c-8000-3428f9d4e40f', 'role': 'agent'},
+   'snippet': {'content': 'The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.',
+    'index': 0,
+    'embedding': [
+     -0.036940154,
+     0.021077264,
+     -0.03274468,
+     0.016222501,
+     -0.05038565,
+     0.012776218,
+     -0.034123193,
+     -0.005039564,
+     ...
+     ...]},
+   'distance': 0.9322964182738759,
+   'metadata': {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+   'title': 'Old World'}],
+   'time': 0.04166412353515625}
+    ```
+</Accordion>
+
+<Tip>
+    Check out the [API reference](/api-reference/search-agent-docs) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
+
+#### Hybrid Search
+
+Our hybrid search functionality combines multiple search techniques to deliver highly relevant and accurate search results. Julep's hybrid search uses a three-pronged approach that leverages:
+
+1. **Full-text search** - Traditional keyword-based search using PostgreSQL's tsquery/tsrank
+2. **Vector search** - Semantic search using embeddings for contextual understanding
+3. **Trigram search** - Fuzzy text matching using character n-grams for typo tolerance
+
+By combining these approaches, hybrid search ensures that queries are matched not only on exact terms but also understood in context and tolerant of variations, providing more nuanced and precise results. This comprehensive approach enhances search performance, improves result relevance, and accommodates a wider range of search queries.
+
+##### Trigram Search Features
+
+Julep's trigram search capabilities include:
+
+- **Fuzzy Matching** - Handles typos, spelling variations, and morphological differences
+- **Similarity Scoring** - Combines trigram similarity with Levenshtein distance for accurate matching
+- **Word-Level Analysis** - Matches individual meaningful words against target content
+- **Adaptive Weighting** - Adjusts fuzzy matching strength based on query length
+- **Performance Optimization** - Uses PostgreSQL's GIN indexes and materialized CTEs for efficient processing
+
+##### How It Works
+
+1. When a search query is submitted, Julep runs both full-text search and trigram-based fuzzy search in parallel.
+2. Traditional full-text search results are prioritized (returned first).
+3. Trigram search then finds documents that full-text search might miss due to minor variations or typos.
+4. The system integrates these results with vector-based search results using Distribution-Based Score Fusion (DBSF).
+5. Results are ranked and returned based on a combination of all three search approaches.
+
+**Parameters:**
+
+| **Parameter**     | **Type**       | **Description**                                                                 | **Default** |
+|-------------------|----------------|---------------------------------------------------------------------------------|-------------|
+| `text`            | `str`          | The textual query to search within documents.                                   | **Required** |
+| `vector`          | `List[float]`  | The embedding vector representing the semantic meaning of the query.            | **Required** |
+| `alpha`           | `float`        | The weight assigned to embedding-based results versus text-based results (must be between 0 and 1).     | `0.5`       |
+| `confidence`      | `float`        | The confidence threshold for embedding similarity (must be between -1 and 1).            | `0.5`       |
+| `metadata_filter` | `object`       | Filters to apply based on document metadata.                                    | `None`      |
+| `limit`           | `int`          | The number of top results to return.                                            | `3`         |
+| `lang`            | `str`          | The language to use for full-text search processing.                            | `english_unaccent` |
+| `mmr_strength`    | `float`        | The strength of Maximum Marginal Relevance diversification (must be between 0 and 1). | `0.5`       |
+| `trigram_similarity_threshold` | `float` | The threshold for trigram similarity matching (must be between 0 and 1). | `0.6`       |
+| `k_multiplier`    | `int`          | Controls how many intermediate results to fetch before final scoring.           | `7`         |
+
+<Note>
+The default parameters for hybrid search are based on our internal benchmarking. These values provide a good starting point, but you may need to adjust them depending on your specific use case to achieve optimal results.
+</Note>
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Define the query
+    text_query = "Medieval times in Europe"
+    # Embed the query using the `docs.embed` method
+    embedded_query = client.docs.embed(text=text_query).vectors[0]
+
+    # Search for docs
+    matched_docs = client.agents.docs.search(
+        agent_id="agent_id",
+        text=text_query,
+        alpha=0.5, # the weight of the embedding query
+        vector=embedded_query,
+        confidence=-0.3, # confidence range is -1 to 1
+    )
+
+    print(matched_docs.model_dump())
+    ```
+
+    ```javascript Node.js
+    // Define the query
+    const text_query = "Medieval times in Europe";
+    // Embed the query using the `docs.embed` method
+    const embedding_result = await client.docs.embed({ text: text_query });
+    const embedded_query = embedding_result.vectors[0];
+
+    // Search for docs
+    const matched_docs = await client.agents.docs.search({
+        agent_id: "agent_id",
+        text: text_query,
+        vector: embedded_query,
+        confidence: -0.3, // confidence range is -1 to 1
+        alpha: 0.5, // the weight of the embedding query
+    });
+
+    console.log(matched_docs);
+    ```
+</CodeGroup>
+
+<Accordion title="Sample Output">
+```
+    {'docs': [{'id': '06791e86-6dcf-7816-8000-e4c3b781d05b',
+    'owner': {'id': '06791e82-46b7-739c-8000-3428f9d4e40f', 'role': 'agent'},
+    'snippet': {'content': 'The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.',
+        'index': 0,
+        'embedding': [
+        -0.036940154,
+        0.021077264,
+        -0.03274468,
+        0.016222501,
+        -0.05038565,
+        0.012776218,
+        -0.034123193,
+        -0.005039564,
+        ...
+        ...]},
+    'distance': 0.13411101466087272,
+    'metadata': {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+    'title': 'Old World'}],
+    'time': 0.0514223575592041}
+    ```
+</Accordion>
+
+<Tip>
+    Check out the [API reference](/api-reference/search-agent-docs) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
+
+## Filtering
+
+While search is carried on based on the textual and/or semantic content of the documents, you can also filter the documents based on their metadata.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Filter docs based on metadata
+    dev_client.agents.docs.list(
+        agent_id="agent_id",
+        metadata_filter={"source": "wikipedia"},
+    )
+    ```
+</CodeGroup>
+
+<Tip>
+    Check out the [API reference](/api-reference/list-agent-docs) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
+</Tip>
+
+## Relationship to Other Concepts
+
+### Sessions
+
+Sessions have access to search, retrieve and reference agents and users documents inside chat conversations. Read more about it [here](/concepts/sessions#documents).
+
+### Tasks
+
+By leveraging [System Tools](/concepts/tools#system-tools), Julep [Tasks](/concepts/tasks) have the ability to create, search, filter and read documents.
+
+**Example:**
+
+<CodeGroup>
+```yaml
+input_schema:
+    type: object
+    properties:
+    user_id:
+        type: string
+        description: The id of the user to list documents for
+
+tools:
+- name: "list_user_docs"
+    description: "List all documents for the current user"
+    type: "system"
+    system:
+    resource: user
+    subresource: doc
+    operation: list
+
+main:
+# Step that lists all documents for the current user
+- tool: "list_user_docs"
+    arguments:
+    user_id: $ _.user_id
+
+# Step that evaluates the textual contents of all documents for the current user
+- evaluate:
+    all_user_docs_contents: $ [doc.content for doc in _.items]
+```
+</CodeGroup>
+
+<Info>
+    Checkout [this cookbook](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/11-generate-user-personas.ipynb) that leverages Julep's docs, system tools and tasks to create content-rich user personas. 
+</Info>
+
+## Best Practices
+
+<CardGroup cols={3}>
+    <Card title="Organize Metadata" icon="tags">
+        <ul>
+            <li>**1. Metadata**: Use consistent and descriptive metadata to enhance document retrieval and filtering.</li>
+        </ul>
+    </Card>
+    <Card title="Version Control" icon="timer">
+        <ul>
+            <li>**1. Version Control**: Maintain version control for documents to track changes and updates over time.</li>
+        </ul>
+    </Card>
+    <Card title="Security and Privacy" icon="lock">
+        <ul>
+            <li>**1. Access Control**: Ensure sensitive information is protected and access to documents is properly managed.</li>
+        </ul>
+    </Card>
+    <Card title="Efficient Chunking" icon="grid-dividers">
+        <ul>
+            <li>**1. Chunking Strategies**: Implement efficient chunking strategies to optimize document processing and retrieval.</li>
+        </ul>
+    </Card>
+    <Card title="Regular Updates" icon="sparkles">
+        <ul>
+            <li>**1. Update**: Regularly update document content and metadata to keep information current and relevant.</li>
+        </ul>
+    </Card>
+</CardGroup>
+
+## Advanced Search Features
+
+### Trigram-Enhanced Fuzzy Matching
+
+Julep's advanced fuzzy matching capability is built on PostgreSQL's `pg_trgm` extension and enhanced with additional similarity techniques. This allows for resilient document retrieval that can handle variations in text, including:
+
+- Typos and spelling errors
+- Morphological variations
+- Term order differences
+- Incomplete terms
+
+#### Similarity Mechanisms
+
+Julep uses a multi-layered approach to determine text similarity:
+
+1. **Basic Trigram Similarity** - Uses PostgreSQL's built-in trigram functions to match documents based on character-level n-grams.
+
+2. **Enhanced Similarity** - Combines trigram matching with Levenshtein distance calculations to provide better accuracy, especially for shorter text segments:
+   ```sql
+   -- 70% trigram, 30% Levenshtein for shorter strings
+   RETURN 0.7 * trgm_sim + 0.3 * norm_lev;
+   ```
+
+3. **Word-Level Similarity** - Breaks text into individual words and finds the best match for each meaningful word:
+   ```sql
+   -- Only process meaningful words (longer than 2 chars)
+   IF length(words1[i]) > 2 THEN
+       -- Find best match in target content
+       best_match := GREATEST(best_match, similarity(words1[i], words2[j]));
+   ```
+
+4. **Comprehensive Similarity** - Adaptively weights different similarity metrics based on query characteristics:
+   ```sql
+   -- Weight factor based on query length - shorter queries need more help
+   word_weight float := CASE
+       WHEN length(query) < 10 THEN 0.4
+       WHEN length(query) < 20 THEN 0.3
+       ELSE 0.2
+   END;
+   ```
+
+#### Tuning Search Behavior
+
+You can customize Julep's fuzzy search behavior through several parameters:
+
+- **Similarity Threshold** (`trigram_similarity_threshold`) - Controls the minimum similarity score required for a document to match:
+  - Higher values (e.g., 0.8) require closer matches, reducing false positives but may miss relevant documents with variations
+  - Lower values (e.g., 0.3) are more lenient, catching more variations but potentially including less relevant results
+  - Default: 0.6 for hybrid search, 0.3 for text-only search
+
+- **Alpha Weight** (`alpha`) - Balances the importance of vector-based semantic search vs. text-based search:
+  - Higher values prioritize semantic/embedding matches
+  - Lower values prioritize text and trigram matches
+  - Default: 0.7 (70% weight to embeddings)
+
+- **Search Language** (`lang`) - Affects tokenization, stemming, and other text processing operations:
+  - Default: 'english_unaccent' which handles accent/diacritic-insensitive matching
+
+#### Implementation Details
+
+Julep's trigram search is implemented using:
+
+1. **Database Indexes** - GIN indexes on document title and content for efficient trigram operations:
+   ```sql
+   CREATE INDEX IF NOT EXISTS idx_docs_title_trgm ON docs USING GIN (title gin_trgm_ops);
+   CREATE INDEX IF NOT EXISTS idx_docs_content_trgm ON docs USING GIN (content gin_trgm_ops);
+   ```
+
+2. **Materialized CTEs** - Improves performance for complex query operations:
+   ```sql
+   WITH tsv_results AS MATERIALIZED (...)
+   ```
+
+3. **Runtime Optimizations** - Selective application of more expensive calculations:
+   ```sql
+   -- Only compute Levenshtein for reasonable length strings (performance)
+   IF length(text1) <= 50 AND length(text2) <= 50 THEN
+   ```
+
+4. **Distribution-Based Score Fusion** - Combines results from different search methods:
+   ```sql
+   -- Aggregate all text/embedding scores into arrays
+   aggregated AS (
+       SELECT
+           array_agg(text_score ORDER BY rn)      AS text_scores,
+           array_agg(embedding_score ORDER BY rn) AS embedding_scores
+   ```
+
+These technologies combine to provide a sophisticated fuzzy search capability that significantly improves document retrieval compared to traditional search methods.
+
+## Next Steps
+
+- [Sessions](/concepts/sessions) - Learn about sessions and how documents are used in chat conversations.
+- [Tools](/concepts/tools) - Learn about tools and how they can be used to fill documents with content.
+- [Tasks](/concepts/tasks) - Learn about tasks and how to use documents inside tasks.
+- [Cookbooks](https://github.com/julep-ai/julep/tree/main/cookbooks) - Check out cookbooks to see how Julep can be used in real-world scenarios.

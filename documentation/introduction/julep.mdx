@@ -1,0 +1,148 @@
+---
+title: 'Welcome to Julep'
+icon: 'eye' 
+---
+
+<Frame>
+  <img
+    className="block dark:hidden"
+    src="/images/overview.svg"
+    alt="Julep Hero Light"
+    style={{ height: "33vh", maxHeight: "280px" }}
+  />
+  <img
+    className="hidden dark:block"
+    src="/images/overview-dark.svg"
+    alt="Julep Hero Dark"
+    style={{ height: "33vh", maxHeight: "280px" }}
+  />
+</Frame>
+
+Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes.
+
+Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs.
+
+While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios which:
+
+- Have multiple steps,
+- Make decisions based on model outputs,
+- Spawn parallel branches,
+- Use lots of tools, and
+- Run for a long time.
+
+
+Julep offers a comprehensive set of features designed to help you build sophisticated AI workflows. 
+
+<Info>
+<h4>Imagine you want to build an AI agent that can do more than just answer simple questions — it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs.</h4>
+</Info>
+
+Now since you understand the problem Julep is solving, let's explore the key features that make Julep stand out.
+
+## Core Features
+
+<CardGroup cols={2}>
+  <Card title="Persistent AI Agents" icon="brain">
+    <p>Create agents that maintain context and remember information across multiple interactions. Agents can learn from past conversations and apply that knowledge to future tasks.</p>
+  </Card>
+
+  <Card title="Stateful Sessions" icon="database">
+    <p>Keep track of conversation history and context across multiple interactions. Sessions can be paused, resumed, and maintain their state indefinitely.</p>
+  </Card>
+
+  <Card title="Multi-Step Tasks" icon="arrows-spin">
+    <p>Build complex workflows with decision-making capabilities, loops, and conditional logic. Tasks can be as simple or as sophisticated as needed.</p>
+  </Card>
+
+  <Card title="Task Management" icon="hourglass">
+    <p>Handle long-running tasks that can run indefinitely. Tasks are automatically managed, with built-in support for retries and error handling.</p>
+  </Card>
+</CardGroup>
+
+## Advanced Capabilities
+
+<AccordionGroup>
+  <Accordion title="Built-in Tools" icon="wrench" defaultOpen={true}>
+    Access a wide range of built-in tools and easily integrate with external APIs. Tools can be added to agents to extend their capabilities.
+  </Accordion>
+
+  <Accordion title="Self-Healing" icon="bandage" defaultOpen={true}>
+    Automatic retry mechanisms for failed steps, message resending, and robust task management keep your workflows running smoothly.
+  </Accordion>
+
+  <Accordion title="RAG Support" icon="database" defaultOpen={true}>
+    Built-in support for Retrieval-Augmented Generation. Use Julep's document store to build systems that can retrieve and utilize your own data.
+  </Accordion>
+
+  <Accordion title="Easy Integration" icon="plug" defaultOpen={true}>
+    Seamlessly integrate with your existing infrastructure using our comprehensive SDKs for Python and Node.js.
+  </Accordion>
+</AccordionGroup>
+
+## Exploring the Documentation
+
+Depending on your use case, here are different ways to explore our documentation:
+
+<CardGroup cols={2}>
+  <Card title="For AI Developers" icon="code" href="/introduction/quickstart">
+    <p>Start with the Quick Start guide, then dive into Core Concepts and Task Management to build AI-powered applications.</p>
+  </Card>
+
+  <Card title="For Enterprise Solutions" icon="building" href="/advanced/architecture-deep-dive">
+    <p>Focus on Architecture Deep Dive, Security Features, and Integration Guides to understand enterprise-grade deployment.</p>
+  </Card>
+
+  <Card title="For Researchers & Experimenters" icon="flask" href="/integrations/supported-models">
+    <p>Explore our Model Configuration, RAG Implementation, and Advanced Features sections to experiment with AI capabilities.</p>
+  </Card>
+
+  <Card title="For System Integrators" icon="network-wired" href="/api-reference">
+    <p>Check out our API Reference, SDK Documentation, and Integration Tutorials to connect Julep with existing systems.</p>
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/introduction/install"
+  >
+    Detailed setup instructions
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="book"
+    href="/introduction/quickstart"
+  >
+    Essential concepts and terminology
+  </Card>
+  <Card
+    title="Tutorials"
+    icon="code"
+    href="/tutorials"
+  >
+    Learn from practical tutorials
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+<CardGroup cols={2}>
+  <Card
+    title="Join our Community"
+    icon="discord"
+    href="https://discord.gg/p4c7ehs4vD"
+  >
+    Get help and share ideas with other Julep developers
+  </Card>
+  <Card
+    title="Contact Support"
+    icon="envelope"
+    href="mailto:developers@julep.ai"
+  >
+    Reach out to our team for assistance
+  </Card>
+</CardGroup>
+
