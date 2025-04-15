@@ -1,0 +1,271 @@
+---
+title: 'Users'
+description: 'Understanding and Managing Users in Julep'
+icon: 'circle-user'
+---
+
+## Overview
+
+Users in Julep represent the entities interacting with your AI agents. These can be real people or other systems that require automated responses from an agent. Managing users effectively allows for personalized and contextual interactions, ensuring that each user's preferences and history are maintained across sessions.
+
+## Components
+
+Users are comprised of several key components that facilitate their interaction with agents and sessions:
+
+- **Name**: The identifier for the user.
+- **About**: Additional information describing the user.
+- **Metadata**: Customizable key-value pairs that store user-specific data, preferences, and other relevant information.
+
+### Users configuration options
+
+When creating a user, the following attributes can be specified:
+
+| **Field**  | **Type** | **Description**                                                    | **Default** |
+|------------|----------|--------------------------------------------------------------------|-------------|
+| `name`     | `string`   | The name of the user.                                              | Required    |
+| `about`    | `string`   | Information about the user.                                        | `""`        |
+| `metadata` | `object`   | Additional metadata for the user, such as preferences or settings. | `null`      |
+
+## Creating a User
+
+You can create a user using Julep's SDKs in Python or JavaScript. Below are examples demonstrating how to create a user.
+
+<CodeGroup>
+    ```python Python
+    from julep import Julep
+
+    client = Julep(api_key="your_api_key")
+
+    user = client.users.create(
+        name="John Doe",
+        about="A 21-year-old man who is a student at MIT.",
+        metadata={
+            "email": "john.doe@example.com",
+            "preferences": {
+                "language": "en",
+                "timezone": "UTC"
+            }
+        }
+    )
+
+    print(f"Created user: {user.id}")
+    ```
+
+    ```javascript Node.js
+    import { Julep } from '@julep/sdk';
+
+    const client = new Julep({ apiKey: 'your_api_key' });
+
+    const user = await client.users.create({
+        name: "John Doe",
+        about: "A 21-year-old man who is a student at MIT.",
+        metadata: {
+            email: "john.doe@example.com",
+            preferences: {
+                language: "en",
+                timezone: "UTC"
+            }
+        }
+    });
+
+    console.log(`Created user: ${user.id}`);
+    ```
+</CodeGroup>
+
+## Managing Users
+
+Once users are created, you can perform various operations such as retrieving, updating, and deleting user profiles.
+
+### Retrieving Users
+
+Retrieve user information individually or as a list.
+
+<CodeGroup>
+    ```python Python
+    # Get a user by ID
+    user = client.users.get(user_id="user_id_here")
+    print(user)
+
+    # List all users
+    users = client.users.list()
+    for user in users:
+        print(user)
+    ```
+
+    ```javascript Node.js
+    // Get a user by ID
+    const user = await client.users.get("user_id_here");
+    console.log(user);
+
+    // List all users
+    const users = await client.users.list();
+    users.forEach(user => console.log(user));
+    ```
+</CodeGroup>
+
+<Tip>
+    Check out the [API reference](/api-reference/users) or SDK reference ([Python](/sdks/python/reference#users) or [JavaScript](/sdks/nodejs/reference#users)) for more details on different operations you can perform on users.
+</Tip>
+
+### Updating Users
+
+Update user details or specific fields within the user profile.
+
+<CodeGroup>
+    ```python Python
+    # Update user metadata
+    updated_user = client.users.update(
+        user_id="user_id_here",
+        metadata={
+            "preferences": {
+                "language": "es",
+                "notifications_enabled": True
+            }
+        }
+    )
+
+    print(f"Updated user: {updated_user.id}")
+    ```
+
+    ```javascript Node.js
+    // Update user metadata
+    const updatedUser = await client.users.update("user_id_here", {
+        metadata: {
+            preferences: {
+                language: "es",
+                notifications_enabled: true
+            }
+        }
+    });
+
+    console.log(`Updated user: ${updatedUser.id}`);
+    ```
+</CodeGroup>
+
+<Tip>
+    Check out the [API reference](/api-reference/users) or SDK reference ([Python](/sdks/python/reference#users) or [JavaScript](/sdks/nodejs/reference#users)) for more details on different operations you can perform on users.
+</Tip>
+
+### Deleting Users
+
+Remove users from your system when they are no longer needed.
+
+<CodeGroup>
+    ```python Python
+    # Delete a single user
+    client.users.delete(user_id="user_id_here")
+    ```
+
+    ```javascript Node.js
+    // Delete a single user
+    await client.users.delete("user_id_here");
+    ```
+</CodeGroup>
+
+<Tip>
+    Check out the API reference [here](/api-reference/users) or SDK reference (Python [here](/sdks/python/reference#users) or JavaScript [here](/sdks/nodejs/reference#users) for more details on different operations you can perform on users.
+</Tip>
+
+## Relationship to Other Concepts
+
+### Sessions
+
+Users interact with agents through **sessions**, which maintain the context and history of conversations. Each session is associated with a single user and an agent, ensuring that interactions are personalized and relevant.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    client = Julep(api_key="YOUR_API_KEY")
+    user = client.users.create(name="Alice", about="An avid reader.")
+    agent = client.agents.create(name="BookBot", about="Helps find and recommend books.")
+    session = client.sessions.create(agent=agent.id, user=user.id)
+    ```
+
+    ```javascript Node.js
+    const client = new Julep({ apiKey: 'YOUR_API_KEY' });
+    const user = await client.users.create({
+        name: "Alice",
+        about: "An avid reader."
+    });
+    const agent = await client.agents.create({
+        name: "BookBot",
+        about: "Helps find and recommend books."
+    });
+    const session = await client.sessions.create({
+        agent: agent.id,
+        user: user.id
+    });
+    ```
+</CodeGroup>
+
+### Agents
+
+While users represent the entities interacting with your system, **agents** are the AI-powered entities that respond to user interactions. Agents can have access to user data to provide personalized and context-aware responses.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    agent = client.agents.create(
+        name="SupportBot",
+        about="Assists customers with their inquiries.",
+        model="gpt-4"
+    )
+
+    user = client.users.create(name="Bob", about="A customer with recent purchases.")
+    session = client.sessions.create(agent=agent.id, user=user.id)
+    ```
+
+    ```javascript Node.js
+    const agent = await client.agents.create({
+        name: "SupportBot",
+        about: "Assists customers with their inquiries.",
+        model: "gpt-4"
+    });
+
+    const user = await client.users.create({
+        name: "Bob",
+        about: "A customer with recent purchases."
+    });
+
+    const session = await client.sessions.create({
+        agent: agent.id,
+        user: user.id
+    });
+    ```
+</CodeGroup>
+
+<Tip>
+    Check out the [API reference](/api-reference/agents) or SDK reference ([Python](/sdks/python/reference#agents) or [JavaScript](/sdks/nodejs/reference#agents)) for more details on different operations you can perform on agents.
+</Tip>
+
+## Best Practices
+
+<CardGroup cols={3}>
+    <Card title="Session Management" icon="recycle">
+        <ul>
+            <li>1. **Reuse Sessions**: Reuse existing sessions for returning users to maintain continuity in interactions.</li>
+            <li>2. **Session Cleanup**: Regularly clean up inactive sessions to manage resources efficiently.</li>
+            <li>3. **Context Overflow Strategy**: Choose an appropriate context overflow strategy (e.g., "adaptive") to handle long conversations without losing important information.</li>
+        </ul>
+    </Card>
+    <Card title="Personalization" icon="user-group">
+        <ul>
+            <li>1. **Leverage Metadata**: Use user metadata to store and retrieve preferences, enhancing personalized interactions.</li>
+            <li>2. **Maintain Context**: Ensure that the context within sessions is updated and relevant to provide coherent and context-aware responses.</li>
+        </ul>
+    </Card>
+    <Card title="Data Security" icon="shield">
+        <ul>
+            <li>1. **Protect User Data**: Ensure that all user data, especially sensitive information, is stored securely and complies with relevant data protection regulations.</li>
+            <li>2. **Access Control**: Implement proper access controls to restrict who can view or modify user data.</li>
+        </ul>
+    </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Sessions](/concepts/sessions) - Learn how to manage sessions and maintain conversation context.
+- [Agents](/concepts/agents) - Learn how to manage agents and create personalized interactions.
+- [Tasks](/concepts/tasks) - Learn how to manage tasks and create automated workflows.

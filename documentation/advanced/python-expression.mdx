@@ -1,0 +1,365 @@
+---
+title: 'Python Expression'
+description: 'Learn how to use Python expressions in Julep task definitions'
+icon: 'python'
+---
+
+## Overview
+
+Julep tasks support Python expressions for dynamic value computation and data manipulation. This guide explains how to use them effectively.
+
+## The Special `_` Variable
+
+The underscore `_` is a special variable that serves three different purposes depending on where it's used:
+
+1. **First Step Input**: In the first step of a task, `_` contains the execution input:
+```yaml
+# If task is executed with input `{"topic": "AI"}`
+- evaluate:
+    topic: $ _.topic  # Accesses the input "AI"
+```
+
+2. **Previous Step Output**: In any subsequent step, `_` contains the output from the previous step:
+```yaml
+- evaluate:
+    results: $ _.split('\n')  # Splits previous step's output into lines
+```
+
+3. **Iterator Value**: In `foreach` and `map` steps, `_` represents the current item being iterated.
+```yaml
+# If the task is executed with input `{"questions": ["What is AI?", "What is Julep?"]}`
+- foreach:
+    in: $ _.questions
+    do:
+      - wait_for_input:
+          info:
+            "message": $ _  # _ is each question
+```
+
+## The Special `$` Variable
+
+The `$` variable is used to differentiate between a Python expression and a string. When using the `$` variable, the expression is evaluated as a Python expression.
+
+```yaml
+- evaluate:
+    topic: $ _.topic  # Accesses the input "AI"
+```
+
+```yaml
+- prompt:
+    - role: user
+      content: |-
+        f'''
+        Please answer the following question:
+        {_.question} 
+        '''
+```
+<Note>
+To learn more about how to use the `$` variable, please refer to the [New Syntax](/advanced/new-syntax) section.
+</Note>
+
+## Where Python Expressions Are Used
+
+Python expressions can be used in various task steps. For a complete list of step types and their syntax, refer to the [Step Types](/advanced/types-of-task-steps) page.
+
+Common places include:
+- `evaluate` steps
+- Tool `arguments`
+- `if` conditions
+- `foreach` and `map` iterations
+
+## Available Functions and Libraries
+
+The following Python functions and libraries are available for use in expressions:
+
+### Basic Python Builtins
+- `abs`, `all`, `any`, `bool`, `dict`, `enumerate`
+- `float`, `int`, `len`, `list`, `map`, `max`, `min`
+- `round`, `set`, `str`, `sum`, `tuple`, `zip`, `reduce`
+
+### Safe Versions of Functions
+- `range`: `def safe_range(*args)`
+  
+  Safely creates a range object with size limits (max 1,000,000 elements).
+
+- `load_json`: `def safe_json_loads(s: str) -> Any` (Deprecated in favor of `json.loads`)
+  
+  Safely parses a JSON string with size limits.
+
+- `load_yaml`: `def safe_yaml_load(s: str) -> Any` (Deprecated in favor of `yaml.safe_load`)
+  
+  Safely parses a YAML string with size limits.
+
+- `dump_json`: `def dump_json(obj: Any, *, **kwargs) -> str` (Deprecated in favor of `json.dumps`)
+  
+  Safely serializes an object to a JSON string.
+
+- `dump_yaml`: `def dump_yaml(obj: Any, **kwargs) -> str` (Deprecated in favor of `yaml.dump`)
+  
+  Safely serializes an object to a YAML string.
+
+- `extract_json`: `def safe_extract_json(string: str) -> Any`
+  
+  Safely extracts and parses JSON from text.
+
+### Regex and NLP Functions
+- `search_regex`: `def search_regex(pattern: str, string: str) -> Optional[re2.Match]`
+  
+  Searches for a regex pattern in a string.
+
+- `match_regex`: `def match_regex(pattern: str, string: str) -> bool`
+  
+  Checks if a regex pattern matches a string.
+
+- `chunk_doc`: `def chunk_doc(string: str) -> list[str]`
+  
+  Chunks a string into sentences.
+
+- `nlp` pipelines.
+
+Example using these functions in an evaluate step:
+```yaml
+- evaluate:
+    # Parse JSON string with size limit of 1MB
+    data: $ json.loads(_.json_string)
+    
+    # Parse YAML string with size limit of 1MB
+    config: $ yaml.safe_load(_.yaml_string)
+    
+    # Extract JSON from text that might contain markdown code blocks
+    extracted_content: $ extract_json('Here is some JSON: ```json\n{"key": "value"}\n```')
+```
+
+### CSV Functions
+- `reader`: `def reader(data: str, dialect="excel", delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting=0, strict: bool = False) -> csv._reader`
+
+  Creates a CSV reader.
+
+- `writer`: `def writer(data: str, dialect="excel", delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting=0, strict: bool = False) -> csv._writer`
+
+  Creates a CSV writer.
+
+- `DictReader`: `class DictReader(data: str, fieldnames=None, restkey=None, restval=None, dialect="excel", *args, **kwds)`
+
+  Create an object that operates like a regular reader but maps the information in each row to a dict.
+
+- `DictWriter`: `class DictWriter(data: str, fieldnames, restval="", extrasaction="raise", dialect="excel", *args, **kwds)`
+
+  Create an object which operates like a regular writer but maps dictionaries onto output rows.
+
+- `register_dialect`: `def register_dialect(name: str, dialect: type[Dialect] = ..., *, delimiter: str = ",", quotechar: str | None = '"', escapechar: str | None = None, doublequote: bool = True, skipinitialspace: bool = False, lineterminator: str = "\r\n", quoting: _QuotingType = 0, strict: bool = False) -> csv._reader`
+
+  Associate dialect with name.
+
+- `unregister_dialect`: `def unregister_dialect(name: str) -> None`
+
+  Delete the dialect associated with name from the dialect registry.
+
+- `get_dialect`: `def get_dialect(name: str) -> Dialect`
+
+  Return the dialect associated with name.
+
+- `list_dialects`: `def list_dialects() -> list[str]`
+
+  Return the names of all registered dialects.
+
+- `field_size_limit`: `def field_size_limit(new_limit: int = ...) -> int`
+
+  Returns the current maximum field size allowed by the parser.
+
+- `Dialect`: `class Dialect()`
+
+  The Dialect class is a container class whose attributes contain information for how to handle doublequotes, whitespace, delimiters, etc.
+
+- `excel`: `class excel()`
+
+  The excel class defines the usual properties of an Excel-generated CSV file.
+
+- `excel_tab`: `class excel_tab()`
+
+  The excel_tab class defines the usual properties of an Excel-generated TAB-delimited file.
+
+- `unix_dialect`: `class unix_dialect()`
+
+  The unix_dialect class defines the usual properties of a CSV file generated on UNIX systems, i.e. using '\n' as line terminator and quoting all fields.
+
+- `Sniffer`: `class Sniffer`
+
+  The Sniffer class is used to deduce the format of a CSV file.
+
+- `QUOTE_ALL` - Instructs writer objects to quote all fields.
+
+- `QUOTE_MINIMAL` - Instructs writer objects to only quote those fields which contain special characters such as delimiter, quotechar or any of the characters in lineterminator.
+
+- `QUOTE_NONNUMERIC` - Instructs writer objects to quote all non-numeric fields. Instructs reader objects to convert all non-quoted fields to type float.
+
+- `QUOTE_NONE` - Instructs writer objects to never quote fields.
+
+- `QUOTE_NOTNULL` - Instructs writer objects to quote all fields which are not None.
+
+- `QUOTE_STRINGS` - Instructs writer objects to always place quotes around fields which are strings.
+
+- `Error`: `class Error()`
+
+  Raised by any of the functions when an error is detected.
+
+This module tries to mimic `csv` module from the standard Python library. You can find additional information [here](https://docs.python.org/3/library/csv.html)
+
+## Example Usage
+
+```yaml
+name: Data Processing Task
+
+main:
+  # Using _ as input
+  - evaluate:
+      csv_data: $ [row for row in csv.reader("a,b,c\n1,2,3")]
+```
+
+### Standard Library Modules
+- `re`: Regular expressions (using re2)
+- `json`: JSON operations
+- `yaml`: YAML operations
+- `string`: String constants and operations
+- `datetime`: Date and time operations
+- `math`: Mathematical functions
+- `statistics`: Statistical operations
+- `base64`: Base64 encoding/decoding
+- `urllib.parse`: URL parsing operations
+- `random`: Random number generation
+- `time`: Time operations
+- `csv`: CSV operations
+
+For the complete list of available functions and their safe implementations, refer to the [utils.py](https://github.com/julep-ai/julep/blob/main/agents-api/agents_api/activities/utils.py) file in the source code.
+
+## Example Usage
+
+Here's a practical example combining different aspects of Python expressions:
+
+```yaml
+name: Data Processing Task
+
+main:
+  # Using _ as input
+  - evaluate:
+      topics: $ _.topics  # Access input topics
+
+  # Using _ as previous output
+  - evaluate:
+      filtered_topics: $ [t for t in _.topics if len(t) > 3]
+
+  # Using _ in foreach
+  - foreach:
+      in: $ _.filtered_topics
+      do:
+        - tool: web_search
+          arguments:
+            query: $ 'Latest news about ' + _ # _ is each topic
+```
+
+### Custom Implementations
+
+#### Humanization (Alpha)
+
+The `humanize_text_alpha` function transforms text using multiple techniques such as:
+- Back-translation.
+- Rewriting using non-public LLMs.
+- Stylistic modifications such as homoglyphs and em dashes.
+
+Breakdown of the function:
+
+Function signature:
+
+`humanize_text_alpha(text: str, threshold: float = 90, src_lang: str = "english", target_lang: str = "german", use_homoglyphs: bool = True, use_em_dashes: bool = True, grammar_check: bool = False, max_tries: int = 10) -> str`
+
+Parameters:
+
+- `text`: The text to be humanized.
+- `threshold`: The threshold for the humanization (0-100).
+- `src_lang`: The source language of the original text.
+- `target_lang`: The target language used in the back-translation technique.
+- `use_homoglyphs`: Whether to use homoglyphs, a technique that replaces certain characters with similar looking characters to trick AI detection classifiers.
+- `use_em_dashes`: Whether to use em dashes, i.e. adding dashes between longer words to break the tokens.
+- `grammar_check`: Whether to run another prompt after back-translation to check for correct grammar.
+- `max_tries`: The maximum number of tries to humanize the text.
+
+Example usage:
+
+```yaml
+- evaluate:
+    humanized_text: $ humanize_text_alpha(_.text, threshold=30, target_lang="german")
+```
+
+#### Markdown to HTML
+
+The `markdown_to_html` function converts markdown text to HTML.
+
+Breakdown of the function:
+
+Function signature:
+
+`markdown_to_html(markdown_text: str) -> str`
+
+Parameters:
+
+- `markdown_text`: The markdown text to be converted to HTML.
+
+Example usage:
+
+```yaml
+- evaluate:
+    html_text: $ markdown_to_html(_.markdown_text)
+```
+
+#### HTML to Markdown
+
+The `html_to_markdown` function converts HTML text to markdown.
+
+Breakdown of the function:  
+
+Function signature:
+
+`html_to_markdown(html_text: str) -> str`
+
+Parameters:
+
+- `html_text`: The HTML text to be converted to markdown.
+
+Example usage:
+
+```yaml
+- evaluate:
+    markdown_text: $ html_to_markdown(_.html_text)
+```
+
+## Security
+
+All Python expressions are executed in a sandboxed environment with:
+
+<CardGroup cols={2}>
+  <Card title="Function Limits" icon="function">
+    <p>Limited available functions to prevent unsafe operations</p>
+  </Card>
+  
+  <Card title="String Limits" icon="text-size">
+    <p>Maximum string length restrictions to prevent memory issues</p>
+  </Card>
+
+  <Card title="Collection Limits" icon="layer-group">
+    <p>Collection size limits to prevent resource exhaustion</p>
+  </Card>
+
+  <Card title="Time Limits" icon="clock">
+    <p>Execution time limits to prevent infinite loops</p>
+  </Card>
+</CardGroup>
+
+This ensures safe execution while providing necessary functionality for task workflows.
+
+## Support
+
+If you need help with further questions in Julep:
+
+- Join our [Discord community](https://discord.com/invite/JTSBGRZrzj)
+- Check the [GitHub repository](https://github.com/julep-ai/julep)
+- Contact support at [hey@julep.ai](mailto:hey@julep.ai)
