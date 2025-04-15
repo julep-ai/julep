@@ -25,14 +25,13 @@ OFFSET $4
 """
 
 
-@rewrap_exceptions(common_db_exceptions("secret", ["list"]))
 @wrap_in_class(
     Secret,
     transform=lambda d: {**d, "id": d["secret_id"]},
 )
 @pg_query
 @beartype
-async def list_secrets(
+async def list_secrets_query(
     *,
     developer_id: UUID | None,
     agent_id: UUID | None,
@@ -49,3 +48,6 @@ async def list_secrets(
             secrets_master_key,
         ],
     )
+
+
+list_secrets = rewrap_exceptions(common_db_exceptions("secret", ["list"]))(list_secrets_query)

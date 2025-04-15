@@ -12,12 +12,12 @@ from ...autogen.openapi_model import (
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.expressions import evaluate_expressions
-from ...common.utils.secret_storage import SecretStorage
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
 from ...env import max_free_sessions
 from ...queries.chat.gather_messages import gather_messages
 from ...queries.chat.prepare_chat_context import prepare_chat_context
+from ...queries.secrets.list import list_secrets_query
 from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from ..utils.model_validation import validate_model
 from .router import router
@@ -164,7 +164,10 @@ async def render_chat_input(
     # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
     # but we don't allow that (spec should match type).
     formatted_tools = []
-    secrets = SecretStorage(developer_id=developer.id)
+    secrets = {
+        secret.name: secret.value
+        for secret in await list_secrets_query(developer_id=developer.id)
+    }
     for i, tool in enumerate(tools):
         if tool.type == "computer_20241022" and tool.computer_20241022:
             function = tool.computer_20241022
@@ -173,7 +176,7 @@ async def render_chat_input(
                 "function": {
                     "name": tool.name,
                     "parameters": {
-                        k: evaluate_expressions(v, values=secrets)
+                        k: evaluate_expressions(v, values={"secrets": secrets})
                         for k, v in function.model_dump().items()
                         if k not in ["name", "type"]
                     }

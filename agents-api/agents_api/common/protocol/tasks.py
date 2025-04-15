@@ -20,11 +20,11 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
     )
     from ...common.utils.expressions import evaluate_expressions
-    from ...common.utils.secret_storage import SecretStorage
     from ...worker.codec import RemoteObject
 
 from ...env import max_steps_accessible_in_tasks
 from ...queries.executions import list_execution_transitions
+from ...queries.secrets.list import list_secrets_query
 from ...queries.utils import serialize_model_data
 from .models import ExecutionInput
 
@@ -168,11 +168,16 @@ class StepContext(BaseModel):
 
     @computed_field
     @property
-    def tools(self) -> list[Tool | CreateToolRequest]:
+    async def tools(self) -> list[Tool | CreateToolRequest]:
         execution_input = self.execution_input
         task = execution_input.task
         agent_tools = execution_input.agent_tools
-        secrets = SecretStorage(developer_id=self.execution_input.developer_id)
+        secrets = {
+            secret.name: secret.value
+            for secret in await list_secrets_query(
+                developer_id=self.execution_input.developer_id
+            )
+        }
 
         step_tools: Literal["all"] | list[ToolRef | CreateToolRequest] = getattr(
             self.current_step,
