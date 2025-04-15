@@ -302,31 +302,6 @@ paths:
                     - $ref: '#/components/schemas/Docs.HybridDocSearchRequest'
               required:
                 - body
-  /agents/{id}/secret:
-    post:
-      operationId: AgentSecretByNameRoute_secret
-      description: Get a secret by name
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The owner ID
-          schema:
-            $ref: '#/components/schemas/Common.uuid'
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Secrets.GetSecretResponse'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Secrets.GetSecretRequest'
-        description: Request to get a secret
   /agents/{id}/secrets:
     get:
       operationId: AgentSecretsRoute_list
@@ -752,31 +727,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Tasks.CreateTaskRequest'
-  /developers/{id}/secret:
-    post:
-      operationId: DeveloperSecretByNameRoute_secret
-      description: Get a secret by name
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The owner ID
-          schema:
-            $ref: '#/components/schemas/Common.uuid'
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Secrets.GetSecretResponse'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Secrets.GetSecretRequest'
-        description: Request to get a secret
   /developers/{id}/secrets:
     get:
       operationId: DeveloperSecretsRoute_list
@@ -5720,56 +5670,6 @@ components:
         - name
         - value
       properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-        developer_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the developer who owns this secret
-        agent_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the agent this secret is associated with (optional)
-        name:
-          type: string
-          description: Name of the secret
-        description:
-          type: string
-          description: Description of what the secret is used for
-        value:
-          type: string
-          description: The decrypted secret value
-    Secrets.GetSecretRequest:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-    Secrets.GetSecretResponse:
-      type: object
-      required:
-        - id
-        - created_at
-        - updated_at
-        - name
-        - value
-      properties:
-        id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          description: When this resource was created as UTC date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          description: When this resource was updated as UTC date-time
-          readOnly: true
         metadata:
           type: object
           additionalProperties: {}

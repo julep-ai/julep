@@ -41,11 +41,3 @@ model CreateSecretRequest {
 }
 
 model PatchSecretRequest is UpdateSecretRequest {}
-
-model GetSecretRequest {
-    name: string;
-}
-
-model GetSecretResponse {
-    ...Secret;
-}
