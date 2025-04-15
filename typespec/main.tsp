@@ -135,10 +135,4 @@ namespace Api {
 
     @route("/agents/{id}/secrets")
     interface AgentSecretsRoute extends Secrets.AgentSecretsEndpoints {}
-
-    @route("/developers/{id}/secret")
-    interface DeveloperSecretByNameRoute extends Secrets.GetSecretEndpoints {}
-
-    @route("/agents/{id}/secret")
-    interface AgentSecretByNameRoute extends Secrets.GetSecretEndpoints {}
 }
