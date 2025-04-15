@@ -168,7 +168,7 @@ class TaskExecutionWorkflow:
                         output = i
                         break
             case ToolCallStep(arguments=arguments):
-                tools: list[Tool] = self.context.tools
+                tools: list[Tool] = await self.context.tools
                 tool_name = self.context.current_step.tool
 
                 tool = next((t for t in tools if t.name == tool_name), None)
@@ -569,7 +569,7 @@ class TaskExecutionWorkflow:
             call = tool_call["integration"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = self.context.tools if self.context is not None else []
+            tools = await self.context.tools if self.context is not None else []
             integration_tool = next((t for t in tools if t.name == tool_name), None)
 
             if integration_tool is None:
@@ -608,7 +608,7 @@ class TaskExecutionWorkflow:
             call = tool_call["api_call"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = self.context.tools if self.context else []
+            tools = await self.context.tools if self.context else []
             apicall_tool = next((t for t in tools if t.name == tool_name), None)
 
             if apicall_tool is None:

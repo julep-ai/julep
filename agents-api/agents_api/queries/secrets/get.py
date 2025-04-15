@@ -28,6 +28,7 @@ WHERE name = $1 AND (
 """
 
 
+@rewrap_exceptions(common_db_exceptions("secret", ["get"]))
 @wrap_in_class(
     Secret,
     one=True,
@@ -35,7 +36,7 @@ WHERE name = $1 AND (
 )
 @pg_query
 @beartype
-async def get_secret_query(
+async def get_secret(
     *,
     developer_id: UUID | None,
     agent_id: UUID | None,
@@ -50,6 +51,3 @@ async def get_secret_query(
             secrets_master_key,
         ],
     )
-
-
-get_secret = rewrap_exceptions(common_db_exceptions("secret", ["get"]))(get_secret_query)
