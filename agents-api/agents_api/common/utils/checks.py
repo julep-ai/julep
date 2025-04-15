@@ -49,7 +49,7 @@ async def check_litellm() -> HealthStatus:
 async def check_integration_service() -> HealthStatus:
     """Check Integration service health."""
     try:
-        async with AsyncClient(timeout=60) as client:
+        async with AsyncClient(timeout=10) as client:
             response = await client.get(
                 f"{integration_service_url}/integrations",
             )
