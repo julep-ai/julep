@@ -1,5 +1,3 @@
-import logging
-
 from beartype import beartype
 from spider import AsyncSpider
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -9,9 +7,6 @@ from ...env import (
     spider_api_key,  # Import env to access environment variables
 )
 from ...models import SpiderOutput, SpiderResponse
-
-# Configure logger
-logger = logging.getLogger(__name__)
 
 
 @beartype
@@ -42,28 +37,23 @@ async def execute_spider_method(
     # Initialize the results variable
     results = None
 
-    logger.debug(f"Using API key: {api_key}")
-    logger.debug(f"Spider arguments: {arguments}")
-
     try:
         async with AsyncSpider(api_key=api_key) as spider_client:
             async for result in getattr(spider_client, method_name)(
                 url=str(arguments.url),
-                # params=arguments.params,
-                # stream=False,
-                # content_type=arguments.content_type,
+                params=arguments.params,
+                stream=False,
+                content_type=arguments.content_type,
             ):
                 results = result
 
         if results is None:
             msg = "No results found"
-            logger.error(msg)
             raise ValueError(msg)
         final_result = create_spider_response(results)
     except Exception as e:
         # Log the exception or handle it as needed
         msg = f"Error executing spider method '{method_name}': {e}"
-        logger.error(msg, exc_info=True)
         raise RuntimeError(msg)
 
     return SpiderOutput(result=final_result)
