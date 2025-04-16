@@ -29,7 +29,10 @@ async def update_developer_secret(
     return await update_secret_query(
         secret_id=secret_id,
         developer_id=developer_id,
-        data=data,
+        name=data.name,
+        description=data.description,
+        metadata=data.metadata,
+        value=data.value,
     )
 
 
@@ -55,5 +58,8 @@ async def update_agent_secret(
     return await update_secret_query(
         secret_id=secret_id,
         agent_id=agent_id,
-        data=data,
+        name=data.name,
+        description=data.description,
+        metadata=data.metadata,
+        value=data.value,
     )
