@@ -1,17 +1,22 @@
 """Update secret endpoint."""
 
+from typing import Annotated
 from uuid import UUID
 
+from fastapi import Depends
+
 from ...autogen.openapi_model import Secret, UpdateSecretRequest
+from ...dependencies.developer_id import get_developer_id
 from ...queries.secrets import update_secret as update_secret_query
 from .router import router
 
 
-@router.put("/developers/{developer_id}/secrets/{secret_id}", response_model=Secret)
+@router.put("/secrets/{secret_id}", response_model=Secret)
 async def update_developer_secret(
-    developer_id: UUID,
+    *,
     secret_id: UUID,
     data: UpdateSecretRequest,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> Secret:
     """Update a developer secret.
 
@@ -28,7 +33,7 @@ async def update_developer_secret(
     """
     return await update_secret_query(
         secret_id=secret_id,
-        developer_id=developer_id,
+        developer_id=x_developer_id,
         name=data.name,
         description=data.description,
         metadata=data.metadata,

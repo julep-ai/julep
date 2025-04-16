@@ -130,7 +130,7 @@ namespace Api {
     @route("/files")
     interface FilesRoute extends Files.Endpoints {}
 
-    @route("/developers/{id}/secrets")
+    @route("/secrets")
     interface DeveloperSecretsRoute extends Secrets.DeveloperSecretsEndpoints {}
 
     @route("/agents/{id}/secrets")
