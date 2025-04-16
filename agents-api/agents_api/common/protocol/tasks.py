@@ -166,8 +166,6 @@ class StepContext(BaseModel):
 
         self.loaded = True
 
-    @computed_field
-    @property
     async def tools(self) -> list[Tool | CreateToolRequest]:
         execution_input = self.execution_input
         task = execution_input.task
@@ -194,7 +192,9 @@ class StepContext(BaseModel):
 
         # Need to convert task.tools (list[TaskToolDef]) to list[Tool]
         task_tools = []
-        for tool in task.tools:
+        tools = task.tools if task else []
+        inherit_tools = task.inherit_tools if task else False
+        for tool in tools:
             tool_def = tool.model_dump()
             spec = tool_def.pop("spec", {}) or {}
             evaluated_spec = (
@@ -204,11 +204,11 @@ class StepContext(BaseModel):
                 CreateToolRequest(**{tool_def["type"]: evaluated_spec, **tool_def}),
             )
 
-        if not task.inherit_tools:
+        if not inherit_tools:
             return task_tools
 
         # Remove duplicates from agent_tools
-        filtered_tools = [t for t in agent_tools if t.name not in (x.name for x in task.tools)]
+        filtered_tools = [t for t in agent_tools if t.name not in (x.name for x in tools)]
 
         return filtered_tools + task_tools
 
