@@ -1,11 +1,12 @@
 """Query functions for creating secrets."""
 
+from typing import Any
 from uuid import UUID
 
 from beartype import beartype
 from uuid_extensions import uuid7
 
-from agents_api.autogen.openapi_model import CreateSecretRequest, Secret
+from agents_api.autogen.openapi_model import Secret
 
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...env import secrets_master_key
@@ -35,7 +36,12 @@ RETURNING *;
 async def create_secret(
     *,
     secret_id: UUID | None = None,
-    data: CreateSecretRequest,
+    developer_id: UUID | None = None,
+    agent_id: UUID | None = None,
+    name: str,
+    description: str | None = None,
+    value: str,
+    metadata: dict[str, Any] | None = None,
 ) -> tuple[str, list]:
     """
     Constructs and executes a SQL query to create a new secret in the database.
@@ -55,12 +61,12 @@ async def create_secret(
         query,
         [
             secret_id,
-            data.developer_id,
-            data.agent_id,
-            data.name,
-            data.description,
-            data.value,
+            developer_id,
+            agent_id,
+            name,
+            description,
+            value,
             secrets_master_key,
-            data.metadata,
+            metadata,
         ],
     )

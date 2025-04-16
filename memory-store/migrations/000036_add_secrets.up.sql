@@ -23,22 +23,6 @@ CREATE INDEX idx_secrets_developer_id ON secrets(developer_id);
 CREATE INDEX idx_secrets_name ON secrets(name);
 CREATE INDEX idx_secrets_metadata ON secrets USING gin(metadata);
 
--- Add trigger for updated_at
-CREATE OR REPLACE FUNCTION update_secrets_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Drop trigger if exists and recreate
-DROP TRIGGER IF EXISTS trg_secrets_updated_at ON secrets;
-
-CREATE TRIGGER trg_secrets_updated_at BEFORE
-UPDATE ON secrets FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column ();
-
 -- Add encryption/decryption functions using pgcrypto
 CREATE OR REPLACE FUNCTION encrypt_secret(
     p_value TEXT,

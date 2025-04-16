@@ -1,10 +1,11 @@
 """Query functions for updating secrets."""
 
+from typing import Any
 from uuid import UUID
 
 from beartype import beartype
 
-from ...autogen.openapi_model import Secret, UpdateSecretRequest
+from ...autogen.openapi_model import Secret
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...env import secrets_master_key
 from ...metrics.counters import query_metrics
@@ -41,9 +42,12 @@ query = """
 async def update_secret(
     *,
     secret_id: UUID,
-    developer_id: UUID | None,
-    agent_id: UUID | None,
-    data: UpdateSecretRequest,
+    developer_id: UUID | None = None,
+    agent_id: UUID | None = None,
+    name: str | None = None,
+    description: str | None = None,
+    metadata: dict[str, Any] | None = None,
+    value: str | None = None,
 ) -> tuple[str, list]:
     return (
         query,
@@ -51,10 +55,10 @@ async def update_secret(
             secret_id,
             developer_id,
             agent_id,
-            data.name,
-            data.description,
-            data.metadata,
-            data.value,
+            name,
+            description,
+            metadata,
+            value,
             secrets_master_key,
         ],
     )
