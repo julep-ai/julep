@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from temporalio import workflow
 from temporalio.exceptions import ActivityError, ApplicationError
@@ -168,7 +168,7 @@ class TaskExecutionWorkflow:
                         output = i
                         break
             case ToolCallStep(arguments=arguments):
-                tools: list[Tool] = await self.context.tools
+                tools: list[Tool] = await self.context.tools()
                 tool_name = self.context.current_step.tool
 
                 tool = next((t for t in tools if t.name == tool_name), None)
@@ -569,7 +569,7 @@ class TaskExecutionWorkflow:
             call = tool_call["integration"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = await self.context.tools if self.context is not None else []
+            tools = await self.context.tools() if self.context is not None else []
             integration_tool = next((t for t in tools if t.name == tool_name), None)
 
             if integration_tool is None:
@@ -608,18 +608,24 @@ class TaskExecutionWorkflow:
             call = tool_call["api_call"]
             tool_name = call["name"]
             arguments = call["arguments"]
-            tools = await self.context.tools if self.context else []
+            tools = await self.context.tools() if self.context else []
             apicall_tool = next((t for t in tools if t.name == tool_name), None)
 
             if apicall_tool is None:
                 msg = f"Integration {tool_name} not found"
                 raise ApplicationError(msg)
 
+            if apicall_tool.api_call is None:
+                msg = f"API call data for {tool_name} not found"
+                raise ApplicationError(msg)
+
+            api_call: ApiCallDef = cast(ApiCallDef, apicall_tool.api_call)
+
             api_call = ApiCallDef(
-                method=apicall_tool.api_call.method,
-                url=apicall_tool.api_call.url,
-                headers=apicall_tool.api_call.headers,
-                follow_redirects=apicall_tool.api_call.follow_redirects,
+                method=api_call.method,
+                url=api_call.url,
+                headers=api_call.headers,
+                follow_redirects=api_call.follow_redirects,
             )
 
             if "json_" in arguments:
