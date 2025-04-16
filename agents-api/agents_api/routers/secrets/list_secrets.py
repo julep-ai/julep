@@ -1,16 +1,20 @@
 """List secrets endpoint."""
 
+from typing import Annotated
 from uuid import UUID
 
+from fastapi import Depends
+
 from ...autogen.openapi_model import Secret
+from ...dependencies.developer_id import get_developer_id
 from ...queries.secrets import list_secrets as list_secrets_query
 from .router import router
 
 
-@router.get("/developers/{developer_id}/secrets", response_model=list[Secret])
+@router.get("/secrets", response_model=list[Secret])
 async def list_developer_secrets(
-    developer_id: UUID,
     *,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
 ) -> list[Secret]:
@@ -25,7 +29,7 @@ async def list_developer_secrets(
         List of secrets
     """
     return await list_secrets_query(
-        developer_id=developer_id,
+        developer_id=x_developer_id,
         limit=limit,
         offset=offset,
     )
