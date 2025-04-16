@@ -51,7 +51,10 @@ SELECT
         enqueue_existing => TRUE
     );
 
-alter index idx_docs_metadata|search_tsv|title_trgm|content_trgm set (fastupdate=off);
+alter index idx_docs_metadata set (fastupdate=off);
+alter index search_tsv set (fastupdate=off);
+alter index title_trgm set (fastupdate=off);
+alter index content_trgm set (fastupdate=off);
 
 ALTER TABLE docs ALTER COLUMN title SET STATISTICS 1000;
 ALTER TABLE docs ALTER COLUMN content SET STATISTICS 1000;
@@ -198,9 +201,7 @@ combined AS (
     embedding,
     metadata,
     owner_type,
-    owner_id --,
-    -- updated_at,
-    -- source
+    owner_id
   FROM fts_results
 
   UNION ALL
@@ -215,14 +216,12 @@ combined AS (
     embedding,
     metadata,
     owner_type,
-    owner_id --,
-    -- updated_at,
-    -- source
+    owner_id
   FROM trgm_scored
 )
 SELECT *
 FROM combined
-ORDER BY score DESC -- , updated_at DESC
+ORDER BY score DESC
 LIMIT $8'
 
     USING
