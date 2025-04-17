@@ -23,7 +23,8 @@ async def send_email(
     try:
         domain = arguments.from_.split("@")[-1]
     except Exception as e:
-        raise Exception(f"Error splitting email domain: {e}")
+        msg = f"Error splitting email domain: {e}"
+        raise Exception(msg)
 
     # Extract domain from from_ address (e.g. "test@example.com" -> "email.example.com")
     if not domain.startswith("email."):
