@@ -1,4 +1,5 @@
 import re
+
 import aiohttp
 from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -22,7 +23,7 @@ def validate_email_list(emails: str) -> bool:
     """
     if not emails:
         return True
-    
+
     for email in emails.split(","):
         email = email.strip()
         if email and not validate_email(email):
@@ -48,17 +49,17 @@ async def send_email(
         return MailgunSendEmailOutput(
             success=False, error=f"Invalid sender email address: {arguments.from_}"
         )
-    
+
     if not validate_email(arguments.to):
         return MailgunSendEmailOutput(
             success=False, error=f"Invalid recipient email address: {arguments.to}"
         )
-    
+
     if arguments.cc and not validate_email_list(arguments.cc):
         return MailgunSendEmailOutput(
             success=False, error=f"Invalid CC email address(es): {arguments.cc}"
         )
-    
+
     if arguments.bcc and not validate_email_list(arguments.bcc):
         return MailgunSendEmailOutput(
             success=False, error=f"Invalid BCC email address(es): {arguments.bcc}"
