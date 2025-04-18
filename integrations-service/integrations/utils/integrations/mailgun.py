@@ -1,3 +1,4 @@
+import re
 import aiohttp
 from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -5,6 +6,28 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from ...autogen.Tools import MailgunSendEmailArguments, MailgunSetup
 from ...env import mailgun_api_key  # Import env to access environment variables
 from ...models import MailgunSendEmailOutput
+
+
+def validate_email(email: str) -> bool:
+    """
+    Validates an email address using a regex pattern.
+    """
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    return bool(re.match(pattern, email))
+
+
+def validate_email_list(emails: str) -> bool:
+    """
+    Validates a comma-separated list of email addresses.
+    """
+    if not emails:
+        return True
+    
+    for email in emails.split(","):
+        email = email.strip()
+        if email and not validate_email(email):
+            return False
+    return True
 
 
 @beartype
@@ -19,6 +42,27 @@ async def send_email(
     """
     Sends an email with the provided details using the Mailgun API.
     """
+
+    # Validate email addresses
+    if not validate_email(arguments.from_):
+        return MailgunSendEmailOutput(
+            success=False, error=f"Invalid sender email address: {arguments.from_}"
+        )
+    
+    if not validate_email(arguments.to):
+        return MailgunSendEmailOutput(
+            success=False, error=f"Invalid recipient email address: {arguments.to}"
+        )
+    
+    if arguments.cc and not validate_email_list(arguments.cc):
+        return MailgunSendEmailOutput(
+            success=False, error=f"Invalid CC email address(es): {arguments.cc}"
+        )
+    
+    if arguments.bcc and not validate_email_list(arguments.bcc):
+        return MailgunSendEmailOutput(
+            success=False, error=f"Invalid BCC email address(es): {arguments.bcc}"
+        )
 
     domain = arguments.from_.split("@")[-1]
 
