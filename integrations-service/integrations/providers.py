@@ -48,6 +48,7 @@ from .models import (
     EmailOutput,
     FfmpegSearchOutput,
     LlamaParseFetchOutput,
+    MailgunSendEmailOutput,
     ProviderInfo,
     RemoteBrowserOutput,
     SpiderOutput,
@@ -362,7 +363,7 @@ mailgun = BaseProvider(
             method="send_email",
             description="Send an email",
             arguments=MailgunSendEmailArguments,
-            output=EmailOutput,
+            output=MailgunSendEmailOutput,
         ),
     ],
     info=ProviderInfo(

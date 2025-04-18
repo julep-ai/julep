@@ -20,11 +20,7 @@ async def send_email(
     Sends an email with the provided details using the Mailgun API.
     """
 
-    try:
-        domain = arguments.from_.split("@")[-1]
-    except Exception as e:
-        msg = f"Error splitting email domain: {e}"
-        raise Exception(msg)
+    domain = arguments.from_.split("@")[-1]
 
     # Extract domain from from_ address (e.g. "test@example.com" -> "email.example.com")
     if not domain.startswith("email."):
@@ -45,10 +41,10 @@ async def send_email(
     }
 
     # Add CC and BCC if provided
-    if hasattr(arguments, "cc") and arguments.cc:
+    if arguments.cc:
         data["cc"] = arguments.cc
 
-    if hasattr(arguments, "bcc") and arguments.bcc:
+    if arguments.bcc:
         data["bcc"] = arguments.bcc
 
     # Make API request
