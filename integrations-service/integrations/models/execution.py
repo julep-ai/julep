@@ -1,12 +1,12 @@
 from pydantic import BaseModel
 
 from ..autogen.Tools import (
+    # Arguments
     AlgoliaSearchArguments,
+    # Setup
     AlgoliaSetup,
     ArxivSearchArguments,
-    # Arguments
     BraveSearchArguments,
-    # Setup
     BraveSearchSetup,
     BrowserbaseCompleteSessionArguments,
     BrowserbaseContextArguments,
@@ -24,6 +24,8 @@ from ..autogen.Tools import (
     FfmpegSearchArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
+    MailgunSendEmailArguments,
+    MailgunSetup,
     RemoteBrowserArguments,
     RemoteBrowserSetup,
     SpiderFetchArguments,
@@ -49,6 +51,7 @@ from .cloudinary import CloudinaryEditOutput, CloudinaryUploadOutput
 from .email import EmailOutput
 from .ffmpeg import FfmpegSearchOutput
 from .llama_parse import LlamaParseFetchOutput
+from .mailgun import MailgunSendEmailOutput
 from .remote_browser import RemoteBrowserOutput
 from .spider import SpiderOutput
 from .unstructured import UnstructuredParseOutput
@@ -65,39 +68,41 @@ class ExecutionError(BaseModel):
 
 # Setup configurations
 ExecutionSetup = (
-    EmailSetup
-    | SpiderSetup
-    | WeatherSetup
+    AlgoliaSetup
     | BraveSearchSetup
     | BrowserbaseSetup
-    | RemoteBrowserSetup
-    | LlamaParseSetup
     | CloudinarySetup
+    | EmailSetup
+    | LlamaParseSetup
+    | MailgunSetup
+    | RemoteBrowserSetup
+    | SpiderSetup
     | UnstructuredSetup
-    | AlgoliaSetup
+    | WeatherSetup
 )
 
 # Argument configurations
 ExecutionArguments = (
-    SpiderFetchArguments
-    | WeatherGetArguments
-    | EmailArguments
-    | WikipediaSearchArguments
+    AlgoliaSearchArguments
+    | ArxivSearchArguments
     | BraveSearchArguments
-    | BrowserbaseCreateSessionArguments
-    | BrowserbaseGetSessionArguments
-    | BrowserbaseGetSessionLiveUrlsArguments
     | BrowserbaseCompleteSessionArguments
     | BrowserbaseContextArguments
+    | BrowserbaseCreateSessionArguments
     | BrowserbaseExtensionArguments
     | BrowserbaseListSessionsArguments
-    | RemoteBrowserArguments
-    | LlamaParseFetchArguments
-    | FfmpegSearchArguments
+    | BrowserbaseGetSessionArguments
+    | BrowserbaseGetSessionLiveUrlsArguments
     | CloudinaryUploadArguments
     | CloudinaryEditArguments
-    | ArxivSearchArguments
-    | AlgoliaSearchArguments
+    | EmailArguments
+    | FfmpegSearchArguments
+    | LlamaParseFetchArguments
+    | MailgunSendEmailArguments
+    | RemoteBrowserArguments
+    | SpiderFetchArguments
+    | WeatherGetArguments
+    | WikipediaSearchArguments
 )
 
 ExecutionResponse = (
@@ -115,6 +120,7 @@ ExecutionResponse = (
     | RemoteBrowserOutput
     | LlamaParseFetchOutput
     | FfmpegSearchOutput
+    | MailgunSendEmailOutput
     | CloudinaryEditOutput
     | CloudinaryUploadOutput
     | ExecutionError

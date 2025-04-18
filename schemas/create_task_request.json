@@ -403,6 +403,11 @@
           ],
           "title": "Headers"
         },
+        "include_response_content": {
+          "default": true,
+          "title": "Include Response Content",
+          "type": "boolean"
+        },
         "json": {
           "anyOf": [
             {
@@ -553,6 +558,11 @@
             }
           ],
           "title": "Headers"
+        },
+        "include_response_content": {
+          "default": true,
+          "title": "Include Response Content",
+          "type": "boolean"
         },
         "json": {
           "anyOf": [
