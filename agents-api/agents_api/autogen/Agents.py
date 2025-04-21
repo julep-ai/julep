@@ -137,6 +137,34 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     """
 
 
+class ListModelsResponse(BaseModel):
+    """
+    Response for the list models endpoint
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    models: list[ModelInfo]
+    """
+    List of available models
+    """
+
+
+class ModelInfo(BaseModel):
+    """
+    Model information returned by the model list endpoint
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str
+    """
+    The ID/name of the model
+    """
+
+
 class PatchAgentRequest(BaseModel):
     """
     Payload for patching a agent

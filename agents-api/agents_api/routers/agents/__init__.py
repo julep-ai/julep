@@ -1,5 +1,6 @@
 # ruff: noqa: F401
 
+from .list_models import list_models
 from .create_agent import create_agent
 from .create_agent_tool import create_agent_tool
 from .create_or_update_agent import create_or_update_agent

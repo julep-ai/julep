@@ -61,3 +61,15 @@ model CreateOrUpdateAgentRequest extends CreateAgentRequest {
     id: uuid;
     ...UpdateAgentRequest;
 }
+
+/** Model information returned by the model list endpoint */
+model ModelInfo {
+    /** The ID/name of the model */
+    id: string;
+}
+
+/** Response for the list models endpoint */
+model ListModelsResponse {
+    /** List of available models */
+    models: ModelInfo[];
+}
