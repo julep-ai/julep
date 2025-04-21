@@ -1,4 +1,17 @@
 import "../common";
+import "./algolia.tsp";
+import "./arxiv.tsp";
+import "./brave.tsp";
+import "./browserbase";
+import "./cloudinary.tsp";
+import "./ffmpeg.tsp";
+import "./llama_parse.tsp";
+import "./mailgun.tsp";
+import "./remote_browser.tsp";
+import "./spider.tsp";
+import "./unstructured.tsp";
+import "./weather.tsp";
+import "./wikipedia.tsp";
 
 using Common;
 
@@ -22,6 +35,7 @@ alias integrationProvider = (
     | "brave"
     | "browserbase"
     | "email"
+    | "mailgun"
     | "remote_browser"
     | "llama_parse"
     | "ffmpeg"
@@ -118,6 +132,7 @@ alias IntegrationDef = (
     | SpiderIntegrationDef
     | WikipediaIntegrationDef
     | WeatherIntegrationDef
+    | MailgunIntegrationDef
     | BrowserbaseIntegrationDef
     | RemoteBrowserIntegrationDef
     | LlamaParseIntegrationDef
