@@ -57,6 +57,18 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Agents.CreateAgentRequest'
+  /agents/models:
+    get:
+      operationId: AgentsRoute_listModels
+      description: List all available models
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agents.ListModelsResponse'
   /agents/{id}:
     post:
       operationId: AgentsRoute_createOrUpdate
@@ -1846,6 +1858,26 @@ components:
             {%- endif -%}
       allOf:
         - $ref: '#/components/schemas/Agents.CreateAgentRequest'
+    Agents.ListModelsResponse:
+      type: object
+      required:
+        - models
+      properties:
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agents.ModelInfo'
+          description: List of available models
+      description: Response for the list models endpoint
+    Agents.ModelInfo:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: The ID/name of the model
+      description: Model information returned by the model list endpoint
     Agents.PatchAgentRequest:
       type: object
       properties:

@@ -4317,6 +4317,9 @@
               "$ref": "#/$defs/WeatherIntegrationDef"
             },
             {
+              "$ref": "#/$defs/MailgunIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
             },
             {
@@ -7251,6 +7254,252 @@
       "title": "LogitBias",
       "type": "number"
     },
+    "MailgunIntegrationDef": {
+      "description": "Mailgun integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MailgunSendEmailArguments"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "const": "send_email",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "mailgun",
+          "default": "mailgun",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MailgunSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "MailgunIntegrationDef",
+      "type": "object"
+    },
+    "MailgunIntegrationDefUpdate": {
+      "description": "Mailgun integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MailgunSendEmailArgumentsUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "const": "send_email",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "mailgun",
+          "default": "mailgun",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MailgunSetupUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "MailgunIntegrationDefUpdate",
+      "type": "object"
+    },
+    "MailgunSendEmailArguments": {
+      "description": "Arguments for mailgun.send_email method",
+      "properties": {
+        "bcc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Bcc"
+        },
+        "body": {
+          "title": "Body",
+          "type": "string"
+        },
+        "cc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cc"
+        },
+        "from": {
+          "title": "From",
+          "type": "string"
+        },
+        "subject": {
+          "title": "Subject",
+          "type": "string"
+        },
+        "to": {
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "to",
+        "from",
+        "subject",
+        "body"
+      ],
+      "title": "MailgunSendEmailArguments",
+      "type": "object"
+    },
+    "MailgunSendEmailArgumentsUpdate": {
+      "description": "Arguments for mailgun.send_email method",
+      "properties": {
+        "bcc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Bcc"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Body"
+        },
+        "cc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cc"
+        },
+        "from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "From"
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Subject"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "To"
+        }
+      },
+      "title": "MailgunSendEmailArgumentsUpdate",
+      "type": "object"
+    },
+    "MailgunSetup": {
+      "description": "Setup parameters for Mailgun integration",
+      "properties": {
+        "api_key": {
+          "title": "Api Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "api_key"
+      ],
+      "title": "MailgunSetup",
+      "type": "object"
+    },
+    "MailgunSetupUpdate": {
+      "description": "Setup parameters for Mailgun integration",
+      "properties": {
+        "api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Api Key"
+        }
+      },
+      "title": "MailgunSetupUpdate",
+      "type": "object"
+    },
     "Main-Input": {
       "properties": {
         "initial": {
@@ -8339,6 +8588,9 @@
             },
             {
               "$ref": "#/$defs/WeatherIntegrationDefUpdate"
+            },
+            {
+              "$ref": "#/$defs/MailgunIntegrationDefUpdate"
             },
             {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDefUpdate"
@@ -10504,6 +10756,9 @@
               "$ref": "#/$defs/WeatherIntegrationDef"
             },
             {
+              "$ref": "#/$defs/MailgunIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
             },
             {
@@ -10679,6 +10934,9 @@
             },
             {
               "$ref": "#/$defs/WeatherIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/MailgunIntegrationDef"
             },
             {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
@@ -11253,6 +11511,9 @@
             },
             {
               "$ref": "#/$defs/WeatherIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/MailgunIntegrationDef"
             },
             {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
@@ -12171,6 +12432,9 @@
             },
             {
               "$ref": "#/$defs/WeatherIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/MailgunIntegrationDef"
             },
             {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
@@ -13373,6 +13637,9 @@
               "$ref": "#/$defs/WeatherIntegrationDef"
             },
             {
+              "$ref": "#/$defs/MailgunIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
             },
             {
@@ -13542,6 +13809,9 @@
             },
             {
               "$ref": "#/$defs/WeatherIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/MailgunIntegrationDef"
             },
             {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
