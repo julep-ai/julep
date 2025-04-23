@@ -1,5 +1,13 @@
+CREATE TEMP TABLE docs_temp AS
+SELECT * FROM docs; 
+
+delete from docs;
+alter table docs drop constraint pk_docs CASCADE;
 alter table docs add constraint pk_docs primary key (developer_id, doc_id, created_at);
 alter table docs add constraint uq_doc_index unique (doc_id, index, created_at);
+
+insert into docs select * from docs_temp;
+drop table docs_temp;
 
 select ai.drop_vectorizer(id) from ai.vectorizer;
 
