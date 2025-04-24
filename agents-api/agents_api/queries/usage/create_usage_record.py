@@ -16,30 +16,30 @@ from ..utils import pg_query, rewrap_exceptions
 FALLBACK_PRICING = {
     # Meta Llama models
     "meta-llama/llama-4-scout": {
-        "api_request": 0.08 / 1000,
-        "api_response": 0.45 / 1000,
+        "api_request": 0.08 / 1000000,
+        "api_response": 0.45 / 1000000,
     },
     "meta-llama/llama-4-maverick": {
-        "api_request": 0.19 / 1000,
-        "api_response": 0.85 / 1000,
+        "api_request": 0.19 / 1000000,
+        "api_response": 0.85 / 1000000,
     },
     "meta-llama/llama-4-maverick:free": {
-        "api_request": 0.0 / 1000,
-        "api_response": 0.0 / 1000,
+        "api_request": 0.0 / 1000000,
+        "api_response": 0.0 / 1000000,
     },
     # Qwen model
     "qwen/qwen-2.5-72b-instruct": {
-        "api_request": 0.7 / 1000,
-        "api_response": 0.7 / 1000,
+        "api_request": 0.7 / 1000000,
+        "api_response": 0.7 / 1000000,
     },
     # Sao10k model
     "sao10k/l3.3-euryale-70b": {
-        "api_request": 0.7 / 1000,
-        "api_response": 0.8 / 1000,
+        "api_request": 0.7 / 1000000,
+        "api_response": 0.8 / 1000000,
     },
     "sao10k/l3.1-euryale-70b": {
-        "api_request": 0.7 / 1000,
-        "api_response": 0.8 / 1000,
+        "api_request": 0.7 / 1000000,
+        "api_response": 0.8 / 1000000,
     },
 }
 
