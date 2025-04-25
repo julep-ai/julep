@@ -16,30 +16,44 @@ from ..utils import pg_query, rewrap_exceptions
 FALLBACK_PRICING = {
     # Meta Llama models
     "meta-llama/llama-4-scout": {
-        "api_request": 0.08 / 1000,
-        "api_response": 0.45 / 1000,
+        "api_request": 0.08 / 1000000,
+        "api_response": 0.45 / 1000000,
     },
     "meta-llama/llama-4-maverick": {
-        "api_request": 0.19 / 1000,
-        "api_response": 0.85 / 1000,
+        "api_request": 0.19 / 1000000,
+        "api_response": 0.85 / 1000000,
     },
     "meta-llama/llama-4-maverick:free": {
-        "api_request": 0.0 / 1000,
-        "api_response": 0.0 / 1000,
+        "api_request": 0.0 / 1000000,
+        "api_response": 0.0 / 1000000,
     },
     # Qwen model
     "qwen/qwen-2.5-72b-instruct": {
-        "api_request": 0.7 / 1000,
-        "api_response": 0.7 / 1000,
+        "api_request": 0.7 / 1000000,
+        "api_response": 0.7 / 1000000,
     },
     # Sao10k model
     "sao10k/l3.3-euryale-70b": {
-        "api_request": 0.7 / 1000,
-        "api_response": 0.8 / 1000,
+        "api_request": 0.7 / 1000000,
+        "api_response": 0.8 / 1000000,
     },
     "sao10k/l3.1-euryale-70b": {
-        "api_request": 0.7 / 1000,
-        "api_response": 0.8 / 1000,
+        "api_request": 0.7 / 1000000,
+        "api_response": 0.8 / 1000000,
+    },
+    # eva-unit-01 model
+    "openrouter/eva-unit-01/eva-llama-3.33-70b": {
+        "api_request": 4 / 1000000,
+        "api_response": 6 / 1000000,
+    },
+    "openrouter/eva-unit-01/eva-qwen-2.5-72b": {
+        "api_request": 0.9 / 1000000,
+        "api_response": 1.2 / 1000000,
+    },
+    # mistral-large-2411 model
+    "openrouter/mistralai/mistral-large-2411": {
+        "api_request": 2 / 1000000,
+        "api_response": 6 / 1000000,
     },
 }
 
