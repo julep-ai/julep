@@ -61,6 +61,84 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert exc_info.raised.status_code == 404
 
 
+@test("query: list entries sql, invalid limit")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing entries with an invalid limit raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc_info:
+        await list_entries(
+            developer_id=developer_id,
+            session_id=uuid7(),
+            limit=1001,
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+    assert exc_info.raised.status_code == 400
+    assert exc_info.raised.detail == "Limit must be between 1 and 1000"
+
+    with raises(HTTPException) as exc_info:
+        await list_entries(
+            developer_id=developer_id,
+            session_id=uuid7(),
+            limit=0,
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+    assert exc_info.raised.status_code == 400
+    assert exc_info.raised.detail == "Limit must be between 1 and 1000"
+
+
+@test("query: list entries sql, invalid offset")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing entries with an invalid offset raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc_info:
+        await list_entries(
+            developer_id=developer_id,
+            session_id=uuid7(),
+            offset=-1,
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+    assert exc_info.raised.status_code == 400
+    assert exc_info.raised.detail == "Offset must be >= 0"
+
+
+@test("query: list entries sql, invalid sort by")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing entries with an invalid sort by raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc_info:
+        await list_entries(
+            developer_id=developer_id,
+            session_id=uuid7(),
+            sort_by="invalid",
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+    assert exc_info.raised.status_code == 400
+    assert exc_info.raised.detail == "Invalid sort field"
+
+
+@test("query: list entries sql, invalid sort direction")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing entries with an invalid sort direction raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+
+    with raises(HTTPException) as exc_info:
+        await list_entries(
+            developer_id=developer_id,
+            session_id=uuid7(),
+            direction="invalid",
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+    assert exc_info.raised.status_code == 400
+    assert exc_info.raised.detail == "Invalid sort direction"
+
+
 @test("query: list entries sql - session exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     """Test the retrieval of entries from the database."""

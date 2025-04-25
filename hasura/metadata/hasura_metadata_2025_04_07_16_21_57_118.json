@@ -1,0 +1,945 @@
+{
+  "resource_version": 21,
+  "metadata": {
+    "version": 3,
+    "sources": [
+      {
+        "name": "default",
+        "kind": "postgres",
+        "tables": [
+          {
+            "table": {
+              "name": "agents",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "developer",
+                "using": {
+                  "foreign_key_constraint_on": "developer_id"
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "tasks",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "agent_id": "agent_id",
+                      "developer_id": "developer_id"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "tasks",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "tools",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "agent_id": "agent_id",
+                      "developer_id": "developer_id"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "tools",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "columns": []
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "instructions",
+                    "canonical_name",
+                    "default_settings",
+                    "metadata",
+                    "about",
+                    "default_system_template",
+                    "model",
+                    "name",
+                    "created_at",
+                    "updated_at",
+                    "agent_id",
+                    "developer_id"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "name",
+                    "about",
+                    "instructions",
+                    "model",
+                    "metadata",
+                    "default_settings",
+                    "default_system_template"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "check": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "developers",
+              "schema": "public"
+            },
+            "array_relationships": [
+              {
+                "name": "agents",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "developer_id",
+                    "table": {
+                      "name": "agents",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "docs",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "developer_id",
+                    "table": {
+                      "name": "docs",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "executions",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "developer_id",
+                    "table": {
+                      "name": "executions",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "files",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "developer_id",
+                    "table": {
+                      "name": "files",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "sessions",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "developer_id",
+                    "table": {
+                      "name": "sessions",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "users",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "developer_id",
+                    "table": {
+                      "name": "users",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "developer_id",
+                    "email",
+                    "active",
+                    "tags",
+                    "settings",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "doc_owners",
+              "schema": "public"
+            }
+          },
+          {
+            "table": {
+              "name": "docs",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "developer",
+                "using": {
+                  "foreign_key_constraint_on": "developer_id"
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "docs_embeddings_stores",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "doc_id": "doc_id",
+                      "index": "index"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "docs_embeddings_store",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "docs_embeddings",
+              "schema": "public"
+            }
+          },
+          {
+            "table": {
+              "name": "docs_embeddings_store",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "doc",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "doc_id": "doc_id",
+                      "index": "index"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "docs",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "embeddings_cache",
+              "schema": "public"
+            }
+          },
+          {
+            "table": {
+              "name": "entries",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "session",
+                "using": {
+                  "foreign_key_constraint_on": "session_id"
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "entry_relations",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "session",
+                "using": {
+                  "foreign_key_constraint_on": "session_id"
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "executions",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "developer",
+                "using": {
+                  "foreign_key_constraint_on": "developer_id"
+                }
+              },
+              {
+                "name": "task",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "task_id": "task_id",
+                      "task_version": "version"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "tasks",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "temporal_executions_lookups",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "execution_id",
+                    "table": {
+                      "name": "temporal_executions_lookup",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "transitions",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "execution_id",
+                    "table": {
+                      "name": "transitions",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "task_id",
+                    "task_version",
+                    "execution_id",
+                    "input",
+                    "metadata",
+                    "created_at"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "file_owners",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "file",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "file_id": "file_id"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "files",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "files",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "developer",
+                "using": {
+                  "foreign_key_constraint_on": "developer_id"
+                }
+              },
+              {
+                "name": "file_owner",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "file_id": "file_id"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "file_owners",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "latest_executions",
+              "schema": "public"
+            },
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "task_id",
+                    "task_version",
+                    "execution_id",
+                    "input",
+                    "metadata",
+                    "created_at",
+                    "updated_at",
+                    "status",
+                    "error",
+                    "transition_count",
+                    "output",
+                    "current_step",
+                    "next_step",
+                    "step_label",
+                    "transition_metadata"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "latest_transitions",
+              "schema": "public"
+            }
+          },
+          {
+            "table": {
+              "name": "session_lookup",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "session",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "session_id": "session_id"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "sessions",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "sessions",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "developer",
+                "using": {
+                  "foreign_key_constraint_on": "developer_id"
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "entries",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "session_id",
+                    "table": {
+                      "name": "entries",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "entry_relations",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "session_id",
+                    "table": {
+                      "name": "entry_relations",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "session_lookups",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "session_id": "session_id"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "session_lookup",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "tasks",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "agent",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "agent_id": "agent_id",
+                      "developer_id": "developer_id"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "agents",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "executions",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "task_id": "task_id",
+                      "version": "task_version"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "executions",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "workflows",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "task_id": "task_id",
+                      "version": "version"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "workflows",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "columns": [
+                    "agent_id",
+                    "task_id",
+                    "version",
+                    "name",
+                    "description",
+                    "input_schema",
+                    "inherit_tools",
+                    "metadata"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "canonical_name",
+                    "agent_id",
+                    "task_id",
+                    "version",
+                    "name",
+                    "description",
+                    "input_schema",
+                    "inherit_tools",
+                    "created_at",
+                    "updated_at",
+                    "metadata"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "agent_id",
+                    "version",
+                    "name",
+                    "description",
+                    "input_schema",
+                    "inherit_tools",
+                    "metadata"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "check": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "temporal_executions_lookup",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "execution",
+                "using": {
+                  "foreign_key_constraint_on": "execution_id"
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "tools",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "agent",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "agent_id": "agent_id",
+                      "developer_id": "developer_id"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "agents",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "transitions",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "execution",
+                "using": {
+                  "foreign_key_constraint_on": "execution_id"
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "users",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "developer",
+                "using": {
+                  "foreign_key_constraint_on": "developer_id"
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "columns": [
+                    "created_at",
+                    "updated_at"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "user_id",
+                    "name",
+                    "about",
+                    "created_at",
+                    "updated_at",
+                    "metadata"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "name",
+                    "about",
+                    "metadata"
+                  ],
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "check": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "developer_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "workflows",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "task",
+                "using": {
+                  "manual_configuration": {
+                    "column_mapping": {
+                      "developer_id": "developer_id",
+                      "task_id": "task_id",
+                      "version": "version"
+                    },
+                    "insertion_order": null,
+                    "remote_table": {
+                      "name": "tasks",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "configuration": {
+          "connection_info": {
+            "database_url": {
+              "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+            },
+            "isolation_level": "read-committed",
+            "pool_settings": {
+              "connection_lifetime": 600,
+              "idle_timeout": 180,
+              "max_connections": 50,
+              "retries": 1
+            },
+            "use_prepared_statements": true
+          }
+        }
+      }
+    ]
+  }
+}

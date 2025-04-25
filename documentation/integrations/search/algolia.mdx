@@ -1,0 +1,91 @@
+---
+title: 'Algolia'
+description: 'Learn how to use the Algolia search integration with Julep'
+icon: 'magnifying-glass'
+---
+
+## Overview
+
+Welcome to the Algolia integration guide for Julep! This integration allows you to perform powerful searches across your Algolia indices, enabling workflows that require fast, relevant, and typo-tolerant search capabilities. Whether you're building a site search, content discovery system, or personalized recommendation engine, this guide will help you set up and use Algolia with Julep.
+
+## Prerequisites
+
+<Info type="info" title="Algolia Account and API Keys Required">
+  To use the Algolia integration, you need an Algolia account with an Application ID and API Key. You can sign up for an account at [Algolia](https://www.algolia.com/users/sign_up) and obtain your API credentials from the Algolia dashboard.
+</Info>
+
+## How to Use the Integration
+
+To get started with the Algolia integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Configure Your API Credentials">
+    Add your Algolia Application ID and API Key to the tools section of your task. This will allow Julep to authenticate requests to Algolia on your behalf.
+  </Step>
+  <Step title="Create Task Definition">
+    Use the following YAML configuration to define your search task:
+
+```yaml Algolia Search Example
+name: Algolia Search Task
+
+tools:
+- name: algolia_search
+  type: integration
+  integration:
+    provider: algolia
+    method: search
+    setup:
+      algolia_application_id: "ALGOLIA_APPLICATION_ID"
+      algolia_api_key: "ALGOLIA_API_KEY"
+
+main:
+- tool: algolia_search
+  arguments:
+    index_name: your_index_name # this is a placeholder for the actual index name
+    query: searchquery # this is a placeholder for the actual search query
+    hits_per_page: 10
+    attributes_to_retrieve: $ ["attribute1", "attribute2"] # this is a placeholder for the actual attributes to retrieve
+```
+  </Step>
+</Steps>
+
+## YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "Algolia Search Task".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `algolia_search` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `algolia` for Algolia Search.
+      - **_method_**: Indicates the method to be used, which is `search` for Algolia Search. This is the only supported method.
+      - **_setup_**: Contains configuration details, such as:
+        - **_algolia_application_id_**: Your Algolia Application ID.
+        - **_algolia_api_key_**: Your Algolia API Key (should be a search-only API key for security).
+  </Accordion>
+
+  <Accordion title="Workflow Configuration">
+    - **_main_**: Defines the main execution steps.
+      - **_tool_**: Refers to the tool defined earlier (`algolia_search`).
+      - **_arguments_**: Specifies the input parameters for the tool:
+        - **_index_name_**: The name of the Algolia index to search.
+        - **_query_**: The search query to run against the index.
+        - **_hits_per_page_** (optional): Maximum number of results to return (default: 20).
+        - **_attributes_to_retrieve_** (optional): List of specific attributes to retrieve from the search results.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Remember to replace `ALGOLIA_APPLICATION_ID` and `ALGOLIA_API_KEY` with your actual Algolia credentials. For security, it's recommended to use search-only API keys with the minimal necessary permissions.
+</Note>
+
+## Conclusion
+
+The Algolia integration provides a powerful way to incorporate fast, relevant, and scalable search functionality into your Julep workflows. By leveraging Algolia's search capabilities, you can create sophisticated search experiences that help users find exactly what they're looking for.
+
+<Tip>
+  For more information about Algolia's search parameters and capabilities, refer to the [Algolia Search API documentation](https://www.algolia.com/doc/api-reference/api-parameters/). 
+</Tip>

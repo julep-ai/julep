@@ -162,6 +162,10 @@ class ApiCallDef(BaseModel):
     """
     The timeout for the request
     """
+    include_response_content: StrictBool = True
+    """
+    Whether to include the content in the response
+    """
 
 
 class ApiCallDefUpdate(BaseModel):
@@ -232,6 +236,10 @@ class ApiCallDefUpdate(BaseModel):
     timeout: int | None = None
     """
     The timeout for the request
+    """
+    include_response_content: StrictBool = True
+    """
+    Whether to include the content in the response
     """
 
 
@@ -352,6 +360,7 @@ class BaseIntegrationDef(BaseModel):
         "brave",
         "browserbase",
         "email",
+        "mailgun",
         "remote_browser",
         "llama_parse",
         "ffmpeg",
@@ -394,6 +403,7 @@ class BaseIntegrationDefUpdate(BaseModel):
             "brave",
             "browserbase",
             "email",
+            "mailgun",
             "remote_browser",
             "llama_parse",
             "ffmpeg",
@@ -1023,6 +1033,7 @@ class CreateToolRequest(BaseModel):
         | SpiderIntegrationDef
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
+        | MailgunIntegrationDef
         | BrowserbaseContextIntegrationDef
         | BrowserbaseExtensionIntegrationDef
         | BrowserbaseListSessionsIntegrationDef
@@ -1493,6 +1504,154 @@ class LlamaParseSetupUpdate(BaseModel):
     """
 
 
+class MailgunIntegrationDef(BaseIntegrationDef):
+    """
+    Mailgun integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["mailgun"] = "mailgun"
+    """
+    The provider must be "mailgun"
+    """
+    method: Literal["send_email"] | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: MailgunSetup | None = None
+    """
+    The setup parameters for Mailgun
+    """
+    arguments: MailgunSendEmailArguments | None = None
+    """
+    The arguments for mailgun methods
+    """
+
+
+class MailgunIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Mailgun integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["mailgun"] = "mailgun"
+    """
+    The provider must be "mailgun"
+    """
+    method: Literal["send_email"] | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: MailgunSetupUpdate | None = None
+    """
+    The setup parameters for Mailgun
+    """
+    arguments: MailgunSendEmailArgumentsUpdate | None = None
+    """
+    The arguments for mailgun methods
+    """
+
+
+class MailgunSendEmailArguments(BaseModel):
+    """
+    Arguments for mailgun.send_email method
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    to: str
+    """
+    The email address to send the email to
+    """
+    from_: Annotated[str, Field(alias="from")]
+    """
+    The email address to send the email from
+    """
+    subject: str
+    """
+    The subject of the email
+    """
+    body: str
+    """
+    The body of the email
+    """
+    cc: str | None = None
+    """
+    Optional carbon copy recipients (comma-separated email addresses)
+    """
+    bcc: str | None = None
+    """
+    Optional blind carbon copy recipients (comma-separated email addresses)
+    """
+
+
+class MailgunSendEmailArgumentsUpdate(BaseModel):
+    """
+    Arguments for mailgun.send_email method
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    to: str | None = None
+    """
+    The email address to send the email to
+    """
+    from_: Annotated[str | None, Field(alias="from")] = None
+    """
+    The email address to send the email from
+    """
+    subject: str | None = None
+    """
+    The subject of the email
+    """
+    body: str | None = None
+    """
+    The body of the email
+    """
+    cc: str | None = None
+    """
+    Optional carbon copy recipients (comma-separated email addresses)
+    """
+    bcc: str | None = None
+    """
+    Optional blind carbon copy recipients (comma-separated email addresses)
+    """
+
+
+class MailgunSetup(BaseModel):
+    """
+    Setup parameters for Mailgun integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    api_key: str
+    """
+    The API key for the Mailgun integration
+    """
+
+
+class MailgunSetupUpdate(BaseModel):
+    """
+    Setup parameters for Mailgun integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    api_key: str | None = None
+    """
+    The API key for the Mailgun integration
+    """
+
+
 class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1542,6 +1701,7 @@ class PatchToolRequest(BaseModel):
         | SpiderIntegrationDefUpdate
         | WikipediaIntegrationDefUpdate
         | WeatherIntegrationDefUpdate
+        | MailgunIntegrationDefUpdate
         | BrowserbaseContextIntegrationDefUpdate
         | BrowserbaseExtensionIntegrationDefUpdate
         | BrowserbaseListSessionsIntegrationDefUpdate
@@ -1975,6 +2135,7 @@ class Tool(BaseModel):
         | SpiderIntegrationDef
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
+        | MailgunIntegrationDef
         | BrowserbaseContextIntegrationDef
         | BrowserbaseExtensionIntegrationDef
         | BrowserbaseListSessionsIntegrationDef
@@ -2234,6 +2395,7 @@ class UpdateToolRequest(BaseModel):
         | SpiderIntegrationDef
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
+        | MailgunIntegrationDef
         | BrowserbaseContextIntegrationDef
         | BrowserbaseExtensionIntegrationDef
         | BrowserbaseListSessionsIntegrationDef

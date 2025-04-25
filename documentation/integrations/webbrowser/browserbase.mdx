@@ -1,0 +1,116 @@
+---
+title: 'Browser Base'
+description: 'Learn how to use the Browser Base integration with Julep'
+icon: 'firefox-browser'
+---
+
+## Overview
+
+Welcome to the Browser Base integration guide for Julep! This integration allows you to manage browser sessions and perform various actions, enabling you to build workflows that require browser automation capabilities. Whether you're testing web applications or automating web tasks, this guide will walk you through the setup and usage.
+
+## Prerequisites
+
+<Info type="info" title="API Key Required">
+  To use the Browserbase integration, you need an API key. You can obtain this key by signing up at [Browserbase](https://browserbase.com/signup).
+</Info>
+
+<Info type="info" title="Project ID Required">
+  To use the Browserbase integration, you need a Project ID. You can obtain this ID by signing up at [Browserbase](https://browserbase.com/signup).
+</Info>
+
+## How to Use the Integration
+
+To get started with the Browserbase integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Configure Your API Key">
+    Add your API key and project ID to the tools section of your task. This will allow Julep to authenticate requests to Browserbase on your behalf.
+
+  </Step>
+  <Step title="Create Task Definition">
+    Use the following YAML configuration to define your browser automation task:
+
+```yaml Browser Base Example
+name: Browser Base Task
+tools:
+- name: browserbase_tool
+  type: integration
+  integration:
+    provider: browserbase
+    method: create_session
+    setup:
+      api_key: "BROWSERBASE_API_KEY"
+      project_id: "BROWSERBASE_PROJECT_ID"
+main:
+- tool: browserbase_tool
+  arguments:
+    project_id: BROWSERBASE_PROJECT_ID
+```
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "Browser Base Task".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `browserbase_tool` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `browserbase` for Browserbase.
+      - **_method_**: Specifies the method to use, such as `create_session`, `list_sessions`, `get_session`, `complete_session`, `get_live_urls`, or `install_extension_from_github`. Defaults to `list_sessions` if not specified.
+      - **_setup_**: Contains configuration details.
+        - **_api_key_**:(Required) The API key. Can be found in Settings.
+        - **_project_id_**: (Required) The Project ID. Can be found in Settings.
+        - **_api_url_**: (optional) The API URL. Defaults to https://www.browserbase.com
+        - **_connect_url_**: (optional) The Connect URL. Defaults to wss://connect.browserbase.com
+
+  </Accordion>
+
+  <Accordion title="Workflow Configuration">
+    - **_main_**: Defines the main execution steps.
+      - **_tool_**: Refers to the tool defined earlier (`browserbase_tool`).
+      - **_arguments_**: Specifies the input parameters for the tool, which vary depending on the method used.
+        <Accordion title="create_session">
+            - **_project_id_**: The Project ID. Can be found in Settings.
+            - **_extension_id_**: (optional) The installed Extension ID. See Install Extension from GitHub.
+            - **_browser_settings_**: (optional) Browser settings object.
+            - **_timeout_**: (optional) Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
+            - **_keep_alive_**: (optional) Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
+            - **_proxies_**: (optional) Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
+        </Accordion>
+        <Accordion title="list_sessions">
+            - **_status_**: The status of the sessions to list (Available options: RUNNING, ERROR, TIMED_OUT, COMPLETED).
+        </Accordion>
+        <Accordion title="get_session">
+            - **_id_**: The session ID.
+        </Accordion>
+        <Accordion title="complete_session">
+            - **_id_**: The session ID.
+        </Accordion>
+        <Accordion title="get_live_urls">
+            - **_id_**: The session ID.
+        </Accordion>
+        <Accordion title="install_extension_from_github">
+            - **_repository_name_**: The GitHub repository name.
+            - **_ref_**: Ref to install from a branch or tag.
+        </Accordion>
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  - Remember to replace `BROWSERBASE_API_KEY` and `BROWSERBASE_PROJECT_ID` with your actual API key and project ID. 
+  - Customize the `arguments` based on the method you choose to use.
+</Note>
+
+## Conclusion
+
+With the Browserbase integration, you can efficiently manage browser sessions and automate web tasks. 
+This integration provides a robust solution for browser automation, enhancing your workflow's capabilities and user experience.
+
+<Tip>
+  For more information, please refer to the [Browserbase API documentation](https://docs.browserbase.com/introduction).
+</Tip> 

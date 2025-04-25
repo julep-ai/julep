@@ -30,6 +30,18 @@
   </h3>
 </div>
 
+# **Julep AI Changelog for 11 Apri 2025** ✨
+
+- **Major Feature**: Introduced support for Gemini models in `litellm-config.yaml` ✨
+- **Minor Feature**: Added environment configuration for Open Responses API ✨
+- **Critical Fix**: Corrected cardinality violations in SQL queries across agents-api 🔧
+- **Minor Fix**: Resolved documentation formatting issues in 21 files 🔧
+- **Major Enhancement**: Refactored API calls to include developer ID for better tracking 📈
+- **Minor Enhancement**: Improved Gunicorn worker configurability via environment variables 📈
+- **Secondary Performance**: Integrated OpenAPI model and TyeSpecs for expanded functionality 🚀
+- **Critical Breaking**: Replaced Postgraphile with Hasura for GraphQL services 💥
+- **Other Breaking**: Updated Docker configurations to adhere to new deployment requirements 💥
+
 # **Julep AI Changelog for 14 February 2025** ✨
 
 - **Major Feature**: Default `parallelism` in MapReduce now set to `task_max_parallelism` for optimized processing ✨

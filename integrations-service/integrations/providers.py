@@ -19,6 +19,8 @@ from .autogen.Tools import (
     FfmpegSearchArguments,
     LlamaParseFetchArguments,
     LlamaParseSetup,
+    MailgunSendEmailArguments,
+    MailgunSetup,
     RemoteBrowserArguments,
     RemoteBrowserSetup,
     SpiderFetchArguments,
@@ -46,6 +48,7 @@ from .models import (
     EmailOutput,
     FfmpegSearchOutput,
     LlamaParseFetchOutput,
+    MailgunSendEmailOutput,
     ProviderInfo,
     RemoteBrowserOutput,
     SpiderOutput,
@@ -352,6 +355,25 @@ algolia = BaseProvider(
     ),
 )
 
+mailgun = BaseProvider(
+    provider="mailgun",
+    setup=MailgunSetup,
+    methods=[
+        BaseProviderMethod(
+            method="send_email",
+            description="Send an email",
+            arguments=MailgunSendEmailArguments,
+            output=MailgunSendEmailOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        friendly_name="Mailgun",
+        url="https://www.mailgun.com/",
+        docs="https://documentation.mailgun.com/",
+        icon="https://www.mailgun.com/favicon.ico",
+    ),
+)
+
 available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -366,4 +388,5 @@ available_providers: dict[str, BaseProvider] = {
     "arxiv": arxiv,
     "unstructured": unstructured,
     "algolia": algolia,
+    "mailgun": mailgun,
 }

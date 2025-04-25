@@ -6,7 +6,8 @@ from agents_api.queries.files.create_file import create_file
 from agents_api.queries.files.delete_file import delete_file
 from agents_api.queries.files.get_file import get_file
 from agents_api.queries.files.list_files import list_files
-from ward import test
+from fastapi import HTTPException
+from ward import raises, test
 
 from tests.fixtures import pg_dsn, test_agent, test_developer, test_file, test_user
 
@@ -112,6 +113,75 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
     )
     assert len(files) >= 1
     assert any(f.id == file.id for f in files)
+
+
+@test("query: list files, invalid limit")
+async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """Test that listing files with an invalid limit raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_files(
+            developer_id=developer.id,
+            connection_pool=pool,
+            limit=101,
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+    with raises(HTTPException) as exc:
+        await list_files(
+            developer_id=developer.id,
+            connection_pool=pool,
+            limit=0,
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+
+@test("query: list files, invalid offset")
+async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """Test that listing files with an invalid offset raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_files(
+            developer_id=developer.id,
+            connection_pool=pool,
+            offset=-1,
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Offset must be >= 0"
+
+
+@test("query: list files, invalid sort by")
+async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """Test that listing files with an invalid sort by raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_files(
+            developer_id=developer.id,
+            connection_pool=pool,
+            sort_by="invalid",
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort field"
+
+
+@test("query: list files, invalid sort direction")
+async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """Test that listing files with an invalid sort direction raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_files(
+            developer_id=developer.id,
+            connection_pool=pool,
+            direction="invalid",
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort direction"
 
 
 @test("query: list user files")

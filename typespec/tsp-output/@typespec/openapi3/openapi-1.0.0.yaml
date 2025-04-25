@@ -57,6 +57,18 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Agents.CreateAgentRequest'
+  /agents/models:
+    get:
+      operationId: AgentsRoute_listModels
+      description: List all available models
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agents.ListModelsResponse'
   /agents/{id}:
     post:
       operationId: AgentsRoute_createOrUpdate
@@ -1846,6 +1858,26 @@ components:
             {%- endif -%}
       allOf:
         - $ref: '#/components/schemas/Agents.CreateAgentRequest'
+    Agents.ListModelsResponse:
+      type: object
+      required:
+        - models
+      properties:
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agents.ModelInfo'
+          description: List of available models
+      description: Response for the list models endpoint
+    Agents.ModelInfo:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: The ID/name of the model
+      description: Model information returned by the model list endpoint
     Agents.PatchAgentRequest:
       type: object
       properties:
@@ -8630,6 +8662,10 @@ components:
           type: integer
           format: uint8
           description: The timeout for the request
+        include_response_content:
+          type: boolean
+          description: Whether to include the content in the response
+          default: true
       description: API call definition
     Tools.ApiCallDefUpdate:
       type: object
@@ -8693,6 +8729,10 @@ components:
           type: integer
           format: uint8
           description: The timeout for the request
+        include_response_content:
+          type: boolean
+          description: Whether to include the content in the response
+          default: true
       description: API call definition
     Tools.ArxivIntegrationDef:
       type: object
@@ -8957,6 +8997,7 @@ components:
             - brave
             - browserbase
             - email
+            - mailgun
             - remote_browser
             - llama_parse
             - ffmpeg
@@ -8980,6 +9021,7 @@ components:
           spider: '#/components/schemas/Tools.SpiderIntegrationDef'
           wikipedia: '#/components/schemas/Tools.WikipediaIntegrationDef'
           weather: '#/components/schemas/Tools.WeatherIntegrationDef'
+          mailgun: '#/components/schemas/Tools.MailgunIntegrationDef'
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDef'
@@ -9002,6 +9044,7 @@ components:
             - brave
             - browserbase
             - email
+            - mailgun
             - remote_browser
             - llama_parse
             - ffmpeg
@@ -9025,6 +9068,7 @@ components:
           spider: '#/components/schemas/Tools.SpiderIntegrationDefUpdate'
           wikipedia: '#/components/schemas/Tools.WikipediaIntegrationDefUpdate'
           weather: '#/components/schemas/Tools.WeatherIntegrationDefUpdate'
+          mailgun: '#/components/schemas/Tools.MailgunIntegrationDefUpdate'
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
           remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
           llama_parse: '#/components/schemas/Tools.LlamaParseIntegrationDefUpdate'
@@ -9866,6 +9910,7 @@ components:
             - $ref: '#/components/schemas/Tools.SpiderIntegrationDef'
             - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
             - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
+            - $ref: '#/components/schemas/Tools.MailgunIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseContextIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseExtensionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseListSessionsIntegrationDef'
@@ -10268,6 +10313,123 @@ components:
           additionalProperties: {}
           description: Optional upload parameters
       description: Setup parameters for LlamaParse integration
+    Tools.MailgunIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - mailgun
+          description: The provider must be "mailgun"
+          default: mailgun
+        method:
+          type: string
+          enum:
+            - send_email
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.MailgunSetup'
+          description: The setup parameters for Mailgun
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.MailgunSendEmailArguments'
+          description: The arguments for mailgun methods
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Mailgun integration definition
+    Tools.MailgunIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - mailgun
+          description: The provider must be "mailgun"
+          default: mailgun
+        method:
+          type: string
+          enum:
+            - send_email
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.MailgunSetupUpdate'
+          description: The setup parameters for Mailgun
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.MailgunSendEmailArgumentsUpdate'
+          description: The arguments for mailgun methods
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Mailgun integration definition
+    Tools.MailgunSendEmailArguments:
+      type: object
+      required:
+        - to
+        - from
+        - subject
+        - body
+      properties:
+        to:
+          type: string
+          description: The email address to send the email to
+        from:
+          type: string
+          description: The email address to send the email from
+        subject:
+          type: string
+          description: The subject of the email
+        body:
+          type: string
+          description: The body of the email
+        cc:
+          type: string
+          description: Optional carbon copy recipients (comma-separated email addresses)
+        bcc:
+          type: string
+          description: Optional blind carbon copy recipients (comma-separated email addresses)
+      description: Arguments for mailgun.send_email method
+    Tools.MailgunSendEmailArgumentsUpdate:
+      type: object
+      properties:
+        to:
+          type: string
+          description: The email address to send the email to
+        from:
+          type: string
+          description: The email address to send the email from
+        subject:
+          type: string
+          description: The subject of the email
+        body:
+          type: string
+          description: The body of the email
+        cc:
+          type: string
+          description: Optional carbon copy recipients (comma-separated email addresses)
+        bcc:
+          type: string
+          description: Optional blind carbon copy recipients (comma-separated email addresses)
+      description: Arguments for mailgun.send_email method
+    Tools.MailgunSetup:
+      type: object
+      required:
+        - api_key
+      properties:
+        api_key:
+          type: string
+          description: The API key for the Mailgun integration
+      description: Setup parameters for Mailgun integration
+    Tools.MailgunSetupUpdate:
+      type: object
+      properties:
+        api_key:
+          type: string
+          description: The API key for the Mailgun integration
+      description: Setup parameters for Mailgun integration
     Tools.NamedToolChoice:
       type: object
       properties:
@@ -10299,6 +10461,7 @@ components:
             - $ref: '#/components/schemas/Tools.SpiderIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.WikipediaIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.WeatherIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.MailgunIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseContextIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseExtensionIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseListSessionsIntegrationDefUpdate'
@@ -10724,6 +10887,7 @@ components:
             - $ref: '#/components/schemas/Tools.SpiderIntegrationDef'
             - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
             - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
+            - $ref: '#/components/schemas/Tools.MailgunIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseContextIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseExtensionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseListSessionsIntegrationDef'
@@ -10951,6 +11115,7 @@ components:
             - $ref: '#/components/schemas/Tools.SpiderIntegrationDef'
             - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
             - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
+            - $ref: '#/components/schemas/Tools.MailgunIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseContextIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseExtensionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseListSessionsIntegrationDef'

@@ -1,0 +1,78 @@
+---
+title: 'Wikipedia'
+description: 'Learn how to use the Wikipedia integration with Julep'
+icon: 'wikipedia-w'
+---
+
+## Overview
+
+Welcome to the Wikipedia integration guide for Julep! This integration allows you to access a vast repository of information from Wikipedia, enabling you to build workflows that require comprehensive data retrieval capabilities. Whether you're developing a knowledge base or need quick access to encyclopedic information, this guide will walk you through the setup and usage.
+
+## Prerequisites
+
+<Info type="info" title="No API Key Required">
+  The Wikipedia integration does not require an API key. You can start using it immediately without any additional setup.
+</Info>
+
+## How to Use the Integration
+
+To get started with the Wikipedia integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Define Your Search Parameters">
+    Use the following YAML configuration to define your search parameters and request data from Wikipedia:
+
+```yaml Wikipedia Search Example
+name: Wikipedia Search
+tools:
+- name: wikipedia_search
+  type: integration
+  integration:
+    provider: wikipedia
+    method: search
+
+main:
+- tool: wikipedia_search
+  arguments:
+    query: Artificial Intelligence
+    load_max_docs: 5
+```
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "Wikipedia Search".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `wikipedia_search` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `wikipedia` for Wikipedia.
+      - **_method_**: Indicates the method to be used, which is `search` for Wikipedia. If not specified, the method will be `search` by default.
+  </Accordion>
+
+  <Accordion title="Workflow Configuration">
+    - **_main_**: Defines the main execution steps.
+      - **_tool_**: Refers to the tool defined earlier (`wikipedia_search`).
+      - **_arguments_**: Specifies the input parameters for the tool:
+        - **_query_**: The search query string.
+        - **_load_max_docs_**: (optional) Maximum number of documents to load. Defaults to 2. Range 1-10.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Customize the `query` and `load_max_docs` parameters to suit your specific search needs.
+</Note>
+
+## Conclusion
+
+With the Wikipedia integration, you can easily access a wealth of information from one of the largest online encyclopedias. 
+This integration provides a robust solution for data retrieval, enhancing your workflow's capabilities and user experience.
+
+<Tip>
+  For more information, please refer to the [Wikipedia API documentation](https://wikipedia.readthedocs.io/en/latest/).
+</Tip> 

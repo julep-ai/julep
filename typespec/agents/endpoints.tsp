@@ -1,6 +1,8 @@
+import "@typespec/http";
 import "../common";
 import "./models.tsp";
 
+using TypeSpec.Http;
 using Common;
 
 namespace Agents;
@@ -16,4 +18,10 @@ interface Endpoints
         UpdateEndpoint<UpdateAgentRequest, Agent, "Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)">,
         PatchEndpoint<PatchAgentRequest, Agent, "Update an existing Agent by id (merges with existing values)">,
         DeleteEndpoint<"Delete Agent by id">,
-        GetEndpoint<Agent, "Get an Agent by id"> {}
+        GetEndpoint<Agent, "Get an Agent by id"> {
+    
+    @route("models")
+    @get
+    @doc("List all available models")
+    listModels(): ListModelsResponse;
+}

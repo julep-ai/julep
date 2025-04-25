@@ -18,6 +18,7 @@ from agents_api.queries.agents import (
     patch_agent,
     update_agent,
 )
+from fastapi import HTTPException
 from uuid_extensions import uuid7
 from ward import raises, test
 
@@ -127,6 +128,22 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     assert isinstance(result, list)
     assert all(isinstance(agent, Agent) for agent in result)
+
+
+@test("query: list agents sql, invalid sort direction")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    """Test that listing agents with an invalid sort direction raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_agents(
+            developer_id=developer_id,
+            connection_pool=pool,
+            direction="invalid",
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort direction"
 
 
 @test("query: patch agent sql")

@@ -1,0 +1,100 @@
+---
+title: 'Unstructured'
+description: 'Learn how to use the Unstructured.io integration with Julep'
+icon: 'file-lines'
+---
+
+## Overview
+
+Welcome to the Unstructured.io integration guide for Julep! This integration allows you to extract structured information from a wide variety of document formats, enabling you to build workflows that leverage advanced document processing capabilities. Whether you're developing a document analysis system, creating a RAG pipeline, or need to convert unstructured documents into structured data, this guide will walk you through the setup and usage.
+
+## Prerequisites
+
+<Info type="info" title="API Key Required">
+  To use the Unstructured.io integration, you need an API key. You can obtain this key by signing up at [Unstructured.io](https://unstructured.io/).
+</Info>
+
+## How to Use the Integration
+
+To get started with the Unstructured.io integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Configure Your API Key">
+    Add your API key to the tools section of your task. This will allow Julep to authenticate requests to Unstructured.io on your behalf.
+  </Step>
+  <Step title="Create Task Definition">
+    Use the following YAML configuration to define your document parsing task:
+
+```yaml Unstructured Example
+name: Unstructured Document Processing Task
+tools:
+- name: unstructured_processor
+  type: integration
+  integration:
+    provider: unstructured
+    method: parse
+    setup:
+      unstructured_api_key: "UNSTRUCTURED_API_KEY"
+
+main:
+- tool: unstructured_processor
+  arguments:
+    file: document_base64 # this is a placeholder for the actual file
+    filename: document.pdf # this is a placeholder for the actual filename
+    partition_params:
+      key1: value1 # these are placeholders for the actual parameters
+      key2: value2 # these are placeholders for the actual parameters
+```
+  </Step>
+  <Step title="Run Task">
+    Deploy your task by creating a new execution.
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "Unstructured Document Processing Task".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `unstructured_processor` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `unstructured` for Unstructured.io.
+      - **_method_**: Indicates the method to be used, which is `parse` for Unstructured.io.
+      - **_setup_**: Contains configuration details
+          - **_unstructured_api_key_**: (Required) The API key for your Unstructured.io account.
+          - **_server_url_**: (Optional) Custom API endpoint URL if needed.
+          - **_server_**: (Optional) Server name to use.
+          - **_url_params_**: (Optional) Dictionary of parameters to template the server URL with.
+          - **_timeout_ms_**: (Optional) Request timeout in milliseconds.
+  </Accordion>
+
+  <Accordion title="Execution Configuration">
+    - **_main_**: Defines the main execution steps.
+      - **_tool_**: Refers to the tool defined earlier (`unstructured_processor`).
+      - **_arguments_**: Specifies the input parameters for the tool:
+        - **_file_**: Base64 encoded file string.
+        - **_filename_**: (Optional) The name of the file. Helpful for file type detection. In case no filename is provided, a random UUID will be generated.
+        - **_partition_params_**: (Optional) Advanced parameters for document processing. To see the full list of parameters, please refer to the [Unstructured.io API documentation](https://docs.unstructured.io/api-reference/partition/api-parameters).
+  </Accordion>
+</AccordionGroup>
+
+<Callout type="info" title="Additional Parameters">
+  The different parameters available for the Unstructured.io integration can be found in the [Unstructured.io API documentation](https://docs.unstructured.io/api-reference/).
+</Callout>
+
+<Note>
+  - Remember to replace `UNSTRUCTURED_API_KEY` with your actual API key or use environment variables. For base64 encoded files, ensure your file is properly encoded before passing it to the integration.
+  - Unstructured.io supports a wide range of file types including PDFs, Word documents, PowerPoint presentations, Excel spreadsheets, emails, HTML, images, and more. For a full list of supported file types, please refer to the [Unstructured.io documentation](https://docs.unstructured.io/getting-started/supported-files).
+</Note>
+
+## Conclusion
+
+With the Unstructured.io integration, you can efficiently convert unstructured documents into structured data for analysis, search, and AI applications. This integration provides a powerful solution for document processing, enhancing your workflow's capabilities and enabling advanced RAG (Retrieval-Augmented Generation) pipelines.
+
+<Tip>
+  For more information, please refer to the [Unstructured.io documentation](https://docs.unstructured.io/).
+</Tip>

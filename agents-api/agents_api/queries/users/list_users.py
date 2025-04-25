@@ -1,12 +1,12 @@
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
+from beartype.vale import Is
 
 from ...autogen.openapi_model import User
 from ...common.utils.db_exceptions import common_db_exceptions
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import make_num_validator, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query outside the function
 user_query = """
@@ -42,8 +42,17 @@ OFFSET $3;
 async def list_users(
     *,
     developer_id: UUID,
-    limit: int = 100,
-    offset: int = 0,
+    limit: Annotated[
+        int,
+        Is[
+            make_num_validator(
+                min_value=1, max_value=100, err_msg="Limit must be between 1 and 100"
+            )
+        ],
+    ] = 100,
+    offset: Annotated[
+        int, Is[make_num_validator(min_value=0, err_msg="Offset must be non-negative")]
+    ] = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict | None = None,
@@ -63,10 +72,6 @@ async def list_users(
     Returns:
         tuple[str, list]: SQL query and parameters
     """
-    if limit < 1 or limit > 1000:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
-    if offset < 0:
-        raise HTTPException(status_code=400, detail="Offset must be non-negative")
 
     params = [
         developer_id,  # $1

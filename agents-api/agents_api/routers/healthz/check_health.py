@@ -1,21 +1,36 @@
-import logging
-from uuid import UUID
+import asyncio
 
 from fastapi import HTTPException
 
-from ...queries.agents.list_agents import list_agents as list_agents_query
+from ...common.utils.checks import (
+    check_integration_service,
+    check_litellm,
+    check_postgres,
+    check_temporal,
+)
 from .router import router
 
 
 @router.get("/healthz", tags=["healthz"])
 async def check_health() -> dict:
-    try:
-        # Check if the database is reachable
-        await list_agents_query(
-            developer_id=UUID("00000000-0000-0000-0000-000000000000"),
-        )
-    except Exception as e:
-        logging.error("An error occurred while checking health: %s", str(e))
-        raise HTTPException(status_code=500, detail="An internal error has occurred.") from e
+    # Run all health checks concurrently
+    postgres_status, temporal_status, litellm_status, integration_status = await asyncio.gather(
+        check_postgres(),
+        check_temporal(),
+        check_litellm(),
+        check_integration_service(),
+    )
 
-    return {"status": "ok"}
+    # Create health status with results
+    services = {
+        "postgres": postgres_status,
+        "temporal": temporal_status,
+        "litellm": litellm_status,
+        "integration_service": integration_status,
+    }
+
+    # If any service is down, mark overall status as degraded
+    if any(status == "error" for status in services.values()):
+        raise HTTPException(status_code=500, detail=services)
+
+    return services

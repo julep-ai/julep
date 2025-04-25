@@ -198,6 +198,80 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     )
 
 
+@test("query: list tasks sql, invalid limit")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """Test that listing tasks with an invalid limit raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_tasks(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            connection_pool=pool,
+            limit=101,
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+    with raises(HTTPException) as exc:
+        await list_tasks(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            connection_pool=pool,
+            limit=0,
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Limit must be between 1 and 100"
+
+
+@test("query: list tasks sql, invalid offset")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """Test that listing tasks with an invalid offset raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_tasks(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            connection_pool=pool,
+            offset=-1,
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Offset must be >= 0"
+
+
+@test("query: list tasks sql, invalid sort by")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """Test that listing tasks with an invalid sort by raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_tasks(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            connection_pool=pool,
+            sort_by="invalid",
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort field"
+
+
+@test("query: list tasks sql, invalid sort direction")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """Test that listing tasks with an invalid sort direction raises an exception."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await list_tasks(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            connection_pool=pool,
+            direction="invalid",
+        )
+    assert exc.raised.status_code == 400
+    assert exc.raised.detail == "Invalid sort direction"
+
+
 @test("query: update task sql - exists")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
     """Test that a task can be successfully updated."""

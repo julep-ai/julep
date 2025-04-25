@@ -1,15 +1,15 @@
 from datetime import timedelta
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
+from beartype.vale import Is
 
 from ...autogen.openapi_model import Entry
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
-from ..utils import pg_query, rewrap_exceptions, wrap_in_class
+from ..utils import make_num_validator, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
 session_exists_query = """
@@ -59,8 +59,17 @@ async def list_entries(
     developer_id: UUID,
     session_id: UUID,
     allowed_sources: list[str] = ["api_request", "api_response"],
-    limit: int = 100,
-    offset: int = 0,
+    limit: Annotated[
+        int,
+        Is[
+            make_num_validator(
+                min_value=1, max_value=1000, err_msg="Limit must be between 1 and 1000"
+            )
+        ],
+    ] = 100,
+    offset: Annotated[
+        int, Is[make_num_validator(min_value=0, err_msg="Offset must be >= 0")]
+    ] = 0,
     sort_by: Literal["created_at", "timestamp"] = "timestamp",
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
@@ -81,10 +90,6 @@ async def list_entries(
     Returns:
         tuple[str, list] | tuple[str, list, str]: SQL query and parameters for listing the entries.
     """
-    if limit < 1 or limit > 1000:
-        raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
-    if offset < 0:
-        raise HTTPException(status_code=400, detail="Offset must be non-negative")
 
     query = list_entries_query.format(
         sort_by=sort_by,

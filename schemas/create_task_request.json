@@ -403,6 +403,11 @@
           ],
           "title": "Headers"
         },
+        "include_response_content": {
+          "default": true,
+          "title": "Include Response Content",
+          "type": "boolean"
+        },
         "json": {
           "anyOf": [
             {
@@ -553,6 +558,11 @@
             }
           ],
           "title": "Headers"
+        },
+        "include_response_content": {
+          "default": true,
+          "title": "Include Response Content",
+          "type": "boolean"
         },
         "json": {
           "anyOf": [
@@ -4307,6 +4317,9 @@
               "$ref": "#/$defs/WeatherIntegrationDef"
             },
             {
+              "$ref": "#/$defs/MailgunIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
             },
             {
@@ -6198,11 +6211,17 @@
           "type": "number"
         },
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "k_multiplier": {
+          "default": 7,
+          "minimum": 0.0,
+          "title": "K Multiplier",
+          "type": "integer"
         },
         "lang": {
           "default": "en-US",
@@ -6247,6 +6266,13 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "title": "HybridDocSearch",
@@ -6255,18 +6281,24 @@
     "HybridDocSearchRequest": {
       "properties": {
         "alpha": {
-          "default": 0.75,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": 0.0,
           "title": "Alpha",
           "type": "number"
         },
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "k_multiplier": {
+          "default": 7,
+          "minimum": 0.0,
+          "title": "K Multiplier",
+          "type": "integer"
         },
         "lang": {
           "default": "en-US",
@@ -6296,6 +6328,13 @@
           "title": "Text",
           "type": "string"
         },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
+        },
         "vector": {
           "items": {
             "type": "number"
@@ -6321,11 +6360,17 @@
           "type": "number"
         },
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "k_multiplier": {
+          "default": 7,
+          "minimum": 0.0,
+          "title": "K Multiplier",
+          "type": "integer"
         },
         "lang": {
           "default": "en-US",
@@ -6370,6 +6415,13 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "title": "HybridDocSearchUpdate",
@@ -7201,6 +7253,252 @@
       "minimum": -100.0,
       "title": "LogitBias",
       "type": "number"
+    },
+    "MailgunIntegrationDef": {
+      "description": "Mailgun integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MailgunSendEmailArguments"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "const": "send_email",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "mailgun",
+          "default": "mailgun",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MailgunSetup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "MailgunIntegrationDef",
+      "type": "object"
+    },
+    "MailgunIntegrationDefUpdate": {
+      "description": "Mailgun integration definition",
+      "properties": {
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MailgunSendEmailArgumentsUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "const": "send_email",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Method"
+        },
+        "provider": {
+          "const": "mailgun",
+          "default": "mailgun",
+          "title": "Provider",
+          "type": "string"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MailgunSetupUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "MailgunIntegrationDefUpdate",
+      "type": "object"
+    },
+    "MailgunSendEmailArguments": {
+      "description": "Arguments for mailgun.send_email method",
+      "properties": {
+        "bcc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Bcc"
+        },
+        "body": {
+          "title": "Body",
+          "type": "string"
+        },
+        "cc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cc"
+        },
+        "from": {
+          "title": "From",
+          "type": "string"
+        },
+        "subject": {
+          "title": "Subject",
+          "type": "string"
+        },
+        "to": {
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "to",
+        "from",
+        "subject",
+        "body"
+      ],
+      "title": "MailgunSendEmailArguments",
+      "type": "object"
+    },
+    "MailgunSendEmailArgumentsUpdate": {
+      "description": "Arguments for mailgun.send_email method",
+      "properties": {
+        "bcc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Bcc"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Body"
+        },
+        "cc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cc"
+        },
+        "from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "From"
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Subject"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "To"
+        }
+      },
+      "title": "MailgunSendEmailArgumentsUpdate",
+      "type": "object"
+    },
+    "MailgunSetup": {
+      "description": "Setup parameters for Mailgun integration",
+      "properties": {
+        "api_key": {
+          "title": "Api Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "api_key"
+      ],
+      "title": "MailgunSetup",
+      "type": "object"
+    },
+    "MailgunSetupUpdate": {
+      "description": "Setup parameters for Mailgun integration",
+      "properties": {
+        "api_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Api Key"
+        }
+      },
+      "title": "MailgunSetupUpdate",
+      "type": "object"
     },
     "Main-Input": {
       "properties": {
@@ -8290,6 +8588,9 @@
             },
             {
               "$ref": "#/$defs/WeatherIntegrationDefUpdate"
+            },
+            {
+              "$ref": "#/$defs/MailgunIntegrationDefUpdate"
             },
             {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDefUpdate"
@@ -10455,6 +10756,9 @@
               "$ref": "#/$defs/WeatherIntegrationDef"
             },
             {
+              "$ref": "#/$defs/MailgunIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
             },
             {
@@ -10632,6 +10936,9 @@
               "$ref": "#/$defs/WeatherIntegrationDef"
             },
             {
+              "$ref": "#/$defs/MailgunIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
             },
             {
@@ -10801,6 +11108,13 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "title": "TextOnlyDocSearch",
@@ -10828,6 +11142,13 @@
         "text": {
           "title": "Text",
           "type": "string"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "required": [
@@ -10874,6 +11195,13 @@
           "minimum": 1.0,
           "title": "Num Search Messages",
           "type": "integer"
+        },
+        "trigram_similarity_threshold": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trigram Similarity Threshold",
+          "type": "number"
         }
       },
       "title": "TextOnlyDocSearchUpdate",
@@ -11183,6 +11511,9 @@
             },
             {
               "$ref": "#/$defs/WeatherIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/MailgunIntegrationDef"
             },
             {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
@@ -12103,6 +12434,9 @@
               "$ref": "#/$defs/WeatherIntegrationDef"
             },
             {
+              "$ref": "#/$defs/MailgunIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
             },
             {
@@ -12318,7 +12652,7 @@
     "VectorDocSearch": {
       "properties": {
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
@@ -12375,7 +12709,7 @@
     "VectorDocSearchRequest": {
       "properties": {
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
@@ -12422,7 +12756,7 @@
     "VectorDocSearchUpdate": {
       "properties": {
         "confidence": {
-          "default": 0,
+          "default": 0.5,
           "maximum": 1.0,
           "minimum": -1.0,
           "title": "Confidence",
@@ -13303,6 +13637,9 @@
               "$ref": "#/$defs/WeatherIntegrationDef"
             },
             {
+              "$ref": "#/$defs/MailgunIntegrationDef"
+            },
+            {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"
             },
             {
@@ -13472,6 +13809,9 @@
             },
             {
               "$ref": "#/$defs/WeatherIntegrationDef"
+            },
+            {
+              "$ref": "#/$defs/MailgunIntegrationDef"
             },
             {
               "$ref": "#/$defs/BrowserbaseContextIntegrationDef"

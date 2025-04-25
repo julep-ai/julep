@@ -1,0 +1,80 @@
+---
+title: 'FFmpeg'
+description: 'Learn how to use the FFmpeg integration with Julep'
+icon: 'photo-film'
+---
+
+## Overview
+
+Welcome to the FFmpeg integration guide for Julep! This integration allows you to process media files using FFmpeg commands, enabling you to build workflows that require advanced media processing capabilities. Whether you're converting video formats or extracting audio, this guide will walk you through the setup and usage.
+
+## How to Use the Integration
+
+To get started with the FFmpeg integration, follow these steps to configure and create a task:
+
+<Steps>
+  <Step title="Define Your FFmpeg Command">
+    Use the following YAML configuration to define your FFmpeg command and process media files:
+
+```yaml FFmpeg Example
+name: FFmpeg Task
+
+tools:
+- name: ffmpeg_tool
+  type: integration
+  integration:
+    provider: ffmpeg
+    method: bash_cmd
+
+main:
+- tool: ffmpeg_tool
+  arguments:
+    cmd: $ "ffmpeg -i input.mp4 -vn -acodec copy output.aac"
+    file: base64_encoded_file # this is a placeholder for the actual file
+```
+
+    <Info>
+      The `base64_encoded_file` is the base64 encoded file to process which in this case is the `input.mp4` file.
+      The `file` argument can accept either a single base64 encoded string or a list of base64 encoded strings.
+      However, even when passing a list of files, the FFmpeg command can only use a single input file (single `-i` flag).
+      Multiple input files with multiple `-i` flags are not supported.
+    </Info>
+  </Step>
+</Steps>
+
+### YAML Explanation
+
+<AccordionGroup>
+  <Accordion title="Basic Configuration">
+    - **_name_**: A descriptive name for the task, in this case, "FFmpeg Task".
+    - **_tools_**: This section lists the tools or integrations being used. Here, `ffmpeg_tool` is defined as an integration tool.
+  </Accordion>
+
+  <Accordion title="Tool Configuration">
+    - **_type_**: Specifies the type of tool, which is `integration` in this context.
+    - **_integration_**: Details the provider and setup for the integration.
+      - **_provider_**: Indicates the service provider, which is `ffmpeg` for FFmpeg. 
+      - **_method_**: Indicates the method to be used, which is `bash_cmd` for FFmpeg. If not specified, the method will be `bash_cmd` by default.
+  </Accordion>
+
+  <Accordion title="Workflow Configuration">
+    - **_main_**: Defines the main execution steps.
+      - **_tool_**: Refers to the tool defined earlier (`ffmpeg_tool`).
+      - **_arguments_**: Specifies the input parameters for the tool:
+        - **_cmd_**: The FFmpeg command to execute.
+        - **_file_**: The base64 encoded file to process. Can be a single base64 encoded string or a list of base64 encoded strings.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Ensure your input file is base64 encoded and the FFmpeg command is correctly formatted for your specific use case.
+</Note>
+
+## Conclusion
+
+With the FFmpeg integration, you can efficiently process media files using powerful FFmpeg commands. 
+This integration provides a robust solution for media processing, enhancing your workflow's capabilities and user experience.
+
+<Tip>
+  For more information, please refer to the [FFmpeg documentation](https://ffmpeg.org/documentation.html).
+</Tip> 
