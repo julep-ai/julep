@@ -65,6 +65,62 @@ Documents are attached to either an agent or a user. This is how you can create 
     Check out the [API reference](/api-reference/create-user-doc) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
 </Tip>
 
+### Getting a Doc
+
+To get a doc, you can use the `client.agents.docs.get` or `client.users.docs.get` method.
+
+**Example:**
+
+<CodeGroup>
+```python Python
+# Getting a doc
+doc = client.agents.docs.get(
+    agent_id="agent_id",
+    doc_id="doc_id",
+)
+
+print(doc)
+```
+
+```javascript Node.js
+// Getting a doc
+const doc = await client.agents.docs.get(
+    agent_id="agent_id",
+    doc_id="doc_id",
+)
+
+console.log(doc)
+```
+</CodeGroup>
+
+When you get a doc, you can access the doc's `title`, `content`, `embeddings`, `metadata` and other attributes.
+
+<Accordion title="Sample Output">
+    ```
+    Doc(
+        id='0680b756-9827-7cf2-8000-82ed5daf816e',
+        content=['The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa.'],
+        created_at=datetime.datetime(2023, 4, 25, 11, 43, 37, 513161, tzinfo=datetime.timezone.utc),
+        title='Old World',
+        embedding_dimensions=1024,
+        embedding_model='text-embedding-3-large',
+        embeddings=[
+            -0.036940154,
+            0.021077264,
+            -0.03274468,
+            0.016222501,
+            ...
+            -0.05038565,
+            0.012776218,
+            ...
+        ],
+        language='english',
+        metadata={"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+        modality='text'
+    )
+    ```
+</Accordion>
+
 ### Chunking
 
 In Julep, documents are not automatically chunked. We recommend that developers handle chunking based on their specific use case requirements, as different applications may have unique needs for how documents should be divided. 
