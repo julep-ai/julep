@@ -30,7 +30,9 @@ CREATE OR REPLACE FUNCTION encrypt_api_key(
 BEGIN
     RETURN crypt(p_api_key, gen_salt('bf', 10));
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql 
+   SECURITY DEFINER
+   SET search_path = pg_catalog, public;
 
 -- Add function to verify API key against stored hash
 CREATE OR REPLACE FUNCTION verify_api_key(
@@ -40,7 +42,9 @@ CREATE OR REPLACE FUNCTION verify_api_key(
 BEGIN
     RETURN p_hash = crypt(p_api_key, p_hash);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql 
+   SECURITY DEFINER
+   SET search_path = pg_catalog, public;
 
 -- Add comment to table
 COMMENT ON TABLE api_keys IS 'Stores API keys for developers with bcrypt hashing for security';
