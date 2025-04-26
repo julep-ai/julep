@@ -1,68 +1,23 @@
-CREATE TEMP TABLE docs_temp AS
-SELECT * FROM docs; 
+BEGIN;
 
-delete from docs;
-alter table docs drop constraint pk_docs CASCADE;
-alter table docs add constraint pk_docs primary key (developer_id, doc_id, created_at);
+alter table docs drop constraint if exists pk_docs CASCADE;
+alter table docs drop constraint if exists uq_docs_dev_doc_idx;
+alter table docs add constraint pk_docs primary key (developer_id, doc_id, index, created_at);
+alter table docs drop constraint if exists uq_doc_index;
 alter table docs add constraint uq_doc_index unique (doc_id, index, created_at);
-
-insert into docs select * from docs_temp;
-drop table docs_temp;
-
-select ai.drop_vectorizer(id) from ai.vectorizer;
 
 SELECT
     create_hypertable (
         'docs',
         by_range ('created_at', INTERVAL '1 day'),
-        if_not_exists => TRUE
-    );
-
-SELECT
-    ai.create_vectorizer (
-        source => 'docs',
-        destination => 'docs_embeddings',
-        embedding => ai.embedding_openai ('text-embedding-3-large', 1024, 'document'), -- need to parameterize this
-        -- actual chunking is managed by the docs table
-        -- this is to prevent running out of context window
-        chunking => ai.chunking_recursive_character_text_splitter (
-            chunk_column => 'content',
-            chunk_size => 30000, -- 30k characters ~= 7.5k tokens
-            chunk_overlap => 600, -- 600 characters ~= 150 tokens
-            separators => ARRAY[ -- tries separators in order
-                -- markdown headers
-                E'\n#',
-                E'\n##',
-                E'\n###',
-                E'\n---',
-                E'\n***',
-                -- html tags
-                E'</article>', -- Split on major document sections
-                E'</div>', -- Split on div boundaries
-                E'</section>',
-                E'</p>', -- Split on paragraphs
-                E'<br>', -- Split on line breaks
-                -- other separators
-                E'\n\n', -- paragraphs
-                '. ',
-                '? ',
-                '! ',
-                '; ', -- sentences (note space after punctuation)
-                E'\n', -- line breaks
-                ' ' -- words (last resort)
-            ]
-        ),
-        scheduling => ai.scheduling_timescaledb (),
-        indexing => ai.indexing_diskann (),
-        formatting => ai.formatting_python_template (E'Title: $title\n\n$chunk'),
-        processing => ai.processing_default (),
-        enqueue_existing => TRUE
+        if_not_exists => TRUE,
+        migrate_data => TRUE
     );
 
 alter index idx_docs_metadata set (fastupdate=off);
-alter index search_tsv set (fastupdate=off);
-alter index title_trgm set (fastupdate=off);
-alter index content_trgm set (fastupdate=off);
+alter index idx_docs_search_tsv set (fastupdate=off);
+alter index idx_docs_title_trgm set (fastupdate=off);
+alter index idx_docs_content_trgm set (fastupdate=off);
 
 ALTER TABLE docs ALTER COLUMN title SET STATISTICS 1000;
 ALTER TABLE docs ALTER COLUMN content SET STATISTICS 1000;
@@ -243,3 +198,5 @@ LIMIT $8'
         k;
 END;
 $$;
+
+END;
