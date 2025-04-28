@@ -13,13 +13,6 @@ delete_doc_query = """
 DELETE FROM docs
 WHERE developer_id = $1
   AND doc_id = $2
-  AND EXISTS (
-    SELECT 1 FROM doc_owners
-    WHERE developer_id = $1
-      AND doc_id = $2
-      AND owner_type = $3
-      AND owner_id = $4
-  )
 RETURNING doc_id;
 """
 
@@ -66,6 +59,6 @@ async def delete_doc(
         tuple[str, list]: SQL query and parameters for deleting the document.
     """
     return [
-        (delete_doc_query, [developer_id, doc_id, owner_type, owner_id]),
+        (delete_doc_query, [developer_id, doc_id]),
         (delete_doc_owners_query, [developer_id, doc_id, owner_type, owner_id]),
     ]
