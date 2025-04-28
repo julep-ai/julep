@@ -34,22 +34,22 @@ async def delete_developer_secret(
     return await delete_secret_query(secret_id=secret_id, developer_id=x_developer_id)
 
 
-@router.delete("/agents/{agent_id}/secrets/{secret_id}", response_model=ResourceDeletedResponse)
-async def delete_agent_secret(
-    agent_id: UUID,
-    secret_id: UUID,
-) -> ResourceDeletedResponse:
-    """Delete a secret.
+# @router.delete("/agents/{agent_id}/secrets/{secret_id}", response_model=ResourceDeletedResponse)
+# async def delete_agent_secret(
+#     agent_id: UUID,
+#     secret_id: UUID,
+# ) -> ResourceDeletedResponse:
+#     """Delete a secret.
 
-    Args:
-        secret_id: ID of the secret to delete
-        conn: Database connection
-        developer_id: ID of the developer who owns the secret
+#     Args:
+#         secret_id: ID of the secret to delete
+#         conn: Database connection
+#         developer_id: ID of the developer who owns the secret
 
-    Returns:
-        The deleted secret
+#     Returns:
+#         The deleted secret
 
-    Raises:
-        HTTPException: If the secret doesn't exist
-    """
-    return await delete_secret_query(secret_id=secret_id, agent_id=agent_id)
+#     Raises:
+#         HTTPException: If the secret doesn't exist
+#     """
+#     return await delete_secret_query(secret_id=secret_id, agent_id=agent_id)

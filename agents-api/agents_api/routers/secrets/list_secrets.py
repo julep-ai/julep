@@ -35,25 +35,25 @@ async def list_developer_secrets(
     )
 
 
-@router.get("/agents/{agent_id}/secrets", response_model=list[Secret])
-async def list_agent_secrets(
-    agent_id: UUID,
-    *,
-    limit: int = 100,
-    offset: int = 0,
-) -> list[Secret]:
-    """List all secrets for an agent.
+# @router.get("/agents/{agent_id}/secrets", response_model=list[Secret])
+# async def list_agent_secrets(
+#     agent_id: UUID,
+#     *,
+#     limit: int = 100,
+#     offset: int = 0,
+# ) -> list[Secret]:
+#     """List all secrets for an agent.
 
-    Args:
-        agent_id: ID of the agent whose secrets to list
-        limit: Maximum number of secrets to return
-        offset: Number of secrets to skip
+#     Args:
+#         agent_id: ID of the agent whose secrets to list
+#         limit: Maximum number of secrets to return
+#         offset: Number of secrets to skip
 
-    Returns:
-        List of secrets
-    """
-    return await list_secrets_query(
-        agent_id=agent_id,
-        limit=limit,
-        offset=offset,
-    )
+#     Returns:
+#         List of secrets
+#     """
+#     return await list_secrets_query(
+#         agent_id=agent_id,
+#         limit=limit,
+#         offset=offset,
+#     )

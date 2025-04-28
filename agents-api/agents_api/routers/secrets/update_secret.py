@@ -41,30 +41,30 @@ async def update_developer_secret(
     )
 
 
-@router.put("/agents/{agent_id}/secrets/{secret_id}", response_model=Secret)
-async def update_agent_secret(
-    agent_id: UUID,
-    secret_id: UUID,
-    data: UpdateSecretRequest,
-) -> Secret:
-    """Update an agent secret.
+# @router.put("/agents/{agent_id}/secrets/{secret_id}", response_model=Secret)
+# async def update_agent_secret(
+#     agent_id: UUID,
+#     secret_id: UUID,
+#     data: UpdateSecretRequest,
+# ) -> Secret:
+#     """Update an agent secret.
 
-    Args:
-        agent_id: ID of the agent who owns the secret
-        secret_id: ID of the secret to update
-        data: New secret data
+#     Args:
+#         agent_id: ID of the agent who owns the secret
+#         secret_id: ID of the secret to update
+#         data: New secret data
 
-    Returns:
-        The updated secret
+#     Returns:
+#         The updated secret
 
-    Raises:
-        HTTPException: If the secret doesn't exist or doesn't belong to the agent
-    """
-    return await update_secret_query(
-        secret_id=secret_id,
-        agent_id=agent_id,
-        name=data.name,
-        description=data.description,
-        metadata=data.metadata,
-        value=data.value,
-    )
+#     Raises:
+#         HTTPException: If the secret doesn't exist or doesn't belong to the agent
+#     """
+#     return await update_secret_query(
+#         secret_id=secret_id,
+#         agent_id=agent_id,
+#         name=data.name,
+#         description=data.description,
+#         metadata=data.metadata,
+#         value=data.value,
+#     )
