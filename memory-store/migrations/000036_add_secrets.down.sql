@@ -1,7 +1,0 @@
-BEGIN;
-
-DROP FUNCTION IF EXISTS decrypt_secret;
-DROP FUNCTION IF EXISTS encrypt_secret;
-DROP TABLE IF EXISTS secrets;
-
-COMMIT; 
