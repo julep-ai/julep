@@ -170,12 +170,7 @@ class StepContext(BaseModel):
         execution_input = self.execution_input
         task = execution_input.task
         agent_tools = execution_input.agent_tools
-        secrets = {
-            secret.name: secret.value
-            for secret in await list_secrets_query(
-                developer_id=self.execution_input.developer_id
-            )
-        }
+        secrets = {}
 
         step_tools: Literal["all"] | list[ToolRef | CreateToolRequest] = getattr(
             self.current_step,
@@ -194,6 +189,13 @@ class StepContext(BaseModel):
         task_tools = []
         tools = task.tools if task else []
         inherit_tools = task.inherit_tools if task else False
+        if tools:
+            secrets = {
+                secret.name: secret.value
+                for secret in await list_secrets_query(
+                    developer_id=self.execution_input.developer_id
+                )
+            }
         for tool in tools:
             tool_def = tool.model_dump()
             spec = tool_def.pop("spec", {}) or {}
