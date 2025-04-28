@@ -34,7 +34,7 @@ OFFSET $4
 async def list_secrets_query(
     *,
     developer_id: UUID | None,
-    agent_id: UUID | None,
+    agent_id: UUID | None = None,
     limit: int = 100,
     offset: int = 0,
 ) -> tuple[str, list]:
