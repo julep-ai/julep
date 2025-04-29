@@ -9,6 +9,7 @@ from agents_api.activities.execute_api_call import execute_api_call
 from agents_api.activities.execute_integration import execute_integration
 from agents_api.activities.execute_system import execute_system
 from agents_api.activities.task_steps.base_evaluate import base_evaluate
+from agents_api.app import app
 from agents_api.autogen.openapi_model import (
     Agent,
     ApiCallDef,
@@ -57,6 +58,8 @@ from agents_api.workflows.task_execution import TaskExecutionWorkflow
 from aiohttp import test_utils
 from temporalio.exceptions import ApplicationError
 from ward import raises, test
+
+from .fixtures import create_db_pool, pg_dsn
 
 
 @test("task execution workflow: handle function tool call step")
@@ -113,10 +116,11 @@ async def _():
 
 
 @test("task execution workflow: handle integration tool call step")
-async def _():
+async def _(dsn=pg_dsn):
     async def _resp():
         return "integration_tool_call_response"
 
+    app.state.postgres_pool = await create_db_pool(dsn=dsn)
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1")
     execution_input = ExecutionInput(
@@ -182,7 +186,8 @@ async def _():
 
 
 @test("task execution workflow: handle integration tool call step, integration tools not found")
-async def _():
+async def _(dsn=pg_dsn):
+    app.state.postgres_pool = await create_db_pool(dsn=dsn)
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1")
     execution_input = ExecutionInput(
@@ -225,7 +230,8 @@ async def _():
 
 
 @test("task execution workflow: handle api_call tool call step")
-async def _():
+async def _(dsn=pg_dsn):
+    app.state.postgres_pool = await create_db_pool(dsn=dsn)
     async def _resp():
         return "api_call_tool_call_response"
 
@@ -309,7 +315,8 @@ async def _():
 
 
 @test("task execution workflow: handle api_call tool call step with Method Override")
-async def _():
+async def _(dsn=pg_dsn):
+    app.state.postgres_pool = await create_db_pool(dsn=dsn)
     async def _resp():
         return "api_call_tool_call_response"
 
@@ -1588,7 +1595,8 @@ async def _():
 
 
 @test("task execution workflow: evaluate tool call expressions")
-async def _():
+async def _(dsn=pg_dsn):
+    app.state.postgres_pool = await create_db_pool(dsn=dsn)
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
     execution_input = ExecutionInput(
