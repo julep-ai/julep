@@ -14,7 +14,7 @@ DELETE FROM docs d
 WHERE d.developer_id = $1
   AND d.doc_id = $2
   AND EXISTS (
-    SELECT 1 
+    SELECT 1
     FROM doc_owners o
     WHERE o.developer_id = d.developer_id
       AND o.doc_id = d.doc_id
