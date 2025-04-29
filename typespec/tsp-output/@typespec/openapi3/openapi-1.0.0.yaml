@@ -851,6 +851,146 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Jobs.JobStatus'
+  /projects:
+    get:
+      operationId: ProjectsRoute_list
+      description: List Projects (paginated)
+      parameters:
+        - $ref: '#/components/parameters/Common.PaginationOptions.limit'
+        - $ref: '#/components/parameters/Common.PaginationOptions.offset'
+        - $ref: '#/components/parameters/Common.PaginationOptions.sort_by'
+        - $ref: '#/components/parameters/Common.PaginationOptions.direction'
+        - $ref: '#/components/parameters/Common.PaginationOptions.metadata_filter'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Projects.Project'
+                required:
+                  - items
+    post:
+      operationId: ProjectsRoute_create
+      description: Create a new Project
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projects.Project'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Projects.CreateProjectRequest'
+  /projects/{id}:
+    post:
+      operationId: ProjectsRoute_createOrUpdate
+      description: Create or update a Project
+      parameters:
+        - $ref: '#/components/parameters/Projects.CreateOrUpdateProjectRequest.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projects.Project'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Projects.UpdateProjectRequest'
+    put:
+      operationId: ProjectsRoute_update
+      description: Update an existing Project by id (overwrites existing values; use PATCH for merging instead)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projects.Project'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Projects.UpdateProjectRequest'
+    patch:
+      operationId: ProjectsRoute_patch
+      description: Update an existing Project by id (merges with existing values)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projects.Project'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Projects.PatchProjectRequest'
+    delete:
+      operationId: ProjectsRoute_delete
+      description: Delete Project by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+    get:
+      operationId: ProjectsRoute_get
+      description: Get a Project by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projects.Project'
   /responses:
     post:
       operationId: ResponsesRoute_createResponse
@@ -1537,6 +1677,12 @@ components:
           - updated_at
         default: created_at
       explode: false
+    Projects.CreateOrUpdateProjectRequest.id:
+      name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Common.uuid'
     Sessions.CreateOrUpdateSessionRequest.id:
       name: id
       in: path
@@ -4137,6 +4283,110 @@ components:
             - $ref: '#/components/schemas/Jobs.JobState'
           description: Current state of the job
           default: pending
+    Projects.CreateOrUpdateProjectRequest:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          $ref: '#/components/schemas/Common.uuid'
+        metadata:
+          type: object
+          additionalProperties: {}
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the project (unique per developer)
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: Display name of the project
+      allOf:
+        - $ref: '#/components/schemas/Projects.CreateProjectRequest'
+    Projects.CreateProjectRequest:
+      type: object
+      required:
+        - name
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the project (unique per developer)
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: Display name of the project
+      description: Payload for creating a project
+    Projects.PatchProjectRequest:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the project (unique per developer)
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: Display name of the project
+      description: Payload for patching a project
+    Projects.Project:
+      type: object
+      required:
+        - id
+        - created_at
+        - updated_at
+        - name
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          readOnly: true
+        metadata:
+          type: object
+          additionalProperties: {}
+        created_at:
+          type: string
+          format: date-time
+          description: When this resource was created as UTC date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          description: When this resource was updated as UTC date-time
+          readOnly: true
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the project (unique per developer)
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: Display name of the project
+      description: Project model
+    Projects.UpdateProjectRequest:
+      type: object
+      required:
+        - name
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+        canonical_name:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Canonical name of the project (unique per developer)
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Common.displayName'
+          description: Display name of the project
+      description: Payload for updating a project
     Responses.BaseTool:
       type: object
       required:
