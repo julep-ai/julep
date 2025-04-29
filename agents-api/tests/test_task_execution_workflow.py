@@ -232,6 +232,7 @@ async def _(dsn=pg_dsn):
 @test("task execution workflow: handle api_call tool call step")
 async def _(dsn=pg_dsn):
     app.state.postgres_pool = await create_db_pool(dsn=dsn)
+
     async def _resp():
         return "api_call_tool_call_response"
 
@@ -317,6 +318,7 @@ async def _(dsn=pg_dsn):
 @test("task execution workflow: handle api_call tool call step with Method Override")
 async def _(dsn=pg_dsn):
     app.state.postgres_pool = await create_db_pool(dsn=dsn)
+
     async def _resp():
         return "api_call_tool_call_response"
 
