@@ -6,40 +6,62 @@ It includes functions to construct and execute SQL queries for inserting new age
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import Agent, CreateAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
 from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
+from ..projects.project_exists import project_exists
 
-# Define the raw SQL query
+# Define the raw SQL query for creating the agent
 agent_query = """
-INSERT INTO agents (
-    developer_id,
-    agent_id,
-    canonical_name,
-    name,
-    about,
-    instructions,
-    model,
-    metadata,
-    default_settings,
-    default_system_template
+WITH new_agent AS (
+    INSERT INTO agents (
+        developer_id,
+        agent_id,
+        canonical_name,
+        name,
+        about,
+        instructions,
+        model,
+        metadata,
+        default_settings,
+        default_system_template
+    )
+    VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10
+    )
+    RETURNING *
+), proj AS (
+    -- Find project ID by canonical name
+    SELECT project_id, canonical_name
+    FROM projects
+    WHERE developer_id = $1 AND canonical_name = $11
+), project_association AS (
+    -- Create project association if project exists
+    INSERT INTO project_agents (project_id, developer_id, agent_id)
+    SELECT p.project_id, $1, $2
+    FROM proj p
+    WHERE p.project_id IS NOT NULL
+    ON CONFLICT (project_id, agent_id) DO NOTHING
+    RETURNING 1
 )
-VALUES (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    $7,
-    $8,
-    $9,
-    $10
-)
-RETURNING *;
+SELECT 
+    a.*,
+    p.canonical_name AS project
+FROM new_agent a
+LEFT JOIN proj p ON TRUE;
 """
 
 
@@ -70,6 +92,13 @@ async def create_agent(
         tuple[str, dict]: SQL query and parameters for creating the agent.
     """
     agent_id = agent_id or uuid7()
+    project_canonical_name = data.project or "default"
+    
+    # First check if the project exists
+    project_exists_result = await project_exists(developer_id, project_canonical_name)
+
+    if not project_exists_result[0]["project_exists"]:
+        raise HTTPException(status_code=404, detail=f"Project '{project_canonical_name}' not found")
 
     # Ensure instructions is a list
     data.instructions = (
@@ -94,6 +123,7 @@ async def create_agent(
         data.metadata,
         default_settings,
         data.default_system_template,
+        project_canonical_name,
     ]
 
     return (

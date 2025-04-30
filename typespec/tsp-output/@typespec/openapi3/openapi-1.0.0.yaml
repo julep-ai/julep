@@ -1735,6 +1735,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the agent
         canonical_name:
           allOf:
             - $ref: '#/components/schemas/Common.canonicalName'
@@ -1828,6 +1832,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the agent
         canonical_name:
           allOf:
             - $ref: '#/components/schemas/Common.canonicalName'
@@ -1925,6 +1933,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the agent
         canonical_name:
           allOf:
             - $ref: '#/components/schemas/Common.canonicalName'
@@ -2034,6 +2046,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the agent
         canonical_name:
           allOf:
             - $ref: '#/components/schemas/Common.canonicalName'
@@ -2128,6 +2144,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.displayName'
           description: Name of the agent
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the agent
         canonical_name:
           allOf:
             - $ref: '#/components/schemas/Common.canonicalName'
