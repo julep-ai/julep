@@ -18,7 +18,7 @@ query = """
         description = COALESCE($5, description),
         metadata = COALESCE($6, metadata),
         value_encrypted = CASE
-            WHEN $7 IS NOT NULL THEN encrypt_secret($7, $8)
+            WHEN $7::text IS NOT NULL THEN encrypt_secret($7::text, $8)
             ELSE value_encrypted
         END
     WHERE secret_id = $1
@@ -34,7 +34,7 @@ query = """
 @wrap_in_class(
     Secret,
     one=True,
-    transform=lambda d: {**d, "id": d["secret_id"]},
+    transform=lambda d: {**d, "id": d["secret_id"], "value": "ENCRYPTED"},
 )
 @query_metrics("update_secret")
 @pg_query

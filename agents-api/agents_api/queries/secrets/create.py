@@ -30,19 +30,19 @@ RETURNING *;
 @wrap_in_class(
     Secret,
     one=True,
-    transform=lambda d: {**d, "id": d["secret_id"]},
+    transform=lambda d: {**d, "id": d["secret_id"], "value": "ENCRYPTED"},
 )
 @query_metrics("create_secret")
 @pg_query
 @beartype
 async def create_secret(
     *,
-    secret_id: UUID | None = None,
-    developer_id: UUID | None = None,
-    agent_id: UUID | None = None,
+    developer_id: UUID,
+    agent_id: UUID,
     name: str,
-    description: str | None = None,
     value: str,
+    secret_id: UUID | None = None,
+    description: str | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> tuple[str, list]:
     """
