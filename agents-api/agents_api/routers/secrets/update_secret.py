@@ -5,19 +5,19 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from ...autogen.openapi_model import UpdateSecretRequest, UpdateSecretResponse
+from ...autogen.openapi_model import Secret, UpdateSecretRequest
 from ...dependencies.developer_id import get_developer_id
 from ...queries.secrets import update_secret as update_secret_query
 from .router import router
 
 
-@router.put("/secrets/{secret_id}", response_model=UpdateSecretResponse)
+@router.put("/secrets/{secret_id}", tags=["secrets"])
 async def update_developer_secret(
     *,
     secret_id: UUID,
     data: UpdateSecretRequest,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
-) -> UpdateSecretResponse:
+) -> Secret:
     """Update a developer secret.
 
     Args:

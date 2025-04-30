@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
+from starlette.status import HTTP_202_ACCEPTED
 
 from agents_api.autogen.openapi_model import ResourceDeletedResponse
 
@@ -12,7 +13,12 @@ from ...queries.secrets import delete_secret as delete_secret_query
 from .router import router
 
 
-@router.delete("/secrets/{secret_id}", response_model=ResourceDeletedResponse)
+@router.delete(
+    "/secrets/{secret_id}",
+    response_model=ResourceDeletedResponse,
+    status_code=HTTP_202_ACCEPTED,
+    tags=["secrets"],
+)
 async def delete_developer_secret(
     *,
     secret_id: UUID,

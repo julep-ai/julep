@@ -11,7 +11,7 @@ from ...queries.secrets import list_secrets as list_secrets_query
 from .router import router
 
 
-@router.get("/secrets", response_model=list[Secret])
+@router.get("/secrets", response_model=list[Secret], tags=["secrets"])
 async def list_developer_secrets(
     *,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],

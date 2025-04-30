@@ -4,20 +4,21 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
+from starlette.status import HTTP_201_CREATED
 
-from agents_api.autogen.openapi_model import CreateSecretRequest, CreateSecretResponse
+from agents_api.autogen.openapi_model import CreateSecretRequest, Secret
 
 from ...dependencies.developer_id import get_developer_id
 from ...queries.secrets import create_secret as create_secret_query
 from .router import router
 
 
-@router.post("/secrets", response_model=CreateSecretResponse)
+@router.post("/secrets", status_code=HTTP_201_CREATED, tags=["secrets"])
 async def create_developer_secret(
     *,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     secret: CreateSecretRequest,
-) -> CreateSecretResponse:
+) -> Secret:
     """Create a new secret for a developer.
 
     Args:
