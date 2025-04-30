@@ -3,7 +3,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 
 from agents_api.autogen.openapi_model import CreateSecretRequest, CreateSecretResponse
 
