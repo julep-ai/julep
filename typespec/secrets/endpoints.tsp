@@ -15,12 +15,12 @@ namespace Secrets;
 
 interface DeveloperSecretsEndpoints
     extends ChildLimitOffsetPagination<Secret, "List secrets (paginated)">,
-        ChildCreateEndpoint<CreateSecretRequest, Secret, "Create a new secret">,
-        ChildUpdateEndpoint<UpdateSecretRequest, Secret, "Update an existing secret by id (overwrites existing values)">,
+        ChildCreateEndpoint<CreateSecretRequest, CreateSecretResponse, "Create a new secret">,
+        ChildUpdateEndpoint<UpdateSecretRequest, UpdateSecretResponse, "Update an existing secret by id (overwrites existing values)">,
         ChildDeleteEndpoint<"Delete a secret by id"> {}
 
 interface AgentSecretsEndpoints
     extends ChildLimitOffsetPagination<Secret, "List secrets (paginated)">,
-        ChildCreateEndpoint<CreateSecretRequest, Secret, "Create a new secret">,
-        ChildUpdateEndpoint<UpdateSecretRequest, Secret, "Update an existing secret by id (overwrites existing values)">,
+        ChildCreateEndpoint<CreateSecretRequest, CreateSecretResponse, "Create a new secret">,
+        ChildUpdateEndpoint<UpdateSecretRequest, UpdateSecretResponse, "Update an existing secret by id (overwrites existing values)">,
         ChildDeleteEndpoint<"Delete a secret by id"> {}

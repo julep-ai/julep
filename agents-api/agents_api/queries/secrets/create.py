@@ -15,10 +15,12 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 query = """
 INSERT INTO secrets (
-    id, developer_id, agent_id, name, description, value_encrypted, metadata
+    secret_id, developer_id, agent_id, name, description, value_encrypted, metadata
 )
 VALUES (
-    $1, $2, $3, $4, $5, encrypt_secret($6, $7), $8
+    $1, $2, $3, $4, $5,
+    (SELECT encrypt_secret($6::text, $7::text)),
+    $8
 )
 RETURNING *;
 """

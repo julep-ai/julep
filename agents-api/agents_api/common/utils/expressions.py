@@ -41,15 +41,19 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
             if activity.in_activity():
                 activity.logger.error(f"Error in base_evaluate: {evaluate_error}\n")
             raise evaluate_error from e
-    elif isinstance(expr, int | bool | float):
+    elif isinstance(expr, int | bool | float) or expr is None:
         return expr
     elif isinstance(expr, list):
         return [_recursive_evaluate(e, evaluator) for e in expr]
     elif isinstance(expr, dict):
         return {k: _recursive_evaluate(v, evaluator) for k, v in expr.items()}
     else:
-        msg = f"Invalid expression: {expr}"
-        raise ValueError(msg)
+        try:
+            str_expr = str(expr)
+            return _recursive_evaluate(str_expr, evaluator)
+        except Exception:
+            msg = f"Invalid expression: {expr}"
+            raise ValueError(msg)
 
 
 @beartype

@@ -12,10 +12,8 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 query = """
     DELETE FROM secrets
     WHERE secret_id = $1
-    AND (
-        ($2 IS NOT NULL AND developer_id = $2) OR
-        ($3 IS NOT NULL AND agent_id = $3)
-    )
+    AND developer_id = $2
+    AND ($3::UUID IS NULL OR agent_id = $3)
     RETURNING *;
 """
 
