@@ -10,13 +10,12 @@ from beartype import beartype
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions
 
-
 # Define the raw SQL query for checking project existence
 check_project_query = """
-SELECT 
-    CASE 
+SELECT
+    CASE
         WHEN EXISTS (
-            SELECT 1 FROM projects 
+            SELECT 1 FROM projects
             WHERE developer_id = $1 AND canonical_name = $2
         ) THEN
             TRUE
@@ -30,7 +29,4 @@ SELECT
 @pg_query
 @beartype
 async def project_exists(developer_id: UUID, canonical_name: str) -> tuple[str, list]:
-    return (
-        check_project_query,
-        [developer_id, canonical_name]
-    )
+    return (check_project_query, [developer_id, canonical_name])

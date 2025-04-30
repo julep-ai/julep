@@ -32,11 +32,11 @@ SELECT
     a.created_at,
     a.updated_at,
     p.canonical_name AS project
-FROM 
+FROM
     agents a
 LEFT JOIN project_agents pa ON a.agent_id = pa.agent_id AND a.developer_id = pa.developer_id
 LEFT JOIN projects p ON pa.project_id = p.project_id AND pa.developer_id = p.developer_id
-WHERE 
+WHERE
     a.developer_id = $1 {metadata_filter_query}
 ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN a.created_at END ASC NULLS LAST,

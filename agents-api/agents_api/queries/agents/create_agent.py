@@ -12,8 +12,8 @@ from uuid_extensions import uuid7
 from ...autogen.openapi_model import Agent, CreateAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
-from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 from ..projects.project_exists import project_exists
+from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query for creating the agent
 agent_query = """
@@ -57,7 +57,7 @@ WITH new_agent AS (
     ON CONFLICT (project_id, agent_id) DO NOTHING
     RETURNING 1
 )
-SELECT 
+SELECT
     a.*,
     p.canonical_name AS project
 FROM new_agent a
@@ -93,12 +93,14 @@ async def create_agent(
     """
     agent_id = agent_id or uuid7()
     project_canonical_name = data.project or "default"
-    
+
     # First check if the project exists
     project_exists_result = await project_exists(developer_id, project_canonical_name)
 
     if not project_exists_result[0]["project_exists"]:
-        raise HTTPException(status_code=404, detail=f"Project '{project_canonical_name}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Project '{project_canonical_name}' not found"
+        )
 
     # Ensure instructions is a list
     data.instructions = (
