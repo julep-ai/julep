@@ -187,7 +187,7 @@ def _validate_master_key(key: str | None) -> str:
     return key
 
 
-secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY", default=None))
+secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY", default="s" * 32))
 
 # Consolidate environment variables
 environment: dict[str, Any] = {
