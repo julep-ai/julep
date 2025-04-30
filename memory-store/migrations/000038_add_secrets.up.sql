@@ -3,8 +3,8 @@ BEGIN;
 -- Create secrets table with encryption at rest
 CREATE TABLE IF NOT EXISTS secrets (
     secret_id UUID NOT NULL,
-    developer_id UUID NULL,
-    agent_id UUID NULL,
+    developer_id UUID NOT NULL,
+    agent_id UUID NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     value_encrypted BYTEA NOT NULL,
@@ -14,8 +14,7 @@ CREATE TABLE IF NOT EXISTS secrets (
     CONSTRAINT pk_secrets PRIMARY KEY (developer_id, agent_id, secret_id),
     CONSTRAINT uq_secrets_unique UNIQUE(developer_id, agent_id, name),
     CONSTRAINT ct_secrets_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object'),
-    CONSTRAINT ct_secrets_canonical_name_valid_identifier CHECK (name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
-    CONSTRAINT ct_secrets_owner_not_null CHECK (developer_id IS NOT NULL OR agent_id IS NOT NULL)
+    CONSTRAINT ct_secrets_canonical_name_valid_identifier CHECK (name ~ '^[a-zA-Z][a-zA-Z0-9_]*$')
 );
 
 -- Add indexes
