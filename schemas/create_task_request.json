@@ -6804,6 +6804,23 @@
       "title": "JobStatus",
       "type": "object"
     },
+    "ListModelsResponse": {
+      "description": "Response for the list models endpoint",
+      "properties": {
+        "models": {
+          "items": {
+            "$ref": "#/$defs/ModelInfo"
+          },
+          "title": "Models",
+          "type": "array"
+        }
+      },
+      "required": [
+        "models"
+      ],
+      "title": "ListModelsResponse",
+      "type": "object"
+    },
     "ListResponse_Agent_": {
       "properties": {
         "items": {
@@ -8100,6 +8117,20 @@
       "additionalProperties": true,
       "properties": {},
       "title": "MetadataFilter",
+      "type": "object"
+    },
+    "ModelInfo": {
+      "description": "Model information returned by the model list endpoint",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "ModelInfo",
       "type": "object"
     },
     "MultipleChatOutput": {

@@ -40,4 +40,18 @@ model CreateSecretRequest {
     ...UpdateSecretRequest;
 }
 
+@withVisibility("create")
+model CreateSecretResponse {
+    ...Secret;
+    /** The encrypted value of the secret */
+    value_encrypted: bytes;
+}
+
+@withVisibility("create", "update")
+model UpdateSecretResponse {
+    ...Secret;
+    /** The encrypted value of the secret */
+    value_encrypted: bytes;
+}
+
 model PatchSecretRequest is UpdateSecretRequest {}

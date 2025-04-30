@@ -36,6 +36,37 @@ class CreateSecretRequest(BaseModel):
     """
 
 
+class CreateSecretResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    metadata: dict[str, Any] | None = None
+    developer_id: UUID | None = None
+    """
+    ID of the developer who owns this secret
+    """
+    agent_id: UUID | None = None
+    """
+    ID of the agent this secret is associated with (optional)
+    """
+    name: str
+    """
+    Name of the secret
+    """
+    description: str | None = None
+    """
+    Description of what the secret is used for
+    """
+    value: str
+    """
+    The decrypted secret value
+    """
+    value_encrypted: str
+    """
+    The encrypted value of the secret
+    """
+
+
 class Secret(BaseModel):
     """
     A secret that can be used in tasks and sessions
@@ -76,5 +107,7 @@ class Secret(BaseModel):
     """
 
 
-class UpdateSecretRequest(CreateSecretRequest):
-    pass
+UpdateSecretRequest = CreateSecretRequest
+
+
+UpdateSecretResponse = CreateSecretResponse
