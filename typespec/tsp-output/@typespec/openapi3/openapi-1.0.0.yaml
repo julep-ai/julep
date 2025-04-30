@@ -9391,11 +9391,6 @@ components:
           description: The specific method of the integration to call
         setup:
           description: The setup parameters the integration accepts
-        secrets:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/Tools.SecretRef'
-          description: Secret references to use in templates (available only at setup time, not during execution)
         arguments:
           description: The arguments to pre-apply to the integration call
       discriminator:
@@ -9443,11 +9438,6 @@ components:
           description: The specific method of the integration to call
         setup:
           description: The setup parameters the integration accepts
-        secrets:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/Tools.SecretRefUpdate'
-          description: Secret references to use in templates (available only at setup time, not during execution)
         arguments:
           description: The arguments to pre-apply to the integration call
       discriminator:

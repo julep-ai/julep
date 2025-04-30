@@ -388,10 +388,6 @@ class BaseIntegrationDef(BaseModel):
     """
     The setup parameters the integration accepts
     """
-    secrets: dict[str, SecretRef] | None = None
-    """
-    Secret references to use in templates (available only at setup time, not during execution)
-    """
     arguments: Any | None = None
     """
     The arguments to pre-apply to the integration call
@@ -437,10 +433,6 @@ class BaseIntegrationDefUpdate(BaseModel):
     """
     The setup parameters the integration accepts
     """
-    secrets: dict[str, SecretRefUpdate] | None = None
-    """
-    Secret references to use in templates (available only at setup time, not during execution)
-    """
     arguments: Any | None = None
     """
     The arguments to pre-apply to the integration call
@@ -455,8 +447,7 @@ class Bash20241022Def(BaseModel):
     name: str = "bash"
 
 
-class Bash20241022DefUpdate(Bash20241022Def):
-    pass
+Bash20241022DefUpdate = Bash20241022Def
 
 
 class BraveIntegrationDef(BaseIntegrationDef):
@@ -675,12 +666,10 @@ class BrowserbaseGetSessionArgumentsUpdate(BaseModel):
     id: str | None = None
 
 
-class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
-    pass
+BrowserbaseGetSessionLiveUrlsArguments = BrowserbaseGetSessionArguments
 
 
-class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(BrowserbaseGetSessionArgumentsUpdate):
-    pass
+BrowserbaseGetSessionLiveUrlsArgumentsUpdate = BrowserbaseGetSessionArgumentsUpdate
 
 
 class BrowserbaseListSessionsArguments(BaseModel):
@@ -1004,10 +993,7 @@ class Computer20241022Def(BaseModel):
     """
 
 
-class Computer20241022DefUpdate(Computer20241022Def):
-    """
-    Anthropic new tools
-    """
+Computer20241022DefUpdate = Computer20241022Def
 
 
 class CreateToolRequest(BaseModel):
@@ -2132,8 +2118,7 @@ class TextEditor20241022Def(BaseModel):
     name: str = "str_replace_editor"
 
 
-class TextEditor20241022DefUpdate(TextEditor20241022Def):
-    pass
+TextEditor20241022DefUpdate = TextEditor20241022Def
 
 
 class Tool(BaseModel):

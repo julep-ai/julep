@@ -101,9 +101,6 @@ model BaseIntegrationDef {
     /** The setup parameters the integration accepts */
     setup?: unknown;
 
-    /** Secret references to use in templates (available only at setup time, not during execution) */
-    secrets?: Record<SecretRef>;
-
     /** The arguments to pre-apply to the integration call */
     arguments?: unknown;
 }

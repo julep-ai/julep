@@ -388,10 +388,6 @@ class BaseIntegrationDef(BaseModel):
     """
     The setup parameters the integration accepts
     """
-    secrets: dict[str, SecretRef] | None = None
-    """
-    Secret references to use in templates (available only at setup time, not during execution)
-    """
     arguments: Any | None = None
     """
     The arguments to pre-apply to the integration call
@@ -436,10 +432,6 @@ class BaseIntegrationDefUpdate(BaseModel):
     setup: Any | None = None
     """
     The setup parameters the integration accepts
-    """
-    secrets: dict[str, SecretRefUpdate] | None = None
-    """
-    Secret references to use in templates (available only at setup time, not during execution)
     """
     arguments: Any | None = None
     """
