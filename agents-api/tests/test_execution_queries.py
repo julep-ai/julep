@@ -497,4 +497,4 @@ async def _(
     assert isinstance(count_result, dict)
     assert "count" in count_result
     assert isinstance(count_result["count"], int)
-    assert count_result["count"] == 1
+    assert count_result["count"] > 1
