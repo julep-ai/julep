@@ -6,6 +6,7 @@ import asyncio
 import logging
 from collections.abc import Callable
 from typing import Any, cast
+from uuid import UUID
 
 import sentry_sdk
 import uvicorn
@@ -16,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
 from pydantic import ValidationError
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 from temporalio.service import RPCError
 
 from .app import app
@@ -23,7 +25,7 @@ from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
 from .env import enable_responses, sentry_dsn
 from .exceptions import PromptTooBigError
-from .middleware import ActiveDeveloperMiddleware
+from .queries.developers.get_developer import get_developer
 from .routers import (
     agents,
     docs,
@@ -281,8 +283,65 @@ else:
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(healthz.router)
 
+
 # Add middleware for active developer check
-app.add_middleware(ActiveDeveloperMiddleware)
+@app.middleware("http")
+async def check_active_developer(request: Request, call_next):
+    """
+    Process the request and check if the developer is active.
+
+    Args:
+        request: The incoming request
+        call_next: The next middleware or endpoint handler
+
+    Returns:
+        The response from the next middleware or endpoint
+    """
+    skip_prefixes = [
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/healthz",
+    ]
+
+    if any(request.url.path.startswith(prefix) for prefix in skip_prefixes):
+        return await call_next(request)
+
+    # Skip in single-tenant mode
+    # if not multi_tenant_mode:
+    #     return await call_next(request)
+
+    # Get the X-Developer-Id header
+    developer_id_header = request.headers.get("X-Developer-Id")
+    if not developer_id_header:
+        return await call_next(request)  # Let it fail at the route level if required
+
+    try:
+        # Convert to UUID
+        developer_id = UUID(developer_id_header)
+        try:
+            # The get_developer function already filters on active=true
+            await get_developer(developer_id=developer_id)
+            # If no exception, developer is active
+        except HTTPException as e:
+            if e.status_code in (HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST):
+                # Developer not found or not active
+                return JSONResponse(
+                    content={
+                        "error": {
+                            "message": "Invalid developer account",
+                            "code": "invalid_developer_account",
+                        }
+                    },
+                    status_code=HTTP_403_FORBIDDEN,
+                )
+            raise e
+        # Continue processing the request
+        return await call_next(request)
+    except ValueError:
+        # Invalid UUID format - let it fail at the route level if auth is required
+        return await call_next(request)
+
 
 # TODO: CORS should be enabled only for JWT auth
 #
