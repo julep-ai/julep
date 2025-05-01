@@ -23,6 +23,7 @@ from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
 from .env import enable_responses, sentry_dsn
 from .exceptions import PromptTooBigError
+from .middleware import ActiveDeveloperMiddleware
 from .routers import (
     agents,
     docs,
@@ -279,6 +280,10 @@ else:
     app.include_router(internal.router)
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(healthz.router)
+
+# Add middleware for active developer check
+app.add_middleware(ActiveDeveloperMiddleware)
+
 # TODO: CORS should be enabled only for JWT auth
 #
 app.add_middleware(
