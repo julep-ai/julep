@@ -3,23 +3,31 @@ This module contains tests for entry queries against the CozoDB database.
 It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
 """
 
+from unittest.mock import MagicMock, patch
+
+from agents_api.app import app
 from agents_api.autogen.openapi_model import (
     CreateEntryRequest,
+    CreateSessionRequest,
     Entry,
     History,
 )
 from agents_api.clients.pg import create_db_pool
+from agents_api.env import max_free_entries
 from agents_api.queries.entries import (
     create_entries,
     delete_entries,
     get_history,
     list_entries,
 )
+from agents_api.queries.entries.count_entries import count_entries
+from agents_api.queries.sessions.create_session import create_session
+from agents_api.routers.sessions.render import render_chat_input
 from fastapi import HTTPException
 from uuid_extensions import uuid7
 from ward import raises, test
 
-from tests.fixtures import pg_dsn, test_developer, test_developer_id, test_session
+from tests.fixtures import pg_dsn, test_agent, test_developer, test_developer_id, test_session
 
 MODEL = "gpt-4o-mini"
 
@@ -261,3 +269,88 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert all(id not in [entry.id for entry in result] for id in entry_ids)
     assert len(result) == 0
     assert result is not None
+
+
+@test("render: free tier entry limit exceeded")
+async def _(session=test_session, dsn=pg_dsn):
+    """Test that a free tier user cannot exceed the maximum number of entries."""
+
+    pool = await create_db_pool(dsn=dsn)
+    app.state.postgres_pool = pool
+
+    # Create a mock developer without the "paid" tag
+    mock_developer = MagicMock()
+    mock_developer.id = uuid7()
+    mock_developer.tags = []
+
+    # Create a mock chat input
+    mock_chat_input = MagicMock()
+
+    # Mock the count_entries function to return a count exceeding the free tier limit
+    with (
+        patch("agents_api.routers.sessions.render.count_entries") as mock_count_entries,
+        patch("agents_api.routers.sessions.render.count_sessions_query") as mock_count_sessions,
+    ):
+        # Set up mock return values
+        mock_count_sessions.return_value = {"count": 10}  # Below the session limit
+        mock_count_entries.return_value = {
+            "count": max_free_entries + 1
+        }  # Exceed the entry limit
+
+        # Attempt to render chat input which should trigger the free tier limit check
+        with raises(HTTPException) as exc_info:
+            await render_chat_input(
+                developer=mock_developer,
+                session_id=session.id,
+                chat_input=mock_chat_input,
+            )
+
+        # Verify the correct exception is raised
+        assert exc_info.raised.status_code == 403
+        assert exc_info.raised.detail == "Entry count exceeded the free tier limit"
+
+        # Verify our mocks were called with the correct parameters
+        mock_count_entries.assert_called_once_with(developer_id=mock_developer.id)
+
+
+@test("query: count entries by developer")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+    # Create a test session first
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            name="Test Session",
+            description="Test session for counting entries",
+            metadata={"test": True},
+            agent=agent.id,
+        ),
+        connection_pool=pool,
+    )
+
+    # Create a test entry in the session
+    await create_entries(
+        developer_id=developer_id,
+        session_id=session.id,
+        data=[
+            CreateEntryRequest(
+                content="Test entry content",
+                role="user",
+                metadata={"test": True},
+                source="api_request",
+                tokenizer="gpt-4o-mini",
+                token_count=10,
+            )
+        ],
+        connection_pool=pool,
+    )
+    count_result = await count_entries(
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
+
+    assert count_result is not None
+    assert isinstance(count_result, dict)
+    assert "count" in count_result
+    assert isinstance(count_result["count"], int)
+    assert count_result["count"] > 1
