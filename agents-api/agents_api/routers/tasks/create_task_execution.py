@@ -139,7 +139,7 @@ async def create_task_execution(
     # check if the developer is paid
     if "paid" not in developer.tags:
         # Check execution count
-        executions = await count_executions_query(developer_id=x_developer_id, task_id=task_id)
+        executions = await count_executions_query(developer_id=x_developer_id)
         execution_count = executions["count"]
         if execution_count > max_free_executions:
             raise HTTPException(
