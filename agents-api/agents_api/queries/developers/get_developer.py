@@ -11,7 +11,7 @@ from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 developer_query = """
-SELECT * FROM developers WHERE developer_id = $1 -- developer_id
+SELECT * FROM developers WHERE developer_id = $1 and active = true
 """
 
 
