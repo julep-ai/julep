@@ -13,9 +13,10 @@ from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
-from ...env import max_free_sessions
+from ...env import max_free_entries, max_free_sessions
 from ...queries.chat.gather_messages import gather_messages
 from ...queries.chat.prepare_chat_context import prepare_chat_context
+from ...queries.entries.count_entries import count_entries
 from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from ..utils.model_validation import validate_model
 from .router import router
@@ -61,13 +62,22 @@ async def render_chat_input(
 ) -> tuple[list[dict], list[DocReference], list[dict] | None, dict, list[dict], ChatContext]:
     # check if the developer is paid
     if "paid" not in developer.tags:
-        # get the session length
+        # Check session count
         sessions = await count_sessions_query(developer_id=developer.id)
-        session_length = sessions["count"]
-        if session_length > max_free_sessions:
+        session_count = sessions["count"]
+        if session_count > max_free_sessions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Session length exceeded the free tier limit",
+                detail="Session count exceeded the free tier limit",
+            )
+
+        # Check entries count
+        entries = await count_entries(developer_id=developer.id)
+        entry_count = entries["count"]
+        if entry_count > max_free_entries:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Entry count exceeded the free tier limit",
             )
 
     # First get the chat context

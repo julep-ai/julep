@@ -20,10 +20,13 @@ from ...clients.temporal import run_task_execution_workflow
 from ...common.protocol.developers import Developer
 from ...common.protocol.models import task_to_spec
 from ...dependencies.developer_id import get_developer_id
-from ...env import max_free_executions
+from ...env import max_free_executions, max_free_transitions
 from ...queries.developers.get_developer import get_developer
 from ...queries.executions.count_executions import (
     count_executions as count_executions_query,
+)
+from ...queries.executions.count_transitions import (
+    count_transitions as count_transitions_query,
 )
 from ...queries.executions.create_execution import (
     create_execution as create_execution_query,
@@ -135,13 +138,22 @@ async def create_task_execution(
 
     # check if the developer is paid
     if "paid" not in developer.tags:
+        # Check execution count
         executions = await count_executions_query(developer_id=x_developer_id, task_id=task_id)
-
         execution_count = executions["count"]
         if execution_count > max_free_executions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Execution count exceeded the free tier limit",
+            )
+
+        # Check transitions count
+        transitions = await count_transitions_query(developer_id=x_developer_id)
+        transition_count = transitions["count"]
+        if transition_count > max_free_transitions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Transition count exceeded the free tier limit",
             )
 
     execution, handle = await start_execution(

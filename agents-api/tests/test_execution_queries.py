@@ -7,6 +7,7 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.executions.count_executions import count_executions
+from agents_api.queries.executions.count_transitions import count_transitions
 from agents_api.queries.executions.create_execution import create_execution
 from agents_api.queries.executions.create_execution_transition import (
     create_execution_transition,
@@ -443,3 +444,57 @@ async def _(
     assert result.status == "failed"
     assert result.error == "Something went wrong"
     assert result.transition_count == 2  # init + error
+
+
+@test("query: count transitions by developer")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a new execution for testing transitions
+    execution = await create_execution(
+        developer_id=developer_id,
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "transition_count_test"}),
+        connection_pool=pool,
+    )
+
+    # Create a workflow handle for temporal lookup
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="transition_count_test",
+    )
+    await create_temporal_lookup(
+        execution_id=execution.id,
+        workflow_handle=workflow_handle,
+        connection_pool=pool,
+    )
+
+    # Create a test transition
+    scope_id = uuid7()
+    await create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="init",
+            output={"result": "initialization"},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
+            next={"workflow": "main", "step": 0, "scope_id": scope_id},
+        ),
+        connection_pool=pool,
+    )
+
+    # Get transition count
+    count_result = await count_transitions(
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
+
+    assert count_result is not None
+    assert isinstance(count_result, dict)
+    assert "count" in count_result
+    assert isinstance(count_result["count"], int)
+    assert count_result["count"] == 1

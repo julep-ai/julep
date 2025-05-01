@@ -8,9 +8,11 @@ in the TimescaleDB database. This includes operations for:
 - Deleting executions
 - Retrieving execution history
 - Listing executions with filtering and pagination
+- Counting executions and transitions
 """
 
 from .count_executions import count_executions
+from .count_transitions import count_transitions
 from .create_execution import create_execution
 from .create_execution_transition import create_execution_transition
 from .get_execution import get_execution
@@ -22,6 +24,7 @@ from .prepare_execution_input import prepare_execution_input
 
 __all__ = [
     "count_executions",
+    "count_transitions",
     "create_execution",
     "create_execution_transition",
     "get_execution",
