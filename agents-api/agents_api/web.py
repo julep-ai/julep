@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
 from pydantic import ValidationError
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 from temporalio.service import RPCError
 
 from .app import app
@@ -307,10 +307,6 @@ async def check_active_developer(request: Request, call_next):
     if any(request.url.path.startswith(prefix) for prefix in skip_prefixes):
         return await call_next(request)
 
-    # Skip in single-tenant mode
-    # if not multi_tenant_mode:
-    #     return await call_next(request)
-
     # Get the X-Developer-Id header
     developer_id_header = request.headers.get("X-Developer-Id")
     if not developer_id_header:
@@ -319,27 +315,33 @@ async def check_active_developer(request: Request, call_next):
     try:
         # Convert to UUID
         developer_id = UUID(developer_id_header)
-        try:
-            # The get_developer function already filters on active=true
-            await get_developer(developer_id=developer_id)
-            # If no exception, developer is active
-        except HTTPException as e:
-            if e.status_code in (HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST):
-                # Developer not found or not active
-                return JSONResponse(
-                    content={
-                        "error": {
-                            "message": "Invalid developer account",
-                            "code": "invalid_developer_account",
-                        }
-                    },
-                    status_code=HTTP_403_FORBIDDEN,
-                )
-            raise e
-        # Continue processing the request
-        return await call_next(request)
+        # The get_developer function already filters on active=true
+        await get_developer(developer_id=developer_id)
+        # If no exception, developer is active
+    except HTTPException as e:
+        if e.status_code == HTTP_404_NOT_FOUND:
+            # Developer not found or not active
+            return JSONResponse(
+                content={
+                    "error": {
+                        "message": "Invalid developer account",
+                        "code": "invalid_developer_account",
+                    }
+                },
+                status_code=HTTP_403_FORBIDDEN,
+            )
+
+        return JSONResponse(
+            content={
+                "error": {
+                    "message": e.detail,
+                    "code": f"http_{e.status_code}",
+                    "type": "http_error",
+                }
+            },
+            status_code=e.status_code,
+        )
     except ValueError:
-        # Invalid UUID format - let it fail at the route level if auth is required
         return await call_next(request)
 
 
