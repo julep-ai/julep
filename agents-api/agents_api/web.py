@@ -305,34 +305,55 @@ async def usage_check_middleware(request: Request, call_next):
 
     try:
         developer_id = UUID(developer_id_str)
-        try:
-            user_cost_data = await get_user_cost(developer_id=developer_id)
-        except HTTPException as e:
-            if e.status_code == status.HTTP_404_NOT_FOUND:
-                return invalid_account_error
-
-            raise e
-        except asyncpg.NoDataFoundError:
-            return invalid_account_error
+        user_cost_data: dict = await get_user_cost(developer_id=developer_id)
 
         # Check if user is active
         if not user_cost_data.get("active", False):
             return invalid_account_error
+        
+        if request.method == "GET":
+            return await call_next(request)
 
-        # Check usage limits for non-GET requests
-        if request.method != "GET":
-            user_cost = float(user_cost_data.get("cost", None) or None)
+        # Skip cost check for users with "paid" tag
+        user_tags = user_cost_data.get("tags", []) or []
+        if not isinstance(user_tags, list):
+            user_tags = []
+            
+        if "paid" in user_tags:
+            return await call_next(request)
 
-            if user_cost is None or user_cost > free_tier_cost_limit:
-                return JSONResponse(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    content={
-                        "error": {
-                            "message": "Cost limit exceeded",
-                            "code": "cost_limit_exceeded",
-                        }
-                    },
-                )
+        user_cost = user_cost_data.get("cost")
+
+        if user_cost is None or float(user_cost) > free_tier_cost_limit:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "error": {
+                        "message": "Cost limit exceeded",
+                        "code": "cost_limit_exceeded",
+                    }
+                },
+            )
+    except HTTPException as e:
+            if e.status_code == status.HTTP_404_NOT_FOUND:
+                return invalid_account_error
+
+            return JSONResponse(
+                status_code=e.status_code,
+                content=e.detail,
+            )
+    except asyncpg.NoDataFoundError:
+        return invalid_account_error
+    except ValueError as e:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "error": {
+                    "message": "Invalid developer ID",
+                    "code": "invalid_developer_id",
+                }
+            },
+        )
     except Exception as e:
         # Log the error but don't block the request
         logger.error(f"Error in usage check middleware: {e!s}")
