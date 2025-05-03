@@ -6,7 +6,6 @@ It tracks token usage and costs for LLM API calls.
 from typing import Any
 from uuid import UUID
 
-import numpy as np
 from beartype import beartype
 from litellm import cost_per_token, model_cost
 
@@ -69,10 +68,9 @@ input_costs_fallback = [
     for pricing in FALLBACK_PRICING.values()
     if pricing["api_request"] > 0
 ]
+combined_input_costs = input_costs_litellm + input_costs_fallback
 AVG_INPUT_COST_PER_TOKEN = (
-    np.mean(input_costs_litellm + input_costs_fallback)
-    if input_costs_litellm + input_costs_fallback
-    else 0
+    sum(combined_input_costs) / len(combined_input_costs) if combined_input_costs else 0
 )
 
 # Calculate average of non-zero output costs
@@ -86,10 +84,9 @@ output_costs_fallback = [
     for pricing in FALLBACK_PRICING.values()
     if pricing["api_response"] > 0
 ]
+combined_output_costs = output_costs_litellm + output_costs_fallback
 AVG_OUTPUT_COST_PER_TOKEN = (
-    np.mean(output_costs_litellm + output_costs_fallback)
-    if output_costs_litellm + output_costs_fallback
-    else 0
+    sum(combined_output_costs) / len(combined_output_costs) if combined_output_costs else 0
 )
 
 # Define the raw SQL query
