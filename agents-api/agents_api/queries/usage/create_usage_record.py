@@ -59,11 +59,11 @@ FALLBACK_PRICING = {
 
 MAX_INPUT_COST_PER_TOKEN = max(
     max((model_cost[model].get("input_cost_per_token", 0) for model in model_cost), default=0),
-    max((pricing["api_request"] for pricing in FALLBACK_PRICING.values()), default=0)
+    max((pricing["api_request"] for pricing in FALLBACK_PRICING.values()), default=0),
 )
 MAX_OUTPUT_COST_PER_TOKEN = max(
     max((model_cost[model].get("output_cost_per_token", 0) for model in model_cost), default=0),
-    max((pricing["api_response"] for pricing in FALLBACK_PRICING.values()), default=0)
+    max((pricing["api_response"] for pricing in FALLBACK_PRICING.values()), default=0),
 )
 
 # Define the raw SQL query
@@ -145,7 +145,9 @@ async def create_usage_record(
                     MAX_INPUT_COST_PER_TOKEN * prompt_tokens
                     + MAX_OUTPUT_COST_PER_TOKEN * completion_tokens
                 )
-                print(f"No fallback pricing found for model {model}, using max costs: {total_cost}")
+                print(
+                    f"No fallback pricing found for model {model}, using max costs: {total_cost}"
+                )
 
     params = [
         developer_id,
