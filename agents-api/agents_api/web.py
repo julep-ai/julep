@@ -310,7 +310,7 @@ async def usage_check_middleware(request: Request, call_next):
         # Check if user is active
         if not user_cost_data.get("active", False):
             return invalid_account_error
-        
+
         if request.method == "GET":
             return await call_next(request)
 
@@ -318,7 +318,7 @@ async def usage_check_middleware(request: Request, call_next):
         user_tags = user_cost_data.get("tags", []) or []
         if not isinstance(user_tags, list):
             user_tags = []
-            
+
         if "paid" in user_tags:
             return await call_next(request)
 
@@ -335,16 +335,16 @@ async def usage_check_middleware(request: Request, call_next):
                 },
             )
     except HTTPException as e:
-            if e.status_code == status.HTTP_404_NOT_FOUND:
-                return invalid_account_error
+        if e.status_code == status.HTTP_404_NOT_FOUND:
+            return invalid_account_error
 
-            return JSONResponse(
-                status_code=e.status_code,
-                content=e.detail,
-            )
+        return JSONResponse(
+            status_code=e.status_code,
+            content=e.detail,
+        )
     except asyncpg.NoDataFoundError:
         return invalid_account_error
-    except ValueError as e:
+    except ValueError:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
