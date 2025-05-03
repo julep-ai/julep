@@ -46,7 +46,7 @@ async def _(client=client):
     }
 
     # Mock the get_user_cost function
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(return_value=mock_user_cost_data)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)):
         # Make request with the developer ID header
         response = client.get("/test-inactive-user", headers={"X-Developer-Id": developer_id})
 
@@ -75,7 +75,7 @@ def _(client=client):
     }
 
     # Mock the get_user_cost function
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(return_value=mock_user_cost_data)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)):
         # Make request with the developer ID header
         response = client.get(
             "/test-inactive-paid-user", headers={"X-Developer-Id": developer_id}
@@ -118,7 +118,7 @@ def _(client=client):
     }
 
     # Mock the get_user_cost function
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(return_value=mock_user_cost_data)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)):
         # Make a POST request that should be blocked
         post_response = client.post(
             "/test-cost-limit/post",
@@ -189,7 +189,7 @@ def _(client=client):
     }
 
     # Mock the get_user_cost function
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(return_value=mock_user_cost_data)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)):
         # Make a POST request that should be allowed due to paid tag
         response = client.post(
             "/test-paid/post",
@@ -241,7 +241,7 @@ def _(client=client):
     }
 
     # Mock the get_user_cost function
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(return_value=mock_user_cost_data)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)):
         # Make a GET request
         response = client.get(
             "/test-get-with-cost-limit", headers={"X-Developer-Id": developer_id}
@@ -271,7 +271,7 @@ def _(client=client):
     }
 
     # Mock the get_user_cost function
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(return_value=mock_user_cost_data)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)):
         # Make a POST request
         response = client.post(
             "/test-none-cost",
@@ -304,7 +304,7 @@ def _(client=client):
     }
 
     # Mock the get_user_cost function
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(return_value=mock_user_cost_data)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)):
         # Make a POST request
         response = client.post(
             "/test-null-tags",
@@ -353,7 +353,7 @@ def _(client=client):
 
     # Mock the get_user_cost function to raise NoDataFoundError
     with patch(
-        "agents_api.web.get_user_cost", new=AsyncMock(side_effect=asyncpg.NoDataFoundError())
+        "agents_api.web.get_usage_cost", new=AsyncMock(side_effect=asyncpg.NoDataFoundError())
     ):
         # Make request with the developer ID header
         response = client.get("/test-user-not-found", headers={"X-Developer-Id": developer_id})
@@ -365,7 +365,7 @@ def _(client=client):
 
     # Mock the get_user_cost function to raise HTTPException with 404
     http_404_error = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(side_effect=http_404_error)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(side_effect=http_404_error)):
         # Make request with the developer ID header
         response = client.get("/test-404-error", headers={"X-Developer-Id": developer_id})
 
@@ -391,7 +391,7 @@ def _(client=client):
     http_500_error = HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Server error"
     )
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(side_effect=http_500_error)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(side_effect=http_500_error)):
         # Make request with the developer ID header
         response = client.get("/test-500-error", headers={"X-Developer-Id": developer_id})
 
@@ -439,7 +439,7 @@ def _(client=client):
     }
 
     # Mock the get_user_cost function
-    with patch("agents_api.web.get_user_cost", new=AsyncMock(return_value=mock_user_cost_data)):
+    with patch("agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)):
         # Make request with the developer ID header
         response = client.get("/test-valid-user", headers={"X-Developer-Id": developer_id})
 
