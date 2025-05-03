@@ -1,6 +1,6 @@
--- Create continuous aggregate for monthly cost per developer
+-- Create continuous aggregate for monthly cost per developer with real-time data
 CREATE MATERIALIZED VIEW usage_cost_monthly
-WITH (timescaledb.continuous) AS
+WITH (timescaledb.continuous, timescaledb.materialized_only=false) AS
 SELECT
     developer_id,
     time_bucket('1 month', created_at) AS bucket_start,
@@ -18,8 +18,8 @@ ON usage_cost_monthly (developer_id, bucket_start DESC);
 SELECT add_continuous_aggregate_policy(
     'usage_cost_monthly',
     start_offset => INTERVAL '3 months',
-    end_offset => INTERVAL '1 minute',
-    schedule_interval => INTERVAL '1 minute'
+    end_offset => INTERVAL '0 minute',
+    schedule_interval => INTERVAL '30 seconds'
 );
 
 -- Create view that joins with developers table for easy querying
