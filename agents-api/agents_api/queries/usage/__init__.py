@@ -14,7 +14,9 @@ related to usage tracking and reporting.
 # ruff: noqa: F401, F403, F405
 
 from .create_usage_record import create_usage_record
+from .get_user_cost import get_user_cost
 
 __all__ = [
     "create_usage_record",
+    "get_user_cost",
 ]
