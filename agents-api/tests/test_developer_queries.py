@@ -1,7 +1,14 @@
 # Tests for agent queries
 
+from unittest.mock import patch
+from uuid import uuid4
+from fastapi import Depends
+from fastapi.testclient import TestClient
+
+from agents_api.app import app
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.developers import Developer
+from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import (
     get_developer,
@@ -89,3 +96,36 @@ async def _(dsn=pg_dsn, dev=test_new_developer, email=random_email):
     assert developer.active
     assert developer.tags == [*dev.tags, "tag2"]
     assert developer.settings == {**dev.settings, "key2": "val2"}
+
+
+@test("dependency: access denied for inactive developer")
+async def _(dsn=pg_dsn):
+    with patch("agents_api.dependencies.developer_id.multi_tenant_mode", True):
+        developer_id = uuid4()
+        # Add a test endpoint that requires authentication
+
+        @app.get("/test")
+        async def test_endpoint(x_developer_id=Depends(get_developer_id)):
+            return {"message": "success"}
+
+        # Create a test client
+        client = TestClient(app)
+
+        # Create an inactive developer
+        pool = await create_db_pool(dsn=dsn)
+        await create_developer(
+            email="inactive@test.com",
+            active=False,
+            developer_id=developer_id,
+            connection_pool=pool,
+        )
+
+        # Make a request with the inactive developer's ID
+        response = client.get(
+            "/test",
+            headers={"X-Developer-Id": str(developer_id)},
+        )
+
+        # Verify we get a 403 response
+        assert response.status_code == 403
+        assert response.json()["error"]["message"] == "Invalid developer account"
