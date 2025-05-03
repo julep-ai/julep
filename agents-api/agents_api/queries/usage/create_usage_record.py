@@ -6,6 +6,7 @@ It tracks token usage and costs for LLM API calls.
 from typing import Any
 from uuid import UUID
 
+import numpy as np
 from beartype import beartype
 from litellm import cost_per_token, model_cost
 
@@ -57,14 +58,23 @@ FALLBACK_PRICING = {
     },
 }
 
-MAX_INPUT_COST_PER_TOKEN = max(
-    max((model_cost[model].get("input_cost_per_token", 0) for model in model_cost), default=0),
-    max((pricing["api_request"] for pricing in FALLBACK_PRICING.values()), default=0),
-)
-MAX_OUTPUT_COST_PER_TOKEN = max(
-    max((model_cost[model].get("output_cost_per_token", 0) for model in model_cost), default=0),
-    max((pricing["api_response"] for pricing in FALLBACK_PRICING.values()), default=0),
-)
+# Calculate average of non-zero input costs
+input_costs_litellm = [model_cost[model].get("input_cost_per_token", 0) 
+                      for model in model_cost 
+                      if model_cost[model].get("input_cost_per_token", 0) > 0]
+input_costs_fallback = [pricing["api_request"] 
+                       for pricing in FALLBACK_PRICING.values() 
+                       if pricing["api_request"] > 0]
+AVG_INPUT_COST_PER_TOKEN = np.mean(input_costs_litellm + input_costs_fallback) if input_costs_litellm + input_costs_fallback else 0
+
+# Calculate average of non-zero output costs
+output_costs_litellm = [model_cost[model].get("output_cost_per_token", 0) 
+                       for model in model_cost 
+                       if model_cost[model].get("output_cost_per_token", 0) > 0]
+output_costs_fallback = [pricing["api_response"] 
+                        for pricing in FALLBACK_PRICING.values() 
+                        if pricing["api_response"] > 0]
+AVG_OUTPUT_COST_PER_TOKEN = np.mean(output_costs_litellm + output_costs_fallback) if output_costs_litellm + output_costs_fallback else 0
 
 # Define the raw SQL query
 usage_query = """
@@ -142,12 +152,10 @@ async def create_usage_record(
                 )
             else:
                 total_cost = (
-                    MAX_INPUT_COST_PER_TOKEN * prompt_tokens
-                    + MAX_OUTPUT_COST_PER_TOKEN * completion_tokens
+                    AVG_INPUT_COST_PER_TOKEN * prompt_tokens
+                    + AVG_OUTPUT_COST_PER_TOKEN * completion_tokens
                 )
-                print(
-                    f"No fallback pricing found for model {model}, using max costs: {total_cost}"
-                )
+                print(f"No fallback pricing found for model {model}, using avg costs: {total_cost}")
 
     params = [
         developer_id,
