@@ -26,15 +26,15 @@ LIMIT 1;
     dict,
     one=True,
 )
-@query_metrics("get_user_cost")
+@query_metrics("get_usage_cost")
 @pg_query
 @beartype
-async def get_user_cost(
+async def get_usage_cost(
     *,
     developer_id: UUID,
 ) -> tuple[str, list, Literal["fetch", "fetchmany", "fetchrow"]]:
     """
-    Get the cost of a user's usage.
+    Get the cost of a developer's usage.
 
     Parameters:
         developer_id (UUID): The unique identifier for the developer.

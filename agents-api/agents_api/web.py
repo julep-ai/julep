@@ -25,7 +25,7 @@ from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
 from .env import enable_responses, free_tier_cost_limit, sentry_dsn
 from .exceptions import PromptTooBigError
-from .queries.usage.get_user_cost import get_user_cost
+from .queries.usage.get_user_cost import get_usage_cost
 from .routers import (
     agents,
     docs,
@@ -305,7 +305,7 @@ async def usage_check_middleware(request: Request, call_next):
 
     try:
         developer_id = UUID(developer_id_str)
-        user_cost_data: dict = await get_user_cost(developer_id=developer_id)
+        user_cost_data: dict = await get_usage_cost(developer_id=developer_id)
 
         # Check if user is active
         if not user_cost_data.get("active", False):
