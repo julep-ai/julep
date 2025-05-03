@@ -3,24 +3,21 @@ This module initializes the FastAPI application, registers routes, sets up middl
 """
 
 import asyncio
-import asyncpg
 import logging
-import os
 from collections.abc import Callable
 from typing import Any, cast
 from uuid import UUID
 
+import asyncpg
 import sentry_sdk
 import uvicorn
 import uvloop
-from contextlib import suppress
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
 from pydantic import ValidationError
-from starlette.middleware.base import BaseHTTPMiddleware
 from temporalio.service import RPCError
 
 from .app import app
@@ -286,6 +283,7 @@ else:
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(healthz.router)
 
+
 # Register the usage check middleware
 @app.middleware("http")
 async def usage_check_middleware(request: Request, call_next):
@@ -293,7 +291,7 @@ async def usage_check_middleware(request: Request, call_next):
     developer_id_str = request.headers.get("X-Developer-Id")
     if not developer_id_str:
         return await call_next(request)
-    
+
     user_cost_data: dict = {}
     invalid_account_error = JSONResponse(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -316,15 +314,15 @@ async def usage_check_middleware(request: Request, call_next):
             raise e
         except asyncpg.NoDataFoundError:
             return invalid_account_error
-        
+
         # Check if user is active
         if not user_cost_data.get("active", False):
             return invalid_account_error
-            
+
         # Check usage limits for non-GET requests
         if request.method != "GET":
             user_cost = float(user_cost_data.get("cost", None) or None)
-            
+
             if user_cost is None or user_cost > free_tier_cost_limit:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -337,10 +335,11 @@ async def usage_check_middleware(request: Request, call_next):
                 )
     except Exception as e:
         # Log the error but don't block the request
-        logger.error(f"Error in usage check middleware: {str(e)}")
+        logger.error(f"Error in usage check middleware: {e!s}")
 
     # Continue processing the request
     return await call_next(request)
+
 
 # TODO: CORS should be enabled only for JWT auth
 #

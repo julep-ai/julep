@@ -12,7 +12,6 @@ from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-
 usage_query = """
 SELECT developer_id, active, tags, monthly_cost AS cost
 FROM usage_cost_monthly
