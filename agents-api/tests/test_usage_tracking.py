@@ -8,7 +8,11 @@ from unittest.mock import patch
 
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.utils.usage import track_embedding_usage, track_usage
-from agents_api.queries.usage.create_usage_record import create_usage_record, AVG_INPUT_COST_PER_TOKEN, AVG_OUTPUT_COST_PER_TOKEN
+from agents_api.queries.usage.create_usage_record import (
+    AVG_INPUT_COST_PER_TOKEN,
+    AVG_OUTPUT_COST_PER_TOKEN,
+    create_usage_record,
+)
 from litellm import cost_per_token
 from litellm.utils import Message, ModelResponse, Usage, token_counter
 from ward import test
@@ -145,7 +149,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     actual_call = mock_print.call_args_list[-1].args[0]
     total_cost = AVG_INPUT_COST_PER_TOKEN * 100 + AVG_OUTPUT_COST_PER_TOKEN * 100
 
-    expected_call = f"No fallback pricing found for model {unknown_model}, using avg costs: {total_cost}"
+    expected_call = (
+        f"No fallback pricing found for model {unknown_model}, using avg costs: {total_cost}"
+    )
 
     assert len(response) == 1
     record = response[0]
