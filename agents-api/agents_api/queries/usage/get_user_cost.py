@@ -13,9 +13,10 @@ from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 usage_query = """
-SELECT developer_id, active, tags, monthly_cost AS cost
-FROM usage_cost_monthly
+SELECT developer_id, active, tags, monthly_cost AS cost, bucket_start AS month
+FROM developer_cost_monthly
 WHERE developer_id = $1
+ORDER BY month DESC
 LIMIT 1;
 """
 
