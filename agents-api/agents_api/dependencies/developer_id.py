@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Header, HTTPException, status
+from fastapi import Header
 
 from ..common.protocol.developers import Developer
 from ..env import multi_tenant_mode
@@ -25,17 +25,6 @@ async def get_developer_id(
         except ValueError as e:
             msg = "X-Developer-Id must be a valid UUID"
             raise InvalidHeaderFormat(msg) from e
-
-    try:
-        await get_developer(developer_id=x_developer_id)
-    except HTTPException as e:
-        if e.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid developer account",
-            )
-
-        raise e
 
     return x_developer_id
 
