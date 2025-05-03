@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 from uuid import uuid4
-from fastapi import Depends
-from fastapi.testclient import TestClient
 
 from agents_api.app import app
 from agents_api.clients.pg import create_db_pool
@@ -15,6 +13,8 @@ from agents_api.queries.developers.get_developer import (
 )
 from agents_api.queries.developers.patch_developer import patch_developer
 from agents_api.queries.developers.update_developer import update_developer
+from fastapi import Depends
+from fastapi.testclient import TestClient
 from uuid_extensions import uuid7
 from ward import raises, test
 
