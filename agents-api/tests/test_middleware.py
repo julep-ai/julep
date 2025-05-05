@@ -7,11 +7,16 @@ from unittest.mock import AsyncMock, patch
 
 import asyncpg
 from agents_api.app import app
+from agents_api.clients.pg import create_db_pool
 from agents_api.env import free_tier_cost_limit
+from agents_api.queries.developers.create_developer import create_developer
 from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
+from uuid_extensions import uuid7
 from ward import fixture, test
+
+from .fixtures import make_request, pg_dsn, test_agent, test_session
 
 
 class TestPayload(BaseModel):
@@ -462,3 +467,131 @@ def _(client=client):
         # Verify the request was allowed
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["message"] == "valid user"
+
+
+@test("middleware: can't create session when cost limit is reached")
+async def _(make_request=make_request, dsn=pg_dsn, test_agent=test_agent):
+    """Test that creating a session fails with 403 when cost limit is reached."""
+
+    # Create a real developer for this test with no paid tag
+    pool = await create_db_pool(dsn=dsn)
+    developer_id = uuid7()
+    email = f"test-{developer_id}@example.com"
+    await create_developer(
+        email=email,
+        active=True,
+        tags=[],  # Free tier user (no paid tag)
+        settings={},
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
+
+    # Mock the get_usage_cost function to simulate cost limit exceeded
+    mock_user_cost_data = {
+        "active": True,
+        "cost": float(free_tier_cost_limit) + 1.0,  # Exceed the cost limit
+        "developer_id": developer_id,
+        "tags": [],  # No paid tag
+    }
+
+    # Use the mock for get_usage_cost
+    with patch(
+        "agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)
+    ):
+        # Try to create a session - should fail with 403
+        response = make_request(
+            method="POST",
+            url="/sessions",
+            json={"agent_id": str(test_agent.id)},
+            headers={"X-Developer-Id": str(developer_id)},
+        )
+
+        # Verify session creation was blocked
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert "Cost limit exceeded" in response.text
+        assert "cost_limit_exceeded" in response.text
+
+
+@test("middleware: can't delete session when cost limit is reached")
+async def _(make_request=make_request, dsn=pg_dsn, test_session=test_session, agent=test_agent):
+    """Test that deleting a session fails with 403 when cost limit is reached."""
+
+    # Create a real developer for this test with no paid tag
+    pool = await create_db_pool(dsn=dsn)
+    developer_id = uuid7()
+    email = f"test-{developer_id}@example.com"
+    await create_developer(
+        email=email,
+        active=True,
+        tags=[],  # Free tier user (no paid tag)
+        settings={},
+        developer_id=developer_id,
+        connection_pool=pool,
+    )
+
+    # Mock the get_usage_cost function to return different values for different calls
+    # First call should return under limit for session creation
+    # Subsequent calls should return over limit for deletion
+    mock_responses = [
+        # First response - under the limit (for session creation)
+        {
+            "active": True,
+            "cost": float(free_tier_cost_limit) - 0.5,  # Under the cost limit
+            "developer_id": developer_id,
+            "tags": [],
+        },
+        # Second response - over the limit (for session deletion)
+        {
+            "active": True,
+            "cost": float(free_tier_cost_limit) + 1.0,  # Exceed the cost limit
+            "developer_id": developer_id,
+            "tags": [],
+        },
+    ]
+
+    mock_get_usage_cost = AsyncMock()
+    mock_get_usage_cost.side_effect = mock_responses
+
+    with patch("agents_api.web.get_usage_cost", new=mock_get_usage_cost):
+        # First create a session when under the cost limit
+        session_response = make_request(
+            method="POST",
+            url="/sessions",
+            json={"agent": str(agent.id)},
+            headers={"X-Developer-Id": str(developer_id)},
+        )
+
+        assert session_response.status_code == status.HTTP_201_CREATED
+        session_id = session_response.json()["id"]
+
+        # Try to delete the session - should fail with 403 since cost is now over limit
+        delete_response = make_request(
+            method="DELETE",
+            url=f"/sessions/{session_id}",
+            headers={"X-Developer-Id": str(developer_id)},
+        )
+
+        # Verify session deletion was blocked
+        assert delete_response.status_code == status.HTTP_403_FORBIDDEN
+        assert "Cost limit exceeded" in delete_response.text
+        assert "cost_limit_exceeded" in delete_response.text
+
+        # Mock one more response for the GET request
+        mock_get_usage_cost.side_effect = [
+            {
+                "active": True,
+                "cost": float(free_tier_cost_limit) + 1.0,  # Still over the limit
+                "developer_id": developer_id,
+                "tags": [],
+            }
+        ]
+
+        # But GET request should still work even when over cost limit
+        get_response = make_request(
+            method="GET",
+            url=f"/sessions/{session_id}",
+            headers={"X-Developer-Id": str(developer_id)},
+        )
+
+        # Verify GET request was allowed
+        assert get_response.status_code == status.HTTP_200_OK

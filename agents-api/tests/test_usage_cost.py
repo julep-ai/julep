@@ -10,11 +10,33 @@ from agents_api.clients.pg import create_db_pool
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.usage.create_usage_record import create_usage_record
 from agents_api.queries.usage.get_user_cost import get_usage_cost
-from fastapi import HTTPException
 from uuid_extensions import uuid7
 from ward import test
 
 from .fixtures import pg_dsn, test_developer_id
+
+
+@test("query: get_usage_cost returns zero cost when no usage records exist")
+async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """Test that get_usage_cost returns zero cost when no usage records exist."""
+    pool = await create_db_pool(dsn=dsn)
+
+    # Calculate expected cost
+    expected_cost = 0.0
+
+    # Get the usage cost
+    cost_record = await get_usage_cost(developer_id=developer_id, connection_pool=pool)
+
+    # Verify the record
+    assert cost_record is not None, "Should have a cost record"
+    assert cost_record["developer_id"] == developer_id
+    assert "cost" in cost_record, "Should have a cost field"
+    assert isinstance(cost_record["cost"], Decimal), "Cost should be a Decimal"
+    assert cost_record["cost"] == expected_cost, (
+        f"Cost should be {expected_cost}, got {cost_record['cost']}"
+    )
+    assert "month" in cost_record, "Should have a month field"
+    assert isinstance(cost_record["month"], datetime), "Month should be a datetime"
 
 
 @test("query: get_usage_cost returns the correct cost when records exist")
@@ -118,33 +140,6 @@ async def _(dsn=pg_dsn) -> None:
     assert cost_record["cost"] == expected_cost, (
         f"Cost should match expected: {expected_cost} but got {cost_record['cost']}"
     )
-
-
-@test("query: get_usage_cost returns None when no usage records exist")
-async def _(dsn=pg_dsn) -> None:
-    """Test that get_usage_cost returns None when no usage records exist for a developer."""
-    pool = await create_db_pool(dsn=dsn)
-
-    # Create a new developer without any usage records
-    dev_id = uuid7()
-    email = f"test-{dev_id}@example.com"
-    await create_developer(
-        email=email,
-        active=True,
-        tags=["test"],
-        settings={},
-        developer_id=dev_id,
-        connection_pool=pool,
-    )
-
-    # Get the usage cost - should return None or raise 404
-    try:
-        cost_record = await get_usage_cost(developer_id=dev_id, connection_pool=pool)
-        assert cost_record is None, "Should not have a cost record for developer with no usage"
-    except HTTPException as ex:
-        # Accept either None or a 404 error
-        assert ex.status_code == 404, f"Expected 404 error, got {ex.status_code}"
-        assert "Usage not found" in ex.detail, f"Unexpected error detail: {ex.detail}"
 
 
 @test("query: get_usage_cost handles inactive developers correctly")
