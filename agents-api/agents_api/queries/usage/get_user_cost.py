@@ -13,10 +13,31 @@ from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 usage_query = """
-SELECT developer_id, active, tags, monthly_cost AS cost, bucket_start AS month
-FROM developer_cost_monthly
-WHERE developer_id = $1
-ORDER BY month DESC
+SELECT
+    COALESCE(developer_id, $1) as developer_id,
+    COALESCE(active, TRUE) as active,
+    COALESCE(tags, '{}') as tags,
+    COALESCE(monthly_cost, 0.0) AS cost,
+    COALESCE(bucket_start, NOW()) AS month
+FROM (
+    SELECT developer_id, active, tags, monthly_cost, bucket_start
+    FROM developer_cost_monthly
+    WHERE developer_id = $1
+    ORDER BY bucket_start DESC
+    LIMIT 1
+) as subq
+UNION ALL
+SELECT
+    $1 as developer_id,
+    TRUE as active,
+    '{}' as tags,
+    0.0 AS cost,
+    NOW() AS month
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM developer_cost_monthly
+    WHERE developer_id = $1
+)
 LIMIT 1;
 """
 
