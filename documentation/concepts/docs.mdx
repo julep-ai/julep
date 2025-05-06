@@ -67,27 +67,21 @@ Documents are attached to either an agent or a user. This is how you can create 
 
 ### Getting a Doc
 
-To get a doc, you can use the `client.agents.docs.get` or `client.users.docs.get` method.
+To get a doc, you can use the `client.docs.get` method, and pass either your .
 
 **Example:**
 
 <CodeGroup>
 ```python Python
 # Getting a doc
-doc = client.agents.docs.get(
-    agent_id="agent_id",
-    doc_id="doc_id",
-)
+doc = client.docs.get(doc_id="doc_id")
 
 print(doc)
 ```
 
 ```javascript Node.js
 // Getting a doc
-const doc = await client.agents.docs.get(
-    agent_id="agent_id",
-    doc_id="doc_id",
-)
+const doc = await client.docs.get("doc_id");
 
 console.log(doc)
 ```
