@@ -38,7 +38,7 @@ ON CONFLICT (developer_id, user_id) DO UPDATE SET
     about = EXCLUDED.about,
     metadata = EXCLUDED.metadata,
     project_id = (SELECT project_id FROM proj)
-RETURNING 
+RETURNING
     users.*,
     (SELECT canonical_name FROM proj) AS project;
 """
@@ -78,15 +78,15 @@ async def create_or_update_user(
     """
     # Get project (default if not specified)
     project_canonical_name = data.project
-    
+
     # Check if the project exists
     project_exists_result = await project_exists(developer_id, project_canonical_name)
-    
+
     if not project_exists_result[0]["project_exists"]:
         raise HTTPException(
             status_code=404, detail=f"Project '{project_canonical_name}' not found"
         )
-        
+
     params = [
         developer_id,  # $1
         user_id,  # $2

@@ -65,7 +65,7 @@ ON CONFLICT (developer_id, agent_id) DO UPDATE SET
     default_settings = EXCLUDED.default_settings,
     default_system_template = EXCLUDED.default_system_template,
     project_id = (SELECT project_id FROM proj)
-RETURNING 
+RETURNING
     agents.*,
     (SELECT canonical_name FROM proj) AS project;
 """
@@ -101,10 +101,10 @@ async def create_or_update_agent(
     project_canonical_name = (
         data.project if hasattr(data, "project") and data.project else "default"
     )
-    
+
     # Check if the project exists
     project_exists_result = await project_exists(developer_id, project_canonical_name)
-    
+
     if not project_exists_result[0]["project_exists"]:
         raise HTTPException(
             status_code=404, detail=f"Project '{project_canonical_name}' not found"

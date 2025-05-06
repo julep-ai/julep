@@ -15,7 +15,7 @@ from ..utils import make_num_validator, pg_query, rewrap_exceptions, wrap_in_cla
 
 # Base query for listing files
 base_files_query = """
-SELECT 
+SELECT
     f.*,
     p.canonical_name AS project
 FROM files f

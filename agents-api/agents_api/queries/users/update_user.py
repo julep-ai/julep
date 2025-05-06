@@ -28,7 +28,7 @@ SET
     END
 WHERE developer_id = $1 -- developer_id
 AND user_id = $2 -- user_id
-RETURNING 
+RETURNING
     users.*,
     (SELECT canonical_name FROM projects WHERE project_id = users.project_id) AS project;
 """
@@ -66,15 +66,15 @@ async def update_user(
     """
     # Check if project exists if it's provided
     project_canonical_name = data.project
-    
+
     if project_canonical_name:
         project_exists_result = await project_exists(developer_id, project_canonical_name)
-        
+
         if not project_exists_result[0]["project_exists"]:
             raise HTTPException(
                 status_code=404, detail=f"Project '{project_canonical_name}' not found"
             )
-    
+
     params = [
         developer_id,
         user_id,

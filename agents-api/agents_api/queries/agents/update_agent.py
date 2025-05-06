@@ -35,7 +35,7 @@ SET
         ELSE project_id
     END
 WHERE agent_id = $2 AND developer_id = $1
-RETURNING 
+RETURNING
     agents.*,
     (SELECT canonical_name FROM projects WHERE project_id = agents.project_id) AS project;
 """
@@ -69,15 +69,15 @@ async def update_agent(
     """
     # Check if project exists if it's provided
     project_canonical_name = data.project
-    
+
     if project_canonical_name:
         project_exists_result = await project_exists(developer_id, project_canonical_name)
-        
+
         if not project_exists_result[0]["project_exists"]:
             raise HTTPException(
                 status_code=404, detail=f"Project '{project_canonical_name}' not found"
             )
-            
+
     params = [
         developer_id,
         agent_id,

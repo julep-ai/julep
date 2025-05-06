@@ -120,13 +120,13 @@ async def create_file(
     content_bytes = base64.b64decode(data.content)
     size = len(content_bytes)
     hash_bytes = hashlib.sha256(content_bytes).digest()
-    
+
     # Get project (default if not specified)
     project_canonical_name = data.project
-    
+
     # Check if the project exists
     project_exists_result = await project_exists(developer_id, project_canonical_name)
-    
+
     if not project_exists_result[0]["project_exists"]:
         raise HTTPException(
             status_code=404, detail=f"Project '{project_canonical_name}' not found"

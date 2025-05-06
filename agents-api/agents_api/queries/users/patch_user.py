@@ -76,15 +76,15 @@ async def patch_user(
     """
     # Check if project exists if it's being updated
     project_canonical_name = data.project
-    
+
     if project_canonical_name:
         project_exists_result = await project_exists(developer_id, project_canonical_name)
-        
+
         if not project_exists_result[0]["project_exists"]:
             raise HTTPException(
                 status_code=404, detail=f"Project '{project_canonical_name}' not found"
             )
-    
+
     params = [
         developer_id,  # $1
         user_id,  # $2

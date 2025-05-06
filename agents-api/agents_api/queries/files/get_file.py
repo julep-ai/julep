@@ -14,7 +14,7 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
 file_query = """
-SELECT 
+SELECT
     f.*,
     p.canonical_name AS project
 FROM files f
