@@ -1,5 +1,6 @@
 # Tests for agent queries
 
+
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.protocol.developers import Developer
 from agents_api.queries.developers.create_developer import create_developer

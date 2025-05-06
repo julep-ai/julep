@@ -10,6 +10,8 @@ from collections.abc import Callable
 from itertools import chain
 from typing import Any
 
+from pydantic import BaseModel
+
 
 def total_size(
     o: Any, handlers: dict[type, Callable] | None = None, verbose: bool = False
@@ -19,6 +21,7 @@ def total_size(
 
     Automatically finds the contents of the following builtin containers and
     their subclasses: tuple, list, deque, dict, set and frozenset.
+    Also handles Pydantic models by recursively measuring their fields.
 
     To search other containers, add handlers to iterate over their contents:
         handlers = {SomeContainerClass: iter,
@@ -38,6 +41,9 @@ def total_size(
     def dict_handler(d):
         return chain.from_iterable(d.items())
 
+    def pydantic_handler(model: BaseModel):
+        return chain.from_iterable(model.model_dump().items())
+
     all_handlers = {
         tuple: iter,
         list: iter,
@@ -45,6 +51,7 @@ def total_size(
         dict: dict_handler,
         set: iter,
         frozenset: iter,
+        BaseModel: pydantic_handler,
     }
     all_handlers.update(handlers)  # user handlers take precedence
     seen: set[int] = set()  # track which object id's have already been seen

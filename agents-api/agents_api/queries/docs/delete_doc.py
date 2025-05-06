@@ -10,17 +10,18 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Delete doc query
 delete_doc_query = """
-DELETE FROM docs
-WHERE developer_id = $1
-  AND doc_id = $2
+DELETE FROM docs d
+WHERE d.developer_id = $1
+  AND d.doc_id = $2
   AND EXISTS (
-    SELECT 1 FROM doc_owners
-    WHERE developer_id = $1
-      AND doc_id = $2
-      AND owner_type = $3
-      AND owner_id = $4
+    SELECT 1
+    FROM doc_owners o
+    WHERE o.developer_id = d.developer_id
+      AND o.doc_id = d.doc_id
+      AND o.owner_type = $3
+      AND o.owner_id = $4
   )
-RETURNING doc_id;
+RETURNING d.doc_id;
 """
 
 delete_doc_owners_query = """
