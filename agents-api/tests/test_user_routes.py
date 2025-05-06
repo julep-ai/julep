@@ -264,7 +264,7 @@ def _(make_request=make_request, project=test_project):
         url="/users",
         json=data,
     )
-    
+
     # Then list users with project filter
     response = make_request(
         method="GET",

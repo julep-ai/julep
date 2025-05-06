@@ -77,7 +77,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that creating a user with an invalid project raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    
+
     with raises(HTTPException) as exc:
         await create_user(
             developer_id=developer_id,
@@ -88,7 +88,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             ),
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    
+
     assert exc.raised.status_code == 404
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
@@ -226,7 +226,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that listing users with a project filter returns the correct users."""
 
     pool = await create_db_pool(dsn=dsn)
-    
+
     # First create a user with the specific project
     await create_user(
         developer_id=developer_id,
@@ -237,12 +237,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
         ),
         connection_pool=pool,
     )  # type: ignore[not-callable]
-    
+
     # Now fetch with project filter
     result = await list_users(
-        developer_id=developer_id, 
-        project=project.canonical_name,
-        connection_pool=pool
+        developer_id=developer_id, project=project.canonical_name, connection_pool=pool
     )  # type: ignore[not-callable]
 
     assert isinstance(result, list)

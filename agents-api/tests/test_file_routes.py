@@ -136,7 +136,7 @@ async def _(make_request=make_request, s3_client=s3_client, project=test_project
         url="/files",
         json=data,
     )
-    
+
     # Then list files with project filter
     response = make_request(
         method="GET",
@@ -148,7 +148,7 @@ async def _(make_request=make_request, s3_client=s3_client, project=test_project
 
     assert response.status_code == 200
     result = response.json()
-    
+
     assert isinstance(result["items"], list)
     assert len(result["items"]) > 0
     assert all(file["project"] == project.canonical_name for file in result["items"])

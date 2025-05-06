@@ -9,7 +9,14 @@ from agents_api.queries.files.list_files import list_files
 from fastapi import HTTPException
 from ward import raises, test
 
-from tests.fixtures import pg_dsn, test_agent, test_developer, test_file, test_project, test_user
+from tests.fixtures import (
+    pg_dsn,
+    test_agent,
+    test_developer,
+    test_file,
+    test_project,
+    test_user,
+)
 
 
 @test("query: create file")
@@ -55,7 +62,7 @@ async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
 @test("query: create file with invalid project")
 async def _(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
-    
+
     with raises(HTTPException) as exc:
         await create_file(
             developer_id=developer.id,
@@ -68,7 +75,7 @@ async def _(dsn=pg_dsn, developer=test_developer):
             ),
             connection_pool=pool,
         )
-    
+
     assert exc.raised.status_code == 404
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
@@ -224,7 +231,7 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
 @test("query: list files with project filter")
 async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Create a file with the project
     file = await create_file(
         developer_id=developer.id,
@@ -237,14 +244,14 @@ async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
         ),
         connection_pool=pool,
     )
-    
+
     # List files with project filter
     files = await list_files(
         developer_id=developer.id,
         project=project.canonical_name,
         connection_pool=pool,
     )
-    
+
     assert len(files) >= 1
     assert any(f.id == file.id for f in files)
     assert all(f.project == project.canonical_name for f in files)

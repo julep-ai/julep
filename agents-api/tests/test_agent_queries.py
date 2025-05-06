@@ -56,7 +56,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
         ),
         connection_pool=pool,
     )  # type: ignore[not-callable]
-    
+
     assert result.project == project.canonical_name
 
 
@@ -65,7 +65,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that creating an agent with an invalid project raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    
+
     with raises(HTTPException) as exc:
         await create_agent(
             developer_id=developer_id,
@@ -77,7 +77,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
             ),
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    
+
     assert exc.raised.status_code == 404
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
@@ -119,7 +119,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
         ),
         connection_pool=pool,
     )  # type: ignore[not-callable]
-    
+
     assert result.project == project.canonical_name
 
 
@@ -269,7 +269,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that listing agents with a project filter returns the correct agents."""
 
     pool = await create_db_pool(dsn=dsn)
-    
+
     # First create an agent with the specific project
     await create_agent(
         developer_id=developer_id,
@@ -281,12 +281,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
         ),
         connection_pool=pool,
     )  # type: ignore[not-callable]
-    
+
     # Now fetch with project filter
     result = await list_agents(
-        developer_id=developer_id, 
-        project=project.canonical_name,
-        connection_pool=pool
+        developer_id=developer_id, project=project.canonical_name, connection_pool=pool
     )  # type: ignore[not-callable]
 
     assert isinstance(result, list)
