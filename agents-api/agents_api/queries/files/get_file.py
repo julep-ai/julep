@@ -14,8 +14,11 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
 file_query = """
-SELECT f.*
+SELECT 
+    f.*,
+    p.canonical_name AS project
 FROM files f
+LEFT JOIN projects p ON f.project_id = p.project_id
 LEFT JOIN file_owners fo ON f.developer_id = fo.developer_id AND f.file_id = fo.file_id
 WHERE f.developer_id = $1
 AND f.file_id = $2

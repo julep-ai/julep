@@ -10,16 +10,18 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 # Define the raw SQL query outside the function
 user_query = """
 SELECT
-    user_id as id, -- user_id
-    developer_id, -- developer_id
-    name, -- name
-    about, -- about
-    metadata, -- metadata
-    created_at, -- created_at
-    updated_at -- updated_at
-FROM users
-WHERE developer_id = $1
-AND user_id = $2;
+    u.user_id as id, -- user_id
+    u.developer_id, -- developer_id
+    u.name, -- name
+    u.about, -- about
+    u.metadata, -- metadata
+    u.created_at, -- created_at
+    u.updated_at, -- updated_at
+    p.canonical_name AS project -- project
+FROM users u
+LEFT JOIN projects p ON u.project_id = p.project_id
+WHERE u.developer_id = $1
+AND u.user_id = $2;
 """
 
 

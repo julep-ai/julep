@@ -4185,6 +4185,10 @@ components:
         content:
           type: string
           description: Base64 encoded content of the file
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the file
       description: Payload for creating a file
     Files.File:
       type: object
@@ -4224,6 +4228,10 @@ components:
         content:
           type: string
           description: Base64 encoded content of the file
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the file
         size:
           type: integer
           format: uint64
@@ -11605,6 +11613,10 @@ components:
           type: string
           description: About the user
           default: ''
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the user
       description: Payload for creating a user (and associated documents)
     Users.PatchUserRequest:
       type: object
@@ -11621,6 +11633,10 @@ components:
           type: string
           description: About the user
           default: ''
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the user
       description: Payload for patching a user
     Users.UpdateUserRequest:
       type: object
@@ -11640,6 +11656,10 @@ components:
           type: string
           description: About the user
           default: ''
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the user
       description: Payload for updating a user
     Users.User:
       type: object
@@ -11676,6 +11696,10 @@ components:
           type: string
           description: About the user
           default: ''
+        project:
+          allOf:
+            - $ref: '#/components/schemas/Common.canonicalName'
+          description: Project canonical name of the user
   securitySchemes:
     ApiKeyAuth:
       type: apiKey

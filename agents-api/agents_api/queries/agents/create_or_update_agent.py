@@ -6,10 +6,12 @@ It constructs and executes SQL queries to insert a new agent or update an existi
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
+from ..projects.project_exists import project_exists
 from ..utils import generate_canonical_name, pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
@@ -18,6 +20,11 @@ WITH existing_agent AS (
     SELECT canonical_name
     FROM agents
     WHERE developer_id = $1 AND agent_id = $2
+), proj AS (
+    -- Find project ID by canonical name
+    SELECT project_id, canonical_name
+    FROM projects
+    WHERE developer_id = $1 AND canonical_name = $11
 )
 INSERT INTO agents (
     developer_id,
@@ -29,7 +36,8 @@ INSERT INTO agents (
     model,
     metadata,
     default_settings,
-    default_system_template
+    default_system_template,
+    project_id
 )
 VALUES (
     $1,                                          -- developer_id
@@ -44,7 +52,8 @@ VALUES (
     $7,                                          -- model
     $8,                                          -- metadata
     $9,                                          -- default_settings
-    $10                                          -- default_system_template
+    $10,                                         -- default_system_template
+    (SELECT project_id FROM proj)                -- project_id
 )
 ON CONFLICT (developer_id, agent_id) DO UPDATE SET
     canonical_name = EXCLUDED.canonical_name,
@@ -54,8 +63,11 @@ ON CONFLICT (developer_id, agent_id) DO UPDATE SET
     model = EXCLUDED.model,
     metadata = EXCLUDED.metadata,
     default_settings = EXCLUDED.default_settings,
-    default_system_template = EXCLUDED.default_system_template
-RETURNING *;
+    default_system_template = EXCLUDED.default_system_template,
+    project_id = (SELECT project_id FROM proj)
+RETURNING 
+    agents.*,
+    (SELECT canonical_name FROM proj) AS project;
 """
 
 
@@ -80,11 +92,23 @@ async def create_or_update_agent(
     Args:
         agent_id (UUID): The UUID of the agent to create or update.
         developer_id (UUID): The UUID of the developer owning the agent.
-        agent_data (Dict[str, Any]): A dictionary containing agent fields to insert or update.
+        data (CreateOrUpdateAgentRequest): A dictionary containing agent fields to insert or update.
 
     Returns:
         tuple[list[str], dict]: A tuple containing the list of SQL queries and their parameters.
     """
+    # Get project (default if not specified)
+    project_canonical_name = (
+        data.project if hasattr(data, "project") and data.project else "default"
+    )
+    
+    # Check if the project exists
+    project_exists_result = await project_exists(developer_id, project_canonical_name)
+    
+    if not project_exists_result[0]["project_exists"]:
+        raise HTTPException(
+            status_code=404, detail=f"Project '{project_canonical_name}' not found"
+        )
 
     # Ensure instructions is a list
     data.instructions = (
@@ -109,6 +133,7 @@ async def create_or_update_agent(
         data.metadata,
         default_settings,
         data.default_system_template,
+        project_canonical_name,
     ]
 
     return (

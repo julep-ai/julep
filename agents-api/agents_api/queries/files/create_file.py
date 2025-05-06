@@ -9,34 +9,55 @@ from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateFileRequest, File
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
+from ..projects.project_exists import project_exists
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Create file
 file_query = """
-INSERT INTO files (
-    developer_id,
-    file_id,
-    name,
-    description,
-    mime_type,
-    size,
-    hash
+WITH new_file AS (
+    INSERT INTO files (
+        developer_id,
+        file_id,
+        name,
+        description,
+        mime_type,
+        size,
+        hash
+    )
+    VALUES (
+        $1, -- developer_id
+        $2, -- file_id
+        $3, -- name
+        $4, -- description
+        $5, -- mime_type
+        $6, -- size
+        $7  -- hash
+    )
+    RETURNING *
+), proj AS (
+    -- Find project ID by canonical name
+    SELECT project_id, canonical_name
+    FROM projects
+    WHERE developer_id = $1 AND canonical_name = $8
+), project_association AS (
+    -- Update file with project_id
+    UPDATE files
+    SET project_id = p.project_id
+    FROM proj p
+    WHERE files.file_id = $2 AND files.developer_id = $1
+    RETURNING 1
 )
-VALUES (
-    $1, -- developer_id
-    $2, -- file_id
-    $3, -- name
-    $4, -- description
-    $5, -- mime_type
-    $6, -- size
-    $7  -- hash
-)
-RETURNING *;
+SELECT
+    f.*,
+    p.canonical_name AS project
+FROM new_file f
+LEFT JOIN proj p ON TRUE;
 """
 
 # Replace both user_file and agent_file queries with a single file_owner query
@@ -99,6 +120,17 @@ async def create_file(
     content_bytes = base64.b64decode(data.content)
     size = len(content_bytes)
     hash_bytes = hashlib.sha256(content_bytes).digest()
+    
+    # Get project (default if not specified)
+    project_canonical_name = data.project
+    
+    # Check if the project exists
+    project_exists_result = await project_exists(developer_id, project_canonical_name)
+    
+    if not project_exists_result[0]["project_exists"]:
+        raise HTTPException(
+            status_code=404, detail=f"Project '{project_canonical_name}' not found"
+        )
 
     # Base file parameters
     file_params = [
@@ -109,6 +141,7 @@ async def create_file(
         data.mime_type,
         size,
         hash_bytes,
+        project_canonical_name,
     ]
 
     queries = []

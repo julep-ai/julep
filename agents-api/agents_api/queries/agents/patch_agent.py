@@ -6,14 +6,23 @@ It constructs and executes SQL queries to update specific fields of an agent bas
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
 
 from ...autogen.openapi_model import Agent, PatchAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
+from ..projects.project_exists import project_exists
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
 agent_query = """
+WITH proj AS (
+    -- Find project ID by canonical name if project is being updated
+    SELECT project_id, canonical_name
+    FROM projects
+    WHERE developer_id = $1 AND canonical_name = $11
+    AND $11 IS NOT NULL
+)
 UPDATE agents
 SET
     name = CASE
@@ -47,9 +56,15 @@ SET
     canonical_name = CASE
         WHEN $10::citext IS NOT NULL THEN $10
         ELSE canonical_name
+    END,
+    project_id = CASE
+        WHEN $11 IS NOT NULL THEN (SELECT project_id FROM proj)
+        ELSE project_id
     END
 WHERE agent_id = $2 AND developer_id = $1
-RETURNING *;
+RETURNING 
+    agents.*,
+    (SELECT canonical_name FROM projects WHERE project_id = agents.project_id) AS project;
 """
 
 
@@ -79,6 +94,17 @@ async def patch_agent(
     Returns:
         tuple[str, list]: A tuple containing the SQL query and its parameters.
     """
+    # Check if project exists if it's being updated
+    project_canonical_name = data.project
+    
+    if project_canonical_name:
+        project_exists_result = await project_exists(developer_id, project_canonical_name)
+        
+        if not project_exists_result[0]["project_exists"]:
+            raise HTTPException(
+                status_code=404, detail=f"Project '{project_canonical_name}' not found"
+            )
+
     params = [
         developer_id,
         agent_id,
@@ -90,6 +116,7 @@ async def patch_agent(
         data.default_system_template,
         [data.instructions] if isinstance(data.instructions, str) else data.instructions,
         data.canonical_name,
+        project_canonical_name,
     ]
 
     return (
