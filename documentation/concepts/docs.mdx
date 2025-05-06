@@ -65,6 +65,56 @@ Documents are attached to either an agent or a user. This is how you can create 
     Check out the [API reference](/api-reference/create-user-doc) or SDK reference ([Python](/sdks/python/reference#docs) or [JavaScript](/sdks/nodejs/reference#docs)) for more details on different operations you can perform on docs.
 </Tip>
 
+### Getting a Doc
+
+To get a doc, you can use the `client.docs.get` method, and pass either your .
+
+**Example:**
+
+<CodeGroup>
+```python Python
+# Getting a doc
+doc = client.docs.get(doc_id="doc_id")
+
+print(doc)
+```
+
+```javascript Node.js
+// Getting a doc
+const doc = await client.docs.get("doc_id");
+
+console.log(doc)
+```
+</CodeGroup>
+
+When you get a doc, you can access the doc's `title`, `content`, `embeddings`, `metadata` and other attributes.
+
+<Accordion title="Sample Output">
+    ```
+    Doc(
+        id='0680b756-9827-7cf2-8000-82ed5daf816e',
+        content=['The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa.'],
+        created_at=datetime.datetime(2023, 4, 25, 11, 43, 37, 513161, tzinfo=datetime.timezone.utc),
+        title='Old World',
+        embedding_dimensions=1024,
+        embedding_model='text-embedding-3-large',
+        embeddings=[
+            -0.036940154,
+            0.021077264,
+            -0.03274468,
+            0.016222501,
+            ...
+            -0.05038565,
+            0.012776218,
+            ...
+        ],
+        language='english',
+        metadata={"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+        modality='text'
+    )
+    ```
+</Accordion>
+
 ### Chunking
 
 In Julep, documents are not automatically chunked. We recommend that developers handle chunking based on their specific use case requirements, as different applications may have unique needs for how documents should be divided. 
@@ -94,33 +144,33 @@ The default parameters for full-text search are based on our internal benchmarki
 **Example:**
 
 <CodeGroup>
-    ```python Python
-    # Define the query
-    text_query = "Medieval times in Europe"
+```python Python
+# Define the query
+text_query = "Medieval times in Europe"
 
-    # Search for docs
-    matched_docs = client.agents.docs.search(
-        agent_id="agent_id",
-        text=text_query,
-        limit=10, # the maximum number of docs to return
-    )
+# Search for docs
+matched_docs = client.agents.docs.search(
+    agent_id="agent_id",
+    text=text_query,
+    limit=10, # the maximum number of docs to return
+)
 
-    print(matched_docs.model_dump())
-    ```
+print(matched_docs.model_dump())
+```
 
-    ```javascript Node.js
-    // Define the query
-    const text_query = "Medieval times in Europe";
+```javascript Node.js
+// Define the query
+const text_query = "Medieval times in Europe";
 
-    // Search for docs
-    const matched_docs = await client.agents.docs.search({
-        agent_id: "agent_id",
-        text: text_query,
-        limit: 10, // the maximum number of docs to return
-    });
+// Search for docs
+const matched_docs = await client.agents.docs.search({
+    agent_id: "agent_id",
+    text: text_query,
+    limit: 10, // the maximum number of docs to return
+});
 
-    console.log(matched_docs);
-    ```
+console.log(matched_docs);
+```
 </CodeGroup>
 
 <Accordion title="Sample Output">
@@ -169,36 +219,36 @@ The default parameters for embedding search are based on our internal benchmarki
 </Note>
 
 <CodeGroup>
-    ```python Python
-    # Define the vector query
-    vector_query = client.docs.embed(text="Medieval times in Europe").vectors[0]
+```python Python
+# Define the vector query
+vector_query = client.docs.embed(text="Medieval times in Europe").vectors[0]
 
-    # Search for docs
-    matched_docs = client.agents.docs.search(
-        agent_id="agent_id",
-        vector=vector_query,
-        limit=10, # the maximum number of docs to return
-        confidence=-0.3, # confidence range is -1 to 1
-    )
+# Search for docs
+matched_docs = client.agents.docs.search(
+    agent_id="agent_id",
+    vector=vector_query,
+    limit=10, # the maximum number of docs to return
+    confidence=-0.3, # confidence range is -1 to 1
+)
 
-    print(matched_docs.model_dump())
-    ```
+print(matched_docs.model_dump())
+```
 
-    ```javascript Node.js
-    // Define the vector query
-    const embedding_result = client.docs.embed({ text: "Medieval times in Europe" });
-    const vector_query = embedding_result.vectors[0];
+```javascript Node.js
+// Define the vector query
+const embedding_result = client.docs.embed({ text: "Medieval times in Europe" });
+const vector_query = embedding_result.vectors[0];
 
-    // Search for docs
-    const matched_docs = await client.agents.docs.search({
-        agent_id: "agent_id",
-        vector: vector_query,
-        limit: 10, // the maximum number of docs to return
-        confidence: -0.3, // confidence range is -1 to 1
-    });
+// Search for docs
+const matched_docs = await client.agents.docs.search({
+    agent_id: "agent_id",
+    vector: vector_query,
+    limit: 10, // the maximum number of docs to return
+    confidence: -0.3, // confidence range is -1 to 1
+});
 
-    console.log(matched_docs);
-    ```
+console.log(matched_docs);
+```
 </CodeGroup>
 
 <Accordion title="Sample Output">
@@ -279,66 +329,66 @@ The default parameters for hybrid search are based on our internal benchmarking.
 **Example:**
 
 <CodeGroup>
-    ```python Python
-    # Define the query
-    text_query = "Medieval times in Europe"
-    # Embed the query using the `docs.embed` method
-    embedded_query = client.docs.embed(text=text_query).vectors[0]
+```python Python
+# Define the query
+text_query = "Medieval times in Europe"
+# Embed the query using the `docs.embed` method
+embedded_query = client.docs.embed(text=text_query).vectors[0]
 
-    # Search for docs
-    matched_docs = client.agents.docs.search(
-        agent_id="agent_id",
-        text=text_query,
-        alpha=0.5, # the weight of the embedding query
-        vector=embedded_query,
-        confidence=-0.3, # confidence range is -1 to 1
-    )
+# Search for docs
+matched_docs = client.agents.docs.search(
+    agent_id="agent_id",
+    text=text_query,
+    alpha=0.5, # the weight of the embedding query
+    vector=embedded_query,
+    confidence=-0.3, # confidence range is -1 to 1
+)
 
-    print(matched_docs.model_dump())
-    ```
+print(matched_docs.model_dump())
+```
 
-    ```javascript Node.js
-    // Define the query
-    const text_query = "Medieval times in Europe";
-    // Embed the query using the `docs.embed` method
-    const embedding_result = await client.docs.embed({ text: text_query });
-    const embedded_query = embedding_result.vectors[0];
+```javascript Node.js
+// Define the query
+const text_query = "Medieval times in Europe";
+// Embed the query using the `docs.embed` method
+const embedding_result = await client.docs.embed({ text: text_query });
+const embedded_query = embedding_result.vectors[0];
 
-    // Search for docs
-    const matched_docs = await client.agents.docs.search({
-        agent_id: "agent_id",
-        text: text_query,
-        vector: embedded_query,
-        confidence: -0.3, // confidence range is -1 to 1
-        alpha: 0.5, // the weight of the embedding query
-    });
+// Search for docs
+const matched_docs = await client.agents.docs.search({
+    agent_id: "agent_id",
+    text: text_query,
+    vector: embedded_query,
+    confidence: -0.3, // confidence range is -1 to 1
+    alpha: 0.5, // the weight of the embedding query
+});
 
-    console.log(matched_docs);
-    ```
+console.log(matched_docs);
+```
 </CodeGroup>
 
 <Accordion title="Sample Output">
 ```
-    {'docs': [{'id': '06791e86-6dcf-7816-8000-e4c3b781d05b',
-    'owner': {'id': '06791e82-46b7-739c-8000-3428f9d4e40f', 'role': 'agent'},
-    'snippet': {'content': 'The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.',
-        'index': 0,
-        'embedding': [
-        -0.036940154,
-        0.021077264,
-        -0.03274468,
-        0.016222501,
-        -0.05038565,
-        0.012776218,
-        -0.034123193,
-        -0.005039564,
-        ...
-        ...]},
-    'distance': 0.13411101466087272,
-    'metadata': {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
-    'title': 'Old World'}],
-    'time': 0.0514223575592041}
-    ```
+{'docs': [{'id': '06791e86-6dcf-7816-8000-e4c3b781d05b',
+'owner': {'id': '06791e82-46b7-739c-8000-3428f9d4e40f', 'role': 'agent'},
+'snippet': {'content': 'The medieval period, spanning roughly from the 5th to the late 15th century, was a time of significant transformation across Europe, Asia, and Africa. In Europe, the era was marked by the rise of feudalism, the power of the Catholic Church, and the cultural blossoming of the Renaissance towards its end. Asia witnessed the flourishing of the Silk Road, facilitating trade and cultural exchange, and the rise of powerful empires such as the Mongol Empire, which at its height, stretched from Europe to Asia. Meanwhile, Africa saw the growth of influential kingdoms and empires like Mali, known for its wealth and the legendary pilgrimage of Mansa Musa, and the spread of Islam across the continent, which played a crucial role in shaping its cultural and social landscapes.',
+    'index': 0,
+    'embedding': [
+    -0.036940154,
+    0.021077264,
+    -0.03274468,
+    0.016222501,
+    -0.05038565,
+    0.012776218,
+    -0.034123193,
+    -0.005039564,
+    ...
+    ...]},
+'distance': 0.13411101466087272,
+'metadata': {"source": "https://en.wikipedia.org/wiki/Medieval_period"},
+'title': 'Old World'}],
+'time': 0.0514223575592041}
+```
 </Accordion>
 
 <Tip>
@@ -352,13 +402,26 @@ While search is carried on based on the textual and/or semantic content of the d
 **Example:**
 
 <CodeGroup>
-    ```python Python
-    # Filter docs based on metadata
-    dev_client.agents.docs.list(
-        agent_id="agent_id",
-        metadata_filter={"source": "wikipedia"},
-    )
-    ```
+```python Python
+# Filter docs based on metadata
+dev_client.agents.docs.list(
+    agent_id="agent_id",
+    metadata_filter={"source": "wikipedia"},
+)
+print(docs.items)
+```
+
+```javascript Node.js
+// Filter docs based on metadata
+const docs = await client.agents.docs.list(
+    agentId,
+    {
+        metadata_filter: {"source": "wikipedia"},
+    }
+);
+
+console.log(docs.items);
+```
 </CodeGroup>
 
 <Tip>

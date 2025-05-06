@@ -184,6 +184,7 @@ Agents can be associated with different types of tools available in Julep to ena
 
 For example:
 
+<CodeGroup>
 ```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
@@ -202,6 +203,22 @@ client.agents.tools.create(
   }
 )
 ```
+```javascript Node.js
+// Create an agent
+const agent = await client.agents.create({name: "My Agent"});
+
+// Associate a tool with the agent
+await client.agents.tools.create(agent.id, {
+  name: "computer",
+  type: "computer_20241022",
+  computer_20241022: {
+    display_height_px: 768,
+    display_width_px: 1024,
+    display_number: 1,
+  },
+});
+```
+</CodeGroup>
 
 ### Sessions
 
@@ -209,6 +226,7 @@ Agents can be used in sessions to enable real-time, interactive conversations. W
 
 For example:
 
+<CodeGroup>
 ```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
@@ -216,6 +234,15 @@ agent = client.agents.create(name="My Agent")
 # Create a session with the agent
 session = client.sessions.create(agent=agent.id)
 ```
+
+```javascript Node.js
+// Create an agent
+const agent = await client.agents.create({name: "My Agent"});
+
+// Create a session with the agent
+const session = await client.sessions.create({agent: agent.id});
+```
+</CodeGroup>
 
 ## Best Practices
 
