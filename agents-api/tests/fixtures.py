@@ -14,6 +14,7 @@ from agents_api.autogen.openapi_model import (
     CreateToolRequest,
     CreateTransitionRequest,
     CreateUserRequest,
+    CreateProjectRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.utils.memory import total_size
@@ -33,6 +34,7 @@ from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
 from agents_api.queries.tools.create_tools import create_tools
 from agents_api.queries.users.create_user import create_user
+from agents_api.queries.projects.create_project import create_project
 from agents_api.web import app
 from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
@@ -74,6 +76,21 @@ async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
     return await get_developer(
         developer_id=developer_id,
+        connection_pool=pool,
+    )
+
+
+@fixture(scope="test")
+async def test_project(dsn=pg_dsn, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+    
+    return await create_project(
+        developer_id=developer.id,
+        data=CreateProjectRequest(
+            name="Test Project",
+            canonical_name="test_project",
+            metadata={"test": "test"},
+        ),
         connection_pool=pool,
     )
 

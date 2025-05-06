@@ -9,7 +9,7 @@ from agents_api.queries.files.list_files import list_files
 from fastapi import HTTPException
 from ward import raises, test
 
-from tests.fixtures import pg_dsn, test_agent, test_developer, test_file, test_user
+from tests.fixtures import pg_dsn, test_agent, test_developer, test_file, test_project, test_user
 
 
 @test("query: create file")
@@ -30,6 +30,47 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert file.name == "Hello"
     assert file.description == "World"
     assert file.mime_type == "text/plain"
+
+
+@test("query: create file with project")
+async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
+    pool = await create_db_pool(dsn=dsn)
+    file = await create_file(
+        developer_id=developer.id,
+        data=CreateFileRequest(
+            name="Hello with Project",
+            description="World",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+            project=project.canonical_name,
+        ),
+        connection_pool=pool,
+    )
+    assert isinstance(file, File)
+    assert file.id is not None
+    assert file.name == "Hello with Project"
+    assert file.project == project.canonical_name
+
+
+@test("query: create file with invalid project")
+async def _(dsn=pg_dsn, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+    
+    with raises(HTTPException) as exc:
+        await create_file(
+            developer_id=developer.id,
+            data=CreateFileRequest(
+                name="Hello with Invalid Project",
+                description="World",
+                mime_type="text/plain",
+                content="eyJzYW1wbGUiOiAidGVzdCJ9",
+                project="invalid_project",
+            ),
+            connection_pool=pool,
+        )
+    
+    assert exc.raised.status_code == 404
+    assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
 @test("query: create user file")
@@ -61,6 +102,39 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert any(f.id == file.id for f in files)
 
 
+@test("query: create user file with project")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user, project=test_project):
+    pool = await create_db_pool(dsn=dsn)
+    file = await create_file(
+        developer_id=developer.id,
+        data=CreateFileRequest(
+            name="User File with Project",
+            description="Test user file",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+            project=project.canonical_name,
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+    assert isinstance(file, File)
+    assert file.id is not None
+    assert file.name == "User File with Project"
+    assert file.project == project.canonical_name
+
+    # Verify file appears in user's files with the right project
+    files = await list_files(
+        developer_id=developer.id,
+        owner_type="user",
+        owner_id=user.id,
+        project=project.canonical_name,
+        connection_pool=pool,
+    )
+    assert any(f.id == file.id for f in files)
+    assert all(f.project == project.canonical_name for f in files)
+
+
 @test("query: create agent file")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
@@ -89,6 +163,38 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert any(f.id == file.id for f in files)
 
 
+@test("query: create agent file with project")
+async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent, project=test_project):
+    pool = await create_db_pool(dsn=dsn)
+
+    file = await create_file(
+        developer_id=developer.id,
+        data=CreateFileRequest(
+            name="Agent File with Project",
+            description="Test agent file",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+            project=project.canonical_name,
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+    assert file.name == "Agent File with Project"
+    assert file.project == project.canonical_name
+
+    # Verify file appears in agent's files with the right project
+    files = await list_files(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        project=project.canonical_name,
+        connection_pool=pool,
+    )
+    assert any(f.id == file.id for f in files)
+    assert all(f.project == project.canonical_name for f in files)
+
+
 @test("query: get file")
 async def _(dsn=pg_dsn, file=test_file, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
@@ -113,6 +219,35 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
     )
     assert len(files) >= 1
     assert any(f.id == file.id for f in files)
+
+
+@test("query: list files with project filter")
+async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
+    pool = await create_db_pool(dsn=dsn)
+    
+    # Create a file with the project
+    file = await create_file(
+        developer_id=developer.id,
+        data=CreateFileRequest(
+            name="Project File for Filtering",
+            description="Test project file filtering",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+            project=project.canonical_name,
+        ),
+        connection_pool=pool,
+    )
+    
+    # List files with project filter
+    files = await list_files(
+        developer_id=developer.id,
+        project=project.canonical_name,
+        connection_pool=pool,
+    )
+    
+    assert len(files) >= 1
+    assert any(f.id == file.id for f in files)
+    assert all(f.project == project.canonical_name for f in files)
 
 
 @test("query: list files, invalid limit")
@@ -213,6 +348,38 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert any(f.id == file.id for f in files)
 
 
+@test("query: list user files with project")
+async def _(dsn=pg_dsn, developer=test_developer, user=test_user, project=test_project):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a file owned by the user with a project
+    file = await create_file(
+        developer_id=developer.id,
+        data=CreateFileRequest(
+            name="User Project List Test",
+            description="Test file for user project listing",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+            project=project.canonical_name,
+        ),
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
+
+    # List user's files with project filter
+    files = await list_files(
+        developer_id=developer.id,
+        owner_type="user",
+        owner_id=user.id,
+        project=project.canonical_name,
+        connection_pool=pool,
+    )
+    assert len(files) >= 1
+    assert any(f.id == file.id for f in files)
+    assert all(f.project == project.canonical_name for f in files)
+
+
 @test("query: list agent files")
 async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
@@ -240,6 +407,38 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     )
     assert len(files) >= 1
     assert any(f.id == file.id for f in files)
+
+
+@test("query: list agent files with project")
+async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent, project=test_project):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a file owned by the agent with a project
+    file = await create_file(
+        developer_id=developer.id,
+        data=CreateFileRequest(
+            name="Agent Project List Test",
+            description="Test file for agent project listing",
+            mime_type="text/plain",
+            content="eyJzYW1wbGUiOiAidGVzdCJ9",
+            project=project.canonical_name,
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+
+    # List agent's files with project filter
+    files = await list_files(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        project=project.canonical_name,
+        connection_pool=pool,
+    )
+    assert len(files) >= 1
+    assert any(f.id == file.id for f in files)
+    assert all(f.project == project.canonical_name for f in files)
 
 
 @test("query: delete user file")
