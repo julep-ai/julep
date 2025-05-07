@@ -88,7 +88,6 @@ async def test_project(dsn=pg_dsn, developer=test_developer):
         developer_id=developer.id,
         data=CreateProjectRequest(
             name="Test Project",
-            canonical_name="test_project",
             metadata={"test": "test"},
         ),
         connection_pool=pool,
@@ -103,8 +102,8 @@ def patch_embed_acompletion():
 
 
 @fixture(scope="test")
-async def test_agent(dsn=pg_dsn, developer=test_developer):
-    pool = await create_db_pool(dsn=dsn)
+async def test_agent(dsn=pg_dsn, developer=test_developer, project=test_project):
+    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
 
     return await create_agent(
         developer_id=developer.id,
@@ -113,6 +112,7 @@ async def test_agent(dsn=pg_dsn, developer=test_developer):
             name="test agent",
             about="test agent about",
             metadata={"test": "test"},
+            project=project.canonical_name,
         ),
         connection_pool=pool,
     )

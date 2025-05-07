@@ -6,12 +6,10 @@ It constructs and executes SQL queries to update specific fields of an agent bas
 from uuid import UUID
 
 from beartype import beartype
-from fastapi import HTTPException
 
 from ...autogen.openapi_model import Agent, PatchAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
-from ..projects.project_exists import project_exists
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Define the raw SQL query
@@ -22,49 +20,61 @@ WITH proj AS (
     FROM projects
     WHERE developer_id = $1 AND canonical_name = $11
     AND $11 IS NOT NULL
+),
+project_check AS (
+    -- Check if project exists when being updated
+    SELECT EXISTS (
+        SELECT 1 FROM proj
+    ) as project_exists
+),
+updated_agent AS (
+    UPDATE agents
+    SET
+        name = CASE
+            WHEN $3::text IS NOT NULL THEN $3
+            ELSE name
+        END,
+        about = CASE
+            WHEN $4::text IS NOT NULL THEN $4
+            ELSE about
+        END,
+        metadata = CASE
+            WHEN $5::jsonb IS NOT NULL THEN metadata || $5
+            ELSE metadata
+        END,
+        model = CASE
+            WHEN $6::text IS NOT NULL THEN $6
+            ELSE model
+        END,
+        default_settings = CASE
+            WHEN $7::jsonb IS NOT NULL THEN $7
+            ELSE default_settings
+        END,
+        default_system_template = CASE
+            WHEN $8::text IS NOT NULL THEN $8
+            ELSE default_system_template
+        END,
+        instructions = CASE
+            WHEN $9::text[] IS NOT NULL THEN $9
+            ELSE instructions
+        END,
+        canonical_name = CASE
+            WHEN $10::citext IS NOT NULL THEN $10
+            ELSE canonical_name
+        END
+    WHERE agent_id = $2 AND developer_id = $1
+    AND (
+        $11 IS NULL OR
+        (SELECT project_exists FROM project_check)
+    )
+    RETURNING *
 )
-UPDATE agents
-SET
-    name = CASE
-        WHEN $3::text IS NOT NULL THEN $3
-        ELSE name
-    END,
-    about = CASE
-        WHEN $4::text IS NOT NULL THEN $4
-        ELSE about
-    END,
-    metadata = CASE
-        WHEN $5::jsonb IS NOT NULL THEN metadata || $5
-        ELSE metadata
-    END,
-    model = CASE
-        WHEN $6::text IS NOT NULL THEN $6
-        ELSE model
-    END,
-    default_settings = CASE
-        WHEN $7::jsonb IS NOT NULL THEN $7
-        ELSE default_settings
-    END,
-    default_system_template = CASE
-        WHEN $8::text IS NOT NULL THEN $8
-        ELSE default_system_template
-    END,
-    instructions = CASE
-		WHEN $9::text[] IS NOT NULL THEN $9
-		ELSE instructions
-	END,
-    canonical_name = CASE
-        WHEN $10::citext IS NOT NULL THEN $10
-        ELSE canonical_name
-    END,
-    project_id = CASE
-        WHEN $11 IS NOT NULL THEN (SELECT project_id FROM proj)
-        ELSE project_id
-    END
-WHERE agent_id = $2 AND developer_id = $1
-RETURNING
-    agents.*,
-    (SELECT canonical_name FROM projects WHERE project_id = agents.project_id) AS project;
+SELECT
+    a.*,
+    p.canonical_name as project
+FROM updated_agent a
+LEFT JOIN project_agents pa ON a.developer_id = pa.developer_id AND a.agent_id = pa.agent_id
+LEFT JOIN projects p ON pa.project_id = p.project_id;
 """
 
 
@@ -94,17 +104,6 @@ async def patch_agent(
     Returns:
         tuple[str, list]: A tuple containing the SQL query and its parameters.
     """
-    # Check if project exists if it's being updated
-    project_canonical_name = data.project
-
-    if project_canonical_name:
-        project_exists_result = await project_exists(developer_id, project_canonical_name)
-
-        if not project_exists_result[0]["project_exists"]:
-            raise HTTPException(
-                status_code=404, detail=f"Project '{project_canonical_name}' not found"
-            )
-
     params = [
         developer_id,
         agent_id,
@@ -116,7 +115,7 @@ async def patch_agent(
         data.default_system_template,
         [data.instructions] if isinstance(data.instructions, str) else data.instructions,
         data.canonical_name,
-        project_canonical_name,
+        data.project,
     ]
 
     return (

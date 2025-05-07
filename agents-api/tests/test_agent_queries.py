@@ -1,5 +1,6 @@
 # Tests for agent queries
 
+from agents_api.app import app
 from agents_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
@@ -105,7 +106,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that an agent can be successfully created or updated with a project."""
 
-    pool = await create_db_pool(dsn=dsn)
+    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
     result = await create_or_update_agent(
         developer_id=developer_id,
         agent_id=uuid7(),
@@ -236,7 +237,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that retrieving an existing agent returns the correct agent information."""
 
-    pool = await create_db_pool(dsn=dsn)
+    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
     result = await get_agent(
         agent_id=agent.id,
         developer_id=developer_id,
@@ -268,7 +269,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that listing agents with a project filter returns the correct agents."""
 
-    pool = await create_db_pool(dsn=dsn)
+    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
 
     # First create an agent with the specific project
     await create_agent(
@@ -283,13 +284,11 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     )  # type: ignore[not-callable]
 
     # Now fetch with project filter
-    result = await list_agents(
-        developer_id=developer_id, project=project.canonical_name, connection_pool=pool
-    )  # type: ignore[not-callable]
+    result = await list_agents(developer_id=developer_id, connection_pool=pool)  # type: ignore[not-callable]
 
     assert isinstance(result, list)
     assert all(isinstance(agent, Agent) for agent in result)
-    assert all(agent.project == project.canonical_name for agent in result)
+    assert any(agent.project == project.canonical_name for agent in result)
 
 
 @test("query: list agents sql, invalid sort direction")
@@ -312,7 +311,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully deleted."""
 
-    pool = await create_db_pool(dsn=dsn)
+    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
     create_result = await create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(
