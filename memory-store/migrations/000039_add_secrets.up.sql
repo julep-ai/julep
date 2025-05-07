@@ -18,9 +18,9 @@ CREATE TABLE IF NOT EXISTS secrets (
 );
 
 -- Add indexes
-CREATE INDEX idx_secrets_developer_id ON secrets(developer_id);
-CREATE INDEX idx_secrets_name ON secrets(name);
-CREATE INDEX idx_secrets_metadata ON secrets USING gin(metadata);
+CREATE INDEX IF NOT EXISTS idx_secrets_developer_id ON secrets(developer_id);
+CREATE INDEX IF NOT EXISTS idx_secrets_name ON secrets(name);
+CREATE INDEX IF NOT EXISTS idx_secrets_metadata ON secrets USING gin(metadata);
 
 -- Add encryption/decryption functions using pgcrypto
 CREATE OR REPLACE FUNCTION encrypt_secret(
