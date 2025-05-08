@@ -13,17 +13,17 @@ query = """
 SELECT
     secret_id, developer_id, agent_id, name, description,
     created_at, updated_at, metadata,
-    decrypt_secret(value_encrypted, $5) as value
+    decrypt_secret(value_encrypted, $4) as value
 FROM secrets
 WHERE (
     developer_id = $1 AND
-    ($2 IS NULL OR agent_id = $2) AND
+    ($2::UUID IS NULL OR agent_id = $2) AND
     name = $3
 )
 LIMIT 1;
 """
 
-
+#TODO: handle HTTPException: 404: No secret found during get_by_name, shouldn't be an error
 @wrap_in_class(
     Secret,
     one=True,

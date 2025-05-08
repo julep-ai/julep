@@ -4,6 +4,7 @@ from uuid import UUID
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
+from temporalio.workflow import _NotInWorkflowEventLoopError
 
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
@@ -192,7 +193,7 @@ class StepContext(BaseModel):
         task_tools = []
         tools = task.tools if task else []
         inherit_tools = task.inherit_tools if task else False
-        if workflow._Runtime.current():
+        try:
             secrets_query_result = await workflow.execute_activity(
                 pg_query_step,
                 args=["list_secrets_query", "secrets.list", {"developer_id": self.execution_input.developer_id}],
@@ -200,7 +201,7 @@ class StepContext(BaseModel):
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
-        else:
+        except _NotInWorkflowEventLoopError:
             secrets_query_result = await list_secrets_query(
                 developer_id=self.execution_input.developer_id
             )
