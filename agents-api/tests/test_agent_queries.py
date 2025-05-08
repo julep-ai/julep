@@ -30,7 +30,7 @@ from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_project
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully created."""
 
-    pool = await create_db_pool(dsn=dsn)
+    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
     await create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -46,7 +46,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that an agent can be successfully created with a project."""
 
-    pool = await create_db_pool(dsn=dsn)
+    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
     result = await create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -65,7 +65,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that creating an agent with an invalid project raises an exception."""
 
-    pool = await create_db_pool(dsn=dsn)
+    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
 
     with raises(HTTPException) as exc:
         await create_agent(
