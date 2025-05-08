@@ -103,7 +103,7 @@ def patch_embed_acompletion():
 
 @fixture(scope="test")
 async def test_agent(dsn=pg_dsn, developer=test_developer, project=test_project):
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
 
     return await create_agent(
         developer_id=developer.id,

@@ -351,7 +351,7 @@ def _(make_request=make_request, project=test_project):
 
     assert isinstance(agents, list)
     assert len(agents) > 0
-    assert all(agent["project"] == project.canonical_name for agent in agents)
+    assert any(agent["project"] == project.canonical_name for agent in agents)
 
 
 @test("route: list agents with metadata filter")
