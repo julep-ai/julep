@@ -9,9 +9,9 @@ from litellm import aembedding as _aembedding
 from litellm import get_supported_openai_params
 from litellm.utils import CustomStreamWrapper, ModelResponse, get_valid_models
 
-from ..common.utils.usage import track_embedding_usage, track_usage
-from ..common.utils.secrets import get_secret_by_name
 from ..common.utils.llm_providers import get_api_key_env_var_name
+from ..common.utils.secrets import get_secret_by_name
+from ..common.utils.usage import track_embedding_usage, track_usage
 from ..env import (
     embedding_dimensions,
     embedding_model_id,
@@ -53,11 +53,12 @@ async def acompletion(
     custom_api_key: str | None = None,
     **kwargs,
 ) -> ModelResponse | CustomStreamWrapper:
-
     # TODO: test this condition? try out custom_api_key is not None
     if not custom_api_key and litellm_url:
         api_key_env_var_name = get_api_key_env_var_name(model)
-        secret = await get_secret_by_name(developer_id=UUID(kwargs.get("user")), name=api_key_env_var_name)
+        secret = await get_secret_by_name(
+            developer_id=UUID(kwargs.get("user")), name=api_key_env_var_name
+        )
         if secret:
             custom_api_key = secret.value
 
@@ -78,7 +79,6 @@ async def acompletion(
     for message in messages:
         if "tool_calls" in message and message["tool_calls"] == []:
             message.pop("tool_calls")
-    
 
     model_response = await _acompletion(
         model=model,

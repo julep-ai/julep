@@ -24,8 +24,8 @@ def create_worker(client: Client) -> Any:
     from ..activities.execute_api_call import execute_api_call
     from ..activities.execute_integration import execute_integration
     from ..activities.execute_system import execute_system
-    from ..activities.sync_items_remote import load_inputs_remote, save_inputs_remote
     from ..activities.pg_query_step import pg_query_step
+    from ..activities.sync_items_remote import load_inputs_remote, save_inputs_remote
     from ..common.interceptors import CustomInterceptor
     from ..env import (
         temporal_task_queue,

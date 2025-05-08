@@ -4,8 +4,7 @@ from beartype import beartype
 from temporalio import activity
 
 from .. import queries
-from ..app import app
-from ..env import pg_dsn, testing
+from ..env import testing
 
 
 @beartype

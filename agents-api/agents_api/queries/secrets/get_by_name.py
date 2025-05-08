@@ -23,7 +23,8 @@ WHERE (
 LIMIT 1;
 """
 
-#TODO: handle HTTPException: 404: No secret found during get_by_name, shouldn't be an error
+
+# TODO: handle HTTPException: 404: No secret found during get_by_name, shouldn't be an error
 @wrap_in_class(
     Secret,
     maybe_one=True,
@@ -48,4 +49,6 @@ async def get_secret_by_name_query(
     )
 
 
-get_secret_by_name = rewrap_exceptions(common_db_exceptions("secret", ["get_by_name"]))(get_secret_by_name_query)
+get_secret_by_name = rewrap_exceptions(common_db_exceptions("secret", ["get_by_name"]))(
+    get_secret_by_name_query
+)

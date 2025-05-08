@@ -1,16 +1,21 @@
 """Tests for list_secrets_query usage in render.py and tasks.py."""
 
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 from agents_api.autogen.Agents import Agent
+from agents_api.autogen.openapi_model import (
+    ChatInput,
+    TaskSpecDef,
+    TransitionTarget,
+    Workflow,
+)
 from agents_api.autogen.Secrets import Secret
 from agents_api.autogen.Tasks import PromptItem, PromptStep, TaskTool
 from agents_api.autogen.Tools import Tool
-from agents_api.autogen.openapi_model import Workflow, WorkflowStep, TransitionTarget, TaskSpecDef, ChatInput
 from agents_api.common.protocol.models import ExecutionInput
 from agents_api.common.protocol.tasks import StepContext
+from agents_api.common.utils.datetime import utcnow
 from agents_api.routers.sessions.render import render_chat_input
 from ward import test
 
@@ -38,7 +43,7 @@ async def _(developer=test_developer):
             updated_at="2023-01-01T00:00:00Z",
         ),
     ]
-    
+
     # Create tools that use secret expressions
     tools = [
         Tool(
@@ -48,13 +53,13 @@ async def _(developer=test_developer):
             computer_20241022={
                 "path": "/usr/bin/curl",
                 "api_key": "$secrets.api_key",
-                "auth_token": "$secrets.service_token"
+                "auth_token": "$secrets.service_token",
             },
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         )
     ]
-    
+
     # Create mock chat context
     mock_chat_context = MagicMock()
     mock_chat_context.session.render_templates = True
@@ -63,56 +68,65 @@ async def _(developer=test_developer):
     mock_chat_context.settings = {"model": "claude-3.5-sonnet"}
     mock_chat_context.get_chat_environment.return_value = {}
     mock_chat_context.merge_system_template.return_value = "System: Use tools to help the user"
-    
+
     # Mock input data
     session_id = uuid4()
     chat_input = ChatInput(messages=[])
-    
+
     # Set up mocking for required functions
-    with patch("agents_api.routers.sessions.render.list_secrets_query") as mock_list_secrets_query, \
-         patch("agents_api.routers.sessions.render.prepare_chat_context") as mock_prepare_chat_context, \
-         patch("agents_api.routers.sessions.render.gather_messages") as mock_gather_messages, \
-         patch("agents_api.routers.sessions.render.render_template") as mock_render_template, \
-         patch("agents_api.common.utils.expressions.evaluate_expressions") as mock_evaluate_expressions:
-        
+    with (
+        patch(
+            "agents_api.routers.sessions.render.list_secrets_query"
+        ) as mock_list_secrets_query,
+        patch(
+            "agents_api.routers.sessions.render.prepare_chat_context"
+        ) as mock_prepare_chat_context,
+        patch("agents_api.routers.sessions.render.gather_messages") as mock_gather_messages,
+        patch("agents_api.routers.sessions.render.render_template") as mock_render_template,
+        patch(
+            "agents_api.common.utils.expressions.evaluate_expressions"
+        ) as mock_evaluate_expressions,
+    ):
         # Set up return values for mocks
         mock_list_secrets_query.return_value = test_secrets
         mock_prepare_chat_context.return_value = mock_chat_context
         mock_gather_messages.return_value = ([], [])
-        mock_render_template.return_value = [{"role": "system", "content": "System: Use tools to help the user"}]
-        
+        mock_render_template.return_value = [
+            {"role": "system", "content": "System: Use tools to help the user"}
+        ]
+
         # Set up evaluate_expressions to properly substitute secrets
         def evaluate_side_effect(value, values):
             if isinstance(value, str) and "$secrets." in value:
                 if "$secrets.api_key" in value:
                     return value.replace("$secrets.api_key", "sk_test_123456789")
-                elif "$secrets.service_token" in value:
+                if "$secrets.service_token" in value:
                     return value.replace("$secrets.service_token", "token_987654321")
             return value
-            
+
         mock_evaluate_expressions.side_effect = evaluate_side_effect
-        
+
         # Call the function being tested
-        messages, doc_refs, formatted_tools, *_ = await render_chat_input(
+        _messages, _doc_refs, formatted_tools, *_ = await render_chat_input(
             developer=developer,
             session_id=session_id,
             chat_input=chat_input,
         )
-        
+
         # Assert that list_secrets_query was called with the right parameters
         mock_list_secrets_query.assert_called_once_with(developer_id=developer.id)
-        
+
         # Verify that expressions were evaluated
         mock_evaluate_expressions.assert_called()
-        
+
         # Check that formatted_tools contains the evaluated secrets
         assert formatted_tools is not None
         assert len(formatted_tools) > 0
-        
+
         # The first tool should be the computer_20241022 tool
         tool = formatted_tools[0]
         assert tool["type"] == "computer_20241022"
-        
+
         # Verify that the secrets were evaluated in the function parameters
         function_params = tool["function"]["parameters"]
         assert "api_key" in function_params
@@ -150,7 +164,7 @@ async def _(developer_id=test_developer_id):
             updated_at="2023-01-01T00:00:00Z",
         ),
     ]
-    
+
     # Create tools that use secret expressions
     task_tools = [
         TaskTool(
@@ -160,102 +174,92 @@ async def _(developer_id=test_developer_id):
                 "primary_key": "$secrets.api_key_1",
                 "secondary_key": "$secrets.api_key_2",
                 "connection_string": "$secrets.database_url",
-                "url": "https://api.example.com"
-            }
+                "url": "https://api.example.com",
+            },
         ),
         TaskTool(
             type="api_call",
             name="second_tool",
             spec={
-                "headers": {
-                    "Authorization": "Bearer $secrets.api_key_1"
-                },
-                "url": "https://api.example.com/v2"
-            }
-        )
+                "headers": {"Authorization": "Bearer $secrets.api_key_1"},
+                "url": "https://api.example.com/v2",
+            },
+        ),
     ]
-    
+
     # Create a valid prompt step for the workflow
     test_prompt_step = PromptStep(
         kind_="prompt",
         prompt=[PromptItem(role="user", content="Test prompt content")],
     )
-    
+
     # Create a mock workflow with a proper step
     test_workflow = Workflow(name="main", steps=[test_prompt_step])
-    
+
     # Create a proper TaskSpecDef
     task_spec = TaskSpecDef(
         id=uuid4(),
         name="test_task",
-        created_at=datetime.now().isoformat(),
-        updated_at=datetime.now().isoformat(),
+        created_at=utcnow(),
+        updated_at=utcnow(),
         workflows=[test_workflow],
         tools=task_tools,
-        inherit_tools=False
+        inherit_tools=False,
     )
-    
+
     # Create a proper Agent
     test_agent = Agent(
-        id=uuid4(),
-        name="test_agent",
-        model="gpt-4",
-        created_at=datetime.now().isoformat(),
-        updated_at=datetime.now().isoformat()
+        id=uuid4(), name="test_agent", model="gpt-4", created_at=utcnow(), updated_at=utcnow()
     )
-    
+
     # Create execution input with the task
     execution_input = ExecutionInput(
         developer_id=developer_id,
         agent=test_agent,
         agent_tools=[],
         arguments={},
-        task=task_spec
+        task=task_spec,
     )
-    
+
     # Create a transition target pointing to the workflow step
-    cursor = TransitionTarget(
-        workflow="main", 
-        step=0,
-        scope_id=uuid4()
-    )
-    
+    cursor = TransitionTarget(workflow="main", step=0, scope_id=uuid4())
+
     # Set up the step context properly
     step_context = StepContext(
-        loaded=True,
-        execution_input=execution_input,
-        cursor=cursor,
-        current_input={}
+        loaded=True, execution_input=execution_input, cursor=cursor, current_input={}
     )
-    
+
     # Mock the current step to use all tools
-    with patch.object(step_context, "current_step", MagicMock(tools="all")):
-        # Use context manager for mocking
-        with patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets_query, \
-             patch("agents_api.common.protocol.tasks.evaluate_expressions") as mock_evaluate_expressions:
-            
-            # Set mock return values
-            mock_list_secrets_query.return_value = test_secrets
-            # Have evaluate_expressions pass through the values but replace secret expressions
-            mock_evaluate_expressions.side_effect = lambda spec, values: {
-                k: v.replace("$secrets.api_key_1", "sk_test_123")
-                   .replace("$secrets.api_key_2", "sk_test_456")
-                   .replace("$secrets.database_url", "postgresql://user:password@localhost:5432/db")
-                if isinstance(v, str) else v
-                for k, v in spec.items()
-            }
-            
-            # Call the tools method
-            tools = await step_context.tools()
-            
-            # Assert that list_secrets_query was called with the right parameters
-            mock_list_secrets_query.assert_called_once_with(developer_id=developer_id)
-            
-            # Verify the right number of tools were created
-            assert len(tools) == len(task_tools)
-            
-            # Verify evaluate_expressions was called for each tool
-            assert mock_evaluate_expressions.call_count == len(task_tools)
+    with (
+        patch.object(step_context, "current_step", MagicMock(tools="all")),
+        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets_query,
+        patch(
+            "agents_api.common.protocol.tasks.evaluate_expressions"
+        ) as mock_evaluate_expressions,
+    ):
+        # Set mock return values
+        mock_list_secrets_query.return_value = test_secrets
+        # Have evaluate_expressions pass through the values but replace secret expressions
+        mock_evaluate_expressions.side_effect = lambda spec, values: {
+            k: v.replace("$secrets.api_key_1", "sk_test_123")
+            .replace("$secrets.api_key_2", "sk_test_456")
+            .replace("$secrets.database_url", "postgresql://user:password@localhost:5432/db")
+            if isinstance(v, str)
+            else v
+            for k, v in spec.items()
+        }
+
+        # Call the tools method
+        tools = await step_context.tools()
+
+        # Assert that list_secrets_query was called with the right parameters
+        mock_list_secrets_query.assert_called_once_with(developer_id=developer_id)
+
+        # Verify the right number of tools were created
+        assert len(tools) == len(task_tools)
+
+        # Verify evaluate_expressions was called for each tool
+        assert mock_evaluate_expressions.call_count == len(task_tools)
 
 
 @test("tasks: list_secrets_query in StepContext.tools method")
@@ -279,87 +283,74 @@ async def _(developer_id=test_developer_id):
             updated_at="2023-01-01T00:00:00Z",
         ),
     ]
-    
+
     # Create tools that use secret expressions
     task_tools = [
         TaskTool(
             type="function",
             name="test_tool_with_secret",
-            spec={
-                "api_key": "$secrets.api_key",
-                "url": "https://api.example.com"
-            }
+            spec={"api_key": "$secrets.api_key", "url": "https://api.example.com"},
         )
     ]
-    
+
     # Create a valid prompt step for the workflow
     test_prompt_step = PromptStep(
         kind_="prompt",
         prompt=[PromptItem(role="user", content="Test prompt content")],
     )
-    
+
     # Create a mock workflow with a proper step
     test_workflow = Workflow(name="main", steps=[test_prompt_step])
-    
+
     # Create a proper TaskSpecDef
     task_spec = TaskSpecDef(
         id=uuid4(),
         name="test_task",
-        created_at=datetime.now().isoformat(),
-        updated_at=datetime.now().isoformat(),
+        created_at=utcnow(),
+        updated_at=utcnow(),
         workflows=[test_workflow],
         tools=task_tools,
-        inherit_tools=False
+        inherit_tools=False,
     )
-    
+
     # Create a proper Agent
     test_agent = Agent(
-        id=uuid4(),
-        name="test_agent",
-        model="gpt-4",
-        created_at=datetime.now().isoformat(),
-        updated_at=datetime.now().isoformat()
+        id=uuid4(), name="test_agent", model="gpt-4", created_at=utcnow(), updated_at=utcnow()
     )
-    
+
     # Create execution input with the task
     execution_input = ExecutionInput(
         developer_id=developer_id,
         agent=test_agent,
         agent_tools=[],
         arguments={},
-        task=task_spec
+        task=task_spec,
     )
-    
+
     # Create a transition target pointing to the workflow step
-    cursor = TransitionTarget(
-        workflow="main", 
-        step=0,
-        scope_id=uuid4()
-    )
-    
+    cursor = TransitionTarget(workflow="main", step=0, scope_id=uuid4())
+
     # Set up the step context properly
     step_context = StepContext(
-        loaded=True,
-        execution_input=execution_input,
-        cursor=cursor,
-        current_input={}
+        loaded=True, execution_input=execution_input, cursor=cursor, current_input={}
     )
-    
+
     # Mock the current step to use all tools
-    with patch.object(step_context, "current_step", MagicMock(tools="all")):
-        # Use context manager for mocking
-        with patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets_query:
-            # Set mock return value
-            mock_list_secrets_query.return_value = test_secrets
-            
-            # Call the tools method
-            tools = await step_context.tools()
-            
-            # Assert that list_secrets_query was called with the right parameters
-            mock_list_secrets_query.assert_called_once_with(developer_id=developer_id)
-            
-            # Verify tools were created with evaluated secrets
-            assert len(tools) == len(task_tools)
-            
-            # StepContext.tools() returns the correct tools
-            assert len(tools) > 0 
+    with (
+        patch.object(step_context, "current_step", MagicMock(tools="all")),
+        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets_query,
+    ):
+        # Set mock return value
+        mock_list_secrets_query.return_value = test_secrets
+
+        # Call the tools method
+        tools = await step_context.tools()
+
+        # Assert that list_secrets_query was called with the right parameters
+        mock_list_secrets_query.assert_called_once_with(developer_id=developer_id)
+
+        # Verify tools were created with evaluated secrets
+        assert len(tools) == len(task_tools)
+
+        # StepContext.tools() returns the correct tools
+        assert len(tools) > 0

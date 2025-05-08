@@ -24,12 +24,12 @@ with workflow.unsafe.imports_passed_through():
     from ...common.utils.expressions import evaluate_expressions
     from ...worker.codec import RemoteObject
 
+from ...activities.pg_query_step import pg_query_step
+from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from ...env import max_steps_accessible_in_tasks, temporal_heartbeat_timeout
 from ...queries.executions import list_execution_transitions
 from ...queries.secrets.list import list_secrets_query
 from ...queries.utils import serialize_model_data
-from ...activities.pg_query_step import pg_query_step
-from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from .models import ExecutionInput
 
 # TODO: Maybe we should use a library for this
@@ -196,7 +196,11 @@ class StepContext(BaseModel):
         try:
             secrets_query_result = await workflow.execute_activity(
                 pg_query_step,
-                args=["list_secrets_query", "secrets.list", {"developer_id": self.execution_input.developer_id}],
+                args=[
+                    "list_secrets_query",
+                    "secrets.list",
+                    {"developer_id": self.execution_input.developer_id},
+                ],
                 schedule_to_close_timeout=timedelta(days=31),
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -207,10 +211,7 @@ class StepContext(BaseModel):
             )
 
         if tools:
-            secrets = {
-                secret.name: secret.value
-                for secret in secrets_query_result
-            }
+            secrets = {secret.name: secret.value for secret in secrets_query_result}
         for tool in tools:
             tool_def = tool.model_dump()
             spec = tool_def.pop("spec", {}) or {}

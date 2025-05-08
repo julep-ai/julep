@@ -224,12 +224,12 @@ def wrap_in_class(
         if maybe_one:
             if len(data) == 0:
                 return None
-            elif len(data) == 1:
+            if len(data) == 1:
                 return cls(**transform(data[0]))
-            else:
-                raise ValueError(f"Expected one result or none, got {len(data)}")
+            msg = f"Expected one result or none, got {len(data)}"
+            raise ValueError(msg)
 
-        elif one:
+        if one:
             assert len(data) == 1, f"Expected one result, got {len(data)}"
             obj: ModelT = cls(**transform(data[0]))
             return obj
