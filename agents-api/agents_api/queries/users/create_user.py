@@ -1,5 +1,6 @@
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from uuid_extensions import uuid7
@@ -34,11 +35,18 @@ WITH new_user AS (
     FROM projects
     WHERE developer_id = $1 AND canonical_name = $6
 ), project_association AS (
-    -- Update user with project_id
-    UPDATE users
-    SET project_id = p.project_id
+    -- Create association in project_users table
+    INSERT INTO project_users (
+        project_id,
+        developer_id,
+        user_id
+    )
+    SELECT
+        p.project_id,
+        $1,
+        $2
     FROM proj p
-    WHERE users.user_id = $2 AND users.developer_id = $1
+    ON CONFLICT (project_id, user_id) DO NOTHING
     RETURNING 1
 )
 SELECT
@@ -61,7 +69,7 @@ LEFT JOIN proj p ON TRUE;
 @query_metrics("create_user")
 @pg_query
 @beartype
-async def create_user(
+async def create_user_query(
     *,
     developer_id: UUID,
     user_id: UUID | None = None,
@@ -78,30 +86,45 @@ async def create_user(
     Returns:
         tuple[str, list]: A tuple containing the SQL query and its parameters.
     """
-    user_id = user_id or uuid7()
-    metadata = data.metadata or {}
 
+    return (
+        user_query,
+        [
+            developer_id,  # $1
+            user_id or uuid7(),  # $2
+            data.name,  # $3
+            data.about,  # $4
+            data.metadata or {},  # $5
+            data.project or "default",  # $6
+        ],
+    )
+
+
+async def create_user(
+    *,
+    developer_id: UUID,
+    user_id: UUID | None = None,
+    data: CreateUserRequest,
+    connection_pool: asyncpg.Pool | None = None,
+) -> User:
     # Get project (default if not specified)
-    project_canonical_name = data.project
+    project_canonical_name = data.project or "default"
 
     # Check if the project exists
-    project_exists_result = await project_exists(developer_id, project_canonical_name)
+    project_exists_result = await project_exists(
+        developer_id,
+        project_canonical_name,
+        connection_pool=connection_pool,
+    )
 
     if not project_exists_result[0]["project_exists"]:
         raise HTTPException(
             status_code=404, detail=f"Project '{project_canonical_name}' not found"
         )
 
-    params = [
-        developer_id,  # $1
-        user_id,  # $2
-        data.name,  # $3
-        data.about,  # $4
-        metadata,  # $5
-        project_canonical_name,  # $6
-    ]
-
-    return (
-        user_query,
-        params,
+    return await create_user_query(
+        developer_id=developer_id,
+        user_id=user_id,
+        data=data,
+        connection_pool=connection_pool,
     )

@@ -21,7 +21,8 @@ WITH filtered_users AS (
         u.updated_at, -- updated_at
         p.canonical_name AS project -- project
     FROM users u
-    LEFT JOIN projects p ON u.project_id = p.project_id
+    LEFT JOIN project_users pu ON u.user_id = pu.user_id AND u.developer_id = pu.developer_id
+    LEFT JOIN projects p ON pu.project_id = p.project_id
     WHERE u.developer_id = $1
         AND ($4::jsonb IS NULL OR u.metadata @> $4)
         AND ($7::text IS NULL OR p.canonical_name = $7)

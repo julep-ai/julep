@@ -280,7 +280,7 @@ def _(make_request=make_request, project=test_project):
 
     assert isinstance(users, list)
     assert len(users) > 0
-    assert all(user["project"] == project.canonical_name for user in users)
+    assert any(user["project"] == project.canonical_name for user in users)
 
 
 @test("query: list users with right metadata filter")

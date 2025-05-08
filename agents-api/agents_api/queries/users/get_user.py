@@ -19,7 +19,8 @@ SELECT
     u.updated_at, -- updated_at
     p.canonical_name AS project -- project
 FROM users u
-LEFT JOIN projects p ON u.project_id = p.project_id
+LEFT JOIN project_users pu ON u.user_id = pu.user_id AND u.developer_id = pu.developer_id
+LEFT JOIN projects p ON pu.project_id = p.project_id
 WHERE u.developer_id = $1
 AND u.user_id = $2;
 """

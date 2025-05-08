@@ -1,5 +1,6 @@
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 
@@ -16,31 +17,47 @@ WITH proj AS (
     SELECT project_id, canonical_name
     FROM projects
     WHERE developer_id = $1 AND canonical_name = $6
+), user_op AS (
+    INSERT INTO users (
+        developer_id,
+        user_id,
+        name,
+        about,
+        metadata
+    )
+    VALUES (
+        $1, -- developer_id
+        $2, -- user_id
+        $3, -- name
+        $4, -- about
+        $5::jsonb -- metadata
+    )
+    ON CONFLICT (developer_id, user_id) DO UPDATE SET
+        name = EXCLUDED.name,
+        about = EXCLUDED.about,
+        metadata = EXCLUDED.metadata
+    RETURNING *
+), project_association AS (
+    -- Create or update project association
+    INSERT INTO project_users (
+        project_id,
+        developer_id,
+        user_id
+    )
+    SELECT
+        p.project_id,
+        $1,
+        $2
+    FROM proj p
+    WHERE p.project_id IS NOT NULL
+    ON CONFLICT (project_id, user_id) DO NOTHING
+    RETURNING 1
 )
-INSERT INTO users (
-    developer_id,
-    user_id,
-    name,
-    about,
-    metadata,
-    project_id
-)
-VALUES (
-    $1, -- developer_id
-    $2, -- user_id
-    $3, -- name
-    $4, -- about
-    $5::jsonb, -- metadata
-    (SELECT project_id FROM proj) -- project_id
-)
-ON CONFLICT (developer_id, user_id) DO UPDATE SET
-    name = EXCLUDED.name,
-    about = EXCLUDED.about,
-    metadata = EXCLUDED.metadata,
-    project_id = (SELECT project_id FROM proj)
-RETURNING
-    users.*,
-    (SELECT canonical_name FROM proj) AS project;
+SELECT
+    u.*,
+    p.canonical_name AS project
+FROM user_op u
+LEFT JOIN proj p ON TRUE;
 """
 
 
@@ -56,7 +73,7 @@ RETURNING
 @query_metrics("create_or_update_user")
 @pg_query
 @beartype
-async def create_or_update_user(
+async def create_or_update_user_query(
     *,
     developer_id: UUID,
     user_id: UUID,
@@ -76,8 +93,31 @@ async def create_or_update_user(
     Raises:
         HTTPException: If developer doesn't exist (404) or on unique constraint violation (409)
     """
+
+    params = [
+        developer_id,  # $1
+        user_id,  # $2
+        data.name,  # $3
+        data.about,  # $4
+        data.metadata or {},  # $5
+        data.project or "default",  # $6
+    ]
+
+    return (
+        user_query,
+        params,
+    )
+
+
+async def create_or_update_user(
+    *,
+    developer_id: UUID,
+    user_id: UUID,
+    data: CreateOrUpdateUserRequest,
+    connection_pool: asyncpg.Pool | None = None,
+) -> User:
     # Get project (default if not specified)
-    project_canonical_name = data.project
+    project_canonical_name = data.project or "default"
 
     # Check if the project exists
     project_exists_result = await project_exists(developer_id, project_canonical_name)
@@ -87,16 +127,9 @@ async def create_or_update_user(
             status_code=404, detail=f"Project '{project_canonical_name}' not found"
         )
 
-    params = [
-        developer_id,  # $1
-        user_id,  # $2
-        data.name,  # $3
-        data.about,  # $4
-        data.metadata or {},  # $5
-        project_canonical_name,  # $6
-    ]
-
-    return (
-        user_query,
-        params,
+    return await create_or_update_user_query(
+        developer_id=developer_id,
+        user_id=user_id,
+        data=data,
+        connection_pool=connection_pool,
     )
