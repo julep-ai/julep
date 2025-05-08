@@ -5,6 +5,7 @@ It includes functions to construct and execute SQL queries for inserting new age
 
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from uuid_extensions import uuid7
@@ -74,7 +75,7 @@ LEFT JOIN proj p ON TRUE;
 @query_metrics("create_agent")
 @pg_query
 @beartype
-async def create_agent(
+async def create_agent_query(
     *,
     developer_id: UUID,
     agent_id: UUID | None = None,
@@ -91,44 +92,45 @@ async def create_agent(
     Returns:
         tuple[str, dict]: SQL query and parameters for creating the agent.
     """
-    agent_id = agent_id or uuid7()
-    project_canonical_name = data.project or "default"
 
-    # First check if the project exists
-    project_exists_result = await project_exists(developer_id, project_canonical_name)
+    return (
+        agent_query,
+        [
+            developer_id,
+            agent_id or uuid7(),
+            data.canonical_name or generate_canonical_name(),
+            data.name,
+            data.about,
+            data.instructions if isinstance(data.instructions, list) else [data.instructions],
+            data.model,
+            data.metadata or {},
+            data.default_settings or {},
+            data.default_system_template,
+            data.project,
+        ],
+    )
+
+
+async def create_agent(
+    *,
+    developer_id: UUID,
+    agent_id: UUID | None = None,
+    data: CreateAgentRequest,
+    connection_pool: asyncpg.Pool | None = None,
+) -> Agent:
+    project_canonical_name = data.project or "default"
+    project_exists_result = await project_exists(
+        developer_id, project_canonical_name, connection_pool=connection_pool
+    )
 
     if not project_exists_result[0]["project_exists"]:
         raise HTTPException(
             status_code=404, detail=f"Project '{project_canonical_name}' not found"
         )
 
-    # Ensure instructions is a list
-    data.instructions = (
-        data.instructions if isinstance(data.instructions, list) else [data.instructions]
-    )
-
-    # Convert default_settings to dict if it exists
-    default_settings = data.default_settings or {}
-
-    # Set default values
-    data.metadata = data.metadata or {}
-    data.canonical_name = data.canonical_name or generate_canonical_name()
-
-    params = [
-        developer_id,
-        agent_id,
-        data.canonical_name,
-        data.name,
-        data.about,
-        data.instructions,
-        data.model,
-        data.metadata,
-        default_settings,
-        data.default_system_template,
-        project_canonical_name,
-    ]
-
-    return (
-        agent_query,
-        params,
+    return await create_agent_query(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        data=data,
+        connection_pool=connection_pool,
     )
