@@ -26,7 +26,7 @@ LIMIT 1;
 #TODO: handle HTTPException: 404: No secret found during get_by_name, shouldn't be an error
 @wrap_in_class(
     Secret,
-    one=True,
+    maybe_one=True,
     transform=lambda d: {**d, "id": d["secret_id"]},
 )
 @pg_query

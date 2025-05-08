@@ -212,6 +212,7 @@ def sanitize_string(value: Any) -> Any:
 def wrap_in_class(
     cls: type[ModelT] | Callable[..., ModelT],
     one: bool = False,
+    maybe_one: bool = False,
     transform: Callable[[dict], dict] | None = None,
 ) -> Callable[..., Callable[..., ModelT | list[ModelT]]]:
     def _return_data(rec: list[Record]):
@@ -220,7 +221,15 @@ def wrap_in_class(
         nonlocal transform
         transform = transform or (lambda x: x)
 
-        if one:
+        if maybe_one:
+            if len(data) == 0:
+                return None
+            elif len(data) == 1:
+                return cls(**transform(data[0]))
+            else:
+                raise ValueError(f"Expected one result or none, got {len(data)}")
+
+        elif one:
             assert len(data) == 1, f"Expected one result, got {len(data)}"
             obj: ModelT = cls(**transform(data[0]))
             return obj

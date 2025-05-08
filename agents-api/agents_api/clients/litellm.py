@@ -54,6 +54,7 @@ async def acompletion(
     **kwargs,
 ) -> ModelResponse | CustomStreamWrapper:
 
+    # TODO: test this condition? try out custom_api_key is not None
     if not custom_api_key and litellm_url:
         api_key_env_var_name = get_api_key_env_var_name(model)
         secret = await get_secret_by_name(developer_id=UUID(kwargs.get("user")), name=api_key_env_var_name)
