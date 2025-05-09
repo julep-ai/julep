@@ -15,16 +15,11 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 # Define the raw SQL query
 agent_query = """
 WITH proj AS (
-    -- Find project ID by canonical name if project is provided
+    -- Find project ID by canonical name if project is provided and not NULL
     SELECT project_id, canonical_name
     FROM projects
     WHERE developer_id = $1 AND canonical_name = $9
-),
-project_check AS (
-    -- Check if project exists when being updated
-    SELECT EXISTS (
-        SELECT 1 FROM proj
-    ) as project_exists
+    AND $9 IS NOT NULL
 ),
 updated_agent AS (
     UPDATE agents
@@ -36,10 +31,6 @@ updated_agent AS (
         default_settings = $7::jsonb,
         default_system_template = $8
     WHERE agent_id = $2 AND developer_id = $1
-    AND (
-        $9 IS NULL OR
-        (SELECT project_exists FROM project_check)
-    )
     RETURNING *
 )
 SELECT

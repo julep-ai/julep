@@ -15,16 +15,8 @@ WITH proj AS (
     FROM projects
     WHERE developer_id = $1 AND canonical_name = $6
     AND $6 IS NOT NULL
-), project_exists AS (
-    -- Check if the specified project exists
-    SELECT
-        CASE
-            WHEN $6 IS NULL THEN TRUE -- No project specified, so exists check passes
-            WHEN EXISTS (SELECT 1 FROM proj) THEN TRUE -- Project exists
-            ELSE FALSE -- Project specified but doesn't exist
-        END AS exists
 ), user_update AS (
-    -- Only proceed with update if project exists
+    -- Update user details
     UPDATE users
     SET
         name = CASE
@@ -41,7 +33,6 @@ WITH proj AS (
         END
     WHERE developer_id = $1
     AND user_id = $2
-    AND (SELECT exists FROM project_exists)
     RETURNING *
 ), project_association AS (
     -- Create or update project association if project is being updated
@@ -69,7 +60,6 @@ WITH proj AS (
     )
 )
 SELECT
-    (SELECT exists FROM project_exists) AS project_exists,
     u.*,
     COALESCE(
         (SELECT canonical_name FROM proj),
@@ -105,7 +95,6 @@ async def patch_user(
     """
     Constructs an optimized SQL query for partial user updates.
     Uses primary key for efficient update and jsonb_merge for metadata.
-    Includes project existence check directly in the SQL.
 
     Args:
         developer_id (UUID): The developer's UUID
@@ -115,9 +104,6 @@ async def patch_user(
     Returns:
         tuple[str, list]: SQL query and parameters
     """
-    # SQL will return project_exists status in the result
-    # If false, the row won't be updated, and we'll raise an appropriate exception
-    # in the error handling layer
     params = [
         developer_id,  # $1
         user_id,  # $2

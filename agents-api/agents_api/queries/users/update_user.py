@@ -15,16 +15,8 @@ WITH proj AS (
     FROM projects
     WHERE developer_id = $1 AND canonical_name = $6
     AND $6 IS NOT NULL
-), project_exists AS (
-    -- Check if the specified project exists
-    SELECT
-        CASE
-            WHEN $6 IS NULL THEN TRUE -- No project specified, so exists check passes
-            WHEN EXISTS (SELECT 1 FROM proj) THEN TRUE -- Project exists
-            ELSE FALSE -- Project specified but doesn't exist
-        END AS exists
 ), user_update AS (
-    -- Only proceed with update if project exists
+    -- Update the user details
     UPDATE users
     SET
         name = $3, -- name
@@ -32,7 +24,6 @@ WITH proj AS (
         metadata = $5 -- metadata
     WHERE developer_id = $1 -- developer_id
     AND user_id = $2 -- user_id
-    AND (SELECT exists FROM project_exists)
     RETURNING *
 ), project_association AS (
     -- Create or update project association if project is provided and exists
@@ -60,7 +51,6 @@ WITH proj AS (
     )
 )
 SELECT
-    (SELECT exists FROM project_exists) AS project_exists,
     u.*,
     COALESCE(
         (SELECT canonical_name FROM proj),
@@ -96,7 +86,6 @@ async def update_user(
     """
     Constructs an optimized SQL query to update a user's details.
     Uses primary key for efficient update.
-    Includes project existence check directly in the SQL.
 
     Args:
         developer_id (UUID): The developer's UUID

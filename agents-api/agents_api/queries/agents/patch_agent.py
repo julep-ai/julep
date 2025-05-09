@@ -21,12 +21,6 @@ WITH proj AS (
     WHERE developer_id = $1 AND canonical_name = $11
     AND $11 IS NOT NULL
 ),
-project_check AS (
-    -- Check if project exists when being updated
-    SELECT EXISTS (
-        SELECT 1 FROM proj
-    ) as project_exists
-),
 updated_agent AS (
     UPDATE agents
     SET
@@ -63,10 +57,6 @@ updated_agent AS (
             ELSE canonical_name
         END
     WHERE agent_id = $2 AND developer_id = $1
-    AND (
-        $11 IS NULL OR
-        (SELECT project_exists FROM project_check)
-    )
     RETURNING *
 )
 SELECT
