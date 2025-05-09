@@ -30,7 +30,7 @@ from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_project
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully created."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     await create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -46,7 +46,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that an agent can be successfully created with a project."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     result = await create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -65,7 +65,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that creating an agent with an invalid project raises an exception."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
 
     with raises(HTTPException) as exc:
         await create_agent(
@@ -106,7 +106,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that an agent can be successfully created or updated with a project."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     result = await create_or_update_agent(
         developer_id=developer_id,
         agent_id=uuid7(),
@@ -237,7 +237,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that retrieving an existing agent returns the correct agent information."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     result = await get_agent(
         agent_id=agent.id,
         developer_id=developer_id,
@@ -269,7 +269,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that listing agents with a project filter returns the correct agents."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
 
     # First create an agent with the specific project
     await create_agent(
@@ -311,7 +311,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that an agent can be successfully deleted."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     create_result = await create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(

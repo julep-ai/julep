@@ -121,7 +121,7 @@ async def create_or_update_user(
 
     # Check if the project exists
     project_exists_result = await project_exists(
-        developer_id, project_canonical_name, connecrtion_pool=connection_pool
+        developer_id, project_canonical_name, connection_pool=connection_pool
     )
 
     if not project_exists_result[0]["project_exists"]:

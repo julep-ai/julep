@@ -98,7 +98,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     """Test that a user can be successfully created or updated."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     user = await create_or_update_user(
         developer_id=developer_id,
         user_id=uuid7(),
@@ -118,7 +118,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     """Test that a user can be successfully created or updated with a project."""
 
-    app.state.postgres_pool = pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=dsn)
     user = await create_or_update_user(
         developer_id=developer_id,
         user_id=uuid7(),
