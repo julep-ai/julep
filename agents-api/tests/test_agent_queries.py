@@ -174,6 +174,30 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, projec
     assert result.project == project.canonical_name
 
 
+@test("query: update agent, project does not exist")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that an existing agent's information can be successfully updated with a project that does not exist."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await update_agent(
+            agent_id=agent.id,
+            developer_id=developer_id,
+            data=UpdateAgentRequest(
+                name="updated agent with project",
+                about="updated agent about",
+                model="gpt-4o-mini",
+                default_settings={"temperature": 1.0},
+                metadata={"hello": "world"},
+                project="invalid_project",
+            ),
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 404
+    assert "Project 'invalid_project' not found" in exc.raised.detail
+
+
 @test("query: patch agent sql")
 async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     """Test that an agent can be successfully patched."""
@@ -215,10 +239,45 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, projec
         ),
         connection_pool=pool,
     )  # type: ignore[not-callable]
+    # Verify the agent is in the list of agents with the correct project
+    agents = await list_agents(
+        developer_id=developer_id,
+        connection_pool=pool,
+    )  # type: ignore[not-callable]
+
+    # Find our patched agent in the list
+    patched_agent = next((a for a in agents if a.id == agent.id), None)
+
+    assert patched_agent is not None
+    assert patched_agent.name == "patched agent with project"
+    assert patched_agent.project == project.canonical_name
 
     assert result is not None
     assert isinstance(result, Agent)
     assert result.project == project.canonical_name
+
+
+@test("query: patch agent, project does not exist")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """Test that an agent can be successfully patched with a project that does not exist."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await patch_agent(
+            agent_id=agent.id,
+            developer_id=developer_id,
+            data=PatchAgentRequest(
+                name="patched agent with project",
+                about="patched agent about",
+                default_settings={"temperature": 1.0},
+                metadata={"something": "else"},
+                project="invalid_project",
+            ),
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 404
+    assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
 @test("query: get agent not exists sql")

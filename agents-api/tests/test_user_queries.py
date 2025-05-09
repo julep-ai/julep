@@ -168,11 +168,47 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user, project=
         ),
         connection_pool=pool,
     )  # type: ignore[not-callable]
+    # Verify the user was updated by listing all users
+    users = await list_users(
+        developer_id=developer_id,
+        connection_pool=pool,
+    )  # type: ignore[not-callable]
+
+    assert users is not None
+    assert isinstance(users, list)
+    assert len(users) > 0
+
+    # Find the updated user in the list
+    updated_user = next((u for u in users if u.id == user.id), None)
+    assert updated_user is not None
+    assert updated_user.name == "updated user with project"
+    assert updated_user.project == project.canonical_name
 
     assert update_result is not None
     assert isinstance(update_result, User)
     assert update_result.updated_at > user.created_at
     assert update_result.project == project.canonical_name
+
+
+@test("query: update user, project does not exist")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """Test that an existing user's information can be successfully updated with a project that does not exist."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await update_user(
+            user_id=user.id,
+            developer_id=developer_id,
+            data=UpdateUserRequest(
+                name="updated user with project",
+                about="updated user about",
+                project="invalid_project",
+            ),
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 404
+    assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
 @test("query: get user not exists sql")
@@ -358,10 +394,48 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user, project=
         ),
         connection_pool=pool,
     )  # type: ignore[not-callable]
+    # Verify the user was updated by listing all users
+    users = await list_users(
+        developer_id=developer_id,
+        connection_pool=pool,
+    )  # type: ignore[not-callable]
+
+    assert users is not None
+    assert isinstance(users, list)
+    assert len(users) > 0
+
+    # Find the updated user in the list
+    updated_user = next((u for u in users if u.id == user.id), None)
+    assert updated_user is not None
+    assert updated_user.name == "patched user with project"
+    assert updated_user.project == project.canonical_name
+
     assert patch_result is not None
     assert isinstance(patch_result, User)
     assert patch_result.updated_at > user.created_at
     assert patch_result.project == project.canonical_name
+
+
+@test("query: patch user, project does not exist")
+async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """Test that a user can be successfully patched with a project that does not exist."""
+
+    pool = await create_db_pool(dsn=dsn)
+    with raises(HTTPException) as exc:
+        await patch_user(
+            developer_id=developer_id,
+            user_id=user.id,
+            data=PatchUserRequest(
+                name="patched user with project",
+                about="patched user about",
+                metadata={"test": "metadata"},
+                project="invalid_project",
+            ),
+            connection_pool=pool,
+        )  # type: ignore[not-callable]
+
+    assert exc.raised.status_code == 404
+    assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
 @test("query: delete user sql")
