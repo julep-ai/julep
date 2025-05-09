@@ -5,7 +5,6 @@ Tests verify the SQL queries without actually executing them against a database.
 
 from uuid import UUID
 
-from agents_api.app import app
 from agents_api.autogen.openapi_model import (
     CreateOrUpdateUserRequest,
     CreateUserRequest,

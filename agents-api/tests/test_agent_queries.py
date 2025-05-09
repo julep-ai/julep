@@ -1,6 +1,5 @@
 # Tests for agent queries
 
-from agents_api.app import app
 from agents_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
