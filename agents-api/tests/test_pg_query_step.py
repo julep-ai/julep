@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from agents_api.activities.pg_query_step import pg_query_step
-from ward import skip, test
+from ward import test
 
 
 @test("pg_query_step correctly calls the specified query")
@@ -16,10 +16,10 @@ async def _():
         # Set up module resolution chain: queries -> test_module -> test_file -> test_query
         mock_test_file = MagicMock()
         mock_test_file.test_query = mock_query
-        
+
         mock_test_module = MagicMock()
         mock_test_module.test_file = mock_test_file
-        
+
         # Configure the queries module to return our mock module
         mock_queries.test_module = mock_test_module
 
@@ -41,7 +41,9 @@ async def _():
 async def _():
     # Try with an invalid query name (no dot separator)
     try:
-        await pg_query_step(query_name="invalid_query_name", file_name="invalid_file_name", values={})
+        await pg_query_step(
+            query_name="invalid_query_name", file_name="invalid_file_name", values={}
+        )
         assert False, "Expected an exception but none was raised"
     except ValueError:
         # Expected behavior - ValueError should be raised
@@ -60,10 +62,10 @@ async def _():
         # Set up module resolution chain: queries -> test_module -> test_file -> test_query
         mock_test_file = MagicMock()
         mock_test_file.test_query = mock_query
-        
+
         mock_test_module = MagicMock()
         mock_test_module.test_file = mock_test_file
-        
+
         # Configure the queries module to return our mock module
         mock_queries.test_module = mock_test_module
 
