@@ -18,7 +18,8 @@ SELECT
     f.*,
     p.canonical_name AS project
 FROM files f
-LEFT JOIN projects p ON f.project_id = p.project_id
+LEFT JOIN project_files pf ON f.developer_id = pf.developer_id AND f.file_id = pf.file_id
+LEFT JOIN projects p ON pf.project_id = p.project_id
 LEFT JOIN file_owners fo ON f.developer_id = fo.developer_id AND f.file_id = fo.file_id
 WHERE f.developer_id = $1
 AND f.file_id = $2

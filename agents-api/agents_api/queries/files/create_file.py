@@ -8,6 +8,7 @@ import hashlib
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
 from fastapi import HTTPException
 from uuid_extensions import uuid7
@@ -46,18 +47,24 @@ WITH new_file AS (
     FROM projects
     WHERE developer_id = $1 AND canonical_name = $8
 ), project_association AS (
-    -- Update file with project_id
-    UPDATE files
-    SET project_id = p.project_id
+    -- Insert into project_files junction table
+    INSERT INTO project_files (
+        project_id,
+        developer_id,
+        file_id
+    )
+    SELECT
+        p.project_id,
+        $1,
+        $2
     FROM proj p
-    WHERE files.file_id = $2 AND files.developer_id = $1
+    WHERE p.project_id IS NOT NULL
     RETURNING 1
 )
 SELECT
     f.*,
-    p.canonical_name AS project
-FROM new_file f
-LEFT JOIN proj p ON TRUE;
+    $8 AS project
+FROM new_file f;
 """
 
 # Replace both user_file and agent_file queries with a single file_owner query
@@ -72,7 +79,9 @@ WITH inserted_owner AS (
     VALUES ($1, $2, $3, $4)
     RETURNING file_id
 )
-SELECT f.*
+SELECT
+    f.*,
+    $5 AS project
 FROM inserted_owner io
 JOIN files f ON f.file_id = io.file_id;
 """
@@ -93,7 +102,7 @@ JOIN files f ON f.file_id = io.file_id;
 @query_metrics("create_file")
 @pg_query
 @beartype
-async def create_file(
+async def create_file_query(
     *,
     developer_id: UUID,
     file_id: UUID | None = None,
@@ -121,17 +130,6 @@ async def create_file(
     size = len(content_bytes)
     hash_bytes = hashlib.sha256(content_bytes).digest()
 
-    # Get project (default if not specified)
-    project_canonical_name = data.project
-
-    # Check if the project exists
-    project_exists_result = await project_exists(developer_id, project_canonical_name)
-
-    if not project_exists_result[0]["project_exists"]:
-        raise HTTPException(
-            status_code=404, detail=f"Project '{project_canonical_name}' not found"
-        )
-
     # Base file parameters
     file_params = [
         developer_id,
@@ -141,7 +139,7 @@ async def create_file(
         data.mime_type,
         size,
         hash_bytes,
-        project_canonical_name,
+        data.project or "default",
     ]
 
     queries = []
@@ -151,7 +149,41 @@ async def create_file(
 
     # Then create the association if owner info provided
     if owner_type and owner_id:
-        assoc_params = [developer_id, file_id, owner_type, owner_id]
+        assoc_params = [developer_id, file_id, owner_type, owner_id, data.project or "default"]
         queries.append((file_owner_query, assoc_params))
 
     return queries
+
+
+async def create_file(
+    *,
+    developer_id: UUID,
+    file_id: UUID | None = None,
+    data: CreateFileRequest,
+    owner_type: Literal["user", "agent"] | None = None,
+    owner_id: UUID | None = None,
+    connection_pool: asyncpg.Pool | None = None,
+) -> File:
+    # Get project (default if not specified)
+    project_canonical_name = data.project or "default"
+
+    # Check if the project exists
+    project_exists_result = await project_exists(
+        developer_id,
+        project_canonical_name,
+        connection_pool=connection_pool,
+    )
+
+    if not project_exists_result[0]["project_exists"]:
+        raise HTTPException(
+            status_code=404, detail=f"Project '{project_canonical_name}' not found"
+        )
+
+    return await create_file_query(
+        developer_id=developer_id,
+        file_id=file_id,
+        data=data,
+        owner_type=owner_type,
+        owner_id=owner_id,
+        connection_pool=connection_pool,
+    )

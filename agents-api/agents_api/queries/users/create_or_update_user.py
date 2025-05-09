@@ -120,7 +120,9 @@ async def create_or_update_user(
     project_canonical_name = data.project or "default"
 
     # Check if the project exists
-    project_exists_result = await project_exists(developer_id, project_canonical_name)
+    project_exists_result = await project_exists(
+        developer_id, project_canonical_name, connecrtion_pool=connection_pool
+    )
 
     if not project_exists_result[0]["project_exists"]:
         raise HTTPException(
