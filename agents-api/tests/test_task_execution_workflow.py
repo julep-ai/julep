@@ -9,7 +9,6 @@ from agents_api.activities.execute_api_call import execute_api_call
 from agents_api.activities.execute_integration import execute_integration
 from agents_api.activities.execute_system import execute_system
 from agents_api.activities.task_steps.base_evaluate import base_evaluate
-from agents_api.app import app
 from agents_api.autogen.openapi_model import (
     Agent,
     ApiCallDef,
@@ -57,10 +56,8 @@ from agents_api.env import (
 from agents_api.workflows.task_execution import TaskExecutionWorkflow
 from aiohttp import test_utils
 from temporalio.exceptions import ApplicationError
+from temporalio.workflow import _NotInWorkflowEventLoopError
 from ward import raises, test
-
-from .fixtures import create_db_pool, pg_dsn
-
 
 @test("task execution workflow: handle function tool call step")
 async def _():
@@ -116,11 +113,10 @@ async def _():
 
 
 @test("task execution workflow: handle integration tool call step")
-async def _(dsn=pg_dsn):
+async def _():
     async def _resp():
         return "integration_tool_call_response"
 
-    app.state.postgres_pool = await create_db_pool(dsn=dsn)
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1")
     execution_input = ExecutionInput(
@@ -156,7 +152,16 @@ async def _(dsn=pg_dsn):
             "integration": {"name": tool_name, "arguments": arguments},
         },
     )
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+    
+    with patch("agents_api.workflows.task_execution.workflow") as workflow, \
+         patch("agents_api.common.protocol.tasks.workflow") as context_workflow, \
+         patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets:
+        
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError("Not in workflow event loop")
+        mock_list_secrets.return_value = []
+        
+        # Set up the activity execution mock
         workflow.execute_activity.return_value = _resp()
         wf.context = context
         wf.outcome = outcome
@@ -186,8 +191,7 @@ async def _(dsn=pg_dsn):
 
 
 @test("task execution workflow: handle integration tool call step, integration tools not found")
-async def _(dsn=pg_dsn):
-    app.state.postgres_pool = await create_db_pool(dsn=dsn)
+async def _():
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1")
     execution_input = ExecutionInput(
@@ -218,7 +222,13 @@ async def _(dsn=pg_dsn):
     outcome = StepOutcome(
         output={"type": "integration", "integration": {"name": "tool1", "arguments": {}}},
     )
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+    with patch("agents_api.workflows.task_execution.workflow") as workflow, \
+         patch("agents_api.common.protocol.tasks.workflow") as context_workflow, \
+         patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets:
+        
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError("Not in workflow event loop")
+        mock_list_secrets.return_value = []
         workflow.execute_activity.return_value = "integration_tool_call_response"
         with raises(ApplicationError) as exc:
             wf.context = context
@@ -230,8 +240,7 @@ async def _(dsn=pg_dsn):
 
 
 @test("task execution workflow: handle api_call tool call step")
-async def _(dsn=pg_dsn):
-    app.state.postgres_pool = await create_db_pool(dsn=dsn)
+async def _():
 
     async def _resp():
         return "api_call_tool_call_response"
@@ -286,7 +295,13 @@ async def _(dsn=pg_dsn):
             },
         },
     )
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+    with patch("agents_api.workflows.task_execution.workflow") as workflow, \
+         patch("agents_api.common.protocol.tasks.workflow") as context_workflow, \
+         patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets:
+        
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError("Not in workflow event loop")
+        mock_list_secrets.return_value= []
         workflow.execute_activity.return_value = _resp()
         wf.context = context
         wf.outcome = outcome
@@ -316,8 +331,7 @@ async def _(dsn=pg_dsn):
 
 
 @test("task execution workflow: handle api_call tool call step with Method Override")
-async def _(dsn=pg_dsn):
-    app.state.postgres_pool = await create_db_pool(dsn=dsn)
+async def _():
 
     async def _resp():
         return "api_call_tool_call_response"
@@ -376,7 +390,14 @@ async def _(dsn=pg_dsn):
             },
         },
     )
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+    with patch("agents_api.workflows.task_execution.workflow") as workflow, \
+         patch("agents_api.common.protocol.tasks.workflow") as context_workflow, \
+         patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets:
+        
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError("Not in workflow event loop")
+        mock_list_secrets.return_value= []
+
         workflow.execute_activity.return_value = _resp()
         wf.context = context
         wf.outcome = outcome
@@ -1597,8 +1618,7 @@ async def _():
 
 
 @test("task execution workflow: evaluate tool call expressions")
-async def _(dsn=pg_dsn):
-    app.state.postgres_pool = await create_db_pool(dsn=dsn)
+async def _():
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
     execution_input = ExecutionInput(
@@ -1646,7 +1666,12 @@ async def _(dsn=pg_dsn):
             "agents_api.common.protocol.tasks.list_execution_transitions",
         ) as list_execution_transitions,
         patch("agents_api.workflows.task_execution.generate_call_id") as generate_call_id,
+        patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
+        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets
     ):
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError("Not in workflow event loop")
+        mock_list_secrets.return_value= []
         generate_call_id.return_value = "XXXX"
         list_execution_transitions.return_value = (
             Transition(

@@ -25,8 +25,5 @@ async def get_secret_by_name(developer_id: UUID, name: str) -> Secret:
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
     except _NotInWorkflowEventLoopError:
-        print("*" * 1000)
-        print("EXCEPTION")
-        print("*" * 1000)
         secret = await get_secret_by_name_query(developer_id=developer_id, name=name)
     return secret
