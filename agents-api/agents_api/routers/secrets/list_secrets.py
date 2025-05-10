@@ -21,7 +21,7 @@ async def list_developer_secrets(
     """List all secrets for a developer.
 
     Args:
-        developer_id: ID of the developer whose secrets to list
+        x_developer_id: ID of the developer whose secrets to list
         limit: Maximum number of secrets to return
         offset: Number of secrets to skip
 
