@@ -1,10 +1,9 @@
 from unittest.mock import patch
 
 from agents_api.clients.litellm import acompletion
+from agents_api.common.utils.llm_providers import get_api_key_env_var_name
 from litellm.types.utils import ModelResponse
 from ward import test
-
-from agents_api.common.utils.llm_providers import get_api_key_env_var_name
 
 
 @test("litellm_utils: acompletion - no tools")
@@ -34,13 +33,10 @@ async def _():
             "model_list": [
                 {
                     "model_name": "gpt-4",
-                    "litellm_params": {
-                        "api_key": "os.environ/OPENAI_API_KEY"
-                    }
+                    "litellm_params": {"api_key": "os.environ/OPENAI_API_KEY"},
                 }
             ]
         }
 
         result = get_api_key_env_var_name("gpt-4")
         assert result == "OPENAI_API_KEY"
-
