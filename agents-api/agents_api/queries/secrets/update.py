@@ -14,18 +14,15 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 query = """
     UPDATE secrets
     SET updated_at = NOW(),
-        name = COALESCE($4, name),
-        description = COALESCE($5, description),
-        metadata = COALESCE($6, metadata),
+        name = COALESCE($3, name),
+        description = COALESCE($4, description),
+        metadata = COALESCE($5, metadata),
         value_encrypted = CASE
-            WHEN $7::text IS NOT NULL THEN encrypt_secret($7::text, $8)
+            WHEN $6::text IS NOT NULL THEN encrypt_secret($6::text, $7)
             ELSE value_encrypted
         END
     WHERE secret_id = $1
-    AND (
-        (developer_id = $2 AND $2 IS NOT NULL) OR
-        (agent_id = $3 AND $3 IS NOT NULL)
-    )
+    AND developer_id = $2
     RETURNING *;
 """
 
@@ -42,8 +39,7 @@ query = """
 async def update_secret(
     *,
     secret_id: UUID,
-    developer_id: UUID | None = None,
-    agent_id: UUID | None = None,
+    developer_id: UUID,
     name: str | None = None,
     description: str | None = None,
     metadata: dict[str, Any] | None = None,
@@ -54,7 +50,6 @@ async def update_secret(
         [
             secret_id,
             developer_id,
-            agent_id,
             name,
             description,
             metadata,

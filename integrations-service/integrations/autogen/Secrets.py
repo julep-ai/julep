@@ -14,14 +14,6 @@ class CreateSecretRequest(BaseModel):
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
-    developer_id: UUID | None = None
-    """
-    ID of the developer who owns this secret
-    """
-    agent_id: UUID | None = None
-    """
-    ID of the agent this secret is associated with (optional)
-    """
     name: str
     """
     Name of the secret
@@ -33,37 +25,6 @@ class CreateSecretRequest(BaseModel):
     value: str
     """
     The decrypted secret value
-    """
-
-
-class CreateSecretResponse(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    metadata: dict[str, Any] | None = None
-    developer_id: UUID | None = None
-    """
-    ID of the developer who owns this secret
-    """
-    agent_id: UUID | None = None
-    """
-    ID of the agent this secret is associated with (optional)
-    """
-    name: str
-    """
-    Name of the secret
-    """
-    description: str | None = None
-    """
-    Description of what the secret is used for
-    """
-    value: str
-    """
-    The decrypted secret value
-    """
-    value_encrypted: str
-    """
-    The encrypted value of the secret
     """
 
 
@@ -85,14 +46,6 @@ class Secret(BaseModel):
     When this resource was updated as UTC date-time
     """
     metadata: dict[str, Any] | None = None
-    developer_id: UUID | None = None
-    """
-    ID of the developer who owns this secret
-    """
-    agent_id: UUID | None = None
-    """
-    ID of the agent this secret is associated with (optional)
-    """
     name: str
     """
     Name of the secret
@@ -108,6 +61,3 @@ class Secret(BaseModel):
 
 
 UpdateSecretRequest = CreateSecretRequest
-
-
-UpdateSecretResponse = CreateSecretResponse

@@ -7,7 +7,7 @@ from typing import Any
 from uuid import UUID
 
 from beartype import beartype
-from litellm import cost_per_token
+from litellm import cost_per_token, model_cost
 
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
@@ -56,6 +56,38 @@ FALLBACK_PRICING = {
         "api_response": 6 / 1000000,
     },
 }
+
+# Calculate average of non-zero input costs
+input_costs_litellm = [
+    model_cost[model].get("input_cost_per_token", 0)
+    for model in model_cost
+    if model_cost[model].get("input_cost_per_token", 0) > 0
+]
+input_costs_fallback = [
+    pricing["api_request"]
+    for pricing in FALLBACK_PRICING.values()
+    if pricing["api_request"] > 0
+]
+combined_input_costs = input_costs_litellm + input_costs_fallback
+AVG_INPUT_COST_PER_TOKEN = (
+    sum(combined_input_costs) / len(combined_input_costs) if combined_input_costs else 0
+)
+
+# Calculate average of non-zero output costs
+output_costs_litellm = [
+    model_cost[model].get("output_cost_per_token", 0)
+    for model in model_cost
+    if model_cost[model].get("output_cost_per_token", 0) > 0
+]
+output_costs_fallback = [
+    pricing["api_response"]
+    for pricing in FALLBACK_PRICING.values()
+    if pricing["api_response"] > 0
+]
+combined_output_costs = output_costs_litellm + output_costs_fallback
+AVG_OUTPUT_COST_PER_TOKEN = (
+    sum(combined_output_costs) / len(combined_output_costs) if combined_output_costs else 0
+)
 
 # Define the raw SQL query
 usage_query = """
@@ -132,7 +164,13 @@ async def create_usage_record(
                     + FALLBACK_PRICING[model]["api_response"] * completion_tokens
                 )
             else:
-                print(f"No fallback pricing found for model {model}")
+                total_cost = (
+                    AVG_INPUT_COST_PER_TOKEN * prompt_tokens
+                    + AVG_OUTPUT_COST_PER_TOKEN * completion_tokens
+                )
+                print(
+                    f"No fallback pricing found for model {model}, using avg costs: {total_cost}"
+                )
 
     params = [
         developer_id,

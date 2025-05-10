@@ -13,38 +13,39 @@ query = """
 SELECT
     secret_id, developer_id, name, description,
     created_at, updated_at, metadata,
-    decrypt_secret(value_encrypted, $4) as value
+    decrypt_secret(value_encrypted, $3) as value
 FROM secrets
 WHERE (
-    developer_id = $1
+    developer_id = $1 AND
+    name = $2
 )
-ORDER BY created_at DESC
-LIMIT $2
-OFFSET $3
+LIMIT 1;
 """
 
 
+# TODO: handle HTTPException: 404: No secret found during get_by_name, shouldn't be an error
 @wrap_in_class(
     Secret,
+    maybe_one=True,
     transform=lambda d: {**d, "id": d["secret_id"]},
 )
 @pg_query
 @beartype
-async def list_secrets_query(
+async def get_secret_by_name_query(
     *,
     developer_id: UUID,
-    limit: int = 100,
-    offset: int = 0,
+    name: str,
 ) -> tuple[str, list]:
     return (
         query,
         [
             developer_id,
-            limit,
-            offset,
+            name,
             secrets_master_key,
         ],
     )
 
 
-list_secrets = rewrap_exceptions(common_db_exceptions("secret", ["list"]))(list_secrets_query)
+get_secret_by_name = rewrap_exceptions(common_db_exceptions("secret", ["get_by_name"]))(
+    get_secret_by_name_query
+)

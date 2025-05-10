@@ -6,7 +6,9 @@ import asyncio
 import logging
 from collections.abc import Callable
 from typing import Any, cast
+from uuid import UUID
 
+import asyncpg
 import sentry_sdk
 import uvicorn
 import uvloop
@@ -21,8 +23,9 @@ from temporalio.service import RPCError
 from .app import app
 from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
-from .env import enable_responses, sentry_dsn
+from .env import enable_responses, free_tier_cost_limit, sentry_dsn
 from .exceptions import PromptTooBigError
+from .queries.usage.get_user_cost import get_usage_cost
 from .routers import (
     agents,
     docs,
@@ -281,6 +284,86 @@ else:
     app.include_router(internal.router)
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(healthz.router)
+
+
+# Register the usage check middleware
+@app.middleware("http")
+async def usage_check_middleware(request: Request, call_next):
+    # Get developer ID from header
+    developer_id_str = request.headers.get("X-Developer-Id")
+    if not developer_id_str:
+        return await call_next(request)
+
+    user_cost_data: dict = {}
+    invalid_account_error = JSONResponse(
+        status_code=status.HTTP_403_FORBIDDEN,
+        content={
+            "error": {
+                "message": "Invalid user account",
+                "code": "invalid_user_account",
+            }
+        },
+    )
+
+    try:
+        developer_id = UUID(developer_id_str)
+        user_cost_data: dict = await get_usage_cost(developer_id=developer_id)
+
+        # Check if user is active
+        if not user_cost_data.get("active", False):
+            return invalid_account_error
+
+        if request.method == "GET":
+            return await call_next(request)
+
+        # Skip cost check for users with "paid" tag
+        user_tags = user_cost_data.get("tags", []) or []
+        if not isinstance(user_tags, list):
+            user_tags = []
+
+        if "paid" in user_tags:
+            return await call_next(request)
+
+        user_cost = user_cost_data.get("cost")
+
+        if user_cost is None or float(user_cost) > free_tier_cost_limit:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "error": {
+                        "message": "Cost limit exceeded",
+                        "code": "cost_limit_exceeded",
+                    }
+                },
+            )
+    except HTTPException as e:
+        if e.status_code == status.HTTP_404_NOT_FOUND:
+            return invalid_account_error
+
+        return JSONResponse(
+            status_code=e.status_code,
+            content=e.detail,
+        )
+    except asyncpg.NoDataFoundError:
+        return invalid_account_error
+    except ValueError:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "error": {
+                    "message": "Invalid developer ID",
+                    "code": "invalid_developer_id",
+                }
+            },
+        )
+    except Exception as e:
+        # Log the error but don't block the request
+        logger.error(f"Error in usage check middleware: {e!s}")
+
+    # Continue processing the request
+    return await call_next(request)
+
+
 # TODO: CORS should be enabled only for JWT auth
 #
 app.add_middleware(

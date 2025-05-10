@@ -10,14 +10,14 @@ from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.secrets.update import update_secret
 from ward import test
 
-from tests.fixtures import pg_dsn, test_agent, test_developer_id
+from tests.fixtures import pg_dsn, test_developer_id
 
 
 @test("query: create secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
-    # Create secret with both developer_id and agent_id
+    # Create secret with both developer_id
     agent_secret_data = {
         "name": "agent_api_key",
         "description": "An agent-specific API key",
@@ -27,7 +27,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
     agent_secret = await create_secret(
         developer_id=developer_id,
-        agent_id=agent.id,
         name=agent_secret_data["name"],
         description=agent_secret_data["description"],
         value=agent_secret_data["value"],
@@ -38,13 +37,11 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert agent_secret is not None
     assert isinstance(agent_secret, Secret)
     assert agent_secret.name == agent_secret_data["name"]
-    assert agent_secret.developer_id == developer_id
-    assert agent_secret.agent_id == agent.id
     assert agent_secret.value == "ENCRYPTED"
 
 
 @test("query: list secrets")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     # Create test secrets first - use unique but valid identifiers
@@ -53,7 +50,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
     await create_secret(
         developer_id=developer_id,
-        agent_id=agent.id,
         name=secret_name1,
         description="Test secret 1 for listing",
         value="sk_test_list_1",
@@ -62,7 +58,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
     await create_secret(
         developer_id=developer_id,
-        agent_id=agent.id,
         name=secret_name2,
         description="Test secret 2 for listing",
         value="sk_test_list_2",
@@ -88,7 +83,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     # Test listing agent secrets
     agent_secrets = await list_secrets(
         developer_id=developer_id,
-        agent_id=agent.id,
         connection_pool=pool,
     )
 
@@ -98,14 +92,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
 
 @test("query: update secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first
     original_name = f"update_test_key_a{uuid4().hex[:6]}"
     original_secret = await create_secret(
         developer_id=developer_id,
-        agent_id=agent.id,
         name=original_name,
         description="Original description",
         value="original_value",
@@ -154,14 +147,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
 
 
 @test("query: delete secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first
     delete_test_name = f"delete_test_key_a{uuid4().hex[:6]}"
     test_secret = await create_secret(
         developer_id=developer_id,
-        agent_id=agent.id,
         name=delete_test_name,
         description="Secret to be deleted",
         value="delete_me",
@@ -191,18 +183,16 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     agent_secret_name = f"agent_delete_test_b{uuid4().hex[:6]}"
     agent_secret = await create_secret(
         developer_id=developer_id,
-        agent_id=agent.id,
         name=agent_secret_name,
         description="Agent secret to be deleted",
         value="agent_delete_me",
         connection_pool=pool,
     )
 
-    # Delete with both developer_id and agent_id
+    # Delete with developer_id
     agent_delete_result = await delete_secret(
         secret_id=agent_secret.id,
         developer_id=developer_id,
-        agent_id=agent.id,
         connection_pool=pool,
     )
 

@@ -91,6 +91,10 @@ api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth
 max_free_sessions: int = env.int("MAX_FREE_SESSIONS", default=50)
 max_free_executions: int = env.int("MAX_FREE_EXECUTIONS", default=50)
 
+# Usage limits
+# -----------
+free_tier_cost_limit: float = env.float("FREE_TIER_COST_LIMIT", default=2.0)
+
 # Litellm API
 # -----------
 litellm_url: str | None = env.str("LITELLM_URL", default=None)
@@ -211,6 +215,7 @@ environment: dict[str, Any] = {
     "s3_secret_key": s3_secret_key,
     "testing": testing,
     "enable_responses": enable_responses,
+    "free_tier_cost_limit": free_tier_cost_limit,
     "secrets_master_key": secrets_master_key,
 }
 
