@@ -16,6 +16,19 @@ CREATE TABLE IF NOT EXISTS secrets (
     CONSTRAINT ct_secrets_canonical_name_valid_identifier CHECK (name ~ '^[a-zA-Z][a-zA-Z0-9_]*$')
 );
 
+CREATE OR REPLACE FUNCTION update_secrets_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_secrets_timestamp_trigger
+BEFORE UPDATE ON secrets
+FOR EACH ROW
+EXECUTE FUNCTION update_secrets_timestamp();
+
 -- Add indexes
 CREATE INDEX IF NOT EXISTS idx_secrets_developer_id ON secrets(developer_id);
 CREATE INDEX IF NOT EXISTS idx_secrets_name ON secrets(name);
