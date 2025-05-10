@@ -11,7 +11,7 @@ from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# Query to list execution transitions
+# Query to list execution input data
 list_execution_inputs_query = """
 SELECT * FROM transitions
 WHERE
