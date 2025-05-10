@@ -28,8 +28,7 @@ async def delete_developer_secret(
 
     Args:
         secret_id: ID of the secret to delete
-        conn: Database connection
-        developer_id: ID of the developer who owns the secret
+        x_developer_id: ID of the developer who owns the secret
 
     Returns:
         The deleted secret

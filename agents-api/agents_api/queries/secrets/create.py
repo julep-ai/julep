@@ -50,7 +50,10 @@ async def create_secret(
     Parameters:
         developer_id (UUID): The unique identifier for the developer creating the secret.
         secret_id (UUID | None): The unique identifier for the secret.
-        data (CreateSecretRequest): The data for the new secret.
+        name (str): The name of the secret.
+        value (str): The value of the secret.
+        description (str | None): The description of the secret.
+        metadata (dict[str, Any] | None): Additional metadata for the secret.
 
     Returns:
         tuple[str, list]: SQL query and parameters for creating the secret.
