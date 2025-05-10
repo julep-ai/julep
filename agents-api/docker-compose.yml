@@ -51,6 +51,7 @@ x--shared-environment: &shared-environment
   BRAVE_API_KEY: ${BRAVE_API_KEY}
   GUNICORN_CPU_DIVISOR: ${GUNICORN_CPU_DIVISOR:-4}
   GUNICORN_WORKERS: ${GUNICORN_WORKERS}
+  SECRETS_MASTER_KEY: ${SECRETS_MASTER_KEY}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}
@@ -87,6 +88,8 @@ x--base-agents-api: &base-agents-api
       - action: rebuild
         path: Dockerfile
 
+  volumes:
+    - ../llm-proxy/litellm-config.yaml:/app/litellm-config.yaml:ro
 
 services:
   agents-api:
@@ -125,3 +128,6 @@ services:
           path: uv.lock
         - action: rebuild
           path: Dockerfile.worker
+
+    volumes:
+      - ../llm-proxy/litellm-config.yaml:/app/litellm-config.yaml:ro

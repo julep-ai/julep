@@ -212,13 +212,40 @@ def sanitize_string(value: Any) -> Any:
 def wrap_in_class(
     cls: type[ModelT] | Callable[..., ModelT],
     one: bool = False,
+    maybe_one: bool = False,
     transform: Callable[[dict], dict] | None = None,
-) -> Callable[..., Callable[..., ModelT | list[ModelT]]]:
-    def _return_data(rec: list[Record]):
+) -> Callable[..., Callable[..., ModelT | list[ModelT] | None]]:
+    """
+    Decorator that wraps database query results into Pydantic model instances.
+
+    Args:
+        cls: The Pydantic model class or callable that constructs the model
+        one: If True, expects exactly one result and returns a single model instance
+        maybe_one: If True, returns None if no results, a single model if one result,
+                  and raises ValueError if multiple results
+        transform: Optional function to transform each record before model instantiation
+
+    Returns:
+        A decorator that transforms query results into model instances
+
+    Raises:
+        ValueError: If one=True and not exactly one result is returned, or
+                   if maybe_one=True and multiple results are returned
+    """
+
+    def _return_data(rec: list[Record]) -> ModelT | list[ModelT] | None:
         data = [dict(r.items()) for r in rec]
 
         nonlocal transform
         transform = transform or (lambda x: x)
+
+        if maybe_one:
+            if len(data) == 0:
+                return None
+            if len(data) == 1:
+                return cls(**transform(data[0]))
+            msg = f"Expected one result or none, got {len(data)}"
+            raise ValueError(msg)
 
         if one:
             assert len(data) == 1, f"Expected one result, got {len(data)}"
@@ -230,13 +257,15 @@ def wrap_in_class(
 
     def decorator(
         func: Callable[P, list[Record] | Awaitable[list[Record]]],
-    ) -> Callable[P, ModelT | list[ModelT]]:
+    ) -> Callable[P, ModelT | list[ModelT] | None]:
         @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT] | None:
             return _return_data(func(*args, **kwargs))
 
         @wraps(func)
-        async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
+        async def async_wrapper(
+            *args: P.args, **kwargs: P.kwargs
+        ) -> ModelT | list[ModelT] | None:
             return _return_data(await func(*args, **kwargs))
 
         # Set the wrapped function as an attribute of the wrapper,

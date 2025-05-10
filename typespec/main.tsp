@@ -16,6 +16,7 @@ import "./users";
 import "./versions.tsp";
 import "./responses";
 import "./projects";
+import "./secrets";
 
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
@@ -132,4 +133,10 @@ namespace Api {
 
     @route("/projects")
     interface ProjectsRoute extends Projects.Endpoints {}
+
+    @route("/secrets")
+    interface DeveloperSecretsRoute extends Secrets.DeveloperSecretsEndpoints {}
+
+    @route("/agents/{id}/secrets")
+    interface AgentSecretsRoute extends Secrets.AgentSecretsEndpoints {}
 }

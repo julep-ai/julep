@@ -176,6 +176,23 @@ brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
 # ---------------
 enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
 
+
+# Secrets
+# -------
+def _validate_master_key(key: str | None) -> str:
+    """Validate that the master key is the correct length for encryption."""
+    if key is None:
+        print("WARNING!!! SECRETS_MASTER_KEY is not set, secrets may not work correctly")
+        return ""
+
+    if len(key) != 32:
+        msg = "SECRETS_MASTER_KEY must be exactly 32 characters long"
+        raise ValueError(msg)
+    return key
+
+
+secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY", default="s" * 32))
+
 # Consolidate environment variables
 environment: dict[str, Any] = {
     "debug": debug,
@@ -199,6 +216,7 @@ environment: dict[str, Any] = {
     "testing": testing,
     "enable_responses": enable_responses,
     "free_tier_cost_limit": free_tier_cost_limit,
+    "secrets_master_key": secrets_master_key,
 }
 
 if debug or testing:
