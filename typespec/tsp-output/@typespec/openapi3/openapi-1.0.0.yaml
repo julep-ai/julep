@@ -348,7 +348,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Secrets.CreateSecretResponse'
+                $ref: '#/components/schemas/Secrets.Secret'
       requestBody:
         required: true
         content:
@@ -378,7 +378,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Secrets.UpdateSecretResponse'
+                $ref: '#/components/schemas/Secrets.Secret'
       requestBody:
         required: true
         content:
@@ -1048,7 +1048,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Secrets.CreateSecretResponse'
+                $ref: '#/components/schemas/Secrets.Secret'
       requestBody:
         required: true
         content:
@@ -1078,7 +1078,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Secrets.UpdateSecretResponse'
+                $ref: '#/components/schemas/Secrets.Secret'
       requestBody:
         required: true
         content:
@@ -5667,6 +5667,7 @@ components:
     Secrets.CreateSecretRequest:
       type: object
       required:
+        - developer_id
         - name
         - value
       properties:
@@ -5677,10 +5678,6 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.uuid'
           description: ID of the developer who owns this secret
-        agent_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the agent this secret is associated with (optional)
         name:
           type: string
           description: Name of the secret
@@ -5690,43 +5687,13 @@ components:
         value:
           type: string
           description: The decrypted secret value
-    Secrets.CreateSecretResponse:
-      type: object
-      required:
-        - name
-        - value
-        - value_encrypted
-      properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-        developer_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the developer who owns this secret
-        agent_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the agent this secret is associated with (optional)
-        name:
-          type: string
-          description: Name of the secret
-        description:
-          type: string
-          description: Description of what the secret is used for
-        value:
-          type: string
-          description: The decrypted secret value
-        value_encrypted:
-          type: string
-          format: byte
-          description: The encrypted value of the secret
     Secrets.Secret:
       type: object
       required:
         - id
         - created_at
         - updated_at
+        - developer_id
         - name
         - value
       properties:
@@ -5751,10 +5718,6 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.uuid'
           description: ID of the developer who owns this secret
-        agent_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the agent this secret is associated with (optional)
         name:
           type: string
           description: Name of the secret
@@ -5768,6 +5731,7 @@ components:
     Secrets.UpdateSecretRequest:
       type: object
       required:
+        - developer_id
         - name
         - value
       properties:
@@ -5778,10 +5742,6 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.uuid'
           description: ID of the developer who owns this secret
-        agent_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the agent this secret is associated with (optional)
         name:
           type: string
           description: Name of the secret
@@ -5791,37 +5751,6 @@ components:
         value:
           type: string
           description: The decrypted secret value
-    Secrets.UpdateSecretResponse:
-      type: object
-      required:
-        - name
-        - value
-        - value_encrypted
-      properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-        developer_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the developer who owns this secret
-        agent_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the agent this secret is associated with (optional)
-        name:
-          type: string
-          description: Name of the secret
-        description:
-          type: string
-          description: Description of what the secret is used for
-        value:
-          type: string
-          description: The decrypted secret value
-        value_encrypted:
-          type: string
-          format: byte
-          description: The encrypted value of the secret
     Sessions.BaseDocSearch:
       type: object
       required:
