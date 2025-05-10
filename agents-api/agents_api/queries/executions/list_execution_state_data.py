@@ -31,7 +31,6 @@ LIMIT $2 OFFSET $3;
 # (current_step).workflow NOT SIMILAR TO '%\\[[0-9]+\\]%'
 
 
-
 def _transform(d):
     current_step = d.pop("current_step")
     next_step = d.pop("next_step", None)
