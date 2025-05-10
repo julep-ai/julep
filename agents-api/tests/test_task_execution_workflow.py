@@ -976,12 +976,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1052,12 +1054,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1128,12 +1132,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1204,12 +1210,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1280,12 +1288,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1356,12 +1366,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1432,12 +1444,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1506,12 +1520,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1580,12 +1596,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1670,11 +1688,11 @@ async def _():
     with (
         patch(
             "agents_api.common.protocol.tasks.list_execution_inputs_data",
-        ) as list_execution_inputs_data, \
+        ) as list_execution_inputs_data,
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
-    ),
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
         patch("agents_api.workflows.task_execution.generate_call_id") as generate_call_id,
     ):
         generate_call_id.return_value = "XXXX"
@@ -1753,12 +1771,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
@@ -1837,12 +1857,14 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_inputs_data",
-    ) as list_execution_inputs_data, \
+    with (
         patch(
-        "agents_api.common.protocol.tasks.list_execution_state_data",
-        return_value=[],
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
     ):
         list_execution_inputs_data.return_value = (
             Transition(
