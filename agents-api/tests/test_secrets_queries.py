@@ -8,6 +8,7 @@ from agents_api.queries.secrets.create import create_secret
 from agents_api.queries.secrets.delete import delete_secret
 from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.secrets.update import update_secret
+from agents_api.queries.secrets.get_by_name import get_secret_by_name
 from ward import test
 
 from tests.fixtures import pg_dsn, test_developer_id
@@ -89,6 +90,33 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert agent_secrets is not None
     assert isinstance(agent_secrets, list)
     assert any(secret.name == secret_name2 for secret in agent_secrets)
+
+
+@test("query: get secret by name")
+async def _(dsn=pg_dsn, developer_id=test_developer_id):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a test secret first
+    secret_name = f"get_test_key_a{uuid4().hex[:6]}"
+    secret = await create_secret(
+        developer_id=developer_id,
+        name=secret_name,
+        description="Test secret for get by name",
+        value="sk_get_test_1",
+        connection_pool=pool,
+    )
+
+    # Get the secret by name
+    retrieved_secret = await get_secret_by_name(
+        developer_id=developer_id,
+        name=secret_name,
+        connection_pool=pool,
+    )
+
+    assert retrieved_secret is not None
+    assert isinstance(retrieved_secret, Secret)
+    assert retrieved_secret.name == secret_name
+    assert retrieved_secret.value == "sk_get_test_1"
 
 
 @test("query: update secret")
