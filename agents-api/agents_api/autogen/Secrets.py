@@ -14,10 +14,6 @@ class CreateSecretRequest(BaseModel):
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
-    developer_id: UUID
-    """
-    ID of the developer who owns this secret
-    """
     name: str
     """
     Name of the secret
@@ -50,10 +46,6 @@ class Secret(BaseModel):
     When this resource was updated as UTC date-time
     """
     metadata: dict[str, Any] | None = None
-    developer_id: UUID
-    """
-    ID of the developer who owns this secret
-    """
     name: str
     """
     Name of the secret

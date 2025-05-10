@@ -14,9 +14,6 @@ model Secret {
   ...HasTimestamps;
   ...HasMetadata;
 
-  /** ID of the developer who owns this secret */
-  developer_id: uuid;
-
   /** Name of the secret */
   name: string;
 

@@ -5667,17 +5667,12 @@ components:
     Secrets.CreateSecretRequest:
       type: object
       required:
-        - developer_id
         - name
         - value
       properties:
         metadata:
           type: object
           additionalProperties: {}
-        developer_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the developer who owns this secret
         name:
           type: string
           description: Name of the secret
@@ -5693,7 +5688,6 @@ components:
         - id
         - created_at
         - updated_at
-        - developer_id
         - name
         - value
       properties:
@@ -5714,10 +5708,6 @@ components:
         metadata:
           type: object
           additionalProperties: {}
-        developer_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the developer who owns this secret
         name:
           type: string
           description: Name of the secret
@@ -5731,17 +5721,12 @@ components:
     Secrets.UpdateSecretRequest:
       type: object
       required:
-        - developer_id
         - name
         - value
       properties:
         metadata:
           type: object
           additionalProperties: {}
-        developer_id:
-          allOf:
-            - $ref: '#/components/schemas/Common.uuid'
-          description: ID of the developer who owns this secret
         name:
           type: string
           description: Name of the secret
