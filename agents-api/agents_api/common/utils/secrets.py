@@ -1,12 +1,13 @@
 from datetime import timedelta
 from uuid import UUID
 
+from async_lru import alru_cache
 from temporalio import workflow
 from temporalio.workflow import _NotInWorkflowEventLoopError
 
 from ...activities.pg_query_step import pg_query_step
 from ...autogen.openapi_model import Secret
-from ...env import temporal_heartbeat_timeout
+from ...env import secrets_cache_ttl, temporal_heartbeat_timeout
 from ...queries.secrets import get_secret_by_name as get_secret_by_name_query
 from ..exceptions.secrets import (
     SecretNotFoundError,  # AIDEV-NOTE: use domain exception for missing secrets
@@ -14,7 +15,9 @@ from ..exceptions.secrets import (
 from ..retry_policies import DEFAULT_RETRY_POLICY
 
 
+@alru_cache(ttl=secrets_cache_ttl)
 async def get_secret_by_name(developer_id: UUID, name: str) -> Secret:
+    # FIXME: Should use workflow.in_workflow() instead ?
     try:
         secret = await workflow.execute_activity(
             pg_query_step,
@@ -29,7 +32,9 @@ async def get_secret_by_name(developer_id: UUID, name: str) -> Secret:
         )
     except _NotInWorkflowEventLoopError:
         secret = await get_secret_by_name_query(developer_id=developer_id, name=name)
+
     # AIDEV-NOTE: use domain-specific exception instead of HTTPException
     if secret is None:
         raise SecretNotFoundError(developer_id, name)
+
     return secret

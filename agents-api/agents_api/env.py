@@ -35,6 +35,7 @@ enable_backwards_compatibility_for_syntax: bool = env.bool(
 )
 max_steps_accessible_in_tasks: int = env.int("MAX_STEPS_ACCESSIBLE_IN_TASKS", default=250)
 gunicorn_cpu_divisor: int = env.int("GUNICORN_CPU_DIVISOR", default=4)
+secrets_cache_ttl: int = env.int("SECRETS_CACHE_TTL", default=120)
 
 raw_workers: str | None = env.str("GUNICORN_WORKERS", default=None)
 if raw_workers and raw_workers.strip():
@@ -195,7 +196,12 @@ def _validate_master_key(key: str | None) -> str:
     return key
 
 
-secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY"))
+if not TYPE_CHECKING:
+    secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY"))
+
+else:
+    secrets_master_key: str = "*" * 32
+    print("USING FAKE SECRETS KEY FOR TESTING")
 
 # Consolidate environment variables
 environment: dict[str, Any] = {

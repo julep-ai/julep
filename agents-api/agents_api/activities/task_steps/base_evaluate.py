@@ -1,14 +1,14 @@
 # AIDEV-NOTE: This module provides the activity for evaluating Python expressions within the task execution context.
-import ast
 from typing import Any
 
 from beartype import beartype
+from simpleeval import SimpleEval
 from temporalio import activity
 
+from ...common.exceptions.executions import EvaluateError
 from ...common.protocol.tasks import StepContext
 from ...common.utils.expressions import evaluate_expressions
 from ...common.utils.task_validation import backwards_compatibility
-from ..utils import get_evaluator
 
 
 # AIDEV-NOTE: Recursively evaluates expressions, handling different data types (strings, lists, dicts) and PyExpression objects.

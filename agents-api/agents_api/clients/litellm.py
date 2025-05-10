@@ -1,3 +1,4 @@
+import contextlib
 from functools import wraps
 from typing import Literal
 from uuid import UUID
@@ -56,18 +57,23 @@ async def acompletion(
     custom_api_key: str | None = None,
     **kwargs,
 ) -> ModelResponse | CustomStreamWrapper:
+    api_user = kwargs.get("user")
+
     # TODO: test this condition? try out custom_api_key is not None
     if not custom_api_key and litellm_url:
         api_key_env_var_name = get_api_key_env_var_name(model)
-        try:
-            secret = await get_secret_by_name(
-                developer_id=UUID(kwargs.get("user")), name=api_key_env_var_name
-            )
-        except SecretNotFoundError:
-            secret = None
-        if secret:
-            custom_api_key = secret.value
 
+        secret = None
+
+        if api_user is not None:
+            developer_id: UUID = UUID(api_user)
+
+            with contextlib.suppress(SecretNotFoundError):
+                secret = await get_secret_by_name(
+                    developer_id=developer_id, name=api_key_env_var_name
+                )
+
+        custom_api_key = secret and secret.value
         model = f"openai/{model}"  # This is needed for litellm
 
     supported_params: list[str] = (

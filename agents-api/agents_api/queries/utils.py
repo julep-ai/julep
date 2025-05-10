@@ -346,9 +346,12 @@ def rewrap_exceptions(
 def run_concurrently(
     fns: list[Callable[..., Any]],
     *,
-    args_list: list[tuple] = [],
-    kwargs_list: list[dict] = [],
+    args_list: list[tuple] | None = None,
+    kwargs_list: list[dict] | None = None,
 ) -> list[Any]:
+    # AIDEV-NOTE: avoid mutable default args; initialize to empty list if None
+    args_list = args_list if args_list is not None else []
+    kwargs_list = kwargs_list if kwargs_list is not None else []
     args_list = args_list or [()] * len(fns)
     kwargs_list = kwargs_list or [{}] * len(fns)
 

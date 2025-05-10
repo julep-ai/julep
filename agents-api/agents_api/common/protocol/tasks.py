@@ -175,9 +175,7 @@ class StepContext(BaseModel):
 
         self.loaded = True
 
-    # AIDEV-NOTE: Computed property to get the tools available for the current step, considering agent and task tools.
-    @computed_field
-    @property
+    # AIDEV-NOTE: To get the tools available for the current step, considering agent and task tools.
     async def tools(self) -> list[Tool | CreateToolRequest]:
         execution_input = self.execution_input
         task = execution_input.task
