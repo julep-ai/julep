@@ -10,6 +10,7 @@ TypeSpec is a structured language for defining API contracts that serves as the 
 - Generates OpenAPI 3.0 YAML specifications
 
 ## Domain Resources
+- **projects**: Organizational units for grouping related resources
 - **agents**: AI agent definitions with instructions and configuration
 - **tasks**: Workflow definitions with steps, conditionals, and tool integration
 - **tools**: Capabilities that agents can use (functions, integrations, system resources)
