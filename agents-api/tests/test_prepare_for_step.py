@@ -342,8 +342,12 @@ async def _():
     )
 
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
+        "agents_api.common.protocol.tasks.list_execution_inputs_data",
         return_value=subworkflow1_transitions,
+    ), \
+        patch(
+        "agents_api.common.protocol.tasks.list_execution_state_data",
+        return_value=[],
     ):
         context.cursor.scope_id = subworkflow1_scope_id
         inputs, labels, state = await context.get_inputs()
@@ -352,8 +356,12 @@ async def _():
         assert state == {}
 
     with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
+        "agents_api.common.protocol.tasks.list_execution_inputs_data",
         return_value=subworkflow2_transitions,
+    ), \
+        patch(
+        "agents_api.common.protocol.tasks.list_execution_state_data",
+        return_value=[],
     ):
         context.cursor.scope_id = subworkflow2_scope_id
         inputs, labels, state = await context.get_inputs()
