@@ -9,6 +9,9 @@ from litellm import aembedding as _aembedding
 from litellm import get_supported_openai_params
 from litellm.utils import CustomStreamWrapper, ModelResponse, get_valid_models
 
+from ..common.exceptions.secrets import (
+    SecretNotFoundError,  # AIDEV-NOTE: catch missing secrets in LLM client
+)
 from ..common.utils.llm_providers import get_api_key_env_var_name
 from ..common.utils.secrets import get_secret_by_name
 from ..common.utils.usage import track_embedding_usage, track_usage
@@ -56,9 +59,12 @@ async def acompletion(
     # TODO: test this condition? try out custom_api_key is not None
     if not custom_api_key and litellm_url:
         api_key_env_var_name = get_api_key_env_var_name(model)
-        secret = await get_secret_by_name(
-            developer_id=UUID(kwargs.get("user")), name=api_key_env_var_name
-        )
+        try:
+            secret = await get_secret_by_name(
+                developer_id=UUID(kwargs.get("user")), name=api_key_env_var_name
+            )
+        except SecretNotFoundError:
+            secret = None
         if secret:
             custom_api_key = secret.value
 

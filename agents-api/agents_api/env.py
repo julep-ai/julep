@@ -6,7 +6,7 @@ It utilizes the environs library for environment variable parsing.
 import multiprocessing
 import random
 from pprint import pprint
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from environs import Env
 
@@ -83,7 +83,7 @@ pool_max_size: int = min(env.int("POOL_MAX_SIZE", default=multiprocessing.cpu_co
 _random_generated_key: str = "".join(str(random.randint(0, 9)) for _ in range(32))
 api_key: str = env.str("AGENTS_API_KEY", _random_generated_key)
 
-if api_key == _random_generated_key:
+if api_key == _random_generated_key and not TYPE_CHECKING:
     print(f"Generated API key since not set in the environment: {api_key}")
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
@@ -180,10 +180,14 @@ enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
 # Secrets
 # -------
 def _validate_master_key(key: str | None) -> str:
-    """Validate that the master key is the correct length for encryption."""
+    """Validate that the master key is the correct length for encryption and is provided."""
+    # AIDEV-NOTE: enforce presence and proper length of master key
     if key is None:
-        print("WARNING!!! SECRETS_MASTER_KEY is not set, secrets may not work correctly")
-        return ""
+        # AIDEV-NOTE: allow default insecure key in testing environment
+        if testing:
+            return "s" * 32
+        msg = "SECRETS_MASTER_KEY environment variable is required and must be exactly 32 characters long"
+        raise ValueError(msg)
 
     if len(key) != 32:
         msg = "SECRETS_MASTER_KEY must be exactly 32 characters long"
@@ -191,7 +195,7 @@ def _validate_master_key(key: str | None) -> str:
     return key
 
 
-secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY", default="s" * 32))
+secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY"))
 
 # Consolidate environment variables
 environment: dict[str, Any] = {
