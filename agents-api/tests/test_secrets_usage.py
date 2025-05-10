@@ -6,18 +6,23 @@ from uuid import uuid4
 from agents_api.autogen.Agents import Agent
 from agents_api.autogen.openapi_model import (
     ChatInput,
+    PromptItem,
+    PromptStep,
+    Secret,
     TaskSpecDef,
+    TaskToolDef,
+    Tool,
     TransitionTarget,
     Workflow,
 )
-from agents_api.autogen.openapi_model import TaskToolDef, Secret, PromptItem, PromptStep, Tool
 from agents_api.common.protocol.models import ExecutionInput
 from agents_api.common.protocol.tasks import StepContext
 from agents_api.common.utils.datetime import utcnow
 from agents_api.routers.sessions.render import render_chat_input
-from ward import test, skip
+from ward import skip, test
 
 from tests.fixtures import test_developer, test_developer_id
+
 
 @skip("Skipping secrets usage tests")
 @test("render: list_secrets_query usage in render_chat_input")
@@ -129,7 +134,7 @@ async def _(developer=test_developer):
 
         # Verify that the secrets were evaluated in the function parameters
         function_params = tool["function"]["parameters"]
-        assert "api_key" in function_params, print(tool)
+        assert "api_key" in function_params, f"{tool}"
         assert function_params["api_key"] == "sk_test_123456789"
         assert "auth_token" in function_params
         assert function_params["auth_token"] == "token_987654321"
