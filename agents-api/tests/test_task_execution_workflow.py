@@ -976,10 +976,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1048,10 +1054,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1120,10 +1132,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1192,10 +1210,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1264,10 +1288,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1336,10 +1366,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1408,10 +1444,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1478,10 +1520,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1548,10 +1596,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1633,12 +1687,16 @@ async def _():
     )
     with (
         patch(
-            "agents_api.common.protocol.tasks.list_execution_transitions",
-        ) as list_execution_transitions,
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
         patch("agents_api.workflows.task_execution.generate_call_id") as generate_call_id,
     ):
         generate_call_id.return_value = "XXXX"
-        list_execution_transitions.return_value = (
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1713,10 +1771,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1793,10 +1857,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
