@@ -4,15 +4,14 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS secrets (
     secret_id UUID NOT NULL,
     developer_id UUID NOT NULL,
-    agent_id UUID NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     value_encrypted BYTEA NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB DEFAULT '{}'::jsonb,
-    CONSTRAINT pk_secrets PRIMARY KEY (developer_id, agent_id, secret_id),
-    CONSTRAINT uq_secrets_unique UNIQUE(developer_id, agent_id, name),
+    CONSTRAINT pk_secrets PRIMARY KEY (developer_id, secret_id),
+    CONSTRAINT uq_secrets_unique UNIQUE(developer_id, name),
     CONSTRAINT ct_secrets_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object'),
     CONSTRAINT ct_secrets_canonical_name_valid_identifier CHECK (name ~ '^[a-zA-Z][a-zA-Z0-9_]*$')
 );
