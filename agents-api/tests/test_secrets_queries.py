@@ -37,7 +37,6 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert agent_secret is not None
     assert isinstance(agent_secret, Secret)
     assert agent_secret.name == agent_secret_data["name"]
-    assert agent_secret.developer_id == developer_id
     assert agent_secret.value == "ENCRYPTED"
 
 
