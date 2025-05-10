@@ -17,7 +17,8 @@ from .list_execution_transitions import list_execution_transitions
 from .list_executions import list_executions
 from .lookup_temporal_data import lookup_temporal_data
 from .prepare_execution_input import prepare_execution_input
-
+from .list_execution_inputs_data import list_execution_inputs_data
+from .list_execution_state_data import list_execution_state_data
 __all__ = [
     "count_executions",
     "create_execution",
@@ -28,4 +29,6 @@ __all__ = [
     "list_executions",
     "lookup_temporal_data",
     "prepare_execution_input",
+    "list_execution_inputs_data",
+    "list_execution_state_data",
 ]
