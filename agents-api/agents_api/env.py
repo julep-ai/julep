@@ -6,7 +6,7 @@ It utilizes the environs library for environment variable parsing.
 import multiprocessing
 import random
 from pprint import pprint
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from environs import Env
 
