@@ -15,12 +15,12 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 query = """
 INSERT INTO secrets (
-    secret_id, developer_id, agent_id, name, description, value_encrypted, metadata
+    secret_id, developer_id, name, description, value_encrypted, metadata
 )
 VALUES (
-    $1, $2, $3, $4, $5,
-    (SELECT encrypt_secret($6::text, $7::text)),
-    $8
+    $1, $2, $3, $4,
+    (SELECT encrypt_secret($5::text, $6::text)),
+    $7
 )
 RETURNING *;
 """
@@ -38,7 +38,6 @@ RETURNING *;
 async def create_secret(
     *,
     developer_id: UUID,
-    agent_id: UUID,
     name: str,
     value: str,
     secret_id: UUID | None = None,
@@ -50,7 +49,6 @@ async def create_secret(
 
     Parameters:
         developer_id (UUID): The unique identifier for the developer creating the secret.
-        agent_id (UUID): The unique identifier for the agent creating the secret.
         secret_id (UUID | None): The unique identifier for the secret.
         data (CreateSecretRequest): The data for the new secret.
 
@@ -64,7 +62,6 @@ async def create_secret(
         [
             secret_id,
             developer_id,
-            agent_id,
             name,
             description,
             value,

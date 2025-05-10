@@ -11,14 +11,13 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 query = """
 SELECT
-    secret_id, developer_id, agent_id, name, description,
+    secret_id, developer_id, name, description,
     created_at, updated_at, metadata,
-    decrypt_secret(value_encrypted, $4) as value
+    decrypt_secret(value_encrypted, $3) as value
 FROM secrets
 WHERE (
     developer_id = $1 AND
-    ($2::UUID IS NULL OR agent_id = $2) AND
-    name = $3
+    name = $2
 )
 LIMIT 1;
 """
@@ -34,15 +33,13 @@ LIMIT 1;
 @beartype
 async def get_secret_by_name_query(
     *,
-    developer_id: UUID | None,
-    agent_id: UUID | None = None,
+    developer_id: UUID,
     name: str,
 ) -> tuple[str, list]:
     return (
         query,
         [
             developer_id,
-            agent_id,
             name,
             secrets_master_key,
         ],

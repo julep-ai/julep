@@ -13,7 +13,6 @@ query = """
     DELETE FROM secrets
     WHERE secret_id = $1
     AND developer_id = $2
-    AND ($3::UUID IS NULL OR agent_id = $3)
     RETURNING *;
 """
 
@@ -30,14 +29,13 @@ query = """
 @pg_query
 @beartype
 async def delete_secret(
-    *, secret_id: UUID, developer_id: UUID | None = None, agent_id: UUID | None = None
+    *, secret_id: UUID, developer_id: UUID
 ) -> tuple[str, list]:
     """Delete a secret.
 
     Args:
         secret_id: ID of the secret to delete
-        developer_id: ID of the developer who owns the secret (optional)
-        agent_id: ID of the agent associated with the secret (optional)
+        developer_id: ID of the developer who owns the secret
 
     Returns:
         ResourceDeletedResponse: Information about the deleted secret
@@ -51,6 +49,5 @@ async def delete_secret(
         [
             secret_id,
             developer_id,
-            agent_id,
         ],
     )
