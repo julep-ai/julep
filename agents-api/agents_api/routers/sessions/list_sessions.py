@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module defines the API endpoint for listing sessions with filtering, pagination, and sorting.
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -10,6 +11,9 @@ from ...queries.sessions.list_sessions import list_sessions as list_sessions_que
 from .router import router
 
 
+# AIDEV-NOTE: API endpoint to list sessions.
+# Supports filtering by metadata, pagination (limit, offset), and sorting (sort_by, direction).
+# It depends on developer ID, metadata filter, and query parameters, and calls the list_sessions_query function.
 @router.get("/sessions", tags=["sessions"])
 async def list_sessions(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],

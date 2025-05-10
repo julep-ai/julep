@@ -1,3 +1,15 @@
+# CLAUDE.md - activities
+
+This folder contains Temporal activity implementations for task steps in `agents-api`.
+
+Guidelines
+- Define activities as async functions with the `@activity` decorator.
+- Validate Python expressions using `validate_py_expression` from `base_evaluate`.
+- Follow root error-handling patterns with typed exceptions.
+- Document activity behavior with Google-style docstrings.
+- Register activities in the worker (`agents_api/worker`).
+- See parent CLAUDE.md for component-level commands and tests.
+
 # Activities
 
 ## Purpose

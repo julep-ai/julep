@@ -82,30 +82,30 @@ Found a bug? Have a feature request? [Submit an issue](https://github.com/julep-
 | Service | Description |
 |---------|-------------|
 | `agents-api` | Core API service |
-| `typespec` | API specifications |
-| `blob-store` | File storage service |
-| `cli` | Command-line interface |
-| `embedding-service` | Text embedding management |
-| `llm-proxy` | Language model proxy |
-| `gateway` | API gateway & routing |
-| `monitoring` | System metrics & monitoring |
+| `memory-store` | PostgreSQL database with TimescaleDB for persistent storage |
+| `blob-store` | Object storage for files and binary data |
+| `integrations-service` | Adapters for external services and tools |
+| `scheduler` | Temporal workflow engine for task scheduling and orchestration |
+| `gateway` | API gateway for routing and request handling |
+| `llm-proxy` | LiteLLM proxy for language model interactions |
+| `monitoring` | Prometheus and Grafana monitoring infrastructure |
+| `typespec` | API specifications in TypeSpec format |
+| `sdks` | Node.js and Python client SDKs |
+| `cli` | Command-line interface for Julep |
 
-### Supporting Services
+### Supporting Modules
 
-- `integrations-service`: External integrations
-- `memory-store`: Persistent storage
-- `scheduler`: Task scheduling
 - `deploy`: Deployment configs
-- `documentation`: Project docs
-- `scripts`: Utility scripts
-- `cookbooks`: Usage examples
+- `documentation`: Project documentation assets
+- `scripts`: Utility scripts and tools
+- `cookbooks`: Usage examples and recipes
 
 ### Tech Stack
 
 - **FastAPI**: Web framework for building APIs
 - **TypeSpec**: API specification language
 - **Timescale**: Database system
-- **SeadweedFS**: Blob storage system
+- **SeaweedFS**: Blob storage system
 - **Grafana**: Monitoring and observability platform
 - **Prometheus**: Monitoring and observability platform
 - **LiteLLM**: LLM framework

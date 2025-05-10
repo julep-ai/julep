@@ -1,3 +1,15 @@
+# CLAUDE.md - workflows
+
+This folder contains Temporal workflow definitions orchestrating activities in `agents-api`.
+
+Key Points
+- Implement workflows with Temporal Python SDK (init, step, finish, error, cancel).
+- Use `WorkflowClient.execute` for invocation.
+- Define branching logic with IfElse and Parallel steps as needed.
+- Monitor transitions in the database for debugging.
+- Place workflow tests in `agents-api/tests/`.
+- See parent CLAUDE.md for component-wide instructions.
+
 # Workflows
 
 ## Purpose

@@ -1,3 +1,26 @@
+# CLAUDE.md - typespec
+
+This directory contains TypeSpec definitions for APIs and code generation.
+
+Key Uses
+- Bash commands:
+  - cd typespec
+  - poe codegen
+- Core directories:
+  - `agents/`, `tasks/`, `tools/`, `sessions/`, etc. define domain models.
+- Code style guidelines:
+  - Use discriminated unions with `kind_` property.
+  - Apply mixins (HasId, HasTimestamps, HasMetadata) consistently.
+- Testing instructions:
+  - Validate specs: `tsp compile`
+  - Regenerate OpenAPI models: `bash scripts/generate_openapi_code.sh`
+- Repository etiquette:
+  - Do NOT edit generated code in `autogen/`.
+- Developer environment:
+  - Ensure `@typespec/openapi3` plugin is installed.
+- Unexpected behaviors:
+  - Alias conflicts (e.g., `if_`) require manual resolution.
+
 # TypeSpec Architecture Documentation
 
 ## Overview

@@ -1,3 +1,14 @@
+# CLAUDE.md - clients
+
+This folder contains API client wrappers for external services used by `agents-api`.
+
+Key Points
+- Implement async HTTP clients using `httpx`.
+- Obtain and refresh auth tokens via `common/utils/auth.py`.
+- Handle HTTP errors with typed exceptions from `common/exceptions`.
+- Write unit tests under `agents-api/tests/`.
+- Configure endpoints and credentials via environment variables.
+
 # Clients
 
 ## Purpose

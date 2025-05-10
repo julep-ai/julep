@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module provides the activity for evaluating Python expressions within the task execution context.
 import ast
 from typing import Any
 
@@ -18,7 +19,8 @@ from ...common.utils.task_validation import backwards_compatibility
 from ..utils import get_evaluator
 
 
-# Recursive evaluation helper function
+# AIDEV-NOTE: Recursively evaluates expressions, handling different data types (strings, lists, dicts) and PyExpression objects.
+# It prepares the expression for evaluation by the simpleeval library.
 def _recursive_evaluate(expr, evaluator: SimpleEval):
     # Handle PyExpression type from the model
     if hasattr(expr, "root") and isinstance(expr.root, str):
@@ -53,6 +55,8 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
 
 @activity.defn
 @beartype
+# AIDEV-NOTE: Main activity function for evaluating expressions.
+# Sets up the evaluation environment with context values and extra functions, then calls the recursive evaluator.
 async def base_evaluate(
     exprs: Any,
     context: StepContext | None = None,

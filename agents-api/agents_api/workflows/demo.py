@@ -4,6 +4,7 @@ from temporalio import workflow
 
 from ..common.retry_policies import DEFAULT_RETRY_POLICY
 
+# AIDEV-NOTE: Sample workflow demonstrating Temporal integration with a simple demo activity.
 with workflow.unsafe.imports_passed_through():
     from ..activities.demo import demo_activity
 

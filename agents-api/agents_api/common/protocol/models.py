@@ -27,6 +27,8 @@ with workflow.unsafe.imports_passed_through():
     from ...worker.codec import RemoteObject
 
 
+# AIDEV-NOTE: Data model representing the input provided to a task execution workflow.
+# Includes details about the developer, execution, task, agent, tools, and arguments.
 class ExecutionInput(BaseModel):
     loaded: bool = False
     developer_id: UUID
@@ -36,6 +38,7 @@ class ExecutionInput(BaseModel):
     agent_tools: list[Tool | CreateToolRequest]
     arguments: dict[str, Any] | RemoteObject
 
+    # AIDEV-TODO: Convert fields to only arguments (remote object only), execution_id, developer_id.
     # TODO: Convert fields to only arguments (remote object only), execution_id, developer_id
 
     # Not used at the moment
@@ -49,6 +52,8 @@ class ExecutionInput(BaseModel):
 
 
 @beartype
+# AIDEV-NOTE: Converts a Task or task request model into a TaskSpecDef, which is used internally for workflow execution.
+# Includes important notes on the conversion process and field renaming.
 def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest,
     **model_opts,
@@ -103,6 +108,7 @@ def task_to_spec(
     )
 
 
+# AIDEV-NOTE: Converts a TaskSpec dictionary back into a format suitable for Task or CreateTaskRequest models.
 def spec_to_task_data(spec: dict) -> dict:
     task_id = spec.pop("task_id", None)
 
@@ -120,6 +126,7 @@ def spec_to_task_data(spec: dict) -> dict:
     }
 
 
+# AIDEV-NOTE: Converts a TaskSpec dictionary or arguments into a Task or CreateTaskRequest Pydantic model.
 def spec_to_task(**spec) -> Task | CreateTaskRequest:
     if not spec.get("id"):
         spec["id"] = spec.pop("task_id", None)

@@ -1,5 +1,3 @@
-# ruff: noqa: F401, F403, F405
-
 """
 The `execution` module provides SQL query functions for managing executions
 in the TimescaleDB database. This includes operations for:

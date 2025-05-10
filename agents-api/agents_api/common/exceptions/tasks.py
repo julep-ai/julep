@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module defines which exceptions are retryable during task execution and provides a function to determine retryability.
 """
 🎯 Error Handling: The Art of Knowing When to Try Again
 
@@ -28,6 +29,7 @@ from tenacity import RetryError
 
 from .tools import IntegrationExecutionException
 
+# AIDEV-NOTE: Tuple of exception types that are considered non-retryable during task execution.
 # 🚫 The "No Second Chances" Club - errors that we won't retry
 # Because sometimes, no means no!
 NON_RETRYABLE_ERROR_TYPES = (
@@ -107,6 +109,7 @@ NON_RETRYABLE_ERROR_TYPES = (
     litellm.exceptions.OpenAIError,
 )
 
+# AIDEV-NOTE: Tuple of exception types that are considered retryable during task execution.
 # 🔄 The "Try Again" Club - errors that deserve another shot
 # Because everyone deserves a second chance... or third... or fourth...
 RETRYABLE_ERROR_TYPES = (
@@ -141,6 +144,7 @@ RETRYABLE_ERROR_TYPES = (
     IntegrationExecutionException,
 )
 
+# AIDEV-NOTE: Tuple of HTTP status codes that are considered retryable.
 # HTTP status codes that say "maybe try again later?"
 RETRYABLE_HTTP_STATUS_CODES = (
     408,  # Request Timeout (server needs a coffee break)
@@ -151,6 +155,7 @@ RETRYABLE_HTTP_STATUS_CODES = (
 )
 
 
+# AIDEV-NOTE: Determines if a given exception is retryable based on defined non-retryable, retryable, and HTTP status code lists.
 def is_retryable_error(error: BaseException) -> bool:
     """
     The Great Error Judge: Decides if an error deserves another chance at life.

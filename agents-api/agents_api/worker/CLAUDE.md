@@ -1,4 +1,13 @@
-# Worker
+# CLAUDE.md - worker
+
+This folder contains the Temporal worker setup for processing agents-api workflows and activities.
+
+Key Points
+- Entrypoint script: `run_worker.py` initializes the Temporal worker.
+- Register both workflows and activities in worker setup.
+- Configure `TEMPORAL_URL` and retry policies via environment variables.
+- Logging and monitoring configured in `logging.yaml`.
+- Use `poe test` for basic worker smoke tests.
 
 ## Purpose
 - Temporal worker process for executing workflows and activities

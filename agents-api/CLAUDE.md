@@ -1,3 +1,32 @@
+# CLAUDE.md - agents-api
+
+This directory hosts the `agents-api` FastAPI service and Temporal workflows for agent definitions and task execution.
+
+Key Uses
+- Bash commands:
+  - cd agents-api
+  - source .venv/bin/activate
+  - poe format
+  - poe lint
+  - poe typecheck
+  - poe test
+  - poe check
+  - bash scripts/generate_openapi_code.sh
+- Core files and utilities:
+  - `agents_api/` contains routers, activities, workflows.
+  - `agents_api/common/` for exceptions, protocol, and utils.
+- Code style guidelines:
+  - Follows root `CLAUDE.md` Python standards (FastAPI, async/await, ruff formatting).
+- Testing instructions:
+  - Tests live under `agents-api/tests/` using `ward`.
+  - Run specific tests: `poe test --search "pattern" --fail-limit 1`.
+- Repository etiquette:
+  - Tag AI-generated commits with `[AI]`.
+- Developer environment:
+  - Ensure `PYTHONPATH=$PWD` and correct CWD in `agents-api/`.
+- Unexpected behaviors:
+  - Remember to regenerate autogen code after TypeSpec changes.
+
 # Julep Agents API
 
 ## Service Overview
