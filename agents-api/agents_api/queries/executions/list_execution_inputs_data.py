@@ -12,7 +12,7 @@ from ...common.utils.db_exceptions import common_db_exceptions, partialclass
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Query to list execution transitions
-list_execution_transitions_query = """
+list_execution_inputs_query = """
 SELECT * FROM transitions
 WHERE
     execution_id = $1
@@ -111,4 +111,4 @@ async def list_execution_inputs_data(
         str(scope_id),
     ]
 
-    return (list_execution_transitions_query, params)
+    return (list_execution_inputs_query, params)
