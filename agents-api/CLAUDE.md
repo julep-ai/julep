@@ -16,6 +16,7 @@
 - Common utilities and protocol definitions (common/)
 
 ## Key Concepts
+- Projects: Organizational units for grouping related resources
 - Tasks: Workflow specifications with steps and tools
 - Executions: Running instances of tasks
 - Sessions: User interaction contexts

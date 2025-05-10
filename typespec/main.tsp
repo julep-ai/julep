@@ -15,6 +15,7 @@ import "./tools";
 import "./users";
 import "./versions.tsp";
 import "./responses";
+import "./projects";
 
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
@@ -128,4 +129,7 @@ namespace Api {
 
     @route("/files")
     interface FilesRoute extends Files.Endpoints {}
+
+    @route("/projects")
+    interface ProjectsRoute extends Projects.Endpoints {}
 }

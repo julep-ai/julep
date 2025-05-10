@@ -31,13 +31,20 @@ See `CONTRIBUTING.md` for details on architecture and component relationships.
 - **agents-api**: Main service implementing agent and task functionality
 - **memory-store**: PostgreSQL database with TimescaleDB for persistent storage
 - **blob-store**: Object storage for files and binary data
-- **scheduler**: Temporal workflow engine for execution orchestration  
+- **scheduler**: Temporal workflow engine for execution orchestration
 - **integrations-service**: External service integrations (browsers, APIs, etc.)
 - **gateway**: API gateway for routing and request handling
 - **llm-proxy**: LLM service proxy using litellm
 - **monitoring**: Monitoring infrastructure with Prometheus and Grafana
 - **typespec**: API specifications in TypeSpec format
 - **sdks**: Client SDKs for Node.js and Python
+
+## Resource Organization
+- **Projects**: Organizational units that group related resources together
+  - Every developer has a default "default" project automatically created
+  - Agents, users, and files belong to exactly one project
+  - Used for logical grouping and future API key/billing separation
+  - API includes standard CRUD operations for project management
 
 ## Directory-Specific Documentation
 When working in specific directories, **ALWAYS check for CLAUDE.md files first**. These files contain detailed notes on architecture, patterns, and implementation details specific to that directory. They are designed to be LLM-friendly and provide essential context for understanding and making changes to the code.

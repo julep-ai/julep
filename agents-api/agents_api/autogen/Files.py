@@ -39,6 +39,13 @@ class CreateFileRequest(BaseModel):
     """
     Base64 encoded content of the file
     """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the file
+    """
 
 
 class File(BaseModel):
@@ -71,6 +78,13 @@ class File(BaseModel):
     content: str
     """
     Base64 encoded content of the file
+    """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the file
     """
     size: Annotated[int, Field(ge=1, json_schema_extra={"readOnly": True})]
     """
