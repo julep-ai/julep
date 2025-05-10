@@ -28,9 +28,7 @@ query = """
 )
 @pg_query
 @beartype
-async def delete_secret(
-    *, secret_id: UUID, developer_id: UUID
-) -> tuple[str, list]:
+async def delete_secret(*, secret_id: UUID, developer_id: UUID) -> tuple[str, list]:
     """Delete a secret.
 
     Args:
