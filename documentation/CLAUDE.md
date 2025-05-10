@@ -28,10 +28,16 @@ Key Uses
 
 ## Key System Concepts
 
+### Projects
+- Definition: Organizational units for grouping related resources
+- Components: Canonical name, display name, metadata
+- Use: Organize agents, users, and files into logical groups
+- Features: Default project for compatibility, future API key/billing segmentation
+
 ### Agents
 - Definition: Configured LLM instances with specific personas and capabilities
 - Components: Instructions, metadata, tools, docs
-- Configuration: Name, model, system template, default settings
+- Configuration: Name, model, system template, default settings, project
 - Use: Power sessions and tasks as conversational or autonomous entities
 
 ### Tasks

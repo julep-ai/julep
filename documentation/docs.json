@@ -34,12 +34,14 @@
               {
                 "group": "Core Concepts",
                 "pages": [
+                  "concepts/projects",
                   "concepts/agents",
                   "concepts/tasks",
                   "concepts/sessions",
                   "concepts/tools",
                   "concepts/users",
                   "concepts/docs",
+                  "concepts/files",
                   "concepts/execution"
                 ]
               },

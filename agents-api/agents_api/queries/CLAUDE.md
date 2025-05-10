@@ -18,9 +18,14 @@ Key Points
 
 ## Key Query Modules
 
+### projects/
+- Create, list, and check for project existence
+- Project association with resources
+
 ### agents/, tasks/, sessions/, users/
 - CRUD operations for core resources
 - Data validation and normalization
+- Project association handling
 
 ### executions/
 - Create and track task executions

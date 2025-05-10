@@ -22,6 +22,9 @@ model User {
 
     /** About the user */
     about: string = "";
+
+    /** Project canonical name of the user */
+    project?: canonicalName;
 }
 
 /** Payload for updating a user */

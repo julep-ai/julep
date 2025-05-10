@@ -1,0 +1,225 @@
+---
+title: 'Files'
+description: 'Managing files and attachments in Julep'
+icon: 'file'
+---
+
+# Files
+
+Files in Julep allow agents to work with various types of data including documents, images, audio, and other media. Files are stored securely and can be accessed by agents and tasks as needed.
+
+## Overview
+
+Julep's file system provides:
+
+- Secure storage for various file types
+- Unique identifiers for consistent access
+- Metadata for organization and discovery
+- Content hashing for integrity verification
+- Project association for logical grouping
+
+## File Properties
+
+Each file in Julep has the following properties:
+
+| **Field**     | **Type**   | **Description**                                       | **Default**  |
+|---------------|------------|-------------------------------------------------------|--------------|
+| `name`        | `string`   | Name of the file                                      | Required     |
+| `project`     | `string`   | The canonical name of the project this file belongs to | `"default"`  |
+| `content`     | `string`   | Base64-encoded file content                           | Required     |
+| `description` | `string`   | Description of the file                               | `""`         |
+| `mime_type`   | `string`   | MIME type of the file                                 | `null`       |
+| `size`        | `number`   | Size of the file in bytes (read-only)                 | Auto-calculated |
+| `hash`        | `string`   | Hash of the file content (read-only)                  | Auto-calculated |
+| `created_at`  | `string`   | Creation timestamp (read-only)                        | Auto-generated |
+
+## Creating Files
+
+You can create files using the Julep SDK in Python or JavaScript:
+
+<CodeGroup>
+```python Python
+from julep import Julep
+import base64
+
+client = Julep(api_key="your_api_key")
+
+# Read a local file and encode it as base64
+with open("path/to/document.pdf", "rb") as file:
+    content = base64.b64encode(file.read()).decode("utf-8")
+
+# Create the file in Julep
+file = client.files.create(
+    name="document.pdf",
+    project="knowledge-base",
+    content=content,
+    description="Important document for reference",
+    mime_type="application/pdf"
+)
+
+print(f"Created file: {file.id}")
+```
+
+```javascript Node.js
+import { Julep } from '@julep/sdk';
+import fs from 'fs';
+
+const client = new Julep({ apiKey: 'your_api_key' });
+
+// Read a local file and encode it as base64
+const content = fs.readFileSync('path/to/document.pdf').toString('base64');
+
+// Create the file in Julep
+const file = await client.files.create({
+    name: "document.pdf",
+    project: "knowledge-base",
+    content: content,
+    description: "Important document for reference",
+    mime_type: "application/pdf"
+});
+
+console.log(`Created file: ${file.id}`);
+```
+</CodeGroup>
+
+## Managing Files
+
+### Retrieving Files
+
+<CodeGroup>
+```python Python
+# Get a specific file by ID
+file = client.files.get("file_id_here")
+print(file)
+
+# List all files
+files = client.files.list()
+for file in files:
+    print(f"{file.name}: {file.description}")
+
+# List files with filtering
+files = client.files.list(metadata_filter={"category": "report"})
+```
+
+```javascript Node.js
+// Get a specific file by ID
+const file = await client.files.get("file_id_here");
+console.log(file);
+
+// List all files
+const files = await client.files.list();
+files.forEach(file => console.log(`${file.name}: ${file.description}`));
+
+// List files with filtering
+const files = await client.files.list({ metadata_filter: { category: "report" } });
+```
+</CodeGroup>
+
+### Deleting Files
+
+<CodeGroup>
+```python Python
+# Delete a file
+client.files.delete("file_id_here")
+```
+
+```javascript Node.js
+// Delete a file
+await client.files.delete("file_id_here");
+```
+</CodeGroup>
+
+## Relationship to Other Concepts
+
+### Projects
+
+Files belong to exactly one project, which helps organize related resources together. When creating a file, you can specify which project it belongs to using the `project` parameter. If not specified, the file will be assigned to the "default" project.
+
+**Example:**
+
+<CodeGroup>
+```python Python
+# Create a file in a specific project
+file = client.files.create(
+    name="marketing-image.jpg",
+    project="product-launch",
+    content=base64_content,
+    mime_type="image/jpeg"
+)
+```
+
+```javascript Node.js
+// Create a file in a specific project
+const file = await client.files.create({
+    name: "marketing-image.jpg",
+    project: "product-launch",
+    content: base64Content,
+    mime_type: "image/jpeg"
+});
+```
+</CodeGroup>
+
+For more information about projects, see [Projects](/concepts/projects).
+
+### Agents and Tasks
+
+Files can be used by both agents and tasks to access and process information. For example, an agent might analyze an image file, or a task might process a document file.
+
+<CodeGroup>
+```python Python
+# Create a file
+file = client.files.create(name="data.csv", content=base64_content)
+
+# Reference the file in a task execution
+execution = client.tasks.executions.create(
+    task_id="task_id_here",
+    input={"file_id": file.id}
+)
+```
+
+```javascript Node.js
+// Create a file
+const file = await client.files.create({
+    name: "data.csv",
+    content: base64Content
+});
+
+// Reference the file in a task execution
+const execution = await client.tasks.executions.create({
+    task_id: "task_id_here",
+    input: { file_id: file.id }
+});
+```
+</CodeGroup>
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="File Organization" icon="folder-tree">
+    <ul>
+      <li>Group related files in the same project</li>
+      <li>Use consistent naming conventions</li>
+      <li>Include descriptive metadata for better discovery</li>
+    </ul>
+  </Card>
+  <Card title="Performance" icon="gauge-high">
+    <ul>
+      <li>Keep file sizes reasonable for faster processing</li>
+      <li>Consider chunking large files into smaller ones</li>
+      <li>Be mindful of the content limits when Base64 encoding</li>
+    </ul>
+  </Card>
+  <Card title="Security" icon="shield">
+    <ul>
+      <li>Avoid storing sensitive information in files</li>
+      <li>Regularly audit and clean up unused files</li>
+      <li>Validate file types before uploading</li>
+    </ul>
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Projects](/concepts/projects) - Learn about organizing resources with projects
+- [Agents](/concepts/agents) - Learn how agents can work with files
+- [Tasks](/concepts/tasks) - Learn how to use files in task workflows
