@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+# AIDEV-NOTE: This file contains the core Temporal workflow definition and step handlers for task execution.
+# !/usr/bin/env python3
 
 import asyncio
 from datetime import timedelta

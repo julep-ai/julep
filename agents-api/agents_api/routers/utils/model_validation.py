@@ -1,3 +1,4 @@
+# AIDEV-NOTE: Validates model names against LiteLLM and raises HTTPException for invalid names.
 from fastapi import HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST
 

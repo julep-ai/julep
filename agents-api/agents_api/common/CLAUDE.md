@@ -1,4 +1,13 @@
-# Common
+# CLAUDE.md - common
+
+This folder contains shared utilities, protocol definitions, and exceptions for `agents-api`.
+
+Key Points
+- Exceptions defined in `exceptions/`; always use typed exception classes.
+- Pydantic models in `protocol/` for request/response schemas.
+- Utilities in `utils/` leverage context managers for resource handling.
+- Use `AIDEV-NOTE:` anchors in complex utilities to aid future AI/developer context.
+- Follow root coding standards for formatting and naming.
 
 ## Purpose
 - Shared utilities, protocols, and type definitions

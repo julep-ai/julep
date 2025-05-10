@@ -1,3 +1,14 @@
+# CLAUDE.md - queries
+
+This folder contains database query builders and SQL files for `agents-api`.
+
+Key Points
+- Organize queries by domain under subfolders (agents, chat, tasks, etc.).
+- Use asyncpg for execution and return typed Pydantic models.
+- Validate SQL syntax with `poe check`.
+- Add new queries in `queries/` and index them if needed.
+- Tests reside under `agents-api/tests/`.
+
 # Queries
 
 ## Purpose

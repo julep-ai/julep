@@ -13,6 +13,7 @@ Each sub-module defines its own set of API endpoints and is responsible for hand
 """
 
 # ruff: noqa: F401
+# AIDEV-NOTE: Central router aggregator for all sub-modules in agents-api.
 
 # TODO: Create a router for developers
 # SCRUM-21

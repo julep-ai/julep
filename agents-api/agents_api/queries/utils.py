@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module contains utility functions and decorators for database queries and data processing.
 import concurrent.futures
 import inspect
 import socket
@@ -31,6 +32,7 @@ T = TypeVar("T")
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
+# AIDEV-NOTE: Generates a unique, readable canonical name.
 def generate_canonical_name() -> str:
     """Generate canonical name"""
 
@@ -51,6 +53,7 @@ type PreparedPGQueryArgs = tuple[FetchMethod, AsyncPGFetchArgs]
 type BatchedPreparedPGQueryArgs = list[PreparedPGQueryArgs]
 
 
+# AIDEV-NOTE: Prepares and formats PostgreSQL query arguments for batch execution.
 @beartype
 def prepare_pg_query_args(
     query_args: PGQueryArgs | list[PGQueryArgs],
@@ -82,6 +85,8 @@ def prepare_pg_query_args(
     return batch
 
 
+# AIDEV-NOTE: Decorator for executing PostgreSQL queries within a transaction.
+# Handles connection pooling, error handling, and result formatting.
 @beartype
 def pg_query[**P](
     func: Callable[P, PGQueryArgs | list[PGQueryArgs]] | None = None,
@@ -188,6 +193,7 @@ def pg_query[**P](
     return pg_query_dec
 
 
+# AIDEV-NOTE: Sanitizes strings to remove null characters for PostgreSQL compatibility.
 def sanitize_string(value: Any) -> Any:
     """
     Remove null characters (\u0000) from strings for PostgreSQL compatibility.
@@ -209,6 +215,7 @@ def sanitize_string(value: Any) -> Any:
     return value
 
 
+# AIDEV-NOTE: Decorator to wrap query results in Pydantic models.
 def wrap_in_class(
     cls: type[ModelT] | Callable[..., ModelT],
     one: bool = False,
@@ -249,6 +256,7 @@ def wrap_in_class(
     return decorator
 
 
+# AIDEV-NOTE: Decorator to rewrap specific exceptions raised by a function.
 def rewrap_exceptions(
     mapping: dict[
         type[BaseException] | Callable[[BaseException], bool],
@@ -305,6 +313,7 @@ def rewrap_exceptions(
     return decorator
 
 
+# AIDEV-NOTE: Runs multiple asynchronous functions concurrently.
 def run_concurrently(
     fns: list[Callable[..., Any]],
     *,
@@ -323,6 +332,7 @@ def run_concurrently(
         return [future.result() for future in concurrent.futures.as_completed(futures)]
 
 
+# AIDEV-NOTE: Serializes Pydantic model data into a dictionary, handling nested models.
 def serialize_model_data(data: Any) -> Any:
     """
     Recursively serialize Pydantic models and their nested structures.
@@ -342,6 +352,7 @@ def serialize_model_data(data: Any) -> Any:
     return data
 
 
+# AIDEV-NOTE: Builds SQL conditions for filtering based on JSONB metadata.
 def build_metadata_filter_conditions(
     base_params: list[Any], metadata_filter: dict[str, Any], table_alias: str = ""
 ) -> tuple[str, list[Any]]:
@@ -380,6 +391,7 @@ def build_metadata_filter_conditions(
     return sql_conditions, params
 
 
+# AIDEV-NOTE: Creates a validator function for numerical ranges.
 def make_num_validator(
     min_value: int | float | None = None,
     max_value: int | float | None = None,

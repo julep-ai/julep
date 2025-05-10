@@ -1,3 +1,30 @@
+# CLAUDE.md - integrations-service
+
+This directory provides adapters and routers for external service integrations.
+
+Key Uses
+- Bash commands:
+  - cd integrations-service
+  - source .venv/bin/activate
+  - poe format
+  - poe lint
+  - poe test
+  - poe check
+- Core directories:
+  - `integrations/` for integration modules and routers.
+  - `tests/mocks/` for service mocks.
+- Code style guidelines:
+  - Follows root Python standards (async httpx clients, ruff formatting).
+- Testing instructions:
+  - Use pytest for integration tests.
+  - Mock external services with fixtures in `tests/mocks/`.
+- Repository etiquette:
+  - Document external API versions and schema changes.
+- Developer environment:
+  - Set env vars in `.env` for service credentials.
+- Unexpected behaviors:
+  - Watch for rate limits; configure retry logic.
+
 # Integrations Service Architecture
 
 ## Overview

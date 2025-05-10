@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module defines custom exceptions specifically for agent-related operations.
 """Defines custom exceptions for agent-related operations in the agents API."""
 
 from uuid import UUID
@@ -5,10 +6,12 @@ from uuid import UUID
 from . import BaseCommonException
 
 
+# AIDEV-NOTE: Base exception class for all agent-related exceptions, inheriting from BaseCommonException.
 class BaseAgentException(BaseCommonException):
     """Base exception class for all agent-related exceptions."""
 
 
+# AIDEV-NOTE: Exception raised when a requested agent cannot be found.
 class AgentNotFoundError(BaseAgentException):
     """
     Exception raised when a requested agent cannot be found.
@@ -25,6 +28,7 @@ class AgentNotFoundError(BaseAgentException):
         )
 
 
+# AIDEV-NOTE: Exception raised when a requested tool associated with an agent cannot be found.
 class AgentToolNotFoundError(BaseAgentException):
     """
     Exception raised when a requested tool associated with an agent cannot be found.
@@ -38,6 +42,7 @@ class AgentToolNotFoundError(BaseAgentException):
         super().__init__(f"Tool {tool_id!s} not found for agent {agent_id!s}", http_code=404)
 
 
+# AIDEV-NOTE: Exception raised when a requested document associated with an agent cannot be found.
 class AgentDocNotFoundError(BaseAgentException):
     """
     Exception raised when a requested document associated with an agent cannot be found.
@@ -51,6 +56,7 @@ class AgentDocNotFoundError(BaseAgentException):
         super().__init__(f"Doc {doc_id!s} not found for agent {agent_id!s}", http_code=404)
 
 
+# AIDEV-NOTE: Exception raised when a requested agent model is not recognized or valid.
 class AgentModelNotValid(BaseAgentException):
     """Exception raised when requested model is not recognized."""
 
@@ -62,6 +68,7 @@ class AgentModelNotValid(BaseAgentException):
         )
 
 
+# AIDEV-NOTE: Exception raised when the API key for a requested model is missing in the configuration.
 class MissingAgentModelAPIKeyError(BaseAgentException):
     """Exception raised when API key for requested model is missing."""
 

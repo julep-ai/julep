@@ -1,3 +1,26 @@
+# CLAUDE.md - memory-store
+
+This directory contains PostgreSQL and TimescaleDB schema definitions and migrations for the `memory-store` service.
+
+Key Uses
+- Bash commands:
+  - cd memory-store
+  - poe check
+- Core directories:
+  - `migrations/` for database schema changes.
+- Code style guidelines:
+  - SQL formatted to 96 chars per line.
+  - Follow naming conventions for hypertables.
+- Testing instructions:
+  - Run `poe test` if tests exist.
+  - Validate SQL with `poe check`.
+- Repository etiquette:
+  - Increment migration version per change.
+- Developer environment:
+  - Configure `DATABASE_URL` in `.env`.
+- Unexpected behaviors:
+  - TimescaleDB hypertable creation nuances.
+
 # Memory Store
 
 ## Overview

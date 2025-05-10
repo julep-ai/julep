@@ -1,4 +1,12 @@
-# Autogen
+# CLAUDE.md - autogen
+
+This folder contains auto-generated code in `agents-api` from TypeSpec and OpenAPI.
+
+Key Points
+- Do NOT edit files here manually; they are overwritten on regeneration.
+- Regenerate via `bash scripts/generate_openapi_code.sh` from the project root.
+- Source-of-truth TypeSpec definitions reside in the `typespec/` directory.
+- Ensure version compatibility between TypeSpec plugin and codegen scripts.
 
 ## Purpose
 - Auto-generated API client code from OpenAPI specifications
