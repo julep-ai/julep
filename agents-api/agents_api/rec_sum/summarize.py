@@ -34,7 +34,9 @@ Instructions:
 - VERY IMPORTANT: Add the indices of messages that are being summarized so that those messages can then be removed from the session otherwise, there'll be no way to identify which messages to remove. See example for more details."""
 
 
-def make_summarize_prompt(session, user="a user", assistant="gpt-4-turbo", **_) -> list[str]:
+def make_summarize_prompt(
+    session, user: str = "a user", assistant: str = "gpt-4-turbo", **_
+) -> list[str]:
     return [
         f"You are given a session history of a chat between {user or 'a user'} and {assistant or 'gpt-4-turbo'}. The session is formatted in the ChatML JSON format (from OpenAI).\n\n{summarize_instructions}\n\n<ct:example-session>\n{json.dumps(add_indices(summarize_example_chat), indent=2)}\n</ct:example-session>\n\n<ct:example-plan>\n{summarize_example_plan}\n</ct:example-plan>\n\n<ct:example-summarized-messages>\n{json.dumps(summarize_example_result, indent=2)}\n</ct:example-summarized-messages>",
         f"Begin! Write the summarized messages as a json list just like the example above. First write your plan inside <ct:plan></ct:plan> and then your answer between <ct:summarized-messages></ct:summarized-messages>. Don't forget to add the indices of the messages being summarized alongside each summary.\n\n<ct:session>\n{json.dumps(add_indices(session), indent=2)}\n\n</ct:session>",
@@ -44,9 +46,9 @@ def make_summarize_prompt(session, user="a user", assistant="gpt-4-turbo", **_) 
 @retry(stop=stop_after_attempt(2))
 async def summarize_messages(
     chat_session,
-    model="gpt-4o",
+    model: str = "gpt-4o",
     stop=["</ct:summarized"],
-    temperature=0.8,
+    temperature: float = 0.8,
     **kwargs,
 ):
     assert len(chat_session) >= 2, "Session is too short"

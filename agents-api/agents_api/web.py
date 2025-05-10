@@ -456,12 +456,12 @@ async def litellm_api_error(request: Request, exc: APIError):
 
 
 def main(
-    host="127.0.0.1",
-    port=8000,
-    backlog=4096,
-    timeout_keep_alive=30,
+    host: str = "127.0.0.1",
+    port: int = 8000,
+    backlog: int = 4096,
+    timeout_keep_alive: int = 30,
     workers=None,
-    log_level="info",
+    log_level: str = "info",
 ) -> None:
     uvicorn.run(
         app,

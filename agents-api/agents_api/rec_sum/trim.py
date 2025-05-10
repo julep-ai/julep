@@ -32,7 +32,9 @@ Instructions:
 # It is important to make keep the tone, setting and flow of the conversation consistent while trimming the messages.
 
 
-def make_trim_prompt(session, user="a user", assistant="gpt-4-turbo", **_) -> list[str]:
+def make_trim_prompt(
+    session, user: str = "a user", assistant: str = "gpt-4-turbo", **_
+) -> list[str]:
     return [
         f"You are given a session history of a chat between {user or 'a user'} and {assistant or 'gpt-4-turbo'}. The session is formatted in the ChatML JSON format (from OpenAI).\n\n{trim_instructions}\n\n<ct:example-session>\n{json.dumps(add_indices(trim_example_chat), indent=2)}\n</ct:example-session>\n\n<ct:example-plan>\n{trim_example_plan}\n</ct:example-plan>\n\n<ct:example-trimmed>\n{json.dumps(trim_example_result, indent=2)}\n</ct:example-trimmed>",
         f"Begin! Write the trimmed messages as a json list. First write your plan inside <ct:plan></ct:plan> and then your answer between <ct:trimmed></ct:trimmed>.\n\n<ct:session>\n{json.dumps(add_indices(session), indent=2)}\n\n</ct:session>",
@@ -42,9 +44,9 @@ def make_trim_prompt(session, user="a user", assistant="gpt-4-turbo", **_) -> li
 @retry(stop=stop_after_attempt(2))
 async def trim_messages(
     chat_session,
-    model="gpt-4o",
+    model: str = "gpt-4o",
     stop=["</ct:trimmed"],
-    temperature=0.7,
+    temperature: float = 0.7,
     **kwargs,
 ):
     assert len(chat_session) >= 2, "Session is too short"

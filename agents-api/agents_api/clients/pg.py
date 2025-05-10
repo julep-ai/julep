@@ -5,7 +5,7 @@ import asyncpg
 from ..env import pg_dsn
 
 
-async def _init_conn(conn):
+async def _init_conn(conn) -> None:
     for datatype in ["json", "jsonb"]:
         await conn.set_type_codec(
             datatype,

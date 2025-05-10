@@ -48,14 +48,14 @@ Return only the rewritten text without explanations or meta-commentary.""",
 }
 
 
-def text_translate(text, src_lang, target_lang):
+def text_translate(text: str, src_lang, target_lang):
     try:
         return GoogleTranslator(source=src_lang, target=target_lang).translate(text=text)
     except Exception:
         return text
 
 
-def mix_translate(text, src_lang, target_lang):
+def mix_translate(text: str, src_lang, target_lang):
     """
     Translate the given text from src_lang to target_lang and back to src_lang using googletrans.
     """
@@ -85,7 +85,7 @@ def humanize_llm(text: str) -> str:
         raise Exception(msg) from e
 
 
-def grammar(text):
+def grammar(text: str):
     try:
         response = litellm.completion(
             model=HUMANIZATION["model"],
@@ -127,7 +127,7 @@ def is_human_desklib(text: str) -> float:
         raise Exception(msg) from e
 
 
-def is_human_sapling(text):
+def is_human_sapling(text: str):
     try:
         payload = {
             "text": text,
@@ -143,7 +143,7 @@ def is_human_sapling(text):
         raise Exception(msg) from e
 
 
-def is_human_zerogpt(input_text, max_tries=3):
+def is_human_zerogpt(input_text, max_tries: int = 3):
     if max_tries < 0:
         return None
 
@@ -187,7 +187,7 @@ def is_human_zerogpt(input_text, max_tries=3):
     return None
 
 
-def replace_with_homoglyphs(text, max_replacements=2):
+def replace_with_homoglyphs(text: str, max_replacements: int = 2):
     homoglyphs = {
         # Whitelisted
         " ": " ",

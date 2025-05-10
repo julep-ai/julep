@@ -17,7 +17,7 @@ class AgentNotFoundError(BaseAgentException):
         agent_id (UUID | str): The ID of the agent that was not found.
     """
 
-    def __init__(self, developer_id: UUID | str, agent_id: UUID | str):
+    def __init__(self, developer_id: UUID | str, agent_id: UUID | str) -> None:
         # Initialize the exception with a message indicating the missing agent and developer ID.
         super().__init__(
             f"Agent {agent_id!s} not found for developer {developer_id!s}",
@@ -33,7 +33,7 @@ class AgentToolNotFoundError(BaseAgentException):
         tool_id (UUID | str): The ID of the tool that was not found.
     """
 
-    def __init__(self, agent_id: UUID | str, tool_id: UUID | str):
+    def __init__(self, agent_id: UUID | str, tool_id: UUID | str) -> None:
         # Initialize the exception with a message indicating the missing tool and agent ID.
         super().__init__(f"Tool {tool_id!s} not found for agent {agent_id!s}", http_code=404)
 
@@ -46,7 +46,7 @@ class AgentDocNotFoundError(BaseAgentException):
         doc_id (UUID | str): The ID of the document that was not found.
     """
 
-    def __init__(self, agent_id: UUID | str, doc_id: UUID | str):
+    def __init__(self, agent_id: UUID | str, doc_id: UUID | str) -> None:
         # Initialize the exception with a message indicating the missing document and agent ID.
         super().__init__(f"Doc {doc_id!s} not found for agent {agent_id!s}", http_code=404)
 
@@ -54,7 +54,7 @@ class AgentDocNotFoundError(BaseAgentException):
 class AgentModelNotValid(BaseAgentException):
     """Exception raised when requested model is not recognized."""
 
-    def __init__(self, model: str, all_models: list[str]):
+    def __init__(self, model: str, all_models: list[str]) -> None:
         super().__init__(
             f"Unknown model: {model}. Please provide a valid model name."
             "Available models: " + ", ".join(all_models),
@@ -65,7 +65,7 @@ class AgentModelNotValid(BaseAgentException):
 class MissingAgentModelAPIKeyError(BaseAgentException):
     """Exception raised when API key for requested model is missing."""
 
-    def __init__(self, model: str):
+    def __init__(self, model: str) -> None:
         super().__init__(
             f"API key missing for model: {model}. Please provide a valid API key in the configuration",
             http_code=400,

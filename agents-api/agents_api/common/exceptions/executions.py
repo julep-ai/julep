@@ -3,7 +3,7 @@ from thefuzz import fuzz
 
 
 class EvaluateError(Exception):
-    def __init__(self, error, expression, values):
+    def __init__(self, error, expression, values) -> None:
         error_message = error.message if hasattr(error, "message") else str(error)
         message = error_message
 

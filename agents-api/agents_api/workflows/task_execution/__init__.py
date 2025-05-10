@@ -131,11 +131,11 @@ class TaskExecutionWorkflow:
     context: StepContext | None = None
     outcome: StepOutcome | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.last_error = None
 
     @workflow.signal
-    async def set_last_error(self, value: LastErrorInput):
+    async def set_last_error(self, value: LastErrorInput) -> None:
         self.last_error = value.last_error
 
     async def eval_step_exprs(self, step_type: WorkflowStep):

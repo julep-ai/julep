@@ -11,11 +11,11 @@ import string
 import time
 import urllib.parse
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import reduce
 from threading import Lock as ThreadLock
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, Literal, ParamSpec, TypeVar
 
 import markdown2
 import markdownify
@@ -358,14 +358,14 @@ ALLOWED_FUNCTIONS = {
 
 def csv_reader(
     data: str,
-    dialect="excel",
+    dialect: str = "excel",
     delimiter: str = ",",
     quotechar: str | None = '"',
     escapechar: str | None = None,
     doublequote: bool = True,
     skipinitialspace: bool = False,
     lineterminator: str = "\r\n",
-    quoting=0,
+    quoting: int = 0,
     strict: bool = False,
 ):
     return csv.reader(
@@ -384,14 +384,14 @@ def csv_reader(
 
 def csv_writer(
     data: str,
-    dialect="excel",
+    dialect: str = "excel",
     delimiter: str = ",",
     quotechar: str | None = '"',
     escapechar: str | None = None,
     doublequote: bool = True,
     skipinitialspace: bool = False,
     lineterminator: str = "\r\n",
-    quoting=0,
+    quoting: int = 0,
     strict: bool = False,
 ):
     return csv.writer(
@@ -410,10 +410,10 @@ def csv_writer(
 
 def csv_dictreader(
     data: str,
-    fieldnames=None,
+    fieldnames: Sequence[str] | None = None,
     restkey=None,
     restval=None,
-    dialect="excel",
+    dialect: str = "excel",
     *args,
     **kwds,
 ):
@@ -430,10 +430,10 @@ def csv_dictreader(
 
 def csv_dictwriter(
     data: str,
-    fieldnames,
-    restval="",
-    extrasaction="raise",
-    dialect="excel",
+    fieldnames: Sequence[str],
+    restval: str = "",
+    extrasaction: Literal["raise", "ignore"] = "raise",
+    dialect: str = "excel",
     *args,
     **kwds,
 ):
@@ -804,17 +804,17 @@ class RateLimiter:
     max_requests: int  # Maximum requests per minute
     window_size: int = 60  # Window size in seconds (1 minute)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self._requests = deque()
         self._lock = ThreadLock()  # Thread-safe lock
         self._async_lock = asyncio.Lock()  # Async-safe lock
 
-    def _clean_old_requests(self):
+    def _clean_old_requests(self) -> None:
         now = time.time()
         while self._requests and now - self._requests[0] > self.window_size:
             self._requests.popleft()
 
-    async def acquire(self):
+    async def acquire(self) -> bool:
         async with self._async_lock:
             with self._lock:
                 now = time.time()

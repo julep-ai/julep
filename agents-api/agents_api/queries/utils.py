@@ -414,7 +414,7 @@ def make_num_validator(
     max_value: int | float | None = None,
     err_msg: str | None = None,
 ):
-    def validator(v: int | float):
+    def validator(v: int | float) -> bool:
         nonlocal err_msg
 
         if min_value is not None and v < min_value:
