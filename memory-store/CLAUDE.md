@@ -13,6 +13,7 @@ Memory-store is Julep's PostgreSQL-based persistent storage layer for agents, se
 
 ### Core Data Models
 - `developers`: Root entity for multi-tenancy
+- `projects`: Organizational units for grouping related resources
 - `users`: End-users who interact with agents
 - `agents`: AI agent configurations with model settings and instructions
 - `tools`: Functionality exposed to agents (API integrations, etc.)

@@ -280,7 +280,7 @@ class StepContext(BaseModel):
 
         transitions = await list_execution_transitions(
             execution_id=self.execution_input.execution.id,
-            limit=limit,
+            # limit=limit,
             direction="asc",
             scope_id=scope_id,
         )  # type: ignore[not-callable]

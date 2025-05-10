@@ -33,6 +33,7 @@ from .routers import (
     healthz,
     internal,
     jobs,
+    projects,
     responses,
     secrets,
     sessions,
@@ -282,6 +283,7 @@ else:
     app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
     app.include_router(secrets.router, dependencies=[Depends(get_api_key)])
     app.include_router(internal.router)
+    app.include_router(projects.router, dependencies=[Depends(get_api_key)])
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(healthz.router)
 

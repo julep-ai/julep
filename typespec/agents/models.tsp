@@ -22,6 +22,9 @@ model Agent {
     /** Name of the agent */
     name: displayName;
 
+    /** Project canonical name of the agent */
+    project?: canonicalName;
+
     /** Canonical name of the agent */
     canonical_name?: canonicalName;
 

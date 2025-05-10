@@ -7,6 +7,10 @@
 
 ## Key Routers
 
+### projects/
+- Project creation and listing
+- Resource organization and management
+
 ### agents/
 - CRUD operations for agents (AI assistants)
 - Tool management for agents

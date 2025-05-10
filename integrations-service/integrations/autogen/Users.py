@@ -32,6 +32,13 @@ class CreateUserRequest(BaseModel):
     """
     About the user
     """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the user
+    """
 
 
 class PatchUserRequest(BaseModel):
@@ -57,6 +64,13 @@ class PatchUserRequest(BaseModel):
     """
     About the user
     """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the user
+    """
 
 
 class UpdateUserRequest(BaseModel):
@@ -81,6 +95,13 @@ class UpdateUserRequest(BaseModel):
     about: str = ""
     """
     About the user
+    """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the user
     """
 
 
@@ -111,6 +132,13 @@ class User(BaseModel):
     about: str = ""
     """
     About the user
+    """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the user
     """
 
 

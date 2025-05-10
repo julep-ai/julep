@@ -9,6 +9,7 @@ from agents_api.autogen.openapi_model import (
     CreateDocRequest,
     CreateExecutionRequest,
     CreateFileRequest,
+    CreateProjectRequest,
     CreateSessionRequest,
     CreateTaskRequest,
     CreateToolRequest,
@@ -29,6 +30,7 @@ from agents_api.queries.executions.create_execution_transition import (
 )
 from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
 from agents_api.queries.files.create_file import create_file
+from agents_api.queries.projects.create_project import create_project
 from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
 from agents_api.queries.tools.create_tools import create_tools
@@ -79,6 +81,20 @@ async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
 
 
 @fixture(scope="test")
+async def test_project(dsn=pg_dsn, developer=test_developer):
+    pool = await create_db_pool(dsn=dsn)
+
+    return await create_project(
+        developer_id=developer.id,
+        data=CreateProjectRequest(
+            name="Test Project",
+            metadata={"test": "test"},
+        ),
+        connection_pool=pool,
+    )
+
+
+@fixture(scope="test")
 def patch_embed_acompletion():
     output = {"role": "assistant", "content": "Hello, world!"}
     with patch_embed_acompletion_ctx(output) as (embed, acompletion):
@@ -86,7 +102,7 @@ def patch_embed_acompletion():
 
 
 @fixture(scope="test")
-async def test_agent(dsn=pg_dsn, developer=test_developer):
+async def test_agent(dsn=pg_dsn, developer=test_developer, project=test_project):
     pool = await create_db_pool(dsn=dsn)
 
     return await create_agent(
@@ -96,6 +112,7 @@ async def test_agent(dsn=pg_dsn, developer=test_developer):
             name="test agent",
             about="test agent about",
             metadata={"test": "test"},
+            project=project.canonical_name,
         ),
         connection_pool=pool,
     )

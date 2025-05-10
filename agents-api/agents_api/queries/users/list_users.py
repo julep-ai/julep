@@ -12,16 +12,20 @@ from ..utils import make_num_validator, pg_query, rewrap_exceptions, wrap_in_cla
 user_query = """
 WITH filtered_users AS (
     SELECT
-        user_id as id, -- user_id
-        developer_id, -- developer_id
-        name, -- name
-        about, -- about
-        metadata, -- metadata
-        created_at, -- created_at
-        updated_at -- updated_at
-    FROM users
-    WHERE developer_id = $1
-        AND ($4::jsonb IS NULL OR metadata @> $4)
+        u.user_id as id, -- user_id
+        u.developer_id, -- developer_id
+        u.name, -- name
+        u.about, -- about
+        u.metadata, -- metadata
+        u.created_at, -- created_at
+        u.updated_at, -- updated_at
+        p.canonical_name AS project -- project
+    FROM users u
+    LEFT JOIN project_users pu ON u.user_id = pu.user_id AND u.developer_id = pu.developer_id
+    LEFT JOIN projects p ON pu.project_id = p.project_id
+    WHERE u.developer_id = $1
+        AND ($4::jsonb IS NULL OR u.metadata @> $4)
+        AND ($7::text IS NULL OR p.canonical_name = $7)
 )
 SELECT *
 FROM filtered_users
@@ -56,6 +60,7 @@ async def list_users(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict | None = None,
+    project: str | None = None,
 ) -> tuple[str, list]:
     """
     Constructs an optimized SQL query for listing users with pagination and filtering.
@@ -68,6 +73,7 @@ async def list_users(
         sort_by (str): Field to sort by
         direction (str): Sort direction
         metadata_filter (dict, optional): Metadata-based filters
+        project (str, optional): Filter users by project canonical name
 
     Returns:
         tuple[str, list]: SQL query and parameters
@@ -78,8 +84,9 @@ async def list_users(
         limit,  # $2
         offset,  # $3
         metadata_filter,  # Will be NULL if not provided
-        sort_by,  # $4
-        direction,  # $5
+        sort_by,  # $5
+        direction,  # $6
+        project,  # $7
     ]
 
     return (
