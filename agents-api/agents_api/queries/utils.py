@@ -217,21 +217,22 @@ def wrap_in_class(
 ) -> Callable[..., Callable[..., ModelT | list[ModelT] | None]]:
     """
     Decorator that wraps database query results into Pydantic model instances.
-    
+
     Args:
         cls: The Pydantic model class or callable that constructs the model
         one: If True, expects exactly one result and returns a single model instance
         maybe_one: If True, returns None if no results, a single model if one result,
                   and raises ValueError if multiple results
         transform: Optional function to transform each record before model instantiation
-    
+
     Returns:
         A decorator that transforms query results into model instances
-    
+
     Raises:
         ValueError: If one=True and not exactly one result is returned, or
                    if maybe_one=True and multiple results are returned
     """
+
     def _return_data(rec: list[Record]) -> ModelT | list[ModelT] | None:
         data = [dict(r.items()) for r in rec]
 
@@ -262,7 +263,9 @@ def wrap_in_class(
             return _return_data(func(*args, **kwargs))
 
         @wraps(func)
-        async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT] | None:
+        async def async_wrapper(
+            *args: P.args, **kwargs: P.kwargs
+        ) -> ModelT | list[ModelT] | None:
             return _return_data(await func(*args, **kwargs))
 
         # Set the wrapped function as an attribute of the wrapper,

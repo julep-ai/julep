@@ -6,9 +6,9 @@ from agents_api.autogen.openapi_model import Secret
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.secrets.create import create_secret
 from agents_api.queries.secrets.delete import delete_secret
+from agents_api.queries.secrets.get_by_name import get_secret_by_name
 from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.secrets.update import update_secret
-from agents_api.queries.secrets.get_by_name import get_secret_by_name
 from ward import test
 
 from tests.fixtures import pg_dsn, test_developer_id
@@ -98,7 +98,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     # Create a test secret first
     secret_name = f"get_test_key_a{uuid4().hex[:6]}"
-    secret = await create_secret(
+    await create_secret(
         developer_id=developer_id,
         name=secret_name,
         description="Test secret for get by name",
