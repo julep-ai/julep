@@ -1,3 +1,24 @@
+# CLAUDE.md - documentation
+
+This directory contains the project documentation, guides, cookbooks, and asset files.
+
+Key Uses
+- Bash commands:
+  - (No build commands; docs are static markdown.)
+- Core directories:
+  - `concepts/`, `guides/`, `cookbooks/`, `tutorials/`, `assets/`.
+- Style guidelines:
+  - Markdown formatted for readability; wrap at 96 chars.
+  - Use Google-style code blocks with language tags.
+- Testing instructions:
+  - Manually verify links and code samples.
+- Repository etiquette:
+  - Update `CHANGELOG.md` and navigation `SUMMARY.md` for doc changes.
+- Developer environment:
+  - Preview docs using any local static site generator if desired.
+- Unexpected behaviors:
+  - Ensure images in `assets/` render correctly in all output formats.
+
 # Julep Documentation Structure
 
 ## Core Purpose

@@ -1,3 +1,15 @@
+# CLAUDE.md - routers
+
+This folder contains FastAPI route definitions for `agents-api` endpoints.
+
+Key Points
+- Follow RESTful CRUD patterns for resource routes.
+- Use dependency injection for authentication and authorization.
+- Response models sourced from `autogen/` or `protocol/`.
+- Document new endpoints in `openapi.yaml` and regenerate clients as needed.
+- Run `poe codegen` after TypeSpec updates.
+- Place route-specific tests under `agents-api/tests/`.
+
 # Routers
 
 ## Purpose

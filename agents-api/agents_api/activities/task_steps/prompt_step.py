@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module contains the activity for executing a prompt step, which interacts with the language model.
 from beartype import beartype
 from litellm.types.utils import ModelResponse
 from temporalio import activity
@@ -14,6 +15,8 @@ from .base_evaluate import base_evaluate
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
+# AIDEV-NOTE: Formats internal Tool definitions into the structure expected by the LLM (currently focused on OpenAI function tools).
+@beartype
 def format_tool(tool: Tool) -> dict:
     if tool.type == "function":
         return {
@@ -31,6 +34,7 @@ def format_tool(tool: Tool) -> dict:
         "function": {"name": tool.name, "description": tool.description},
     }
 
+    # AIDEV-TODO: Implement system tools formatting.
     # FIXME: Implement system tools
     # if tool.type == "system":
     #     handler: Callable = get_handler_with_filtered_params(tool.system)
@@ -45,17 +49,21 @@ def format_tool(tool: Tool) -> dict:
 
     #     formatted["function"]["parameters"] = json_schema
 
-    # # FIXME: Implement integration tools
+    # AIDEV-TODO: Implement integration tools formatting.
+    # FIXME: Implement integration tools
     # elif tool.type == "integration":
     #     raise NotImplementedError("Integration tools are not supported")
 
-    # # FIXME: Implement API call tools
+    # AIDEV-TODO: Implement API call tools formatting.
+    # FIXME: Implement API call tools
     # elif tool.type == "api_call":
     #     raise NotImplementedError("API call tools are not supported")
 
 
 @activity.defn
 @beartype
+# AIDEV-NOTE: Executes the prompt step by interacting with the language model via LiteLLM.
+# Handles prompt evaluation, tool formatting, model calling, and response processing.
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
@@ -114,7 +122,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     # Check if using Claude model and has specific tool types
     is_claude_model = agent_model.lower().startswith("claude-3.5")
 
-    # FIXME: Hack to make the computer use tools compatible with litellm
+    # AIDEV-FIXME: Hack to make the computer use tools compatible with litellm.
     # Issue was: litellm expects type to be `computer_20241022` and spec to be
     # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
     # but we don't allow that (spec should match type).
@@ -135,12 +143,16 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             }
             formatted_tools.append(tool)
     # For non-Claude models, we don't need to send tools
+    # AIDEV-TODO: Enable formatted_tools once format-tools PR is merged.
     # FIXME: Enable formatted_tools once format-tools PR is merged.
     if not is_claude_model:
         formatted_tools = None
 
+    # AIDEV-HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages.
+    # AIDEV-FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format.
     # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
     # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
+    # AIDEV-TODO: Enable formatted_tools once format-tools PR is merged.
     # FIXME: Enable formatted_tools once format-tools PR is merged.
     is_groq_model = agent_model.lower().startswith("llama-3.1")
     if is_groq_model:
@@ -189,6 +201,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             next=None,
         )
 
+    # AIDEV-NOTE: Re-convert tool-calls from LLM response back to internal integration/system call format if needed.
     # Re-convert tool-calls to integration/system calls if needed
     response_as_dict = response.model_dump()
 

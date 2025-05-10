@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module defines custom exceptions specifically for session-related operations.
 """
 Defines session-related exceptions for the agents API.
 
@@ -9,6 +10,7 @@ from uuid import UUID
 from . import BaseCommonException
 
 
+# AIDEV-NOTE: Base exception class for all session-related exceptions, inheriting from BaseCommonException.
 class BaseSessionException(BaseCommonException):
     """
     Base exception class for session-related errors.
@@ -17,6 +19,7 @@ class BaseSessionException(BaseCommonException):
     """
 
 
+# AIDEV-NOTE: Exception raised when a requested session cannot be found.
 class SessionNotFoundError(BaseSessionException):
     """
     Exception raised when a session cannot be found.

@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module defines custom exceptions specifically for user-related operations.
 """This module defines custom exceptions related to user operations in the agents-api."""
 
 from uuid import UUID
@@ -5,6 +6,7 @@ from uuid import UUID
 from . import BaseCommonException
 
 
+# AIDEV-NOTE: Base exception class for all user-related errors, inheriting from BaseCommonException.
 class BaseUserException(BaseCommonException):
     """
     Base exception class for user-related errors.
@@ -13,6 +15,7 @@ class BaseUserException(BaseCommonException):
     """
 
 
+# AIDEV-NOTE: Exception raised when a requested user cannot be found.
 class UserNotFoundError(BaseUserException):
     """
     Exception raised when a requested user cannot be found.
@@ -29,6 +32,7 @@ class UserNotFoundError(BaseUserException):
         )
 
 
+# AIDEV-NOTE: Exception raised when a specific document related to a user cannot be found.
 class UserDocNotFoundError(BaseUserException):
     """
     Exception raised when a specific document related to a user cannot be found.

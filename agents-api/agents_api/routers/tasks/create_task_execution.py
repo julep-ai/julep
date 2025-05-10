@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module defines the API endpoint for creating and initiating task executions.
 import logging
 from typing import Annotated
 from uuid import UUID
@@ -40,6 +41,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
+# AIDEV-NOTE: Initiates a task execution by creating a database entry and starting the Temporal workflow.
 @beartype
 async def start_execution(
     *,
@@ -77,6 +79,7 @@ async def start_execution(
     job_id = uuid7()
 
     try:
+        # AIDEV-NOTE: Runs the Temporal task execution workflow.
         handle = await run_task_execution_workflow(
             execution_input=execution_input,
             job_id=job_id,
@@ -85,6 +88,7 @@ async def start_execution(
     except Exception as e:
         logger.exception(e)
 
+        # AIDEV-NOTE: Creates an error transition in the database if the workflow fails to start.
         await create_execution_transition(
             developer_id=developer_id,
             execution_id=execution_id,
@@ -109,6 +113,9 @@ async def start_execution(
     return execution, handle
 
 
+# AIDEV-NOTE: API endpoint to create a new task execution for a given task.
+# It depends on developer ID, task ID from the path, and execution data from the request body.
+# Includes validation for the input data schema and checks for free tier limits before starting the execution.
 @router.post(
     "/tasks/{task_id}/executions",
     status_code=HTTP_201_CREATED,
@@ -121,6 +128,7 @@ async def create_task_execution(
     background_tasks: BackgroundTasks,
 ) -> Execution:
     try:
+        # AIDEV-NOTE: Validates the input data against the task's input schema.
         task = await get_task_query(task_id=task_id, developer_id=x_developer_id)
         validate(data.input, task.input_schema)
 
@@ -130,6 +138,7 @@ async def create_task_execution(
             detail="Invalid request arguments schema",
         )
 
+    # AIDEV-NOTE: Checks if the developer is within the free tier execution limit for the task.
     # get developer data
     developer: Developer = await get_developer(developer_id=x_developer_id)
 
@@ -144,6 +153,7 @@ async def create_task_execution(
                 detail="Execution count exceeded the free tier limit",
             )
 
+    # AIDEV-NOTE: Starts the task execution and creates a Temporal lookup entry in the background.
     execution, handle = await start_execution(
         developer_id=x_developer_id,
         task_id=task_id,

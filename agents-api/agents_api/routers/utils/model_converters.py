@@ -1,3 +1,4 @@
+# AIDEV-NOTE: Utilities to convert API and internal Pydantic models for requests and responses.
 from uuid import UUID
 
 from fastapi import HTTPException
