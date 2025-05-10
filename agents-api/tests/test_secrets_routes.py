@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from ward import test
 
-from tests.fixtures import client, make_request, test_agent
+from tests.fixtures import client, make_request, test_developer_id
 
 
 @test("route: unauthorized secrets route should fail")
@@ -25,13 +25,13 @@ def _(client=client):
 
 
 @test("route: create secret")
-def _(make_request=make_request, agent=test_agent):
+def _(make_request=make_request, developer_id=test_developer_id):
     data = {
+        "developer_id": str(developer_id),
         "name": f"test_secret_{uuid4().hex[:8]}",
         "description": "Test secret for API integration",
         "value": "sk_test_123456789",
         "metadata": {"service": "test-service", "environment": "test"},
-        "agent_id": str(agent.id),
     }
 
     response = make_request(
@@ -50,15 +50,15 @@ def _(make_request=make_request, agent=test_agent):
 
 
 @test("route: list secrets")
-def _(make_request=make_request, agent=test_agent):
+def _(make_request=make_request, developer_id=test_developer_id):
     # First create a secret to ensure we have something to list
     secret_name = f"list_test_secret_{uuid4().hex[:8]}"
     data = {
+        "developer_id": str(developer_id),
         "name": secret_name,
         "description": "Test secret for listing",
         "value": "sk_list_test_123456789",
         "metadata": {"service": "test-service", "environment": "test"},
-        "agent_id": str(agent.id),
     }
 
     make_request(
@@ -83,15 +83,15 @@ def _(make_request=make_request, agent=test_agent):
 
 
 @test("route: update secret")
-def _(make_request=make_request, agent=test_agent):
+def _(make_request=make_request, developer_id=test_developer_id):
     # First create a secret
     original_name = f"update_test_secret_{uuid4().hex[:8]}"
     create_data = {
+        "developer_id": str(developer_id),
         "name": original_name,
         "description": "Original description",
         "value": "sk_original_value",
         "metadata": {"original": True},
-        "agent_id": str(agent.id),
     }
 
     create_response = make_request(
@@ -105,11 +105,11 @@ def _(make_request=make_request, agent=test_agent):
     # Now update it
     updated_name = f"updated_secret_{uuid4().hex[:8]}"
     update_data = {
+        "developer_id": str(developer_id),
         "name": updated_name,
         "description": "Updated description",
         "value": "sk_updated_value",
         "metadata": {"updated": True, "timestamp": "now"},
-        "agent_id": str(agent.id),
     }
 
     update_response = make_request(
@@ -128,15 +128,15 @@ def _(make_request=make_request, agent=test_agent):
 
 
 @test("route: delete secret")
-def _(make_request=make_request, agent=test_agent):
+def _(make_request=make_request, developer_id=test_developer_id):
     # First create a secret
     delete_test_name = f"delete_test_secret_{uuid4().hex[:8]}"
     create_data = {
+        "developer_id": str(developer_id),
         "name": delete_test_name,
         "description": "Secret to be deleted",
         "value": "sk_delete_me",
         "metadata": {"service": "test-service", "environment": "test"},
-        "agent_id": str(agent.id),
     }
 
     create_response = make_request(
@@ -169,15 +169,15 @@ def _(make_request=make_request, agent=test_agent):
 
 
 @test("route: create duplicate secret name fails")
-def _(make_request=make_request, agent=test_agent):
+def _(make_request=make_request, developer_id=test_developer_id):
     # Create a secret with a specific name
     unique_name = f"unique_secret_{uuid4().hex[:8]}"
     data = {
+        "developer_id": str(developer_id),
         "name": unique_name,
         "description": "First secret with this name",
         "value": "sk_first_value",
         "metadata": {"service": "test-service", "environment": "test"},
-        "agent_id": str(agent.id),
     }
 
     first_response = make_request(
@@ -190,11 +190,11 @@ def _(make_request=make_request, agent=test_agent):
 
     # Try to create another with the same name
     duplicate_data = {
+        "developer_id": str(developer_id),
         "name": unique_name,  # Same name
         "description": "Second secret with same name",
         "value": "sk_second_value",
         "metadata": {"service": "test-service", "environment": "test"},
-        "agent_id": str(agent.id),
     }
 
     second_response = make_request(

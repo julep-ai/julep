@@ -33,7 +33,6 @@ async def create_developer_secret(
     """
     return await create_secret_query(
         developer_id=x_developer_id,
-        agent_id=secret.agent_id,
         name=secret.name,
         description=secret.description,
         value=secret.value,

@@ -33,7 +33,6 @@ async def update_developer_secret(
     """
     return await update_secret_query(
         secret_id=secret_id,
-        agent_id=data.agent_id,
         developer_id=x_developer_id,
         name=data.name,
         description=data.description,
