@@ -41,7 +41,8 @@ class RemoteObject(BaseModel):
         serialized = serialize(x)
 
         key = sync_s3.add_object_with_hash(serialized)
-        return RemoteObject(key=key, bucket=blob_store_bucket)
+        # AIDEV-NOTE: use cls to return correct subclass instance for Self
+        return cls(key=key, bucket=blob_store_bucket)
 
     def load(self) -> Any:
         sync_s3.setup()
@@ -167,7 +168,11 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
     encoding = "text/pickle+lz4"
     b_encoding = encoding.encode()
 
-    def to_payload(self, value: Any) -> Payload | None:
+    def to_payload(
+        self, value: Any
+    ) -> (
+        Payload | FailedEncodingSentinel | None
+    ):  # AIDEV-NOTE: include FailedEncodingSentinel for error payloads
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}".encode()
 
         try:

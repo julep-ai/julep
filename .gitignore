@@ -11,3 +11,5 @@ ngrok*
 .aider*
 .vscode/
 schema.sql
+
+**/.claude/settings.local.json

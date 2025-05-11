@@ -1,8 +1,10 @@
+from datetime import timedelta
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
+from temporalio.workflow import _NotInWorkflowEventLoopError
 
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
@@ -19,10 +21,14 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
+    from ...common.utils.expressions import evaluate_expressions
     from ...worker.codec import RemoteObject
 
-from ...env import max_steps_accessible_in_tasks
+from ...activities.pg_query_step import pg_query_step
+from ...common.retry_policies import DEFAULT_RETRY_POLICY
+from ...env import max_steps_accessible_in_tasks, temporal_heartbeat_timeout
 from ...queries.executions import list_execution_transitions
+from ...queries.secrets.list import list_secrets_query
 from ...queries.utils import serialize_model_data
 from .models import ExecutionInput
 
@@ -169,13 +175,12 @@ class StepContext(BaseModel):
 
         self.loaded = True
 
-    @computed_field
-    @property
-    # AIDEV-NOTE: Computed property to get the tools available for the current step, considering agent and task tools.
-    def tools(self) -> list[Tool | CreateToolRequest]:
+    # AIDEV-NOTE: To get the tools available for the current step, considering agent and task tools.
+    async def tools(self) -> list[Tool | CreateToolRequest]:
         execution_input = self.execution_input
         task = execution_input.task
         agent_tools = execution_input.agent_tools
+        secrets = {}
 
         step_tools: Literal["all"] | list[ToolRef | CreateToolRequest] = getattr(
             self.current_step,
@@ -192,17 +197,42 @@ class StepContext(BaseModel):
 
         # Need to convert task.tools (list[TaskToolDef]) to list[Tool]
         task_tools = []
-        for tool in task.tools:
-            tool_def = tool.model_dump()
-            task_tools.append(
-                CreateToolRequest(**{tool_def["type"]: tool_def.pop("spec"), **tool_def}),
+        tools = task.tools if task else []
+        inherit_tools = task.inherit_tools if task else False
+        try:
+            secrets_query_result = await workflow.execute_activity(
+                pg_query_step,
+                args=[
+                    "list_secrets_query",
+                    "secrets.list",
+                    {"developer_id": self.execution_input.developer_id},
+                ],
+                schedule_to_close_timeout=timedelta(days=31),
+                retry_policy=DEFAULT_RETRY_POLICY,
+                heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+            )
+        except _NotInWorkflowEventLoopError:
+            secrets_query_result = await list_secrets_query(
+                developer_id=self.execution_input.developer_id
             )
 
-        if not task.inherit_tools:
+        if tools:
+            secrets = {secret.name: secret.value for secret in secrets_query_result}
+        for tool in tools:
+            tool_def = tool.model_dump()
+            spec = tool_def.pop("spec", {}) or {}
+            evaluated_spec = (
+                evaluate_expressions(spec, values={"secrets": secrets}) if spec else {}
+            )
+            task_tools.append(
+                CreateToolRequest(**{tool_def["type"]: evaluated_spec, **tool_def}),
+            )
+
+        if not inherit_tools:
             return task_tools
 
         # Remove duplicates from agent_tools
-        filtered_tools = [t for t in agent_tools if t.name not in (x.name for x in task.tools)]
+        filtered_tools = [t for t in agent_tools if t.name not in (x.name for x in tools)]
 
         return filtered_tools + task_tools
 

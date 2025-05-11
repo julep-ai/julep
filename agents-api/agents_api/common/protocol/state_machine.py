@@ -137,7 +137,7 @@ class ExecutionStateMachine:
     Uses context managers for safe state transitions.
     """
 
-    def __init__(self, execution_id: UUID):
+    def __init__(self, execution_id: UUID) -> None:
         """Initialize the state machine with QUEUED status."""
         self.state = ExecutionState(
             status=ExecutionStatus.QUEUED,

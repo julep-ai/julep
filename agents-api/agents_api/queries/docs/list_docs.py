@@ -74,7 +74,7 @@ async def list_docs(
     ] = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-    metadata_filter: dict[str, Any] = {},
+    metadata_filter: dict[str, Any] | None = None,
     include_without_embeddings: bool = False,
 ) -> tuple[str, list]:
     """
@@ -103,6 +103,8 @@ async def list_docs(
     # if sort_by not in ["created_at", "updated_at"]:
     #     raise HTTPException(status_code=400, detail="Invalid sort field")
 
+    # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
+    metadata_filter = metadata_filter if metadata_filter is not None else {}
     # Start with the base query
     query = base_docs_query
     params = [developer_id, include_without_embeddings, owner_type, owner_id]

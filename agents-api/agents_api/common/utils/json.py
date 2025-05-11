@@ -52,7 +52,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         return obj
 
 
-def dumps(obj: Any, default_empty_value="", cls=None) -> str:
+def dumps(obj: Any, default_empty_value: str = "", cls=None) -> str:
     """
     Serializes an object to a JSON formatted string using the custom JSON encoder.
     Parameters:

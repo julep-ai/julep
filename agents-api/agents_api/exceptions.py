@@ -8,7 +8,7 @@ class AgentsBaseException(Exception):
 class ModelNotSupportedError(AgentsBaseException):
     """Exception raised when model is not supported."""
 
-    def __init__(self, model_name) -> None:
+    def __init__(self, model_name: str) -> None:
         super().__init__(f"model {model_name} is not supported")
 
 
@@ -56,5 +56,5 @@ class QueriesBaseException(AgentsBaseException):
 
 
 class InvalidSQLQuery(QueriesBaseException):
-    def __init__(self, query_name: str):
+    def __init__(self, query_name: str) -> None:
         super().__init__(f"invalid query: {query_name}")

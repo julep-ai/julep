@@ -66,7 +66,7 @@ async def list_sessions(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-    metadata_filter: dict[str, Any] = {},
+    metadata_filter: dict[str, Any] | None = None,
 ) -> tuple[str, list]:
     """
     Lists sessions from the PostgreSQL database based on the provided filters.
@@ -82,6 +82,8 @@ async def list_sessions(
     Returns:
         tuple[str, list]: SQL query and parameters
     """
+    # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
+    metadata_filter = metadata_filter if metadata_filter is not None else {}
     return (
         session_query,
         [

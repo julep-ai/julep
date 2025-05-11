@@ -16,7 +16,7 @@ class BaseToolsException(BaseCommonException):
 class IntegrationExecutionException(BaseToolsException):
     """Exception raised when an error occurs during an integration execution."""
 
-    def __init__(self, integration: BaseIntegrationDef, error: str):
+    def __init__(self, integration: BaseIntegrationDef, error: str) -> None:
         integration_str = integration.provider + (
             "." + integration.method if integration.method else ""
         )

@@ -1,22 +1,14 @@
 # AIDEV-NOTE: This module provides the activity for evaluating Python expressions within the task execution context.
-import ast
 from typing import Any
 
-import simpleeval
 from beartype import beartype
-from box import Box
-from openai import BaseModel
-
-# Increase the max string length to 2048000
-simpleeval.MAX_STRING_LENGTH = 2048000
-
 from simpleeval import SimpleEval
 from temporalio import activity
 
 from ...common.exceptions.executions import EvaluateError
 from ...common.protocol.tasks import StepContext
+from ...common.utils.expressions import evaluate_expressions
 from ...common.utils.task_validation import backwards_compatibility
-from ..utils import get_evaluator
 
 
 # AIDEV-NOTE: Recursively evaluates expressions, handling different data types (strings, lists, dicts) and PyExpression objects.
@@ -53,10 +45,10 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
         raise ValueError(msg)
 
 
-@activity.defn
-@beartype
 # AIDEV-NOTE: Main activity function for evaluating expressions.
 # Sets up the evaluation environment with context values and extra functions, then calls the recursive evaluator.
+@activity.defn
+@beartype
 async def base_evaluate(
     exprs: Any,
     context: StepContext | None = None,
@@ -72,38 +64,4 @@ async def base_evaluate(
         # NOTE: We limit the number of inputs to 50 to avoid excessive memory usage
         values.update(await context.prepare_for_step(limit=50))
 
-    # Handle PyExpression objects and strings similarly
-    if isinstance(exprs, str) or (hasattr(exprs, "root") and isinstance(exprs.root, str)):
-        input_len = 1
-    else:
-        input_len = len(exprs)
-
-    assert input_len > 0, "exprs must be a non-empty string, PyExpression, list or dict"
-
-    extra_lambdas = {}
-    if extra_lambda_strs:
-        for k, v in extra_lambda_strs.items():
-            v = v.strip()
-
-            # Check that all extra lambdas are valid
-            assert v.startswith("lambda "), "All extra lambdas must start with 'lambda'"
-
-            try:
-                ast.parse(v)
-            except Exception as e:
-                msg = f"Invalid lambda: {v}"
-                raise ValueError(msg) from e
-
-            # Eval the lambda and add it to the extra lambdas
-            extra_lambdas[k] = eval(v)
-
-    # Turn the nested dict values from pydantic to dicts where possible
-    values = {k: v.model_dump() if isinstance(v, BaseModel) else v for k, v in values.items()}
-
-    # frozen_box doesn't work coz we need some mutability in the values
-    values = Box(values, frozen_box=False, conversion_box=True)
-
-    evaluator: SimpleEval = get_evaluator(names=values, extra_functions=extra_lambdas)
-
-    # Recursively evaluate the expression
-    return _recursive_evaluate(exprs, evaluator)
+    return evaluate_expressions(exprs, values=values, extra_lambda_strs=extra_lambda_strs)

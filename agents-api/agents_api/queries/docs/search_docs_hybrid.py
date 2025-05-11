@@ -47,7 +47,7 @@ async def search_docs_hybrid(
     embedding: list[float] | None = None,
     k: int = 10,
     alpha: float = 0.7,
-    metadata_filter: dict[str, Any] = {},
+    metadata_filter: dict[str, Any] | None = None,
     search_language: str = "english_unaccent",
     confidence: int | float = 0.5,
     trigram_similarity_threshold: float = 0.5,  # Lower threshold to catch more spelling errors
@@ -75,6 +75,8 @@ async def search_docs_hybrid(
         tuple[str, list]: The SQL query and parameters for the search.
     """
 
+    # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
+    metadata_filter = metadata_filter if metadata_filter is not None else {}
     if k < 1:
         raise HTTPException(status_code=400, detail="k must be >= 1")
 

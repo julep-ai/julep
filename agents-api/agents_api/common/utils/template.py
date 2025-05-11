@@ -7,7 +7,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2schema import infer, to_json_schema
 from jsonschema import validate
 
-from ...activities.utils import ALLOWED_FUNCTIONS, constants, stdlib
+from ...common.utils.evaluator import ALLOWED_FUNCTIONS, constants, stdlib
 
 __all__: list[str] = [
     "render_template",

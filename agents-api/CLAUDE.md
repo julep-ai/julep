@@ -9,6 +9,9 @@ Key Uses
   - poe format
   - poe lint
   - poe typecheck
+  - ty check [PATH]…           # Extremely fast Python type checker (default: project root)
+  - ty server                  # Start the ty language server for editor integration
+  - ty version                 # Display ty's version
   - poe test
   - poe check
   - bash scripts/generate_openapi_code.sh

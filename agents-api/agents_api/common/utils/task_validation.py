@@ -3,9 +3,9 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from ...activities.utils import ALLOWED_FUNCTIONS, stdlib
 from ...autogen.openapi_model import CreateTaskRequest, PatchTaskRequest, UpdateTaskRequest
 from ...common.protocol.models import task_to_spec
+from ...common.utils.evaluator import ALLOWED_FUNCTIONS, stdlib
 from ...env import enable_backwards_compatibility_for_syntax
 
 

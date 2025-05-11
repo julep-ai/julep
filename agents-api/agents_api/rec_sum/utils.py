@@ -10,7 +10,7 @@ _T2 = TypeVar("_T2")
 
 class chatml:
     @staticmethod
-    def make(content, role="system", name: _T2 = None, **_) -> dict[str, _T2]:
+    def make(content, role: str = "system", name: _T2 = None, **_) -> dict[str, _T2]:
         return {
             key: value
             for key, value in {"role": role, "name": name, "content": content}.items()
@@ -18,19 +18,19 @@ class chatml:
         }
 
     @staticmethod
-    def user(content, name=None) -> Any:
+    def user(content, name: str | None = None) -> Any:
         return chatml.make(role="user", content=content, name=name)
 
     @staticmethod
-    def assistant(content, name=None) -> Any:
+    def assistant(content, name: str | None = None) -> Any:
         return chatml.make(role="assistant", content=content, name=name)
 
     @staticmethod
-    def system(content, name=None) -> Any:
+    def system(content, name: str | None = None) -> Any:
         return chatml.make(content, name=name)
 
     @staticmethod
-    def thought(content, name=None) -> Any:
+    def thought(content, name: str | None = None) -> Any:
         return chatml.make(content, name="thought")
 
     @staticmethod
@@ -46,7 +46,7 @@ class chatml:
         return chatml.system(content, name="entity")
 
 
-def add_indices(list_of_dicts, idx_name="index") -> list[dict]:
+def add_indices(list_of_dicts, idx_name: str = "index") -> list[dict]:
     return [{idx_name: i, **msg} for i, msg in enumerate(list_of_dicts)]
 
 

@@ -41,12 +41,15 @@ async def transition_step(
     if not context.execution_input.execution:
         msg = "Execution is required in execution_input"
         raise ValueError(msg)
+    # AIDEV-NOTE: assert that execution is not None for type checker
+    execution = context.execution_input.execution
+    assert execution is not None
 
     # Create transition
     try:
         transition = await create_execution_transition(
             developer_id=context.execution_input.developer_id,
-            execution_id=context.execution_input.execution.id,
+            execution_id=execution.id,
             data=transition_info,
             task_token=transition_info.task_token,
             connection_pool=app.state.postgres_pool,
