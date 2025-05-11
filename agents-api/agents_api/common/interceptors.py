@@ -118,7 +118,9 @@ def offload_if_large[T](result: T) -> T | RemoteObject:
 
 def offload_to_blob_store[S, T](
     func: Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T]],
-) -> Callable[[S, ExecuteActivityInput | ExecuteWorkflowInput], Awaitable[T | RemoteObject]]:
+) -> Callable[
+    [S, ExecuteActivityInput | ExecuteWorkflowInput], T | RemoteObject
+]:  # AIDEV-NOTE: return type adjusted to cover both async and sync wrappers
     @wraps(func)
     async def wrapper(
         self,
@@ -151,7 +153,8 @@ def offload_to_blob_store[S, T](
         result = func(self, input)
 
         # Save the result to the blob store if necessary
-        return offload_if_large(result)
+        # AIDEV-NOTE: wrapper_sync sees func() returns Awaitable; ignore for typing
+        return offload_if_large(result)  # type: ignore[invalid-return-type]
 
     if inspect.iscoroutinefunction(func):
         return wrapper

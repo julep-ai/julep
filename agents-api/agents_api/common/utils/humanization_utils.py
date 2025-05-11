@@ -248,7 +248,9 @@ def replace_with_homoglyphs(text: str, max_replacements: int = 2):
     }
 
     # Convert text to list for single pass replacement
-    text_chars = list(text)
+    text_chars: list[str] = list(
+        text
+    )  # AIDEV-NOTE: annotate to list[str] so indexing is recognized by type checker
     text_len = len(text_chars)
 
     for original, homoglyph in homoglyphs.items():
@@ -259,8 +261,8 @@ def replace_with_homoglyphs(text: str, max_replacements: int = 2):
         # Get random positions for replacements
         positions = random.sample(range(text_len), min(count, text_len))
         for pos in positions:
-            if text_chars[pos] == original:
-                text_chars[pos] = homoglyph
+            if text_chars[pos] == original:  # type: ignore[call-non-callable]  # AIDEV-NOTE: suppress false-positive on indexing
+                text_chars[pos] = homoglyph  # type: ignore[call-non-callable]
 
     return "".join(text_chars)
 

@@ -242,24 +242,23 @@ def wrap_in_class(
 
     def _return_data(rec: list[Record]) -> ModelT | list[ModelT] | None:
         data = [dict(r.items()) for r in rec]
-
-        nonlocal transform
-        transform = transform or (lambda x: x)
+        # AIDEV-NOTE: initialize transformer function once per call
+        transform_fn = transform or (lambda x: x)
 
         if maybe_one:
             if len(data) == 0:
                 return None
             if len(data) == 1:
-                return cls(**transform(data[0]))
+                return cls(**transform_fn(data[0]))
             msg = f"Expected one result or none, got {len(data)}"
             raise ValueError(msg)
 
         if one:
             assert len(data) == 1, f"Expected one result, got {len(data)}"
-            obj: ModelT = cls(**transform(data[0]))
+            obj: ModelT = cls(**transform_fn(data[0]))
             return obj
 
-        objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
+        objs: list[ModelT] = [cls(**item) for item in map(transform_fn, data)]
         return objs
 
     def decorator(
@@ -430,15 +429,14 @@ def make_num_validator(
     err_msg: str | None = None,
 ):
     def validator(v: int | float) -> bool:
-        nonlocal err_msg
-
+        # Choose appropriate error message without mutating outer err_msg
         if min_value is not None and v < min_value:
-            err_msg = err_msg or f"Number must be greater than or equal to {min_value}"
-            raise QueryParamsValidationError(err_msg)
+            msg = err_msg or f"Number must be greater than or equal to {min_value}"
+            raise QueryParamsValidationError(msg)
 
         if max_value is not None and v > max_value:
-            err_msg = err_msg or f"Number must be less than or equal to {max_value}"
-            raise QueryParamsValidationError(err_msg)
+            msg = err_msg or f"Number must be less than or equal to {max_value}"
+            raise QueryParamsValidationError(msg)
 
         return True
 

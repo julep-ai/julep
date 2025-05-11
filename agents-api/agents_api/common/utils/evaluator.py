@@ -15,7 +15,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import reduce
 from threading import Lock as ThreadLock
-from typing import Any, Literal, ParamSpec, TypeVar
+from typing import Any, Literal, ParamSpec, TypeVar, cast
 
 import markdown2
 import markdownify
@@ -179,7 +179,8 @@ def safe_random_sample(population: list[T] | tuple[T, ...] | str, k: int) -> lis
     if k > len(population):
         msg = "Sample size cannot exceed population size"
         raise ValueError(msg)
-    return random.sample(population, k)
+    # AIDEV-NOTE: cast random.sample's return to list[T] for type-checker
+    return cast(list[T], random.sample(population, k))
 
 
 @beartype
