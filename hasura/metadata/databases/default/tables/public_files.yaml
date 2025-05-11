@@ -1,0 +1,27 @@
+table:
+  name: files
+  schema: public
+object_relationships:
+  - name: developer
+    using:
+      foreign_key_constraint_on: developer_id
+  - name: file_owner
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          file_id: file_id
+        insertion_order: null
+        remote_table:
+          name: file_owners
+          schema: public
+array_relationships:
+  - name: project_files
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - developer_id
+          - file_id
+        table:
+          name: project_files
+          schema: public

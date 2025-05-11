@@ -1,0 +1,42 @@
+table:
+  name: sessions
+  schema: public
+object_relationships:
+  - name: developer
+    using:
+      foreign_key_constraint_on: developer_id
+  - name: session_project
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          session_id: session_id
+        insertion_order: null
+        remote_table:
+          name: project_sessions
+          schema: public
+array_relationships:
+  - name: entries
+    using:
+      foreign_key_constraint_on:
+        column: session_id
+        table:
+          name: entries
+          schema: public
+  - name: entry_relations
+    using:
+      foreign_key_constraint_on:
+        column: session_id
+        table:
+          name: entry_relations
+          schema: public
+  - name: session_lookups
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          session_id: session_id
+        insertion_order: null
+        remote_table:
+          name: session_lookup
+          schema: public

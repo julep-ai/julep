@@ -1,0 +1,12 @@
+table:
+  name: project_files
+  schema: public
+object_relationships:
+  - name: file
+    using:
+      foreign_key_constraint_on:
+        - developer_id
+        - file_id
+  - name: project
+    using:
+      foreign_key_constraint_on: project_id
