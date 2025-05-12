@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS project_agents (
     project_id UUID NOT NULL,
     developer_id UUID NOT NULL,
     agent_id UUID NOT NULL,
-    added_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_project_agents PRIMARY KEY (project_id, agent_id),
     CONSTRAINT fk_project_agents_project FOREIGN KEY (project_id) REFERENCES projects (project_id) ON DELETE RESTRICT,
     CONSTRAINT fk_project_agents_agent FOREIGN KEY (developer_id, agent_id) REFERENCES agents (developer_id, agent_id) ON DELETE CASCADE
@@ -38,7 +37,6 @@ CREATE TABLE IF NOT EXISTS project_users (
     project_id UUID NOT NULL,
     developer_id UUID NOT NULL,
     user_id UUID NOT NULL,
-    added_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_project_users PRIMARY KEY (project_id, user_id),
     CONSTRAINT fk_project_users_project FOREIGN KEY (project_id) REFERENCES projects (project_id) ON DELETE RESTRICT,
     CONSTRAINT fk_project_users_user FOREIGN KEY (developer_id, user_id) REFERENCES users (developer_id, user_id) ON DELETE CASCADE
@@ -49,7 +47,6 @@ CREATE TABLE IF NOT EXISTS project_files (
     project_id UUID NOT NULL,
     developer_id UUID NOT NULL,
     file_id UUID NOT NULL,
-    added_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_project_files PRIMARY KEY (project_id, file_id),
     CONSTRAINT fk_project_files_project FOREIGN KEY (project_id) REFERENCES projects (project_id) ON DELETE RESTRICT,
     CONSTRAINT fk_project_files_file FOREIGN KEY (developer_id, file_id) REFERENCES files (developer_id, file_id) ON DELETE CASCADE
@@ -60,6 +57,8 @@ CREATE OR REPLACE VIEW project_sessions AS
 SELECT
     s.session_id,
     s.developer_id,
+    p.project_id,
+    p.canonical_name AS project_canonical_name,
     s.situation,
     s.system_template,
     s.metadata,
@@ -70,13 +69,16 @@ SELECT
     s.recall_options,
     s.created_at,
     s.updated_at
-FROM sessions s;
+FROM sessions s
+JOIN projects p ON s.developer_id = p.developer_id;
 
 -- Create project_tasks view
 CREATE OR REPLACE VIEW project_tasks AS
 SELECT
     t.task_id,
     t.developer_id,
+    p.project_id,
+    p.canonical_name AS project_canonical_name,
     t.agent_id,
     t.canonical_name,
     t.name,
@@ -87,19 +89,23 @@ SELECT
     t.created_at,
     t.updated_at,
     t.version
-FROM tasks t;
+FROM tasks t
+JOIN projects p ON t.developer_id = p.developer_id;
 
 -- Create project_executions view
 CREATE OR REPLACE VIEW project_executions AS
 SELECT
     e.execution_id,
     e.developer_id,
+    p.project_id,
+    p.canonical_name AS project_canonical_name,
     e.task_id,
     e.task_version,
     e.input,
     e.metadata,
     e.created_at
-FROM executions e;
+FROM executions e
+JOIN projects p ON e.developer_id = p.developer_id;
 
 -- Create project_docs view
 CREATE OR REPLACE VIEW project_docs AS
@@ -114,6 +120,8 @@ WITH doc_owners AS (
 SELECT
     d.doc_id,
     d.developer_id,
+    p.project_id,
+    p.canonical_name AS project_canonical_name,
     d.title,
     d.content,
     d.metadata,
@@ -121,6 +129,7 @@ SELECT
     d.updated_at,
     doc_owner_data.owner_ids
 FROM docs d
+JOIN projects p ON d.developer_id = p.developer_id
 LEFT JOIN doc_owners doc_owner_data ON d.doc_id = doc_owner_data.doc_id AND d.developer_id = doc_owner_data.developer_id;
 
 -- Create indexes
