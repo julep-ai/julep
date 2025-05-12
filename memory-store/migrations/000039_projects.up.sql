@@ -54,10 +54,33 @@ CREATE TABLE IF NOT EXISTS project_files (
 
 -- Create project_sessions view
 CREATE OR REPLACE VIEW project_sessions AS
+WITH sessions_with_projects AS (
+    -- Sessions with agent participants that are in projects
+    SELECT DISTINCT
+        s.session_id,
+        s.developer_id,
+        p.project_id
+    FROM sessions s
+    JOIN session_lookup sl ON s.session_id = sl.session_id AND sl.participant_type = 'agent'
+    JOIN project_agents pa ON pa.developer_id = s.developer_id AND pa.agent_id = sl.participant_id
+    JOIN projects p ON pa.project_id = p.project_id
+    
+    UNION
+    
+    -- Sessions with user participants that are in projects
+    SELECT DISTINCT
+        s.session_id,
+        s.developer_id,
+        p.project_id
+    FROM sessions s
+    JOIN session_lookup sl ON s.session_id = sl.session_id AND sl.participant_type = 'user'
+    JOIN project_users pu ON pu.developer_id = s.developer_id AND pu.user_id = sl.participant_id
+    JOIN projects p ON pu.project_id = p.project_id
+)
 SELECT
     s.session_id,
     s.developer_id,
-    p.project_id,
+    sp.project_id,
     p.canonical_name AS project_canonical_name,
     s.situation,
     s.system_template,
@@ -70,7 +93,8 @@ SELECT
     s.created_at,
     s.updated_at
 FROM sessions s
-JOIN projects p ON s.developer_id = p.developer_id;
+JOIN sessions_with_projects sp ON s.session_id = sp.session_id AND s.developer_id = sp.developer_id
+JOIN projects p ON sp.project_id = p.project_id;
 
 -- Create project_tasks view
 CREATE OR REPLACE VIEW project_tasks AS
@@ -90,7 +114,9 @@ SELECT
     t.updated_at,
     t.version
 FROM tasks t
-JOIN projects p ON t.developer_id = p.developer_id;
+JOIN agents a ON t.developer_id = a.developer_id AND t.agent_id = a.agent_id
+JOIN project_agents pa ON a.developer_id = pa.developer_id AND a.agent_id = pa.agent_id
+JOIN projects p ON pa.project_id = p.project_id;
 
 -- Create project_executions view
 CREATE OR REPLACE VIEW project_executions AS
@@ -105,32 +131,59 @@ SELECT
     e.metadata,
     e.created_at
 FROM executions e
-JOIN projects p ON e.developer_id = p.developer_id;
+JOIN tasks t ON e.developer_id = t.developer_id AND e.task_id = t.task_id AND e.task_version = t.version
+JOIN agents a ON t.developer_id = a.developer_id AND t.agent_id = a.agent_id
+JOIN project_agents pa ON a.developer_id = pa.developer_id AND a.agent_id = pa.agent_id
+JOIN projects p ON pa.project_id = p.project_id;
 
 -- Create project_docs view
 CREATE OR REPLACE VIEW project_docs AS
-WITH doc_owners AS (
+WITH doc_owner_groups AS (
     SELECT
         doc_id,
         developer_id,
         array_agg(owner_id) as owner_ids
     FROM doc_owners
     GROUP BY doc_id, developer_id
+),
+docs_with_projects AS (
+    -- Docs owned by agents that are in projects
+    SELECT DISTINCT
+        d.doc_id,
+        d.developer_id,
+        p.project_id
+    FROM docs d
+    JOIN doc_owner_groups dog ON d.doc_id = dog.doc_id AND d.developer_id = dog.developer_id
+    JOIN project_agents pa ON pa.developer_id = d.developer_id AND pa.agent_id = ANY(dog.owner_ids)
+    JOIN projects p ON pa.project_id = p.project_id
+    
+    UNION
+    
+    -- Docs owned by users that are in projects
+    SELECT DISTINCT
+        d.doc_id,
+        d.developer_id,
+        p.project_id
+    FROM docs d
+    JOIN doc_owner_groups dog ON d.doc_id = dog.doc_id AND d.developer_id = dog.developer_id
+    JOIN project_users pu ON pu.developer_id = d.developer_id AND pu.user_id = ANY(dog.owner_ids)
+    JOIN projects p ON pu.project_id = p.project_id
 )
 SELECT
     d.doc_id,
     d.developer_id,
-    p.project_id,
+    dp.project_id,
     p.canonical_name AS project_canonical_name,
     d.title,
     d.content,
     d.metadata,
     d.created_at,
     d.updated_at,
-    doc_owner_data.owner_ids
+    dog.owner_ids
 FROM docs d
-JOIN projects p ON d.developer_id = p.developer_id
-LEFT JOIN doc_owners doc_owner_data ON d.doc_id = doc_owner_data.doc_id AND d.developer_id = doc_owner_data.developer_id;
+JOIN docs_with_projects dp ON d.doc_id = dp.doc_id AND d.developer_id = dp.developer_id
+JOIN projects p ON dp.project_id = p.project_id
+LEFT JOIN doc_owner_groups dog ON d.doc_id = dog.doc_id AND d.developer_id = dog.developer_id;
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_projects_developer_id ON projects (developer_id);
