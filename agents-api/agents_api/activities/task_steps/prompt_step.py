@@ -111,12 +111,12 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         passed_settings.pop("tool_choice", None)
 
     # Format tools for litellm
-    formatted_tools = [format_tool(tool) for tool in context.tools]
+    formatted_tools = [format_tool(tool) for tool in await context.tools()]
 
     # Map tools to their original objects
     tools_mapping: dict[str, Tool] = {
         fmt_tool.get("name") or fmt_tool.get("function", {}).get("name"): orig_tool
-        for fmt_tool, orig_tool in zip(formatted_tools, context.tools)
+        for fmt_tool, orig_tool in zip(formatted_tools, await context.tools())
     }
 
     # Check if using Claude model and has specific tool types
@@ -127,7 +127,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
     # but we don't allow that (spec should match type).
     formatted_tools = []
-    for i, tool in enumerate(context.tools):
+    for i, tool in enumerate(await context.tools()):
         if tool.type == "computer_20241022" and tool.computer_20241022:
             function = tool.computer_20241022
             tool = {

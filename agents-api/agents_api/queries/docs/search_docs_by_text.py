@@ -38,7 +38,7 @@ async def search_docs_by_text(
     owners: list[tuple[Literal["user", "agent"], UUID]],
     query: str,
     k: int = 3,
-    metadata_filter: dict[str, Any] = {},
+    metadata_filter: dict[str, Any] | None = None,
     search_language: str | None = "english_unaccent",
     trigram_similarity_threshold: float = 0.5,  # Higher threshold to catch fewer spelling errors
     extract_keywords: bool = False,
@@ -61,6 +61,8 @@ async def search_docs_by_text(
         tuple[str, list]: SQL query and parameters for searching the documents.
     """
 
+    # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
+    metadata_filter = metadata_filter if metadata_filter is not None else {}
     if k < 1:
         raise HTTPException(status_code=400, detail="k must be >= 1")
 

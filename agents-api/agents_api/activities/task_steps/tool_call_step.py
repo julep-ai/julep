@@ -7,7 +7,7 @@ from ...autogen.openapi_model import CreateToolRequest, Tool
 
 # AIDEV-TODO: This function for generating call IDs should be moved to a more appropriate location.
 # FIXME: This shouldn't be here.
-def generate_call_id():
+def generate_call_id() -> str:
     # Generate 18 random bytes (which will result in 24 base64 characters)
     random_bytes = secrets.token_bytes(18)
     # Encode to base64 and remove padding

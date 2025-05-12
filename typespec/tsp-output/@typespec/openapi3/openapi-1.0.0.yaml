@@ -302,6 +302,112 @@ paths:
                     - $ref: '#/components/schemas/Docs.HybridDocSearchRequest'
               required:
                 - body
+  /agents/{id}/secrets:
+    get:
+      operationId: AgentSecretsRoute_list
+      description: List secrets (paginated)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - $ref: '#/components/parameters/Common.PaginationOptions.limit'
+        - $ref: '#/components/parameters/Common.PaginationOptions.offset'
+        - $ref: '#/components/parameters/Common.PaginationOptions.sort_by'
+        - $ref: '#/components/parameters/Common.PaginationOptions.direction'
+        - $ref: '#/components/parameters/Common.PaginationOptions.metadata_filter'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Secrets.Secret'
+                required:
+                  - items
+    post:
+      operationId: AgentSecretsRoute_create
+      description: Create a new secret
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.CreateSecretRequest'
+  /agents/{id}/secrets/{child_id}:
+    put:
+      operationId: AgentSecretsRoute_update
+      description: Update an existing secret by id (overwrites existing values)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: child_id
+          in: path
+          required: true
+          description: ID of the resource to be updated
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.UpdateSecretRequest'
+    delete:
+      operationId: AgentSecretsRoute_delete
+      description: Delete a secret by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: child_id
+          in: path
+          required: true
+          description: ID of the resource to be deleted
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Common.ResourceDeletedResponse'
   /agents/{id}/tasks:
     get:
       operationId: TasksRoute_list
@@ -1036,6 +1142,112 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Responses.Response'
+  /secrets/{id}:
+    get:
+      operationId: DeveloperSecretsRoute_list
+      description: List secrets (paginated)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - $ref: '#/components/parameters/Common.PaginationOptions.limit'
+        - $ref: '#/components/parameters/Common.PaginationOptions.offset'
+        - $ref: '#/components/parameters/Common.PaginationOptions.sort_by'
+        - $ref: '#/components/parameters/Common.PaginationOptions.direction'
+        - $ref: '#/components/parameters/Common.PaginationOptions.metadata_filter'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Secrets.Secret'
+                required:
+                  - items
+    post:
+      operationId: DeveloperSecretsRoute_create
+      description: Create a new secret
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.CreateSecretRequest'
+  /secrets/{id}/{child_id}:
+    put:
+      operationId: DeveloperSecretsRoute_update
+      description: Update an existing secret by id (overwrites existing values)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: child_id
+          in: path
+          required: true
+          description: ID of the resource to be updated
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secrets.Secret'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secrets.UpdateSecretRequest'
+    delete:
+      operationId: DeveloperSecretsRoute_delete
+      description: Delete a secret by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: child_id
+          in: path
+          required: true
+          description: ID of the resource to be deleted
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Common.ResourceDeletedResponse'
   /sessions:
     get:
       operationId: SessionsRoute_list
@@ -5730,6 +5942,78 @@ components:
           allOf:
             - $ref: '#/components/schemas/Responses.WebSearchStatus'
           description: The status of the web search tool call.
+    Secrets.CreateSecretRequest:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+        name:
+          type: string
+          description: Name of the secret
+        description:
+          type: string
+          description: Description of what the secret is used for
+        value:
+          type: string
+          description: The decrypted secret value
+    Secrets.Secret:
+      type: object
+      required:
+        - id
+        - created_at
+        - updated_at
+        - name
+        - value
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/Common.uuid'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          description: When this resource was created as UTC date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          description: When this resource was updated as UTC date-time
+          readOnly: true
+        metadata:
+          type: object
+          additionalProperties: {}
+        name:
+          type: string
+          description: Name of the secret
+        description:
+          type: string
+          description: Description of what the secret is used for
+        value:
+          type: string
+          description: The decrypted secret value
+      description: A secret that can be used in tasks and sessions
+    Secrets.UpdateSecretRequest:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+        name:
+          type: string
+          description: Name of the secret
+        description:
+          type: string
+          description: Description of what the secret is used for
+        value:
+          type: string
+          description: The decrypted secret value
     Sessions.BaseDocSearch:
       type: object
       required:
@@ -8907,6 +9191,11 @@ components:
           additionalProperties:
             type: string
           description: The headers to send with the request
+        secrets:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Tools.SecretRef'
+          description: Secret references to use in templates (available only at setup time, not during execution)
         content:
           type: string
           description: The content as base64 to send with the request
@@ -8974,6 +9263,11 @@ components:
           additionalProperties:
             type: string
           description: The headers to send with the request
+        secrets:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Tools.SecretRefUpdate'
+          description: Secret references to use in templates (available only at setup time, not during execution)
         content:
           type: string
           description: The content as base64 to send with the request
@@ -10894,6 +11188,20 @@ components:
           format: uint16
           description: The height of the browser
       description: The setup parameters for the remote browser
+    Tools.SecretRef:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: The name of the secret to reference
+    Tools.SecretRefUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the secret to reference
     Tools.SpiderFetchArguments:
       type: object
       required:

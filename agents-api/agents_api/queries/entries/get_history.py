@@ -80,7 +80,7 @@ async def get_history(
     *,
     developer_id: UUID,
     session_id: UUID,
-    allowed_sources: list[str] = ["api_request", "api_response"],
+    allowed_sources: list[str] | None = None,
 ) -> tuple[str, list] | tuple[str, list, str]:
     """
     Get session history.
@@ -94,6 +94,10 @@ async def get_history(
         tuple[str, list] | tuple[str, list, str]: SQL query and parameters for getting the history.
     """
 
+    # AIDEV-NOTE: avoid mutable default args; initialize allowed_sources
+    allowed_sources = (
+        allowed_sources if allowed_sources is not None else ["api_request", "api_response"]
+    )
     return (
         history_query,
         [session_id, allowed_sources, developer_id],

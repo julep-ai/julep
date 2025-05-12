@@ -51,7 +51,7 @@ async def list_projects(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-    metadata_filter: dict[str, Any] = {},
+    metadata_filter: dict[str, Any] | None = None,
 ) -> tuple[str, list]:
     """
     Constructs query to list projects for a developer with pagination.
@@ -68,6 +68,8 @@ async def list_projects(
         Tuple of (query, params)
     """
 
+    # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
+    metadata_filter = metadata_filter if metadata_filter is not None else {}
     # Initialize parameters
     params = [
         developer_id,

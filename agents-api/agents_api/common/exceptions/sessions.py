@@ -31,7 +31,7 @@ class SessionNotFoundError(BaseSessionException):
         session_id (UUID | str): The unique identifier of the session that was not found.
     """
 
-    def __init__(self, developer_id: UUID | str, session_id: UUID | str):
+    def __init__(self, developer_id: UUID | str, session_id: UUID | str) -> None:
         super().__init__(
             f"Session {session_id!s} not found for developer {developer_id!s}",
             http_code=404,

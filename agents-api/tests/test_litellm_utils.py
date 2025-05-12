@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from agents_api.clients.litellm import acompletion
+from agents_api.common.utils.llm_providers import get_api_key_env_var_name
 from litellm.types.utils import ModelResponse
 from ward import test
 
@@ -23,3 +24,19 @@ async def _():
         mock_acompletion.assert_called_once()
         called_messages = mock_acompletion.call_args[1]["messages"]
         assert "tool_calls" not in called_messages[0]
+
+
+@test("litellm_utils: get_api_key_env_var_name")
+async def _():
+    with patch("agents_api.common.utils.llm_providers.get_config") as mock_get_config:
+        mock_get_config.return_value = {
+            "model_list": [
+                {
+                    "model_name": "gpt-4",
+                    "litellm_params": {"api_key": "os.environ/OPENAI_API_KEY"},
+                }
+            ]
+        }
+
+        result = get_api_key_env_var_name("gpt-4")
+        assert result == "OPENAI_API_KEY"

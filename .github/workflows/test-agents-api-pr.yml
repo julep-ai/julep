@@ -23,7 +23,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-      
+
       - name: Install Go migrate
         uses: jaxxstorm/action-install-gh-release@v1.10.0
         with: # Grab the latest version
@@ -36,6 +36,8 @@ jobs:
           uv sync --all-extras --dev
 
       - name: Run tests
+        env:
+          SECRETS_MASTER_KEY: ${{ secrets.SECRETS_MASTER_KEY }}
         run: |
           cd agents-api
           uv run poe test --fail-limit 3

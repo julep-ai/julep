@@ -44,8 +44,8 @@ Instructions:
 
 def make_entities_prompt(
     session: list[pd.Series] | list[Any],
-    user="a user",
-    assistant="gpt-4-turbo",
+    user: str = "a user",
+    assistant: str = "gpt-4-turbo",
     **_,
 ):
     session = [m.to_dict() if isinstance(m, pd.Series) else m for m in session]
@@ -60,9 +60,9 @@ def make_entities_prompt(
 @retry(stop=stop_after_attempt(2))
 async def get_entities(
     chat_session,
-    model="gpt-4o",
+    model: str = "gpt-4o",
     stop=["</ct:entities"],
-    temperature=0.7,
+    temperature: float = 0.7,
     **kwargs,
 ):
     assert len(chat_session) >= 2, "Session is too short"

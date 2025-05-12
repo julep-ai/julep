@@ -6,7 +6,7 @@ from thefuzz import fuzz
 # AIDEV-NOTE: Exception raised during the evaluation of Python expressions within a task step.
 # Provides suggestions for common errors like Jinja templating syntax or misspelled variable names.
 class EvaluateError(Exception):
-    def __init__(self, error, expression, values):
+    def __init__(self, error, expression, values) -> None:
         error_message = error.message if hasattr(error, "message") else str(error)
         message = error_message
 

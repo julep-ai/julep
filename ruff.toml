@@ -61,6 +61,8 @@ ignore = [
   "E501",       # line-too-long
   "E722",       # bare-except
   "RUF001",     # ambiguous-unicode-character-string
+  "RUF002",     #
+  "RUF003",     #
   "RUF029",     # unused-async
   "ASYNC230",   # blocking-open-in-async
   "ASYNC109",   # disallow-async-fns-with-timeout-param

@@ -24,7 +24,7 @@ class UserNotFoundError(BaseUserException):
         user_id (UUID | str): The ID of the user that was not found.
     """
 
-    def __init__(self, developer_id: UUID | str, user_id: UUID | str):
+    def __init__(self, developer_id: UUID | str, user_id: UUID | str) -> None:
         # Construct an error message indicating the user and developer involved in the error.
         super().__init__(
             f"User {user_id!s} not found for developer {developer_id!s}",
@@ -41,6 +41,6 @@ class UserDocNotFoundError(BaseUserException):
         doc_id (UUID | str): The ID of the document that was not found.
     """
 
-    def __init__(self, user_id: UUID | str, doc_id: UUID | str):
+    def __init__(self, user_id: UUID | str, doc_id: UUID | str) -> None:
         # Construct an error message indicating the document and user involved in the error.
         super().__init__(f"Doc {doc_id!s} not found for user {user_id!s}", http_code=404)

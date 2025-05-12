@@ -27,7 +27,7 @@ logger.setLevel(logging.DEBUG)
     retry=retry_if_exception_type(RuntimeError),
     after=after_log(logger, logging.DEBUG),
 )
-async def main():
+async def main() -> None:
     """
     Initializes the Temporal client and worker with TLS configuration (if provided),
     then starts the worker to listen for tasks on the configured task queue.
