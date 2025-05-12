@@ -1,6 +1,5 @@
 """Tests for transitions queries."""
 
-
 from agents_api.autogen.openapi_model import CreateTransitionRequest
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.executions import list_execution_inputs_data, list_execution_state_data
@@ -103,8 +102,8 @@ async def _(
 
 @test("query: list execution state data")
 async def _(
-    dsn=pg_dsn, 
-    developer_id=test_developer_id, 
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
     scope_id=custom_scope_id,
     execution_started=test_execution_started,
 ):
@@ -113,20 +112,24 @@ async def _(
 
     data = []
 
-    data.append(CreateTransitionRequest(
-        type="step",
-        output={"set_step": "set step"},
-        current={"workflow": "main", "step": 0, "scope_id": scope_id},
-        next={"workflow": "main", "step": 1, "scope_id": scope_id},
-        metadata={"step_type": "SetStep"},
-    ))
+    data.append(
+        CreateTransitionRequest(
+            type="step",
+            output={"set_step": "set step"},
+            current={"workflow": "main", "step": 0, "scope_id": scope_id},
+            next={"workflow": "main", "step": 1, "scope_id": scope_id},
+            metadata={"step_type": "SetStep"},
+        )
+    )
 
-    data.append(CreateTransitionRequest(
-        type="finish",
-        output={"final_step": "final step"},
-        current={"workflow": "main", "step": 1, "scope_id": scope_id},
-        next=None,
-    ))
+    data.append(
+        CreateTransitionRequest(
+            type="finish",
+            output={"final_step": "final step"},
+            current={"workflow": "main", "step": 1, "scope_id": scope_id},
+            next=None,
+        )
+    )
 
     for transition in data:
         await create_execution_transition(
@@ -147,4 +150,4 @@ async def _(
         print(f"transition: {transition}")
 
     assert len(transitions) == 1
-    assert transitions[0].output == {'set_step': 'set step'}
+    assert transitions[0].output == {"set_step": "set step"}
