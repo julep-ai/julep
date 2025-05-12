@@ -351,9 +351,11 @@ async def test_execution(
     )
     yield execution
 
+
 @fixture
 def custom_scope_id():
     return uuid7()
+
 
 @fixture(scope="test")
 async def test_execution_started(
@@ -381,7 +383,7 @@ async def test_execution_started(
     )
 
     actual_scope_id = scope_id or uuid7()
-    
+
     # Start the execution
     await create_execution_transition(
         developer_id=developer_id,
