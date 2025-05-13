@@ -148,29 +148,27 @@ async def create_usage_record(
     # For custom API keys, we still track usage but mark it as such
     total_cost = 0.0
 
-    if not custom_api_used:
-        # Calculate cost using litellm's cost_per_token function
-        try:
-            prompt_cost, completion_cost = cost_per_token(
-                model, prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
-            )
-            total_cost = prompt_cost + completion_cost
-        except Exception:
-            estimated = True
+    try:
+        prompt_cost, completion_cost = cost_per_token(
+            model, prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
+        total_cost = prompt_cost + completion_cost
+    except Exception:
+        estimated = True
 
-            if model in FALLBACK_PRICING:
-                total_cost = (
-                    FALLBACK_PRICING[model]["api_request"] * prompt_tokens
-                    + FALLBACK_PRICING[model]["api_response"] * completion_tokens
-                )
-            else:
-                total_cost = (
-                    AVG_INPUT_COST_PER_TOKEN * prompt_tokens
-                    + AVG_OUTPUT_COST_PER_TOKEN * completion_tokens
-                )
-                print(
-                    f"No fallback pricing found for model {model}, using avg costs: {total_cost}"
-                )
+        if model in FALLBACK_PRICING:
+            total_cost = (
+                FALLBACK_PRICING[model]["api_request"] * prompt_tokens
+                + FALLBACK_PRICING[model]["api_response"] * completion_tokens
+            )
+        else:
+            total_cost = (
+                AVG_INPUT_COST_PER_TOKEN * prompt_tokens
+                + AVG_OUTPUT_COST_PER_TOKEN * completion_tokens
+            )
+            print(
+                f"No fallback pricing found for model {model}, using avg costs: {total_cost}"
+            )
 
     params = [
         developer_id,
