@@ -182,21 +182,13 @@ enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
 # -------
 def _validate_master_key(key: str | None) -> str:
     """Validate that the master key is the correct length for encryption and is provided."""
-    # AIDEV-NOTE: enforce presence and proper length of master key
-    if key is None:
-        # AIDEV-NOTE: allow default insecure key in testing environment
-        if testing:
-            return "s" * 32
-        msg = "SECRETS_MASTER_KEY environment variable is required and must be exactly 32 characters long"
-        raise ValueError(msg)
-
-    if len(key) != 32:
+    if key is None or len(key) != 32:
         msg = "SECRETS_MASTER_KEY must be exactly 32 characters long"
         raise ValueError(msg)
     return key
 
 
-if not TYPE_CHECKING:
+if not TYPE_CHECKING and not testing:
     secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY"))
 
 else:
