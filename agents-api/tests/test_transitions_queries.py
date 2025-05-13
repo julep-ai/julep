@@ -92,10 +92,8 @@ async def _(
         connection_pool=pool,
     )
 
-    for transition in transitions:
-        print(f"transition: {transition}")
-
     assert len(transitions) == 3
+    assert transitions[0].output == {}
     assert transitions[1].output == [{"inside_foreach": "inside foreach"}]
     assert transitions[2].output == {"inside_evaluate": "inside evaluate"}
 
@@ -145,9 +143,6 @@ async def _(
         direction="asc",
         connection_pool=pool,
     )
-
-    for transition in transitions:
-        print(f"transition: {transition}")
 
     assert len(transitions) == 1
     assert transitions[0].output == {"set_step": "set step"}
