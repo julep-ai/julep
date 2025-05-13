@@ -4,7 +4,7 @@ from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from ...autogen.openapi_model import Tool
+from ...autogen.openapi_model import CreateToolRequest, Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
@@ -17,7 +17,7 @@ COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 # AIDEV-NOTE: Formats internal Tool definitions into the structure expected by the LLM (currently focused on OpenAI function tools).
 @beartype
-def format_tool(tool: Tool) -> dict:
+def format_tool(tool: Tool | CreateToolRequest) -> dict:
     if tool.type == "function":
         return {
             "type": "function",
