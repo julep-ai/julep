@@ -68,16 +68,43 @@ docker compose --env-file .env --profile temporal-ui --profile multi-tenant --pr
 > **Note:** In multi-tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK.
 
 ### 6. Generate a JWT Token (Only for Multi-Tenant Mode)
+Replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token
+<Tabs>
+  <Tab title="Linux">
+  
+  1. **Install** the JWT CLI from apt:
+     ```bash
+     sudo apt install jwt
+     ```
+  2. **Export** your `JWT_SHARED_KEY`:
+     ```bash
+     export JWT_SHARED_KEY="your-shared-key"
+     ```
+  3. **Generate** the token:
+     ```bash
+     jwt -alg HS512 -sign <(printf '{"exp":%d,"sub":"00000000-0000-0000-0000-000000000000"}' "$(date -d '+10 days' +%s)") -key <(printf '%s' "$JWT_SHARED_KEY")
+     ```
+  </Tab>
 
-To generate a JWT token, `jwt-cli` is required. Kindly install the same before proceeding with the next steps.
+  <Tab title="macOS">
+  
+  1. **Install** the Mike-Engel JWT-CLI:
+     ```bash
+     brew install mike-engel/jwt-cli/jwt-cli
+     ```
+  2. **Export** your `JWT_SHARED_KEY`:
+     ```bash
+     export JWT_SHARED_KEY="your-shared-key"
+     ```
 
-Use the following command and replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token:
+  3. **Generate** the token:
+     ```bash
+     jwt encode --secret "$JWT_SHARED_KEY" --alg HS512 --exp $(date -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
+     ```
+  </Tab>
+</Tabs>
 
-```bash
-jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
-```
-
-This command generates a JWT token that will be valid for 10 days.
+> **Note:** This command generates a JWT token that will be valid for 10 days.
 
 ### 7. Access and Interact
 - **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.

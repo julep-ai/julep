@@ -386,26 +386,6 @@ Return values from workflow:
       timestamp: $ datetime.now().isoformat()
 ```
 
-### Yield Step
-
-Execute subworkflows:
-
-```yaml YAML
-# Yield to subworkflow
-- yield:
-    workflow: process_data
-    arguments:
-      input_data: $ _.raw_data
-
-# Yield with result handling
-- yield:
-    workflow: analyze
-    arguments:
-      text: $ _.content
-- evaluate:
-    analysis_result: $ _
-```
-
 ### Log Step
 
 Log messages or specific values:
