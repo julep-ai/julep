@@ -166,9 +166,7 @@ async def create_usage_record(
                 AVG_INPUT_COST_PER_TOKEN * prompt_tokens
                 + AVG_OUTPUT_COST_PER_TOKEN * completion_tokens
             )
-            print(
-                f"No fallback pricing found for model {model}, using avg costs: {total_cost}"
-            )
+            print(f"No fallback pricing found for model {model}, using avg costs: {total_cost}")
 
     params = [
         developer_id,
