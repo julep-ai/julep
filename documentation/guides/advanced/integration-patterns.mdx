@@ -157,7 +157,7 @@ steps:
 
 For dynamically selecting services based on configuration:
 
-```yaml
+```yaml [expandable]
 steps:
   - kind: transform
     expression: "$ secrets.preferred_service"
@@ -193,7 +193,7 @@ steps:
 
 Implement regular secret rotation without service disruption:
 
-```python
+```python [expandable]
 # Python example of rotating a secret
 from julep import Julep
 import uuid
@@ -226,7 +226,7 @@ client.secrets.update(
 
 For graceful handling of authentication and configuration errors:
 
-```yaml
+```yaml [expandable]
 steps:
   - kind: try_catch
     try:

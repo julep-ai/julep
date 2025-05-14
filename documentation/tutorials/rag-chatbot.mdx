@@ -97,7 +97,7 @@ We're using two tools:
   </Step>
 
   <Step title="Process and Index Content">
-```yaml
+```yaml [expandable]
 - evaluate:
     document: $ _.document
     chunks: |
@@ -165,7 +165,7 @@ We're using two tools:
 </Steps>
 
 <Accordion title="Complete Task YAML" icon="code">
-```yaml YAML
+```yaml YAML [expandable]
 # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
 name: Julep Jina Crawler Task
 description: A Julep agent that can crawl a website and store the content in the document store.
@@ -298,7 +298,7 @@ Start by creating an execution for the task. This execution will make the agent 
 
 <CodeGroup> 
 
-```python Python
+```python Python [expandable]
 from julep import Client
 import time
 import yaml
@@ -338,7 +338,7 @@ else:
     print(f"Error: {result.error}")
 ```
 
-```js Node.js
+```js Node.js [expandable]
 import { Julep } from '@julep/sdk';
 import fs from 'fs';
 import yaml from 'yaml';

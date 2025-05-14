@@ -89,7 +89,7 @@ await client.agents.docs.delete(agentId, documentId);
 
 Extend your agent's capabilities by adding tools:
 
-```javascript
+```javascript [expandable]
 // Add a web search tool
 const tool = await client.agents.tools.create(agentId, {
   name: 'web_search',

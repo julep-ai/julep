@@ -147,7 +147,7 @@ Pause workflow for user input:
 
 Executing a subworkflow from a main workflow:
 
-```yaml YAML
+```yaml YAML [expandable]
 # Subworkflow
 subworkflow:
 - evaluate:
@@ -309,7 +309,7 @@ Process collections in parallel:
 
 Conditional execution:
 
-```yaml YAML
+```yaml YAML [expandable]
 # Simple if
 - if: $ _.count > 0
   then:
@@ -406,7 +406,7 @@ Handle errors by specifying an error message:
 
 Here's an example combining various step types:
 
-```yaml YAML
+```yaml YAML [expandable]
 # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
 name: Multi-Step Task Demonstration
 description: A demonstration of multi-step task processing with research and summarization capabilities.

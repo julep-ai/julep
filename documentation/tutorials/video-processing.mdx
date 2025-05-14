@@ -184,7 +184,7 @@ We're using three main integrations:
 </Steps>
 
 <Accordion title="Complete Task YAML" icon="code">
-```yaml YAML
+```yaml YAML [expandable]
 # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
 name: Julep Video Processing Task
 description: A Julep agent that can process and analyze videos using Cloudinary
@@ -307,7 +307,7 @@ Here's how to use this task with the Julep SDK:
 
 <CodeGroup>
 
-```python Python
+```python Python [expandable]
 import time
 import yaml
 from julep import Client
@@ -358,7 +358,7 @@ else:
     print(f"Error: {result.error}")
 ```
 
-```js Node.js
+```js Node.js [expandable]
 import { Julep } from '@julep/sdk';
 import yaml from 'yaml';
 import fs from 'fs';
