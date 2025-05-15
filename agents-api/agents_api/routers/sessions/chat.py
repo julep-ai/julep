@@ -1,4 +1,3 @@
-import json
 from collections.abc import AsyncGenerator
 from typing import Annotated, Any
 from uuid import UUID
@@ -34,6 +33,11 @@ def with_mock_response(r: str | None = None):
     return wrapper
 
 
+def join_deltas(acc: dict, delta: dict) -> dict:
+    acc["content"] += delta.pop("content", "")
+    return {**acc, **delta}
+
+
 async def stream_chat_response(
     model_response: litellm.CustomStreamWrapper,
     developer_id: UUID,
@@ -55,89 +59,67 @@ async def stream_chat_response(
         model: The model name used for the response
         background_tasks: Background tasks for saving responses
     """
+    collected_deltas = []
     # Variables to collect the complete response for saving to history if needed
-    collected_content = ""
     role = "assistant"
 
     # Usage information will be collected from the stream response
     usage_data = None
 
-    # Send initial metadata
+    # Create initial response with metadata
     response_id = uuid7()
     created_time = utcnow()
-    metadata = {
-        "id": str(response_id),
-        "created_at": created_time.isoformat(),
-        "docs": doc_references,
-        "jobs": [],
-        "usage": None,
-    }
-    yield f"data: {json.dumps(metadata)}\n\n"
 
     # Process all chunks
     async for chunk in model_response:
+        if not collected_deltas:
+            collected_deltas = [{}] * len(chunk.choices or [])
+        else:
+            collected_deltas = [
+                join_deltas(acc, choice.delta.model_dump())
+                for acc, choice in zip(collected_deltas, chunk.choices)
+            ]
+
         # Check if this chunk contains usage data
         if hasattr(chunk, "usage") and chunk.usage:
             usage_data = chunk.usage.model_dump()
 
-        # Collect content for saving if needed
-        if should_save and chunk.choices:
-            for choice in chunk.choices:
-                if hasattr(choice, "delta") and choice.delta:
-                    # Add content if it exists
-                    if choice.delta.content:
-                        collected_content += choice.delta.content
-
-                    # Update role if provided
-                    if hasattr(choice.delta, "role") and choice.delta.role:
-                        role = choice.delta.role
-
-        # Clean up the chunk's delta content to avoid None values
-        if chunk.choices:
-            for choice in chunk.choices:
-                # Ensure content is never None in the JSON output
-                if hasattr(choice, "delta") and (
-                    hasattr(choice.delta, "content") and choice.delta.content is None
-                ):
-                    choice.delta.content = ""
-
-        # Forward the chunk
-        chunk_data = {
-            "choices": [choice.model_dump() for choice in chunk.choices],
-        }
-        yield f"data: {json.dumps(chunk_data)}\n\n"
-
-    # Check if the model_response object itself has the usage information
-    if not usage_data and hasattr(model_response, "usage") and model_response.usage:
-        usage_data = model_response.usage.model_dump()
-
-    # Send usage info if available
-    if usage_data:
-        yield f"data: {json.dumps({'usage': usage_data})}\n\n"
-
-        # Track token usage
-        total_tokens = usage_data.get("total_tokens", 0)
-        if total_tokens > 0:
-            total_tokens_per_user.labels(str(developer_id)).inc(amount=total_tokens)
-
-    # Save the complete response if requested
-    if should_save and session_id and background_tasks and collected_content:
-        response_entry = CreateEntryRequest.from_model_input(
-            model=model,
-            role=role,
-            content=collected_content,
-            source="api_response",
+        # Create a proper ChunkChatResponse for each chunk
+        chunk_response = ChunkChatResponse(
+            id=response_id,
+            created_at=created_time,
+            docs=doc_references,
+            jobs=[],
+            # Only include usage on the final chunk
+            usage=usage_data,
+            choices=[choice.model_dump() for choice in chunk.choices],
         )
 
+        # Forward the chunk as a proper ChunkChatResponse
+        yield chunk_response.model_dump_json()
+
+    # Track token usage if available
+    if usage_data and usage_data.get("total_tokens", 0) > 0:
+        total_tokens_per_user.labels(str(developer_id)).inc(
+            amount=usage_data.get("total_tokens", 0)
+        )
+
+    # Save the complete response if requested
+    if should_save:
         background_tasks.add_task(
             create_entries,
             developer_id=developer_id,
             session_id=session_id,
-            data=[response_entry],
+            data=[
+                CreateEntryRequest.from_model_input(
+                    model=model,
+                    role=role,
+                    content=delta,
+                    source="api_response",
+                )
+                for delta in collected_deltas
+            ],
         )
-
-    # Send done event
-    yield "data: [DONE]\n\n"
 
 
 @router.post(
@@ -239,9 +221,9 @@ async def chat(
                 developer_id=developer.id,
                 doc_references=doc_references,
                 should_save=chat_input.save,
-                session_id=session_id if chat_input.save else None,
+                session_id=session_id,
                 model=settings["model"],
-                background_tasks=background_tasks if chat_input.save else None,
+                background_tasks=background_tasks,
             ),
             media_type="text/event-stream",
         )
@@ -255,10 +237,7 @@ async def chat(
         msg = "Adaptive context is not yet implemented"
         raise NotImplementedError(msg)
 
-    # Return the regular response
-    chat_response_class = ChunkChatResponse if chat_input.stream else MessageChatResponse
-
-    chat_response: ChatResponse = chat_response_class(
+    chat_response = MessageChatResponse(
         id=uuid7(),
         created_at=utcnow(),
         jobs=jobs,
