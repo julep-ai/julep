@@ -1,18 +1,30 @@
 """Tests for transitions queries."""
 
 from datetime import timedelta
+from uuid import UUID
+
 from agents_api.autogen.openapi_model import CreateTransitionRequest
 from agents_api.clients.pg import create_db_pool
-from agents_api.common.utils.datetime import utcnow, datetime
-from agents_api.queries.executions import list_execution_inputs_data, list_execution_state_data, list_execution_transitions
+from agents_api.common.utils.datetime import datetime, utcnow
+from agents_api.queries.executions import (
+    list_execution_inputs_data,
+    list_execution_state_data,
+)
 from agents_api.queries.executions.create_execution_transition import (
     create_execution_transition,
 )
-from ward import test
-from uuid_extensions import uuid7
-from uuid import UUID
-from tests.fixtures import custom_scope_id, pg_dsn, test_developer_id, test_execution_started, test_task
 from asyncpg import Pool
+from uuid_extensions import uuid7
+from ward import test
+
+from tests.fixtures import (
+    custom_scope_id,
+    pg_dsn,
+    test_developer_id,
+    test_execution_started,
+    test_task,
+)
+
 
 @test("query: list execution inputs data")
 async def _(
@@ -182,17 +194,18 @@ async def create_execution(
         RETURNING *;
     """
 
-    execution_result = await pool.fetchrow(
+    await pool.fetchrow(
         create_execution_query,
         str(developer_id),
         str(task_id),
         str(execution_id),
         {"test": "test"},
         {},
-        created_at
+        created_at,
     )
 
     return execution_id
+
 
 async def create_transition(
     pool: Pool,
@@ -235,7 +248,7 @@ async def create_transition(
         """
 
     transition_id = uuid7()
-    transition_result = await pool.fetchrow(
+    await pool.fetchrow(
         create_execution_transition_query,
         str(execution_id),
         str(transition_id),
@@ -246,7 +259,7 @@ async def create_transition(
         output,
         None,
         metadata,
-        created_at
+        created_at,
     )
 
 
@@ -259,7 +272,9 @@ async def _(
 ):
     pool = await create_db_pool(dsn=dsn)
 
-    execution_id = await create_execution(pool, developer_id, task.id, utcnow() - timedelta(weeks=1))
+    execution_id = await create_execution(
+        pool, developer_id, task.id, utcnow() - timedelta(weeks=1)
+    )
 
     await create_transition(
         pool,
@@ -271,7 +286,7 @@ async def _(
         {},
         utcnow() - timedelta(weeks=1),
     )
-    
+
     await create_transition(
         pool,
         execution_id,
@@ -295,10 +310,7 @@ async def _(
     assert transitions_with_search_window[0].output == {"step_step": "step step"}
 
     transitions_without_search_window = await list_execution_inputs_data(
-        execution_id=execution_id,
-        scope_id=scope_id,
-        direction="asc",
-        connection_pool=pool
+        execution_id=execution_id, scope_id=scope_id, direction="asc", connection_pool=pool
     )
 
     assert len(transitions_without_search_window) == 2
@@ -315,8 +327,10 @@ async def _(
 ):
     pool = await create_db_pool(dsn=dsn)
 
-    execution_id = await create_execution(pool, developer_id, task.id, utcnow() - timedelta(weeks=1))
-    
+    execution_id = await create_execution(
+        pool, developer_id, task.id, utcnow() - timedelta(weeks=1)
+    )
+
     await create_transition(
         pool,
         execution_id,
@@ -327,7 +341,7 @@ async def _(
         {},
         utcnow() - timedelta(weeks=1),
     )
-    
+
     await create_transition(
         pool,
         execution_id,
@@ -338,7 +352,7 @@ async def _(
         {"step_type": "SetStep"},
         utcnow() - timedelta(weeks=1),
     )
-    
+
     await create_transition(
         pool,
         execution_id,
@@ -362,10 +376,7 @@ async def _(
     assert transitions_with_search_window[0].output == {"step_step": "step step"}
 
     transitions_without_search_window = await list_execution_state_data(
-        execution_id=execution_id,
-        scope_id=scope_id,
-        direction="asc",
-        connection_pool=pool
+        execution_id=execution_id, scope_id=scope_id, direction="asc", connection_pool=pool
     )
 
     assert len(transitions_without_search_window) == 2
