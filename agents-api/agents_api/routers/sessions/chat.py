@@ -27,6 +27,13 @@ from .router import router
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
+def with_mock_response(r: str | None = None):
+    def wrapper():
+        return r
+
+    return wrapper
+
+
 async def stream_chat_response(
     model_response: litellm.CustomStreamWrapper,
     developer_id: UUID,
@@ -122,6 +129,7 @@ async def chat(
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
     x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
+    mock_response: Annotated[str, Depends(with_mock_response())] = None,
     connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> Any:
     """
@@ -163,7 +171,7 @@ async def chat(
     if chat_input.stream:
         params["stream"] = True
 
-    payload = {**settings, **params}
+    payload = {**settings, **params, "mock_response": mock_response}
 
     # Get response from LiteLLM (streaming or non-streaming)
     model_response = await litellm.acompletion(**payload)
