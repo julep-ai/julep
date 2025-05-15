@@ -59,6 +59,9 @@ async def stream_chat_response(
     collected_content = ""
     role = "assistant"
 
+    # Usage information will be collected from the stream response
+    usage_data = None
+
     # Send initial metadata
     response_id = uuid7()
     created_time = utcnow()
@@ -73,13 +76,30 @@ async def stream_chat_response(
 
     # Process all chunks
     async for chunk in model_response:
+        # Check if this chunk contains usage data
+        if hasattr(chunk, "usage") and chunk.usage:
+            usage_data = chunk.usage.model_dump()
+
         # Collect content for saving if needed
         if should_save and chunk.choices:
             for choice in chunk.choices:
-                if hasattr(choice, "delta") and choice.delta and choice.delta.content:
-                    collected_content += choice.delta.content
-                    # Store role for later use
-                    role = choice.delta.role
+                if hasattr(choice, "delta") and choice.delta:
+                    # Add content if it exists
+                    if choice.delta.content:
+                        collected_content += choice.delta.content
+
+                    # Update role if provided
+                    if hasattr(choice.delta, "role") and choice.delta.role:
+                        role = choice.delta.role
+
+        # Clean up the chunk's delta content to avoid None values
+        if chunk.choices:
+            for choice in chunk.choices:
+                # Ensure content is never None in the JSON output
+                if hasattr(choice, "delta") and (
+                    hasattr(choice.delta, "content") and choice.delta.content is None
+                ):
+                    choice.delta.content = ""
 
         # Forward the chunk
         chunk_data = {
@@ -87,9 +107,12 @@ async def stream_chat_response(
         }
         yield f"data: {json.dumps(chunk_data)}\n\n"
 
-    # Send usage info if available
-    if model_response.usage:
+    # Check if the model_response object itself has the usage information
+    if not usage_data and hasattr(model_response, "usage") and model_response.usage:
         usage_data = model_response.usage.model_dump()
+
+    # Send usage info if available
+    if usage_data:
         yield f"data: {json.dumps({'usage': usage_data})}\n\n"
 
         # Track token usage
@@ -128,7 +151,7 @@ async def chat(
     session_id: UUID,
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
-    x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
+    x_custom_api_key: Annotated[str | None, Header(alias="X-Custom-Api-Key")] = None,
     mock_response: Annotated[str | None, Depends(with_mock_response())] = None,
     connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> Any:
