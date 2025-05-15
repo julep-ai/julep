@@ -193,6 +193,7 @@ async def chat(
     # Set streaming parameter based on chat_input.stream
     if chat_input.stream:
         params["stream"] = True
+        params["stream_options"] = {"include_usage": True}
 
     payload = {**settings, **params, "mock_response": mock_response}
 
