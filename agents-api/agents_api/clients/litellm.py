@@ -79,7 +79,7 @@ async def acompletion(
     supported_params: list[str] = (
         get_supported_openai_params(model) or []
     )  # Supported params returns Optional[list[str]]
-    supported_params += ["user", "mock_response"]
+    supported_params += ["user", "mock_response", "stream_options"]
     settings = {k: v for k, v in kwargs.items() if k in supported_params}
 
     # NOTE: This is a fix for Mistral API, which expects a different message format
