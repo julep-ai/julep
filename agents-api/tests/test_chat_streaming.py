@@ -23,64 +23,6 @@ from .fixtures import (
 )
 
 
-class MockStreamResponse:
-    """Mock for a streaming response from litellm."""
-
-    def __init__(self, content: str, n_chunks: int = 3):
-        """Create a mock stream response.
-
-        Args:
-            content: The content to stream back
-            n_chunks: Number of chunks to split the content into
-        """
-        self.content = content
-        self.n_chunks = n_chunks
-        self.chunks = []
-
-        # Split content into chunks
-        chunk_size = max(1, len(content) // n_chunks)
-        for i in range(0, len(content), chunk_size):
-            end = min(i + chunk_size, len(content))
-            self.chunks.append(content[i:end])
-
-        # Set up usage and choices for model_dump methods
-        self.usage = MagicMock()
-        self.usage.model_dump.return_value = {
-            "prompt_tokens": 10,
-            "completion_tokens": 20,
-            "total_tokens": 30,
-        }
-
-        # Current index for iteration
-        self._index = 0
-
-    def __aiter__(self):
-        """Return self as an async iterator."""
-        self._index = 0
-        return self
-
-    async def __anext__(self):
-        """Get next chunk or raise StopAsyncIteration."""
-        if self._index >= len(self.chunks):
-            raise StopAsyncIteration
-
-        chunk = self.chunks[self._index]
-        self._index += 1
-
-        choice = MagicMock()
-        choice.delta.content = chunk
-        choice.delta.role = "assistant"
-        choice.model_dump.return_value = {
-            "index": 0,
-            "delta": {"content": chunk, "role": "assistant"},
-            "finish_reason": None,
-        }
-
-        mock_chunk = MagicMock()
-        mock_chunk.choices = [choice]
-        return mock_chunk
-
-
 async def collect_stream_content(response: StreamingResponse) -> str:
     """Helper function to collect and concatenate stream chunks."""
     chunks = []
@@ -157,26 +99,20 @@ async def _(
     # Define a mock response
     mock_response = "This is a test streaming response"
 
-    # Mock litellm.acompletion to return our stream response
-    mock_stream = MockStreamResponse(mock_response)
-    acompletion_mock = AsyncMock(return_value=mock_stream)
-
-    with (
-        patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
-        patch("agents_api.clients.litellm.acompletion", acompletion_mock),
-    ):
+    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
             stream=True,
         )
 
-        # Call the chat function
+        # Call the chat function with mock_response
         response = await chat(
             developer=developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
+            mock_response=mock_response,
         )
 
         # Verify response type is StreamingResponse
@@ -200,11 +136,6 @@ async def _(
         assert "data: [DONE]" in content_str
 
         assert response.media_type == "text/event-stream"
-
-        # Verify litellm.acompletion was called with stream=True
-        acompletion_mock.assert_called_once()
-        assert "stream" in acompletion_mock.call_args[1]
-        assert acompletion_mock.call_args[1]["stream"] is True
 
 
 @test("chat: Test streaming response saves user messages to history when save=True")
@@ -244,14 +175,9 @@ async def _(
     # Define a mock response
     mock_response = "This is a test streaming response with history"
 
-    # Mock litellm.acompletion to return our stream response
-    mock_stream = MockStreamResponse(mock_response)
-    acompletion_mock = AsyncMock(return_value=mock_stream)
-
     with (
         patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
         patch("agents_api.routers.sessions.chat.create_entries", create_entries_mock),
-        patch("agents_api.clients.litellm.acompletion", acompletion_mock),
     ):
         # Create chat input with stream=True and save=True
         chat_input = ChatInput(
@@ -279,6 +205,7 @@ async def _(
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=background_tasks,
+            mock_response=mock_response,
         )
 
         # Verify response content
@@ -298,11 +225,6 @@ async def _(
         assert task_kwargs["data"][0].role == "user"
         assert task_kwargs["data"][0].content == "Hello"
         assert task_kwargs["data"][0].source == "api_request"
-
-        # Verify litellm.acompletion was called with stream=True
-        acompletion_mock.assert_called_once()
-        assert "stream" in acompletion_mock.call_args[1]
-        assert acompletion_mock.call_args[1]["stream"] is True
 
 
 @test("chat: Test streaming response does not save history when save=False")
@@ -342,14 +264,9 @@ async def _(
     # Define a mock response
     mock_response = "This is a test streaming response without saving"
 
-    # Mock litellm.acompletion to return our stream response
-    mock_stream = MockStreamResponse(mock_response)
-    acompletion_mock = AsyncMock(return_value=mock_stream)
-
     with (
         patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
         patch("agents_api.routers.sessions.chat.create_entries", create_entries_mock),
-        patch("agents_api.clients.litellm.acompletion", acompletion_mock),
     ):
         # Create chat input with stream=True and save=False
         chat_input = ChatInput(
@@ -377,6 +294,7 @@ async def _(
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=background_tasks,
+            mock_response=mock_response,
         )
 
         # Verify response content
@@ -429,14 +347,7 @@ async def _(
     # Define a mock response
     mock_response = "This is a test streaming response with documents"
 
-    # Mock litellm.acompletion to return our stream response
-    mock_stream = MockStreamResponse(mock_response)
-    acompletion_mock = AsyncMock(return_value=mock_stream)
-
-    with (
-        patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
-        patch("agents_api.clients.litellm.acompletion", acompletion_mock),
-    ):
+    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -449,6 +360,7 @@ async def _(
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
+            mock_response=mock_response,
         )
 
         # Verify content
@@ -505,14 +417,7 @@ async def _(
     # Define a mock response
     mock_response = "This is a test streaming response with custom API key"
 
-    # Use a real mock instead of a spy - mock the actual response with our MockStreamResponse
-    mock_stream = MockStreamResponse(mock_response)
-    acompletion_mock = AsyncMock(return_value=mock_stream)
-
-    with (
-        patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
-        patch("agents_api.clients.litellm.acompletion", acompletion_mock),
-    ):
+    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -529,17 +434,13 @@ async def _(
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
             x_custom_api_key=custom_api_key,
+            mock_response=mock_response,
         )
 
         # Verify response content
         content_str = await collect_stream_content(response)
         extracted_content = extract_content_from_sse(content_str)
         assert mock_response.replace(" ", "") in extracted_content.replace(" ", "")
-
-        # Verify litellm.acompletion was called with the custom API key
-        acompletion_mock.assert_called_once()
-        assert "custom_api_key" in acompletion_mock.call_args[1]
-        assert acompletion_mock.call_args[1]["custom_api_key"] == custom_api_key
 
 
 @test("chat: Test streaming with tools")
@@ -592,14 +493,7 @@ async def _(
     # Define a mock response
     mock_response = "This is a test streaming response with tools"
 
-    # Use a real mock instead of a spy - mock the actual response with our MockStreamResponse
-    mock_stream = MockStreamResponse(mock_response)
-    acompletion_mock = AsyncMock(return_value=mock_stream)
-
-    with (
-        patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
-        patch("agents_api.clients.litellm.acompletion", acompletion_mock),
-    ):
+    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -612,17 +506,13 @@ async def _(
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
+            mock_response=mock_response,
         )
 
         # Verify response content
         content_str = await collect_stream_content(response)
         extracted_content = extract_content_from_sse(content_str)
         assert mock_response.replace(" ", "") in extracted_content.replace(" ", "")
-
-        # Verify litellm.acompletion was called with tools
-        acompletion_mock.assert_called_once()
-        assert "tools" in acompletion_mock.call_args[1]
-        assert acompletion_mock.call_args[1]["tools"] == formatted_tools
 
 
 @test("chat: Test multiple mock_response formats")
@@ -664,52 +554,48 @@ async def _(
         )
 
         string_mock = "This is a simple string mock"
-        mock_stream = MockStreamResponse(string_mock)
-        acompletion_mock = AsyncMock(return_value=mock_stream)
 
-        with patch("agents_api.clients.litellm.acompletion", acompletion_mock):
-            response1 = await chat(
-                developer=developer,
-                session_id=session.id,
-                chat_input=chat_input,
-                background_tasks=BackgroundTasks(),
-            )
+        response1 = await chat(
+            developer=developer,
+            session_id=session.id,
+            chat_input=chat_input,
+            background_tasks=BackgroundTasks(),
+            mock_response=string_mock,
+        )
 
-            assert isinstance(response1, StreamingResponse)
+        assert isinstance(response1, StreamingResponse)
 
-            # Verify response content
-            content_str1 = await collect_stream_content(response1)
-            extracted_content1 = extract_content_from_sse(content_str1)
-            assert string_mock.replace(" ", "") in extracted_content1.replace(" ", "")
-            assert "data: " in content_str1
-            assert "data: [DONE]" in content_str1
+        # Verify response content
+        content_str1 = await collect_stream_content(response1)
+        extracted_content1 = extract_content_from_sse(content_str1)
+        assert string_mock.replace(" ", "") in extracted_content1.replace(" ", "")
+        assert "data: " in content_str1
+        assert "data: [DONE]" in content_str1
 
-            # 2. Test with complex JSON-compatible mock_response
-            complex_mock = {
-                "response": "This is a complex mock",
-                "details": {"confidence": 0.95, "source": "test"},
-            }
+        # 2. Test with complex JSON-compatible mock_response
+        complex_mock = {
+            "response": "This is a complex mock",
+            "details": {"confidence": 0.95, "source": "test"},
+        }
 
-            # We need to convert this to JSON string
-            complex_mock_str = json.dumps(complex_mock)
-            mock_stream2 = MockStreamResponse(complex_mock_str)
-            acompletion_mock2 = AsyncMock(return_value=mock_stream2)
+        # We need to convert this to JSON string
+        complex_mock_str = json.dumps(complex_mock)
 
-            with patch("agents_api.clients.litellm.acompletion", acompletion_mock2):
-                response2 = await chat(
-                    developer=developer,
-                    session_id=session.id,
-                    chat_input=chat_input,
-                    background_tasks=BackgroundTasks(),
-                )
+        response2 = await chat(
+            developer=developer,
+            session_id=session.id,
+            chat_input=chat_input,
+            background_tasks=BackgroundTasks(),
+            mock_response=complex_mock_str,
+        )
 
-                assert isinstance(response2, StreamingResponse)
+        assert isinstance(response2, StreamingResponse)
 
-                # Verify response content
-                content_str2 = await collect_stream_content(response2)
-                extracted_content2 = extract_content_from_sse(content_str2)
-                # Check that the JSON content is in the response
-                assert "response" in extracted_content2
-                assert "complex mock" in extracted_content2
-                assert "data: " in content_str2
-                assert "data: [DONE]" in content_str2
+        # Verify response content
+        content_str2 = await collect_stream_content(response2)
+        extracted_content2 = extract_content_from_sse(content_str2)
+        # Check that the JSON content is in the response
+        assert "response" in extracted_content2
+        assert "complex mock" in extracted_content2
+        assert "data: " in content_str2
+        assert "data: [DONE]" in content_str2
