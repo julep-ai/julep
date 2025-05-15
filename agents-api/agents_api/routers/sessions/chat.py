@@ -129,7 +129,7 @@ async def chat(
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
     x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
-    mock_response: Annotated[str, Depends(with_mock_response())] = None,
+    mock_response: Annotated[str | None, Depends(with_mock_response())] = None,
     connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> Any:
     """
