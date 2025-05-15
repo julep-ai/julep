@@ -1,15 +1,18 @@
 """Tests for transitions queries."""
 
+from datetime import timedelta
 from agents_api.autogen.openapi_model import CreateTransitionRequest
 from agents_api.clients.pg import create_db_pool
-from agents_api.queries.executions import list_execution_inputs_data, list_execution_state_data
+from agents_api.common.utils.datetime import utcnow, datetime
+from agents_api.queries.executions import list_execution_inputs_data, list_execution_state_data, list_execution_transitions
 from agents_api.queries.executions.create_execution_transition import (
     create_execution_transition,
 )
 from ward import test
-
-from tests.fixtures import custom_scope_id, pg_dsn, test_developer_id, test_execution_started
-
+from uuid_extensions import uuid7
+from uuid import UUID
+from tests.fixtures import custom_scope_id, pg_dsn, test_developer_id, test_execution_started, test_task
+from asyncpg import Pool
 
 @test("query: list execution inputs data")
 async def _(
@@ -146,3 +149,225 @@ async def _(
 
     assert len(transitions) == 1
     assert transitions[0].output == {"set_step": "set step"}
+
+
+async def create_execution(
+    pool: Pool,
+    developer_id: UUID,
+    task_id: UUID,
+    created_at: datetime,
+):
+    execution_id = uuid7()
+    create_execution_query = """
+        INSERT INTO executions
+        (
+            developer_id,
+            task_id,
+            execution_id,
+            input,
+            metadata,
+            task_version,
+            created_at
+        )
+        VALUES
+        (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            1,
+            $6
+        )
+        RETURNING *;
+    """
+
+    execution_result = await pool.fetchrow(
+        create_execution_query,
+        str(developer_id),
+        str(task_id),
+        str(execution_id),
+        {"test": "test"},
+        {},
+        created_at
+    )
+
+    return execution_id
+
+async def create_transition(
+    pool: Pool,
+    execution_id: UUID,
+    type: str,
+    current_step: dict,
+    next_step: dict,
+    output: dict,
+    metadata: dict,
+    created_at: datetime,
+):
+    create_execution_transition_query = """
+        INSERT INTO transitions
+        (
+            execution_id,
+            transition_id,
+            type,
+            step_label,
+            current_step,
+            next_step,
+            output,
+            task_token,
+            metadata,
+            created_at
+        )
+        VALUES
+        (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9,
+            $10
+        )
+        RETURNING *;
+        """
+
+    transition_id = uuid7()
+    transition_result = await pool.fetchrow(
+        create_execution_transition_query,
+        str(execution_id),
+        str(transition_id),
+        type,
+        "label",
+        current_step,
+        next_step,
+        output,
+        None,
+        metadata,
+        created_at
+    )
+
+
+@test("query: list execution inputs data: search_window")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    scope_id=custom_scope_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+
+    execution_id = await create_execution(pool, developer_id, task.id, utcnow() - timedelta(weeks=1))
+
+    await create_transition(
+        pool,
+        execution_id,
+        "init",
+        {"workflow_name": "main", "step_index": 0, "scope_id": scope_id},
+        {"workflow_name": "main", "step_index": 0, "scope_id": scope_id},
+        {"init_step": "init step"},
+        {},
+        utcnow() - timedelta(weeks=1),
+    )
+    
+    await create_transition(
+        pool,
+        execution_id,
+        "step",
+        {"workflow_name": "main", "step_index": 0, "scope_id": scope_id},
+        {"workflow_name": "main", "step_index": 1, "scope_id": scope_id},
+        {"step_step": "step step"},
+        {},
+        utcnow() - timedelta(days=1),
+    )
+
+    transitions_with_search_window = await list_execution_inputs_data(
+        execution_id=execution_id,
+        scope_id=scope_id,
+        direction="asc",
+        connection_pool=pool,
+        search_window=timedelta(days=5),
+    )
+
+    assert len(transitions_with_search_window) == 1
+    assert transitions_with_search_window[0].output == {"step_step": "step step"}
+
+    transitions_without_search_window = await list_execution_inputs_data(
+        execution_id=execution_id,
+        scope_id=scope_id,
+        direction="asc",
+        connection_pool=pool
+    )
+
+    assert len(transitions_without_search_window) == 2
+    assert transitions_without_search_window[0].output == {"init_step": "init step"}
+    assert transitions_without_search_window[1].output == {"step_step": "step step"}
+
+
+@test("query: list execution state data: search_window")
+async def _(
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    scope_id=custom_scope_id,
+    task=test_task,
+):
+    pool = await create_db_pool(dsn=dsn)
+
+    execution_id = await create_execution(pool, developer_id, task.id, utcnow() - timedelta(weeks=1))
+    
+    await create_transition(
+        pool,
+        execution_id,
+        "init",
+        {"workflow_name": "main", "step_index": 0, "scope_id": scope_id},
+        {"workflow_name": "main", "step_index": 0, "scope_id": scope_id},
+        {"init_step": "init step"},
+        {},
+        utcnow() - timedelta(weeks=1),
+    )
+    
+    await create_transition(
+        pool,
+        execution_id,
+        "step",
+        {"workflow_name": "main", "step_index": 0, "scope_id": scope_id},
+        {"workflow_name": "main", "step_index": 1, "scope_id": scope_id},
+        {"init_step": "init step"},
+        {"step_type": "SetStep"},
+        utcnow() - timedelta(weeks=1),
+    )
+    
+    await create_transition(
+        pool,
+        execution_id,
+        "step",
+        {"workflow_name": "main", "step_index": 1, "scope_id": scope_id},
+        {"workflow_name": "main", "step_index": 2, "scope_id": scope_id},
+        {"step_step": "step step"},
+        {"step_type": "SetStep"},
+        utcnow() - timedelta(days=1),
+    )
+
+    transitions_with_search_window = await list_execution_state_data(
+        execution_id=execution_id,
+        scope_id=scope_id,
+        direction="asc",
+        connection_pool=pool,
+        search_window=timedelta(days=5),
+    )
+
+    assert len(transitions_with_search_window) == 1
+    assert transitions_with_search_window[0].output == {"step_step": "step step"}
+
+    transitions_without_search_window = await list_execution_state_data(
+        execution_id=execution_id,
+        scope_id=scope_id,
+        direction="asc",
+        connection_pool=pool
+    )
+
+    assert len(transitions_without_search_window) == 2
+    assert transitions_without_search_window[0].output == {"init_step": "init step"}
+    assert transitions_without_search_window[1].output == {"step_step": "step step"}
