@@ -11,11 +11,11 @@ from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.secrets.update import update_secret
 from ward import test
 
-from tests.fixtures import pg_dsn, test_developer_id
+from tests.fixtures import clean_secrets, pg_dsn, test_developer_id
 
 
 @test("query: create secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     # Create secret with both developer_id
@@ -42,7 +42,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
 
 @test("query: list secrets")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     # Create test secrets first - use unique but valid identifiers
@@ -68,6 +68,53 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     # Test listing developer secrets
     secrets = await list_secrets(
         developer_id=developer_id,
+        decrypt=True,
+        connection_pool=pool,
+    )
+
+    assert secrets is not None
+    assert isinstance(secrets, list)
+    assert len(secrets) == 2
+    assert all(isinstance(secret, Secret) for secret in secrets)
+
+    # Check if our test secrets are in the list
+    created_secret_names = {secret.name for secret in secrets}
+    assert secret_name1 in created_secret_names
+    assert secret_name2 in created_secret_names
+
+    # Check if the values are decrypted
+    assert any(secret.value == "sk_test_list_1" for secret in secrets)
+    assert any(secret.value == "sk_test_list_2" for secret in secrets)
+
+
+@test("query: list secrets (decrypt=False)")
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create test secrets first - use unique but valid identifiers
+    secret_name1 = f"list_test_key_a{uuid4().hex[:6]}"
+    secret_name2 = f"list_test_key_b{uuid4().hex[:6]}"
+
+    await create_secret(
+        developer_id=developer_id,
+        name=secret_name1,
+        description="Test secret 1 for listing",
+        value="sk_test_list_1",
+        connection_pool=pool,
+    )
+
+    await create_secret(
+        developer_id=developer_id,
+        name=secret_name2,
+        description="Test secret 2 for listing",
+        value="sk_test_list_2",
+        connection_pool=pool,
+    )
+
+    # Test listing developer secrets
+    secrets = await list_secrets(
+        developer_id=developer_id,
+        decrypt=False,
         connection_pool=pool,
     )
 
@@ -81,19 +128,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert secret_name1 in created_secret_names
     assert secret_name2 in created_secret_names
 
-    # Test listing agent secrets
-    agent_secrets = await list_secrets(
-        developer_id=developer_id,
-        connection_pool=pool,
-    )
-
-    assert agent_secrets is not None
-    assert isinstance(agent_secrets, list)
-    assert any(secret.name == secret_name2 for secret in agent_secrets)
+    # Check if the values are encrypted
+    assert all(secret.value == "ENCRYPTED" for secret in secrets)
 
 
 @test("query: get secret by name")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first
@@ -110,6 +150,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     retrieved_secret = await get_secret_by_name(
         developer_id=developer_id,
         name=secret_name,
+        decrypt=True,
         connection_pool=pool,
     )
 
@@ -119,8 +160,36 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert retrieved_secret.value == "sk_get_test_1"
 
 
+@test("query: get secret by name (decrypt=False)")
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a test secret first
+    secret_name = f"get_test_key_a{uuid4().hex[:6]}"
+    await create_secret(
+        developer_id=developer_id,
+        name=secret_name,
+        description="Test secret for get by name",
+        value="sk_get_test_1",
+        connection_pool=pool,
+    )
+
+    # Get the secret by name
+    retrieved_secret = await get_secret_by_name(
+        developer_id=developer_id,
+        name=secret_name,
+        decrypt=False,
+        connection_pool=pool,
+    )
+
+    assert retrieved_secret is not None
+    assert isinstance(retrieved_secret, Secret)
+    assert retrieved_secret.name == secret_name
+    assert retrieved_secret.value == "ENCRYPTED"
+
+
 @test("query: update secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first
@@ -175,7 +244,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
 
 @test("query: delete secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first

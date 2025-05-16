@@ -208,7 +208,7 @@ class StepContext(BaseModel):
                 args=[
                     "list_secrets_query",
                     "secrets.list",
-                    {"developer_id": self.execution_input.developer_id},
+                    {"developer_id": self.execution_input.developer_id, "decrypt": True},
                 ],
                 schedule_to_close_timeout=timedelta(days=31),
                 retry_policy=DEFAULT_RETRY_POLICY,
@@ -216,7 +216,8 @@ class StepContext(BaseModel):
             )
         except _NotInWorkflowEventLoopError:
             secrets_query_result = await list_secrets_query(
-                developer_id=self.execution_input.developer_id
+                developer_id=self.execution_input.developer_id,
+                decrypt=True,
             )
 
         if tools:

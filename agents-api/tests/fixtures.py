@@ -31,6 +31,8 @@ from agents_api.queries.executions.create_execution_transition import (
 from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
 from agents_api.queries.files.create_file import create_file
 from agents_api.queries.projects.create_project import create_project
+from agents_api.queries.secrets.delete import delete_secret
+from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
 from agents_api.queries.tools.create_tools import create_tools
@@ -506,3 +508,27 @@ async def s3_client():
         finally:
             await s3_client.close()
             app.state.s3_client = None
+
+
+@fixture(scope="test")
+async def clean_secrets(dsn=pg_dsn, developer_id=test_developer_id):
+    async def purge() -> None:
+        pool = await create_db_pool(dsn=dsn)
+        try:
+            secrets = await list_secrets(
+                developer_id=developer_id,
+                connection_pool=pool,
+            )
+            for secret in secrets:
+                await delete_secret(
+                    secret_id=secret.id,
+                    developer_id=developer_id,
+                    connection_pool=pool,
+                )
+        finally:
+            # pool is closed in *the same* loop it was created in
+            await pool.close()
+
+    await purge()
+    yield
+    await purge()
