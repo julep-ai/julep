@@ -50,7 +50,8 @@ from .utils import (
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
-
+from agents_api.queries.secrets.list import list_secrets
+from agents_api.queries.secrets.delete import delete_secret
 
 @fixture(scope="global")
 def pg_dsn():
@@ -506,3 +507,28 @@ async def s3_client():
         finally:
             await s3_client.close()
             app.state.s3_client = None
+
+
+
+@fixture(scope="test")
+async def clean_secrets(dsn=pg_dsn, developer_id=test_developer_id):
+    async def purge() -> None:
+        pool = await create_db_pool(dsn=dsn)
+        try:
+            secrets = await list_secrets(
+                developer_id=developer_id,
+                connection_pool=pool,
+            )
+            for secret in secrets:
+                await delete_secret(
+                    secret_id=secret.id,
+                    developer_id=developer_id,
+                    connection_pool=pool,
+                )
+        finally:
+            # pool is closed in *the same* loop it was created in
+            await pool.close()
+
+    await purge()
+    yield
+    await purge()

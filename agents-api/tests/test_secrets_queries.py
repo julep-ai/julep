@@ -11,41 +11,12 @@ from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.secrets.update import update_secret
 from ward import test
 
-from tests.fixtures import pg_dsn, test_developer_id
-
-
-async def clean_secrets(developer_id, connection_pool):
-    """Clean up all secrets for a given developer."""
-    # List all secrets for the developer
-    secrets = await list_secrets(
-        developer_id=developer_id,
-        connection_pool=connection_pool,
-    )
-
-    # Delete each secret
-    for secret in secrets:
-        await delete_secret(
-            secret_id=secret.id,
-            developer_id=developer_id,
-            connection_pool=connection_pool,
-        )
-
-    # Verify all secrets are deleted
-    remaining_secrets = await list_secrets(
-        developer_id=developer_id,
-        connection_pool=connection_pool,
-    )
-    assert len(remaining_secrets) == 0, (
-        f"Failed to clean up all secrets, {len(remaining_secrets)} remaining"
-    )
+from tests.fixtures import pg_dsn, test_developer_id, clean_secrets
 
 
 @test("query: create secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
-
-    # Clean up any existing secrets first
-    await clean_secrets(developer_id, pool)
 
     # Create secret with both developer_id
     agent_secret_data = {
@@ -69,16 +40,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert agent_secret.name == agent_secret_data["name"]
     assert agent_secret.value == "ENCRYPTED"
 
-    # Clean up after test
-    await clean_secrets(developer_id, pool)
-
 
 @test("query: list secrets")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
+    
 
-    # Clean up any existing secrets first
-    await clean_secrets(developer_id, pool)
 
     # Create test secrets first - use unique but valid identifiers
     secret_name1 = f"list_test_key_a{uuid4().hex[:6]}"
@@ -121,15 +88,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert any(secret.value == "sk_test_list_1" for secret in secrets)
     assert any(secret.value == "sk_test_list_2" for secret in secrets)
 
-    await clean_secrets(developer_id, pool)
 
 
 @test("query: list secrets (decrypt=False)")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
-    # Clean up any existing secrets first
-    await clean_secrets(developer_id, pool)
+
 
     # Create test secrets first - use unique but valid identifiers
     secret_name1 = f"list_test_key_a{uuid4().hex[:6]}"
@@ -171,15 +136,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     # Check if the values are encrypted
     assert all(secret.value == "ENCRYPTED" for secret in secrets)
 
-    await clean_secrets(developer_id, pool)
 
 
 @test("query: get secret by name")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
-    # Clean up any existing secrets first
-    await clean_secrets(developer_id, pool)
+
 
     # Create a test secret first
     secret_name = f"get_test_key_a{uuid4().hex[:6]}"
@@ -204,15 +167,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert retrieved_secret.name == secret_name
     assert retrieved_secret.value == "sk_get_test_1"
 
-    await clean_secrets(developer_id, pool)
-
 
 @test("query: get secret by name (decrypt=False)")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
-    # Clean up any existing secrets first
-    await clean_secrets(developer_id, pool)
+
 
     # Create a test secret first
     secret_name = f"get_test_key_a{uuid4().hex[:6]}"
@@ -237,15 +197,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert retrieved_secret.name == secret_name
     assert retrieved_secret.value == "ENCRYPTED"
 
-    await clean_secrets(developer_id, pool)
-
 
 @test("query: update secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
-    # Clean up any existing secrets first
-    await clean_secrets(developer_id, pool)
+
 
     # Create a test secret first
     original_name = f"update_test_key_a{uuid4().hex[:6]}"
@@ -297,15 +254,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert partial_update.value == "ENCRYPTED"  # Should remain from previous update
     assert partial_update.metadata == updated_metadata  # Should remain from previous update
 
-    await clean_secrets(developer_id, pool)
-
 
 @test("query: delete secret")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
 
-    # Clean up any existing secrets first
-    await clean_secrets(developer_id, pool)
+
 
     # Create a test secret first
     delete_test_name = f"delete_test_key_a{uuid4().hex[:6]}"
@@ -356,4 +310,3 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert agent_delete_result is not None
     assert agent_delete_result.id == agent_secret.id
 
-    await clean_secrets(developer_id, pool)
