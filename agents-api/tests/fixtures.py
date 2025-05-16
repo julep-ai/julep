@@ -31,6 +31,8 @@ from agents_api.queries.executions.create_execution_transition import (
 from agents_api.queries.executions.create_temporal_lookup import create_temporal_lookup
 from agents_api.queries.files.create_file import create_file
 from agents_api.queries.projects.create_project import create_project
+from agents_api.queries.secrets.delete import delete_secret
+from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.sessions.create_session import create_session
 from agents_api.queries.tasks.create_task import create_task
 from agents_api.queries.tools.create_tools import create_tools
@@ -50,8 +52,7 @@ from .utils import (
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
-from agents_api.queries.secrets.list import list_secrets
-from agents_api.queries.secrets.delete import delete_secret
+
 
 @fixture(scope="global")
 def pg_dsn():
@@ -507,7 +508,6 @@ async def s3_client():
         finally:
             await s3_client.close()
             app.state.s3_client = None
-
 
 
 @fixture(scope="test")
