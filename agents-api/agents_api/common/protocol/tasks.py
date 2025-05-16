@@ -27,7 +27,10 @@ with workflow.unsafe.imports_passed_through():
 from ...activities.pg_query_step import pg_query_step
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from ...env import max_steps_accessible_in_tasks, temporal_heartbeat_timeout
-from ...queries.executions import list_execution_transitions
+from ...queries.executions import (
+    list_execution_inputs_data,
+    list_execution_state_data,
+)
 from ...queries.secrets.list import list_secrets_query
 from ...queries.utils import serialize_model_data
 from .models import ExecutionInput
@@ -291,21 +294,24 @@ class StepContext(BaseModel):
         state = {}
         scope_id = self.current_scope_id
 
-        transitions = await list_execution_transitions(
+        transitions = await list_execution_inputs_data(
             execution_id=self.execution_input.execution.id,
-            # limit=limit,
             direction="asc",
             scope_id=scope_id,
         )  # type: ignore[not-callable]
         assert len(transitions) > 0, "No transitions found"
 
         for transition in transitions:
-            # NOTE: The length hack should be refactored in case we want to implement multi-step control steps
-            if transition.next and transition.next.step >= len(inputs):
-                inputs.append(transition.output)
-                labels.append(transition.step_label)
-            if transition.metadata and transition.metadata.get("step_type") == "SetStep":
-                state.update(transition.output)
+            inputs.append(transition.output)
+            labels.append(transition.step_label)
+
+        transitions = await list_execution_state_data(
+            execution_id=self.execution_input.execution.id,
+            direction="asc",
+            scope_id=scope_id,
+        )  # type: ignore[not-callable]
+        for transition in transitions:
+            state.update(transition.output)
 
         return inputs, labels, state
 

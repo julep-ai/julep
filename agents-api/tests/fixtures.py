@@ -352,11 +352,17 @@ async def test_execution(
     yield execution
 
 
+@fixture
+def custom_scope_id():
+    return uuid7()
+
+
 @fixture(scope="test")
 async def test_execution_started(
     dsn=pg_dsn,
     developer_id=test_developer_id,
     task=test_task,
+    scope_id=custom_scope_id,
 ):
     pool = await create_db_pool(dsn=dsn)
     workflow_handle = WorkflowHandle(
@@ -376,7 +382,8 @@ async def test_execution_started(
         connection_pool=pool,
     )
 
-    scope_id = uuid7()
+    actual_scope_id = scope_id or uuid7()
+
     # Start the execution
     await create_execution_transition(
         developer_id=developer_id,
@@ -384,8 +391,8 @@ async def test_execution_started(
         data=CreateTransitionRequest(
             type="init",
             output={},
-            current={"workflow": "main", "step": 0, "scope_id": scope_id},
-            next={"workflow": "main", "step": 0, "scope_id": scope_id},
+            current={"workflow": "main", "step": 0, "scope_id": actual_scope_id},
+            next={"workflow": "main", "step": 0, "scope_id": actual_scope_id},
         ),
         connection_pool=pool,
     )
