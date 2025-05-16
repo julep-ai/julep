@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header
 from fastapi.responses import StreamingResponse
+from litellm.types.utils import StreamingChoices
 from starlette.status import HTTP_201_CREATED
 from uuid_extensions import uuid7
 
@@ -34,8 +35,21 @@ def with_mock_response(r: str | None = None):
 
 
 def join_deltas(acc: dict, delta: dict) -> dict:
-    acc["content"] += delta.pop("content", "")
+    acc["content"] = (acc.get("content", "") or "") + (delta.pop("content", "") or "")
     return {**acc, **delta}
+
+
+def make_choice(
+    choice: StreamingChoices, default_role: str, default_finish_reason: str
+) -> dict:
+    return {
+        **choice.model_dump(),
+        "delta": {
+            **choice.delta.model_dump(),
+            "role": choice.delta.role or default_role,
+        },
+        "finish_reason": choice.finish_reason or default_finish_reason,
+    }
 
 
 async def stream_chat_response(
@@ -61,7 +75,8 @@ async def stream_chat_response(
     """
     collected_deltas = []
     # Variables to collect the complete response for saving to history if needed
-    role = "assistant"
+    default_role = "assistant"
+    default_finish_reason = "stop"
 
     # Usage information will be collected from the stream response
     usage_data = None
@@ -74,11 +89,11 @@ async def stream_chat_response(
     async for chunk in model_response:
         if not collected_deltas:
             collected_deltas = [{}] * len(chunk.choices or [])
-        else:
-            collected_deltas = [
-                join_deltas(acc, choice.delta.model_dump())
-                for acc, choice in zip(collected_deltas, chunk.choices)
-            ]
+
+        collected_deltas = [
+            join_deltas(acc, choice.delta.model_dump())
+            for acc, choice in zip(collected_deltas, chunk.choices)
+        ]
 
         # Check if this chunk contains usage data
         if hasattr(chunk, "usage") and chunk.usage:
@@ -92,7 +107,10 @@ async def stream_chat_response(
             jobs=[],
             # Only include usage on the final chunk
             usage=usage_data,
-            choices=[choice.model_dump() for choice in chunk.choices],
+            choices=[
+                make_choice(choice, default_role, default_finish_reason)
+                for choice in chunk.choices
+            ],
         )
 
         # Forward the chunk as a proper ChunkChatResponse
@@ -113,8 +131,12 @@ async def stream_chat_response(
             data=[
                 CreateEntryRequest.from_model_input(
                     model=model,
-                    role=role,
-                    content=delta,
+                    **{
+                        **delta,
+                        "role": delta.get("role", default_role) or default_role,
+                        "finish_reason": delta.get("finish_reason", default_finish_reason)
+                        or default_finish_reason,
+                    },
                     source="api_response",
                 )
                 for delta in collected_deltas

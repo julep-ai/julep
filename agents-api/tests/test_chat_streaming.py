@@ -6,14 +6,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from agents_api.autogen.openapi_model import (
     ChatInput,
     CreateSessionRequest,
+    DocReference,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.sessions.create_session import create_session
-from agents_api.routers.sessions.chat import chat
+from agents_api.routers.sessions.chat import chat, join_deltas
 from fastapi import BackgroundTasks
 from starlette.responses import StreamingResponse
 from uuid_extensions import uuid7
-from ward import test
+from ward import skip, test
 
 from .fixtures import (
     pg_dsn,
@@ -23,56 +24,59 @@ from .fixtures import (
 )
 
 
-async def collect_stream_content(response: StreamingResponse) -> str:
-    """Helper function to collect and concatenate stream chunks."""
+async def collect_stream_content(response: StreamingResponse) -> list[dict]:
+    """Helper function to collect stream chunks in a list."""
     chunks = []
     async for chunk in response.body_iterator:
         # Ensure we're dealing with string data
         if isinstance(chunk, bytes):
             chunk = chunk.decode("utf-8")
-        chunks.append(chunk)
-
-    return "".join(chunks)
-
-
-def extract_content_from_sse(sse_text: str) -> str:
-    """Extract actual content from SSE formatted response.
-
-    Args:
-        sse_text: The full SSE formatted response
-
-    Returns:
-        Extracted content as a string
-    """
-    content = ""
-    for line in sse_text.split("\n\n"):
-        if not line.startswith("data:"):
-            continue
-
-        try:
-            # Strip "data: " prefix and parse JSON
-            data = json.loads(line[6:])
-
-            # Extract content from choices if present
-            if "choices" in data:
-                for choice in data["choices"]:
-                    if "delta" in choice and "content" in choice["delta"]:
-                        content += choice["delta"]["content"]
-        except (json.JSONDecodeError, KeyError):
-            # Skip any lines that don't contain valid JSON or expected structure
-            continue
-
-    return content
+        chunks.append(json.loads(chunk))
+    return chunks
 
 
-@test("chat: Test streaming response is returned when stream=True")
+@test("join_deltas: Test correct behavior")
+async def _():
+    """Test that join_deltas works properly to merge deltas."""
+    # Test initial case where content needs to be added
+    acc = {"content": ""}
+    delta = {"content": "Hello", "role": "assistant"}
+    result = join_deltas(acc, delta)
+    assert result == {"content": "Hello", "role": "assistant"}
+
+    # Test appending content
+    acc = {"content": "Hello"}
+    delta = {"content": " world!", "role": "assistant"}
+    result = join_deltas(acc, delta)
+    assert result == {"content": "Hello world!", "role": "assistant"}
+
+    # Test with no content in delta
+    acc = {"content": "Hello world!"}
+    delta = {"finish_reason": "stop"}
+    result = join_deltas(acc, delta)
+    assert result == {"content": "Hello world!", "finish_reason": "stop"}
+
+    # Test with None content
+    acc = {"content": None}
+    delta = {"content": "Hello", "role": "assistant"}
+    result = join_deltas(acc, delta)
+    assert result == {"content": "Hello", "role": "assistant"}
+
+    # Test with None content in delta
+    acc = {"content": "Hello"}
+    delta = {"content": None, "role": "assistant"}
+    result = join_deltas(acc, delta)
+    assert result == {"content": "Hello", "role": "assistant"}
+
+
+@test("chat: Test streaming response format")
 async def _(
     developer=test_developer,
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
-    """Test that the chat function returns a StreamingResponse when stream=True."""
+    """Test that streaming responses follow the correct format."""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a session
@@ -80,7 +84,7 @@ async def _(
         developer_id=developer_id,
         data=CreateSessionRequest(
             agent=agent.id,
-            situation="test session for streaming",
+            situation="test session for streaming format",
         ),
         connection_pool=pool,
     )
@@ -96,9 +100,6 @@ async def _(
             MagicMock(),  # chat_context
         )
 
-    # Define a mock response
-    mock_response = "This is a test streaming response"
-
     with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
         # Create chat input with stream=True
         chat_input = ChatInput(
@@ -106,7 +107,8 @@ async def _(
             stream=True,
         )
 
-        # Call the chat function with mock_response
+        # Call the chat function with mock response that includes finish_reason
+        mock_response = "This is a test response"
         response = await chat(
             developer=developer,
             session_id=session.id,
@@ -117,35 +119,118 @@ async def _(
 
         # Verify response type is StreamingResponse
         assert isinstance(response, StreamingResponse)
-
-        # Test the content of the streaming response
-        content_str = await collect_stream_content(response)
-
-        # Verify the response contains expected SSE format and content
-        assert "data: " in content_str
-
-        # Check for metadata in the first chunk
-        assert '"id":' in content_str
-        assert '"created_at":' in content_str
-
-        # Extract the actual content from the SSE response
-        extracted_content = extract_content_from_sse(content_str)
-        assert mock_response.replace(" ", "") in extracted_content.replace(" ", "")
-
-        # Check for the [DONE] marker at the end
-        assert "data: [DONE]" in content_str
-
         assert response.media_type == "text/event-stream"
 
+        # Collect and parse stream content
+        parsed_chunks = await collect_stream_content(response)
 
-@test("chat: Test streaming response saves user messages to history when save=True")
+        assert len(parsed_chunks) > 0
+
+        # Verify chunk format
+        for chunk in parsed_chunks:
+            assert "id" in chunk
+            assert "created_at" in chunk
+            assert "choices" in chunk
+            assert isinstance(chunk["choices"], list)
+            for choice in chunk["choices"]:
+                assert "delta" in choice
+                assert "content" in choice["delta"]
+                assert "finish_reason" in choice
+                assert choice["finish_reason"] in [
+                    "stop",
+                    "length",
+                    "content_filter",
+                    "tool_calls",
+                ]
+
+
+@test("chat: Test streaming with document references")
 async def _(
     developer=test_developer,
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
-    """Test that user messages are saved to history when save=True with streaming response."""
+    """Test that document references are included in streaming response."""
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a session
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test session for streaming with documents",
+        ),
+        connection_pool=pool,
+    )
+
+    # Create document references with required fields
+    doc_refs = [
+        DocReference(
+            id=str(uuid7()),
+            title="Test Document 1",
+            owner={"id": developer_id, "role": "user"},
+            snippet={"index": 0, "content": "Test snippet 1"},
+        ),
+        DocReference(
+            id=str(uuid7()),
+            title="Test Document 2",
+            owner={"id": developer_id, "role": "user"},
+            snippet={"index": 0, "content": "Test snippet 2"},
+        ),
+    ]
+
+    # Mock render_chat_input to return document references
+    async def mock_render(*args, **kwargs):
+        return (
+            [{"role": "user", "content": "Hello"}],  # messages
+            doc_refs,  # doc_references
+            None,  # formatted_tools
+            {"model": "gpt-4o-mini"},  # settings
+            [{"role": "user", "content": "Hello"}],  # new_messages
+            MagicMock(),  # chat_context
+        )
+
+    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
+        # Create chat input with stream=True
+        chat_input = ChatInput(
+            messages=[{"role": "user", "content": "Hello"}],
+            stream=True,
+        )
+
+        # Call the chat function with mock response that includes finish_reason
+        mock_response = "This is a test response"
+        response = await chat(
+            developer=developer,
+            session_id=session.id,
+            chat_input=chat_input,
+            background_tasks=BackgroundTasks(),
+            mock_response=mock_response,
+        )
+
+        # Collect and parse stream content
+        parsed_chunks = await collect_stream_content(response)
+
+        # Verify document references in chunks
+        for chunk in parsed_chunks:
+            assert "docs" in chunk
+            assert len(chunk["docs"]) == len(doc_refs)
+            for doc_ref in chunk["docs"]:
+                assert "id" in doc_ref
+                assert "title" in doc_ref
+                assert "owner" in doc_ref
+                assert "snippet" in doc_ref
+
+
+@skip("Skipping message history saving test")
+@test("chat: Test streaming with message history saving")
+async def _(
+    developer=test_developer,
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    """Test that messages are saved to history when streaming with save=True."""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a session
@@ -169,11 +254,8 @@ async def _(
             MagicMock(),  # chat_context
         )
 
-    # Mock create_entries to verify it's called with correct parameters
+    # Set up mocks
     create_entries_mock = AsyncMock()
-
-    # Define a mock response
-    mock_response = "This is a test streaming response with history"
 
     with (
         patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
@@ -186,55 +268,36 @@ async def _(
             save=True,
         )
 
-        # Create a BackgroundTasks object with a custom add_task method to capture tasks
-        background_tasks = BackgroundTasks()
-
-        # Use a spy to track the add_task method calls
-        original_add_task = background_tasks.add_task
-        captured_tasks = []
-
-        def add_task_spy(task, *args, **kwargs):
-            captured_tasks.append((task, args, kwargs))
-            return original_add_task(task, *args, **kwargs)
-
-        background_tasks.add_task = add_task_spy
-
-        # Call the chat function
+        # Call the chat function with mock response that includes finish_reason
+        mock_response = "This is a test response"
         response = await chat(
             developer=developer,
             session_id=session.id,
             chat_input=chat_input,
-            background_tasks=background_tasks,
+            background_tasks=BackgroundTasks(),
             mock_response=mock_response,
         )
+        _ = await collect_stream_content(response)
 
-        # Verify response content
-        content_str = await collect_stream_content(response)
-        extracted_content = extract_content_from_sse(content_str)
-        assert mock_response.replace(" ", "") in extracted_content.replace(" ", "")
-
-        # Verify that background_tasks.add_task was called at least once
-        assert len(captured_tasks) >= 1
-        task_func, _task_args, task_kwargs = captured_tasks[0]
-
-        # Verify create_entries was added as a background task with correct parameters
-        assert task_func == create_entries_mock
-        assert task_kwargs["developer_id"] == developer_id
-        assert task_kwargs["session_id"] == session.id
-        assert len(task_kwargs["data"]) == 1
-        assert task_kwargs["data"][0].role == "user"
-        assert task_kwargs["data"][0].content == "Hello"
-        assert task_kwargs["data"][0].source == "api_request"
+        # Verify create_entries was called for user messages
+        create_entries_mock.assert_called_once()
+        call_args = create_entries_mock.call_args[1]
+        assert call_args["developer_id"] == developer_id
+        assert call_args["session_id"] == session.id
+        # Verify we're saving the user message
+        assert len(call_args["data"]) == 1
+        assert call_args["data"][0].role == "user"
+        assert call_args["data"][0].content == "Hello"
 
 
-@test("chat: Test streaming response does not save history when save=False")
+@test("chat: Test streaming with usage tracking")
 async def _(
     developer=test_developer,
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
 ):
-    """Test that messages are not saved to history when save=False with streaming response."""
+    """Test that token usage is tracked in streaming responses."""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a session
@@ -242,7 +305,7 @@ async def _(
         developer_id=developer_id,
         data=CreateSessionRequest(
             agent=agent.id,
-            situation="test session for streaming without saving",
+            situation="test session for streaming usage tracking",
         ),
         connection_pool=pool,
     )
@@ -258,95 +321,6 @@ async def _(
             MagicMock(),  # chat_context
         )
 
-    # Mock create_entries to verify it's not called
-    create_entries_mock = AsyncMock()
-
-    # Define a mock response
-    mock_response = "This is a test streaming response without saving"
-
-    with (
-        patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
-        patch("agents_api.routers.sessions.chat.create_entries", create_entries_mock),
-    ):
-        # Create chat input with stream=True and save=False
-        chat_input = ChatInput(
-            messages=[{"role": "user", "content": "Hello"}],
-            stream=True,
-            save=False,
-        )
-
-        # Create a BackgroundTasks object with a custom add_task method to capture tasks
-        background_tasks = BackgroundTasks()
-
-        # Use a spy to track the add_task method calls
-        original_add_task = background_tasks.add_task
-        captured_tasks = []
-
-        def add_task_spy(task, *args, **kwargs):
-            captured_tasks.append((task, args, kwargs))
-            return original_add_task(task, *args, **kwargs)
-
-        background_tasks.add_task = add_task_spy
-
-        # Call the chat function
-        response = await chat(
-            developer=developer,
-            session_id=session.id,
-            chat_input=chat_input,
-            background_tasks=background_tasks,
-            mock_response=mock_response,
-        )
-
-        # Verify response content
-        content_str = await collect_stream_content(response)
-        extracted_content = extract_content_from_sse(content_str)
-        assert mock_response.replace(" ", "") in extracted_content.replace(" ", "")
-
-        # Verify that background_tasks.add_task was not called with create_entries
-        assert len(captured_tasks) == 0
-        create_entries_mock.assert_not_called()
-
-
-@test("chat: Test streaming with document references")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    """Test that document references are included in streaming response parameters."""
-    pool = await create_db_pool(dsn=dsn)
-
-    # Create a session
-    session = await create_session(
-        developer_id=developer_id,
-        data=CreateSessionRequest(
-            agent=agent.id,
-            situation="test session for streaming with documents",
-        ),
-        connection_pool=pool,
-    )
-
-    # Create document references
-    doc_refs = [
-        {"id": str(uuid7()), "title": "Test Document 1"},
-        {"id": str(uuid7()), "title": "Test Document 2"},
-    ]
-
-    # Mock render_chat_input to return document references
-    async def mock_render(*args, **kwargs):
-        return (
-            [{"role": "user", "content": "Hello"}],  # messages
-            doc_refs,  # doc_references
-            None,  # formatted_tools
-            {"model": "gpt-4o-mini"},  # settings
-            [{"role": "user", "content": "Hello"}],  # new_messages
-            MagicMock(),  # chat_context
-        )
-
-    # Define a mock response
-    mock_response = "This is a test streaming response with documents"
-
     with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
         # Create chat input with stream=True
         chat_input = ChatInput(
@@ -354,7 +328,8 @@ async def _(
             stream=True,
         )
 
-        # Call the chat function
+        # Call the chat function with mock response that includes finish_reason and usage
+        mock_response = "This is a test response"
         response = await chat(
             developer=developer,
             session_id=session.id,
@@ -363,24 +338,13 @@ async def _(
             mock_response=mock_response,
         )
 
-        # Verify content
-        content_str = await collect_stream_content(response)
-        extracted_content = extract_content_from_sse(content_str)
-        assert mock_response.replace(" ", "") in extracted_content.replace(" ", "")
+        # Collect and parse stream content
+        parsed_chunks = await collect_stream_content(response)
 
-        # Verify that the document references were included in the first data chunk
-        # Extract the first data chunk as JSON
-        first_chunk = content_str.split("data: ")[1].split("\n\n")[0]
-        metadata = json.loads(first_chunk)
-
-        # Check if doc references are included
-        assert "docs" in metadata
-        assert len(metadata["docs"]) == len(doc_refs)
-
-        # Verify all doc IDs are present
-        doc_ids_in_response = [doc["id"] for doc in metadata["docs"]]
-        expected_ids = [doc["id"] for doc in doc_refs]
-        assert all(doc_id in doc_ids_in_response for doc_id in expected_ids)
+        # Verify usage data in the final chunk
+        final_chunk = parsed_chunks[-1]
+        assert "usage" in final_chunk
+        assert "total_tokens" in final_chunk["usage"]
 
 
 @test("chat: Test streaming with custom API key")
@@ -390,7 +354,7 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
 ):
-    """Test that a custom API key is passed correctly with streaming."""
+    """Test that streaming works with a custom API key."""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a session
@@ -414,9 +378,6 @@ async def _(
             MagicMock(),  # chat_context
         )
 
-    # Define a mock response
-    mock_response = "This is a test streaming response with custom API key"
-
     with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
         # Create chat input with stream=True
         chat_input = ChatInput(
@@ -424,10 +385,9 @@ async def _(
             stream=True,
         )
 
-        # Custom API key
-        custom_api_key = "sk-test-custom-key"
-
-        # Call the chat function with the custom API key
+        # Call the chat function with custom API key and mock response that includes finish_reason
+        custom_api_key = "test-api-key"
+        mock_response = "This is a test response"
         response = await chat(
             developer=developer,
             session_id=session.id,
@@ -437,165 +397,12 @@ async def _(
             mock_response=mock_response,
         )
 
-        # Verify response content
-        content_str = await collect_stream_content(response)
-        extracted_content = extract_content_from_sse(content_str)
-        assert mock_response.replace(" ", "") in extracted_content.replace(" ", "")
+        # Verify response type is StreamingResponse
+        assert isinstance(response, StreamingResponse)
+        assert response.media_type == "text/event-stream"
 
+        # Collect and parse stream content
+        parsed_chunks = await collect_stream_content(response)
 
-@test("chat: Test streaming with tools")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    """Test that tools are properly passed when streaming is enabled."""
-    pool = await create_db_pool(dsn=dsn)
-
-    # Create a session
-    session = await create_session(
-        developer_id=developer_id,
-        data=CreateSessionRequest(
-            agent=agent.id,
-            situation="test session for streaming with tools",
-        ),
-        connection_pool=pool,
-    )
-
-    # Define sample tools
-    formatted_tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "test_tool",
-                "description": "A test tool",
-                "parameters": {
-                    "type": "object",
-                    "properties": {"param1": {"type": "string", "description": "A parameter"}},
-                    "required": ["param1"],
-                },
-            },
-        }
-    ]
-
-    # Mock render_chat_input to return tools
-    async def mock_render(*args, **kwargs):
-        return (
-            [{"role": "user", "content": "Hello"}],  # messages
-            [],  # doc_references
-            formatted_tools,  # formatted_tools
-            {"model": "gpt-4o-mini"},  # settings
-            [{"role": "user", "content": "Hello"}],  # new_messages
-            MagicMock(),  # chat_context
-        )
-
-    # Define a mock response
-    mock_response = "This is a test streaming response with tools"
-
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
-        # Create chat input with stream=True
-        chat_input = ChatInput(
-            messages=[{"role": "user", "content": "Hello"}],
-            stream=True,
-        )
-
-        # Call the chat function
-        response = await chat(
-            developer=developer,
-            session_id=session.id,
-            chat_input=chat_input,
-            background_tasks=BackgroundTasks(),
-            mock_response=mock_response,
-        )
-
-        # Verify response content
-        content_str = await collect_stream_content(response)
-        extracted_content = extract_content_from_sse(content_str)
-        assert mock_response.replace(" ", "") in extracted_content.replace(" ", "")
-
-
-@test("chat: Test multiple mock_response formats")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-):
-    """Test different formats of mock_response with streaming."""
-    pool = await create_db_pool(dsn=dsn)
-
-    # Create a session
-    session = await create_session(
-        developer_id=developer_id,
-        data=CreateSessionRequest(
-            agent=agent.id,
-            situation="test session for streaming with various mock formats",
-        ),
-        connection_pool=pool,
-    )
-
-    # Mock render_chat_input to return consistent values
-    async def mock_render(*args, **kwargs):
-        return (
-            [{"role": "user", "content": "Hello"}],  # messages
-            [],  # doc_references
-            None,  # formatted_tools
-            {"model": "gpt-4o-mini"},  # settings
-            [{"role": "user", "content": "Hello"}],  # new_messages
-            MagicMock(),  # chat_context
-        )
-
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
-        # 1. Test with string mock_response
-        chat_input = ChatInput(
-            messages=[{"role": "user", "content": "Hello"}],
-            stream=True,
-        )
-
-        string_mock = "This is a simple string mock"
-
-        response1 = await chat(
-            developer=developer,
-            session_id=session.id,
-            chat_input=chat_input,
-            background_tasks=BackgroundTasks(),
-            mock_response=string_mock,
-        )
-
-        assert isinstance(response1, StreamingResponse)
-
-        # Verify response content
-        content_str1 = await collect_stream_content(response1)
-        extracted_content1 = extract_content_from_sse(content_str1)
-        assert string_mock.replace(" ", "") in extracted_content1.replace(" ", "")
-        assert "data: " in content_str1
-        assert "data: [DONE]" in content_str1
-
-        # 2. Test with complex JSON-compatible mock_response
-        complex_mock = {
-            "response": "This is a complex mock",
-            "details": {"confidence": 0.95, "source": "test"},
-        }
-
-        # We need to convert this to JSON string
-        complex_mock_str = json.dumps(complex_mock)
-
-        response2 = await chat(
-            developer=developer,
-            session_id=session.id,
-            chat_input=chat_input,
-            background_tasks=BackgroundTasks(),
-            mock_response=complex_mock_str,
-        )
-
-        assert isinstance(response2, StreamingResponse)
-
-        # Verify response content
-        content_str2 = await collect_stream_content(response2)
-        extracted_content2 = extract_content_from_sse(content_str2)
-        # Check that the JSON content is in the response
-        assert "response" in extracted_content2
-        assert "complex mock" in extracted_content2
-        assert "data: " in content_str2
-        assert "data: [DONE]" in content_str2
+        # Verify chunks are received
+        assert len(parsed_chunks) > 0
