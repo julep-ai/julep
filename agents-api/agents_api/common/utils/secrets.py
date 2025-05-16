@@ -16,7 +16,9 @@ from ..retry_policies import DEFAULT_RETRY_POLICY
 
 
 @alru_cache(ttl=secrets_cache_ttl)
-async def get_secret_by_name(developer_id: UUID, name: str) -> Secret:
+async def get_secret_by_name(
+    developer_id: UUID, name: str, decrypt: bool = False
+) -> Secret:
     # FIXME: Should use workflow.in_workflow() instead ?
     try:
         secret = await workflow.execute_activity(
@@ -24,14 +26,18 @@ async def get_secret_by_name(developer_id: UUID, name: str) -> Secret:
             args=[
                 "get_secret_by_name",
                 "secrets.get_by_name",
-                {"developer_id": developer_id, "name": name},
+                {"developer_id": developer_id, "name": name, "decrypt": decrypt},
             ],
             schedule_to_close_timeout=timedelta(days=31),
             retry_policy=DEFAULT_RETRY_POLICY,
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
     except _NotInWorkflowEventLoopError:
-        secret = await get_secret_by_name_query(developer_id=developer_id, name=name)
+        secret = await get_secret_by_name_query(
+            developer_id=developer_id,
+            name=name,
+            decrypt=decrypt,
+        )
 
     # AIDEV-NOTE: use domain-specific exception instead of HTTPException
     if secret is None:

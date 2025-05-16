@@ -13,7 +13,7 @@ query = """
 SELECT
     secret_id, developer_id, name, description,
     created_at, updated_at, metadata,
-    decrypt_secret(value_encrypted, $4) as value
+    CASE WHEN $5 = True THEN decrypt_secret(value_encrypted, $4) ELSE 'ENCRYPTED' END as value
 FROM secrets
 WHERE (
     developer_id = $1
@@ -35,6 +35,7 @@ async def list_secrets_query(
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
+    decrypt: bool = False,
 ) -> tuple[str, list]:
     return (
         query,
@@ -43,6 +44,7 @@ async def list_secrets_query(
             limit,
             offset,
             secrets_master_key,
+            decrypt,
         ],
     )
 
