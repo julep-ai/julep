@@ -80,6 +80,7 @@ def _(make_request=make_request, developer_id=test_developer_id):
     assert len(secrets) > 0
     # Find our test secret
     assert any(secret["name"] == secret_name for secret in secrets)
+    assert all(secret["value"] == "ENCRYPTED" for secret in secrets)
 
 
 @test("route: update secret")
