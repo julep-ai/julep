@@ -21,7 +21,7 @@ async def clean_secrets(developer_id, connection_pool):
         developer_id=developer_id,
         connection_pool=connection_pool,
     )
-    
+
     # Delete each secret
     for secret in secrets:
         await delete_secret(
@@ -29,19 +29,21 @@ async def clean_secrets(developer_id, connection_pool):
             developer_id=developer_id,
             connection_pool=connection_pool,
         )
-    
+
     # Verify all secrets are deleted
     remaining_secrets = await list_secrets(
         developer_id=developer_id,
         connection_pool=connection_pool,
     )
-    assert len(remaining_secrets) == 0, f"Failed to clean up all secrets, {len(remaining_secrets)} remaining"
+    assert len(remaining_secrets) == 0, (
+        f"Failed to clean up all secrets, {len(remaining_secrets)} remaining"
+    )
 
 
 @test("query: create secret")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Clean up any existing secrets first
     await clean_secrets(developer_id, pool)
 
@@ -66,7 +68,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert isinstance(agent_secret, Secret)
     assert agent_secret.name == agent_secret_data["name"]
     assert agent_secret.value == "ENCRYPTED"
-    
+
     # Clean up after test
     await clean_secrets(developer_id, pool)
 
@@ -74,7 +76,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 @test("query: list secrets")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
-    
+
     # Clean up any existing secrets first
     await clean_secrets(developer_id, pool)
 
@@ -204,6 +206,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     await clean_secrets(developer_id, pool)
 
+
 @test("query: get secret by name (decrypt=False)")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
@@ -235,6 +238,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert retrieved_secret.value == "ENCRYPTED"
 
     await clean_secrets(developer_id, pool)
+
 
 @test("query: update secret")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
@@ -294,6 +298,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert partial_update.metadata == updated_metadata  # Should remain from previous update
 
     await clean_secrets(developer_id, pool)
+
 
 @test("query: delete secret")
 async def _(dsn=pg_dsn, developer_id=test_developer_id):
