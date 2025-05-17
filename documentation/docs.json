@@ -21,7 +21,8 @@
                 "pages": [
                   "introduction/julep",
                   "introduction/install",
-                  "introduction/quickstart"
+                  "introduction/quickstart",
+                  "introduction/developer-orientation"
                 ]
               },
               {
