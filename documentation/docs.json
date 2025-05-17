@@ -21,7 +21,8 @@
                 "pages": [
                   "introduction/julep",
                   "introduction/install",
-                  "introduction/quickstart"
+                  "introduction/quickstart",
+                  "introduction/developer-orientation"
                 ]
               },
               {
@@ -52,6 +53,10 @@
                   "tutorials/browser-use",
                   "tutorials/rag-chatbot",
                   "tutorials/trip-planning",
+                  "tutorials/trip-planning-input",
+                  "tutorials/trip-planning-tools",
+                  "tutorials/trip-planning-workflow",
+                  "tutorials/trip-planning-running",
                   "tutorials/video-processing"
                 ]
               },
@@ -124,6 +129,8 @@
                   "guides/getting-started/chat-with-an-agent",
                   "guides/getting-started/create-and-execute-julep-task",
                   "guides/using-secrets",
+                  "guides/adding-tool-integration",
+                  "guides/modifying-agent-workflow",
                   {
                     "group": "Getting Started Examples",
                     "pages": [

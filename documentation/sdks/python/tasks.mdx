@@ -7,7 +7,7 @@ description: 'Learn how to create and manage tasks using the Python SDK'
 
 Create a task with a specific workflow:
 
-```python
+```python [expandable]
 import yaml
 
 task_yaml = """
@@ -50,7 +50,7 @@ task = client.tasks.create(
 
 A task in Julep consists of several components:
 
-```python
+```python [expandable]
 task = client.tasks.create(
     agent_id=agent.id,
     name="Complex Task",
@@ -125,7 +125,7 @@ client.executions.cancel(execution_id=execution.id)
 
 Julep supports various control flow operations in tasks:
 
-```yaml
+```yaml [expandable]
 main:
   # Conditional execution
   - if: _.score > 0.8

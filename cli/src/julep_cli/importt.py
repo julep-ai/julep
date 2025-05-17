@@ -73,9 +73,7 @@ def importt(
         ),
     ] = False,
 ):
-    """
-    Import an agent from the Julep platform using the --agent option.
-    """
+    """Import entities from the Julep platform. Currently only agents are supported."""
 
     output = output or source / "src/agents"
 

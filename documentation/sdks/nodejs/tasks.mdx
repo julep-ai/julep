@@ -9,7 +9,7 @@ Tasks are multi-step workflows that agents can execute. They can include prompts
 
 Tasks can be created using either YAML or JavaScript objects:
 
-```javascript
+```javascript [expandable]
 // Using a JavaScript object
 const task = await client.tasks.create(agentId, {
   name: 'Customer Support Task',
@@ -58,7 +58,7 @@ const task = await client.tasks.create(agentId, yaml.parse(taskYaml));
 
 Tasks can include various types of steps:
 
-```javascript
+```javascript [expandable]
 const task = await client.tasks.create(agentId, {
   name: 'Complex Task',
   description: 'A task with multiple step types',

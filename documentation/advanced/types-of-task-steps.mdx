@@ -147,7 +147,7 @@ Pause workflow for user input:
 
 Executing a subworkflow from a main workflow:
 
-```yaml YAML
+```yaml YAML [expandable]
 # Subworkflow
 subworkflow:
 - evaluate:
@@ -309,7 +309,7 @@ Process collections in parallel:
 
 Conditional execution:
 
-```yaml YAML
+```yaml YAML [expandable]
 # Simple if
 - if: $ _.count > 0
   then:
@@ -386,26 +386,6 @@ Return values from workflow:
       timestamp: $ datetime.now().isoformat()
 ```
 
-### Yield Step
-
-Execute subworkflows:
-
-```yaml YAML
-# Yield to subworkflow
-- yield:
-    workflow: process_data
-    arguments:
-      input_data: $ _.raw_data
-
-# Yield with result handling
-- yield:
-    workflow: analyze
-    arguments:
-      text: $ _.content
-- evaluate:
-    analysis_result: $ _
-```
-
 ### Log Step
 
 Log messages or specific values:
@@ -426,7 +406,7 @@ Handle errors by specifying an error message:
 
 Here's an example combining various step types:
 
-```yaml YAML
+```yaml YAML [expandable]
 # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
 name: Multi-Step Task Demonstration
 description: A demonstration of multi-step task processing with research and summarization capabilities.
