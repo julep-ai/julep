@@ -406,3 +406,105 @@ async def _(
 
         # Verify chunks are received
         assert len(parsed_chunks) > 0
+
+
+@test("chat: Test multi-choice streaming accumulates deltas independently")
+async def _(
+    developer=test_developer,
+    dsn=pg_dsn,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    """Ensure deltas for each choice are accumulated separately."""
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a session
+    session = await create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test session for multi-choice streaming",
+        ),
+        connection_pool=pool,
+    )
+
+    async def mock_render(*args, **kwargs):
+        return (
+            [{"role": "user", "content": "Hello"}],
+            [],
+            None,
+            {"model": "gpt-4o-mini"},
+            [{"role": "user", "content": "Hello"}],
+            MagicMock(),
+        )
+
+    class FakeDelta:
+        def __init__(self, content: str, role: str = "assistant") -> None:
+            self.content = content
+            self.role = role
+
+        def model_dump(self) -> dict:
+            return {"content": self.content, "role": self.role}
+
+    class FakeChoice:
+        def __init__(self, index: int, content: str) -> None:
+            self.index = index
+            self.delta = FakeDelta(content)
+            self.finish_reason = None
+
+        def model_dump(self) -> dict:
+            return {"index": self.index, "finish_reason": self.finish_reason}
+
+    class FakeUsage:
+        def __init__(self, total_tokens: int = 10) -> None:
+            self.total_tokens = total_tokens
+
+        def model_dump(self) -> dict:
+            return {"total_tokens": self.total_tokens}
+
+    class FakeChunk:
+        def __init__(self, choices: list[FakeChoice], usage: FakeUsage | None = None) -> None:
+            self.choices = choices
+            self.usage = usage
+
+    class FakeStream:
+        def __init__(self, chunks: list[FakeChunk]) -> None:
+            self._chunks = iter(chunks)
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            try:
+                return next(self._chunks)
+            except StopIteration:
+                raise StopAsyncIteration
+
+    fake_stream = FakeStream([
+        FakeChunk([FakeChoice(0, "Hello"), FakeChoice(1, "Foo")]),
+        FakeChunk([FakeChoice(0, " world"), FakeChoice(1, " bar")], FakeUsage()),
+    ])
+
+    with (
+        patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
+        patch(
+            "agents_api.clients.litellm.acompletion", new=AsyncMock(return_value=fake_stream)
+        ),
+    ):
+        chat_input = ChatInput(
+            messages=[{"role": "user", "content": "Hello"}],
+            stream=True,
+        )
+
+        response = await chat(
+            developer=developer,
+            session_id=session.id,
+            chat_input=chat_input,
+            background_tasks=BackgroundTasks(),
+        )
+
+        parsed_chunks = await collect_stream_content(response)
+
+        final_chunk = parsed_chunks[-1]
+        assert final_chunk["choices"][0]["delta"]["content"] == "Hello world"
+        assert final_chunk["choices"][1]["delta"]["content"] == "Foo bar"
