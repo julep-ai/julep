@@ -30,6 +30,11 @@
   </h3>
 </div>
 
+# **Julep AI Changelog for 9 May 2025** ✨
+
+- **Minor Docs**: Added links to cookbooks for Quick, Community, and Industry pages.
+- **Minor Docs**: Updated cookbook links to use absolute GitHub URLs.
+
 # **Julep AI Changelog for 11 Apri 2025** ✨
 
 - **Major Feature**: Introduced support for Gemini models in `litellm-config.yaml` ✨
