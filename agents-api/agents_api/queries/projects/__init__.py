@@ -10,7 +10,6 @@ The `project` module within the `queries` package provides a comprehensive suite
 Each function in this module constructs and returns SQL queries along with their parameters for database operations.
 """
 
-
 from .create_project import create_project
 from .list_projects import list_projects
 
