@@ -13,6 +13,8 @@ from .create_execution import create_execution
 from .create_execution_transition import create_execution_transition
 from .get_execution import get_execution
 from .get_execution_transition import get_execution_transition
+from .list_execution_inputs_data import list_execution_inputs_data
+from .list_execution_state_data import list_execution_state_data
 from .list_execution_transitions import list_execution_transitions
 from .list_executions import list_executions
 from .lookup_temporal_data import lookup_temporal_data
@@ -24,6 +26,8 @@ __all__ = [
     "create_execution_transition",
     "get_execution",
     "get_execution_transition",
+    "list_execution_inputs_data",
+    "list_execution_state_data",
     "list_execution_transitions",
     "list_executions",
     "lookup_temporal_data",

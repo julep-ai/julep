@@ -70,7 +70,9 @@ async def acompletion(
 
             with contextlib.suppress(SecretNotFoundError):
                 secret = await get_secret_by_name(
-                    developer_id=developer_id, name=api_key_env_var_name
+                    developer_id=developer_id,
+                    name=api_key_env_var_name,
+                    decrypt=True,
                 )
 
         custom_api_key = secret and secret.value

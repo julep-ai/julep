@@ -170,7 +170,10 @@ async def render_chat_input(
     ):
         secrets = {
             secret.name: secret.value
-            for secret in await list_secrets_query(developer_id=developer.id)
+            for secret in await list_secrets_query(
+                developer_id=developer.id,
+                decrypt=True,
+            )
         }
 
     for tool in tools:

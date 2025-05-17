@@ -1,0 +1,234 @@
+---
+title: 'Trip Planning - Workflow'
+description: 'Learn the step-by-step workflow for generating itineraries'
+icon: 'display'
+---
+
+### 3. Main Workflow Steps
+
+<Steps>
+
+  <Step title="Get Weather Data">
+
+```yaml
+- over: $ steps[0].input.locations
+  map:
+    tool: weather
+    arguments:
+      location: $ _
+```
+
+    <Accordion title="Understanding the use of the _ Variable in iteration steps">
+      When used inside a `map` or a `foreach` step, the `_` variable is a reference to the current value in the iteration.
+
+      For example:
+```yaml
+- over: $ ["Paris", "London"]
+  map:
+    tool: weather
+    arguments:
+      location: $ _ # _ will be "Paris", then "London"
+```
+    </Accordion>
+
+
+    This step:
+    - Iterates over each location in the input array
+    - Calls the weather API for each location
+  </Step>
+
+  <Step title="Search for Tourist Attractions">
+
+```yaml
+- over: $ steps[0].input.locations
+  map:
+    tool: internet_search
+    arguments:
+      query: $ 'tourist attractions in ' + _
+```
+
+
+    This step:
+    - Iterates over the locations again
+    - Searches for tourist attractions in each location
+    - Constructs a search query by concatenating "tourist attractions in " with the location
+  </Step>
+
+  <Step title="Combine Data">
+
+```yaml
+- evaluate:
+    zipped: |-
+      $ list(
+        zip(
+          steps[0].input.locations,
+          [output['result'] for output in steps[0].output],
+          steps[1].output
+        )
+      )
+```
+
+
+    This step:
+    - Combines the data from previous steps into tuples
+    - Each tuple contains: (location, weather_data, attractions_data)
+    - Uses Python's `zip` function to align the data
+
+  </Step>
+
+  <Step title="Generate Itineraries">
+
+```yaml
+- over: $ _['zipped']
+  parallelism: 3
+  # Inside the map step, each `_` represents the current element in the list
+  # which is a tuple of (location, weather, attractions)
+  map:
+    prompt:
+    - role: system
+      content: >-
+        $ f'''You are {agent.name}. Your task is to create a detailed itinerary
+        for visiting tourist attractions in some locations.
+        The user will give you the following information for each location:
+
+        - The location
+        - The current weather condition
+        - The top tourist attractions'''
+    - role: user
+      content: >-
+        $ f'''Location: "{_[0]}"
+        Weather: "{_[1]}"
+        Attractions: "{_[2]}"'''
+    unwrap: true
+```
+
+
+    This step:
+    - Processes up to 3 locations in parallel
+    - For each location tuple:
+      - Sends a prompt to the AI model
+      - Includes location, weather, and attraction data
+      - Generates a personalized itinerary
+
+  </Step>
+
+  <Step title="Format Final Output">
+
+```yaml
+- evaluate:
+    final_plan: |-
+      $ '\\n---------------\\n'.join(activity for activity in _)
+```
+
+
+    This step:
+    - Combines all itineraries into a single output
+    - Separates each itinerary with a divider
+
+  </Step>
+
+</Steps>
+
+<Accordion title="Complete Task YAML" icon="code">
+```yaml YAML
+# yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
+name: Julep Trip Planning Task
+description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
+
+########################################################
+################### INPUT SCHEMA #######################
+########################################################
+
+input_schema:
+  type: object
+  properties:
+    locations:
+      type: array
+      items:
+        type: string
+      description: The locations to search for.
+
+########################################################
+################### TOOLS ##############################
+########################################################
+
+tools:
+- name: wikipedia
+  type: integration
+  integration:
+    provider: wikipedia
+
+- name: weather
+  type: integration
+  integration:
+    provider: weather
+    setup:
+      openweathermap_api_key: "YOUR_OPENWEATHERMAP_API_KEY"
+
+- name: internet_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: "YOUR_BRAVE_API_KEY"
+
+########################################################
+################### MAIN WORKFLOW ######################
+########################################################
+
+main:
+- over: $ steps[0].input.locations
+  map:
+    tool: weather
+    arguments:
+      location: $ _
+
+- over: $ steps[0].input.locations
+  map:
+    tool: internet_search
+    arguments:
+      query: $ 'tourist attractions in ' + _
+
+# Zip locations, weather, and attractions into a list of tuples [(location, weather, attractions)]
+- evaluate:
+    zipped: |-
+      $ list(
+        zip(
+          steps[0].input.locations,
+          [output['result'] for output in steps[0].output],
+          steps[1].output
+        )
+      )
+
+
+- over: $ _['zipped']
+  parallelism: 3
+  # Inside the map step, each `_` represents the current element in the list
+  # which is a tuple of (location, weather, attractions)
+  map:
+    prompt:
+    - role: system
+      content: >-
+        $ f'''You are {agent.name}. Your task is to create a detailed itinerary
+        for visiting tourist attractions in some locations.
+        The user will give you the following information for each location:
+
+        - The location
+        - The current weather condition
+        - The top tourist attractions'''
+    - role: user
+      content: >-
+        $ f'''Location: "{_[0]}"
+        Weather: "{_[1]}"
+        Attractions: "{_[2]}"'''
+    unwrap: true
+
+- evaluate:
+    final_plan: |-
+      $ '\\n---------------\\n'.join(activity for activity in _)
+```
+</Accordion>
+
+## Next Step
+
+- [Running the Task](./trip-planning-running)
