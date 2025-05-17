@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, cast
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
@@ -8,6 +8,7 @@ from ...autogen.openapi_model import (
     ChatInput,
     DocReference,
     RenderResponse,
+    SystemDef,
 )
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
@@ -192,7 +193,27 @@ async def render_chat_input(
                     else {},
                 },
             }
-            formatted_tools.append(tool)
+        elif tool.type == "system" and tool.system is not None:
+            system_def = cast(SystemDef, tool.system)
+            tool_name = ".".join([
+                t
+                for t in [system_def.resource, system_def.subresource, system_def.operation]
+                if t is not None
+            ])
+            tool = {
+                "type": "function",
+                "function": {
+                    "name": tool_name,
+                    "parameters": {
+                        k: v
+                        for k, v in system_def.model_dump().items()
+                        if k not in ["name", "type"]
+                    }
+                    if system_def is not None
+                    else {},
+                },
+            }
+        formatted_tools.append(tool)
 
     # If not using Claude model
     # FIXME: Enable formatted_tools once format-tools PR is merged.

@@ -1,6 +1,7 @@
 import os
 import random
 import string
+from collections.abc import Callable
 from unittest.mock import patch
 from uuid import UUID
 
@@ -52,6 +53,9 @@ from .utils import (
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
+from .utils import (
+    patch_embed_acompletion_multiple_outputs as patch_embed_acompletion_multiple_outputs_ctx,
+)
 
 
 @fixture(scope="global")
@@ -101,6 +105,27 @@ def patch_embed_acompletion():
     output = {"role": "assistant", "content": "Hello, world!"}
     with patch_embed_acompletion_ctx(output) as (embed, acompletion):
         yield embed, acompletion
+
+
+def make_acompletion_multiple_outputs(outputs: list[dict] | Callable):
+    @fixture(scope="test")
+    def patch_embed_acompletion_with_tool_calls(
+        agent=test_agent,
+        doc=test_doc,
+        user=test_user,
+        task=test_task,
+        user_doc=test_user_doc,
+        session=test_session,
+    ):
+        nonlocal outputs
+        if callable(outputs):
+            outputs = outputs(
+                agent=agent, doc=doc, user=user, task=task, user_doc=user_doc, session=session
+            )
+        with patch_embed_acompletion_multiple_outputs_ctx(outputs) as (embed, acompletion):
+            yield embed, acompletion
+
+    return patch_embed_acompletion_with_tool_calls
 
 
 @fixture(scope="test")
