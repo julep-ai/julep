@@ -30,6 +30,11 @@
   </h3>
 </div>
 
+# **Julep AI Changelog for 15 May 2025** ✨
+
+- **Minor Feature**: Updated `julep run` to execute tasks via the API with clearer error reporting ✨
+- **Minor Docs**: Added examples for task execution and error handling in CLI docs 📚
+
 # **Julep AI Changelog for 9 May 2025** ✨
 
 - **Minor Docs**: Added links to cookbooks for Quick, Community, and Industry pages.
