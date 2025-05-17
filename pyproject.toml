@@ -1,0 +1,12 @@
+[project]
+name = "julep-monorepo"
+version = "0.1.0"
+description = "Dependencies and workflows for the julep monorepo"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "testbook>=0.4.2",
+]
