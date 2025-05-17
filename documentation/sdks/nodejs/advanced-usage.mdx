@@ -9,7 +9,7 @@ This guide covers advanced usage patterns and best practices for the Julep Node.
 
 Execute multiple tasks in parallel for better performance:
 
-```javascript
+```javascript [expandable]
 // Create multiple tasks
 const tasks = await Promise.all([
   client.tasks.create(agentId, {
@@ -44,7 +44,7 @@ const results = await Promise.all(
 
 Implement robust error handling with retries:
 
-```javascript
+```javascript [expandable]
 class RetryableError extends Error {
   constructor(message, retryAfter = 1000) {
     super(message);
@@ -97,7 +97,7 @@ const createAgentWithRetry = async () => {
 
 Handle real-time updates from task executions:
 
-```javascript
+```javascript [expandable]
 const { EventEmitter } = require('events');
 
 class ExecutionStream extends EventEmitter {
@@ -158,7 +158,7 @@ stream.start();
 
 Process large amounts of data efficiently:
 
-```javascript
+```javascript [expandable]
 async function processBatch(items, batchSize = 10) {
   const batches = [];
   for (let i = 0; i < items.length; i += batchSize) {
@@ -197,7 +197,7 @@ const results = await processBatch(items, 5);
 
 Add custom middleware to task executions:
 
-```javascript
+```javascript [expandable]
 class TaskMiddleware {
   constructor(client) {
     this.client = client;
@@ -249,7 +249,7 @@ const result = await middleware.execute(taskId, { data: 'test' });
 
 Implement sophisticated session management:
 
-```javascript
+```javascript [expandable]
 class SessionManager {
   constructor(client) {
     this.client = client;

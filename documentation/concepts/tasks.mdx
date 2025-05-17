@@ -168,7 +168,7 @@ Access agent and session data:
 
 Here's how these components work together:
 
-```yaml YAML
+```yaml YAML [expandable]
 name: Process Customer Feedback
 description: Analyze and categorize customer feedback
 input_schema:
@@ -218,7 +218,7 @@ Here's a simple task that summarizes a document and checks if the summary is too
 
 <CodeGroup>
 
-```yaml task.yaml
+```yaml task.yaml [expandable]
 name: Summarize Document
 description: Create a concise summary of any document
 input_schema:
@@ -301,7 +301,7 @@ while True:
   time.sleep(1)
 ```
 
-```javascript Node.js
+```javascript Node.js [expandable]
 // Execute a task
 async function executeTask(taskId) {
   const execution = await client.executions.create(taskId, {
@@ -343,7 +343,7 @@ Julep agents can power tasks by providing memory, context, or tools. Tasks are m
 For example:
 
 <CodeGroup>
-```python Python
+```python Python [expandable]
 import yaml
 
 # Create an agent
@@ -418,7 +418,7 @@ task = client.tasks.create(
 )
 ```
 
-```javascript Node.js
+```javascript Node.js [expandable]
 // Create an agent
 const agent = await client.agents.create({ 
   name: "Customer Support Agent",
@@ -499,7 +499,7 @@ Task can leverage tools to perform complex operations. There are 2 ways of defin
 1. Associate a tool with an agent, and inherit it in the task definition by setting `inherit_tools` to `true` while creating the task. Example:
 
 <CodeGroup>
-```python Python
+```python Python [expandable]
 client.agents.tools.create(
   agent_id="agent_id",
   **yaml.safe_load("""
@@ -524,7 +524,7 @@ task = client.tasks.create(
 )
 ```
 
-```javascript Node.js
+```javascript Node.js [expandable]
 await client.agents.tools.create(
   agent.id,
   yaml.parse(`
