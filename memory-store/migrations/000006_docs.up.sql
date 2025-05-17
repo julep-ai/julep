@@ -32,6 +32,10 @@ CREATE TABLE IF NOT EXISTS docs (
     CONSTRAINT ct_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object')
 );
 
+-- Ensure doc exists uniquely per developer
+ALTER TABLE docs
+ADD CONSTRAINT uq_docs_developer_doc UNIQUE (developer_id, doc_id);
+
 -- Create foreign key constraint if not exists (using DO block for safety)
 DO $$
 BEGIN
@@ -65,8 +69,8 @@ CREATE TABLE IF NOT EXISTS doc_owners (
     owner_type TEXT NOT NULL, -- 'user' or 'agent'
     owner_id UUID NOT NULL,
     CONSTRAINT pk_doc_owners PRIMARY KEY (developer_id, doc_id),
-    -- TODO: Ensure that doc exists (this constraint is not working)
-    -- CONSTRAINT fk_doc_owners_doc FOREIGN KEY (developer_id, doc_id) REFERENCES docs (developer_id, doc_id),
+    CONSTRAINT fk_doc_owners_doc FOREIGN KEY (developer_id, doc_id)
+        REFERENCES docs (developer_id, doc_id) ON DELETE CASCADE,
     CONSTRAINT ct_doc_owners_owner_type CHECK (owner_type IN ('user', 'agent'))
 );
 

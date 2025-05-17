@@ -81,6 +81,7 @@ END $$;
 -- TODO: We should consider using a timescale background job to update the token count
 -- instead of a trigger.
 -- https://docs.timescale.com/use-timescale/latest/user-defined-actions/create-and-register/
+-- AIDEV-NOTE: Evaluate moving token updates to a background job if inserts remain slow.
 CREATE
 OR REPLACE FUNCTION optimized_update_token_count_after () RETURNS TRIGGER AS $$
 DECLARE
@@ -89,7 +90,7 @@ BEGIN
     -- Compute token_count outside the UPDATE statement for clarity and potential optimization
     calc_token_count := cardinality(
         ai.openai_tokenize(
-            'gpt-4o', -- FIXME: Use `NEW.model`
+            NEW.model,
             array_to_string(NEW.content::TEXT[], ' ')
         )
     );
@@ -110,6 +111,7 @@ $$ LANGUAGE plpgsql;
 -- We should consider using a timescale background job to update the token count
 -- instead of a trigger.
 -- https://docs.timescale.com/use-timescale/latest/user-defined-actions/create-and-register/
+-- AIDEV-NOTE: Monitor performance and offload to background job if needed.
 --
 -- CREATE TRIGGER trg_optimized_update_token_count_after
 -- AFTER INSERT

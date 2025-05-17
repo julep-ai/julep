@@ -30,6 +30,13 @@
   </h3>
 </div>
 
+# **Julep AI Changelog for 17 May 2025** ✨
+
+- **Security**: Enabled pgaudit in the development Docker stack.
+- **Integrity**: Added foreign key constraint for `doc_owners` to ensure docs exist.
+- **Maintenance**: Updated token counting trigger to use `NEW.model`.
+- **Migration**: Bumped to version `000042` with upgrade and rollback scripts.
+
 # **Julep AI Changelog for 9 May 2025** ✨
 
 - **Minor Docs**: Added links to cookbooks for Quick, Community, and Industry pages.
