@@ -143,8 +143,15 @@ def apply_mmr_to_docs(
             k=min(limit, len(docs_with_embeddings)),
             lambda_mult=1 - mmr_strength,
         )
-        # Preserve the ranking returned by the MMR algorithm
-        return [docs_with_embeddings[i] for i in indices]
+        # Deduplicate indices while preserving their order
+        unique_indices: list[int] = []
+        seen: set[int] = set()
+        for idx in indices:
+            if idx not in seen:
+                seen.add(idx)
+                unique_indices.append(idx)
+
+        return [docs_with_embeddings[i] for i in unique_indices]
 
     # If docs are present but no embeddings are present for any of the docs, return the top k docs
     return docs[:limit]
