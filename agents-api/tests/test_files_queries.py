@@ -7,7 +7,7 @@ from agents_api.queries.files.delete_file import delete_file
 from agents_api.queries.files.get_file import get_file
 from agents_api.queries.files.list_files import list_files
 from fastapi import HTTPException
-from ward import raises, test
+import pytest
 
 from tests.fixtures import (
     pg_dsn,
@@ -19,8 +19,9 @@ from tests.fixtures import (
 )
 
 
-@test("query: create file")
-async def _(dsn=pg_dsn, developer=test_developer):
+@pytest.mark.asyncio
+async def test_query_create_file(dsn=pg_dsn, developer=test_developer):
+    """query: create file"""
     pool = await create_db_pool(dsn=dsn)
     file = await create_file(
         developer_id=developer.id,
@@ -39,8 +40,9 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert file.mime_type == "text/plain"
 
 
-@test("query: create file with project")
-async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
+@pytest.mark.asyncio
+async def test_query_create_file_with_project(dsn=pg_dsn, developer=test_developer, project=test_project):
+    """query: create file with project"""
     pool = await create_db_pool(dsn=dsn)
     file = await create_file(
         developer_id=developer.id,
@@ -59,11 +61,12 @@ async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
     assert file.project == project.canonical_name
 
 
-@test("query: create file with invalid project")
-async def _(dsn=pg_dsn, developer=test_developer):
+@pytest.mark.asyncio
+async def test_query_create_file_with_invalid_project(dsn=pg_dsn, developer=test_developer):
+    """query: create file with invalid project"""
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await create_file(
             developer_id=developer.id,
             data=CreateFileRequest(
@@ -80,8 +83,9 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
-@test("query: create user file")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_create_user_file(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: create user file"""
     pool = await create_db_pool(dsn=dsn)
     file = await create_file(
         developer_id=developer.id,
@@ -109,8 +113,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert any(f.id == file.id for f in files)
 
 
-@test("query: create user file with project")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user, project=test_project):
+@pytest.mark.asyncio
+async def test_query_create_user_file_with_project(dsn=pg_dsn, developer=test_developer, user=test_user, project=test_project):
+    """query: create user file with project"""
     pool = await create_db_pool(dsn=dsn)
     file = await create_file(
         developer_id=developer.id,
@@ -142,8 +147,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user, project=test_p
     assert all(f.project == project.canonical_name for f in files)
 
 
-@test("query: create agent file")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_create_agent_file(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    """query: create agent file"""
     pool = await create_db_pool(dsn=dsn)
 
     file = await create_file(
@@ -170,8 +176,9 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert any(f.id == file.id for f in files)
 
 
-@test("query: create agent file with project")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent, project=test_project):
+@pytest.mark.asyncio
+async def test_query_create_agent_file_with_project(dsn=pg_dsn, developer=test_developer, agent=test_agent, project=test_project):
+    """query: create agent file with project"""
     pool = await create_db_pool(dsn=dsn)
 
     file = await create_file(
@@ -202,8 +209,9 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent, project=test
     assert all(f.project == project.canonical_name for f in files)
 
 
-@test("query: get file")
-async def _(dsn=pg_dsn, file=test_file, developer=test_developer):
+@pytest.mark.asyncio
+async def test_query_get_file(dsn=pg_dsn, file=test_file, developer=test_developer):
+    """query: get file"""
     pool = await create_db_pool(dsn=dsn)
     file_test = await get_file(
         developer_id=developer.id,
@@ -217,8 +225,9 @@ async def _(dsn=pg_dsn, file=test_file, developer=test_developer):
     assert file_test.hash == file.hash
 
 
-@test("query: list files")
-async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+@pytest.mark.asyncio
+async def test_query_list_files(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """query: list files"""
     pool = await create_db_pool(dsn=dsn)
     files = await list_files(
         developer_id=developer.id,
@@ -228,8 +237,9 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
     assert any(f.id == file.id for f in files)
 
 
-@test("query: list files with project filter")
-async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
+@pytest.mark.asyncio
+async def test_query_list_files_with_project_filter(dsn=pg_dsn, developer=test_developer, project=test_project):
+    """query: list files with project filter"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a file with the project
@@ -257,12 +267,13 @@ async def _(dsn=pg_dsn, developer=test_developer, project=test_project):
     assert all(f.project == project.canonical_name for f in files)
 
 
-@test("query: list files, invalid limit")
-async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+@pytest.mark.asyncio
+async def test_query_list_files_invalid_limit(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """query: list files, invalid limit"""
     """Test that listing files with an invalid limit raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_files(
             developer_id=developer.id,
             connection_pool=pool,
@@ -271,7 +282,7 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
     assert exc.raised.status_code == 400
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_files(
             developer_id=developer.id,
             connection_pool=pool,
@@ -281,12 +292,13 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
 
-@test("query: list files, invalid offset")
-async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+@pytest.mark.asyncio
+async def test_query_list_files_invalid_offset(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """query: list files, invalid offset"""
     """Test that listing files with an invalid offset raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_files(
             developer_id=developer.id,
             connection_pool=pool,
@@ -296,12 +308,13 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
     assert exc.raised.detail == "Offset must be >= 0"
 
 
-@test("query: list files, invalid sort by")
-async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+@pytest.mark.asyncio
+async def test_query_list_files_invalid_sort_by(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """query: list files, invalid sort by"""
     """Test that listing files with an invalid sort by raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_files(
             developer_id=developer.id,
             connection_pool=pool,
@@ -311,12 +324,13 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
     assert exc.raised.detail == "Invalid sort field"
 
 
-@test("query: list files, invalid sort direction")
-async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+@pytest.mark.asyncio
+async def test_query_list_files_invalid_sort_direction(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """query: list files, invalid sort direction"""
     """Test that listing files with an invalid sort direction raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_files(
             developer_id=developer.id,
             connection_pool=pool,
@@ -326,8 +340,9 @@ async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
     assert exc.raised.detail == "Invalid sort direction"
 
 
-@test("query: list user files")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_list_user_files(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: list user files"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a file owned by the user
@@ -355,8 +370,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert any(f.id == file.id for f in files)
 
 
-@test("query: list user files with project")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user, project=test_project):
+@pytest.mark.asyncio
+async def test_query_list_user_files_with_project(dsn=pg_dsn, developer=test_developer, user=test_user, project=test_project):
+    """query: list user files with project"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a file owned by the user with a project
@@ -387,8 +403,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user, project=test_p
     assert all(f.project == project.canonical_name for f in files)
 
 
-@test("query: list agent files")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_list_agent_files(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    """query: list agent files"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a file owned by the agent
@@ -416,8 +433,9 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert any(f.id == file.id for f in files)
 
 
-@test("query: list agent files with project")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent, project=test_project):
+@pytest.mark.asyncio
+async def test_query_list_agent_files_with_project(dsn=pg_dsn, developer=test_developer, agent=test_agent, project=test_project):
+    """query: list agent files with project"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a file owned by the agent with a project
@@ -448,8 +466,9 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent, project=test
     assert all(f.project == project.canonical_name for f in files)
 
 
-@test("query: delete user file")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_delete_user_file(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: delete user file"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a file owned by the user
@@ -485,8 +504,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert not any(f.id == file.id for f in files)
 
 
-@test("query: delete agent file")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_delete_agent_file(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    """query: delete agent file"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a file owned by the agent
@@ -522,8 +542,9 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert not any(f.id == file.id for f in files)
 
 
-@test("query: delete file")
-async def _(dsn=pg_dsn, developer=test_developer, file=test_file):
+@pytest.mark.asyncio
+async def test_query_delete_file(dsn=pg_dsn, developer=test_developer, file=test_file):
+    """query: delete file"""
     pool = await create_db_pool(dsn=dsn)
 
     await delete_file(

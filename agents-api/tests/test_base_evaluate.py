@@ -19,31 +19,35 @@ from agents_api.common.utils.task_validation import (
     backwards_compatibility,
     validate_py_expression,
 )
-from ward import raises, test
+import pytest
 
 
-@test("utility: base_evaluate - empty exprs")
-async def _():
-    with raises(AssertionError):
+@pytest.mark.asyncio
+async def test_utility_base_evaluate_empty_exprs():
+    """utility: base_evaluate - empty exprs"""
+    with pytest.pytest.raises(AssertionError):
         await base_evaluate({}, values={"a": 1})
 
 
-@test("utility: base_evaluate - value undefined")
-async def _():
-    with raises(EvaluateError):
+@pytest.mark.asyncio
+async def test_utility_base_evaluate_value_undefined():
+    """utility: base_evaluate - value undefined"""
+    with pytest.pytest.raises(EvaluateError):
         await base_evaluate("$ b", values={"a": 1})
 
 
-@test("utility: base_evaluate - scalar values")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_base_evaluate_scalar_values():
+    """utility: base_evaluate - scalar values"""
     exprs = [1, 2, True, 1.2459, "$ x + 5"]
     values = {"x": 5}
     result = await base_evaluate(exprs, values=values)
     assert result == [1, 2, True, 1.2459, 10]
 
 
-@test("utility: base_evaluate - str")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_base_evaluate_str():
+    """utility: base_evaluate - str"""
     exprs = "$ x + 5"
     values = {"x": 5}
     result = await base_evaluate(exprs, values=values)
@@ -67,24 +71,27 @@ async def _():
     assert result == "I forgot to put a dollar sign, can you still calculate 10?"
 
 
-@test("utility: base_evaluate - dict")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_base_evaluate_dict():
+    """utility: base_evaluate - dict"""
     exprs = {"a": "$ x + 5", "b": "$ x + 6", "c": "x + 7"}
     values = {"x": 5}
     result = await base_evaluate(exprs, values=values)
     assert result == {"a": 10, "b": 11, "c": "x + 7"}
 
 
-@test("utility: base_evaluate - list")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_base_evaluate_list():
+    """utility: base_evaluate - list"""
     exprs = [{"a": "$ x + 5"}, {"b": "$ x + 6"}, {"c": "x + 7"}]
     values = {"x": 5}
     result = await base_evaluate(exprs, values=values)
     assert result == [{"a": 10}, {"b": 11}, {"c": "x + 7"}]
 
 
-@test("utility: base_evaluate - parameters")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_base_evaluate_parameters():
+    """utility: base_evaluate - parameters"""
     exprs = "$ x + 5"
     context_none = None
     values_none = None
@@ -126,14 +133,14 @@ async def _():
         "agents_api.common.protocol.tasks.StepContext.prepare_for_step",
         return_value={"x": 10},
     ):
-        with raises(ValueError):
+        with pytest.pytest.raises(ValueError):
             result = await base_evaluate(
                 exprs,
                 context=context_none,
                 values=values_none,
                 extra_lambda_strs=extra_lambda_strs_none,
             )
-        with raises(ValueError):
+        with pytest.pytest.raises(ValueError):
             result = await base_evaluate(
                 exprs,
                 context=context_none,
@@ -184,8 +191,9 @@ async def _():
         assert result == 15
 
 
-@test("utility: base_evaluate - backwards compatibility")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_base_evaluate_backwards_compatibility():
+    """utility: base_evaluate - backwards compatibility"""
     exprs = "[[x + 5]]"
     values = {"x": 5, "inputs": {1: 1}, "outputs": {1: 2}}
     result = await base_evaluate(exprs, values=values)
@@ -219,8 +227,9 @@ async def _():
     assert result == 7
 
 
-@test("utility: backwards_compatibility")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_backwards_compatibility():
+    """utility: backwards_compatibility"""
     # Test $ prefix - should return unchanged
     exprs = "$ x + 5"
     result = backwards_compatibility(exprs)
@@ -277,8 +286,8 @@ async def _():
     assert result == "$ _[0]"
 
 
-@test("validate_py_expression should return early for non-dollar expressions")
-def test_validate_non_dollar_expressions():
+def test_validate_py_expression_should_return_early_for_non_dollar_expressions():
+    """validate_py_expression should return early for non-dollar expressions"""
     """Tests that expressions without $ prefix return empty issues and don't get validated."""
     # Regular string without $ prefix
     expression = "Hello world"
@@ -296,8 +305,8 @@ def test_validate_non_dollar_expressions():
     assert all(len(issues) == 0 for issues in result.values())
 
 
-@test("validate_py_expression should handle dollar sign variations")
-def test_dollar_sign_prefix_formats():
+def test_validate_py_expression_should_handle_dollar_sign_variations():
+    """validate_py_expression should handle dollar sign variations"""
     """Tests that $ prefix is correctly recognized in various formats."""
     # $ with space
     expression = "$ 1 + 2"
@@ -320,8 +329,8 @@ def test_dollar_sign_prefix_formats():
     assert all(len(issues) == 0 for issues in result.values())
 
 
-@test("validate_py_expression should handle edge cases")
-def test_validate_edge_cases():
+def test_validate_py_expression_should_handle_edge_cases():
+    """validate_py_expression should handle edge cases"""
     """Tests edge cases like empty strings, None values, etc."""
     # None value
     result = validate_py_expression(None)

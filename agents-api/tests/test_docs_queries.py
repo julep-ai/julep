@@ -10,7 +10,7 @@ from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embe
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
 from fastapi import HTTPException
-from ward import raises, test
+import pytest
 
 from .fixtures import (
     pg_dsn,
@@ -24,8 +24,9 @@ from .fixtures import (
 EMBEDDING_SIZE: int = 1024
 
 
-@test("query: create user doc")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_create_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: create user doc"""
     pool = await create_db_pool(dsn=dsn)
     doc_created = await create_doc(
         developer_id=developer.id,
@@ -52,10 +53,11 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert found.id == doc_created.id
 
 
-@test("query: create user doc, user not found")
-async def _(dsn=pg_dsn, developer=test_developer):
+@pytest.mark.asyncio
+async def test_query_create_user_doc_user_not_found(dsn=pg_dsn, developer=test_developer):
+    """query: create user doc, user not found"""
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as e:
+    with pytest.pytest.raises(HTTPException) as e:
         await create_doc(
             developer_id=developer.id,
             data=CreateDocRequest(
@@ -73,8 +75,9 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert e.raised.detail == "Reference to user not found during create"
 
 
-@test("query: create agent doc")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_create_agent_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    """query: create agent doc"""
     pool = await create_db_pool(dsn=dsn)
     doc = await create_doc(
         developer_id=developer.id,
@@ -101,11 +104,12 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert any(d.id == doc.id for d in docs_list)
 
 
-@test("query: create agent doc, agent not found")
-async def _(dsn=pg_dsn, developer=test_developer):
+@pytest.mark.asyncio
+async def test_query_create_agent_doc_agent_not_found(dsn=pg_dsn, developer=test_developer):
+    """query: create agent doc, agent not found"""
     agent_id = uuid4()
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as e:
+    with pytest.pytest.raises(HTTPException) as e:
         await create_doc(
             developer_id=developer.id,
             data=CreateDocRequest(
@@ -123,8 +127,9 @@ async def _(dsn=pg_dsn, developer=test_developer):
     assert e.raised.detail == "Reference to agent not found during create"
 
 
-@test("query: get doc")
-async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
+@pytest.mark.asyncio
+async def test_query_get_doc(dsn=pg_dsn, developer=test_developer, doc=test_doc):
+    """query: get doc"""
     pool = await create_db_pool(dsn=dsn)
     doc_test = await get_doc(
         developer_id=developer.id,
@@ -137,8 +142,9 @@ async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     assert doc_test.content is not None
 
 
-@test("query: list user docs")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_list_user_docs(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: list user docs"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a doc owned by the user
@@ -192,8 +198,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert any(d.metadata == {"test": "test2"} for d in docs_list_metadata)
 
 
-@test("query: list user docs, invalid limit")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_list_user_docs_invalid_limit(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: list user docs, invalid limit"""
     pool = await create_db_pool(dsn=dsn)
 
     await create_doc(
@@ -209,7 +216,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         connection_pool=pool,
     )
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_docs(
             developer_id=developer.id,
             owner_type="user",
@@ -222,8 +229,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
 
-@test("query: list user docs, invalid offset")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_list_user_docs_invalid_offset(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: list user docs, invalid offset"""
     pool = await create_db_pool(dsn=dsn)
 
     await create_doc(
@@ -239,7 +247,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         connection_pool=pool,
     )
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_docs(
             developer_id=developer.id,
             owner_type="user",
@@ -252,8 +260,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert exc.raised.detail == "Offset must be >= 0"
 
 
-@test("query: list user docs, invalid sort by")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_list_user_docs_invalid_sort_by(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: list user docs, invalid sort by"""
     pool = await create_db_pool(dsn=dsn)
 
     await create_doc(
@@ -269,7 +278,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         connection_pool=pool,
     )
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_docs(
             developer_id=developer.id,
             owner_type="user",
@@ -282,8 +291,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert exc.raised.detail == "Invalid sort field"
 
 
-@test("query: list user docs, invalid sort direction")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_list_user_docs_invalid_sort_direction(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: list user docs, invalid sort direction"""
     pool = await create_db_pool(dsn=dsn)
 
     await create_doc(
@@ -299,7 +309,7 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
         connection_pool=pool,
     )
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_docs(
             developer_id=developer.id,
             owner_type="user",
@@ -312,8 +322,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert exc.raised.detail == "Invalid sort direction"
 
 
-@test("query: list agent docs")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_list_agent_docs(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    """query: list agent docs"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a doc owned by the agent
@@ -368,13 +379,14 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert any(d.metadata == {"test": "test2"} for d in docs_list_metadata)
 
 
-@test("query: list agent docs, invalid limit")
-async def _(dsn=pg_dsn):
+@pytest.mark.asyncio
+async def test_query_list_agent_docs_invalid_limit(dsn=pg_dsn):
+    """query: list agent docs, invalid limit"""
     """Test that listing agent docs with an invalid limit raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_docs(
             developer_id=uuid4(),
             owner_type="agent",
@@ -387,13 +399,14 @@ async def _(dsn=pg_dsn):
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
 
-@test("query: list agent docs, invalid offset")
-async def _(dsn=pg_dsn):
+@pytest.mark.asyncio
+async def test_query_list_agent_docs_invalid_offset(dsn=pg_dsn):
+    """query: list agent docs, invalid offset"""
     """Test that listing agent docs with an invalid offset raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_docs(
             developer_id=uuid4(),
             owner_type="agent",
@@ -406,12 +419,13 @@ async def _(dsn=pg_dsn):
     assert exc.raised.detail == "Offset must be >= 0"
 
 
-@test("query: list agent docs, invalid sort by")
-async def _(dsn=pg_dsn):
+@pytest.mark.asyncio
+async def test_query_list_agent_docs_invalid_sort_by(dsn=pg_dsn):
+    """query: list agent docs, invalid sort by"""
     """Test that listing agent docs with an invalid sort by raises an exception."""
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_docs(
             developer_id=uuid4(),
             owner_type="agent",
@@ -424,12 +438,13 @@ async def _(dsn=pg_dsn):
     assert exc.raised.detail == "Invalid sort field"
 
 
-@test("query: list agent docs, invalid sort direction")
-async def _(dsn=pg_dsn):
+@pytest.mark.asyncio
+async def test_query_list_agent_docs_invalid_sort_direction(dsn=pg_dsn):
+    """query: list agent docs, invalid sort direction"""
     """Test that listing agent docs with an invalid sort direction raises an exception."""
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_docs(
             developer_id=uuid4(),
             owner_type="agent",
@@ -442,8 +457,9 @@ async def _(dsn=pg_dsn):
     assert exc.raised.detail == "Invalid sort direction"
 
 
-@test("query: delete user doc")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_delete_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: delete user doc"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a doc owned by the user
@@ -479,8 +495,9 @@ async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     assert not any(d.id == doc_user.id for d in docs_list)
 
 
-@test("query: delete agent doc")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_delete_agent_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    """query: delete agent doc"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a doc owned by the agent
@@ -516,8 +533,9 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert not any(d.id == doc_agent.id for d in docs_list)
 
 
-@test("query: search docs by text")
-async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
+@pytest.mark.asyncio
+async def test_query_search_docs_by_text(dsn=pg_dsn, agent=test_agent, developer=test_developer):
+    """query: search docs by text"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test document
@@ -553,8 +571,9 @@ async def _(dsn=pg_dsn, agent=test_agent, developer=test_developer):
     assert result[0].metadata == {"test": "test"}, "Metadata should match"
 
 
-@test("query: search docs by text with technical terms and phrases")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_search_docs_by_text_with_technical_terms_and_phrases(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    """query: search docs by text with technical terms and phrases"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create documents with technical content
@@ -616,8 +635,9 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
             )
 
 
-@test("query: search docs by embedding")
-async def _(
+@pytest.mark.asyncio
+async def test_query_search_docs_by_embedding(
+    """query: search docs by embedding"""
     dsn=pg_dsn,
     agent=test_agent,
     developer=test_developer,
@@ -644,8 +664,9 @@ async def _(
     assert result[0].metadata is not None
 
 
-@test("query: search docs by hybrid")
-async def _(
+@pytest.mark.asyncio
+async def test_query_search_docs_by_hybrid(
+    """query: search docs by hybrid"""
     dsn=pg_dsn,
     agent=test_agent,
     developer=test_developer,
@@ -673,8 +694,8 @@ async def _(
     assert result[0].metadata is not None
 
 
-# @test("query: search docs by embedding with different confidence levels")
-# async def _(
+def test_query_search_docs_by_embedding_with_different_confidence_levels(
+    """query: search docs by embedding with different confidence levels"""
 #     dsn=pg_dsn, agent=test_agent, developer=test_developer, doc=test_doc_with_embedding
 # ):
 #     pool = await create_db_pool(dsn=dsn)

@@ -10,4 +10,4 @@ check = [
 
 [tasks.test]
 env = { JULEP_CLI_TESTING = "true", PYTHONPATH = "{PYTHONPATH}:." }
-cmd = "ward test --exclude .venv"
+cmd = "pytest"

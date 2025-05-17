@@ -10,23 +10,25 @@ from agents_api.queries.developers.get_developer import (
 from agents_api.queries.developers.patch_developer import patch_developer
 from agents_api.queries.developers.update_developer import update_developer
 from uuid_extensions import uuid7
-from ward import raises, test
+import pytest
 
 from .fixtures import pg_dsn, random_email, test_new_developer
 
 
-@test("query: get developer not exists")
-async def _(dsn=pg_dsn):
+@pytest.mark.asyncio
+async def test_query_get_developer_not_exists(dsn=pg_dsn):
+    """query: get developer not exists"""
     pool = await create_db_pool(dsn=dsn)
-    with raises(Exception):
+    with pytest.pytest.raises(Exception):
         await get_developer(
             developer_id=uuid7(),
             connection_pool=pool,
         )
 
 
-@test("query: get developer exists")
-async def _(dsn=pg_dsn, dev=test_new_developer):
+@pytest.mark.asyncio
+async def test_query_get_developer_exists(dsn=pg_dsn, dev=test_new_developer):
+    """query: get developer exists"""
     pool = await create_db_pool(dsn=dsn)
     developer = await get_developer(
         developer_id=dev.id,
@@ -41,8 +43,9 @@ async def _(dsn=pg_dsn, dev=test_new_developer):
     assert developer.settings == dev.settings
 
 
-@test("query: create developer")
-async def _(dsn=pg_dsn):
+@pytest.mark.asyncio
+async def test_query_create_developer(dsn=pg_dsn):
+    """query: create developer"""
     pool = await create_db_pool(dsn=dsn)
     dev_id = uuid7()
     developer = await create_developer(
@@ -59,8 +62,9 @@ async def _(dsn=pg_dsn):
     assert developer.created_at is not None
 
 
-@test("query: update developer")
-async def _(dsn=pg_dsn, dev=test_new_developer, email=random_email):
+@pytest.mark.asyncio
+async def test_query_update_developer(dsn=pg_dsn, dev=test_new_developer, email=random_email):
+    """query: update developer"""
     pool = await create_db_pool(dsn=dsn)
     developer = await update_developer(
         email=email,
@@ -73,8 +77,9 @@ async def _(dsn=pg_dsn, dev=test_new_developer, email=random_email):
     assert developer.id == dev.id
 
 
-@test("query: patch developer")
-async def _(dsn=pg_dsn, dev=test_new_developer, email=random_email):
+@pytest.mark.asyncio
+async def test_query_patch_developer(dsn=pg_dsn, dev=test_new_developer, email=random_email):
+    """query: patch developer"""
     pool = await create_db_pool(dsn=dsn)
     developer = await patch_developer(
         email=email,

@@ -307,7 +307,7 @@
 #             content=contents[9][0],
 #         ),
 #     ]
-#     with raises(InputTooBigError) as ex:
+#     with pytest.raises(InputTooBigError) as ex:
 #         session.truncate(messages, threshold)
 
 #     assert (

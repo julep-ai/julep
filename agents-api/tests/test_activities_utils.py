@@ -3,26 +3,26 @@ from unittest.mock import MagicMock, patch
 import markdown2
 import markdownify
 from agents_api.common.utils.evaluator import get_evaluator
-from ward import test
+import pytest
 
 
-@test("evaluator: csv reader")
-def _():
+def test_evaluator_csv_reader():
+    """evaluator: csv reader"""
     e = get_evaluator({})
     result = e.eval('[r for r in csv.reader("a,b,c\\n1,2,3")]')
     assert result == [["a", "b", "c"], ["1", "2", "3"]]
 
 
-@test("evaluator: csv writer")
-def _():
+def test_evaluator_csv_writer():
+    """evaluator: csv writer"""
     e = get_evaluator({})
     result = e.eval('csv.writer("a,b,c\\n1,2,3").writerow(["4", "5", "6"])')
     # at least no exceptions
     assert result == 7
 
 
-@test("evaluator: humanize_text_alpha")
-def _():
+def test_evaluator_humanize_text_alpha():
+    """evaluator: humanize_text_alpha"""
     with (
         patch("requests.post") as mock_requests_post,
         patch("litellm.completion") as mock_litellm_completion,
@@ -56,8 +56,8 @@ def _():
         )
 
 
-@test("evaluator: html_to_markdown")
-def _():
+def test_evaluator_html_to_markdown():
+    """evaluator: html_to_markdown"""
     e = get_evaluator({})
     html = '<b>Yay</b> <a href="http://github.com">GitHub</a>'
     result = e.eval(f"""html_to_markdown('{html}')""")
@@ -65,8 +65,8 @@ def _():
     assert result == markdown
 
 
-@test("evaluator: markdown_to_html")
-def _():
+def test_evaluator_markdown_to_html():
+    """evaluator: markdown_to_html"""
     e = get_evaluator({})
     markdown = "**Yay** [GitHub](http://github.com)"
     result = e.eval(f"""markdown_to_html('{markdown}')""")
@@ -75,15 +75,15 @@ def _():
     assert result == html
 
 
-@test("evaluator: safe_extract_json basic")
-def _():
+def test_evaluator_safe_extract_json_basic():
+    """evaluator: safe_extract_json basic"""
     e = get_evaluator({})
     result = e.eval('extract_json("""```json {"pp": "\thello"}```""")')
     assert result == {"pp": "\thello"}
 
 
-@test("safe_extract_json with various code block formats")
-def test_safe_extract_json_formats():
+def test_safe_extract_json_with_various_code_block_formats():
+    """safe_extract_json with various code block formats"""
     from agents_api.common.utils.evaluator import safe_extract_json
 
     # Test with ```json format
@@ -121,8 +121,8 @@ def test_safe_extract_json_formats():
     assert result["data"]["config"]["enabled"] is True
 
 
-@test("safe_extract_json handles marker validation correctly")
-def test_safe_extract_json_validation():
+def test_safe_extract_json_handles_marker_validation_correctly():
+    """safe_extract_json handles marker validation correctly"""
     from agents_api.common.utils.evaluator import safe_extract_json
 
     # Test invalid start marker validation for ```json format

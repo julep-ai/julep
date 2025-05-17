@@ -1,13 +1,13 @@
 # Tests for user routes
 
 from uuid_extensions import uuid7
-from ward import test
+import pytest
 
 from tests.fixtures import client, make_request, test_project, test_user
 
 
-@test("route: unauthorized should fail")
-def _(client=client):
+def test_route_unauthorized_should_fail(client=client):
+    """route: unauthorized should fail"""
     data = {
         "name": "test user",
         "about": "test user about",
@@ -22,8 +22,8 @@ def _(client=client):
     assert response.status_code == 403
 
 
-@test("route: create user")
-def _(make_request=make_request):
+def test_route_create_user(make_request=make_request):
+    """route: create user"""
     data = {
         "name": "test user",
         "about": "test user about",
@@ -38,8 +38,8 @@ def _(make_request=make_request):
     assert response.status_code == 201
 
 
-@test("route: create user with project")
-def _(make_request=make_request, project=test_project):
+def test_route_create_user_with_project(make_request=make_request, project=test_project):
+    """route: create user with project"""
     data = {
         "name": "test user with project",
         "about": "test user about",
@@ -56,8 +56,8 @@ def _(make_request=make_request, project=test_project):
     assert response.json()["project"] == project.canonical_name
 
 
-@test("route: get user not exists")
-def _(make_request=make_request):
+def test_route_get_user_not_exists(make_request=make_request):
+    """route: get user not exists"""
     user_id = str(uuid7())
 
     response = make_request(
@@ -68,8 +68,8 @@ def _(make_request=make_request):
     assert response.status_code == 404
 
 
-@test("route: get user exists")
-def _(make_request=make_request, user=test_user):
+def test_route_get_user_exists(make_request=make_request, user=test_user):
+    """route: get user exists"""
     user_id = str(user.id)
 
     response = make_request(
@@ -80,8 +80,8 @@ def _(make_request=make_request, user=test_user):
     assert response.status_code != 404
 
 
-@test("route: delete user")
-def _(make_request=make_request):
+def test_route_delete_user(make_request=make_request):
+    """route: delete user"""
     data = {
         "name": "test user",
         "about": "test user about",
@@ -109,8 +109,8 @@ def _(make_request=make_request):
     assert response.status_code == 404
 
 
-@test("route: update user")
-def _(make_request=make_request, user=test_user):
+def test_route_update_user(make_request=make_request, user=test_user):
+    """route: update user"""
     data = {
         "name": "updated user",
         "about": "updated user about",
@@ -139,8 +139,8 @@ def _(make_request=make_request, user=test_user):
     assert user["about"] == "updated user about"
 
 
-@test("route: update user with project")
-def _(make_request=make_request, user=test_user, project=test_project):
+def test_route_update_user_with_project(make_request=make_request, user=test_user, project=test_project):
+    """route: update user with project"""
     data = {
         "name": "updated user with project",
         "about": "updated user about",
@@ -171,8 +171,8 @@ def _(make_request=make_request, user=test_user, project=test_project):
     assert user["project"] == project.canonical_name
 
 
-@test("query: patch user")
-def _(make_request=make_request, user=test_user):
+def test_query_patch_user(make_request=make_request, user=test_user):
+    """query: patch user"""
     user_id = str(user.id)
 
     data = {
@@ -202,8 +202,8 @@ def _(make_request=make_request, user=test_user):
     assert user["about"] == "patched user about"
 
 
-@test("query: patch user with project")
-def _(make_request=make_request, user=test_user, project=test_project):
+def test_query_patch_user_with_project(make_request=make_request, user=test_user, project=test_project):
+    """query: patch user with project"""
     user_id = str(user.id)
 
     data = {
@@ -235,8 +235,8 @@ def _(make_request=make_request, user=test_user, project=test_project):
     assert user["project"] == project.canonical_name
 
 
-@test("query: list users")
-def _(make_request=make_request):
+def test_query_list_users(make_request=make_request):
+    """query: list users"""
     response = make_request(
         method="GET",
         url="/users",
@@ -250,8 +250,8 @@ def _(make_request=make_request):
     assert len(users) > 0
 
 
-@test("query: list users with project filter")
-def _(make_request=make_request, project=test_project):
+def test_query_list_users_with_project_filter(make_request=make_request, project=test_project):
+    """query: list users with project filter"""
     # First create a user with the project
     data = {
         "name": "test user for project filter",
@@ -283,8 +283,8 @@ def _(make_request=make_request, project=test_project):
     assert any(user["project"] == project.canonical_name for user in users)
 
 
-@test("query: list users with right metadata filter")
-def _(make_request=make_request, user=test_user):
+def test_query_list_users_with_right_metadata_filter(make_request=make_request, user=test_user):
+    """query: list users with right metadata filter"""
     response = make_request(
         method="GET",
         url="/users",

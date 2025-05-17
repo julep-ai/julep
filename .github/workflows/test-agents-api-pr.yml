@@ -40,7 +40,7 @@ jobs:
           SECRETS_MASTER_KEY: ${{ secrets.SECRETS_MASTER_KEY }}
         run: |
           cd agents-api
-          uv run poe test --fail-limit 3
+          uv run poe test --maxfail 3
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

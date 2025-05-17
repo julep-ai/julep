@@ -1,11 +1,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from agents_api.activities.pg_query_step import pg_query_step
-from ward import test
+import pytest
 
 
-@test("pg_query_step correctly calls the specified query")
-async def _():
+@pytest.mark.asyncio
+async def test_pg_query_step_correctly_calls_the_specified_query():
+    """pg_query_step correctly calls the specified query"""
     # Patch the relevant modules and functions
     with (
         patch("agents_api.activities.pg_query_step.queries") as mock_queries,
@@ -37,8 +38,9 @@ async def _():
         assert result == {"result": "test"}
 
 
-@test("pg_query_step raises exception for invalid query name format")
-async def _():
+@pytest.mark.asyncio
+async def test_pg_query_step_raises_exception_for_invalid_query_name_format():
+    """pg_query_step raises exception for invalid query name format"""
     # Try with an invalid query name (no dot separator)
     try:
         await pg_query_step(
@@ -52,8 +54,9 @@ async def _():
         assert False, f"Expected ValueError but got {type(e).__name__}"
 
 
-@test("pg_query_step propagates exceptions from the underlying query")
-async def _():
+@pytest.mark.asyncio
+async def test_pg_query_step_propagates_exceptions_from_the_underlying_query():
+    """pg_query_step propagates exceptions from the underlying query"""
     # Patch the relevant modules and functions
     with patch("agents_api.activities.pg_query_step.queries") as mock_queries:
         # Create a mock query function that raises an exception

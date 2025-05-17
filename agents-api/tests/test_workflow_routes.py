@@ -1,14 +1,15 @@
 # Tests for task queries
 
 from uuid_extensions import uuid7
-from ward import test
+import pytest
 
 from tests.fixtures import make_request, test_agent
 from tests.utils import patch_testing_temporal
 
 
-@test("workflow route: evaluate step single")
-async def _(
+@pytest.mark.asyncio
+async def test_workflow_route_evaluate_step_single(
+    """workflow route: evaluate step single"""
     make_request=make_request,
     agent=test_agent,
 ):
@@ -38,8 +39,9 @@ async def _(
         ).raise_for_status()
 
 
-@test("workflow route: evaluate step single with yaml")
-async def _(
+@pytest.mark.asyncio
+async def test_workflow_route_evaluate_step_single_with_yaml(
+    """workflow route: evaluate step single with yaml"""
     make_request=make_request,
     agent=test_agent,
 ):
@@ -80,8 +82,9 @@ main:
         ).raise_for_status()
 
 
-@test("workflow route: evaluate step single with yaml - nested")
-async def _(
+@pytest.mark.asyncio
+async def test_workflow_route_evaluate_step_single_with_yaml_nested(
+    """workflow route: evaluate step single with yaml - nested"""
     make_request=make_request,
     agent=test_agent,
 ):
@@ -125,8 +128,9 @@ main:
         ).raise_for_status()
 
 
-@test("workflow route: create or update: evaluate step single with yaml")
-async def _(
+@pytest.mark.asyncio
+async def test_workflow_route_create_or_update_evaluate_step_single_with_yaml(
+    """workflow route: create or update: evaluate step single with yaml"""
     make_request=make_request,
     agent=test_agent,
 ):

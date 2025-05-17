@@ -7,7 +7,7 @@ from agents_api.queries.executions.create_execution_transition import (
     create_execution_transition,
 )
 from uuid_extensions import uuid7
-from ward import skip, test
+import pytest
 
 from .fixtures import (
     CreateTransitionRequest,
@@ -24,8 +24,8 @@ from .fixtures import (
 from .utils import patch_testing_temporal
 
 
-@test("route: unauthorized should fail")
-def _(client=client, agent=test_agent):
+def test_route_unauthorized_should_fail(client=client, agent=test_agent):
+    """route: unauthorized should fail"""
     data = {
         "name": "test user",
         "main": [
@@ -47,8 +47,8 @@ def _(client=client, agent=test_agent):
     assert response.status_code == 403
 
 
-@test("route: create task")
-def _(make_request=make_request, agent=test_agent):
+def test_route_create_task(make_request=make_request, agent=test_agent):
+    """route: create task"""
     data = {
         "name": "test user",
         "main": [
@@ -70,8 +70,9 @@ def _(make_request=make_request, agent=test_agent):
     assert response.status_code == 201
 
 
-@test("route: create task execution")
-async def _(make_request=make_request, task=test_task):
+@pytest.mark.asyncio
+async def test_route_create_task_execution(make_request=make_request, task=test_task):
+    """route: create task execution"""
     data = {
         "input": {},
         "metadata": {},
@@ -87,8 +88,8 @@ async def _(make_request=make_request, task=test_task):
     assert response.status_code == 201
 
 
-@test("route: get execution not exists")
-def _(make_request=make_request):
+def test_route_get_execution_not_exists(make_request=make_request):
+    """route: get execution not exists"""
     execution_id = str(uuid7())
 
     response = make_request(
@@ -99,8 +100,8 @@ def _(make_request=make_request):
     assert response.status_code == 404
 
 
-@test("route: get execution exists")
-def _(make_request=make_request, execution=test_execution):
+def test_route_get_execution_exists(make_request=make_request, execution=test_execution):
+    """route: get execution exists"""
     response = make_request(
         method="GET",
         url=f"/executions/{execution.id!s}",
@@ -109,8 +110,8 @@ def _(make_request=make_request, execution=test_execution):
     assert response.status_code == 200
 
 
-@test("route: get task not exists")
-def _(make_request=make_request):
+def test_route_get_task_not_exists(make_request=make_request):
+    """route: get task not exists"""
     task_id = str(uuid7())
 
     response = make_request(
@@ -121,8 +122,8 @@ def _(make_request=make_request):
     assert response.status_code == 404
 
 
-@test("route: get task exists")
-def _(make_request=make_request, task=test_task):
+def test_route_get_task_exists(make_request=make_request, task=test_task):
+    """route: get task exists"""
     response = make_request(
         method="GET",
         url=f"/tasks/{task.id!s}",
@@ -131,8 +132,9 @@ def _(make_request=make_request, task=test_task):
     assert response.status_code == 200
 
 
-@test("route: list all execution transition")
-async def _(make_request=make_request, execution=test_execution_started):
+@pytest.mark.asyncio
+async def test_route_list_all_execution_transition(make_request=make_request, execution=test_execution_started):
+    """route: list all execution transition"""
     response = make_request(
         method="GET",
         url=f"/executions/{execution.id!s}/transitions",
@@ -146,8 +148,9 @@ async def _(make_request=make_request, execution=test_execution_started):
     assert len(transitions) > 0
 
 
-@test("route: list a single execution transition")
-async def _(
+@pytest.mark.asyncio
+async def test_route_list_a_single_execution_transition(
+    """route: list a single execution transition"""
     dsn=pg_dsn,
     make_request=make_request,
     execution=test_execution_started,
@@ -187,8 +190,8 @@ async def _(
     assert transition.next.step == response["next"]["step"]
 
 
-@test("route: list task executions")
-def _(make_request=make_request, execution=test_execution):
+def test_route_list_task_executions(make_request=make_request, execution=test_execution):
+    """route: list task executions"""
     response = make_request(
         method="GET",
         url=f"/tasks/{execution.task_id!s}/executions",
@@ -202,8 +205,8 @@ def _(make_request=make_request, execution=test_execution):
     assert len(executions) > 0
 
 
-@test("route: list tasks")
-def _(make_request=make_request, agent=test_agent):
+def test_route_list_tasks(make_request=make_request, agent=test_agent):
+    """route: list tasks"""
     response = make_request(
         method="GET",
         url=f"/agents/{agent.id!s}/tasks",
@@ -245,9 +248,10 @@ def _(make_request=make_request, agent=test_agent):
 # It's failing while getting the temporal client in
 # the `update_execution.py` route, but it's correctly
 # getting it in the `create_task_execution.py` route
-@skip("Temporal connection issue")
-@test("route: update execution")
-async def _(make_request=make_request, task=test_task):
+@pytest.mark.skip(reason="Temporal connection issue")
+@pytest.mark.asyncio
+async def test_route_update_execution(make_request=make_request, task=test_task):
+    """route: update execution"""
     data = {
         "input": {},
         "metadata": {},

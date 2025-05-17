@@ -41,8 +41,8 @@ Use `poe` tasks for consistency (they ensure correct environment variables and c
 poe format           # ruff format
 poe lint             # ruff check
 poe typecheck        # pytype --config pytype.toml (for agents-api) / pyright (for cli)
-poe test             # ward test --exclude .venv (pytest for integrations-service)
-poe test --search "pattern" # Run specific tests by Ward pattern
+poe test             # pytest
+poe test --maxfail 1 -k "pattern" # Run specific tests matching pattern
 poe check            # format + lint + type + SQL validation
 poe codegen          # generate API code (e.g., OpenAPI from TypeSpec)
 ```
@@ -186,13 +186,13 @@ async def create_entry(
 
 ---
 
-## 9. Ward testing framework
+## 9. Pytest framework
 
-*   Use descriptive test names: `@test("Descriptive name of what is being tested")`.
+*   Use descriptive test names like `def test_feature():` and a docstring describing the behavior.
 *   Activate virtual environment: `source .venv/bin/activate`.
 *   Ensure correct working directory (e.g., `agents-api/`) and `PYTHONPATH=$PWD` for script-based tests.
-*   Filter tests: `poe test --search "pattern_to_match"` (do NOT use `-p`).
-*   Limit failures for faster feedback: `poe test --fail-limit 1 --search "pattern_to_match"`.
+*   Filter tests: `poe test -k "pattern_to_match"`.
+*   Limit failures for faster feedback: `poe test --maxfail 1 -k "pattern_to_match"`.
 
 ---
 
@@ -258,7 +258,7 @@ This section provides pointers to important files and common patterns within the
 *   **Execution**: The runtime instance and state of a task being performed by an agent. Core model in `typespec/executions/models.tsp`.
 *   **POE (PoeThePoet)**: The task runner used in this project for development tasks like formatting, linting, testing, and code generation (configured in `pyproject.toml`).
 *   **TypeSpec**: The language used to define API schemas. It is the source of truth for API models, which are then generated into Python Pydantic models in `autogen/` directories.
-*   **Ward**: The primary Python testing framework used for unit and integration tests in most components (e.g., `agents-api`, `cli`).
+*   **Pytest**: The primary Python testing framework used for unit and integration tests across the project.
 *   **Temporal**: The distributed workflow engine used to orchestrate complex, long-running tasks and ensure their reliable execution.
 *   **AIDEV-NOTE/TODO/QUESTION**: Specially formatted comments to provide inline context or tasks for AI assistants and developers.
 

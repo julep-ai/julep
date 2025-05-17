@@ -25,7 +25,7 @@ from agents_api.queries.users import (
 )
 from fastapi.exceptions import HTTPException
 from uuid_extensions import uuid7
-from ward import raises, test
+import pytest
 
 from tests.fixtures import pg_dsn, test_developer_id, test_project, test_user
 
@@ -34,8 +34,9 @@ TEST_DEVELOPER_ID = UUID("123e4567-e89b-12d3-a456-426614174000")
 TEST_USER_ID = UUID("987e6543-e21b-12d3-a456-426614174000")
 
 
-@test("query: create user sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_create_user_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: create user sql"""
     """Test that a user can be successfully created."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -53,8 +54,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert user.about == "test user about"
 
 
-@test("query: create user with project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+@pytest.mark.asyncio
+async def test_query_create_user_with_project_sql(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+    """query: create user with project sql"""
     """Test that a user can be successfully created with a project."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -72,13 +74,14 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     assert user.project == project.canonical_name
 
 
-@test("query: create user with invalid project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_create_user_with_invalid_project_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: create user with invalid project sql"""
     """Test that creating a user with an invalid project raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await create_user(
             developer_id=developer_id,
             data=CreateUserRequest(
@@ -93,8 +96,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
-@test("query: create or update user sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_create_or_update_user_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: create or update user sql"""
     """Test that a user can be successfully created or updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -113,8 +117,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert user.about == "test user about"
 
 
-@test("query: create or update user with project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+@pytest.mark.asyncio
+async def test_query_create_or_update_user_with_project_sql(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+    """query: create or update user with project sql"""
     """Test that a user can be successfully created or updated with a project."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -133,8 +138,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     assert user.project == project.canonical_name
 
 
-@test("query: update user sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+@pytest.mark.asyncio
+async def test_query_update_user_sql(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """query: update user sql"""
     """Test that an existing user's information can be successfully updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -153,8 +159,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     assert update_result.updated_at > user.created_at
 
 
-@test("query: update user with project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user, project=test_project):
+@pytest.mark.asyncio
+async def test_query_update_user_with_project_sql(dsn=pg_dsn, developer_id=test_developer_id, user=test_user, project=test_project):
+    """query: update user with project sql"""
     """Test that an existing user's information can be successfully updated with a project."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -190,12 +197,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user, project=
     assert update_result.project == project.canonical_name
 
 
-@test("query: update user, project does not exist")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+@pytest.mark.asyncio
+async def test_query_update_user_project_does_not_exist(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """query: update user, project does not exist"""
     """Test that an existing user's information can be successfully updated with a project that does not exist."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await update_user(
             user_id=user.id,
             developer_id=developer_id,
@@ -211,15 +219,16 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
-@test("query: get user not exists sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_get_user_not_exists_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: get user not exists sql"""
     """Test that retrieving a non-existent user returns an empty result."""
 
     user_id = uuid7()
 
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(Exception):
+    with pytest.raises(Exception):
         await get_user(
             user_id=user_id,
             developer_id=developer_id,
@@ -227,8 +236,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
         )  # type: ignore[not-callable]
 
 
-@test("query: get user exists sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+@pytest.mark.asyncio
+async def test_query_get_user_exists_sql(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """query: get user exists sql"""
     """Test that retrieving an existing user returns the correct user information."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -242,8 +252,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     assert isinstance(result, User)
 
 
-@test("query: list users sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+@pytest.mark.asyncio
+async def test_query_list_users_sql(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """query: list users sql"""
     """Test that listing users returns a collection of user information."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -257,8 +268,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     assert all(isinstance(user, User) for user in result)
 
 
-@test("query: list users with project filter sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+@pytest.mark.asyncio
+async def test_query_list_users_with_project_filter_sql(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+    """query: list users with project filter sql"""
     """Test that listing users with a project filter returns the correct users."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -284,12 +296,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     assert all(user.project == project.canonical_name for user in result)
 
 
-@test("query: list users sql, invalid limit")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_list_users_sql_invalid_limit(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: list users sql, invalid limit"""
     """Test that listing users with an invalid limit raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_users(
             developer_id=developer_id,
             limit=101,
@@ -299,7 +312,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert exc.raised.status_code == 400
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_users(
             developer_id=developer_id,
             limit=0,
@@ -310,11 +323,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
 
-@test("query: list users sql, invalid offset")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_list_users_sql_invalid_offset(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: list users sql, invalid offset"""
     """Test that listing users with an invalid offset raises an exception."""
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_users(
             developer_id=developer_id,
             connection_pool=pool,
@@ -325,12 +339,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert exc.raised.detail == "Offset must be non-negative"
 
 
-@test("query: list users sql, invalid sort by")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_list_users_sql_invalid_sort_by(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: list users sql, invalid sort by"""
     """Test that listing users with an invalid sort by raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_users(
             developer_id=developer_id,
             connection_pool=pool,
@@ -341,12 +356,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert exc.raised.detail == "Invalid sort field"
 
 
-@test("query: list users sql, invalid sort direction")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_list_users_sql_invalid_sort_direction(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: list users sql, invalid sort direction"""
     """Test that listing users with an invalid sort direction raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_users(
             developer_id=developer_id,
             connection_pool=pool,
@@ -358,8 +374,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert exc.raised.detail == "Invalid sort direction"
 
 
-@test("query: patch user sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+@pytest.mark.asyncio
+async def test_query_patch_user_sql(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """query: patch user sql"""
     """Test that a user can be successfully patched."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -378,8 +395,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     assert patch_result.updated_at > user.created_at
 
 
-@test("query: patch user with project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user, project=test_project):
+@pytest.mark.asyncio
+async def test_query_patch_user_with_project_sql(dsn=pg_dsn, developer_id=test_developer_id, user=test_user, project=test_project):
+    """query: patch user with project sql"""
     """Test that a user can be successfully patched with a project."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -416,12 +434,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user, project=
     assert patch_result.project == project.canonical_name
 
 
-@test("query: patch user, project does not exist")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+@pytest.mark.asyncio
+async def test_query_patch_user_project_does_not_exist(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """query: patch user, project does not exist"""
     """Test that a user can be successfully patched with a project that does not exist."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await patch_user(
             developer_id=developer_id,
             user_id=user.id,
@@ -438,8 +457,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
-@test("query: delete user sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+@pytest.mark.asyncio
+async def test_query_delete_user_sql(dsn=pg_dsn, developer_id=test_developer_id, user=test_user):
+    """query: delete user sql"""
     """Test that a user can be successfully deleted."""
 
     pool = await create_db_pool(dsn=dsn)

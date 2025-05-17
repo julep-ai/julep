@@ -11,13 +11,14 @@ from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.usage.create_usage_record import create_usage_record
 from agents_api.queries.usage.get_user_cost import get_usage_cost
 from uuid_extensions import uuid7
-from ward import test
+import pytest
 
 from .fixtures import pg_dsn, test_developer_id
 
 
-@test("query: get_usage_cost returns zero cost when no usage records exist")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_query_get_usage_cost_returns_zero_cost_when_no_usage_records_exist(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """query: get_usage_cost returns zero cost when no usage records exist"""
     """Test that get_usage_cost returns zero cost when no usage records exist."""
     pool = await create_db_pool(dsn=dsn)
 
@@ -39,8 +40,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert isinstance(cost_record["month"], datetime), "Month should be a datetime"
 
 
-@test("query: get_usage_cost returns the correct cost when records exist")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_query_get_usage_cost_returns_the_correct_cost_when_records_exist(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """query: get_usage_cost returns the correct cost when records exist"""
     """Test that get_usage_cost returns the correct cost for a developer with usage records."""
     pool = await create_db_pool(dsn=dsn)
 
@@ -85,8 +87,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert isinstance(cost_record["month"], datetime), "Month should be a datetime"
 
 
-@test("query: get_usage_cost returns correct results for custom API usage")
-async def _(dsn=pg_dsn) -> None:
+@pytest.mark.asyncio
+async def test_query_get_usage_cost_returns_correct_results_for_custom_api_usage(dsn=pg_dsn) -> None:
+    """query: get_usage_cost returns correct results for custom API usage"""
     """Test that get_usage_cost only includes non-custom API usage in the cost calculation."""
     pool = await create_db_pool(dsn=dsn)
 
@@ -142,8 +145,9 @@ async def _(dsn=pg_dsn) -> None:
     )
 
 
-@test("query: get_usage_cost handles inactive developers correctly")
-async def _(dsn=pg_dsn) -> None:
+@pytest.mark.asyncio
+async def test_query_get_usage_cost_handles_inactive_developers_correctly(dsn=pg_dsn) -> None:
+    """query: get_usage_cost handles inactive developers correctly"""
     """Test that get_usage_cost correctly handles inactive developers."""
     pool = await create_db_pool(dsn=dsn)
 
@@ -189,8 +193,9 @@ async def _(dsn=pg_dsn) -> None:
     )
 
 
-@test("query: get_usage_cost sorts by month correctly and returns the most recent")
-async def _(dsn=pg_dsn) -> None:
+@pytest.mark.asyncio
+async def test_query_get_usage_cost_sorts_by_month_correctly_and_returns_the_most_recent(dsn=pg_dsn) -> None:
+    """query: get_usage_cost sorts by month correctly and returns the most recent"""
     """Test that get_usage_cost returns the most recent month's cost when multiple months exist."""
     pool = await create_db_pool(dsn=dsn)
 

@@ -17,13 +17,14 @@ from agents_api.common.protocol.tasks import (
 from agents_api.common.utils.datetime import utcnow
 from agents_api.common.utils.workflows import get_workflow_name
 from uuid_extensions import uuid7
-from ward import raises, test
+import pytest
 
 from tests.utils import generate_transition
 
 
-@test("utility: prepare_for_step - underscore")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_prepare_for_step_underscore():
+    """utility: prepare_for_step - underscore"""
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=(
@@ -61,8 +62,9 @@ async def _():
         assert result["_"] == {"current_input": "value 1"}
 
 
-@test("utility: prepare_for_step - label lookup in step")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_prepare_for_step_label_lookup_in_step():
+    """utility: prepare_for_step - label lookup in step"""
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=(
@@ -104,8 +106,9 @@ async def _():
         assert result["steps"]["second step"]["output"] == {"z": "3"}
 
 
-@test("utility: prepare_for_step - global state")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_prepare_for_step_global_state():
+    """utility: prepare_for_step - global state"""
     with patch(
         "agents_api.common.protocol.tasks.StepContext.get_inputs",
         return_value=([], [], {"user_name": "John", "count": 10, "has_data": True}),
@@ -141,8 +144,9 @@ async def _():
         assert result["state"]["has_data"] is True
 
 
-@test("utility: get_workflow_name")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_get_workflow_name():
+    """utility: get_workflow_name"""
     transition = Transition(
         id=uuid.uuid4(),
         execution_id=uuid.uuid4(),
@@ -199,8 +203,9 @@ async def _():
     assert get_workflow_name(transition) == "subworkflow"
 
 
-@test("utility: get_workflow_name - raises")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_get_workflow_name_raises():
+    """utility: get_workflow_name - raises"""
     transition = Transition(
         id=uuid.uuid4(),
         execution_id=uuid.uuid4(),
@@ -212,7 +217,7 @@ async def _():
         next=TransitionTarget(workflow="main", step=1, scope_id=uuid.uuid4()),
     )
 
-    with raises(AssertionError):
+    with pytest.raises(AssertionError):
         transition.current = TransitionTarget(
             workflow="`main[2].mapreduce[0][2],0",
             step=0,
@@ -220,15 +225,15 @@ async def _():
         )
         get_workflow_name(transition)
 
-    with raises(AssertionError):
+    with pytest.raises(AssertionError):
         transition.current = TransitionTarget(workflow="PAR:`", step=0, scope_id=uuid.uuid4())
         get_workflow_name(transition)
 
-    with raises(AssertionError):
+    with pytest.raises(AssertionError):
         transition.current = TransitionTarget(workflow="`", step=0, scope_id=uuid.uuid4())
         get_workflow_name(transition)
 
-    with raises(AssertionError):
+    with pytest.raises(AssertionError):
         transition.current = TransitionTarget(
             workflow="PAR:`subworkflow[2].mapreduce[0][3],0",
             step=0,
@@ -237,8 +242,9 @@ async def _():
         get_workflow_name(transition)
 
 
-@test("utility: get_inputs - 2 parallel subworkflows")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_get_inputs_2_parallel_subworkflows():
+    """utility: get_inputs - 2 parallel subworkflows"""
     uuid7()
     subworkflow1_scope_id = uuid7()
     subworkflow2_scope_id = uuid7()

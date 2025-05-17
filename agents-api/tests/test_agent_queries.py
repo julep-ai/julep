@@ -20,13 +20,14 @@ from agents_api.queries.agents import (
 )
 from fastapi import HTTPException
 from uuid_extensions import uuid7
-from ward import raises, test
+import pytest
 
 from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_project
 
 
-@test("query: create agent sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_create_agent_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: create agent sql"""
     """Test that an agent can be successfully created."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -41,8 +42,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     )  # type: ignore[not-callable]
 
 
-@test("query: create agent with project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+@pytest.mark.asyncio
+async def test_query_create_agent_with_project_sql(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+    """query: create agent with project sql"""
     """Test that an agent can be successfully created with a project."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -60,13 +62,14 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     assert result.project == project.canonical_name
 
 
-@test("query: create agent with invalid project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_create_agent_with_invalid_project_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: create agent with invalid project sql"""
     """Test that creating an agent with an invalid project raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await create_agent(
             developer_id=developer_id,
             data=CreateAgentRequest(
@@ -82,8 +85,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
-@test("query: create or update agent sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_create_or_update_agent_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: create or update agent sql"""
     """Test that an agent can be successfully created or updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -101,8 +105,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     )  # type: ignore[not-callable]
 
 
-@test("query: create or update agent with project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+@pytest.mark.asyncio
+async def test_query_create_or_update_agent_with_project_sql(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+    """query: create or update agent with project sql"""
     """Test that an agent can be successfully created or updated with a project."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -123,8 +128,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     assert result.project == project.canonical_name
 
 
-@test("query: update agent sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_update_agent_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: update agent sql"""
     """Test that an existing agent's information can be successfully updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -150,8 +156,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert result.metadata == {"hello": "world"}
 
 
-@test("query: update agent with project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, project=test_project):
+@pytest.mark.asyncio
+async def test_query_update_agent_with_project_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, project=test_project):
+    """query: update agent with project sql"""
     """Test that an existing agent's information can be successfully updated with a project."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -174,12 +181,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, projec
     assert result.project == project.canonical_name
 
 
-@test("query: update agent, project does not exist")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_update_agent_project_does_not_exist(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: update agent, project does not exist"""
     """Test that an existing agent's information can be successfully updated with a project that does not exist."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await update_agent(
             agent_id=agent.id,
             developer_id=developer_id,
@@ -198,8 +206,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
-@test("query: patch agent sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_patch_agent_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: patch agent sql"""
     """Test that an agent can be successfully patched."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -222,8 +231,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert result.default_settings["temperature"] == 1.0
 
 
-@test("query: patch agent with project sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, project=test_project):
+@pytest.mark.asyncio
+async def test_query_patch_agent_with_project_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, project=test_project):
+    """query: patch agent with project sql"""
     """Test that an agent can be successfully patched with a project."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -257,12 +267,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, projec
     assert result.project == project.canonical_name
 
 
-@test("query: patch agent, project does not exist")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_patch_agent_project_does_not_exist(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: patch agent, project does not exist"""
     """Test that an agent can be successfully patched with a project that does not exist."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await patch_agent(
             agent_id=agent.id,
             developer_id=developer_id,
@@ -280,19 +291,21 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert "Project 'invalid_project' not found" in exc.raised.detail
 
 
-@test("query: get agent not exists sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_get_agent_not_exists_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: get agent not exists sql"""
     """Test that retrieving a non-existent agent raises an exception."""
 
     agent_id = uuid7()
     pool = await create_db_pool(dsn=dsn)
 
-    with raises(Exception):
+    with pytest.pytest.raises(Exception):
         await get_agent(agent_id=agent_id, developer_id=developer_id, connection_pool=pool)  # type: ignore[not-callable]
 
 
-@test("query: get agent exists sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_get_agent_exists_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: get agent exists sql"""
     """Test that retrieving an existing agent returns the correct agent information."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -312,8 +325,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert result.metadata == agent.metadata
 
 
-@test("query: list agents sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_list_agents_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: list agents sql"""
     """Test that listing agents returns a collection of agent information."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -323,8 +337,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert all(isinstance(agent, Agent) for agent in result)
 
 
-@test("query: list agents with project filter sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+@pytest.mark.asyncio
+async def test_query_list_agents_with_project_filter_sql(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
+    """query: list agents with project filter sql"""
     """Test that listing agents with a project filter returns the correct agents."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -349,12 +364,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, project=test_project):
     assert any(agent.project == project.canonical_name for agent in result)
 
 
-@test("query: list agents sql, invalid sort direction")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_list_agents_sql_invalid_sort_direction(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: list agents sql, invalid sort direction"""
     """Test that listing agents with an invalid sort direction raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_agents(
             developer_id=developer_id,
             connection_pool=pool,
@@ -365,8 +381,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert exc.raised.detail == "Invalid sort direction"
 
 
-@test("query: delete agent sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_delete_agent_sql(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: delete agent sql"""
     """Test that an agent can be successfully deleted."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -388,7 +405,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)
 
-    with raises(Exception):
+    with pytest.pytest.raises(Exception):
         await get_agent(
             developer_id=developer_id,
             agent_id=create_result.id,

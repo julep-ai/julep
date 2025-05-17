@@ -6,11 +6,11 @@ import sys
 from collections import deque
 
 from agents_api.common.utils.memory import total_size
-from ward import test
+import pytest
 
 
-@test("total_size calculates correct size for basic types")
-def test_total_size_basic_types():
+def test_total_size_calculates_correct_size_for_basic_types():
+    """total_size calculates correct size for basic types"""
     # Integer
     assert total_size(42) == sys.getsizeof(42)
 
@@ -27,8 +27,8 @@ def test_total_size_basic_types():
     assert total_size(None) == sys.getsizeof(None)
 
 
-@test("total_size correctly handles container types")
-def test_total_size_containers():
+def test_total_size_correctly_handles_container_types():
+    """total_size correctly handles container types"""
     # List
     lst = [1, 2, 3, 4, 5]
     expected_min = sys.getsizeof(lst) + sum(sys.getsizeof(i) for i in lst)
@@ -57,8 +57,8 @@ def test_total_size_containers():
     assert total_size(dq) == expected_min
 
 
-@test("total_size correctly handles nested objects")
-def test_total_size_nested():
+def test_total_size_correctly_handles_nested_objects():
+    """total_size correctly handles nested objects"""
     # Simple nested list
     nested_list = [1, [2, 3], [4, [5, 6]]]
     assert total_size(nested_list) > sys.getsizeof(nested_list)
@@ -75,8 +75,8 @@ def test_total_size_nested():
     assert total_size(complex_obj) > sys.getsizeof(complex_obj)
 
 
-@test("total_size handles custom objects")
-def test_total_size_custom_objects():
+def test_total_size_handles_custom_objects():
+    """total_size handles custom objects"""
     class Person:
         def __init__(self, name: str, age: int):
             self.name = name
@@ -103,8 +103,8 @@ def test_total_size_custom_objects():
     )
 
 
-@test("total_size handles objects with circular references")
-def test_total_size_circular_refs():
+def test_total_size_handles_objects_with_circular_references():
+    """total_size handles objects with circular references"""
     # List with circular reference
     a = [1, 2, 3]
     a.append(a)  # a contains itself
@@ -122,8 +122,8 @@ def test_total_size_circular_refs():
     assert size > 0
 
 
-@test("total_size with custom handlers")
-def test_total_size_custom_handlers():
+def test_total_size_with_custom_handlers():
+    """total_size with custom handlers"""
     class CustomContainer:
         def __init__(self, items):
             self.items = items

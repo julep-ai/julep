@@ -1,10 +1,11 @@
 import spacy
 from agents_api.common.nlp import clean_keyword, extract_keywords, text_to_keywords
-from ward import test
+import pytest
 
 
-@test("utility: clean_keyword")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_clean_keyword():
+    """utility: clean_keyword"""
     assert clean_keyword("Hello, World!") == "Hello World"
 
     # Basic cleaning
@@ -26,8 +27,9 @@ async def _():
     assert clean_keyword("- try") == "try"
 
 
-@test("utility: extract_keywords - split_chunks=False")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_extract_keywords_split_chunks_false():
+    """utility: extract_keywords - split_chunks=False"""
     nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat"])
     doc = nlp("John Doe is a software engineer at Google.")
     assert set(extract_keywords(doc, split_chunks=False)) == {
@@ -37,8 +39,9 @@ async def _():
     }
 
 
-@test("utility: extract_keywords - split_chunks=True")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_extract_keywords_split_chunks_true():
+    """utility: extract_keywords - split_chunks=True"""
     nlp = spacy.load("en_core_web_sm", exclude=["lemmatizer", "textcat"])
     doc = nlp("John Doe is a software engineer at Google.")
     assert set(extract_keywords(doc, split_chunks=True)) == {
@@ -50,8 +53,9 @@ async def _():
     }
 
 
-@test("utility: text_to_keywords - split_chunks=False")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_text_to_keywords_split_chunks_false():
+    """utility: text_to_keywords - split_chunks=False"""
     test_cases = [
         # Single words
         ("test", {"test"}),
@@ -119,8 +123,9 @@ async def _():
         )
 
 
-@test("utility: text_to_keywords - split_chunks=True")
-async def _():
+@pytest.mark.asyncio
+async def test_utility_text_to_keywords_split_chunks_true():
+    """utility: text_to_keywords - split_chunks=True"""
     test_cases = [
         # Single words
         ("test", {"test"}),

@@ -15,7 +15,7 @@ from agents_api.queries.executions.create_execution_transition import (
 )
 from asyncpg import Pool
 from uuid_extensions import uuid7
-from ward import test
+import pytest
 
 from tests.fixtures import (
     custom_scope_id,
@@ -26,8 +26,9 @@ from tests.fixtures import (
 )
 
 
-@test("query: list execution inputs data")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_execution_inputs_data(
+    """query: list execution inputs data"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     scope_id=custom_scope_id,
@@ -113,8 +114,9 @@ async def _(
     assert transitions[2].output == {"inside_evaluate": "inside evaluate"}
 
 
-@test("query: list execution state data")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_execution_state_data(
+    """query: list execution state data"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     scope_id=custom_scope_id,
@@ -263,8 +265,9 @@ async def create_transition(
     )
 
 
-@test("query: list execution inputs data: search_window")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_execution_inputs_data_search_window(
+    """query: list execution inputs data: search_window"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     scope_id=custom_scope_id,
@@ -318,8 +321,9 @@ async def _(
     assert transitions_without_search_window[1].output == {"step_step": "step step"}
 
 
-@test("query: list execution state data: search_window")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_execution_state_data_search_window(
+    """query: list execution state data: search_window"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     scope_id=custom_scope_id,

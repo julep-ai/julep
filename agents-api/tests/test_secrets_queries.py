@@ -9,13 +9,14 @@ from agents_api.queries.secrets.delete import delete_secret
 from agents_api.queries.secrets.get_by_name import get_secret_by_name
 from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.secrets.update import update_secret
-from ward import test
+import pytest
 
 from tests.fixtures import clean_secrets, pg_dsn, test_developer_id
 
 
-@test("query: create secret")
-async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_create_secret(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    """query: create secret"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create secret with both developer_id
@@ -41,8 +42,9 @@ async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer
     assert agent_secret.value == "ENCRYPTED"
 
 
-@test("query: list secrets")
-async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_list_secrets(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    """query: list secrets"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create test secrets first - use unique but valid identifiers
@@ -87,8 +89,9 @@ async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer
     assert any(secret.value == "sk_test_list_2" for secret in secrets)
 
 
-@test("query: list secrets (decrypt=False)")
-async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_list_secrets_decrypt_false(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    """query: list secrets (decrypt=False)"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create test secrets first - use unique but valid identifiers
@@ -132,8 +135,9 @@ async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer
     assert all(secret.value == "ENCRYPTED" for secret in secrets)
 
 
-@test("query: get secret by name")
-async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_get_secret_by_name(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    """query: get secret by name"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first
@@ -160,8 +164,9 @@ async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer
     assert retrieved_secret.value == "sk_get_test_1"
 
 
-@test("query: get secret by name (decrypt=False)")
-async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_get_secret_by_name_decrypt_false(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    """query: get secret by name (decrypt=False)"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first
@@ -188,8 +193,9 @@ async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer
     assert retrieved_secret.value == "ENCRYPTED"
 
 
-@test("query: update secret")
-async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_update_secret(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    """query: update secret"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first
@@ -243,8 +249,9 @@ async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer
     assert partial_update.metadata == updated_metadata  # Should remain from previous update
 
 
-@test("query: delete secret")
-async def _(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_delete_secret(clean_secrets=clean_secrets, dsn=pg_dsn, developer_id=test_developer_id):
+    """query: delete secret"""
     pool = await create_db_pool(dsn=dsn)
 
     # Create a test secret first
