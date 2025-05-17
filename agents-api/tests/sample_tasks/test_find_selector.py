@@ -10,8 +10,8 @@
 # this_dir = os.path.dirname(__file__)
 
 
-# @test("workflow sample: find-selector create task")
-# async def _(
+def test_workflow_sample_find_selector_create_task(
+    """workflow sample: find-selector create task"""
 #     cozo_client=cozo_client,
 #     developer_id=test_developer_id,
 #     agent=test_agent,
@@ -39,8 +39,8 @@
 #             ).raise_for_status()
 
 
-# @test("workflow sample: find-selector start with bad input should fail")
-# async def _(
+def test_workflow_sample_find_selector_start_with_bad_input_should_fail(
+    """workflow sample: find-selector start with bad input should fail"""
 #     cozo_client=cozo_client,
 #     developer_id=test_developer_id,
 #     agent=test_agent,
@@ -69,7 +69,7 @@
 
 #             execution_data = dict(input={"test": "input"})
 
-#             with raises(BaseException):
+#             with pytest.pytest.raises(BaseException):
 #                 make_request(
 #                     method="POST",
 #                     url=f"/tasks/{task_id}/executions",
@@ -77,8 +77,8 @@
 #                 ).raise_for_status()
 
 
-# @test("workflow sample: find-selector start with correct input")
-# async def _(
+def test_workflow_sample_find_selector_start_with_correct_input(
+    """workflow sample: find-selector start with correct input"""
 #     cozo_client=cozo_client,
 #     developer_id=test_developer_id,
 #     agent=test_agent,

@@ -1,13 +1,13 @@
 # Tests for agent routes
 
 from uuid_extensions import uuid7
-from ward import test
+import pytest
 
 from tests.fixtures import client, make_request, test_agent, test_project
 
 
-@test("route: unauthorized should fail")
-def _(client=client):
+def test_route_unauthorized_should_fail(client=client):
+    """route: unauthorized should fail"""
     data = {
         "name": "test agent",
         "about": "test agent about",
@@ -23,8 +23,8 @@ def _(client=client):
     assert response.status_code == 403
 
 
-@test("route: create agent")
-def _(make_request=make_request):
+def test_route_create_agent(make_request=make_request):
+    """route: create agent"""
     data = {
         "name": "test agent",
         "about": "test agent about",
@@ -40,8 +40,8 @@ def _(make_request=make_request):
     assert response.status_code == 201
 
 
-@test("route: create agent with project")
-def _(make_request=make_request, project=test_project):
+def test_route_create_agent_with_project(make_request=make_request, project=test_project):
+    """route: create agent with project"""
     data = {
         "name": "test agent with project",
         "about": "test agent about",
@@ -59,8 +59,8 @@ def _(make_request=make_request, project=test_project):
     assert response.json()["project"] == project.canonical_name
 
 
-@test("route: create agent with instructions")
-def _(make_request=make_request):
+def test_route_create_agent_with_instructions(make_request=make_request):
+    """route: create agent with instructions"""
     data = {
         "name": "test agent",
         "about": "test agent about",
@@ -77,8 +77,8 @@ def _(make_request=make_request):
     assert response.status_code == 201
 
 
-@test("route: create or update agent")
-def _(make_request=make_request):
+def test_route_create_or_update_agent(make_request=make_request):
+    """route: create or update agent"""
     agent_id = str(uuid7())
 
     data = {
@@ -97,8 +97,8 @@ def _(make_request=make_request):
     assert response.status_code == 201
 
 
-@test("route: create or update agent with project")
-def _(make_request=make_request, project=test_project):
+def test_route_create_or_update_agent_with_project(make_request=make_request, project=test_project):
+    """route: create or update agent with project"""
     agent_id = str(uuid7())
 
     data = {
@@ -119,8 +119,8 @@ def _(make_request=make_request, project=test_project):
     assert response.json()["project"] == project.canonical_name
 
 
-@test("route: get agent not exists")
-def _(make_request=make_request):
+def test_route_get_agent_not_exists(make_request=make_request):
+    """route: get agent not exists"""
     agent_id = str(uuid7())
 
     response = make_request(
@@ -131,8 +131,8 @@ def _(make_request=make_request):
     assert response.status_code == 404
 
 
-@test("route: get agent exists")
-def _(make_request=make_request, agent=test_agent):
+def test_route_get_agent_exists(make_request=make_request, agent=test_agent):
+    """route: get agent exists"""
     agent_id = str(agent.id)
 
     response = make_request(
@@ -143,8 +143,8 @@ def _(make_request=make_request, agent=test_agent):
     assert response.status_code != 404
 
 
-@test("route: delete agent")
-def _(make_request=make_request):
+def test_route_delete_agent(make_request=make_request):
+    """route: delete agent"""
     data = {
         "name": "test agent",
         "about": "test agent about",
@@ -174,8 +174,8 @@ def _(make_request=make_request):
     assert response.status_code == 404
 
 
-@test("route: update agent")
-def _(make_request=make_request, agent=test_agent):
+def test_route_update_agent(make_request=make_request, agent=test_agent):
+    """route: update agent"""
     data = {
         "name": "updated agent",
         "about": "updated agent about",
@@ -206,8 +206,8 @@ def _(make_request=make_request, agent=test_agent):
     assert "test" not in agent["metadata"]
 
 
-@test("route: update agent with project")
-def _(make_request=make_request, agent=test_agent, project=test_project):
+def test_route_update_agent_with_project(make_request=make_request, agent=test_agent, project=test_project):
+    """route: update agent with project"""
     data = {
         "name": "updated agent with project",
         "about": "updated agent about",
@@ -239,8 +239,8 @@ def _(make_request=make_request, agent=test_agent, project=test_project):
     assert agent["project"] == project.canonical_name
 
 
-@test("route: patch agent")
-def _(make_request=make_request, agent=test_agent):
+def test_route_patch_agent(make_request=make_request, agent=test_agent):
+    """route: patch agent"""
     agent_id = str(agent.id)
 
     data = {
@@ -271,8 +271,8 @@ def _(make_request=make_request, agent=test_agent):
     assert "hello" in agent["metadata"]
 
 
-@test("route: patch agent with project")
-def _(make_request=make_request, agent=test_agent, project=test_project):
+def test_route_patch_agent_with_project(make_request=make_request, agent=test_agent, project=test_project):
+    """route: patch agent with project"""
     agent_id = str(agent.id)
 
     data = {
@@ -305,8 +305,8 @@ def _(make_request=make_request, agent=test_agent, project=test_project):
     assert agent["project"] == project.canonical_name
 
 
-@test("route: list agents")
-def _(make_request=make_request):
+def test_route_list_agents(make_request=make_request):
+    """route: list agents"""
     response = make_request(
         method="GET",
         url="/agents",
@@ -320,8 +320,8 @@ def _(make_request=make_request):
     assert len(agents) > 0
 
 
-@test("route: list agents with project filter")
-def _(make_request=make_request, project=test_project):
+def test_route_list_agents_with_project_filter(make_request=make_request, project=test_project):
+    """route: list agents with project filter"""
     # First create an agent with the project
     data = {
         "name": "test agent for project filter",
@@ -354,8 +354,8 @@ def _(make_request=make_request, project=test_project):
     assert any(agent["project"] == project.canonical_name for agent in agents)
 
 
-@test("route: list agents with metadata filter")
-def _(make_request=make_request):
+def test_route_list_agents_with_metadata_filter(make_request=make_request):
+    """route: list agents with metadata filter"""
     response = make_request(
         method="GET",
         url="/agents",

@@ -42,7 +42,7 @@ from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
-from ward import fixture
+import pytest
 
 from .utils import (
     get_localstack,
@@ -54,7 +54,7 @@ from .utils import (
 )
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="global")
 def pg_dsn():
     with get_pg_dsn() as pg_dsn:
         os.environ["PG_DSN"] = pg_dsn
@@ -65,7 +65,7 @@ def pg_dsn():
             del os.environ["PG_DSN"]
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="global")
 def test_developer_id():
     if not multi_tenant_mode:
         return UUID(int=0)
@@ -73,7 +73,7 @@ def test_developer_id():
     return uuid7()
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="global")
 async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
     pool = await create_db_pool(dsn=dsn)
     return await get_developer(
@@ -82,7 +82,7 @@ async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
     )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_project(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
 
@@ -96,14 +96,14 @@ async def test_project(dsn=pg_dsn, developer=test_developer):
     )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 def patch_embed_acompletion():
     output = {"role": "assistant", "content": "Hello, world!"}
     with patch_embed_acompletion_ctx(output) as (embed, acompletion):
         yield embed, acompletion
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_agent(dsn=pg_dsn, developer=test_developer, project=test_project):
     pool = await create_db_pool(dsn=dsn)
 
@@ -120,7 +120,7 @@ async def test_agent(dsn=pg_dsn, developer=test_developer, project=test_project)
     )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_user(dsn=pg_dsn, developer=test_developer):
     pool = await create_db_pool(dsn=dsn)
 
@@ -134,7 +134,7 @@ async def test_user(dsn=pg_dsn, developer=test_developer):
     )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
     pool = await create_db_pool(dsn=dsn)
     return await create_file(
@@ -149,7 +149,7 @@ async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
     )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
     resp = await create_doc(
@@ -182,7 +182,7 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     # )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     pool = await create_db_pool(dsn=dsn)
     embedding_with_confidence_0 = make_vector_with_similarity(d=0.0)
@@ -232,7 +232,7 @@ async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test
     yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
     pool = await create_db_pool(dsn=dsn)
     resp = await create_doc(
@@ -265,7 +265,7 @@ async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
     # )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     pool = await create_db_pool(dsn=dsn)
     return await create_task(
@@ -283,12 +283,12 @@ async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def random_email():
     return f"{''.join([random.choice(string.ascii_lowercase) for _ in range(10)])}@mail.com"
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_new_developer(dsn=pg_dsn, email=random_email):
     pool = await create_db_pool(dsn=dsn)
     dev_id = uuid7()
@@ -307,7 +307,7 @@ async def test_new_developer(dsn=pg_dsn, email=random_email):
     )
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_session(
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -328,7 +328,7 @@ async def test_session(
     )
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="global")
 async def test_execution(
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -354,12 +354,12 @@ async def test_execution(
     yield execution
 
 
-@fixture
+@pytest.fixture
 def custom_scope_id():
     return uuid7()
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_execution_started(
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -401,7 +401,7 @@ async def test_execution_started(
     yield execution
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="global")
 async def test_transition(
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -423,7 +423,7 @@ async def test_transition(
     yield transition
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def test_tool(
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -457,7 +457,7 @@ SAMPLE_MODELS = [
 ]
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="global")
 def client(_dsn=pg_dsn):
     with (
         TestClient(app=app) as client,
@@ -469,7 +469,7 @@ def client(_dsn=pg_dsn):
         yield client
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="global")
 async def make_request(client=client, developer_id=test_developer_id):
     def _make_request(method, url, **kwargs):
         headers = kwargs.pop("headers", {})
@@ -488,7 +488,7 @@ async def make_request(client=client, developer_id=test_developer_id):
     return _make_request
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="global")
 async def s3_client():
     with get_localstack() as localstack:
         s3_endpoint = localstack.get_url()
@@ -510,7 +510,7 @@ async def s3_client():
             app.state.s3_client = None
 
 
-@fixture(scope="test")
+@pytest.fixture(scope="test")
 async def clean_secrets(dsn=pg_dsn, developer_id=test_developer_id):
     async def purge() -> None:
         pool = await create_db_pool(dsn=dsn)

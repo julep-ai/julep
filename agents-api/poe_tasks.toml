@@ -52,4 +52,4 @@ codegen = [
 
 [tasks.test]
 env = { AGENTS_API_TESTING = "true", PYTHONPATH = "{PYTHONPATH}:." }
-cmd = "ward test --exclude .venv"
+cmd = "pytest"

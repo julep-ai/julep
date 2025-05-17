@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from julep_cli import app
 from typer.testing import CliRunner
-from ward import test
+import pytest
 
 
 def create_runner(env: dict | None = None):
@@ -14,8 +14,8 @@ def create_runner(env: dict | None = None):
 mock_config_dir = Path("/tmp/mock/.config/julep")
 
 
-@test("auth command should save API key when provided via command line")
-def _():
+def test_auth_command_should_save_api_key_when_provided_via_command_line():
+    """auth command should save API key when provided via command line"""
     test_api_key = "test-api-key-123"
 
     runner = create_runner()
@@ -31,8 +31,8 @@ def _():
         mock_save.assert_called_once_with({"api_key": test_api_key})
 
 
-@test("auth command should use API key from environment if not provided")
-def _():
+def test_auth_command_should_use_api_key_from_environment_if_not_provided():
+    """auth command should use API key from environment if not provided"""
     test_api_key = "test-env-api-key-456"
 
     runner = create_runner({"JULEP_API_KEY": test_api_key})
@@ -48,8 +48,8 @@ def _():
         mock_save.assert_called_once_with({"api_key": test_api_key})
 
 
-@test("auth command should fail when no API key is provided")
-def _():
+def test_auth_command_should_fail_when_no_api_key_is_provided():
+    """auth command should fail when no API key is provided"""
     runner = create_runner()
 
     result = runner.invoke(app, ["auth"])
@@ -58,8 +58,8 @@ def _():
     assert "No API key provided" in result.stdout
 
 
-@test("auth command should prompt for API key if not provided and not in env")
-def _():
+def test_auth_command_should_prompt_for_api_key_if_not_provided_and_not_in_env():
+    """auth command should prompt for API key if not provided and not in env"""
     test_api_key = "test-prompt-key-789"
 
     runner = create_runner()

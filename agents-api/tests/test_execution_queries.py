@@ -18,7 +18,7 @@ from agents_api.queries.executions.lookup_temporal_data import lookup_temporal_d
 from fastapi import HTTPException
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
-from ward import raises, test
+import pytest
 
 from tests.fixtures import (
     pg_dsn,
@@ -31,8 +31,9 @@ from tests.fixtures import (
 MODEL = "gpt-4o-mini"
 
 
-@test("query: create execution")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
+@pytest.mark.asyncio
+async def test_query_create_execution(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
+    """query: create execution"""
     pool = await create_db_pool(dsn=dsn)
     workflow_handle = WorkflowHandle(
         client=None,
@@ -56,8 +57,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
     assert execution.input == {"test": "test"}
 
 
-@test("query: get execution")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+@pytest.mark.asyncio
+async def test_query_get_execution(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+    """query: get execution"""
     pool = await create_db_pool(dsn=dsn)
     result = await get_execution(
         execution_id=execution.id,
@@ -69,8 +71,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result.status == "queued"
 
 
-@test("query: lookup temporal id")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+@pytest.mark.asyncio
+async def test_query_lookup_temporal_id(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+    """query: lookup temporal id"""
     pool = await create_db_pool(dsn=dsn)
     result = await lookup_temporal_data(
         execution_id=execution.id,
@@ -82,8 +85,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result["id"]
 
 
-@test("query: list executions")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_executions(
+    """query: list executions"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     execution=test_execution_started,
@@ -101,8 +105,9 @@ async def _(
     assert result[0].status == "starting"
 
 
-@test("query: list executions, invalid limit")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_executions_invalid_limit(
+    """query: list executions, invalid limit"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     task=test_task,
@@ -110,7 +115,7 @@ async def _(
     """Test that listing executions with an invalid limit raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_executions(
             developer_id=developer_id,
             task_id=task.id,
@@ -121,7 +126,7 @@ async def _(
     assert exc.raised.status_code == 400
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_executions(
             developer_id=developer_id,
             task_id=task.id,
@@ -133,8 +138,9 @@ async def _(
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
 
-@test("query: list executions, invalid offset")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_executions_invalid_offset(
+    """query: list executions, invalid offset"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     task=test_task,
@@ -142,7 +148,7 @@ async def _(
     """Test that listing executions with an invalid offset raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_executions(
             developer_id=developer_id,
             task_id=task.id,
@@ -154,8 +160,9 @@ async def _(
     assert exc.raised.detail == "Offset must be >= 0"
 
 
-@test("query: list executions, invalid sort by")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_executions_invalid_sort_by(
+    """query: list executions, invalid sort by"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     task=test_task,
@@ -163,7 +170,7 @@ async def _(
     """Test that listing executions with an invalid sort by raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_executions(
             developer_id=developer_id,
             task_id=task.id,
@@ -175,8 +182,9 @@ async def _(
     assert exc.raised.detail == "Invalid sort field"
 
 
-@test("query: list executions, invalid sort direction")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_executions_invalid_sort_direction(
+    """query: list executions, invalid sort direction"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     task=test_task,
@@ -184,7 +192,7 @@ async def _(
     """Test that listing executions with an invalid sort direction raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.pytest.raises(HTTPException) as exc:
         await list_executions(
             developer_id=developer_id,
             task_id=task.id,
@@ -196,8 +204,9 @@ async def _(
     assert exc.raised.detail == "Invalid sort direction"
 
 
-@test("query: count executions")
-async def _(
+@pytest.mark.asyncio
+async def test_query_count_executions(
+    """query: count executions"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     execution=test_execution_started,
@@ -214,8 +223,9 @@ async def _(
     assert result["count"] > 0
 
 
-@test("query: create execution transition")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+@pytest.mark.asyncio
+async def test_query_create_execution_transition(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+    """query: create execution transition"""
     pool = await create_db_pool(dsn=dsn)
     scope_id = uuid7()
     result = await create_execution_transition(
@@ -235,8 +245,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result.output == {"result": "test"}
 
 
-@test("query: create execution transition - validate transition targets")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+@pytest.mark.asyncio
+async def test_query_create_execution_transition_validate_transition_targets(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution):
+    """query: create execution transition - validate transition targets"""
     pool = await create_db_pool(dsn=dsn)
     scope_id = uuid7()
     await create_execution_transition(
@@ -280,8 +291,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result.output == {"result": "test"}
 
 
-@test("query: create execution transition with execution update")
-async def _(
+@pytest.mark.asyncio
+async def test_query_create_execution_transition_with_execution_update(
+    """query: create execution transition with execution update"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     execution=test_execution_started,
@@ -307,8 +319,9 @@ async def _(
     assert result.output == {"result": "test"}
 
 
-@test("query: get execution with transitions count")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution_started):
+@pytest.mark.asyncio
+async def test_query_get_execution_with_transitions_count(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution_started):
+    """query: get execution with transitions count"""
     pool = await create_db_pool(dsn=dsn)
     result = await get_execution(
         execution_id=execution.id,
@@ -322,8 +335,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, execution=test_execution
     assert result.transition_count == 1
 
 
-@test("query: list executions with latest_executions view")
-async def _(
+@pytest.mark.asyncio
+async def test_query_list_executions_with_latest_executions_view(
+    """query: list executions with latest_executions view"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     execution=test_execution_started,
@@ -345,8 +359,9 @@ async def _(
     assert hasattr(result[0], "transition_count")
 
 
-@test("query: execution with finish transition")
-async def _(
+@pytest.mark.asyncio
+async def test_query_execution_with_finish_transition(
+    """query: execution with finish transition"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     execution=test_execution_started,
@@ -379,8 +394,9 @@ async def _(
     assert result.transition_count == 2  # init + finish
 
 
-@test("query: execution with error transition")
-async def _(
+@pytest.mark.asyncio
+async def test_query_execution_with_error_transition(
+    """query: execution with error transition"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     task=test_task,

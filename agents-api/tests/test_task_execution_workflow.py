@@ -57,11 +57,12 @@ from agents_api.workflows.task_execution import TaskExecutionWorkflow
 from aiohttp import test_utils
 from temporalio.exceptions import ApplicationError
 from temporalio.workflow import _NotInWorkflowEventLoopError
-from ward import raises, test
+import pytest
 
 
-@test("task execution workflow: handle function tool call step")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_function_tool_call_step():
+    """task execution workflow: handle function tool call step"""
     async def _resp():
         return "function_tool_call_response"
 
@@ -113,8 +114,9 @@ async def _():
         )
 
 
-@test("task execution workflow: handle integration tool call step")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_integration_tool_call_step():
+    """task execution workflow: handle integration tool call step"""
     async def _resp():
         return "integration_tool_call_response"
 
@@ -194,8 +196,9 @@ async def _():
         )
 
 
-@test("task execution workflow: handle integration tool call step, integration tools not found")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_integration_tool_call_step_integration_tools_not_found():
+    """task execution workflow: handle integration tool call step, integration tools not found"""
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1")
     execution_input = ExecutionInput(
@@ -237,7 +240,7 @@ async def _():
         )
         mock_list_secrets.return_value = []
         workflow.execute_activity.return_value = "integration_tool_call_response"
-        with raises(ApplicationError) as exc:
+        with pytest.raises(ApplicationError) as exc:
             wf.context = context
             wf.outcome = outcome
             await wf.handle_step(
@@ -246,8 +249,9 @@ async def _():
         assert str(exc.raised) == "Integration tool1 not found"
 
 
-@test("task execution workflow: handle api_call tool call step")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_api_call_tool_call_step():
+    """task execution workflow: handle api_call tool call step"""
     async def _resp():
         return "api_call_tool_call_response"
 
@@ -339,8 +343,9 @@ async def _():
         )
 
 
-@test("task execution workflow: handle api_call tool call step with Method Override")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_api_call_tool_call_step_with_method_override():
+    """task execution workflow: handle api_call tool call step with Method Override"""
     async def _resp():
         return "api_call_tool_call_response"
 
@@ -472,8 +477,9 @@ async def _():
         assert result["status_code"] == 200
 
 
-@test("task execution workflow: handle api call tool call step, include response content")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_api_call_tool_call_step_include_response_content():
+    """task execution workflow: handle api call tool call step, include response content"""
     # Create application with route
     app = aiohttp.web.Application()
 
@@ -572,8 +578,9 @@ async def _():
         assert result["status_code"] == 200
 
 
-@test("task execution workflow: handle system tool call step")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_system_tool_call_step():
+    """task execution workflow: handle system tool call step"""
     async def _resp():
         return "system_tool_call_response"
 
@@ -653,8 +660,9 @@ async def _():
         )
 
 
-@test("task execution workflow: handle switch step, index is positive")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_switch_step_index_is_positive():
+    """task execution workflow: handle switch step, index is positive"""
     wf = TaskExecutionWorkflow()
     step = SwitchStep(switch=[CaseThen(case="_", then=GetStep(get="key1"))])
     execution_input = ExecutionInput(
@@ -697,8 +705,9 @@ async def _():
         assert result == WorkflowResult(state=PartialTransition(output="switch_response"))
 
 
-@test("task execution workflow: handle switch step, index is negative")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_switch_step_index_is_negative():
+    """task execution workflow: handle switch step, index is negative"""
     wf = TaskExecutionWorkflow()
     step = SwitchStep(switch=[CaseThen(case="_", then=GetStep(get="key1"))])
     execution_input = ExecutionInput(
@@ -729,7 +738,7 @@ async def _():
     outcome = StepOutcome(output=-1)
     with patch("agents_api.workflows.task_execution.workflow") as workflow:
         workflow.logger = Mock()
-        with raises(ApplicationError):
+        with pytest.raises(ApplicationError):
             wf.context = context
             wf.outcome = outcome
             await wf.handle_step(
@@ -737,8 +746,9 @@ async def _():
             )
 
 
-@test("task execution workflow: handle switch step, index is zero")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_switch_step_index_is_zero():
+    """task execution workflow: handle switch step, index is zero"""
     wf = TaskExecutionWorkflow()
     step = SwitchStep(switch=[CaseThen(case="_", then=GetStep(get="key1"))])
     execution_input = ExecutionInput(
@@ -781,8 +791,9 @@ async def _():
         assert result == WorkflowResult(state=PartialTransition(output="switch_response"))
 
 
-@test("task execution workflow: handle prompt step, unwrap is True")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_prompt_step_unwrap_is_true():
+    """task execution workflow: handle prompt step, unwrap is True"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt="hi there", unwrap=True)
     execution_input = ExecutionInput(
@@ -824,8 +835,9 @@ async def _():
         workflow.execute_activity.assert_not_called()
 
 
-@test("task execution workflow: handle prompt step, unwrap is False, autorun tools is False")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_prompt_step_unwrap_is_false_autorun_tools_is_false():
+    """task execution workflow: handle prompt step, unwrap is False, autorun tools is False"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt="hi there", unwrap=False, auto_run_tools=False)
     execution_input = ExecutionInput(
@@ -912,8 +924,9 @@ async def _():
         workflow.execute_activity.assert_not_called()
 
 
-@test("task execution workflow: handle prompt step, function call")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_handle_prompt_step_function_call():
+    """task execution workflow: handle prompt step, function call"""
     async def _resp():
         return StepOutcome(output="function_call")
 
@@ -979,8 +992,9 @@ async def _():
         ])
 
 
-@test("task execution workflow: evaluate foreach step expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_foreach_step_expressions():
+    """task execution workflow: evaluate foreach step expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1057,8 +1071,9 @@ async def _():
         assert result == StepOutcome(output=3)
 
 
-@test("task execution workflow: evaluate ifelse step expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_ifelse_step_expressions():
+    """task execution workflow: evaluate ifelse step expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1135,8 +1150,9 @@ async def _():
         assert result == StepOutcome(output=3)
 
 
-@test("task execution workflow: evaluate return step expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_return_step_expressions():
+    """task execution workflow: evaluate return step expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1213,8 +1229,9 @@ async def _():
         assert result == StepOutcome(output={"x": 3})
 
 
-@test("task execution workflow: evaluate wait for input step expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_wait_for_input_step_expressions():
+    """task execution workflow: evaluate wait for input step expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1291,8 +1308,9 @@ async def _():
         assert result == StepOutcome(output={"x": 3})
 
 
-@test("task execution workflow: evaluate evaluate expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_evaluate_expressions():
+    """task execution workflow: evaluate evaluate expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1369,8 +1387,9 @@ async def _():
         assert result == StepOutcome(output={"x": 3})
 
 
-@test("task execution workflow: evaluate map reduce expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_map_reduce_expressions():
+    """task execution workflow: evaluate map reduce expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1447,8 +1466,9 @@ async def _():
         assert result == StepOutcome(output=3)
 
 
-@test("task execution workflow: evaluate set expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_set_expressions():
+    """task execution workflow: evaluate set expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1523,8 +1543,9 @@ async def _():
         assert result == StepOutcome(output={"x": 3})
 
 
-@test("task execution workflow: evaluate log expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_log_expressions():
+    """task execution workflow: evaluate log expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1599,8 +1620,9 @@ async def _():
         assert result == StepOutcome(output="5")
 
 
-@test("task execution workflow: evaluate switch expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_switch_expressions():
+    """task execution workflow: evaluate switch expressions"""
     wf = TaskExecutionWorkflow()
     step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
     execution_input = ExecutionInput(
@@ -1682,8 +1704,9 @@ async def _():
         assert result == StepOutcome(output=1)
 
 
-@test("task execution workflow: evaluate tool call expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_tool_call_expressions():
+    """task execution workflow: evaluate tool call expressions"""
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
     execution_input = ExecutionInput(
@@ -1781,8 +1804,9 @@ async def _():
         )
 
 
-@test("task execution workflow: evaluate yield expressions")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_yield_expressions():
+    """task execution workflow: evaluate yield expressions"""
     wf = TaskExecutionWorkflow()
     step = YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
     execution_input = ExecutionInput(
@@ -1867,8 +1891,9 @@ async def _():
         )
 
 
-@test("task execution workflow: evaluate yield expressions assertion")
-async def _():
+@pytest.mark.asyncio
+async def test_task_execution_workflow_evaluate_yield_expressions_assertion():
+    """task execution workflow: evaluate yield expressions assertion"""
     wf = TaskExecutionWorkflow()
     step = ToolCallStep(tool="tool1", arguments={"x": "$ 1 + 2"})
     execution_input = ExecutionInput(
@@ -1935,7 +1960,7 @@ async def _():
             ),
         )
         with (
-            raises(AssertionError),
+            pytest.raises(AssertionError),
             patch(
                 "agents_api.workflows.task_execution.base_evaluate_activity",
                 new=base_evaluate,

@@ -14,7 +14,7 @@ from agents_api.queries.tasks.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 from google.protobuf.json_format import MessageToDict
 from litellm import Choices, ModelResponse
-from ward import raises, skip, test
+import pytest
 
 from .fixtures import (
     pg_dsn,
@@ -25,9 +25,10 @@ from .fixtures import (
 from .utils import patch_integration_service, patch_testing_temporal
 
 
-@skip("needs to be fixed")
-@test("workflow: evaluate step single")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_evaluate_step_single(
+    """workflow: evaluate step single"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -65,9 +66,10 @@ async def _(
         assert result["hello"] == "world"
 
 
-@skip("needs to be fixed")
-@test("workflow: evaluate step multiple")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_evaluate_step_multiple(
+    """workflow: evaluate step multiple"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -108,9 +110,10 @@ async def _(
         assert result["hello"] == "world"
 
 
-@skip("needs to be fixed")
-@test("workflow: variable access in expressions")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_variable_access_in_expressions(
+    """workflow: variable access in expressions"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -151,9 +154,10 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: yield step")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_yield_step(
+    """workflow: yield step"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -201,9 +205,10 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: sleep step")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_sleep_step(
+    """workflow: sleep step"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -252,9 +257,10 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: return step direct")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_return_step_direct(
+    """workflow: return step direct"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -297,9 +303,10 @@ async def _(
         assert result["value"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: return step nested")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_return_step_nested(
+    """workflow: return step nested"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -349,9 +356,10 @@ async def _(
         assert result["value"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: log step")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_log_step(
+    """workflow: log step"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -400,9 +408,10 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: log step expression fail")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_log_step_expression_fail(
+    """workflow: log step expression fail"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -435,7 +444,7 @@ async def _(
     )
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
-        with raises(BaseException):
+        with pytest.pytest.raises(BaseException):
             execution, handle = await start_execution(
                 developer_id=developer_id,
                 task_id=task.id,
@@ -452,9 +461,10 @@ async def _(
             assert result["hello"] == data.input["test"]
 
 
-@skip("workflow: thread race condition")
-@test("workflow: system call - list agents")
-async def _(
+@pytest.mark.skip(reason="workflow: thread race condition")
+@pytest.mark.asyncio
+async def test_workflow_system_call_list_agents(
+    """workflow: system call - list agents"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -514,9 +524,10 @@ async def _(
         assert all("id" in agent for agent in result)
 
 
-@skip("needs to be fixed")
-@test("workflow: tool call api_call")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_tool_call_api_call(
+    """workflow: tool call api_call"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -575,9 +586,10 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: tool call api_call test retry")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_tool_call_api_call_test_retry(
+    """workflow: tool call api_call test retry"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -648,9 +660,10 @@ async def _(
         assert num_retries >= 2
 
 
-@skip("needs to be fixed")
-@test("workflow: tool call integration dummy")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_tool_call_integration_dummy(
+    """workflow: tool call integration dummy"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -703,9 +716,10 @@ async def _(
         assert result["test"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: tool call integration mocked weather")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_tool_call_integration_mocked_weather(
+    """workflow: tool call integration mocked weather"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -763,9 +777,10 @@ async def _(
             assert result == expected_output
 
 
-@skip("needs to be fixed")
-@test("workflow: wait for input step start")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_wait_for_input_step_start(
+    """workflow: wait for input step start"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -826,9 +841,10 @@ async def _(
         assert "wait_for_input_step" in activities_scheduled
 
 
-@skip("needs to be fixed")
-@test("workflow: foreach wait for input step start")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_foreach_wait_for_input_step_start(
+    """workflow: foreach wait for input step start"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -894,9 +910,10 @@ async def _(
         assert "for_each_step" in activities_scheduled
 
 
-@skip("needs to be fixed")
-@test("workflow: if-else step")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_if_else_step(
+    """workflow: if-else step"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -943,9 +960,10 @@ async def _(
         assert result["hello"] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
-@skip("needs to be fixed")
-@test("workflow: switch step")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_switch_step(
+    """workflow: switch step"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -1001,9 +1019,10 @@ async def _(
         assert result["hello"] == "world"
 
 
-@skip("needs to be fixed")
-@test("workflow: for each step")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_for_each_step(
+    """workflow: for each step"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -1049,9 +1068,10 @@ async def _(
         assert result[0]["hello"] == "world"
 
 
-@skip("needs to be fixed")
-@test("workflow: map reduce step")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_map_reduce_step(
+    """workflow: map reduce step"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -1101,9 +1121,10 @@ async def _(
 
 for p in [1, 3, 5]:
 
-    @skip("needs to be fixed")
-    @test(f"workflow: map reduce step parallel (parallelism={p})")
-    async def _(
+    @pytest.mark.skip(reason="needs to be fixed")
+    @pytest.mark.asyncio
+    async def test_workflow_map_reduce_step_parallel_parallelism_p(
+        """workflow: map reduce step parallel (parallelism={p})"""
         dsn=pg_dsn,
         developer_id=test_developer_id,
         agent=test_agent,
@@ -1157,9 +1178,10 @@ for p in [1, 3, 5]:
             ]
 
 
-@skip("needs to be fixed")
-@test("workflow: prompt step (python expression)")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_prompt_step_python_expression(
+    """workflow: prompt step (python expression)"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -1214,9 +1236,10 @@ async def _(
             assert result["role"] == "assistant"
 
 
-@skip("needs to be fixed")
-@test("workflow: prompt step")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_prompt_step(
+    """workflow: prompt step"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -1276,9 +1299,10 @@ async def _(
             assert result["role"] == "assistant"
 
 
-@skip("needs to be fixed")
-@test("workflow: prompt step unwrap")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_prompt_step_unwrap(
+    """workflow: prompt step unwrap"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -1337,9 +1361,10 @@ async def _(
             assert result == "Hello, world!"
 
 
-@skip("needs to be fixed")
-@test("workflow: set and get steps")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_set_and_get_steps(
+    """workflow: set and get steps"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -1380,9 +1405,10 @@ async def _(
         assert result == "test_value"
 
 
-@skip("needs to be fixed")
-@test("workflow: execute yaml task")
-async def _(
+@pytest.mark.skip(reason="needs to be fixed")
+@pytest.mark.asyncio
+async def test_workflow_execute_yaml_task(
+    """workflow: execute yaml task"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,

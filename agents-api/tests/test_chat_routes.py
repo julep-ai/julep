@@ -13,7 +13,7 @@ from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.chat.gather_messages import gather_messages
 from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
 from agents_api.queries.sessions.create_session import create_session
-from ward import test
+import pytest
 
 from .fixtures import (
     make_request,
@@ -28,16 +28,18 @@ from .fixtures import (
 )
 
 
-@test("chat: check that patching libs works")
-async def _(
+@pytest.mark.asyncio
+async def test_chat_check_that_patching_libs_works(
+    """chat: check that patching libs works"""
     _=patch_embed_acompletion,
 ):
     assert (await litellm.acompletion(model="gpt-4o-mini", messages=[])).id == "fake_id"
     assert (await litellm.aembedding())[0][0] == 1.0  # pytype: disable=missing-parameter
 
 
-@test("chat: check that non-recall gather_messages works")
-async def _(
+@pytest.mark.asyncio
+async def test_chat_check_that_non_recall_gather_messages_works(
+    """chat: check that non-recall gather_messages works"""
     developer=test_developer,
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -77,8 +79,9 @@ async def _(
     embed.assert_not_called()
 
 
-@test("chat: check that gather_messages works")
-async def _(
+@pytest.mark.asyncio
+async def test_chat_check_that_gather_messages_works(
+    """chat: check that gather_messages works"""
     developer=test_developer,
     dsn=pg_dsn,
     developer_id=test_developer_id,
@@ -125,8 +128,9 @@ async def _(
     acompletion.assert_not_called()
 
 
-@test("chat: check that chat route calls both mocks")
-async def _(
+@pytest.mark.asyncio
+async def test_chat_check_that_chat_route_calls_both_mocks(
+    """chat: check that chat route calls both mocks"""
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -167,8 +171,9 @@ async def _(
     acompletion.assert_called_once()
 
 
-@test("chat: check that render route works and does not call completion mock")
-async def _(
+@pytest.mark.asyncio
+async def test_chat_check_that_render_route_works_and_does_not_call_completion_mock(
+    """chat: check that render route works and does not call completion mock"""
     make_request=make_request,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -217,8 +222,9 @@ async def _(
     acompletion.assert_not_called()
 
 
-@test("query: prepare chat context")
-async def _(
+@pytest.mark.asyncio
+async def test_query_prepare_chat_context(
+    """query: prepare chat context"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     agent=test_agent,
@@ -237,8 +243,9 @@ async def _(
     assert len(context.toolsets) > 0
 
 
-@test("chat: test system template merging logic")
-async def _(
+@pytest.mark.asyncio
+async def test_chat_test_system_template_merging_logic(
+    """chat: test system template merging logic"""
     make_request=make_request,
     developer_id=test_developer_id,
     dsn=pg_dsn,
@@ -332,8 +339,9 @@ async def _(
     assert agent_data.name.upper() in messages1[0]["content"]
 
 
-@test("chat: validate the recall options for different modes in chat context")
-async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_chat_validate_the_recall_options_for_different_modes_in_chat_context(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
+    """chat: validate the recall options for different modes in chat context"""
     pool = await create_db_pool(dsn=dsn)
 
     session = await create_session(

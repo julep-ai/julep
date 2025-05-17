@@ -51,7 +51,8 @@ dev = [
   "pyright>=1.1.391",
   "ruff>=0.8.4",
   "textual-dev>=1.7.0",
-  "ward>=0.68.0b0",
+  "pytest>=8.3.3",
+  "pytest-asyncio>=0.24.0",
 ]
 
 [tool.setuptools]

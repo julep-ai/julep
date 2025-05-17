@@ -5,11 +5,12 @@ from agents_api.activities.task_steps.tool_call_step import (
     generate_call_id,
 )
 from agents_api.autogen.openapi_model import CreateToolRequest, SystemDef, Tool
-from ward import test
+import pytest
 
 
-@test("generate_call_id returns call ID with proper format")
-async def _():
+@pytest.mark.asyncio
+async def test_generate_call_id_returns_call_id_with_proper_format():
+    """generate_call_id returns call ID with proper format"""
     # Generate a call ID
     call_id = generate_call_id()
 
@@ -21,8 +22,9 @@ async def _():
     assert "=" not in call_id
 
 
-@test("construct_tool_call correctly formats function tool")
-async def _():
+@pytest.mark.asyncio
+async def test_construct_tool_call_correctly_formats_function_tool():
+    """construct_tool_call correctly formats function tool"""
     # Create a function tool
     tool = CreateToolRequest(
         name="test_function",
@@ -46,8 +48,9 @@ async def _():
     assert tool_call["function"]["arguments"] == arguments
 
 
-@test("construct_tool_call correctly formats system tool")
-async def _():
+@pytest.mark.asyncio
+async def test_construct_tool_call_correctly_formats_system_tool():
+    """construct_tool_call correctly formats system tool"""
     # Create a system tool
     system_info = SystemDef(
         resource="doc",
@@ -74,8 +77,9 @@ async def _():
     assert tool_call["system"]["arguments"] == arguments
 
 
-@test("construct_tool_call works with Tool objects (not just CreateToolRequest)")
-async def _():
+@pytest.mark.asyncio
+async def test_construct_tool_call_works_with_tool_objects_not_just_createtoolrequest():
+    """construct_tool_call works with Tool objects (not just CreateToolRequest)"""
     # Create a function Tool (not CreateToolRequest)
     tool = Tool(
         id=UUID("00000000-0000-0000-0000-000000000000"),

@@ -16,13 +16,14 @@ from agents_api.queries.tasks.patch_task import patch_task
 from agents_api.queries.tasks.update_task import update_task
 from fastapi import HTTPException
 from uuid_extensions import uuid7
-from ward import raises, test
+import pytest
 
 from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_task
 
 
-@test("query: create task sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_create_task_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: create task sql"""
     """Test that a task can be successfully created."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -44,8 +45,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert task.main is not None
 
 
-@test("query: create or update task sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_create_or_update_task_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: create or update task sql"""
     """Test that a task can be successfully created or updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -67,8 +69,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert task.main is not None
 
 
-@test("query: get task sql - exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
+@pytest.mark.asyncio
+async def test_query_get_task_sql_exists(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
+    """query: get task sql - exists"""
     """Test that an existing task can be successfully retrieved."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -86,14 +89,15 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
     assert result.description == "test task about"
 
 
-@test("query: get task sql - not exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_get_task_sql_not_exists(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: get task sql - not exists"""
     """Test that attempting to retrieve a non-existent task raises an error."""
 
     pool = await create_db_pool(dsn=dsn)
     task_id = uuid7()
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await get_task(
             developer_id=developer_id,
             task_id=task_id,
@@ -104,8 +108,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert "Task not found" in str(exc.raised.detail)
 
 
-@test("query: delete task sql - exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
+@pytest.mark.asyncio
+async def test_query_delete_task_sql_exists(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
+    """query: delete task sql - exists"""
     """Test that a task can be successfully deleted."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -129,7 +134,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
     assert deleted.id == task.id
 
     # Verify task no longer exists
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await get_task(
             developer_id=developer_id,
             task_id=task.id,
@@ -140,14 +145,15 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, task=test_task):
     assert "Task not found" in str(exc.raised.detail)
 
 
-@test("query: delete task sql - not exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_delete_task_sql_not_exists(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: delete task sql - not exists"""
     """Test that attempting to delete a non-existent task raises an error."""
 
     pool = await create_db_pool(dsn=dsn)
     task_id = uuid7()
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await delete_task(
             developer_id=developer_id,
             task_id=task_id,
@@ -159,8 +165,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
 
 # Add tests for list tasks
-@test("query: list tasks sql - with filters")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_list_tasks_sql_with_filters(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: list tasks sql - with filters"""
     """Test that tasks can be successfully filtered and retrieved."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -180,8 +187,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert all(task.metadata.get("test") is True for task in result)
 
 
-@test("query: list tasks sql - no filters")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+@pytest.mark.asyncio
+async def test_query_list_tasks_sql_no_filters(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """query: list tasks sql - no filters"""
     """Test that a list of tasks can be successfully retrieved."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -198,12 +206,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     )
 
 
-@test("query: list tasks sql, invalid limit")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+@pytest.mark.asyncio
+async def test_query_list_tasks_sql_invalid_limit(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """query: list tasks sql, invalid limit"""
     """Test that listing tasks with an invalid limit raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_tasks(
             developer_id=developer_id,
             agent_id=agent.id,
@@ -213,7 +222,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     assert exc.raised.status_code == 400
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_tasks(
             developer_id=developer_id,
             agent_id=agent.id,
@@ -224,12 +233,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     assert exc.raised.detail == "Limit must be between 1 and 100"
 
 
-@test("query: list tasks sql, invalid offset")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+@pytest.mark.asyncio
+async def test_query_list_tasks_sql_invalid_offset(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """query: list tasks sql, invalid offset"""
     """Test that listing tasks with an invalid offset raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_tasks(
             developer_id=developer_id,
             agent_id=agent.id,
@@ -240,12 +250,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     assert exc.raised.detail == "Offset must be >= 0"
 
 
-@test("query: list tasks sql, invalid sort by")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+@pytest.mark.asyncio
+async def test_query_list_tasks_sql_invalid_sort_by(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """query: list tasks sql, invalid sort by"""
     """Test that listing tasks with an invalid sort by raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_tasks(
             developer_id=developer_id,
             agent_id=agent.id,
@@ -256,12 +267,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     assert exc.raised.detail == "Invalid sort field"
 
 
-@test("query: list tasks sql, invalid sort direction")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+@pytest.mark.asyncio
+async def test_query_list_tasks_sql_invalid_sort_direction(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """query: list tasks sql, invalid sort direction"""
     """Test that listing tasks with an invalid sort direction raises an exception."""
 
     pool = await create_db_pool(dsn=dsn)
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await list_tasks(
             developer_id=developer_id,
             agent_id=agent.id,
@@ -272,8 +284,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     assert exc.raised.detail == "Invalid sort direction"
 
 
-@test("query: update task sql - exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+@pytest.mark.asyncio
+async def test_query_update_task_sql_exists(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=test_task):
+    """query: update task sql - exists"""
     """Test that a task can be successfully updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -308,14 +321,15 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, task=t
     assert updated_task.metadata == {"updated": True}
 
 
-@test("query: update task sql - not exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_update_task_sql_not_exists(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: update task sql - not exists"""
     """Test that attempting to update a non-existent task raises an error."""
 
     pool = await create_db_pool(dsn=dsn)
     task_id = uuid7()
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await update_task(
             developer_id=developer_id,
             task_id=task_id,
@@ -335,8 +349,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert "Task not found" in str(exc.raised.detail)
 
 
-@test("query: patch task sql - exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_patch_task_sql_exists(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: patch task sql - exists"""
     """Test that patching an existing task works correctly."""
     pool = await create_db_pool(dsn=dsn)
 
@@ -383,13 +398,14 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert patched_task.description == "test task description"
 
 
-@test("query: patch task sql - not exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_patch_task_sql_not_exists(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
+    """query: patch task sql - not exists"""
     """Test that attempting to patch a non-existent task raises an error."""
     pool = await create_db_pool(dsn=dsn)
     task_id = uuid7()
 
-    with raises(HTTPException) as exc:
+    with pytest.raises(HTTPException) as exc:
         await patch_task(
             developer_id=developer_id,
             task_id=task_id,

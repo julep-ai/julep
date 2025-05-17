@@ -14,7 +14,7 @@ from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 from uuid_extensions import uuid7
-from ward import fixture, test
+import pytest
 
 from .fixtures import make_request, pg_dsn, test_agent, test_session
 
@@ -25,15 +25,16 @@ class TestPayload(BaseModel):
     message: str
 
 
-@fixture
+@pytest.fixture
 def client():
     """Test client fixture that gets reset for each test."""
     client = TestClient(app)
     yield client
 
 
-@test("middleware: inactive free user receives forbidden response")
-async def _(client=client):
+@pytest.mark.asyncio
+async def test_middleware_inactive_free_user_receives_forbidden_response(client=client):
+    """middleware: inactive free user receives forbidden response"""
     """Test that requests from inactive users are blocked with 403 Forbidden."""
 
     # Create a test handler
@@ -63,8 +64,8 @@ async def _(client=client):
         assert "invalid_user_account" in response.text
 
 
-@test("middleware: inactive paid user receives forbidden response")
-def _(client=client):
+def test_middleware_inactive_paid_user_receives_forbidden_response(client=client):
+    """middleware: inactive paid user receives forbidden response"""
     """Test that requests from inactive paid users are blocked with 403 Forbidden."""
 
     # Create a test handler
@@ -96,8 +97,8 @@ def _(client=client):
         assert "invalid_user_account" in response.text
 
 
-@test("middleware: cost limit exceeded, all requests blocked except GET")
-def _(client=client):
+def test_middleware_cost_limit_exceeded_all_requests_blocked_except_get(client=client):
+    """middleware: cost limit exceeded, all requests blocked except GET"""
     """Test that non-GET requests from users who exceeded cost limits are blocked with 403 Forbidden."""
 
     # Create test handlers for different methods
@@ -173,8 +174,8 @@ def _(client=client):
         assert get_response.json()["method"] == "GET"
 
 
-@test("middleware: paid tag bypasses cost limit check")
-def _(client=client):
+def test_middleware_paid_tag_bypasses_cost_limit_check(client=client):
+    """middleware: paid tag bypasses cost limit check"""
     """Test that users with 'paid' tag can make non-GET requests even when over the cost limit."""
 
     # Create test handlers for different methods
@@ -235,8 +236,8 @@ def _(client=client):
         assert delete_response.json()["method"] == "DELETE"
 
 
-@test("middleware: GET request with cost limit exceeded passes through")
-def _(client=client):
+def test_middleware_get_request_with_cost_limit_exceeded_passes_through(client=client):
+    """middleware: GET request with cost limit exceeded passes through"""
     """Test that GET requests from users who exceeded cost limits are allowed to proceed."""
 
     # Create a test handler
@@ -267,8 +268,8 @@ def _(client=client):
         assert response.json()["method"] == "GET"
 
 
-@test("middleware: cost is None treats as exceeded limit")
-def _(client=client):
+def test_middleware_cost_is_none_treats_as_exceeded_limit(client=client):
+    """middleware: cost is None treats as exceeded limit"""
     """Test that non-GET requests with None cost value are treated as exceeding the limit."""
 
     # Create a test handler
@@ -302,8 +303,8 @@ def _(client=client):
         assert "cost_limit_exceeded" in response.text
 
 
-@test("middleware: null tags field handled properly")
-def _(client=client):
+def test_middleware_null_tags_field_handled_properly(client=client):
+    """middleware: null tags field handled properly"""
     """Test that users with null tags field are handled properly when over cost limit."""
 
     # Create a test handler
@@ -337,8 +338,8 @@ def _(client=client):
         assert "cost_limit_exceeded" in response.text
 
 
-@test("middleware: no developer_id header passes through")
-def _(client=client):
+def test_middleware_no_developer_id_header_passes_through(client=client):
+    """middleware: no developer_id header passes through"""
     """Test that requests without a developer_id header are allowed to proceed."""
 
     # Create a test handler
@@ -354,8 +355,8 @@ def _(client=client):
     assert response.json()["message"] == "no developer ID needed"
 
 
-@test("middleware: forbidden, if user is not found")
-def _(client=client):
+def test_middleware_forbidden_if_user_is_not_found(client=client):
+    """middleware: forbidden, if user is not found"""
     """Test that requests resulting in NoDataFoundError return 403."""
 
     # Create a test handler
@@ -394,8 +395,8 @@ def _(client=client):
         assert "invalid_user_account" in response.text
 
 
-@test("middleware: hand over all the http errors except of 404")
-def _(client=client):
+def test_middleware_hand_over_all_the_http_errors_except_of_404(client=client):
+    """middleware: hand over all the http errors except of 404"""
     """Test that HTTP exceptions other than 404 return with correct status code."""
 
     # Create a test handler
@@ -418,8 +419,8 @@ def _(client=client):
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-@test("middleware: invalid uuid returns bad request")
-def _(client=client):
+def test_middleware_invalid_uuid_returns_bad_request(client=client):
+    """middleware: invalid uuid returns bad request"""
     """Test that requests with invalid UUID return 400 Bad Request."""
 
     # Create a test handler
@@ -439,8 +440,8 @@ def _(client=client):
     assert "invalid_developer_id" in response.text
 
 
-@test("middleware: valid user passes through")
-def _(client=client):
+def test_middleware_valid_user_passes_through(client=client):
+    """middleware: valid user passes through"""
     """Test that requests from valid users are allowed to proceed."""
 
     # Create a test handler
@@ -469,8 +470,9 @@ def _(client=client):
         assert response.json()["message"] == "valid user"
 
 
-@test("middleware: can't create session when cost limit is reached")
-async def _(make_request=make_request, dsn=pg_dsn, test_agent=test_agent):
+@pytest.mark.asyncio
+async def test_middleware_can_t_create_session_when_cost_limit_is_reached(make_request=make_request, dsn=pg_dsn, test_agent=test_agent):
+    """middleware: can't create session when cost limit is reached"""
     """Test that creating a session fails with 403 when cost limit is reached."""
 
     # Create a real developer for this test with no paid tag
@@ -512,8 +514,9 @@ async def _(make_request=make_request, dsn=pg_dsn, test_agent=test_agent):
         assert "cost_limit_exceeded" in response.text
 
 
-@test("middleware: can't delete session when cost limit is reached")
-async def _(make_request=make_request, dsn=pg_dsn, test_session=test_session, agent=test_agent):
+@pytest.mark.asyncio
+async def test_middleware_can_t_delete_session_when_cost_limit_is_reached(make_request=make_request, dsn=pg_dsn, test_session=test_session, agent=test_agent):
+    """middleware: can't delete session when cost limit is reached"""
     """Test that deleting a session fails with 403 when cost limit is reached."""
 
     # Create a real developer for this test with no paid tag

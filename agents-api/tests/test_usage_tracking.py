@@ -15,13 +15,14 @@ from agents_api.queries.usage.create_usage_record import (
 )
 from litellm import cost_per_token
 from litellm.utils import Message, ModelResponse, Usage, token_counter
-from ward import test
+import pytest
 
 from .fixtures import pg_dsn, test_developer_id
 
 
-@test("query: create_usage_record creates a record with correct parameters")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_query_create_usage_record_creates_a_record_with_correct_parameters(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """query: create_usage_record creates a record with correct parameters"""
     pool = await create_db_pool(dsn=dsn)
     response = await create_usage_record(
         developer_id=developer_id,
@@ -43,8 +44,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert isinstance(record["created_at"], datetime)
 
 
-@test("query: create_usage_record handles different model names correctly")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_query_create_usage_record_handles_different_model_names_correctly(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """query: create_usage_record handles different model names correctly"""
     pool = await create_db_pool(dsn=dsn)
     models = [
         "gpt-4o-mini",
@@ -77,8 +79,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
         assert record["model"] == model
 
 
-@test("query: create_usage_record properly calculates costs")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_query_create_usage_record_properly_calculates_costs(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """query: create_usage_record properly calculates costs"""
     pool = await create_db_pool(dsn=dsn)
     response = await create_usage_record(
         developer_id=developer_id,
@@ -99,8 +102,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert record["cost"] == cost
 
 
-@test("query: create_usage_record with custom API key")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_query_create_usage_record_with_custom_api_key(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """query: create_usage_record with custom API key"""
     pool = await create_db_pool(dsn=dsn)
     response = await create_usage_record(
         developer_id=developer_id,
@@ -123,8 +127,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert record["cost"] == cost
 
 
-@test("query: create_usage_record with fallback pricing")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_query_create_usage_record_with_fallback_pricing(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """query: create_usage_record with fallback pricing"""
     pool = await create_db_pool(dsn=dsn)
     response = await create_usage_record(
         developer_id=developer_id,
@@ -140,8 +145,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert record["estimated"] is True
 
 
-@test("query: create_usage_record with fallback pricing with model not in fallback pricing")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_query_create_usage_record_with_fallback_pricing_with_model_not_in_fallback_pricing(dsn=pg_dsn, developer_id=test_developer_id) -> None:
+    """query: create_usage_record with fallback pricing with model not in fallback pricing"""
     pool = await create_db_pool(dsn=dsn)
 
     with patch("builtins.print") as mock_print:
@@ -167,8 +173,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert expected_call == actual_call
 
 
-@test("utils: track_usage with response.usage available")
-async def _(developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_utils_track_usage_with_response_usage_available(developer_id=test_developer_id) -> None:
+    """utils: track_usage with response.usage available"""
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse(
             usage=Usage(
@@ -188,8 +195,9 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["completion_tokens"] == 100
 
 
-@test("utils: track_usage without response.usage")
-async def _(developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_utils_track_usage_without_response_usage(developer_id=test_developer_id) -> None:
+    """utils: track_usage without response.usage"""
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse(
             usage=None,
@@ -222,8 +230,9 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["completion_tokens"] == completion_tokens
 
 
-@test("utils: track_embedding_usage with response.usage")
-async def _(developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_utils_track_embedding_usage_with_response_usage(developer_id=test_developer_id) -> None:
+    """utils: track_embedding_usage with response.usage"""
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse(
             usage=Usage(
@@ -247,8 +256,9 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["model"] == "text-embedding-3-large"
 
 
-@test("utils: track_embedding_usage without response.usage")
-async def _(developer_id=test_developer_id) -> None:
+@pytest.mark.asyncio
+async def test_utils_track_embedding_usage_without_response_usage(developer_id=test_developer_id) -> None:
+    """utils: track_embedding_usage without response.usage"""
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse()
         response.usage = None

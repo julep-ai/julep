@@ -19,14 +19,15 @@ from agents_api.common.protocol.models import ExecutionInput
 from agents_api.common.protocol.tasks import StepContext
 from agents_api.common.utils.datetime import utcnow
 from agents_api.routers.sessions.render import render_chat_input
-from ward import skip, test
+import pytest
 
 from tests.fixtures import test_developer, test_developer_id
 
 
-@skip("Skipping secrets usage tests")
-@test("render: list_secrets_query usage in render_chat_input")
-async def _(developer=test_developer):
+@pytest.mark.skip(reason="Skipping secrets usage tests")
+@pytest.mark.asyncio
+async def test_render_list_secrets_query_usage_in_render_chat_input(developer=test_developer):
+    """render: list_secrets_query usage in render_chat_input"""
     # Create test secrets
     test_secrets = [
         Secret(
@@ -140,9 +141,10 @@ async def _(developer=test_developer):
         assert function_params["auth_token"] == "token_987654321"
 
 
-@skip("Skipping secrets usage tests")
-@test("tasks: list_secrets_query with multiple secrets")
-async def _(developer_id=test_developer_id):
+@pytest.mark.skip(reason="Skipping secrets usage tests")
+@pytest.mark.asyncio
+async def test_tasks_list_secrets_query_with_multiple_secrets(developer_id=test_developer_id):
+    """tasks: list_secrets_query with multiple secrets"""
     # Create test secrets with varying names
     test_secrets = [
         Secret(
@@ -267,9 +269,10 @@ async def _(developer_id=test_developer_id):
         assert mock_evaluate_expressions.call_count == len(task_tools)
 
 
-@skip("Skipping secrets usage tests")
-@test("tasks: list_secrets_query in StepContext.tools method")
-async def _(developer_id=test_developer_id):
+@pytest.mark.skip(reason="Skipping secrets usage tests")
+@pytest.mark.asyncio
+async def test_tasks_list_secrets_query_in_stepcontext_tools_method(developer_id=test_developer_id):
+    """tasks: list_secrets_query in StepContext.tools method"""
     # Create test secrets
     test_secrets = [
         Secret(

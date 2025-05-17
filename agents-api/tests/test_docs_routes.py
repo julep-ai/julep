@@ -1,4 +1,4 @@
-from ward import test
+import pytest
 
 from .fixtures import (
     make_request,
@@ -12,8 +12,9 @@ from .fixtures import (
 from .utils import patch_testing_temporal
 
 
-@test("route: create user doc")
-async def _(make_request=make_request, user=test_user):
+@pytest.mark.asyncio
+async def test_route_create_user_doc(make_request=make_request, user=test_user):
+    """route: create user doc"""
     async with patch_testing_temporal():
         data = {
             "title": "Test User Doc",
@@ -29,8 +30,9 @@ async def _(make_request=make_request, user=test_user):
         assert response.status_code == 201
 
 
-@test("route: create agent doc")
-async def _(make_request=make_request, agent=test_agent):
+@pytest.mark.asyncio
+async def test_route_create_agent_doc(make_request=make_request, agent=test_agent):
+    """route: create agent doc"""
     async with patch_testing_temporal():
         data = {
             "title": "Test Agent Doc",
@@ -46,8 +48,9 @@ async def _(make_request=make_request, agent=test_agent):
         assert response.status_code == 201
 
 
-@test("route: create agent doc with duplicate title should fail")
-async def _(make_request=make_request, agent=test_agent, user=test_user):
+@pytest.mark.asyncio
+async def test_route_create_agent_doc_with_duplicate_title_should_fail(make_request=make_request, agent=test_agent, user=test_user):
+    """route: create agent doc with duplicate title should fail"""
     async with patch_testing_temporal():
         data = {
             "title": "Test Duplicate Doc",
@@ -81,8 +84,9 @@ async def _(make_request=make_request, agent=test_agent, user=test_user):
         assert response.status_code == 201
 
 
-@test("route: delete doc")
-async def _(make_request=make_request, agent=test_agent):
+@pytest.mark.asyncio
+async def test_route_delete_doc(make_request=make_request, agent=test_agent):
+    """route: delete doc"""
     async with patch_testing_temporal():
         data = {
             "title": "Test Agent Doc",
@@ -121,8 +125,9 @@ async def _(make_request=make_request, agent=test_agent):
         assert response.status_code == 404
 
 
-@test("route: get doc")
-async def _(make_request=make_request, agent=test_agent):
+@pytest.mark.asyncio
+async def test_route_get_doc(make_request=make_request, agent=test_agent):
+    """route: get doc"""
     async with patch_testing_temporal():
         data = {
             "title": "Test Agent Doc",
@@ -144,8 +149,8 @@ async def _(make_request=make_request, agent=test_agent):
         assert response.status_code == 200
 
 
-@test("route: list user docs")
-def _(make_request=make_request, user=test_user):
+def test_route_list_user_docs(make_request=make_request, user=test_user):
+    """route: list user docs"""
     response = make_request(
         method="GET",
         url=f"/users/{user.id}/docs",
@@ -158,8 +163,8 @@ def _(make_request=make_request, user=test_user):
     assert isinstance(docs, list)
 
 
-@test("route: list agent docs")
-def _(make_request=make_request, agent=test_agent):
+def test_route_list_agent_docs(make_request=make_request, agent=test_agent):
+    """route: list agent docs"""
     response = make_request(
         method="GET",
         url=f"/agents/{agent.id}/docs",
@@ -172,8 +177,8 @@ def _(make_request=make_request, agent=test_agent):
     assert isinstance(docs, list)
 
 
-@test("route: list user docs with metadata filter")
-def _(make_request=make_request, user=test_user):
+def test_route_list_user_docs_with_metadata_filter(make_request=make_request, user=test_user):
+    """route: list user docs with metadata filter"""
     response = make_request(
         method="GET",
         url=f"/users/{user.id}/docs",
@@ -189,8 +194,8 @@ def _(make_request=make_request, user=test_user):
     assert isinstance(docs, list)
 
 
-@test("route: list agent docs with metadata filter")
-def _(make_request=make_request, agent=test_agent):
+def test_route_list_agent_docs_with_metadata_filter(make_request=make_request, agent=test_agent):
+    """route: list agent docs with metadata filter"""
     response = make_request(
         method="GET",
         url=f"/agents/{agent.id}/docs",
@@ -206,8 +211,9 @@ def _(make_request=make_request, agent=test_agent):
     assert isinstance(docs, list)
 
 
-@test("route: search agent docs")
-async def _(make_request=make_request, agent=test_agent, doc=test_doc):
+@pytest.mark.asyncio
+async def test_route_search_agent_docs(make_request=make_request, agent=test_agent, doc=test_doc):
+    """route: search agent docs"""
     search_params = {
         "text": doc.content[0],
         "limit": 1,
@@ -227,8 +233,9 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
     assert len(docs) >= 1
 
 
-@test("route: search user docs")
-async def _(make_request=make_request, user=test_user, doc=test_user_doc):
+@pytest.mark.asyncio
+async def test_route_search_user_docs(make_request=make_request, user=test_user, doc=test_user_doc):
+    """route: search user docs"""
     search_params = {
         "text": doc.content[0],
         "limit": 1,
@@ -249,8 +256,9 @@ async def _(make_request=make_request, user=test_user, doc=test_user_doc):
     assert len(docs) >= 1
 
 
-@test("route: search agent docs hybrid with mmr")
-async def _(make_request=make_request, agent=test_agent, doc=test_doc_with_embedding):
+@pytest.mark.asyncio
+async def test_route_search_agent_docs_hybrid_with_mmr(make_request=make_request, agent=test_agent, doc=test_doc_with_embedding):
+    """route: search agent docs hybrid with mmr"""
     EMBEDDING_SIZE = 1024
     search_params = {
         "text": doc.content[0],
@@ -273,8 +281,9 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc_with_embed
     assert len(docs) >= 1
 
 
-@test("routes: embed route")
-async def _(
+@pytest.mark.asyncio
+async def test_routes_embed_route(
+    """routes: embed route"""
     make_request=make_request,
     mocks=patch_embed_acompletion,
 ):
@@ -292,8 +301,9 @@ async def _(
     embed.assert_called()
 
 
-@test("route: bulk delete agent docs")
-async def _(make_request=make_request, agent=test_agent):
+@pytest.mark.asyncio
+async def test_route_bulk_delete_agent_docs(make_request=make_request, agent=test_agent):
+    """route: bulk delete agent docs"""
     for i in range(3):
         data = {
             "title": f"Bulk Test Doc {i}",
@@ -350,8 +360,9 @@ async def _(make_request=make_request, agent=test_agent):
     assert len(docs_after) == len(docs_before) - 3
 
 
-@test("route: bulk delete user docs - metadata filter")
-async def _(make_request=make_request, user=test_user):
+@pytest.mark.asyncio
+async def test_route_bulk_delete_user_docs_metadata_filter(make_request=make_request, user=test_user):
+    """route: bulk delete user docs - metadata filter"""
     for i in range(2):
         data = {
             "title": f"User Bulk Test Doc {i}",
@@ -394,8 +405,9 @@ async def _(make_request=make_request, user=test_user):
     assert len(docs_after) == len(docs_before) - 2
 
 
-@test("route: bulk delete agent docs - delete_all=true")
-async def _(make_request=make_request, agent=test_agent):
+@pytest.mark.asyncio
+async def test_route_bulk_delete_agent_docs_delete_all_true(make_request=make_request, agent=test_agent):
+    """route: bulk delete agent docs - delete_all=true"""
     # Create several test docs
     for i in range(3):
         data = {
@@ -440,8 +452,9 @@ async def _(make_request=make_request, agent=test_agent):
     assert len(docs_after) == 0
 
 
-@test("route: bulk delete agent docs - delete_all=false")
-async def _(make_request=make_request, agent=test_agent):
+@pytest.mark.asyncio
+async def test_route_bulk_delete_agent_docs_delete_all_false(make_request=make_request, agent=test_agent):
+    """route: bulk delete agent docs - delete_all=false"""
     # Create test docs
     for i in range(2):
         data = {
@@ -488,8 +501,9 @@ async def _(make_request=make_request, agent=test_agent):
     assert len(docs_after) == initial_count
 
 
-@test("route: bulk delete user docs - delete_all=true")
-async def _(make_request=make_request, user=test_user):
+@pytest.mark.asyncio
+async def test_route_bulk_delete_user_docs_delete_all_true(make_request=make_request, user=test_user):
+    """route: bulk delete user docs - delete_all=true"""
     # Create test docs
     for i in range(2):
         data = {
@@ -534,8 +548,9 @@ async def _(make_request=make_request, user=test_user):
     assert len(docs_after) == 0
 
 
-@test("route: bulk delete user docs - delete_all=false")
-async def _(make_request=make_request, user=test_user):
+@pytest.mark.asyncio
+async def test_route_bulk_delete_user_docs_delete_all_false(make_request=make_request, user=test_user):
+    """route: bulk delete user docs - delete_all=false"""
     # Create test docs
     for i in range(2):
         data = {

@@ -2,13 +2,13 @@
 
 from uuid import uuid4
 
-from ward import test
+import pytest
 
 from tests.fixtures import client, make_request, test_developer_id
 
 
-@test("route: unauthorized secrets route should fail")
-def _(client=client):
+def test_route_unauthorized_secrets_route_should_fail(client=client):
+    """route: unauthorized secrets route should fail"""
     data = {
         "name": f"test_secret_{uuid4().hex[:8]}",
         "description": "Test secret for listing",
@@ -24,8 +24,8 @@ def _(client=client):
     assert response.status_code == 403
 
 
-@test("route: create secret")
-def _(make_request=make_request, developer_id=test_developer_id):
+def test_route_create_secret(make_request=make_request, developer_id=test_developer_id):
+    """route: create secret"""
     data = {
         "developer_id": str(developer_id),
         "name": f"test_secret_{uuid4().hex[:8]}",
@@ -49,8 +49,8 @@ def _(make_request=make_request, developer_id=test_developer_id):
     assert result["metadata"] == data["metadata"]
 
 
-@test("route: list secrets")
-def _(make_request=make_request, developer_id=test_developer_id):
+def test_route_list_secrets(make_request=make_request, developer_id=test_developer_id):
+    """route: list secrets"""
     # First create a secret to ensure we have something to list
     secret_name = f"list_test_secret_{uuid4().hex[:8]}"
     data = {
@@ -83,8 +83,8 @@ def _(make_request=make_request, developer_id=test_developer_id):
     assert all(secret["value"] == "ENCRYPTED" for secret in secrets)
 
 
-@test("route: update secret")
-def _(make_request=make_request, developer_id=test_developer_id):
+def test_route_update_secret(make_request=make_request, developer_id=test_developer_id):
+    """route: update secret"""
     # First create a secret
     original_name = f"update_test_secret_{uuid4().hex[:8]}"
     create_data = {
@@ -128,8 +128,8 @@ def _(make_request=make_request, developer_id=test_developer_id):
     assert updated_secret["metadata"] == update_data["metadata"]
 
 
-@test("route: delete secret")
-def _(make_request=make_request, developer_id=test_developer_id):
+def test_route_delete_secret(make_request=make_request, developer_id=test_developer_id):
+    """route: delete secret"""
     # First create a secret
     delete_test_name = f"delete_test_secret_{uuid4().hex[:8]}"
     create_data = {
@@ -169,8 +169,8 @@ def _(make_request=make_request, developer_id=test_developer_id):
     assert secret_id not in deleted_secret_ids
 
 
-@test("route: create duplicate secret name fails")
-def _(make_request=make_request, developer_id=test_developer_id):
+def test_route_create_duplicate_secret_name_fails(make_request=make_request, developer_id=test_developer_id):
+    """route: create duplicate secret name fails"""
     # Create a secret with a specific name
     unique_name = f"unique_secret_{uuid4().hex[:8]}"
     data = {

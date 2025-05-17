@@ -1,9 +1,9 @@
 from agents_api.queries.utils import sanitize_string
-from ward import test
+import pytest
 
 
-@test("utility: sanitize_string - strings")
-def _():
+def test_utility_sanitize_string_strings():
+    """utility: sanitize_string - strings"""
     # Test basic string sanitization
     assert sanitize_string("test\u0000string") == "teststring"
     assert sanitize_string("normal string") == "normal string"
@@ -12,8 +12,8 @@ def _():
     assert sanitize_string(None) is None
 
 
-@test("utility: sanitize_string - nested data structures")
-def _():
+def test_utility_sanitize_string_nested_data_structures():
+    """utility: sanitize_string - nested data structures"""
     # Test dictionary sanitization
     test_dict = {
         "key1": "value\u0000",
@@ -38,8 +38,8 @@ def _():
     assert sanitize_string(test_tuple) == expected_tuple
 
 
-@test("utility: sanitize_string - non-string types")
-def _():
+def test_utility_sanitize_string_non_string_types():
+    """utility: sanitize_string - non-string types"""
     # Test non-string types
     assert sanitize_string(123) == 123
     assert sanitize_string(123.45) == 123.45

@@ -7,13 +7,14 @@ from agents_api.clients.pg import create_db_pool
 from agents_api.queries.docs.bulk_delete_docs import bulk_delete_docs
 from agents_api.queries.docs.create_doc import create_doc
 from agents_api.queries.docs.list_docs import list_docs
-from ward import test
+import pytest
 
 from .fixtures import pg_dsn, test_agent, test_developer, test_user
 
 
-@test("query: list_docs with SQL injection attempt in metadata filter")
-async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_list_docs_with_sql_injection_attempt_in_metadata_filter(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    """query: list_docs with SQL injection attempt in metadata filter"""
     """Test that list_docs safely handles metadata filters with SQL injection attempts."""
     pool = await create_db_pool(dsn=dsn)
 
@@ -92,8 +93,9 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     assert not any(d.id == doc_normal.id for d in docs_special)
 
 
-@test("query: bulk_delete_docs with SQL injection attempt in metadata filter")
-async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
+@pytest.mark.asyncio
+async def test_query_bulk_delete_docs_with_sql_injection_attempt_in_metadata_filter(dsn=pg_dsn, developer=test_developer, user=test_user):
+    """query: bulk_delete_docs with SQL injection attempt in metadata filter"""
     """Test that bulk_delete_docs safely handles metadata filters with SQL injection attempts."""
     pool = await create_db_pool(dsn=dsn)
 

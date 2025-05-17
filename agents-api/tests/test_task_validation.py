@@ -1,11 +1,11 @@
 from agents_api.autogen.openapi_model import CreateTaskRequest
 from agents_api.common.utils.task_validation import validate_py_expression, validate_task
 from agents_api.env import enable_backwards_compatibility_for_syntax
-from ward import test
+import pytest
 
 
-@test("task_validation: Python expression validator detects syntax errors")
-def test_syntax_error_detection():
+def test_task_validation_python_expression_validator_detects_syntax_errors():
+    """task_validation: Python expression validator detects syntax errors"""
     # Test with a syntax error
     expression = "$ 1 + )"
     result = validate_py_expression(expression)
@@ -13,8 +13,8 @@ def test_syntax_error_detection():
     assert "Syntax error" in result["syntax_errors"][0]
 
 
-@test("task_validation: Python expression validator detects undefined names")
-def test_undefined_name_detection():
+def test_task_validation_python_expression_validator_detects_undefined_names():
+    """task_validation: Python expression validator detects undefined names"""
     # Test with undefined variable
     expression = "$ undefined_var + 10"
     result = validate_py_expression(expression)
@@ -22,16 +22,16 @@ def test_undefined_name_detection():
     assert "Undefined name: 'undefined_var'" in result["undefined_names"]
 
 
-@test("task_validation: Python expression validator allows steps variable access")
-def test_allow_steps_var():
+def test_task_validation_python_expression_validator_allows_steps_variable_access():
+    """task_validation: Python expression validator allows steps variable access"""
     # Test with accessing steps
     expression = "$ steps[0].output"
     result = validate_py_expression(expression)
     assert all(len(issues) == 0 for issues in result.values())
 
 
-@test("task_validation: Python expression validator detects unsafe operations")
-def test_unsafe_operations_detection():
+def test_task_validation_python_expression_validator_detects_unsafe_operations():
+    """task_validation: Python expression validator detects unsafe operations"""
     # Test with unsafe attribute access
     expression = "$ some_obj.dangerous_method()"
     result = validate_py_expression(expression)
@@ -39,8 +39,8 @@ def test_unsafe_operations_detection():
     assert "Potentially unsafe attribute access" in result["unsafe_operations"][0]
 
 
-@test("task_validation: Python expression validator detects unsafe dunder attributes")
-def test_dunder_attribute_detection():
+def test_task_validation_python_expression_validator_detects_unsafe_dunder_attributes():
+    """task_validation: Python expression validator detects unsafe dunder attributes"""
     # Test with dangerous dunder attribute access
     expression = "$ obj.__class__"
     result = validate_py_expression(expression)
@@ -60,8 +60,8 @@ def test_dunder_attribute_detection():
     )
 
 
-@test("task_validation: Python expression validator detects potential runtime errors")
-def test_runtime_error_detection():
+def test_task_validation_python_expression_validator_detects_potential_runtime_errors():
+    """task_validation: Python expression validator detects potential runtime errors"""
     # Test division by zero
     expression = "$ 10 / 0"
     result = validate_py_expression(expression)
@@ -69,8 +69,8 @@ def test_runtime_error_detection():
     assert "Division by zero" in result["potential_runtime_errors"][0]
 
 
-@test("task_validation: Python expression backwards_compatibility")
-def test_backwards_compatibility():
+def test_task_validation_python_expression_backwards_compatibility():
+    """task_validation: Python expression backwards_compatibility"""
     if enable_backwards_compatibility_for_syntax:
         # Test division by zero
         expression = "{{ 10 / 0 }}"
@@ -79,16 +79,16 @@ def test_backwards_compatibility():
         assert "Division by zero" in result["potential_runtime_errors"][0]
 
 
-@test("task_validation: Python expression validator accepts valid expressions")
-def test_valid_expression():
+def test_task_validation_python_expression_validator_accepts_valid_expressions():
+    """task_validation: Python expression validator accepts valid expressions"""
     # Test a valid expression
     expression = "$ _.topic if hasattr(_, 'topic') else 'default'"
     result = validate_py_expression(expression)
     assert all(len(issues) == 0 for issues in result.values())
 
 
-@test("task_validation: Python expression validator handles special underscore variable")
-def test_underscore_allowed():
+def test_task_validation_python_expression_validator_handles_special_underscore_variable():
+    """task_validation: Python expression validator handles special underscore variable"""
     # Test that _ is allowed by default
     expression = "$ _.attribute"
     result = validate_py_expression(expression)
@@ -133,8 +133,8 @@ valid_task_dict = {
 }
 
 
-@test("task_validation: Task validator detects invalid Python expressions in tasks")
-def test_validation_of_task_with_invalid_expressions():
+def test_task_validation_task_validator_detects_invalid_python_expressions_in_tasks():
+    """task_validation: Task validator detects invalid Python expressions in tasks"""
     # Convert dict to CreateTaskRequest
     task = CreateTaskRequest.model_validate(invalid_task_dict)
 
@@ -159,8 +159,8 @@ def test_validation_of_task_with_invalid_expressions():
     assert undefined_var_found
 
 
-@test("task_validation: Task validator accepts valid Python expressions in tasks")
-def test_validation_of_valid_task():
+def test_task_validation_task_validator_accepts_valid_python_expressions_in_tasks():
+    """task_validation: Task validator accepts valid Python expressions in tasks"""
     # Convert dict to CreateTaskRequest
     task = CreateTaskRequest.model_validate(valid_task_dict)
 
@@ -172,8 +172,8 @@ def test_validation_of_valid_task():
     assert len(validation_result.python_expression_issues) == 0
 
 
-@test("task_validation: Simple test of validation integration")
-def _():
+def test_task_validation_simple_test_of_validation_integration():
+    """task_validation: Simple test of validation integration"""
     # Create a simple valid task
     task_dict = {
         "name": "Simple Task",
@@ -243,8 +243,8 @@ nested_task_with_error_dict = {
 }
 
 
-@test("task_validation: Task validator can identify issues in if/else nested branches")
-def test_recursive_validation_of_if_else_branches():
+def test_task_validation_task_validator_can_identify_issues_in_if_else_nested_branches():
+    """task_validation: Task validator can identify issues in if/else nested branches"""
     """Verify that the task validator can identify issues in nested if/else blocks."""
     # Manually set up an if step with a nested step structure
     step_with_nested_if = {
@@ -279,8 +279,8 @@ def test_recursive_validation_of_if_else_branches():
     assert nested_error_found, "Did not detect syntax error in nested structure"
 
 
-@test("task_validation: Task validator can identify issues in match statement nested blocks")
-def test_recursive_validation_of_match_branches():
+def test_task_validation_task_validator_can_identify_issues_in_match_statement_nested_blocks():
+    """task_validation: Task validator can identify issues in match statement nested blocks"""
     """Verify that the task validator can identify issues in nested match/case blocks."""
     # Set up a match step with a nested error
     step_with_nested_match = {
@@ -318,8 +318,8 @@ def test_recursive_validation_of_match_branches():
     assert nested_error_found, "Did not detect undefined variable in nested case structure"
 
 
-@test("task_validation: Task validator can identify issues in foreach nested blocks")
-def test_recursive_validation_of_foreach_blocks():
+def test_task_validation_task_validator_can_identify_issues_in_foreach_nested_blocks():
+    """task_validation: Task validator can identify issues in foreach nested blocks"""
     """Verify that the task validator can identify issues in nested foreach blocks."""
     # Set up a foreach step with a nested error
     step_with_nested_foreach = {
@@ -366,8 +366,8 @@ def test_list_comprehension_variables():
     )
 
 
-@test("task_validation: Python expression validator detects unsupported features")
-def test_unsupported_features_detection():
+def test_task_validation_python_expression_validator_detects_unsupported_features():
+    """task_validation: Python expression validator detects unsupported features"""
     # Test with a set comprehension (unsupported)
     expression = "$ {x for x in range(10)}"
     result = validate_py_expression(expression)

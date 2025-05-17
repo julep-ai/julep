@@ -23,7 +23,7 @@ from agents_api.queries.sessions import (
     update_session,
 )
 from uuid_extensions import uuid7
-from ward import raises, test
+import pytest
 
 from tests.fixtures import (
     pg_dsn,
@@ -34,8 +34,9 @@ from tests.fixtures import (
 )
 
 
-@test("query: create session sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
+@pytest.mark.asyncio
+async def test_query_create_session_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
+    """query: create session sql"""
     """Test that a session can be successfully created."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -57,8 +58,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=t
     assert result.id == session_id
 
 
-@test("query: create or update session sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
+@pytest.mark.asyncio
+async def test_query_create_or_update_session_sql(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
+    """query: create or update session sql"""
     """Test that a session can be successfully created or updated."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -81,8 +83,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=t
     assert result.updated_at is not None
 
 
-@test("query: get session exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+@pytest.mark.asyncio
+async def test_query_get_session_exists(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """query: get session exists"""
     """Test retrieving an existing session."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -97,13 +100,14 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert result.id == session.id
 
 
-@test("query: get session does not exist")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.mark.asyncio
+async def test_query_get_session_does_not_exist(dsn=pg_dsn, developer_id=test_developer_id):
+    """query: get session does not exist"""
     """Test retrieving a non-existent session."""
 
     session_id = uuid7()
     pool = await create_db_pool(dsn=dsn)
-    with raises(Exception):
+    with pytest.raises(Exception):
         await get_session(
             session_id=session_id,
             developer_id=developer_id,
@@ -111,8 +115,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
         )  # type: ignore[not-callable]
 
 
-@test("query: list sessions")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+@pytest.mark.asyncio
+async def test_query_list_sessions(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """query: list sessions"""
     """Test listing sessions with default pagination."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -128,8 +133,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert any(s.id == session.id for s in result)
 
 
-@test("query: list sessions with filters")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+@pytest.mark.asyncio
+async def test_query_list_sessions_with_filters(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """query: list sessions with filters"""
     """Test listing sessions with specific filters."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -147,8 +153,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     )
 
 
-@test("query: count sessions")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+@pytest.mark.asyncio
+async def test_query_count_sessions(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """query: count sessions"""
     """Test counting the number of sessions for a developer."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -161,8 +168,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert count["count"] >= 1
 
 
-@test("query: update session sql")
-async def _(
+@pytest.mark.asyncio
+async def test_query_update_session_sql(
+    """query: update session sql"""
     dsn=pg_dsn,
     developer_id=test_developer_id,
     session=test_session,
@@ -196,8 +204,9 @@ async def _(
     assert updated_session.forward_tool_calls is True
 
 
-@test("query: patch session sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, agent=test_agent):
+@pytest.mark.asyncio
+async def test_query_patch_session_sql(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, agent=test_agent):
+    """query: patch session sql"""
     """Test that a session can be successfully patched."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -223,8 +232,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, ag
     assert patched_session.metadata == {"test": "metadata"}
 
 
-@test("query: delete session sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+@pytest.mark.asyncio
+async def test_query_delete_session_sql(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+    """query: delete session sql"""
     """Test that a session can be successfully deleted."""
 
     pool = await create_db_pool(dsn=dsn)
@@ -237,7 +247,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)
 
-    with raises(Exception):
+    with pytest.raises(Exception):
         await get_session(
             developer_id=developer_id,
             session_id=session.id,
