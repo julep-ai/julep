@@ -89,7 +89,7 @@ BEGIN
     -- Compute token_count outside the UPDATE statement for clarity and potential optimization
     calc_token_count := cardinality(
         ai.openai_tokenize(
-            'gpt-4o', -- FIXME: Use `NEW.model`
+            NEW.model, -- AIDEV-NOTE: use dynamic model
             array_to_string(NEW.content::TEXT[], ' ')
         )
     );
