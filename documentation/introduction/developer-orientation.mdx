@@ -1,0 +1,49 @@
+---
+title: 'Developer Orientation'
+description: 'Overview of the repository structure and key resources for Julep developers'
+icon: 'info'
+---
+
+## Overview
+
+This page provides a high-level tour of the Julep repository so you know where to find key components and documentation.
+
+## Main Directories
+
+### `agents-api/`
+Core FastAPI service that defines agents, tasks, sessions, and runs workflows.
+
+### `memory-store/`
+PostgreSQL-based service used for vector storage and other persistent data.
+
+### `integrations-service/`
+Houses adapters for external services and tools that agents can call.
+
+### `sdks/`
+Submodules containing the Python and Node.js SDK implementations.
+
+## Developer Resources
+
+- **CLI Usage** – See the [CLI guide](/julepcli/introduction) and [Command Reference](/julepcli/commands).
+- **TypeSpec Definitions** – API schemas live in the [`typespec/`](https://github.com/julep-ai/julep/tree/dev/typespec) directory. The generated OpenAPI spec is available at [`openapi.yaml`](https://github.com/julep-ai/julep/blob/dev/openapi.yaml).
+- **SDK References** – Python and Node.js SDK docs are in the [SDK section](/sdks/index) of the documentation.
+
+## Learn More
+
+Refer to the [Quick Start](/introduction/quickstart) to try Julep right away and the [Installation Guide](/introduction/install) for setup instructions.
+
+## Next Steps for Learning
+
+- 📚 Explore more examples in our [Cookbook](https://github.com/julep-ai/julep/tree/dev/cookbooks)
+- 🔧 Learn about [Tool Integration](https://docs.julep.ai/docs/tools/overview)
+- 🧠 Understand [Agent Memory](https://docs.julep.ai/docs/agents/memory)
+- 🔄 Dive into [Complex Workflows](https://docs.julep.ai/docs/tasks/workflows)
+
+> [!TIP]
+> 💡 Checkout more tutorials in the [Tutorials](https://docs.julep.ai/docs/tutorials/) section of the documentation.
+>
+> 💡 If you are a beginner, we recommend starting with the [Quickstart Guide](https://docs.julep.ai/docs/introduction/quickstart).
+>
+> 💡 If you are looking for more ideas, check out the [Ideas](https://github.com/julep-ai/julep/blob/dev/cookbooks/IDEAS.md) section of the repository.
+>
+> 💡 If you more into cookbook style recipes, check out the [Cookbook](https://github.com/julep-ai/julep/tree/dev/cookbooks) section of the repository.
