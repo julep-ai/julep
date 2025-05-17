@@ -67,8 +67,6 @@ dev = [
     "pip>=24.3.1",
     "poethepoet>=0.31.1",
     "pyjwt>=2.10.1",
-    "pyright>=1.1.391",
-    "pytype>=2024.10.11",
     "ruff>=0.9.0",
     "sqlvalidator>=0.0.20",
     "testcontainers[postgres,localstack]>=4.9.0",
@@ -85,6 +83,7 @@ py-modules = [
 ]
 
 [tool.ty.rules]
+# AIDEV-NOTE: pytype replaced with ty; rules tuned for initial migration
 invalid-parameter-default = "warn"
 invalid-argument-type = "warn"
 unknown-argument = "warn"

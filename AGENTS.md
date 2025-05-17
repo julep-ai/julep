@@ -40,7 +40,7 @@ Use `poe` tasks for consistency (they ensure correct environment variables and c
 # Format, lint, type-check, test, codegen
 poe format           # ruff format
 poe lint             # ruff check
-poe typecheck        # pytype --config pytype.toml (for agents-api) / pyright (for cli)
+poe typecheck        # ty check (reads config from pyproject.toml)
 poe test             # ward test --exclude .venv (pytest for integrations-service)
 poe test --search "pattern" # Run specific tests by Ward pattern
 poe check            # format + lint + type + SQL validation

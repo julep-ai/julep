@@ -860,7 +860,7 @@ dev = [
     { name = "pip" },
     { name = "poethepoet" },
     { name = "pyinstaller" },
-    { name = "pyright" },
+    { name = "ty" },
     { name = "ruff" },
     { name = "textual-dev" },
     { name = "ward" },
@@ -899,7 +899,7 @@ dev = [
     { name = "pip", specifier = ">=24.3.1" },
     { name = "poethepoet", specifier = ">=0.31.1" },
     { name = "pyinstaller", specifier = ">=6.11.1" },
-    { name = "pyright", specifier = ">=1.1.391" },
+    { name = "ty", specifier = ">=0.0.0a8" },
     { name = "ruff", specifier = ">=0.8.4" },
     { name = "textual-dev", specifier = ">=1.7.0" },
     { name = "ward", specifier = ">=0.68.0b0" },
@@ -1761,19 +1761,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pyright"
-version = "1.1.395"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "nodeenv" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/47/a2e1dfd70f9f0db34f70d5b108c82be57bf24185af69c95acff57f9239fa/pyright-1.1.395.tar.gz", hash = "sha256:53703169068c160bfb41e1b44ba3e2512492869c26cfad927e1268cb3fbb1b1c", size = 3813566 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/a1/531897f8caa6c6cc99862cd1c908ddd8a366a51d968e83ab4523ded98b30/pyright-1.1.395-py3-none-any.whl", hash = "sha256:f9bc726870e740c6c77c94657734d90563a3e9765bb523b39f5860198ed75eef", size = 5688787 },
-]
-
-[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -2597,3 +2584,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/34/45/0e055320daaabfc169b21ff6174567b2c910c45617b0d79c68d7ab349b02/yarl-1.18.3-cp312-cp312-win_amd64.whl", hash = "sha256:7e2ee16578af3b52ac2f334c3b1f92262f47e02cc6193c598502bd46f5cd1477", size = 90399 },
     { url = "https://files.pythonhosted.org/packages/f5/4b/a06e0ec3d155924f77835ed2d167ebd3b211a7b0853da1cf8d8414d784ef/yarl-1.18.3-py3-none-any.whl", hash = "sha256:b57f4f58099328dfb26c6a771d09fb20dbbae81d20cfb66141251ea063bd101b", size = 45109 },
 ]
+[[package]]
+name = "ty"
+version = "0.0.0a8"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/aa/0700b67af527edfe6d35d5bd82e6019c65363390bea9f8e4995c78e480d8/ty-0.0.0a8.tar.gz", hash = "sha256:f00c19020d8c7d5806d54564d4a1fe7e5c6efd5743cefddf619575451491496e", size = 2843192, upload-time = "2025-05-09T18:34:34.46Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/43/8af99166cfbe993fdcf3bb42d2583876a0ec7bf9c1aac6b9bfb517f8711d/ty-0.0.0a8-py3-none-linux_armv6l.whl", hash = "sha256:b1a86035380fd85ad7428dd8a1001d03b5bc31ef8453ef75c712b12511f4edaa", size = 6182530, upload-time = "2025-05-09T18:33:39.467Z" },
+]
+
