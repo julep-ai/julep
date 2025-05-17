@@ -66,9 +66,6 @@ task_def = yaml.safe_load("""
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
-########################################################
-################### INPUT SCHEMA #######################
-########################################################
 
 input_schema:
   type: object
@@ -79,9 +76,6 @@ input_schema:
         type: string
       description: The locations to search for.
 
-########################################################
-################### TOOLS ##############################
-########################################################
 
 tools:
 - name: wikipedia
@@ -103,9 +97,6 @@ tools:
     setup:
       api_key: "YOUR_BRAVE_API_KEY"
 
-########################################################
-################### MAIN WORKFLOW ######################
-########################################################
 
 main:
 - over: $ steps[0].input.locations
@@ -175,9 +166,6 @@ const task_def = yaml.safeLoad("""
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
-########################################################
-################### INPUT SCHEMA #######################
-########################################################
 
 input_schema:
   type: object
@@ -188,9 +176,6 @@ input_schema:
         type: string
       description: The locations to search for.
 
-########################################################
-################### TOOLS ##############################
-########################################################
 
 tools:
 - name: wikipedia
@@ -212,9 +197,6 @@ tools:
     setup:
       api_key: "YOUR_BRAVE_API_KEY"
 
-########################################################
-################### MAIN WORKFLOW ######################
-########################################################
 
 main:
 - over: $ steps[0].input.locations
@@ -408,9 +390,6 @@ task_def = yaml.safe_load("""
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
-########################################################
-################### INPUT SCHEMA #######################
-########################################################
 
 input_schema:
   type: object
@@ -421,9 +400,6 @@ input_schema:
         type: string
       description: The locations to search for.
 
-########################################################
-################### TOOLS ##############################
-########################################################
 
 tools:
 - name: wikipedia
@@ -445,9 +421,6 @@ tools:
     setup:
       api_key: "YOUR_BRAVE_API_KEY"
 
-########################################################
-################### MAIN WORKFLOW ######################
-########################################################
 
 main:
 - over: $ steps[0].input.locations
@@ -546,9 +519,6 @@ const task_def = yaml.safeLoad("""
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
-########################################################
-################### INPUT SCHEMA #######################
-########################################################
 
 input_schema:
   type: object
@@ -559,9 +529,6 @@ input_schema:
         type: string
       description: The locations to search for.
 
-########################################################
-################### TOOLS ##############################
-########################################################
 
 tools:
 - name: wikipedia
@@ -583,9 +550,6 @@ tools:
     setup:
       api_key: "YOUR_BRAVE_API_KEY"
 
-########################################################
-################### MAIN WORKFLOW ######################
-########################################################
 
 main:
 - over: $ steps[0].input.locations
