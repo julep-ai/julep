@@ -4,8 +4,3 @@ This module is responsible for defining the structure and capabilities of the AP
 It includes operations such as creating, updating, listing, and deleting agents, as well as managing documents and tools associated with these agents.
 """
 
-# Failed decoding arguments fix
-from temporalio import workflow
-
-with workflow.unsafe.imports_passed_through():
-    import msgpack as msgpack
