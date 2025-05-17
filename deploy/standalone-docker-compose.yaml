@@ -1,16 +1,10 @@
-##########################
-### OPEN RESPONSES API ###
-##########################
-
 # An open-source self-hosted version of the new [OpenAI Responses API](https://community.openai.com/t/introducing-the-responses-api/1140929).
 
 name: open-responses
 
-## ENVIRONMENT VARS ##
 # (Recommended way to set them is using `.env` file instead of here)
 
 x--shared-environment: &shared-environment
-  ### REQUIRED ###
   # Responses API Key
   AGENTS_API_KEY: ${RESPONSES_API_KEY:?RESPONSES_API_KEY is required}
   AGENTS_API_KEY_HEADER_NAME: ${RESPONSES_API_KEY_HEADER_NAME:-Authorization}
@@ -24,7 +18,6 @@ x--shared-environment: &shared-environment
   # Brave Search API Key (For web search tool
   BRAVE_API_KEY: ${BRAVE_API_KEY}
 
-  ### OPTIONAL ###
   # Service settings
   RESPONSES_API_PORT: ${RESPONSES_API_PORT:-8080}
   MEMORY_STORE_PASSWORD: ${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}
@@ -43,14 +36,12 @@ x--shared-environment: &shared-environment
   NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY}
   GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
 
-  ### INTERNAL ###
   # Change **ONLY** if you know what you're doing
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
   ENABLE_RESPONSES: "True"
   PG_DSN: postgres://postgres:${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}@memory-store:5432/postgres
   INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
 
-## SERVICES ##
 
 services:
   api:
