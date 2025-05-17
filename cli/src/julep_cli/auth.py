@@ -6,8 +6,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text
 from typer import Exit, Option
 
-from .app import app, console, error_console
-from .utils import get_config, get_julep_client, save_config
+from .app import app
+from .utils import console, error_console, get_config, get_julep_client, save_config
 
 current_config = get_config()
 current_environment = current_config.get("environment") or "production"

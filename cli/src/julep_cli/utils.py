@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import sqlite3
+import time
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
@@ -9,11 +10,13 @@ from typing import Any
 
 import typer
 import yaml
+from dateutil import tz
 from julep import Julep
 from julep.types import Agent, Task
+from rich.console import Console
 from rich.text import Text
+from rich.tree import Tree
 
-from .app import console, error_console
 from .models import (
     CreateAgentRequest,
     LockedEntity,
@@ -22,8 +25,53 @@ from .models import (
     ToolAgentRelationship,
 )
 
+# Global state
+console = Console()
+error_console = Console(stderr=True, style="bold red")
+
+local_tz = tz.gettz(time.tzname[time.daylight])
+
 CONFIG_DIR = Path.home() / ".config" / "julep"
 CONFIG_FILE_NAME = "config.yml"
+
+
+def to_relative(path: Path | str) -> str:
+    if isinstance(path, str):
+        return os.path.relpath(path)
+
+    if isinstance(path, Path):
+        return str(path.relative_to(Path(".").resolve()))
+
+    raise NotImplementedError
+
+
+def get_directory_tree(directory: Path) -> Tree:
+    tree = Tree(f":open_file_folder: [bold]{directory.name}")
+
+    def add_tree(branch, path: Path):
+        for item in sorted(path.iterdir(), key=lambda x: x.name):
+            if item.is_dir():
+                subtree = branch.add(f":open_file_folder: [bold]{item.name}/")
+                add_tree(subtree, item)
+            else:
+                branch.add(item.name)
+
+    add_tree(tree, directory)
+
+    return tree
+
+
+def confirm_proceed(message: str, default: bool = True) -> bool:
+    proceed = typer.confirm(
+        message,
+        default=default,
+    )
+
+    if not proceed:
+        console.print(Text("Operation cancelled.", style="bold red"), highlight=True)
+        raise typer.Exit(1)
+
+    return proceed
 
 
 class DateTimeEncoder(json.JSONEncoder):
