@@ -23,6 +23,7 @@ from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.developers.create_developer import create_developer
 from agents_api.queries.developers.get_developer import get_developer
 from agents_api.queries.docs.create_doc import create_doc
+from agents_api.queries.docs.delete_doc import delete_doc
 from agents_api.queries.docs.get_doc import get_doc
 from agents_api.queries.executions.create_execution import create_execution
 from agents_api.queries.executions.create_execution_transition import (
@@ -172,14 +173,14 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 
     yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
 
-    # TODO: Delete the doc
-    # await delete_doc(
-    #     developer_id=developer.id,
-    #     doc_id=resp.id,
-    #     owner_type="agent",
-    #     owner_id=agent.id,
-    #     connection_pool=pool,
-    # )
+    # Remove the test doc once the fixture finishes
+    await delete_doc(
+        developer_id=developer.id,
+        doc_id=resp.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
 
 
 @fixture(scope="test")
@@ -255,14 +256,14 @@ async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
 
     yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
 
-    # TODO: Delete the doc
-    # await delete_doc(
-    #     developer_id=developer.id,
-    #     doc_id=resp.id,
-    #     owner_type="user",
-    #     owner_id=user.id,
-    #     connection_pool=pool,
-    # )
+    # Remove the test doc once the fixture finishes
+    await delete_doc(
+        developer_id=developer.id,
+        doc_id=resp.id,
+        owner_type="user",
+        owner_id=user.id,
+        connection_pool=pool,
+    )
 
 
 @fixture(scope="test")
