@@ -1,0 +1,64 @@
+table:
+  name: docs
+  schema: public
+object_relationships:
+  - name: developer
+    using:
+      foreign_key_constraint_on: developer_id
+  - name: doc_project
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          doc_id: doc_id
+        insertion_order: null
+        remote_table:
+          name: project_docs
+          schema: public
+array_relationships:
+  - name: doc_ownership_reverse
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          doc_id: doc_id
+        insertion_order: null
+        remote_table:
+          name: doc_owners
+          schema: public
+  - name: docs_embeddings_stores
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          doc_id: doc_id
+          index: index
+        insertion_order: null
+        remote_table:
+          name: docs_embeddings_store
+          schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - developer_id
+        - doc_id
+        - title
+        - content
+        - index
+        - language
+        - created_at
+        - updated_at
+        - metadata
+        - content_hash
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      limit: 1000
+      allow_aggregations: true
+      query_root_fields:
+        - select_aggregate
+        - select
+        - select_by_pk
+      subscription_root_fields: []
+    comment: ""

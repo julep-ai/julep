@@ -2,21 +2,32 @@ version: '3.8'
 
 services:
   hasura:
-    image: hasura/graphql-engine:v2.33.0
+    image: hasura/graphql-engine:v2.36.13.cli-migrations-v3
     profiles:
       - multi-tenant
     ports:
       - "8086:8080"
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres?sslmode=disable}
+      HASURA_GRAPHQL_DATABASE_URL: ${PG_DSN:-postgres://postgres:${MEMORY_STORE_PASSWORD:?required}@memory-store:5432/postgres}
       HASURA_GRAPHQL_SERVER_PORT: 8080
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: naming_convention,streaming_subscriptions
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:-hasura}
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:?HASURA_ADMIN_SECRET is required}
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
-      HASURA_GRAPHQL_JWT_SECRET: ${HASURA_JWT_SECRET:-{"type":"HS512", "key":"${JWT_SHARED_KEY:-secret}", "claims_map":${HASURA_CLAIMS_MAP}}}
+      HASURA_GRAPHQL_JWT_SECRET: >-
+        {
+          "type":"HS512",
+          "key":"${JWT_SHARED_KEY:?required}",
+          "claims_map":{
+            "x-hasura-allowed-roles":{"path":"$.hasura.all_roles","default":["user"]},
+            "x-hasura-default-role":{"path":"$.hasura.all_roles[0]","default":"user"},
+            "x-hasura-user-id":{"path":"$.sub"}
+          }
+        }
       HASURA_GRAPHQL_CORS_DOMAIN: "*"
+      HASURA_GRAPHQL_ENABLE_TELEMETRY: 'false'
     restart: unless-stopped
     depends_on:
       - memory-store

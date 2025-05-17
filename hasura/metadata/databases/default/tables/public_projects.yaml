@@ -1,0 +1,29 @@
+table:
+  name: projects
+  schema: public
+object_relationships:
+  - name: developer
+    using:
+      foreign_key_constraint_on: developer_id
+array_relationships:
+  - name: project_agents
+    using:
+      foreign_key_constraint_on:
+        column: project_id
+        table:
+          name: project_agents
+          schema: public
+  - name: project_files
+    using:
+      foreign_key_constraint_on:
+        column: project_id
+        table:
+          name: project_files
+          schema: public
+  - name: project_users
+    using:
+      foreign_key_constraint_on:
+        column: project_id
+        table:
+          name: project_users
+          schema: public

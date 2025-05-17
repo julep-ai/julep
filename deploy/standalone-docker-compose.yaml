@@ -27,7 +27,7 @@ x--shared-environment: &shared-environment
   ### OPTIONAL ###
   # Service settings
   RESPONSES_API_PORT: ${RESPONSES_API_PORT:-8080}
-  MEMORY_STORE_PASSWORD: ${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}
+  MEMORY_STORE_PASSWORD: ${MEMORY_STORE_PASSWORD:?MEMORY_STORE_PASSWORD is required}
 
   # Provider API Keys (Enable one or more as needed)
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
@@ -47,7 +47,7 @@ x--shared-environment: &shared-environment
   # Change **ONLY** if you know what you're doing
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
   ENABLE_RESPONSES: "True"
-  PG_DSN: postgres://postgres:${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}@memory-store:5432/postgres
+  PG_DSN: postgres://postgres:${MEMORY_STORE_PASSWORD:?MEMORY_STORE_PASSWORD is required}@memory-store:5432/postgres
   INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
 
 ## SERVICES ##
@@ -68,7 +68,7 @@ services:
   memory-store:
     image: timescale/timescaledb-ha:pg17
     environment:
-      POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}
+      POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:?MEMORY_STORE_PASSWORD is required}
     volumes:
       - memory_store_data:/home/postgres/pgdata/data
     healthcheck:
@@ -80,7 +80,7 @@ services:
   vectorizer-worker:
     image: timescale/pgai-vectorizer-worker:latest
     environment:
-      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}@memory-store:5432/postgres
+      - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:?MEMORY_STORE_PASSWORD is required}@memory-store:5432/postgres
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     command: [ "--poll-interval", "5s" ]
     depends_on:
@@ -89,7 +89,7 @@ services:
 
   migration:
     image: julepai/memory-store-migrations:${TAG:-responses-latest}
-    command: [ "-path", "/migrations", "-database", "postgres://postgres:${MEMORY_STORE_PASSWORD:-obviously_not_a_safe_password}@memory-store:5432/postgres?sslmode=disable" , "up"]
+    command: [ "-path", "/migrations", "-database", "postgres://postgres:${MEMORY_STORE_PASSWORD:?MEMORY_STORE_PASSWORD is required}@memory-store:5432/postgres?sslmode=disable" , "up"]
     restart: "no"
     depends_on:
       memory-store:

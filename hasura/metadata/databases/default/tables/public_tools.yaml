@@ -1,0 +1,14 @@
+table:
+  name: tools
+  schema: public
+object_relationships:
+  - name: agent
+    using:
+      manual_configuration:
+        column_mapping:
+          agent_id: agent_id
+          developer_id: developer_id
+        insertion_order: null
+        remote_table:
+          name: agents
+          schema: public
