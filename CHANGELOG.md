@@ -36,6 +36,7 @@
 - **Minor Feature**: Added environment configuration for Open Responses API ✨
 - **Critical Fix**: Corrected cardinality violations in SQL queries across agents-api 🔧
 - **Minor Fix**: Resolved documentation formatting issues in 21 files 🔧
+- **Minor Fix**: `get_live_urls` now uses `asyncio.to_thread` to avoid blocking the event loop 🔧
 - **Major Enhancement**: Refactored API calls to include developer ID for better tracking 📈
 - **Minor Enhancement**: Improved Gunicorn worker configurability via environment variables 📈
 - **Secondary Performance**: Integrated OpenAPI model and TyeSpecs for expanded functionality 🚀
