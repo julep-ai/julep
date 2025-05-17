@@ -1,6 +1,6 @@
 import "../common";
 import "../agents";
-import "./models.tsp";
+import "./tool_definitions.tsp";
 
 using Common;
 using Agents;
