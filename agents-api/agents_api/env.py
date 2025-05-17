@@ -3,12 +3,15 @@ This module is responsible for loading and providing access to environment varia
 It utilizes the environs library for environment variable parsing.
 """
 
+import logging
 import multiprocessing
 import random
 from pprint import pprint
 from typing import TYPE_CHECKING, Any
 
 from environs import Env
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 # Initialize the Env object for environment variable parsing.
 env: Any = Env()
@@ -85,7 +88,8 @@ _random_generated_key: str = "".join(str(random.randint(0, 9)) for _ in range(32
 api_key: str = env.str("AGENTS_API_KEY", _random_generated_key)
 
 if api_key == _random_generated_key and not TYPE_CHECKING:
-    print(f"Generated API key since not set in the environment: {api_key}")
+    # AIDEV-NOTE: avoid printing API keys; log generic warning only
+    logger.warning("Generated API key since not set in the environment.")
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
 
