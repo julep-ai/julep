@@ -3,6 +3,7 @@ from typing import cast
 
 from beartype import beartype
 from fastapi import HTTPException
+from julep_common.exceptions import TooManyRequestsError
 from temporalio import activity
 
 from ...app import app
@@ -10,7 +11,7 @@ from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...clients.temporal import get_workflow_handle
 from ...common.protocol.tasks import ExecutionInput, StepContext
 from ...env import temporal_activity_after_retry_timeout
-from ...exceptions import LastErrorInput, TooManyRequestsError
+from ...exceptions import LastErrorInput
 from ...queries.executions.create_execution_transition import (
     create_execution_transition,
 )

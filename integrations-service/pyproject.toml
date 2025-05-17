@@ -5,6 +5,7 @@ description = "julep integrations service"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+  "julep-common @ file://../julep_common",
   "langchain-community~=0.3.0",
   "fastapi~=0.115.0",
   "uvicorn~=0.30.6",

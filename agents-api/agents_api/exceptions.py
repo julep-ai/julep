@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 
+from julep_common.exceptions import JulepError
 
-class AgentsBaseException(Exception):
+
+class AgentsBaseException(JulepError):
     pass
 
 
@@ -26,10 +28,6 @@ class UnknownTokenizerError(AgentsBaseException):
 
     def __init__(self) -> None:
         super().__init__("unknown tokenizer")
-
-
-class TooManyRequestsError(Exception):
-    pass
 
 
 @dataclass

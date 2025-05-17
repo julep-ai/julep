@@ -17,16 +17,17 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=ghcr.io/astral-sh/uv:0.5.5 /uv /uvx /bin/
 
-COPY .python-version pyproject.toml uv.lock ./
+COPY integrations-service/.python-version integrations-service/pyproject.toml integrations-service/uv.lock ./
+COPY julep_common /julep_common
 
 RUN \
   uv sync --frozen --all-extras --no-group dev --color never --python-preference system
 
-COPY . ./
+COPY integrations-service ./integrations-service
 
 # Set proper signal handling
 ENV PYTHONUNBUFFERED=1
 ENV GUNICORN_CMD_ARGS="--capture-output --enable-stdio-inheritance"
 
 # Run the application with proper signal handling
-ENTRYPOINT ["uv", "run", "gunicorn", "integrations.web:app", "-c", "gunicorn_conf.py"]
+ENTRYPOINT ["uv", "run", "gunicorn", "integrations.web:app", "-c", "integrations-service/gunicorn_conf.py"]

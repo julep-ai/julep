@@ -20,12 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY .python-version pyproject.toml uv.lock ./
+COPY agents-api/.python-version agents-api/pyproject.toml agents-api/uv.lock ./
+COPY julep_common /julep_common
 
 RUN \
   uv sync --frozen --all-extras --no-group dev --color never --python-preference system
 
-COPY . ./
+COPY agents-api ./agents-api
 
 ENV PYTHONUNBUFFERED=1
 ENV GUNICORN_CMD_ARGS="--capture-output --enable-stdio-inheritance"
