@@ -1,0 +1,20 @@
+---
+title: 'Adding a Tool Integration'
+description: 'Extend Julep with your own tool or API'
+---
+
+# Adding a Tool Integration
+
+This guide explains how to connect a new external tool or API to Julep. You will create a small service that wraps the tool and exposes actions that agents can call.
+
+## 1. Create an Integration Service
+
+Use the Julep SDK to define your integration service. Each action should accept structured inputs and return structured outputs.
+
+## 2. Register the Service
+
+Deploy the service and register its OpenAPI specification with your Julep project. The new actions become available to your agents.
+
+## 3. Invoke From a Task
+
+Call the actions from your task steps. The agent can now leverage your custom tool as part of its workflow.

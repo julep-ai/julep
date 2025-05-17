@@ -129,6 +129,8 @@
                   "guides/getting-started/chat-with-an-agent",
                   "guides/getting-started/create-and-execute-julep-task",
                   "guides/using-secrets",
+                  "guides/adding-tool-integration",
+                  "guides/modifying-agent-workflow",
                   {
                     "group": "Getting Started Examples",
                     "pages": [
