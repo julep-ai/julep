@@ -82,7 +82,7 @@ Replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to gen
      ```
   3. **Generate** the token:
      ```bash
-     jwt -alg HS512 -sign <(printf '{"exp":%d,"sub":"00000000-0000-0000-0000-000000000000"}' "$(date -d '+10 days' +%s)") -key <(printf '%s' "$JWT_SHARED_KEY")
+     jwt -alg HS512 -sign + -claim exp=$(date -d '+10 days' +%s) -claim iat=$(date +%s) -claim sub=00000000-0000-0000-0000-000000000000 -key <(printf '%s' "$JWT_SHARED_SECRET")
      ```
   </Tab>
 
