@@ -170,12 +170,12 @@ experimental:
     jwt:
       moduleName: github.com/julep-ai/traefik-jwt-plugin
 
-### TODO: Enable after testing
-# metrics:
-#   prometheus:
-#     addEntryPointsLabels: true
-#     addRoutersLabels: true
-#     addServicesLabels: true
-#     entryPoint: metrics
-#     headerLabels:
-#       apiuser: Authorization
+### AIDEV-NOTE: Metrics enabled after verifying Traefik v3 upgrade
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+    entryPoint: metrics
+    headerLabels:
+      apiuser: Authorization
