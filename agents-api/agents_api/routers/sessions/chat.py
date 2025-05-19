@@ -4,7 +4,6 @@ from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header
 from fastapi.responses import StreamingResponse
-from litellm.types.utils import StreamingChoices
 from starlette.status import HTTP_201_CREATED
 from uuid_extensions import uuid7
 
@@ -34,22 +33,9 @@ def with_mock_response(r: str | None = None):
     return wrapper
 
 
-def join_deltas(acc: dict, delta: dict) -> dict:
+def _join_deltas(acc: dict, delta: dict) -> dict:
     acc["content"] = (acc.get("content", "") or "") + (delta.pop("content", "") or "")
     return {**acc, **delta}
-
-
-def make_choice(
-    choice: StreamingChoices, default_role: str, default_finish_reason: str
-) -> dict:
-    return {
-        **choice.model_dump(),
-        "delta": {
-            **choice.delta.model_dump(),
-            "role": choice.delta.role or default_role,
-        },
-        "finish_reason": choice.finish_reason or default_finish_reason,
-    }
 
 
 async def stream_chat_response(
@@ -91,7 +77,7 @@ async def stream_chat_response(
             collected_deltas = [{}] * len(chunk.choices or [])
 
         collected_deltas = [
-            join_deltas(acc, choice.delta.model_dump())
+            _join_deltas(acc, choice.delta.model_dump())
             for acc, choice in zip(collected_deltas, chunk.choices)
         ]
 
@@ -108,7 +94,14 @@ async def stream_chat_response(
             # Only include usage on the final chunk
             usage=usage_data,
             choices=[
-                make_choice(choice, default_role, default_finish_reason)
+                {
+                    **choice.model_dump(),
+                    "delta": {
+                        **choice.delta.model_dump(),
+                        "role": choice.delta.role or default_role,
+                    },
+                    "finish_reason": choice.finish_reason or default_finish_reason,
+                }
                 for choice in chunk.choices
             ],
         )
