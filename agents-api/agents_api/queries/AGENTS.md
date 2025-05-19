@@ -8,6 +8,7 @@ Key Points
 - Validate SQL syntax with `poe check`.
 - Add new queries in `queries/` and index them if needed.
 - Tests reside under `agents-api/tests/`.
+- Add `AIDEV-NOTE` anchors at the top of query modules to clarify module purpose.
 
 # Queries
 
