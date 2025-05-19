@@ -378,7 +378,7 @@ def serialize_model_data(data: Any) -> Any:
         return data.model_dump(mode="json")
     if isinstance(data, dict):
         return {key: serialize_model_data(value) for key, value in data.items()}
-    if isinstance(data, (list, tuple)):
+    if isinstance(data, list | tuple):
         return [serialize_model_data(item) for item in data]
     return data
 

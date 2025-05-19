@@ -34,7 +34,7 @@ def _recursive_evaluate(expr, evaluator: SimpleEval):
             if activity.in_activity():
                 activity.logger.error(f"Error in base_evaluate: {evaluate_error}\n")
             raise evaluate_error from e
-    elif isinstance(expr, (int, bool, float)):
+    elif isinstance(expr, int | bool | float):
         return expr
     elif isinstance(expr, list):
         return [_recursive_evaluate(e, evaluator) for e in expr]

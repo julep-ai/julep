@@ -151,7 +151,7 @@ def validate_py_expression(
     # Find all comprehension variables and other locally defined variables
     for node in ast.walk(tree):
         # List, dict, and set comprehensions
-        if isinstance(node, (ast.ListComp, ast.DictComp, ast.SetComp)):
+        if isinstance(node, ast.ListComp | ast.DictComp | ast.SetComp):
             for generator in node.generators:
                 # Add target names from comprehensions
                 if isinstance(generator.target, ast.Name):
