@@ -126,6 +126,8 @@ async def _(
 
         assert len(parsed_chunks) > 0
 
+        resulting_content = []
+
         # Verify chunk format
         for chunk in parsed_chunks:
             assert "id" in chunk
@@ -133,6 +135,7 @@ async def _(
             assert "choices" in chunk
             assert isinstance(chunk["choices"], list)
             for choice in chunk["choices"]:
+                resulting_content.append(choice["delta"]["content"] or "")
                 assert "delta" in choice
                 assert "content" in choice["delta"]
                 assert "finish_reason" in choice
@@ -142,6 +145,8 @@ async def _(
                     "content_filter",
                     "tool_calls",
                 ]
+
+        assert "".join(resulting_content) == mock_response
 
 
 @test("chat: Test streaming with document references")
