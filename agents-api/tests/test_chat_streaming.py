@@ -10,7 +10,7 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.sessions.create_session import create_session
-from agents_api.routers.sessions.chat import chat, join_deltas
+from agents_api.routers.sessions.chat import _join_deltas, chat
 from fastapi import BackgroundTasks
 from starlette.responses import StreamingResponse
 from uuid_extensions import uuid7
@@ -41,31 +41,31 @@ async def _():
     # Test initial case where content needs to be added
     acc = {"content": ""}
     delta = {"content": "Hello", "role": "assistant"}
-    result = join_deltas(acc, delta)
+    result = _join_deltas(acc, delta)
     assert result == {"content": "Hello", "role": "assistant"}
 
     # Test appending content
     acc = {"content": "Hello"}
     delta = {"content": " world!", "role": "assistant"}
-    result = join_deltas(acc, delta)
+    result = _join_deltas(acc, delta)
     assert result == {"content": "Hello world!", "role": "assistant"}
 
     # Test with no content in delta
     acc = {"content": "Hello world!"}
     delta = {"finish_reason": "stop"}
-    result = join_deltas(acc, delta)
+    result = _join_deltas(acc, delta)
     assert result == {"content": "Hello world!", "finish_reason": "stop"}
 
     # Test with None content
     acc = {"content": None}
     delta = {"content": "Hello", "role": "assistant"}
-    result = join_deltas(acc, delta)
+    result = _join_deltas(acc, delta)
     assert result == {"content": "Hello", "role": "assistant"}
 
     # Test with None content in delta
     acc = {"content": "Hello"}
     delta = {"content": None, "role": "assistant"}
-    result = join_deltas(acc, delta)
+    result = _join_deltas(acc, delta)
     assert result == {"content": "Hello", "role": "assistant"}
 
 
