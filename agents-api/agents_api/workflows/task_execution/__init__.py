@@ -787,7 +787,7 @@ class TaskExecutionWorkflow:
         except BaseException as e:
             while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
                 e = e.__cause__
-            if isinstance(e, CancelledError | AsyncioCancelledError):
+            if isinstance(e, (CancelledError, AsyncioCancelledError)):
                 workflow.logger.info(f"Step {context.cursor.step} cancelled")
                 if not getattr(e, "transitioned", False):
                     await transition(context, type="cancelled", output="Workflow Cancelled")

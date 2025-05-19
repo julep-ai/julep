@@ -167,7 +167,7 @@ def safe_random_sample(population: list[T] | tuple[T, ...] | str, k: int) -> lis
         ValueError: If population/sample size exceeds limits
         TypeError: If input is not a valid sequence type
     """
-    if not isinstance(population, list | tuple | str):
+    if not isinstance(population, (list, tuple, str)):
         msg = "Expected a sequence (list, tuple, or string)"
         raise TypeError(msg)
     if len(population) > MAX_COLLECTION_SIZE:

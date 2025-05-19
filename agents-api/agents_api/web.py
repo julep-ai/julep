@@ -66,7 +66,7 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
     """
 
     async def _handler(request: Request, exc: Exception):
-        if isinstance(exc, ValidationError | RequestValidationError):
+        if isinstance(exc, (ValidationError, RequestValidationError)):
             exc = cast(ValidationError | RequestValidationError, exc)
             error_details = []
 
