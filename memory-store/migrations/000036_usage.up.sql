@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS usage (
     completion_tokens INTEGER NOT NULL CONSTRAINT ct_usage_completion_tokens_positive CHECK (completion_tokens >= 0),
     cost NUMERIC(10, 6) NOT NULL CONSTRAINT ct_usage_cost_positive CHECK (cost >= 0),
     estimated BOOLEAN NOT NULL DEFAULT FALSE,
-    custom_api_used BOOLEAN NOT NULL DEFAULT FALSE,
+    custom_key_used BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
     CONSTRAINT fk_usage_developer FOREIGN KEY (developer_id) REFERENCES developers(developer_id),
