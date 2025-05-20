@@ -1,15 +1,10 @@
 name: Translate README
 on:
-  push:
+  pull_request:
     paths:
       - "README.md"
       - ".github/README-*.md"
 
-  pull_request:
-    types: ["ready_for_review"]
-    paths:
-      - "README.md"
-      - ".github/README-*.md"
 jobs:
   translate_readme:
     runs-on: ubuntu-latest
