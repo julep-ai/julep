@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header
@@ -35,7 +35,6 @@ async def chat(
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
     x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
-    connection_pool: Any = None,  # FIXME: Placeholder that should be removed
 ) -> ChatResponse:
     """
     Initiates a chat session.
@@ -73,7 +72,7 @@ async def chat(
     }
     payload = {**settings, **params}
 
-    model_response = await litellm.acompletion(**payload)
+    model_response = await litellm.acompletion(**payload, stream=chat_input.stream)
 
     # Save the input and the response to the session history
     if chat_input.save:
@@ -86,14 +85,14 @@ async def chat(
             for msg in new_messages
         ]
 
-        # Add the response to the new entries
-        # FIXME: We need to save all the choices
-        new_entries.append(
+        # Persist all response choices
+        new_entries.extend(
             CreateEntryRequest.from_model_input(
                 model=settings["model"],
-                **model_response.choices[0].model_dump()["message"],
+                **choice.model_dump()["message"],
                 source="api_response",
-            ),
+            )
+            for choice in model_response.choices
         )
         background_tasks.add_task(
             create_entries,
@@ -112,17 +111,24 @@ async def chat(
         msg = "Adaptive context is not yet implemented"
         raise NotImplementedError(msg)
 
-    # Return the response
-    # FIXME: Implement streaming for chat
+    # Return the response, support streaming
     chat_response_class = ChunkChatResponse if chat_input.stream else MessageChatResponse
+
+    if chat_input.stream:
+        chunks = [chunk async for chunk in model_response]
+        usage = getattr(model_response, "usage", None)
+        choices = [chunk.model_dump() for chunk in chunks]
+    else:
+        usage = model_response.usage
+        choices = [choice.model_dump() for choice in model_response.choices]
 
     chat_response: ChatResponse = chat_response_class(
         id=uuid7(),
         created_at=utcnow(),
         jobs=jobs,
         docs=doc_references,
-        usage=model_response.usage.model_dump(),
-        choices=[choice.model_dump() for choice in model_response.choices],
+        usage=usage.model_dump() if usage else None,
+        choices=choices,
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(
