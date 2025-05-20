@@ -10,7 +10,8 @@ from .get_file import fetch_file_content
 from .router import router
 
 
-# TODO: Use streaming for large payloads
+# AIDEV-NOTE: Stream content when listing files to avoid buffering all file
+# bytes at once.
 @router.get("/files", tags=["files"])
 async def list_files(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],

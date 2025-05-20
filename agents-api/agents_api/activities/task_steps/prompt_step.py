@@ -4,7 +4,7 @@ from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from ...autogen.openapi_model import CreateToolRequest, Tool
+from ...autogen.openapi_model import ApiCallDef, CreateToolRequest, Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
@@ -18,21 +18,73 @@ COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 # AIDEV-NOTE: Formats internal Tool definitions into the structure expected by the LLM (currently focused on OpenAI function tools).
 @beartype
 def format_tool(tool: Tool | CreateToolRequest) -> dict:
+    """Format a Tool definition into the structure expected by LiteLLM."""
+
+    formatted = {
+        "type": "function",
+        "function": {
+            "name": tool.name,
+            "description": tool.description,
+            "parameters": None,
+        },
+    }
+
     if tool.type == "function":
-        return {
-            "type": "function",
-            "function": {
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.function and tool.function.parameters,
+        formatted["function"]["parameters"] = tool.function and tool.function.parameters
+        return formatted
+
+    if tool.type == "system" and tool.system:
+        from langchain_core.tools import tool as tool_decorator
+
+        from ...common.utils.evaluator import get_handler_with_filtered_params
+
+        handler = get_handler_with_filtered_params(tool.system)
+        lc_tool = tool_decorator()(handler)
+        json_schema: dict = lc_tool.get_input_jsonschema()
+
+        if not formatted["function"]["description"]:
+            formatted["function"]["description"] = json_schema.get("description")
+
+        formatted["function"]["parameters"] = json_schema
+        return formatted
+
+    if tool.type == "integration" and tool.integration:
+        params = tool.integration.arguments or {}
+        formatted["function"]["parameters"] = {
+            "type": "object",
+            "properties": {k: {"type": "string"} for k in params},
+        }
+        return formatted
+
+    if tool.type == "api_call" and tool.api_call:
+        api: ApiCallDef = tool.api_call
+        formatted["function"]["parameters"] = {
+            "type": "object",
+            "properties": {
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH",
+                        "HEAD",
+                        "OPTIONS",
+                        "CONNECT",
+                        "TRACE",
+                    ],
+                },
+                "url": {"type": "string", "description": str(api.url)},
+                "headers": {"type": "object"},
+                "params": {"type": "object"},
+                "json": {"type": "object"},
+                "data": {"type": "object"},
             },
         }
+        return formatted
 
-    # For other tool types, we need to translate them to the OpenAI function tool format
-    return {
-        "type": "function",
-        "function": {"name": tool.name, "description": tool.description},
-    }
+    return formatted
 
     # AIDEV-TODO: Implement system tools formatting.
     # FIXME: Implement system tools
