@@ -34,6 +34,7 @@
 
 - **Minor Docs**: Added links to cookbooks for Quick, Community, and Industry pages.
 - **Minor Docs**: Updated cookbook links to use absolute GitHub URLs.
+- **Minor Docs**: Removed the `n` parameter from the Responses API; requests now return a single choice.
 
 # **Julep AI Changelog for 11 Apri 2025** ✨
 
