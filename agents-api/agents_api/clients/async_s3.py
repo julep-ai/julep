@@ -85,3 +85,14 @@ async def add_object_with_hash(body: bytes, replace: bool = False) -> str:
     await add_object(key, body, replace=replace)
 
     return key
+
+
+@beartype
+async def generate_presigned_url(key: str, expires: int = 3600) -> str:
+    """Generate a temporary signed URL for a stored object."""
+    client = await setup()
+    return await client.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": blob_store_bucket, "Key": key},
+        ExpiresIn=expires,
+    )
