@@ -17,10 +17,12 @@ set -euo pipefail
 
 ### 1. Globals --------------------------------------------------------------
 
-IGNORE_DIRS_DEFAULT="deploy scripts monitoring .git .venv node_modules"
+IGNORE_DIRS_DEFAULT="sdks deploy scripts monitoring .git .venv node_modules"
 IGNORE_DIRS="${IGNORE_DIRS:-$IGNORE_DIRS_DEFAULT}"
 
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# cd "$ROOT_DIR"
+
 RED="\033[0;31m"; GREEN="\033[0;32m"; CYAN="\033[0;36m"; NC="\033[0m"
 
 announce() { echo -e "${CYAN}==>$1${NC}"; }
@@ -33,6 +35,9 @@ if ! command -v tsp &> /dev/null; then
 else
   announce "TypeSpec compiler present → $(tsp --version)"
 fi
+
+announce "Installing hasura-cli globally (npm)…"
+curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
 
 ### 4. Walk directories -----------------------------------------------------
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -60,6 +65,7 @@ for dir in $(git ls-tree --name-only -d HEAD | sort); do
     pushd "$d" > /dev/null
     announce "[uv] installing in $d …"
     uv sync
+    uv pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
     popd > /dev/null
     echo -e "${GREEN}✓ uv install done for $d${NC}"
     continue
@@ -84,6 +90,7 @@ for dir in $(git ls-tree --name-only -d HEAD | sort); do
     pushd "$d" > /dev/null
     announce "[pip] installing requirements in $d …"
     pip install -r requirements.txt
+    pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
     popd > /dev/null
     echo -e "${GREEN}✓ pip install done for $d${NC}"
     continue
