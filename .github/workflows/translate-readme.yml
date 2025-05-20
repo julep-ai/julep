@@ -1,3 +1,4 @@
+name: Translate README
 on:
   workflow_dispatch:
   push:
@@ -14,6 +15,7 @@ jobs:
   translate_readme:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: anthropics/claude-code-action@beta
         with:
           direct_prompt: >-
