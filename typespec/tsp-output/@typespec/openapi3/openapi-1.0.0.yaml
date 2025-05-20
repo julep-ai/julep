@@ -939,6 +939,144 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Files.File'
+
+  /users/{id}/files:
+    get:
+      operationId: UserFilesRoute_list
+      description: List Files owned by a User
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Files.File'
+    post:
+      operationId: UserFilesRoute_create
+      description: Create a File for this User
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Files.File'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Files.CreateFileRequest'
+
+  /users/{id}/files/{child_id}:
+    delete:
+      operationId: UserFilesRoute_delete
+      description: Delete a File for this User
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: child_id
+          in: path
+          required: true
+          description: ID of the resource to be deleted
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Common.ResourceDeletedResponse'
+
+  /agents/{id}/files:
+    get:
+      operationId: AgentFilesRoute_list
+      description: List Files owned by an Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Files.File'
+    post:
+      operationId: AgentFilesRoute_create
+      description: Create a File for this Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Files.File'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Files.CreateFileRequest'
+
+  /agents/{id}/files/{child_id}:
+    delete:
+      operationId: AgentFilesRoute_delete
+      description: Delete a File for this Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: child_id
+          in: path
+          required: true
+          description: ID of the resource to be deleted
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '202':
+          description: The request has been accepted for processing, but processing has not yet completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Common.ResourceDeletedResponse'
   /jobs/{id}:
     get:
       operationId: JobRoute_get
