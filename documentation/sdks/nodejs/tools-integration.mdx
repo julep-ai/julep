@@ -16,7 +16,7 @@ Tools in Julep extend your agents' capabilities by allowing them to interact wit
 
 Create custom tools that your agents can use:
 
-```javascript
+```javascript [expandable]
 // Create a custom function tool
 const tool = await client.agents.tools.create(agentId, {
   name: 'calculate_discount',
@@ -152,7 +152,7 @@ const apiTool = await client.agents.tools.create(agentId, {
 
 Once tools are added to an agent, they can be used in tasks:
 
-```javascript
+```javascript [expandable]
 const task = await client.tasks.create(agentId, {
   name: 'Research Task',
   description: 'Research a topic using multiple tools',

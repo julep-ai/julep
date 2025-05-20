@@ -58,7 +58,7 @@ const agent = await julep.agents.create({
 In this step, you will define the task that the Julep agent will execute. This involves specifying the task's name, description, input schema, tools, and the main workflow. The task definition is written in YAML format and includes details about the integrations and the logic for processing the input data.
 
 <CodeGroup>
-```python Python
+```python Python [expandable]
 import yaml
 
 task_def = yaml.safe_load("""
@@ -66,9 +66,6 @@ task_def = yaml.safe_load("""
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
-########################################################
-################### INPUT SCHEMA #######################
-########################################################
 
 input_schema:
   type: object
@@ -79,9 +76,6 @@ input_schema:
         type: string
       description: The locations to search for.
 
-########################################################
-################### TOOLS ##############################
-########################################################
 
 tools:
 - name: wikipedia
@@ -103,9 +97,6 @@ tools:
     setup:
       api_key: "YOUR_BRAVE_API_KEY"
 
-########################################################
-################### MAIN WORKFLOW ######################
-########################################################
 
 main:
 - over: $ steps[0].input.locations
@@ -167,7 +158,7 @@ task = julep.tasks.create(
 )
 ```
 
-```javascript Node.js
+```javascript Node.js [expandable]
 const yaml = require("yaml");
 
 const task_def = yaml.safeLoad("""
@@ -175,9 +166,6 @@ const task_def = yaml.safeLoad("""
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
-########################################################
-################### INPUT SCHEMA #######################
-########################################################
 
 input_schema:
   type: object
@@ -188,9 +176,6 @@ input_schema:
         type: string
       description: The locations to search for.
 
-########################################################
-################### TOOLS ##############################
-########################################################
 
 tools:
 - name: wikipedia
@@ -212,9 +197,6 @@ tools:
     setup:
       api_key: "YOUR_BRAVE_API_KEY"
 
-########################################################
-################### MAIN WORKFLOW ######################
-########################################################
 
 main:
 - over: $ steps[0].input.locations
@@ -389,7 +371,7 @@ while (transitions[0].items.type !== "finish" && transitions[0].items.type !== "
 
 <CodeGroup>
 
-```python Python
+```python Python [expandable]
 from julep import Julep
 import yaml
 import time
@@ -408,9 +390,6 @@ task_def = yaml.safe_load("""
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
-########################################################
-################### INPUT SCHEMA #######################
-########################################################
 
 input_schema:
   type: object
@@ -421,9 +400,6 @@ input_schema:
         type: string
       description: The locations to search for.
 
-########################################################
-################### TOOLS ##############################
-########################################################
 
 tools:
 - name: wikipedia
@@ -445,9 +421,6 @@ tools:
     setup:
       api_key: "YOUR_BRAVE_API_KEY"
 
-########################################################
-################### MAIN WORKFLOW ######################
-########################################################
 
 main:
 - over: $ steps[0].input.locations
@@ -527,7 +500,7 @@ while execution.status not in ["succeeded", "failed", "cancelled"]:
     time.sleep(5)
 ```
 
-```javascript Node.js
+```javascript Node.js [expandable]
 const julep = require('@julep/sdk');
 
 // Initialize the Julep client
@@ -546,9 +519,6 @@ const task_def = yaml.safeLoad("""
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
 
-########################################################
-################### INPUT SCHEMA #######################
-########################################################
 
 input_schema:
   type: object
@@ -559,9 +529,6 @@ input_schema:
         type: string
       description: The locations to search for.
 
-########################################################
-################### TOOLS ##############################
-########################################################
 
 tools:
 - name: wikipedia
@@ -583,9 +550,6 @@ tools:
     setup:
       api_key: "YOUR_BRAVE_API_KEY"
 
-########################################################
-################### MAIN WORKFLOW ######################
-########################################################
 
 main:
 - over: $ steps[0].input.locations

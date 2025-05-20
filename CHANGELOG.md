@@ -30,12 +30,18 @@
   </h3>
 </div>
 
+# **Julep AI Changelog for 9 May 2025** ✨
+
+- **Minor Docs**: Added links to cookbooks for Quick, Community, and Industry pages.
+- **Minor Docs**: Updated cookbook links to use absolute GitHub URLs.
+
 # **Julep AI Changelog for 11 Apri 2025** ✨
 
 - **Major Feature**: Introduced support for Gemini models in `litellm-config.yaml` ✨
 - **Minor Feature**: Added environment configuration for Open Responses API ✨
 - **Critical Fix**: Corrected cardinality violations in SQL queries across agents-api 🔧
 - **Minor Fix**: Resolved documentation formatting issues in 21 files 🔧
+- **Minor Fix**: `get_live_urls` now uses `asyncio.to_thread` to avoid blocking the event loop 🔧
 - **Major Enhancement**: Refactored API calls to include developer ID for better tracking 📈
 - **Minor Enhancement**: Improved Gunicorn worker configurability via environment variables 📈
 - **Secondary Performance**: Integrated OpenAPI model and TyeSpecs for expanded functionality 🚀

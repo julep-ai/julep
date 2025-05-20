@@ -1,0 +1,40 @@
+---
+title: 'Trip Planning - Tools'
+description: 'Configure tools for fetching weather and attraction data'
+icon: 'display'
+---
+
+### 2. Tools Configuration
+
+Next, we define the external tools our task will use:
+
+```yaml
+- name: weather
+  type: integration
+  integration:
+    provider: weather
+    setup:
+      openweathermap_api_key: YOUR_OPENWEATHERMAP_API_KEY
+
+- name: internet_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: YOUR_BRAVE_API_KEY
+```
+
+We're using two integrations:
+- The `weather` integration to fetch current weather conditions
+- The `brave` search integration to find tourist attractions
+
+## Next Step
+
+- [Workflow Steps](./trip-planning-workflow)
+
+## Related Concepts
+
+- [Agents](/concepts/agents)
+- [Tasks](/concepts/tasks)
+- [Tools](/concepts/tools)
+

@@ -1,3 +1,6 @@
+"""Database query to create a new chat session for a developer."""
+# AIDEV-NOTE: Inserts a new session row and returns it with generated ID.
+
 from uuid import UUID
 
 from beartype import beartype

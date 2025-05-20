@@ -6,13 +6,13 @@ icon: 'display'
 
 ## Overview
 
-The Tourist Plan task demonstrates how to:
-- Execute Julep workflow-steps in parallel
-- Integrate with external APIs ([Weather](/integrations/communicationdata/weather) and [Brave Search](/integrations/search/brave))
+The Trip Planning tutorial shows how to:
+- Execute workflow steps in parallel
+- Integrate with external APIs
 - Combine data from multiple sources
 - Generate personalized itineraries using AI
 
-## Task Structure
+Follow each step of the tutorial:
 
 Let's break down the task into its core components:
 
@@ -131,7 +131,7 @@ We're using two integrations:
 
   <Step title="Generate Itineraries">
 
-```yaml
+```yaml [expandable]
 - over: $ _['zipped']
   parallelism: 3
   # Inside the map step, each `_` represents the current element in the list
@@ -183,7 +183,7 @@ We're using two integrations:
 </Steps>
 
 <Accordion title="Complete Task YAML" icon="code">
-```yaml YAML
+```yaml YAML [expandable]
 # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
 name: Julep Trip Planning Task
 description: A Julep agent that can generate a detailed itinerary for visiting tourist attractions in some locations, considering the current weather conditions.
@@ -288,7 +288,7 @@ Here's how to use this task with the Julep SDK:
 
 <CodeGroup>
 
-```python Python
+```python Python [expandable]
 from julep import Client
 import time
 import yaml
@@ -332,7 +332,7 @@ else:
     print(f"Error: {result.error}")
 ```
 
-```js Node.js
+```js Node.js [expandable]
 import { Julep } from '@julep/sdk';
 import fs from 'fs';
 import yaml from 'yaml';
@@ -637,3 +637,18 @@ With clear skies and mild temperatures, this itinerary offers a balanced mix of 
 
 - Try this task yourself, check out the full example, see the [trip-planning cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/03-trip-planning-assistant.ipynb).
 - To learn more about the integrations used in this task, check out the [integrations](/integrations/supported-integrations) page.
+
+**Also See:**
+
+1. [Input Schema](./trip-planning-input)
+2. [Tools Configuration](./trip-planning-tools)
+3. [Workflow Steps](./trip-planning-workflow)
+4. [Running the Task](./trip-planning-running)
+
+## Related Concepts
+
+- [Agents](/concepts/agents)
+- [Tasks](/concepts/tasks)
+- [Tools](/concepts/tools)
+
+
