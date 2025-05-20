@@ -14,8 +14,8 @@ from textual.binding import Binding
 from textual.widgets import Header, Static
 from textual.widgets import Log as TextLog
 
-from .app import app, console, error_console
-from .utils import get_julep_client, manage_db_attribute
+from .app import app
+from .utils import console, error_console, get_julep_client, manage_db_attribute
 
 
 # New TUI app using Textual's Log widget to display transitions in tailing mode

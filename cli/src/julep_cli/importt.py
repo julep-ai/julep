@@ -9,13 +9,16 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
-from .app import app, console, error_console, local_tz
+from .app import app
 from .models import LockedEntity
 from .utils import (
     add_agent_to_julep_yaml,
     add_entity_to_lock_file,
+    console,
+    error_console,
     get_entity_from_lock_file,
     get_julep_client,
+    local_tz,
     update_existing_entity_in_lock_file,
     update_yaml_for_existing_entity,
 )

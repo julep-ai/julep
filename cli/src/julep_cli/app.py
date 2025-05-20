@@ -1,18 +1,11 @@
-import time
 from typing import Annotated
 
-from dateutil import tz
-from rich.console import Console
+import typer
 from trogon.typer import init_tui
 from typer import Exit, Option
 
+from .utils import console, error_console
 from .wrapper import WrappedTyper
-
-# Global state
-console = Console()
-error_console = Console(stderr=True, style="bold red")
-
-local_tz = tz.gettz(time.tzname[time.daylight])
 
 # Initialize typer app with -h as an alias for help
 app = WrappedTyper(
@@ -65,10 +58,11 @@ def version_callback(value: bool):
 
 
 def no_color_callback(value: bool) -> bool:
-    global console, error_console
+    import julep_cli.utils as utils
+
     if value:
-        console = Console(color_system=None)
-        error_console = Console(color_system=None, stderr=True)
+        utils.console._color_system = None  # noqa: SLF001
+        utils.error_console._color_system = None  # noqa: SLF001
 
     return value
 
@@ -81,6 +75,7 @@ def quiet_callback(value: bool) -> bool:
 
 @app.callback()
 def main(
+    ctx: typer.Context,
     no_color: Annotated[
         bool,
         Option(
@@ -110,7 +105,7 @@ def main(
             is_eager=True,
         ),
     ] = False,
-):
+) -> None:
     """
     Julep CLI - Command line interface for the Julep platform
     """
