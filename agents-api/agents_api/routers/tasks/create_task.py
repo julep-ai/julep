@@ -8,6 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from ...autogen.openapi_model import CreateTaskRequest, Task
 from ...common.utils.task_validation import validate_task
+from ...common.utils.tool_validation import validate_tool
 from ...dependencies.developer_id import get_developer_id
 from ...queries.tasks.create_task import create_task as create_task_query
 from .router import router
@@ -29,6 +30,9 @@ async def create_task(
         pass
 
     # Validate Python expressions in the task spec
+    for tool in data.tools:
+        await validate_tool(tool)
+
     validation_result = validate_task(data)
     if not validation_result.is_valid:
         # Prepare a detailed error response
