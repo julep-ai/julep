@@ -5,6 +5,8 @@ from uuid import UUID
 
 import typer
 
+from rich.progress import Progress, SpinnerColumn, TextColumn
+
 from .app import app, console, error_console
 from .executions import create_execution
 from .logs import logs
@@ -65,17 +67,30 @@ def run(
             msg = f"Error reading input file: {e}"
             raise typer.BadParameter(msg)
 
-    # TODO: Implement task execution logic
-    typer.echo(f"Running task '{task}' with input: {task_input}")
-
     client = get_julep_client()
 
-    try:
-        execution = create_execution(client, str(task), task_input)
-        console.print(f"Execution created successfully! Execution ID: {execution.id}")
-    except Exception as e:
-        error_console.print(f"Error creating execution: {e}", highlight=True)
-        raise typer.Exit(1)
+    # AIDEV-NOTE: Execute task via Julep API and surface errors clearly
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+        console=console,
+    ) as progress:
+        try:
+            run_task = progress.add_task("Creating execution...", start=False)
+            progress.start_task(run_task)
+
+            execution = create_execution(client, str(task), task_input)
+        except Exception as e:
+            error_console.print(
+                f"[bold red]Error creating execution: {e}[/bold red]",
+                highlight=True,
+            )
+            raise typer.Exit(1)
+
+    console.print(
+        f"Execution created successfully! Execution ID: {execution.id}",
+    )
 
     if wait:
         logs(execution_id=execution.id, tailing=True)
