@@ -10,24 +10,26 @@ on:
     paths:
       - "README.md"
       - ".github/README-*.md"
-
-steps:
-  - uses: anthropics/claude-code-action@beta
-    with:
-      direct_prompt: >-
-        Use the root README.md to review the .github/README-{lang}.md files
-        to see if they are correctly translated and if needed
-        make changes as necessary. Keep the contents exactly the same, just
-        translated to the target languages.
-
-      custom_instructions: >-
-        This is a monorepo with multiple different services.
-        The repo uses AGENTS.md as the file that contains instructions for
-        AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but
-        is just a symlink to the corresponding AGENTS.md (usually in the same dir).
-
-      anthropic_model: ${{ vars.TRANSLATOR_CLAUDE_MODEL }}
-      anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-      github_token: ${{ secrets.GITHUB_TOKEN }}
-      allowed_tools: "Bash(npm install),Bash(npm run test),Edit,Replace,NotebookEditCell"
-      disallowed_tools: "TaskOutput,KillTask"
+jobs:
+  translate_readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@beta
+        with:
+          direct_prompt: >-
+            Use the root README.md to review the .github/README-{lang}.md files
+            to see if they are correctly translated and if needed
+            make changes as necessary. Keep the contents exactly the same, just
+            translated to the target languages.
+    
+          custom_instructions: >-
+            This is a monorepo with multiple different services.
+            The repo uses AGENTS.md as the file that contains instructions for
+            AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but
+            is just a symlink to the corresponding AGENTS.md (usually in the same dir).
+    
+          anthropic_model: ${{ vars.TRANSLATOR_CLAUDE_MODEL }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          allowed_tools: "Bash(npm install),Bash(npm run test),Edit,Replace,NotebookEditCell"
+          disallowed_tools: "TaskOutput,KillTask"
