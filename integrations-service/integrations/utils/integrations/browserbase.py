@@ -1,6 +1,6 @@
 import contextlib
-import os
 import tempfile
+from pathlib import Path
 
 import httpx
 from beartype import beartype
@@ -233,7 +233,7 @@ async def install_extension_from_github(
                 }
 
                 try:
-                    with open(tmp_file_path, "rb") as f:
+                    with Path(tmp_file_path).open("rb") as f:
                         files = {"file": f}
                         upload_response = await client.post(
                             upload_url,
@@ -249,7 +249,7 @@ async def install_extension_from_github(
 
                 # Delete the temporary file
                 with contextlib.suppress(FileNotFoundError):
-                    os.remove(tmp_file_path)
+                    Path(tmp_file_path).unlink()
 
                 return BrowserbaseExtensionOutput(id=upload_response.json()["id"])
     except Exception as e:

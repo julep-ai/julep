@@ -38,7 +38,7 @@ async def update_tool(
     agent_id: UUID,
     tool_id: UUID,
     data: UpdateToolRequest,
-    **kwargs,
+    **_kwargs,
 ) -> tuple[str, list]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)

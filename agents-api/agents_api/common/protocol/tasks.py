@@ -285,7 +285,7 @@ class StepContext(BaseModel):
 
     # AIDEV-NOTE: Retrieves historical inputs, labels, and state for the current execution scope.
     async def get_inputs(
-        self, limit: int = 50
+        self, _limit: int = 50
     ) -> tuple[list[Any], list[str | None], dict[str, Any]]:
         if self.execution_input.execution is None:
             return [], [], {}

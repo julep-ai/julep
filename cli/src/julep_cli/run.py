@@ -59,7 +59,8 @@ def run(
             raise typer.BadParameter(msg)
     elif input_file:
         try:
-            with open(input_file) as f:
+            # AIDEV-NOTE: Use Path.open for lint compliance
+            with Path(input_file).open() as f:
                 task_input = json.load(f)
         except (json.JSONDecodeError, FileNotFoundError) as e:
             msg = f"Error reading input file: {e}"

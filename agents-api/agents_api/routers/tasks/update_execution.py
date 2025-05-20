@@ -21,7 +21,7 @@ from .router import router
 
 @router.put("/executions/{execution_id}", tags=["executions"])
 async def update_execution(
-    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    _x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     execution_id: UUID,
     data: ResumeExecutionRequest | StopExecutionRequest,
 ):

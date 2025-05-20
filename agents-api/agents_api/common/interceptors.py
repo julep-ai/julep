@@ -189,7 +189,7 @@ async def handle_execution_with_errors[I, T](
                 str(e),
                 type=type(e).__name__,
                 non_retryable=True,
-            )
+            ) from e
         raise
 
 
@@ -223,7 +223,7 @@ def handle_execution_with_errors_sync[I, T](
                 str(e),
                 type=type(e).__name__,
                 non_retryable=True,
-            )
+            ) from e
         raise
 
 
@@ -325,7 +325,7 @@ class CustomInterceptor(Interceptor):
 
     def workflow_interceptor_class(
         self,
-        input: WorkflowInterceptorClassInput,
+        _input: WorkflowInterceptorClassInput,
     ) -> type[WorkflowInboundInterceptor] | None:
         """
         Returns the custom workflow interceptor class.

@@ -15,7 +15,8 @@ def get_config():
             return {}
 
         try:
-            with open(config_path) as f:
+            # AIDEV-NOTE: Replace direct open call with Path.open per lint rules
+            with config_path.open() as f:
                 _config = yaml.safe_load(f)
         except Exception as e:
             print(f"Error loading LiteLLM config: {e}")

@@ -326,7 +326,7 @@ class PlaywrightActions:
         screenshot = self._overlay_cursor(screenshot, x, y)
 
         if filename:
-            with open(filename, "wb") as f:
+            with Path(filename).open("wb") as f:
                 f.write(screenshot)
 
         encoded = base64.b64encode(screenshot).decode("utf-8")

@@ -65,7 +65,7 @@ def make_exception_handler(status_code: int) -> Callable[[Any, Any], Any]:
     A callable exception handler that logs the exception and returns a JSON response with the specified status code.
     """
 
-    async def _handler(request: Request, exc: Exception):
+    async def _handler(_request: Request, exc: Exception):
         if isinstance(exc, ValidationError | RequestValidationError):
             exc = cast(ValidationError | RequestValidationError, exc)
             error_details = []
@@ -290,11 +290,11 @@ app.include_router(healthz.router)
 
 # Register the usage check middleware
 @app.middleware("http")
-async def usage_check_middleware(request: Request, call_next):
+async def usage_check_middleware(_request: Request, call_next):
     # Get developer ID from header
-    developer_id_str = request.headers.get("X-Developer-Id")
+    developer_id_str = _request.headers.get("X-Developer-Id")
     if not developer_id_str:
-        return await call_next(request)
+        return await call_next(_request)
 
     user_cost_data: dict = {}
     invalid_account_error = JSONResponse(
@@ -315,8 +315,8 @@ async def usage_check_middleware(request: Request, call_next):
         if not user_cost_data.get("active", False):
             return invalid_account_error
 
-        if request.method == "GET":
-            return await call_next(request)
+        if _request.method == "GET":
+            return await call_next(_request)
 
         # Skip cost check for users with "paid" tag
         user_tags = user_cost_data.get("tags", []) or []
@@ -324,7 +324,7 @@ async def usage_check_middleware(request: Request, call_next):
             user_tags = []
 
         if "paid" in user_tags:
-            return await call_next(request)
+            return await call_next(_request)
 
         user_cost = user_cost_data.get("cost")
 
@@ -363,7 +363,7 @@ async def usage_check_middleware(request: Request, call_next):
         logger.error(f"Error in usage check middleware: {e!s}")
 
     # Continue processing the request
-    return await call_next(request)
+    return await call_next(_request)
 
 
 # TODO: CORS should be enabled only for JWT auth
@@ -384,7 +384,7 @@ register_exceptions(app)
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc: HTTPException):  # pylint: disable=unused-argument
+async def http_exception_handler(_request, exc: HTTPException):  # pylint: disable=unused-argument
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -398,7 +398,7 @@ async def http_exception_handler(request, exc: HTTPException):  # pylint: disabl
 
 
 @app.exception_handler(RPCError)
-async def validation_error_handler(request: Request, exc: RPCError):
+async def validation_error_handler(_request: Request, exc: RPCError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={
@@ -412,7 +412,7 @@ async def validation_error_handler(request: Request, exc: RPCError):
 
 
 @app.exception_handler(BaseCommonException)
-async def session_not_found_error_handler(request: Request, exc: BaseCommonException):
+async def session_not_found_error_handler(_request: Request, exc: BaseCommonException):
     return JSONResponse(
         status_code=exc.http_code,
         content={
@@ -426,7 +426,7 @@ async def session_not_found_error_handler(request: Request, exc: BaseCommonExcep
 
 
 @app.exception_handler(PromptTooBigError)
-async def prompt_too_big_error(request: Request, exc: PromptTooBigError):
+async def prompt_too_big_error(_request: Request, exc: PromptTooBigError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={
@@ -441,7 +441,7 @@ async def prompt_too_big_error(request: Request, exc: PromptTooBigError):
 
 
 @app.exception_handler(APIError)
-async def litellm_api_error(request: Request, exc: APIError):
+async def litellm_api_error(_request: Request, exc: APIError):
     return JSONResponse(
         status_code=status.HTTP_502_BAD_GATEWAY,
         content={

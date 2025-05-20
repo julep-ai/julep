@@ -229,7 +229,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_ReturnStep(
         self,
-        step: ReturnStep,
+        _step: ReturnStep,
     ):
         if self.outcome is None or self.context is None:
             return WorkflowResult(state=PartialTransition(output=None))
@@ -355,7 +355,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_EvaluateStep(
         self,
-        step: EvaluateStep,
+        _step: EvaluateStep,
     ):
         if self.outcome is None:
             return WorkflowResult(state=PartialTransition(output=None))
@@ -383,7 +383,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_YieldStep(
         self,
-        step: YieldStep,
+        _step: YieldStep,
     ):
         if self.outcome is None or self.context is None:
             return WorkflowResult(state=PartialTransition(output=None))
@@ -418,7 +418,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_WaitForInputStep(
         self,
-        step: WaitForInputStep,
+        _step: WaitForInputStep,
     ):
         workflow.logger.info("Wait for input step: Waiting for external input")
         if self.outcome is None:
@@ -516,7 +516,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_SetStep(
         self,
-        step: SetStep,
+        _step: SetStep,
     ):
         if self.outcome is None:
             return WorkflowResult(state=PartialTransition(output=None))
@@ -538,7 +538,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_ParallelStep(
         self,
-        step: ParallelStep,
+        _step: ParallelStep,
     ):
         # FIXME: Implement ParallelStep
         # SCRUM-17
@@ -548,7 +548,7 @@ class TaskExecutionWorkflow:
 
     async def _handle_ToolCallStep(
         self,
-        step: ToolCallStep,
+        _step: ToolCallStep,
     ):
         tool_call = self.outcome.output if self.outcome is not None else {}
         if tool_call["type"] == "function":

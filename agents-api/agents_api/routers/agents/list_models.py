@@ -11,7 +11,7 @@ from .router import router
 
 @router.get("/agents/models", tags=["agents"])
 async def list_models(
-    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    _x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     x_custom_api_key: str | None = Header(None),
 ) -> ListModelsResponse:
     """

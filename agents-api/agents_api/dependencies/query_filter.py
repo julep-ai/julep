@@ -39,7 +39,7 @@ def create_filter_extractor(
 
     def extract_filters(
         request: Request,
-        metadata_filter: Annotated[MetadataFilter, Query(default_factory=MetadataFilter)],
+        _metadata_filter: Annotated[MetadataFilter, Query(default_factory=MetadataFilter)],
     ) -> MetadataFilter:
         """
         Extracts query parameters that start with the specified prefix and returns them as a dictionary.

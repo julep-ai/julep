@@ -77,7 +77,7 @@ async def base_evaluate_activity(
 async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
-    current_input: Any,
+    _current_input: Any,
     user_state: dict[str, Any] = {},
 ) -> Any:
     info = workflow.info()
@@ -104,7 +104,7 @@ async def continue_as_child(
             args=[
                 execution_input,
                 start,
-                current_input,
+                _current_input,
             ],
             retry_policy=DEFAULT_RETRY_POLICY,
             memo=workflow.memo() | user_state,
@@ -128,7 +128,7 @@ async def execute_switch_branch(
     execution_input: ExecutionInput,
     switch: list,
     index: int,
-    current_input: Any,
+    _current_input: Any,
     user_state: dict[str, Any] = {},
 ) -> Any:
     task = validate_execution_input(execution_input)
@@ -157,7 +157,7 @@ async def execute_switch_branch(
     return await continue_as_child(
         case_execution_input,
         case_next_target,
-        current_input,
+        _current_input,
         user_state=user_state,
     )
 
@@ -169,7 +169,7 @@ async def execute_if_else_branch(
     then_branch: WorkflowStep,
     else_branch: WorkflowStep | None,
     condition: bool,
-    current_input: Any,
+    _current_input: Any,
     user_state: dict[str, Any] = {},
 ) -> Any:
     task = validate_execution_input(execution_input)
@@ -202,7 +202,7 @@ async def execute_if_else_branch(
     return await continue_as_child(
         if_else_execution_input,
         if_else_next_target,
-        current_input,
+        _current_input,
         user_state=user_state,
     )
 
@@ -213,7 +213,7 @@ async def execute_foreach_step(
     execution_input: ExecutionInput,
     do_step: WorkflowStep,
     items: list[Any],
-    current_input: Any,
+    _current_input: Any,
     user_state: dict[str, Any] = {},
 ) -> Any:
     task = validate_execution_input(execution_input)
@@ -259,7 +259,7 @@ async def execute_map_reduce_step(
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    current_input: Any,
+    _current_input: Any,
     user_state: dict[str, Any] = {},
     reduce: str | None = None,
     initial: Any = [],
@@ -315,7 +315,7 @@ async def execute_map_reduce_step_parallel(
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    current_input: Any,
+    _current_input: Any,
     user_state: dict[str, Any] = {},
     initial: Any = [],
     reduce: str | None = None,
@@ -340,7 +340,7 @@ async def execute_map_reduce_step_parallel(
             execution_input=execution_input,
             map_defn=map_defn,
             items=items,
-            current_input=current_input,
+            current_input=_current_input,
             user_state=user_state,
             initial=initial,
             reduce=reduce,

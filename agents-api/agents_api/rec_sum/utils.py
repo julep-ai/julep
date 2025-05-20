@@ -30,7 +30,7 @@ class chatml:
         return chatml.make(content, name=name)
 
     @staticmethod
-    def thought(content, name: str | None = None) -> Any:
+    def thought(content, _name: str | None = None) -> Any:
         return chatml.make(content, name="thought")
 
     @staticmethod

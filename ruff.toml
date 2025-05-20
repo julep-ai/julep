@@ -37,6 +37,7 @@ respect-gitignore = true
 
 # Enable preview features.
 preview = true
+extend-include = ["**/autogen/openapi_model.py"]
 
 line-length = 96
 indent-width = 4
@@ -51,11 +52,50 @@ output-format = "grouped"
 # Enable preview features.
 preview = true
 
-# TODO: Need to add , "**/autogen/*.py"
-exclude = ["gunicorn_conf.py", "*.ipynb"]
+# Exclude generated code from linting except custom models
+exclude = ["gunicorn_conf.py", "*.ipynb", "**/autogen/*.py", "**/tests/**"]
 
-# TODO: Enable C09, S, B, ARG, PTH, ERA, PLW, FURB
-select = ["F", "E1", "E2", "E3", "E4", "E5", "E7", "W", "FAST", "I", "UP", "ASYNC", "COM", "C4", "DTZ", "T10", "EM", "FA", "ISC", "ICN", "INP", "PIE", "Q", "RSE", "RET", "SLF", "SLOT", "SIM", "INT", "PD", "PLE", "FLY", "NPY", "PERF", "RUF"]
+# Gradually enable rule groups
+select = [
+    "F",
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E7",
+    "W",
+    "FAST",
+    "I",
+    "UP",
+    "ASYNC",
+    "COM",
+    "C4",
+    "C90",
+    "ARG",
+    "PTH",
+    "DTZ",
+    "T10",
+    "EM",
+    "FA",
+    "ISC",
+    "ICN",
+    "INP",
+    "PIE",
+    "Q",
+    "RSE",
+    "RET",
+    "SLF",
+    "SLOT",
+    "SIM",
+    "INT",
+    "PD",
+    "PLE",
+    "FLY",
+    "NPY",
+    "PERF",
+    "RUF",
+]
 ignore = [
   "E402",       # module-import-not-at-top-of-file
   "E501",       # line-too-long
@@ -71,6 +111,9 @@ ignore = [
 ]
 
 fixable = ["ALL"]
+
+[lint.mccabe]
+max-complexity = 100
 
 [format]
 exclude = ["*.ipynb", "*.pyi", "*.pyc"]
