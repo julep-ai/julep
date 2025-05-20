@@ -1,6 +1,5 @@
 name: Translate README
 on:
-  workflow_dispatch:
   push:
     paths:
       - "README.md"
