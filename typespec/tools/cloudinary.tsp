@@ -103,17 +103,17 @@ alias CloudinaryOutput = CloudinaryUploadOutput | CloudinaryEditOutput;
 model CloudinaryProviderCard extends BaseProviderCard {
     provider: "cloudinary" = "cloudinary";
     setup: CloudinarySetup;
-    methods: ProviderMethod<CloudinaryUploadArguments | CloudinaryEditArguments, CloudinaryOutput>[] = #[
-        #{
+    methods: ProviderMethod<CloudinaryUploadArguments | CloudinaryEditArguments, CloudinaryOutput>[] = [
+        {
             method: "media_upload",
             description: "Upload media to Cloudinary",
         },
-        #{
+        {
             method: "media_edit",
             description: "Edit media in Cloudinary",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://cloudinary.com/",
         docs: "https://cloudinary.com/documentation/python_quickstart",
         icon: "https://cloudinary.com/favicon.ico",

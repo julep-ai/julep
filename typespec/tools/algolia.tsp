@@ -49,13 +49,13 @@ model AlgoliaIntegrationDef extends BaseIntegrationDef {
 model AlgoliaProviderCard extends BaseProviderCard {
     provider: "algolia" = "algolia";
     setup: AlgoliaSetup;
-    methods: ProviderMethod<AlgoliaSearchArguments, AlgoliaSearchOutput>[] = #[
-        #{
+    methods: ProviderMethod<AlgoliaSearchArguments, AlgoliaSearchOutput>[] = [
+        {
             method: "search",
             description: "Search for content in an Algolia index",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://www.algolia.com/",
         docs: "https://www.algolia.com/doc/",
         icon: "https://www.algolia.com/favicon.ico",

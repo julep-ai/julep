@@ -55,5 +55,5 @@ model HasMetadata {
 model HasJobs {
     /** IDs (if any) of jobs created as part of this request */
     @visibility("read")
-    jobs: uuid[] = #[];
+    jobs: uuid[] = [];
 }

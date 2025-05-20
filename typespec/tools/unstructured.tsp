@@ -56,13 +56,13 @@ model UnstructuredIntegrationDef extends BaseIntegrationDef {
 model UnstructuredProviderCard extends BaseProviderCard {
     provider: "unstructured" = "unstructured";
     setup: UnstructuredSetup;
-    methods: ProviderMethod<UnstructuredPartitionArguments, UnstructuredPartitionOutput>[] = #[
-        #{
+    methods: ProviderMethod<UnstructuredPartitionArguments, UnstructuredPartitionOutput>[] = [
+        {
             method: "partition",
             description: "Partition documents into structured elements",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://unstructured.io/",
         docs: "https://docs.unstructured.io/",
         icon: "https://unstructured.io/favicon.ico",

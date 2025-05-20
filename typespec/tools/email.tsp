@@ -53,13 +53,13 @@ model EmailIntegrationDef extends BaseIntegrationDef {
 model EmailProviderCard extends BaseProviderCard {
     provider: "email" = "email";
     setup: EmailSetup;
-    methods: ProviderMethod<EmailArguments, EmailOutput>[] = #[
-        #{
+    methods: ProviderMethod<EmailArguments, EmailOutput>[] = [
+        {
             method: "send",
             description: "Send an email",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://emailservice.com/",
         docs: "https://emailservice.com/docs/",
         icon: "https://emailservice.com/favicon.ico",
