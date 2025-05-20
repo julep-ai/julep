@@ -315,6 +315,17 @@ def html_to_markdown(html_text: str) -> str:
     return markdownify.markdownify(html_text)
 
 
+# AIDEV-NOTE: Exposes Julep file URLs during expression evaluation
+def resolve_url(url: str, expires: int = 3600) -> str:
+    """Return a signed URL if the input uses the julep scheme."""
+    if url.startswith("julep://"):
+        file_id = url.split("julep://", 1)[1]
+        from ...clients import sync_s3
+
+        return sync_s3.generate_presigned_url(file_id, expires)
+    return url
+
+
 # Restricted set of allowed functions
 ALLOWED_FUNCTIONS = {
     # Basic Python builtins
@@ -354,6 +365,7 @@ ALLOWED_FUNCTIONS = {
     "humanize_text_alpha": humanize_text,
     "markdown_to_html": markdown_to_html,
     "html_to_markdown": html_to_markdown,
+    "resolve_url": resolve_url,
 }
 
 

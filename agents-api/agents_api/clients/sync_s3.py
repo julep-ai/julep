@@ -93,3 +93,14 @@ def add_object_with_hash(body: bytes, replace: bool = False) -> str:
     add_object(key, body, replace=replace)
 
     return key
+
+
+@beartype
+def generate_presigned_url(key: str, expires: int = 3600) -> str:
+    """Generate a temporary signed URL for a stored object."""
+    client = setup()
+    return client.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": blob_store_bucket, "Key": key},
+        ExpiresIn=expires,
+    )

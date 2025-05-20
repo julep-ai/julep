@@ -218,6 +218,20 @@ const execution = await client.tasks.executions.create({
   </Card>
 </CardGroup>
 
+## Accessing Files in Workflows
+
+Files can be referenced inside task steps using the `julep://` scheme. When an
+expression contains a URL like `julep://<file_id>`, Julep automatically resolves
+it to a temporary signed URL that is valid for one hour by default.
+
+```yaml
+main:
+  - evaluate:
+      url: julep://{file_id}
+```
+
+This allows workflows to access file contents without exposing permanent links.
+
 ## Next Steps
 
 - [Projects](/concepts/projects) - Learn about organizing resources with projects

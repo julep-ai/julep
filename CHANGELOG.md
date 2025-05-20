@@ -30,6 +30,10 @@
   </h3>
 </div>
 
+# **Julep AI Changelog for 12 May 2025** ✨
+
+- **Minor Feature**: Added `julep://` file URL resolution in workflows ✨
+
 # **Julep AI Changelog for 9 May 2025** ✨
 
 - **Minor Docs**: Added links to cookbooks for Quick, Community, and Industry pages.
