@@ -1,0 +1,34 @@
+---
+title: 'Token Count Background Job'
+description: 'Migrating token counting from triggers to Timescale jobs'
+icon: 'database'
+---
+
+## Overview
+
+Earlier migrations attempted to update `token_count` using a trigger that called
+`ai.openai_tokenize` for every row. This approach slowed bulk inserts.
+Migration `000042` replaces the trigger function with a version that reads
+`NEW.model` and provides an example of scheduling a TimescaleDB job to update
+missing token counts asynchronously.
+
+## Migration Steps
+
+1. Apply the latest migrations:
+   ```bash
+   migrate -database "<db_url>" -path memory-store/migrations up
+   ```
+2. (Optional) Register the background job:
+   ```sql
+   SELECT add_job(
+       'refresh_entry_token_counts',
+       interval '5 minutes'
+   );
+   ```
+3. To roll back the change:
+   ```bash
+   migrate -database "<db_url>" -path memory-store/migrations down 1
+   ```
+
+The new job recalculates token counts in batches, reducing write latency while
+keeping counts up to date.

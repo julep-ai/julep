@@ -34,6 +34,7 @@
 
 - **Minor Docs**: Added links to cookbooks for Quick, Community, and Industry pages.
 - **Minor Docs**: Updated cookbook links to use absolute GitHub URLs.
+- **Minor Docs**: Documented token-count background job migration.
 
 # **Julep AI Changelog for 11 Apri 2025** ✨
 
