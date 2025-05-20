@@ -19,8 +19,8 @@ group "default" {
 }
 
 target "agents-api" {
-  context = "./agents-api"
-  dockerfile = "Dockerfile"
+  context = "."
+  dockerfile = "agents-api/Dockerfile"
   tags = [
     "julepai/agents-api:${TAG}",
     "julepai/agents-api:git-${GIT_SHA}"
@@ -28,8 +28,8 @@ target "agents-api" {
 }
 
 target "agents-api-worker" {
-  context = "./agents-api"
-  dockerfile = "Dockerfile.worker"
+  context = "."
+  dockerfile = "agents-api/Dockerfile.worker"
   tags = [
     "julepai/worker:${TAG}",
     "julepai/worker:git-${GIT_SHA}"
@@ -46,8 +46,8 @@ target "memory-store" {
 }
 
 target "integrations" {
-  context = "./integrations-service"
-  dockerfile = "Dockerfile"
+  context = "."
+  dockerfile = "integrations-service/Dockerfile"
   tags = [
     "julepai/integrations:${TAG}",
     "julepai/integrations:git-${GIT_SHA}"
