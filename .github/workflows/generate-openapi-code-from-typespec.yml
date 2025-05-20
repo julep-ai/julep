@@ -31,11 +31,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate openapi code
+      - name: Ensure openapi code is fresh
         run: |
           cd typespec; npm ci; cd -
           export PATH=$PATH:$PWD/typespec/node_modules/.bin
           bash scripts/generate_openapi_code.sh
+          git diff --exit-code
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -160,6 +160,7 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
 
 1. **Set Up Development Environment**
    - Clone the repository
+   - Install pre-commit and enable hooks: `pip install pre-commit && pre-commit install`
    - Install Docker and Docker Compose
    - Set up necessary API keys and environment variables
 
