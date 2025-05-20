@@ -124,10 +124,17 @@ model VectorDocSearchRequest extends BaseDocSearchRequest {
     @maxValue(1)
     confidence: float = 0.5;
 
-    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[];
+    /**
+     * Vector to use in the search. Must be the same dimensions as the embedding model
+     * or else an error will be thrown.
+     */
+    vector?: float[];
 
-    text?: never;
+    /**
+     * Text to use for the search. If provided without `vector`, the server will
+     * automatically embed the text.
+     */
+    text?: string;
 
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)
@@ -158,11 +165,17 @@ model HybridDocSearchRequest extends BaseDocSearchRequest {
     @maxValue(1)
     alpha: float = 0.5;
 
-    /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
+    /**
+     * Text to use in the search. In `hybrid` search mode, either `text` or both
+     * `text` and `vector` fields are required.
+     */
     text: string;
 
-    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[];
+    /**
+     * Vector to use in the search. Must be the same dimensions as the embedding
+     * model or else an error will be thrown.
+     */
+    vector?: float[];
 
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)

@@ -249,6 +249,54 @@ async def _(make_request=make_request, user=test_user, doc=test_user_doc):
     assert len(docs) >= 1
 
 
+@test("route: vector search with text only")
+async def _(
+    make_request=make_request,
+    agent=test_agent,
+    doc=test_doc_with_embedding,
+    mocks=patch_embed_acompletion,
+):
+    (embed, _) = mocks
+    search_params = {
+        "text": doc.content[0],
+        "confidence": 0.8,
+        "limit": 1,
+    }
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/search",
+        json=search_params,
+    )
+
+    assert response.status_code == 200
+    embed.assert_called()
+
+
+@test("route: hybrid search with text only")
+async def _(
+    make_request=make_request,
+    agent=test_agent,
+    doc=test_doc_with_embedding,
+    mocks=patch_embed_acompletion,
+):
+    (embed, _) = mocks
+    search_params = {
+        "text": doc.content[0],
+        "alpha": 0.6,
+        "limit": 1,
+    }
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/search",
+        json=search_params,
+    )
+
+    assert response.status_code == 200
+    embed.assert_called()
+
+
 @test("route: search agent docs hybrid with mmr")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc_with_embedding):
     EMBEDDING_SIZE = 1024
