@@ -76,8 +76,6 @@ dev = [
     { name = "psycopg", extra = ["binary"] },
     { name = "pyanalyze" },
     { name = "pyjwt" },
-    { name = "pyright" },
-    { name = "pytype" },
     { name = "ruff" },
     { name = "sqlvalidator" },
     { name = "testcontainers", extra = ["localstack"] },
@@ -152,8 +150,6 @@ dev = [
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.5" },
     { name = "pyanalyze", specifier = ">=0.13.1" },
     { name = "pyjwt", specifier = ">=2.10.1" },
-    { name = "pyright", specifier = ">=1.1.391" },
-    { name = "pytype", specifier = ">=2024.10.11" },
     { name = "ruff", specifier = ">=0.9.0" },
     { name = "sqlvalidator", specifier = ">=0.0.20" },
     { name = "testcontainers", extras = ["postgres", "localstack"], specifier = ">=4.9.0" },
@@ -2472,16 +2468,13 @@ wheels = [
 ]
 
 [[package]]
-name = "pyright"
 version = "1.1.396"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nodeenv" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bd/73/f20cb1dea1bdc1774e7f860fb69dc0718c7d8dea854a345faec845eb086a/pyright-1.1.396.tar.gz", hash = "sha256:142901f5908f5a0895be3d3befcc18bedcdb8cc1798deecaec86ef7233a29b03", size = 3814400, upload-time = "2025-03-02T02:12:16.732Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/be/ecb7cfb42d242b7ee764b52e6ff4782beeec00e3b943a3ec832b281f9da6/pyright-1.1.396-py3-none-any.whl", hash = "sha256:c635e473095b9138c471abccca22b9fedbe63858e0b40d4fc4b67da041891844", size = 5689355, upload-time = "2025-03-02T02:12:14.044Z" },
 ]
 
 [[package]]
@@ -2527,7 +2520,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pytype"
 version = "2024.10.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
@@ -2545,11 +2537,7 @@ dependencies = [
     { name = "toml" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/7a/6fd33673f9c7b9e5f4f8107028c323b1c72acc0f909f1b9b3391a31ea604/pytype-2024.10.11.tar.gz", hash = "sha256:ae5ff82f0b07d5ad68d4ec32a3e8de44fad6ed565a821a76aca50a14df382274", size = 2789497, upload-time = "2024-10-11T08:28:46.068Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/a2/cf47d02d846f6d837e1023b2c19588127c4d9dfc577b8eceb4870def32f4/pytype-2024.10.11-cp312-cp312-macosx_10_14_universal2.whl", hash = "sha256:cdc881cce9541a475ec48989a5ab889e6274a85afbf6da0e30266d0823f66d42", size = 4709678, upload-time = "2024-10-11T08:28:41.081Z" },
-    { url = "https://files.pythonhosted.org/packages/04/51/5925fe8992f02adab358ce9e8068defdae1e58393bfd767e035509da9872/pytype-2024.10.11-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:13327d0d17b981fe2660dd3a69f97bf09a526f93debc40bb44b240628e0b55c1", size = 4682184, upload-time = "2024-10-11T08:28:32.128Z" },
-    { url = "https://files.pythonhosted.org/packages/20/10/52422fdb5a6b4a04938f47a76c655325775b7dd8cc71bd3557aae87b40e1/pytype-2024.10.11-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:fb98711679e631b01b09b09185504fbf38d60f119280918e244a602cf843b0fe", size = 4695132, upload-time = "2024-10-11T08:28:23.525Z" },
 ]
 
 [[package]]
