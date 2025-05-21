@@ -33,7 +33,7 @@
 # **Julep AI Changelog for 21 May 2025** ✨
 
 - **Major Feature**: Introduced **Projects** for organizing agents, users, files, and sessions under user-defined projects; includes a new `projects` table, linking tables for project memberships, and a `project_sessions` view for grouping sessions by project ([#1423](https://github.com/julep-ai/julep/pull/1423)).
-- **Major Feature**: Added **Secrets** management for secure storage of API keys and other sensitive values (encrypted at rest); provides CRUD API endpoints to create, list, update, and delete secrets ([#1424](https://github.com/julep-ai/julep/pull/1424)).
+- **Major Feature**: Added **Secrets** management for secure storage of API keys and other sensitive values (encrypted at rest); provides CRUD API endpoints to create, list, update, and delete secrets ([#1312](https://github.com/julep-ai/julep/pull/1312)).
 - **Major Enhancement**: Added GitHub Actions workflow to automate README translation using Claude, replacing the previous Python-based workflow ([#1433](https://github.com/julep-ai/julep/pull/1433)).
 - **Enhancement**: Introduced a lightweight Docker Compose file and `dev-up` task for rapid local iteration; enforced OpenAPI codegen freshness via CI and pre-commit hooks ([#1431](https://github.com/julep-ai/julep/pull/1431)).
 - **Enhancement**: Enabled text-only queries in vector search models for improved document search capabilities ([#1430](https://github.com/julep-ai/julep/pull/1430)).
