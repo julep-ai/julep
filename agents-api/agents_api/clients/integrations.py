@@ -5,7 +5,7 @@ from httpx import AsyncClient
 
 from ..env import integration_service_url
 
-__all__: list[str] = ["run_integration_service"]
+__all__: list[str] = ["get_available_integrations", "run_integration_service"]
 
 
 @beartype
@@ -28,4 +28,15 @@ async def run_integration_service(
         )
         response.raise_for_status()
 
+        return response.json()
+
+
+@beartype
+async def get_available_integrations() -> list[dict]:
+    """Return the list of available integration providers."""
+
+    url = f"{integration_service_url}/integrations"
+    async with AsyncClient(timeout=10) as client:
+        response = await client.get(url)
+        response.raise_for_status()
         return response.json()
