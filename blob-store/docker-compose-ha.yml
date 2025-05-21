@@ -112,6 +112,8 @@ services:
         condition: service_healthy
       seaweedfs-volume2:
         condition: service_healthy
+      seaweedfs-volume3:
+        condition: service_healthy
       seaweedfs-filer:
         condition: service_healthy
 
