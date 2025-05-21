@@ -59,6 +59,25 @@ services:
     volumes:
       - seaweedfs_data2:/data
 
+  seaweedfs-volume3:
+    <<: *seaweedfs-base
+    ports:
+      - 28082:28082
+      - 18083:18083
+    command: 'volume -max=8 -mserver="seaweedfs-master:9333" -dir=/data -ip.bind=0.0.0.0 -port=28082 -ip=seaweedfs-volume3 -metricsPort=9323 -preStopSeconds=3'
+    healthcheck:
+      test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:28082/healthz" ]
+      interval: 60s
+      retries: 6
+      timeout: 30s
+      start_period: 30s
+      start_interval: 10s
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+    volumes:
+      - seaweedfs_data3:/data
+
   seaweedfs-filer:
     <<: *seaweedfs-base
     ports:
@@ -100,4 +119,6 @@ volumes:
   seaweedfs_data:
     external: true
   seaweedfs_data2:
+    external: true
+  seaweedfs_data3:
     external: true
