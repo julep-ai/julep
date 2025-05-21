@@ -58,7 +58,7 @@ async def list_entries(
     *,
     developer_id: UUID,
     session_id: UUID,
-    allowed_sources: list[str] = ["api_request", "api_response"],
+    allowed_sources: list[str] | None = None,
     limit: Annotated[
         int,
         Is[
@@ -72,7 +72,7 @@ async def list_entries(
     ] = 0,
     sort_by: Literal["created_at", "timestamp"] = "timestamp",
     direction: Literal["asc", "desc"] = "asc",
-    exclude_relations: list[str] = [],
+    exclude_relations: list[str] | None = None,
     search_window: timedelta = timedelta(weeks=4),
 ) -> list[tuple[str, list] | tuple[str, list, str]]:
     """List entries in a session.
@@ -91,6 +91,11 @@ async def list_entries(
         tuple[str, list] | tuple[str, list, str]: SQL query and parameters for listing the entries.
     """
 
+    # AIDEV-NOTE: avoid mutable default args; initialize lists
+    allowed_sources = (
+        allowed_sources if allowed_sources is not None else ["api_request", "api_response"]
+    )
+    exclude_relations = exclude_relations if exclude_relations is not None else []
     query = list_entries_query.format(
         sort_by=sort_by,
         direction=direction,

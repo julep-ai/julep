@@ -1,3 +1,4 @@
+# AIDEV-NOTE: Workflow name parsing utility for extracting base workflow from transition strings.
 from ...autogen.openapi_model import Transition
 
 PAR_PREFIX = "PAR:"

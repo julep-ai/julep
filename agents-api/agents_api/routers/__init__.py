@@ -7,12 +7,13 @@ Sub-modules within the routers module:
 - `users`: Responsible for routing user-related operations. This encompasses user creation, update, deletion, and managing user documents. It ensures that user data can be properly managed and accessed as needed.
 - `jobs`: Deals with routing for job status inquiries. This allows users to check the status of asynchronous jobs, providing insights into the progress and outcomes of long-running operations.
 - `files`: Deals with routing for file operations. This includes creating, reading, updating, and deleting files. It provides endpoints for managing files, including uploading, downloading, and deleting file content.
-- `docs`: Deals with routing for documentation operations. This includes creating, reading, updating, and deleting documentation. It provides endpoints for managing documentation, including uploading, downloading, and deleting documentation content.
-
+- `docs`: Deals with routing for documentation operations. This includes creating, reading, updating, and deleting documents. It provides endpoints for managing documentation, including uploading, downloading, and deleting documentation content.
+- `projects`: Deals with routing for project operations. It provides endpoints for managing projects, including creating, reading, updating, and deleting projects.
 Each sub-module defines its own set of API endpoints and is responsible for handling requests and responses related to its domain, ensuring a modular and organized approach to API development.
 """
 
 # ruff: noqa: F401
+# AIDEV-NOTE: Central router aggregator for all sub-modules in agents-api.
 
 # TODO: Create a router for developers
 # SCRUM-21
@@ -22,6 +23,7 @@ from .docs import router as docs_router
 from .files import router as files_router
 from .internal import router as internal_router
 from .jobs import router as jobs_router
+from .projects import router as projects_router
 from .responses import router as responses_router
 from .sessions import router as sessions_router
 from .tasks import router as tasks_router

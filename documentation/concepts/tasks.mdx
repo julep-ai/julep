@@ -168,7 +168,7 @@ Access agent and session data:
 
 Here's how these components work together:
 
-```yaml YAML
+```yaml YAML [expandable]
 name: Process Customer Feedback
 description: Analyze and categorize customer feedback
 input_schema:
@@ -182,16 +182,26 @@ input_schema:
       default: true
 
 tools:
-  - name: categorize
-    integration:
-      provider: classification
-      method: categorize
+- name: get_weather_info
+  type: integration  
+  integration:
+    provider: weather
+    setup:
+      api_key: OPENWEATHERMAP_API_KEY
 
 main:
-  - prompt: Analyze customer sentiment
-  - tool: categorize
-    arguments:
-      text: $ steps[0].input.feedback_text
+- tool: get_weather_info
+  arguments:
+    location: $ steps[0].input.location
+
+- prompt: |-
+    $ f"""The weather in {steps[0].output.location} is the following:
+    {steps[0].output.weather}
+    
+    <task>
+    Analyze the weather and provide a summary of the weather in the location. Include some recommendations on what to wear based on the weather.
+    </task>
+    """
 ```
 
 > Learn more about tools [here](/concepts/tools).
@@ -208,7 +218,7 @@ Here's a simple task that summarizes a document and checks if the summary is too
 
 <CodeGroup>
 
-```yaml YAML
+```yaml task.yaml [expandable]
 name: Summarize Document
 description: Create a concise summary of any document
 input_schema:
@@ -220,8 +230,8 @@ input_schema:
 
 main:
   - prompt: |-
-        $ f'''Analyze the following text and create a summary:
-        {steps[0].input.document_text}'''
+      $ f'''Analyze the following text and create a summary:
+      {steps[0].input.document_text}'''
     unwrap: true
   - evaluate:
       too_long: $ len(_) > 500
@@ -230,31 +240,35 @@ main:
       prompt: |-
         $ f'''Make the summary more concise:
         {steps[0].output}'''
+      unwrap: true
     else: 
       evaluate:
         content: $ steps[0].output
 ```
 
-```python Python
-# Create a task
+```python main.py
 import yaml
-task_yaml = """
-// ... task yaml here ...
-"""
-task_def = yaml.safe_load(task_yaml)
+import os
+
+task_def = yaml.safe_load(open("task.yaml"))
+
 task = client.tasks.create(
     agent_id="agent_id",
     **task_def
 )
 ```
 
-```javascript Node.js
+```javascript index.js
+
+
 // Create a task
-const taskYaml = `
-// ... task yaml here ...
-`
+import yaml from "yaml";
+import fs from "fs";
+
+const task_definition = yaml.parse(fs.readFileSync("task.yaml", "utf8"));
+
 async function createTask(agentId) {
-  const task = await client.tasks.create(agentId, yaml.parse(taskYaml));
+  const task = await client.tasks.create(agentId, task_definition);
   return task;
 }
 ```
@@ -273,21 +287,21 @@ Here's how to execute a task:
 ```python Python
 # Execute a task
 execution = client.executions.create(
-    task_id=task.id,
-    input={
-        "document_text": "This is a sample document"
-    }
+  task_id=task.id,
+  input={
+      "document_text": "This is a sample document"
+  }
 )
 
 # Monitor progress
 while True:
-    result = client.executions.get(execution.id)
-    if result.status in ["succeeded", "failed"]:
-        break
-    time.sleep(1)
+  result = client.executions.get(execution.id)
+  if result.status in ["succeeded", "failed"]:
+      break
+  time.sleep(1)
 ```
 
-```javascript Node.js
+```javascript Node.js [expandable]
 // Execute a task
 async function executeTask(taskId) {
   const execution = await client.executions.create(taskId, {
@@ -328,21 +342,95 @@ Julep agents can power tasks by providing memory, context, or tools. Tasks are m
 
 For example:
 
-```python Python
+<CodeGroup>
+```python Python [expandable]
 import yaml
 
 # Create an agent
 agent = client.agents.create(
-    name="Customer Support Agent",
-    about="An agent that handles customer support requests",
-    model="gpt-4o",
+  name="Customer Support Agent",
+  about="An agent that handles customer support requests",
+  model="gpt-4o",
 )
 
 # Add a tool to the agent
 client.agents.tools.create(
-    agent_id=agent.id,
-    name="send_email",
-    **yaml.safe_load("""
+  agent_id=agent.id,
+  **yaml.safe_load("""
+  name: send_email
+  type: integration
+  integration:
+    provider: email
+    method: send
+    setup:
+      host: "smtp.example.com"
+      port: 587
+      user: "your_username"
+      password: "your_password"
+  """),
+)
+
+# Create a task that inherits this tool
+task = client.tasks.create(
+  agent_id=agent.id,
+  **yaml.safe_load("""
+    name: Handle Support Request
+
+    # Make sure to set this to true if you want to inherit tools from the agent
+    inherit_tools: true
+
+    input_schema:
+      type: object
+      properties:
+        customer_email:
+          type: string
+          description: The email of the customer
+        subject:
+          type: string
+        body:
+          type: string
+          description: The body of the email
+
+    main:
+    - prompt:
+      - role: system
+        content: You are a customer support agent who works for Julep AI. You will be given a support request from a customer. You will need to handle the request by sending a reply email to the customer.
+      - role: user
+        content: |-
+          $ f"""Handle the support request from this email: {steps[0].input.customer_email}
+          The subject of the email is this:
+          {steps[0].input.subject}
+
+          ---
+
+          The body of the email is this:
+          {steps[0].input.body}
+          """
+      unwrap: true
+
+    - tool: send_email
+      arguments:
+        to: $ steps[0].input.customer_email
+        from: "support@julep.ai"
+        subject: "$ f'Re: {steps[0].input.subject}'"
+        body: $ steps[0].output
+  """)
+)
+```
+
+```javascript Node.js [expandable]
+// Create an agent
+const agent = await client.agents.create({ 
+  name: "Customer Support Agent",
+  about: "An agent that handles customer support requests",
+  model: "gpt-4o",
+  });
+
+// Add a tool to the agent
+await client.agents.tools.create(
+  agent.id,
+  yaml.parse(`
+    name: send_email
     type: integration
     integration:
       provider: email
@@ -352,28 +440,161 @@ client.agents.tools.create(
         port: 587
         user: "your_username"
         password: "your_password"
-    """),
-)
+  `)
+);
 
-# Create a task that inherits this tool
-task = client.tasks.create(
-    agent_id=agent.id,
-    name="Handle Support Request",
-    **yaml.safe_load("""
+// Create a task that inherits this tool
+const task = await client.tasks.create(
+  agent.id, 
+  yaml.parse(`
+    name: Handle Support Request
+
+    # Make sure to set this to true if you want to inherit tools from the agent
+    inherit_tools: true
+
+    input_schema:
+      type: object
+      properties:
+        customer_email:
+          type: string
+          description: The email of the customer
+        subject:
+          type: string
+        body:
+          type: string
+          description: The body of the email
+
     main:
+    - prompt:
+      - role: system
+        content: You are a customer support agent who works for Julep AI. You will be given a support request from a customer. You will need to handle the request by sending a reply email to the customer.
+      - role: user
+        content: |-
+          $ f"""Handle the support request from this email: {steps[0].input.customer_email}
+          The subject of the email is this:
+          {steps[0].input.subject}
+
+          ---
+
+          The body of the email is this:
+          {steps[0].input.body}
+          """
+      unwrap: true
+
     - tool: send_email
       arguments:
         to: $ steps[0].input.customer_email
         from: "support@julep.ai"
-        subject: $ steps[0].input.subject
-        body: $ steps[0].input.body
-    """)
-)
+        subject: "$ f'Re: {steps[0].input.subject}'"
+        body: $ steps[0].output
+  `)
+);
 ```
+</CodeGroup>
 
 ### Tools
 
-Task can leverage tools to perform complex operations. Tools can be defined in the task definition or can be associated with an agent. 
+Task can leverage tools to perform complex operations. There are 2 ways of defining tools for tasks:
+
+1. Associate a tool with an agent, and inherit it in the task definition by setting `inherit_tools` to `true` while creating the task. Example:
+
+<CodeGroup>
+```python Python [expandable]
+client.agents.tools.create(
+  agent_id="agent_id",
+  **yaml.safe_load("""
+    name: get_weather_info
+    type: integration
+    integration:
+      provider: weather
+      setup:
+        api_key: "your_openweathermap_api_key"
+  """)
+
+task = client.tasks.create(
+  agent_id="agent_id",
+  **yaml.safe_load("""
+    name: Get Weather Info
+    inherit_tools: true
+    main:
+      - tool: get_weather_info
+        arguments:
+          location: New York
+  """)
+)
+```
+
+```javascript Node.js [expandable]
+await client.agents.tools.create(
+  agent.id,
+  yaml.parse(`
+    name: get_weather_info
+    type: integration
+    integration:
+      provider: weather
+      setup:
+        api_key: "your_openweathermap_api_key"
+  `)
+);
+
+task = await client.tasks.create(
+  agent.id,
+  yaml.parse(`
+    name: Get Weather Info
+    inherit_tools: true
+    main:
+      - tool: get_weather_info
+        arguments:
+          location: New York
+  `)
+);
+```
+</CodeGroup>
+
+2. Define a tool in the task definition. Example:
+
+<CodeGroup>
+```python Python
+task = client.tasks.create(
+  agent_id="agent_id",
+  **yaml.safe_load("""
+    name: Get Weather Info
+    tools:
+    - name: get_weather_info
+      type: integration
+      integration:
+        provider: weather
+        setup:
+          api_key: "your_openweathermap_api_key"
+    main:
+      - tool: get_weather_info
+        arguments:
+          location: New York
+  """)
+)
+```
+
+```javascript Node.js
+task = await client.tasks.create(
+  agent.id,
+  yaml.parse(`
+    name: Get Weather Info
+    tools:
+    - name: get_weather_info
+      type: integration
+      integration:
+        provider: weather
+        setup:
+          api_key: "your_openweathermap_api_key"
+    main:
+      - tool: get_weather_info
+        arguments:
+          location: New York
+  `)
+);
+```
+</CodeGroup>
+
 When you define a tool in the task definition, it is available to all steps in that task only. On the other hand, when you associate a tool with an agent, it is available to all the Tasks associated with that agent.
 
 ## Best Practices
@@ -407,3 +628,8 @@ When you define a tool in the task definition, it is available to all steps in t
 - [Workflow Steps](/advanced/types-of-task-steps) - Learn about all available step types
 - [Tools](/concepts/tools) - Learn about tools and how to use them in tasks
 - [Sessions](/concepts/sessions) - Learn about sessions and how to use them in tasks
+
+## See Examples
+
+- [Simple Task notebook](https://github.com/julep-ai/julep/blob/main/cookbooks/basics/02-Simple-Task.ipynb)
+- [Trip Planning Assistant notebook](https://github.com/julep-ai/julep/blob/main/cookbooks/advanced/03-trip-planning-assistant.ipynb)

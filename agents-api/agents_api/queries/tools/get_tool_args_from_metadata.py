@@ -83,3 +83,6 @@ async def get_tool_args_from_metadata(
         case (_, _):
             msg = "Either session_id or task_id must be provided"
             raise ValueError(msg)
+    # AIDEV-NOTE: exhaustive match; this point should be unreachable
+    msg = "Unreachable code in get_tool_args_from_metadata"
+    raise RuntimeError(msg)

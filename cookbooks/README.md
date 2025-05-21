@@ -36,20 +36,32 @@ Welcome to the **Julep AI Notebook Collection**! This directory contains a set o
 
 Each notebook explores a unique use case, demonstrating different aspects of Julep's capabilities. Below is a quick overview of the notebooks, their purpose, and a link to run each of them on Google Colab.
 
+
+## Basics Series
+
 | **Notebook Name** | **Colab Link** | **Description** | **Implemented** |
 |------------------ |--------------- |----------------- |----------------- |
-| `00-Devfest-Email-Assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb) | Email assistant for managing DevFest communications | Yes |
-| `01-website-crawler.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/01-website-crawler.ipynb) | Implements a web crawler using a spider to extract website content | Yes |
-| `02-sarcastic-news-headline-generator.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/02-sarcastic-news-headline-generator.ipynb) | Generates sarcastic news headlines using a Brave Search Tool | Yes |
-| `03-trip-planning-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/03-trip-planning-assistant.ipynb) | Plans trips using weather data and location information | Yes |
-| `04-hook-generator-trending-reels.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-hook-generator-trending-reels.ipynb) | Generates engaging hooks for trending social media reels | Yes |
-| `05-video-processing-with-natural-language.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/05-video-processing-with-natural-language.ipynb) | Processes videos using natural language commands | Yes |
-| `06-browser-use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/06-browser-use.ipynb) | Demonstrates browser automation capabilities | Yes |
-| `07-personalized-research-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/07-personalized-research-assistant.ipynb) | Demonstrates personalized research assistant capabilities | Yes |
-| `08-rag-chatbot.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/08-rag-chatbot.ipynb) | Demonstrates RAG chatbot capabilities | Yes |
-| `09-companion-agent.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/09-companion-agent.ipynb) | Demonstrates companion agent capabilities like story generation, user persona management, and more | Yes |
-| `10-reel-generator.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/10-reel-generator.ipynb) | Demonstrates reel generator capabilities | Yes |
+| `01-Hello-Agent.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/basics/01-Hello-Agent.ipynb) | Create a simple agent and chat with it | Yes |
+| `02-Simple-Task.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/basics/02-Simple-Task.ipynb) | Define and run a basic task | Yes |
+| `03-Adding-Tools.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/basics/03-Adding-Tools.ipynb) | Attach a tool to the agent | Yes |
+| `04-Parallel-Steps.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/basics/04-Parallel-Steps.ipynb) | Execute steps in parallel | Yes |
+| `05-RAG-and-Docs.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/basics/05-RAG-and-Docs.ipynb) | Use documents for RAG style responses | Yes |
 
+## Advanced Examples
+
+| **Notebook Name** | **Colab Link** | **Description** | **Implemented** |
+|------------------ |--------------- |----------------- |----------------- |
+| `00-Devfest-Email-Assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/00-Devfest-Email-Assistant.ipynb) | Email assistant for managing DevFest communications | Yes |
+| `01-website-crawler.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/01-website-crawler.ipynb) | Implements a web crawler using a spider to extract website content | Yes |
+| `02-sarcastic-news-headline-generator.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/02-sarcastic-news-headline-generator.ipynb) | Generates sarcastic news headlines using a Brave Search Tool | Yes |
+| `03-trip-planning-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/03-trip-planning-assistant.ipynb) | Plans trips using weather data and location information | Yes |
+| `04-hook-generator-trending-reels.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/04-hook-generator-trending-reels.ipynb) | Generates engaging hooks for trending social media reels | Yes |
+| `05-video-processing-with-natural-language.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/05-video-processing-with-natural-language.ipynb) | Processes videos using natural language commands | Yes |
+| `06-browser-use.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/06-browser-use.ipynb) | Demonstrates browser automation capabilities | Yes |
+| `07-personalized-research-assistant.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/07-personalized-research-assistant.ipynb) | Demonstrates personalized research assistant capabilities | Yes |
+| `08-rag-chatbot.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/08-rag-chatbot.ipynb) | Demonstrates RAG chatbot capabilities | Yes |
+| `09-companion-agent.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/09-companion-agent.ipynb) | Demonstrates companion agent capabilities like story generation, user persona management, and more | Yes |
+| `10-reel-generator.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/advanced/10-reel-generator.ipynb) | Demonstrates reel generator capabilities | Yes |
 ## Potential Cookbooks for Contributors
 
 We welcome contributions to expand our cookbook collection. Here are some ideas for new cookbooks that showcase various Julep features and use cases:

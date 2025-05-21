@@ -23,7 +23,9 @@ from .Entries import *
 from .Executions import *
 from .Files import *
 from .Jobs import *
+from .Projects import *
 from .Responses import *
+from .Secrets import *
 from .Sessions import *
 from .Tasks import *
 from .Tools import *

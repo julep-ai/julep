@@ -1,3 +1,4 @@
+# AIDEV-NOTE: Helper functions for TaskExecution workflow orchestration, including validation and branch execution.
 import asyncio
 from datetime import timedelta
 from typing import Any, TypeVar
@@ -65,8 +66,11 @@ async def base_evaluate_activity(
             heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
         )
     except ActivityError as e:
+        # Unwrap nested ActivityError causes
         while isinstance(e, ActivityError) and getattr(e, "__cause__", None):
-            e = e.__cause__
+            e = e.__cause__  # type: ignore[assignment]  # AIDEV-NOTE: e.__cause__ is BaseException|None
+        # AIDEV-NOTE: assert e is BaseException for raising
+        assert isinstance(e, BaseException)
         raise e
 
 
@@ -109,8 +113,11 @@ async def continue_as_child(
             ]),
         )
     except Exception as e:
+        # Unwrap nested ChildWorkflowError causes
         while isinstance(e, ChildWorkflowError) and getattr(e, "__cause__", None):
-            e = e.__cause__
+            e = e.__cause__  # type: ignore[assignment]  # AIDEV-NOTE: e.__cause__ is BaseException|None
+        # AIDEV-NOTE: assert e is BaseException for raising
+        assert isinstance(e, BaseException)
         e.transitioned = True
         raise e
 

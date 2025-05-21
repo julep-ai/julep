@@ -25,6 +25,7 @@ When creating an agent, you can leverage the following configuration options:
 |-------------------------|-----------------------|-----------------------------------------------------------------------------|-------------|
 | `name`                  | `string`                | The name of your agent                                                      | Required    |
 | `canonical_name`        | `string`                | A unique identifier for your agent, following the pattern `[a-zA-Z][a-zA-Z0-9_]*` | `null`  |
+| `project`               | `string`                | The canonical name of the project this agent belongs to                     | `"default"` |
 | `about`                 | `string`                | A brief description of what your agent does                                 | `""`        |
 | `model`                 | `string`                | The language model your agent uses (e.g., "gpt-4-turbo", "gemini-nano")     | `""`        |
 | `instructions`          | `string` \| `list[string]`| Specific tasks or behaviors expected from the agent                         | `[]`        |
@@ -35,7 +36,7 @@ When creating an agent, you can leverage the following configuration options:
 <Info>
 The **System Template** is a specific system prompt written as a Jinja template that sets the foundational context and instructions for the agent within a session. It defines the background, directives, and any relevant information that the agent should consider when interacting with the user. For more details on Jinja templates, refer to the [Jinja documentation](https://jinja.palletsprojects.com/).
 <Accordion title="Default System Template" icon="template">
-```python Python
+```python Python [expandable]
 {%- if agent.name -%}
 You are {{ agent.name }}.
 {%- endif -%}
@@ -102,6 +103,7 @@ In Julep, how you use agents is very important. The YAML below shows the anatomy
 ```yaml YAML
 name: "My Agent"
 model: "claude-3.5-sonnet"
+project: "data-analytics"
 about: "A helpful AI assistant that specializes in data analysis"
 instructions: "You are a helpful AI assistant that specializes in data analysis"
 metadata:
@@ -178,12 +180,40 @@ To create an agent, you can use the `create` method in the Python or Node.js SDK
 ## Relationship To Other Concepts
 
 This section will help you understand how agents relate to other concepts in Julep.
+
+### Projects
+
+Agents belong to exactly one project, which helps organize related resources together. When creating an agent, you can specify which project it belongs to using the `project` parameter. If not specified, the agent will be assigned to the "default" project.
+
+For example:
+
+<CodeGroup>
+```python Python
+# Create an agent in a specific project
+agent = client.agents.create(
+  name="Customer Support Bot",
+  project="support-platform"
+)
+```
+
+```javascript Node.js
+// Create an agent in a specific project
+const agent = await client.agents.create({
+  name: "Customer Support Bot",
+  project: "support-platform"
+});
+```
+</CodeGroup>
+
+For more information about projects, see [Projects](/concepts/projects).
+
 ### Tools
 
 Agents can be associated with different types of tools available in Julep to enable them to perform operations. These tools associated with an agent can also be leveraged by a task associated with the agent.
 
 For example:
 
+<CodeGroup>
 ```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
@@ -202,6 +232,22 @@ client.agents.tools.create(
   }
 )
 ```
+```javascript Node.js
+// Create an agent
+const agent = await client.agents.create({name: "My Agent"});
+
+// Associate a tool with the agent
+await client.agents.tools.create(agent.id, {
+  name: "computer",
+  type: "computer_20241022",
+  computer_20241022: {
+    display_height_px: 768,
+    display_width_px: 1024,
+    display_number: 1,
+  },
+});
+```
+</CodeGroup>
 
 ### Sessions
 
@@ -209,6 +255,7 @@ Agents can be used in sessions to enable real-time, interactive conversations. W
 
 For example:
 
+<CodeGroup>
 ```python Python
 # Create an agent
 agent = client.agents.create(name="My Agent")
@@ -216,6 +263,15 @@ agent = client.agents.create(name="My Agent")
 # Create a session with the agent
 session = client.sessions.create(agent=agent.id)
 ```
+
+```javascript Node.js
+// Create an agent
+const agent = await client.agents.create({name: "My Agent"});
+
+// Create a session with the agent
+const session = await client.sessions.create({agent: agent.id});
+```
+</CodeGroup>
 
 ## Best Practices
 
@@ -253,6 +309,11 @@ session = client.sessions.create(agent=agent.id)
 ## Next Steps
 
 - [Agent Tools](/concepts/tools) - Learn about tools and how to use them with agents
-- [Agent Tasks](/concepts/tasks) - Learn about tasks and how to use them with agents  
+- [Agent Tasks](/concepts/tasks) - Learn about tasks and how to use them with agents
 - [Agent Sessions](/concepts/sessions) - Learn about sessions and how to use them with agents
 - [Agent Docs](/concepts/docs) - Learn about docs and how to use them with agents
+
+## See Examples
+
+- [Hello Agent notebook](https://github.com/julep-ai/julep/blob/main/cookbooks/basics/01-Hello-Agent.ipynb)
+- [Companion Agent notebook](https://github.com/julep-ai/julep/blob/main/cookbooks/advanced/09-companion-agent.ipynb)

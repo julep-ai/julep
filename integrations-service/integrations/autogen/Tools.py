@@ -130,6 +130,10 @@ class ApiCallDef(BaseModel):
     """
     The headers to send with the request
     """
+    secrets: dict[str, SecretRef] | None = None
+    """
+    Secret references to use in templates (available only at setup time, not during execution)
+    """
     content: str | None = None
     """
     The content as base64 to send with the request
@@ -204,6 +208,10 @@ class ApiCallDefUpdate(BaseModel):
     headers: dict[str, str] | None = None
     """
     The headers to send with the request
+    """
+    secrets: dict[str, SecretRefUpdate] | None = None
+    """
+    Secret references to use in templates (available only at setup time, not during execution)
     """
     content: str | None = None
     """
@@ -439,8 +447,7 @@ class Bash20241022Def(BaseModel):
     name: str = "bash"
 
 
-class Bash20241022DefUpdate(Bash20241022Def):
-    pass
+Bash20241022DefUpdate = Bash20241022Def
 
 
 class BraveIntegrationDef(BaseIntegrationDef):
@@ -659,12 +666,10 @@ class BrowserbaseGetSessionArgumentsUpdate(BaseModel):
     id: str | None = None
 
 
-class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
-    pass
+BrowserbaseGetSessionLiveUrlsArguments = BrowserbaseGetSessionArguments
 
 
-class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(BrowserbaseGetSessionArgumentsUpdate):
-    pass
+BrowserbaseGetSessionLiveUrlsArgumentsUpdate = BrowserbaseGetSessionArgumentsUpdate
 
 
 class BrowserbaseListSessionsArguments(BaseModel):
@@ -988,10 +993,7 @@ class Computer20241022Def(BaseModel):
     """
 
 
-class Computer20241022DefUpdate(Computer20241022Def):
-    """
-    Anthropic new tools
-    """
+Computer20241022DefUpdate = Computer20241022Def
 
 
 class CreateToolRequest(BaseModel):
@@ -1869,6 +1871,26 @@ class RemoteBrowserSetup(BaseModel):
     """
 
 
+class SecretRef(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    """
+    The name of the secret to reference
+    """
+
+
+class SecretRefUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str | None = None
+    """
+    The name of the secret to reference
+    """
+
+
 class SpiderFetchArguments(BaseModel):
     """
     Arguments for Spider integration
@@ -2096,8 +2118,7 @@ class TextEditor20241022Def(BaseModel):
     name: str = "str_replace_editor"
 
 
-class TextEditor20241022DefUpdate(TextEditor20241022Def):
-    pass
+TextEditor20241022DefUpdate = TextEditor20241022Def
 
 
 class Tool(BaseModel):

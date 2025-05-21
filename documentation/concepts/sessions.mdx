@@ -107,7 +107,7 @@ You can control the fuzzy matching behavior using the `trigram_similarity_thresh
 <Info>
 The **System Template** is a specific system prompt written as a Jinja template that sets the foundational context and instructions for the agent within a session. It defines the background, directives, and any relevant information that the agent should consider when interacting with the user. For more details on Jinja templates, refer to the [Jinja documentation](https://jinja.palletsprojects.com/).
 <Accordion title="Default System Template" icon="template">
-```python
+```python [expandable]
 {%- if agent.name -%}
 You are {{agent.name}}.{{" "}}
 {%- endif -%}
@@ -337,7 +337,7 @@ If the agent that's associated with the session has a tool called `fetch_weather
 When chatting in a session, the session can automatically search for documents that are associated with any of the agents and/or users that participate in the session. You can control whether the session should search for documents when chatting using the `recall` option of the `chat` method, which is set to `True` by default. You can also set the session's `recall_options` when creating the session to control how the session should search for documents.
 
 <CodeGroup>
-    ```python Python
+    ```python Python [expandable]
     # Create a session with custom recall options
     client.sessions.create(
         agent=agent.id,
@@ -371,7 +371,7 @@ When chatting in a session, the session can automatically search for documents t
     print("Searched Documents:", response.docs)
     ```
 
-    ```javascript Node.js
+    ```javascript Node.js [expandable]
     client.sessions.create({
         agent: agent.id,
         user: user.id,
@@ -406,7 +406,7 @@ When chatting in a session, the session can automatically search for documents t
 <Info>
     When running the above code with an agent that has documents about Julep, the session will search for documents that are relevant to the conversation and return them in the `response.docs` field.
     <Accordion title="Output" icon="search">
-        ```
+        ``` [expandable]
         Agent's response: Julep is a comprehensive platform designed for creating production-ready AI systems and agents. Here are the key aspects of Julep:
 
 Core Features:

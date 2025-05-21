@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module contains utility functions and decorators for database queries and data processing.
 import concurrent.futures
 import inspect
 import socket
@@ -31,6 +32,7 @@ T = TypeVar("T")
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
+# AIDEV-NOTE: Generates a unique, readable canonical name.
 def generate_canonical_name() -> str:
     """Generate canonical name"""
 
@@ -51,6 +53,7 @@ type PreparedPGQueryArgs = tuple[FetchMethod, AsyncPGFetchArgs]
 type BatchedPreparedPGQueryArgs = list[PreparedPGQueryArgs]
 
 
+# AIDEV-NOTE: Prepares and formats PostgreSQL query arguments for batch execution.
 @beartype
 def prepare_pg_query_args(
     query_args: PGQueryArgs | list[PGQueryArgs],
@@ -82,6 +85,8 @@ def prepare_pg_query_args(
     return batch
 
 
+# AIDEV-NOTE: Decorator for executing PostgreSQL queries within a transaction.
+# Handles connection pooling, error handling, and result formatting.
 @beartype
 def pg_query[**P](
     func: Callable[P, PGQueryArgs | list[PGQueryArgs]] | None = None,
@@ -188,6 +193,7 @@ def pg_query[**P](
     return pg_query_dec
 
 
+# AIDEV-NOTE: Sanitizes strings to remove null characters for PostgreSQL compatibility.
 def sanitize_string(value: Any) -> Any:
     """
     Remove null characters (\u0000) from strings for PostgreSQL compatibility.
@@ -209,34 +215,63 @@ def sanitize_string(value: Any) -> Any:
     return value
 
 
+# AIDEV-NOTE: Decorator to wrap query results in Pydantic models.
 def wrap_in_class(
     cls: type[ModelT] | Callable[..., ModelT],
     one: bool = False,
+    maybe_one: bool = False,
     transform: Callable[[dict], dict] | None = None,
-) -> Callable[..., Callable[..., ModelT | list[ModelT]]]:
-    def _return_data(rec: list[Record]):
-        data = [dict(r.items()) for r in rec]
+) -> Callable[..., Callable[..., ModelT | list[ModelT] | None]]:
+    """
+    Decorator that wraps database query results into Pydantic model instances.
 
-        nonlocal transform
-        transform = transform or (lambda x: x)
+    Args:
+        cls: The Pydantic model class or callable that constructs the model
+        one: If True, expects exactly one result and returns a single model instance
+        maybe_one: If True, returns None if no results, a single model if one result,
+                  and raises ValueError if multiple results
+        transform: Optional function to transform each record before model instantiation
+
+    Returns:
+        A decorator that transforms query results into model instances
+
+    Raises:
+        ValueError: If one=True and not exactly one result is returned, or
+                   if maybe_one=True and multiple results are returned
+    """
+
+    def _return_data(rec: list[Record]) -> ModelT | list[ModelT] | None:
+        data = [dict(r.items()) for r in rec]
+        # AIDEV-NOTE: initialize transformer function once per call
+        transform_fn = transform or (lambda x: x)
+
+        if maybe_one:
+            if len(data) == 0:
+                return None
+            if len(data) == 1:
+                return cls(**transform_fn(data[0]))
+            msg = f"Expected one result or none, got {len(data)}"
+            raise ValueError(msg)
 
         if one:
             assert len(data) == 1, f"Expected one result, got {len(data)}"
-            obj: ModelT = cls(**transform(data[0]))
+            obj: ModelT = cls(**transform_fn(data[0]))
             return obj
 
-        objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
+        objs: list[ModelT] = [cls(**item) for item in map(transform_fn, data)]
         return objs
 
     def decorator(
         func: Callable[P, list[Record] | Awaitable[list[Record]]],
-    ) -> Callable[P, ModelT | list[ModelT]]:
+    ) -> Callable[P, ModelT | list[ModelT] | None]:
         @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT] | None:
             return _return_data(func(*args, **kwargs))
 
         @wraps(func)
-        async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
+        async def async_wrapper(
+            *args: P.args, **kwargs: P.kwargs
+        ) -> ModelT | list[ModelT] | None:
             return _return_data(await func(*args, **kwargs))
 
         # Set the wrapped function as an attribute of the wrapper,
@@ -249,6 +284,7 @@ def wrap_in_class(
     return decorator
 
 
+# AIDEV-NOTE: Decorator to rewrap specific exceptions raised by a function.
 def rewrap_exceptions(
     mapping: dict[
         type[BaseException] | Callable[[BaseException], bool],
@@ -305,12 +341,16 @@ def rewrap_exceptions(
     return decorator
 
 
+# AIDEV-NOTE: Runs multiple asynchronous functions concurrently.
 def run_concurrently(
     fns: list[Callable[..., Any]],
     *,
-    args_list: list[tuple] = [],
-    kwargs_list: list[dict] = [],
+    args_list: list[tuple] | None = None,
+    kwargs_list: list[dict] | None = None,
 ) -> list[Any]:
+    # AIDEV-NOTE: avoid mutable default args; initialize to empty list if None
+    args_list = args_list if args_list is not None else []
+    kwargs_list = kwargs_list if kwargs_list is not None else []
     args_list = args_list or [()] * len(fns)
     kwargs_list = kwargs_list or [{}] * len(fns)
 
@@ -323,6 +363,7 @@ def run_concurrently(
         return [future.result() for future in concurrent.futures.as_completed(futures)]
 
 
+# AIDEV-NOTE: Serializes Pydantic model data into a dictionary, handling nested models.
 def serialize_model_data(data: Any) -> Any:
     """
     Recursively serialize Pydantic models and their nested structures.
@@ -342,6 +383,7 @@ def serialize_model_data(data: Any) -> Any:
     return data
 
 
+# AIDEV-NOTE: Builds SQL conditions for filtering based on JSONB metadata.
 def build_metadata_filter_conditions(
     base_params: list[Any], metadata_filter: dict[str, Any], table_alias: str = ""
 ) -> tuple[str, list[Any]]:
@@ -380,21 +422,21 @@ def build_metadata_filter_conditions(
     return sql_conditions, params
 
 
+# AIDEV-NOTE: Creates a validator function for numerical ranges.
 def make_num_validator(
     min_value: int | float | None = None,
     max_value: int | float | None = None,
     err_msg: str | None = None,
 ):
-    def validator(v: int | float):
-        nonlocal err_msg
-
+    def validator(v: int | float) -> bool:
+        # Choose appropriate error message without mutating outer err_msg
         if min_value is not None and v < min_value:
-            err_msg = err_msg or f"Number must be greater than or equal to {min_value}"
-            raise QueryParamsValidationError(err_msg)
+            msg = err_msg or f"Number must be greater than or equal to {min_value}"
+            raise QueryParamsValidationError(msg)
 
         if max_value is not None and v > max_value:
-            err_msg = err_msg or f"Number must be less than or equal to {max_value}"
-            raise QueryParamsValidationError(err_msg)
+            msg = err_msg or f"Number must be less than or equal to {max_value}"
+            raise QueryParamsValidationError(msg)
 
         return True
 

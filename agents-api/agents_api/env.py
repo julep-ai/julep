@@ -6,7 +6,7 @@ It utilizes the environs library for environment variable parsing.
 import multiprocessing
 import random
 from pprint import pprint
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from environs import Env
 
@@ -35,6 +35,7 @@ enable_backwards_compatibility_for_syntax: bool = env.bool(
 )
 max_steps_accessible_in_tasks: int = env.int("MAX_STEPS_ACCESSIBLE_IN_TASKS", default=250)
 gunicorn_cpu_divisor: int = env.int("GUNICORN_CPU_DIVISOR", default=4)
+secrets_cache_ttl: int = env.int("SECRETS_CACHE_TTL", default=120)
 
 raw_workers: str | None = env.str("GUNICORN_WORKERS", default=None)
 if raw_workers and raw_workers.strip():
@@ -83,7 +84,7 @@ pool_max_size: int = min(env.int("POOL_MAX_SIZE", default=multiprocessing.cpu_co
 _random_generated_key: str = "".join(str(random.randint(0, 9)) for _ in range(32))
 api_key: str = env.str("AGENTS_API_KEY", _random_generated_key)
 
-if api_key == _random_generated_key:
+if api_key == _random_generated_key and not TYPE_CHECKING:
     print(f"Generated API key since not set in the environment: {api_key}")
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
@@ -176,6 +177,24 @@ brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
 # ---------------
 enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
 
+
+# Secrets
+# -------
+def _validate_master_key(key: str | None) -> str:
+    """Validate that the master key is the correct length for encryption and is provided."""
+    if key is None or len(key) != 32:
+        msg = "SECRETS_MASTER_KEY must be exactly 32 characters long"
+        raise ValueError(msg)
+    return key
+
+
+if not TYPE_CHECKING and not testing:
+    secrets_master_key: str = _validate_master_key(env.str("SECRETS_MASTER_KEY"))
+
+else:
+    secrets_master_key: str = "*" * 32
+    print("USING FAKE SECRETS KEY FOR TESTING")
+
 # Consolidate environment variables
 environment: dict[str, Any] = {
     "debug": debug,
@@ -199,6 +218,7 @@ environment: dict[str, Any] = {
     "testing": testing,
     "enable_responses": enable_responses,
     "free_tier_cost_limit": free_tier_cost_limit,
+    "secrets_master_key": secrets_master_key,
 }
 
 if debug or testing:

@@ -184,7 +184,7 @@ We're using three main integrations:
 </Steps>
 
 <Accordion title="Complete Task YAML" icon="code">
-```yaml YAML
+```yaml YAML [expandable]
 # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
 name: Julep Video Processing Task
 description: A Julep agent that can process and analyze videos using Cloudinary
@@ -307,7 +307,7 @@ Here's how to use this task with the Julep SDK:
 
 <CodeGroup>
 
-```python Python
+```python Python [expandable]
 import time
 import yaml
 from julep import Client
@@ -358,7 +358,7 @@ else:
     print(f"Error: {result.error}")
 ```
 
-```js Node.js
+```js Node.js [expandable]
 import { Julep } from '@julep/sdk';
 import yaml from 'yaml';
 import fs from 'fs';
@@ -436,3 +436,9 @@ This is an example output when the task is run over the sample video input.
 
 - Try this task yourself, check out the full example, see the [video-processing-with-natural-language cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/05-video-processing-with-natural-language.ipynb).
 - To learn more about the integrations used in this task, check out the [integrations](/integrations/supported-integrations) page.
+
+## Related Concepts
+
+- [Agents](/concepts/agents)
+- [Tasks](/concepts/tasks)
+- [Tools](/concepts/tools)

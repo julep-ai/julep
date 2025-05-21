@@ -21,7 +21,8 @@
                 "pages": [
                   "introduction/julep",
                   "introduction/install",
-                  "introduction/quickstart"
+                  "introduction/quickstart",
+                  "introduction/developer-orientation"
                 ]
               },
               {
@@ -34,13 +35,16 @@
               {
                 "group": "Core Concepts",
                 "pages": [
+                  "concepts/projects",
                   "concepts/agents",
                   "concepts/tasks",
                   "concepts/sessions",
                   "concepts/tools",
                   "concepts/users",
                   "concepts/docs",
-                  "concepts/execution"
+                  "concepts/files",
+                  "concepts/execution",
+                  "concepts/secrets"
                 ]
               },
               {
@@ -49,6 +53,10 @@
                   "tutorials/browser-use",
                   "tutorials/rag-chatbot",
                   "tutorials/trip-planning",
+                  "tutorials/trip-planning-input",
+                  "tutorials/trip-planning-tools",
+                  "tutorials/trip-planning-workflow",
+                  "tutorials/trip-planning-running",
                   "tutorials/video-processing"
                 ]
               },
@@ -102,6 +110,7 @@
                   "advanced/chat",
                   "advanced/render",
                   "advanced/files",
+                  "advanced/secrets-management",
                   "advanced/architecture-deep-dive",
                   "advanced/agentic-patterns",
                   "advanced/lifecycle",
@@ -119,6 +128,9 @@
                 "pages": [
                   "guides/getting-started/chat-with-an-agent",
                   "guides/getting-started/create-and-execute-julep-task",
+                  "guides/using-secrets",
+                  "guides/adding-tool-integration",
+                  "guides/modifying-agent-workflow",
                   {
                     "group": "Getting Started Examples",
                     "pages": [
@@ -170,7 +182,8 @@
                         "pages": [
                           "sdks/python/agents",
                           "sdks/python/tasks",
-                          "sdks/python/sessions"
+                          "sdks/python/sessions",
+                          "sdks/python/secrets"
                         ]
                       },
                       "sdks/python/tools-integration",
@@ -187,7 +200,8 @@
                         "pages": [
                           "sdks/nodejs/agents",
                           "sdks/nodejs/tasks",
-                          "sdks/nodejs/sessions"
+                          "sdks/nodejs/sessions",
+                          "sdks/nodejs/secrets"
                         ]
                       },
                       "sdks/nodejs/tools-integration",
@@ -200,7 +214,8 @@
                     "pages": [
                       "sdks/common/error-handling",
                       "sdks/common/authentication",
-                      "sdks/common/testing"
+                      "sdks/common/testing",
+                      "sdks/common/secrets"
                     ]
                   }
                 ]

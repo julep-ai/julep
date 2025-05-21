@@ -10,7 +10,11 @@
     "@typespec/openapi3": "0.61.x",
     "@typespec/rest": "0.61.x",
     "@typespec/sse": "0.61.x",
-    "@typespec/versioning": "0.61.x"
+    "@typespec/versioning": "0.61.x",
+    "typespec-compiler-new": "npm:@typespec/compiler@^1.0.0",
+    "typespec-http-new": "npm:@typespec/http@^1.0.1",
+    "typespec-openapi-new": "npm:@typespec/openapi@^1.0.0",
+    "typespec-openapi3-new": "npm:@typespec/openapi3@^1.0.0"
   },
   "private": true
 }

@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import markdown2
 import markdownify
-from agents_api.activities.utils import get_evaluator
+from agents_api.common.utils.evaluator import get_evaluator
 from ward import test
 
 
@@ -84,7 +84,7 @@ def _():
 
 @test("safe_extract_json with various code block formats")
 def test_safe_extract_json_formats():
-    from agents_api.activities.utils import safe_extract_json
+    from agents_api.common.utils.evaluator import safe_extract_json
 
     # Test with ```json format
     json_block = """```json
@@ -123,7 +123,7 @@ def test_safe_extract_json_formats():
 
 @test("safe_extract_json handles marker validation correctly")
 def test_safe_extract_json_validation():
-    from agents_api.activities.utils import safe_extract_json
+    from agents_api.common.utils.evaluator import safe_extract_json
 
     # Test invalid start marker validation for ```json format
     invalid_json_marker = """``json

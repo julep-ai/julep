@@ -15,22 +15,25 @@ from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 # Define the raw SQL query
 agent_query = """
 SELECT
-    agent_id,
-    developer_id,
-    name,
-    canonical_name,
-    about,
-    instructions,
-    model,
-    metadata,
-    default_settings,
-    default_system_template,
-    created_at,
-    updated_at
+    a.agent_id,
+    a.developer_id,
+    a.name,
+    a.canonical_name,
+    a.about,
+    a.instructions,
+    a.model,
+    a.metadata,
+    a.default_settings,
+    a.default_system_template,
+    a.created_at,
+    a.updated_at,
+    p.canonical_name AS project
 FROM
-    agents
+    agents a
+LEFT JOIN project_agents pa ON a.agent_id = pa.agent_id AND a.developer_id = pa.developer_id
+LEFT JOIN projects p ON pa.project_id = p.project_id AND pa.developer_id = p.developer_id
 WHERE
-    agent_id = $2 AND developer_id = $1;
+    a.agent_id = $2 AND a.developer_id = $1;
 """
 
 

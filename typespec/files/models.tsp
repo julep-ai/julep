@@ -24,6 +24,9 @@ model File {
     /** Base64 encoded content of the file */
     content: string;
 
+    /** Project canonical name of the file */
+    project?: canonicalName;
+
     /** Size of the file in bytes */
     @visibility("read")
     @minValue(1)

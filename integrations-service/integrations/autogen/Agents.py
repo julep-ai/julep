@@ -27,6 +27,13 @@ class Agent(BaseModel):
     """
     Name of the agent
     """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the agent
+    """
     canonical_name: Annotated[
         str | None,
         Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
@@ -69,6 +76,13 @@ class CreateAgentRequest(BaseModel):
     """
     Name of the agent
     """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the agent
+    """
     canonical_name: Annotated[
         str | None,
         Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
@@ -107,6 +121,13 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     name: Annotated[str, Field(max_length=255, min_length=1)]
     """
     Name of the agent
+    """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the agent
     """
     canonical_name: Annotated[
         str | None,
@@ -178,6 +199,13 @@ class PatchAgentRequest(BaseModel):
     """
     Name of the agent
     """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the agent
+    """
     canonical_name: Annotated[
         str | None,
         Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
@@ -219,6 +247,13 @@ class UpdateAgentRequest(BaseModel):
     name: Annotated[str, Field(max_length=255, min_length=1)]
     """
     Name of the agent
+    """
+    project: Annotated[
+        str | None,
+        Field(max_length=255, min_length=1, pattern="^[a-zA-Z][a-zA-Z0-9_]*$"),
+    ] = None
+    """
+    Project canonical name of the agent
     """
     canonical_name: Annotated[
         str | None,

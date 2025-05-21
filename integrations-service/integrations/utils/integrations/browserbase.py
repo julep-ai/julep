@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import os
 import tempfile
@@ -189,7 +190,7 @@ async def get_live_urls(
     client = get_browserbase_client(setup)
     try:
         # Use the debug() method to get live URLs
-        urls: SessionLiveURLs = client.sessions.debug(id=arguments.id)
+        urls: SessionLiveURLs = await asyncio.to_thread(client.sessions.debug, id=arguments.id)
         return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
     except Exception as e:
         print(f"Error getting debug URLs: {e}")

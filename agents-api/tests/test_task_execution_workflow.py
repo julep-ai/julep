@@ -56,6 +56,7 @@ from agents_api.env import (
 from agents_api.workflows.task_execution import TaskExecutionWorkflow
 from aiohttp import test_utils
 from temporalio.exceptions import ApplicationError
+from temporalio.workflow import _NotInWorkflowEventLoopError
 from ward import raises, test
 
 
@@ -152,7 +153,19 @@ async def _():
             "integration": {"name": tool_name, "arguments": arguments},
         },
     )
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+
+    with (
+        patch("agents_api.workflows.task_execution.workflow") as workflow,
+        patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
+        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+    ):
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
+            "Not in workflow event loop"
+        )
+        mock_list_secrets.return_value = []
+
+        # Set up the activity execution mock
         workflow.execute_activity.return_value = _resp()
         wf.context = context
         wf.outcome = outcome
@@ -213,7 +226,16 @@ async def _():
     outcome = StepOutcome(
         output={"type": "integration", "integration": {"name": "tool1", "arguments": {}}},
     )
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+    with (
+        patch("agents_api.workflows.task_execution.workflow") as workflow,
+        patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
+        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+    ):
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
+            "Not in workflow event loop"
+        )
+        mock_list_secrets.return_value = []
         workflow.execute_activity.return_value = "integration_tool_call_response"
         with raises(ApplicationError) as exc:
             wf.context = context
@@ -279,7 +301,16 @@ async def _():
             },
         },
     )
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+    with (
+        patch("agents_api.workflows.task_execution.workflow") as workflow,
+        patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
+        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+    ):
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
+            "Not in workflow event loop"
+        )
+        mock_list_secrets.return_value = []
         workflow.execute_activity.return_value = _resp()
         wf.context = context
         wf.outcome = outcome
@@ -367,7 +398,17 @@ async def _():
             },
         },
     )
-    with patch("agents_api.workflows.task_execution.workflow") as workflow:
+    with (
+        patch("agents_api.workflows.task_execution.workflow") as workflow,
+        patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
+        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+    ):
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
+            "Not in workflow event loop"
+        )
+        mock_list_secrets.return_value = []
+
         workflow.execute_activity.return_value = _resp()
         wf.context = context
         wf.outcome = outcome
@@ -976,10 +1017,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1048,10 +1095,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1120,10 +1173,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1192,10 +1251,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1264,10 +1329,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1336,10 +1407,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1408,10 +1485,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1478,10 +1561,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1548,10 +1637,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1633,12 +1728,23 @@ async def _():
     )
     with (
         patch(
-            "agents_api.common.protocol.tasks.list_execution_transitions",
-        ) as list_execution_transitions,
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
         patch("agents_api.workflows.task_execution.generate_call_id") as generate_call_id,
+        patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
+        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
     ):
+        # Set up the mock to raise the expected exception
+        context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
+            "Not in workflow event loop"
+        )
+        mock_list_secrets.return_value = []
         generate_call_id.return_value = "XXXX"
-        list_execution_transitions.return_value = (
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1713,10 +1819,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),
@@ -1793,10 +1905,16 @@ async def _():
             scope_id=scope_id,
         ),
     )
-    with patch(
-        "agents_api.common.protocol.tasks.list_execution_transitions",
-    ) as list_execution_transitions:
-        list_execution_transitions.return_value = (
+    with (
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_inputs_data",
+        ) as list_execution_inputs_data,
+        patch(
+            "agents_api.common.protocol.tasks.list_execution_state_data",
+            return_value=[],
+        ),
+    ):
+        list_execution_inputs_data.return_value = (
             Transition(
                 id=uuid.uuid4(),
                 execution_id=uuid.uuid4(),

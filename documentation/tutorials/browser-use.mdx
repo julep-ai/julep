@@ -43,7 +43,7 @@ This schema specifies that our task expects a goal string describing what the br
 
 Next, we define the external tools our task will use:
 
-```yaml
+```yaml [expandable]
 tools:
 - name: create_browserbase_session
   type: integration
@@ -230,7 +230,7 @@ The `run_browser` subworkflow is a crucial component that handles the interactiv
   </Step>
 
   <Step title="Goal Evaluation">
-```yaml
+```yaml [expandable]
 - evaluate:
     contents: >-
       $ [ \
@@ -295,7 +295,7 @@ This recursive pattern ensures that the browser automation continues until eithe
 - An error occurs that prevents further progress
 
 <Accordion title="Complete Task YAML" icon="code">
-```yaml YAML
+```yaml YAML [expandable]
 # yaml-language-server: $schema=https://raw.githubusercontent.com/julep-ai/julep/refs/heads/dev/schemas/create_task_request.json
 name: Julep Browser Use Task
 description: A Julep agent that can use the computer tool to interact with the browser.
@@ -512,7 +512,7 @@ Here's how to use this task with the Julep SDK:
 
 <CodeGroup>
 
-```python Python
+```python Python [expandable]
 from julep import Client
 import yaml
 import time
@@ -557,7 +557,7 @@ else:
     print(f"Error: {result.error}")
 ```
 
-```js Node.js
+```js Node.js [expandable]
 import { Julep } from '@julep/sdk';
 import yaml from 'yaml';
 import fs from 'fs';
@@ -623,4 +623,10 @@ if (result.status === 'succeeded') {
 ## Next Steps
 
 - Try this task yourself, check out the full example, see the [browser-use cookbook](https://github.com/julep-ai/julep/blob/main/cookbooks/06-browser-use.ipynb).
-- To learn more about the integrations used in this task, check out the [integrations](/integrations/supported-integrations) page.
+ - To learn more about the integrations used in this task, check out the [integrations](/integrations/supported-integrations) page.
+
+## Related Concepts
+
+- [Agents](/concepts/agents)
+- [Tasks](/concepts/tasks)
+- [Tools](/concepts/tools)

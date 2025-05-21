@@ -111,9 +111,16 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
         connection_pool=pool,
     )
 
+    input_cost, completion_cost = cost_per_token(
+        "gpt-4o-mini", prompt_tokens=100, completion_tokens=100
+    )
+    cost = input_cost + completion_cost
+    cost = Decimal(str(cost)).quantize(Decimal("0.000001"))
+
     assert len(response) == 1
     record = response[0]
     assert record["custom_api_used"] is True
+    assert record["cost"] == cost
 
 
 @test("query: create_usage_record with fallback pricing")

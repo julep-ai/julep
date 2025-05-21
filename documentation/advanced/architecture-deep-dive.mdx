@@ -28,6 +28,14 @@ To help you visualize this, here's a diagram:
     height={1000}
   />
 </Frame>
+<Frame caption="System Architecture">
+  <img
+    src="/images/architecture-diagram.svg"
+    width={1000}
+    height={600}
+  />
+</Frame>
+
 
 ## Core Components
 
@@ -55,17 +63,25 @@ To help you visualize this, here's a diagram:
   <Card title="Task & Execution" icon="list-check">
     <p>Github Actions-style workflows for complex operations.</p>
   </Card>
+
+  <Card title="Secret" icon="key">
+    <p>Encrypted key-value pairs for securely storing sensitive information like API keys and credentials.</p>
+  </Card>
 </CardGroup>
 
 ## Infrastructure Components
 
-<CardGroup cols={3}>
+<CardGroup cols={4}>
   <Card title="Document Store" icon="database">
     <p>The document store provides a vector database for semantic search along with a document management system. It supports various file types and handles automatic indexing and retrieval of documents.</p>
   </Card>
 
   <Card title="Task Execution Engine" icon="gears">
     <p>The task execution engine handles distributed task processing, state management, error handling with retries, and supports parallel execution of tasks.</p>
+  </Card>
+
+  <Card title="Secrets Store" icon="key">
+    <p>The secrets store provides encrypted storage for sensitive information like API keys, credentials, and tokens. It uses AES-256 encryption and developer-scoped access controls to securely manage confidential data.</p>
   </Card>
 
   <Card title="API Layer" icon="code">
@@ -128,6 +144,7 @@ To help you visualize this, here's a diagram:
       <li>**2.** Secure communication</li>
       <li>**3.** Data isolation</li>
       <li>**4.** Access controls</li>
+      <li>**5.** Encrypted secrets</li>
     </ol>
   </Card>
 

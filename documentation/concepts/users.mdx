@@ -23,6 +23,7 @@ When creating a user, the following attributes can be specified:
 | **Field**  | **Type** | **Description**                                                    | **Default** |
 |------------|----------|--------------------------------------------------------------------|-------------|
 | `name`     | `string`   | The name of the user.                                              | Required    |
+| `project`  | `string`   | The canonical name of the project this user belongs to.            | `"default"` |
 | `about`    | `string`   | Information about the user.                                        | `""`        |
 | `metadata` | `object`   | Additional metadata for the user, such as preferences or settings. | `null`      |
 
@@ -38,6 +39,7 @@ You can create a user using Julep's SDKs in Python or JavaScript. Below are exam
 
     user = client.users.create(
         name="John Doe",
+        project="university-assistant",
         about="A 21-year-old man who is a student at MIT.",
         metadata={
             "email": "john.doe@example.com",
@@ -58,6 +60,7 @@ You can create a user using Julep's SDKs in Python or JavaScript. Below are exam
 
     const user = await client.users.create({
         name: "John Doe",
+        project: "university-assistant",
         about: "A 21-year-old man who is a student at MIT.",
         metadata: {
             email: "john.doe@example.com",
@@ -167,6 +170,32 @@ Remove users from your system when they are no longer needed.
 </Tip>
 
 ## Relationship to Other Concepts
+
+### Projects
+
+Users belong to exactly one project, which helps organize related resources together. When creating a user, you can specify which project it belongs to using the `project` parameter. If not specified, the user will be assigned to the "default" project.
+
+**Example:**
+
+<CodeGroup>
+    ```python Python
+    # Create a user in a specific project
+    user = client.users.create(
+        name="Marketing User",
+        project="marketing-campaign"
+    )
+    ```
+
+    ```javascript Node.js
+    // Create a user in a specific project
+    const user = await client.users.create({
+        name: "Marketing User",
+        project: "marketing-campaign"
+    });
+    ```
+</CodeGroup>
+
+For more information about projects, see [Projects](/concepts/projects).
 
 ### Sessions
 

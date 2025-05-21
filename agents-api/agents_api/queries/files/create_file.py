@@ -8,35 +8,63 @@ import hashlib
 from typing import Literal
 from uuid import UUID
 
+import asyncpg
 from beartype import beartype
+from fastapi import HTTPException
 from uuid_extensions import uuid7
 
 from ...autogen.openapi_model import CreateFileRequest, File
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
+from ..projects.project_exists import project_exists
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Create file
 file_query = """
-INSERT INTO files (
-    developer_id,
-    file_id,
-    name,
-    description,
-    mime_type,
-    size,
-    hash
+WITH new_file AS (
+    INSERT INTO files (
+        developer_id,
+        file_id,
+        name,
+        description,
+        mime_type,
+        size,
+        hash
+    )
+    VALUES (
+        $1, -- developer_id
+        $2, -- file_id
+        $3, -- name
+        $4, -- description
+        $5, -- mime_type
+        $6, -- size
+        $7  -- hash
+    )
+    RETURNING *
+), proj AS (
+    -- Find project ID by canonical name
+    SELECT project_id, canonical_name
+    FROM projects
+    WHERE developer_id = $1 AND canonical_name = $8
+), project_association AS (
+    -- Insert into project_files junction table
+    INSERT INTO project_files (
+        project_id,
+        developer_id,
+        file_id
+    )
+    SELECT
+        p.project_id,
+        $1,
+        $2
+    FROM proj p
+    WHERE p.project_id IS NOT NULL
+    RETURNING 1
 )
-VALUES (
-    $1, -- developer_id
-    $2, -- file_id
-    $3, -- name
-    $4, -- description
-    $5, -- mime_type
-    $6, -- size
-    $7  -- hash
-)
-RETURNING *;
+SELECT
+    f.*,
+    $8 AS project
+FROM new_file f;
 """
 
 # Replace both user_file and agent_file queries with a single file_owner query
@@ -51,7 +79,9 @@ WITH inserted_owner AS (
     VALUES ($1, $2, $3, $4)
     RETURNING file_id
 )
-SELECT f.*
+SELECT
+    f.*,
+    $5 AS project
 FROM inserted_owner io
 JOIN files f ON f.file_id = io.file_id;
 """
@@ -72,7 +102,7 @@ JOIN files f ON f.file_id = io.file_id;
 @query_metrics("create_file")
 @pg_query
 @beartype
-async def create_file(
+async def create_file_query(
     *,
     developer_id: UUID,
     file_id: UUID | None = None,
@@ -109,6 +139,7 @@ async def create_file(
         data.mime_type,
         size,
         hash_bytes,
+        data.project or "default",
     ]
 
     queries = []
@@ -118,7 +149,41 @@ async def create_file(
 
     # Then create the association if owner info provided
     if owner_type and owner_id:
-        assoc_params = [developer_id, file_id, owner_type, owner_id]
+        assoc_params = [developer_id, file_id, owner_type, owner_id, data.project or "default"]
         queries.append((file_owner_query, assoc_params))
 
     return queries
+
+
+async def create_file(
+    *,
+    developer_id: UUID,
+    file_id: UUID | None = None,
+    data: CreateFileRequest,
+    owner_type: Literal["user", "agent"] | None = None,
+    owner_id: UUID | None = None,
+    connection_pool: asyncpg.Pool | None = None,
+) -> File:
+    # Get project (default if not specified)
+    project_canonical_name = data.project or "default"
+
+    # Check if the project exists
+    project_exists_result = await project_exists(
+        developer_id,
+        project_canonical_name,
+        connection_pool=connection_pool,
+    )
+
+    if not project_exists_result[0]["project_exists"]:
+        raise HTTPException(
+            status_code=404, detail=f"Project '{project_canonical_name}' not found"
+        )
+
+    return await create_file_query(
+        developer_id=developer_id,
+        file_id=file_id,
+        data=data,
+        owner_type=owner_type,
+        owner_id=owner_id,
+        connection_pool=connection_pool,
+    )

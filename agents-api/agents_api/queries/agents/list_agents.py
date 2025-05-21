@@ -19,25 +19,30 @@ from ..utils import (
 # Define the raw SQL query
 raw_query = """
 SELECT
-    agent_id,
-    developer_id,
-    name,
-    canonical_name,
-    about,
-    instructions,
-    model,
-    metadata,
-    default_settings,
-    default_system_template,
-    created_at,
-    updated_at
-FROM agents
-WHERE developer_id = $1 {metadata_filter_query}
+    a.agent_id,
+    a.developer_id,
+    a.name,
+    a.canonical_name,
+    a.about,
+    a.instructions,
+    a.model,
+    a.metadata,
+    a.default_settings,
+    a.default_system_template,
+    a.created_at,
+    a.updated_at,
+    p.canonical_name AS project
+FROM
+    agents a
+LEFT JOIN project_agents pa ON a.agent_id = pa.agent_id AND a.developer_id = pa.developer_id
+LEFT JOIN projects p ON pa.project_id = p.project_id AND pa.developer_id = p.developer_id
+WHERE
+    a.developer_id = $1 {metadata_filter_query}
 ORDER BY
-    CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN created_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN updated_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN updated_at END DESC NULLS LAST
+    CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN a.created_at END ASC NULLS LAST,
+    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN a.created_at END DESC NULLS LAST,
+    CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN a.updated_at END ASC NULLS LAST,
+    CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN a.updated_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
 """
 
@@ -56,7 +61,7 @@ async def list_agents(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-    metadata_filter: dict[str, Any] = {},
+    metadata_filter: dict[str, Any] | None = None,
 ) -> tuple[str, list]:
     """
     Constructs query to list agents for a developer with pagination.
@@ -73,6 +78,8 @@ async def list_agents(
         Tuple of (query, params)
     """
 
+    # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
+    metadata_filter = metadata_filter if metadata_filter is not None else {}
     # Initialize parameters
     params = [
         developer_id,
@@ -84,7 +91,7 @@ async def list_agents(
 
     # Handle metadata filter differently - using JSONB containment
     agent_query = raw_query.format(
-        metadata_filter_query="AND metadata @> $6::jsonb" if metadata_filter else "",
+        metadata_filter_query="AND a.metadata @> $6::jsonb" if metadata_filter else "",
     )
 
     # If we have metadata filters, safely add them as a parameter

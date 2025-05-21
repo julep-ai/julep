@@ -378,7 +378,7 @@ The commands in `julep agents` are used to manage your agents.
     </ParamField>
 
     **Examples:**
-    ```bash
+    ```bash [expandable]
     # Update agent name
     julep agents update --id "agent_abc123" --name "Enhanced Writer"
 
@@ -741,23 +741,9 @@ The commands in `julep agents` are used to manage your agents.
     </ParamField>
   </Tab>
 
-  {/* TODO: Enable the following section once (if ever) we'll have an endpoint to get a tool by id */}
-
-  {/* <Tab title="Get">
-    ```bash
-    julep tools get --id tool_id [--json]
-    ```
-
-    The `julep tools get` command is used to get details of a specific tool.
-
-    <ParamField path="--id" type="string" required>
-      ID of the tool to retrieve
-    </ParamField>
-
-    <ParamField path="--json" type="boolean">
-      Output in JSON format
-    </ParamField>
-  </Tab> */}
+  <Info>
+    A future release will add a `julep tools get` command for retrieving a tool by ID.
+  </Info>
 </Tabs>
 
 ## Execution Management
@@ -813,65 +799,9 @@ The commands in `julep agents` are used to manage your agents.
 </Tabs>
 
 
-{/* TODO: Enable the following section once `julep assistant` gets implemented */}
-
-{/* ## Julep Assistant
-
-<Tabs>
-  <Tab title="Assistant">
-
-    ```bash
-    julep assistant
-    ```
-
-    `julep assistant` launches an interactive prompt (a "wizard" mode) that uses AI to interpret plain-English requests and transform them into valid `julep` CLI commands. Think of it as a chat-based REPL that helps you build and manage your Julep resources more intuitively.
-
-  The assistant works as follows:
-  1. Opens a session where you can type natural language instructions (e.g., *"Create a GPT-4 agent named MarketingBot"*).
-  2. The assistant uses an LLM (Large Language Model) to suggest one or more CLI commands that match your request (e.g., `julep agents create --name "MarketingBot" --model "gpt-4"`).
-  3. Displays the suggested command(s) and prompts for confirmation:
-    - **(Y)**: Run the command immediately, showing output in the same session.
-    - **(n)**: Skip or cancel the suggestion.
-    - **(edit)**: Manually revise the command prior to execution.
-  4. Returns to the prompt for follow-up instructions, giving you a conversational workflow (e.g., *"Now list all my tasks"*, *"Delete the agent I just created"*, etc.).
-
-    **Example Session:**
-    ```bash
-    $ julep assistant
-
-    Welcome to Julep Assistant!
-    Type your request in plain English, or type 'exit' to quit.
-
-    assistant> Create a GPT-4 agent named MarketingBot
-    Proposed command:
-    julep agents create --name "MarketingBot" --model "gpt-4"
-
-    Execute? (Y/n/edit)
-    Y
-    [Running command...]
-    Agent created successfully (id: agent_654321)
-
-    assistant> List all tasks
-    Proposed command:
-    julep tasks list
-
-    Execute? (Y/n/edit)
-    Y
-    [Running command...]
-    [No tasks found]
-
-    assistant> exit
-    ```
-
-  The idea is to make it easier to onboard new users and make it easier to manage projects.
-  - **Simplifies Onboarding**: Users can manage agents, tasks, and tools with minimal knowledge of CLI flags and syntax.
-  - **Conversational Guidance**: The assistant can ask clarifying questions if a request is ambiguous and recall recently created or updated resources.
-  - **Expandable**: Future enhancements might include richer multi-step workflows, advanced editing, and deeper project insights (e.g., referencing `julep-lock.json` state).
-
-    This feature is particularly useful for new users or those who want a quick, conversational way to build out a project without memorizing every `julep` subcommand. Simply type what you want in natural language, confirm or edit the generated commands, and let the assistant handle the rest.
-
-  </Tab>
-</Tabs> */}
+<Info>
+  The CLI will soon include a `julep assistant` command that launches an interactive prompt for generating commands from plain language. This feature is still under development.
+</Info>
 
 ## Miscellaneous
 

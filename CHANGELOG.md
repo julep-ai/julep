@@ -30,12 +30,33 @@
   </h3>
 </div>
 
-# **Julep AI Changelog for 11 Apri 2025** ✨
+# **Julep AI Changelog for 21 May 2025** ✨
+
+- **Major Enhancement**: Added GitHub Actions workflow to automate README translation using Claude, replacing the previous Python-based workflow ([#1433](https://github.com/julep-ai/julep/pull/1433)).
+- **Enhancement**: Introduced lightweight Docker Compose file and `dev-up` task for rapid local iteration; enforced OpenAPI codegen freshness via CI and pre-commit ([#1431](https://github.com/julep-ai/julep/pull/1431)).
+- **Enhancement**: Enabled text-only queries in vector search models for improved document search ([#1430](https://github.com/julep-ai/julep/pull/1430)).
+- **Enhancement**: Refactored database schema and queries to rename `custom_api_used` column to `custom_key_used` for improved clarity and consistency ([#1429](https://github.com/julep-ai/julep/pull/1429)).
+- **Feature**: Added new API endpoints to list agents and users participating in a session ([#1428](https://github.com/julep-ai/julep/pull/1428)).
+- **Feature**: Added user and agent CRUD file routes, exposing new endpoints in OpenAPI ([#1427](https://github.com/julep-ai/julep/pull/1427)).
+- **Critical Migration**: Normalized `session_lookup` table to use a party-based model, with full up/down migrations and cleanup of legacy owner tables ([#1426](https://github.com/julep-ai/julep/pull/1426)).
+- **Enhancement**: Added signed file URL resolver for secure file access and workflow integration ([#1425](https://github.com/julep-ai/julep/pull/1425)).
+
+> Note: This summary includes the most significant code-related PRs in the last month. For the full PR list, see: [Recent Pull Requests](https://github.com/julep-ai/julep/pulls?q=is:pr+created:>=2025-04-21).
+
+---
+
+# **Julep AI Changelog for 9 May 2025** ✨
+
+- **Minor Docs**: Added links to cookbooks for Quick, Community, and Industry pages.
+- **Minor Docs**: Updated cookbook links to use absolute GitHub URLs.
+
+# **Julep AI Changelog for 11 April 2025** ✨
 
 - **Major Feature**: Introduced support for Gemini models in `litellm-config.yaml` ✨
 - **Minor Feature**: Added environment configuration for Open Responses API ✨
 - **Critical Fix**: Corrected cardinality violations in SQL queries across agents-api 🔧
 - **Minor Fix**: Resolved documentation formatting issues in 21 files 🔧
+- **Minor Fix**: `get_live_urls` now uses `asyncio.to_thread` to avoid blocking the event loop 🔧
 - **Major Enhancement**: Refactored API calls to include developer ID for better tracking 📈
 - **Minor Enhancement**: Improved Gunicorn worker configurability via environment variables 📈
 - **Secondary Performance**: Integrated OpenAPI model and TyeSpecs for expanded functionality 🚀

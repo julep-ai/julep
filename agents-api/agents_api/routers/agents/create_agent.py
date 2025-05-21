@@ -1,3 +1,4 @@
+# AIDEV-NOTE: This module defines the API endpoint for creating new agents.
 from typing import Annotated
 from uuid import UUID
 
@@ -14,6 +15,9 @@ from ..utils.model_validation import validate_model
 from .router import router
 
 
+# AIDEV-NOTE: API endpoint to create a new agent.
+# It depends on the developer ID and the agent data from the request body.
+# Validates the agent model if specified and calls the create_agent_query function.
 @router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_agent(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],

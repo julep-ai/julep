@@ -18,44 +18,83 @@ WITH existing_agent AS (
     SELECT canonical_name
     FROM agents
     WHERE developer_id = $1 AND agent_id = $2
+), proj AS (
+    -- Find project ID by canonical name
+    SELECT project_id, canonical_name
+    FROM projects
+    WHERE developer_id = $1 AND canonical_name = $11
+),
+project_check AS (
+    -- Check if project exists
+    SELECT EXISTS (
+        SELECT 1 FROM proj
+    ) as project_exists
+),
+updated_agent AS (
+    INSERT INTO agents (
+        developer_id,
+        agent_id,
+        canonical_name,
+        name,
+        about,
+        instructions,
+        model,
+        metadata,
+        default_settings,
+        default_system_template
+    )
+    VALUES (
+        $1,                                          -- developer_id
+        $2,                                          -- agent_id
+        COALESCE(                                    -- canonical_name
+            (SELECT canonical_name FROM existing_agent),
+            $3
+        ),
+        $4,                                          -- name
+        $5,                                          -- about
+        $6,                                          -- instructions
+        $7,                                          -- model
+        $8,                                          -- metadata
+        $9,                                          -- default_settings
+        $10                                          -- default_system_template
+    )
+    ON CONFLICT (developer_id, agent_id) DO UPDATE SET
+        canonical_name = EXCLUDED.canonical_name,
+        name = EXCLUDED.name,
+        about = EXCLUDED.about,
+        instructions = EXCLUDED.instructions,
+        model = EXCLUDED.model,
+        metadata = EXCLUDED.metadata,
+        default_settings = EXCLUDED.default_settings,
+        default_system_template = EXCLUDED.default_system_template
+    WHERE (
+        $11 IS NULL OR
+        (SELECT project_exists FROM project_check)
+    )
+    RETURNING *
+),
+project_association AS (
+    -- Insert or update project association if project exists
+    INSERT INTO project_agents (project_id, developer_id, agent_id)
+    SELECT
+        (SELECT project_id FROM proj),
+        $1,
+        $2
+    WHERE EXISTS (SELECT 1 FROM proj)
+    ON CONFLICT (project_id, agent_id) DO UPDATE SET
+        project_id = (SELECT project_id FROM proj)
+    RETURNING project_id
 )
-INSERT INTO agents (
-    developer_id,
-    agent_id,
-    canonical_name,
-    name,
-    about,
-    instructions,
-    model,
-    metadata,
-    default_settings,
-    default_system_template
-)
-VALUES (
-    $1,                                          -- developer_id
-    $2,                                          -- agent_id
-    COALESCE(                                    -- canonical_name
-        (SELECT canonical_name FROM existing_agent),
-        $3
-    ),
-    $4,                                          -- name
-    $5,                                          -- about
-    $6,                                          -- instructions
-    $7,                                          -- model
-    $8,                                          -- metadata
-    $9,                                          -- default_settings
-    $10                                          -- default_system_template
-)
-ON CONFLICT (developer_id, agent_id) DO UPDATE SET
-    canonical_name = EXCLUDED.canonical_name,
-    name = EXCLUDED.name,
-    about = EXCLUDED.about,
-    instructions = EXCLUDED.instructions,
-    model = EXCLUDED.model,
-    metadata = EXCLUDED.metadata,
-    default_settings = EXCLUDED.default_settings,
-    default_system_template = EXCLUDED.default_system_template
-RETURNING *;
+SELECT
+    a.*,
+    COALESCE(
+        (SELECT canonical_name FROM proj),
+        (SELECT p.canonical_name
+         FROM project_agents pa
+         JOIN projects p ON pa.project_id = p.project_id
+         WHERE pa.developer_id = a.developer_id AND pa.agent_id = a.agent_id)
+    ) as project
+FROM updated_agent a;
 """
 
 
@@ -80,11 +119,15 @@ async def create_or_update_agent(
     Args:
         agent_id (UUID): The UUID of the agent to create or update.
         developer_id (UUID): The UUID of the developer owning the agent.
-        agent_data (Dict[str, Any]): A dictionary containing agent fields to insert or update.
+        data (CreateOrUpdateAgentRequest): A dictionary containing agent fields to insert or update.
 
     Returns:
         tuple[list[str], dict]: A tuple containing the list of SQL queries and their parameters.
     """
+    # Get project (default if not specified)
+    project_canonical_name = (
+        data.project if hasattr(data, "project") and data.project else "default"
+    )
 
     # Ensure instructions is a list
     data.instructions = (
@@ -109,6 +152,7 @@ async def create_or_update_agent(
         data.metadata,
         default_settings,
         data.default_system_template,
+        project_canonical_name,
     ]
 
     return (

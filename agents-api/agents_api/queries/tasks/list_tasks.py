@@ -62,7 +62,7 @@ async def list_tasks(
     ] = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-    metadata_filter: dict[str, Any] = {},
+    metadata_filter: dict[str, Any] | None = None,
 ) -> tuple[str, list]:
     """
     Retrieves all tasks for a given developer with pagination and sorting.
@@ -85,6 +85,8 @@ async def list_tasks(
     # if direction.lower() not in ["asc", "desc"]:
     #     raise HTTPException(status_code=400, detail="Invalid sort direction")
 
+    # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
+    metadata_filter = metadata_filter if metadata_filter is not None else {}
     # Format query with metadata filter if needed
     query = list_tasks_query.format(
         metadata_filter_query="AND metadata @> $7::jsonb" if metadata_filter else "",

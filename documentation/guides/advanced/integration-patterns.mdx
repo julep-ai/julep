@@ -1,11 +1,257 @@
 ---
 title: 'Integration Patterns'
 description: 'Common patterns for integrating with external services'
-groups: ['admin']
 ---
 
 # Integration Patterns
 
-Learn about common patterns for external service integration.
+When integrating external services with Julep, following consistent patterns helps ensure security, reliability, and maintainability. This guide covers common integration patterns with a focus on using secrets effectively.
 
-[Placeholder content] 
+## Authentication Patterns
+
+### API Key Authentication with Secrets
+
+For services that use API keys for authentication, store them as secrets:
+
+```yaml
+steps:
+  - kind: tool_call
+    tool: external_api
+    operation: fetch_data
+    arguments:
+      url: "https://api.example.com/data"
+      headers:
+        Authorization: "$ f'Bearer {secrets.api_key}'"
+        X-API-Key: "$ secrets.api_key"
+```
+
+### OAuth Authentication with Secrets
+
+For OAuth flows, keep client credentials in secrets:
+
+```yaml
+steps:
+  - kind: tool_call
+    tool: oauth_service
+    operation: get_token
+    arguments:
+      client_id: "$ secrets.oauth_client_id"
+      client_secret: "$ secrets.oauth_client_secret"
+      scope: "read write"
+    output: token
+  
+  - kind: tool_call
+    tool: api_service
+    operation: call_api
+    arguments:
+      url: "https://api.example.com/data"
+      headers:
+        Authorization: "Bearer {{ token }}"
+```
+
+### Basic Authentication with Secrets
+
+For services using basic authentication:
+
+```yaml
+steps:
+  - kind: tool_call
+    tool: api_service
+    operation: call_api
+    arguments:
+      url: "https://api.example.com/data"
+      auth:
+        username: "$ secrets.api_username"
+        password: "$ secrets.api_password"
+```
+
+## Integration Configuration Patterns
+
+### Database Connection with Secrets
+
+When connecting to databases, use secrets for connection parameters:
+
+```yaml
+steps:
+  - kind: tool_call
+    tool: database
+    operation: query
+    arguments:
+      query: "SELECT * FROM users LIMIT 10"
+      connection:
+        host: "$ secrets.db_host"
+        port: "$ secrets.db_port"
+        user: "$ secrets.db_username"
+        password: "$ secrets.db_password"
+        database: "$ secrets.db_name"
+```
+
+### Service Configuration with Secrets
+
+For configuring service endpoints and parameters:
+
+```yaml
+steps:
+  - kind: tool_call
+    tool: email
+    operation: send
+    arguments:
+      to: "recipient@example.com"
+      subject: "Important update"
+      body: "This is an important message."
+      smtp:
+        host: "$ secrets.smtp_host"
+        port: "$ secrets.smtp_port"
+        username: "$ secrets.smtp_username"
+        password: "$ secrets.smtp_password"
+        tls: true
+```
+
+## Advanced Integration Patterns
+
+### Hybrid Secret and Expression Pattern
+
+Combine secrets with expressions for dynamic configurations:
+
+```yaml
+steps:
+  - kind: transform
+    expression: "$ f'https://{secrets.api_domain}/v1/{input.resource}?api_key={secrets.api_key}'"
+    input:
+      resource: "users"
+    output: api_url
+
+  - kind: tool_call
+    tool: http
+    operation: get
+    arguments:
+      url: "{{ api_url }}"
+```
+
+### Multi-tenant Service Integration
+
+For handling multiple tenant configurations with secrets:
+
+```yaml
+steps:
+  - kind: transform
+    expression: "$ f'tenant_{input.tenant_id}'"
+    input:
+      tenant_id: "123"
+    output: tenant_key
+
+  - kind: transform 
+    expression: "$ f'{secrets[tenant_key + \"_api_key\"]}'"
+    output: api_key
+
+  - kind: tool_call
+    tool: external_api
+    operation: fetch_data
+    arguments:
+      url: "https://api.example.com/data"
+      headers:
+        Authorization: "Bearer {{ api_key }}"
+```
+
+### Service Discovery Pattern
+
+For dynamically selecting services based on configuration:
+
+```yaml [expandable]
+steps:
+  - kind: transform
+    expression: "$ secrets.preferred_service"
+    output: service_name
+
+  - kind: if_else
+    if: "$ service_name == 'service_a'"
+    then:
+      - kind: tool_call
+        tool: service_a
+        operation: process
+        arguments:
+          input: "{{ input }}"
+          api_key: "$ secrets.service_a_api_key"
+    else:
+      - kind: tool_call
+        tool: service_b
+        operation: process
+        arguments:
+          data: "{{ input }}"
+          auth_token: "$ secrets.service_b_auth_token"
+```
+
+## Best Practices
+
+### Secret Naming Conventions
+
+- Use descriptive names: `stripe_api_key` instead of just `api_key`
+- Use service prefixes: `aws_access_key`, `aws_secret_key`
+- For multiple environments: `dev_api_key`, `prod_api_key`
+
+### Secret Rotation
+
+Implement regular secret rotation without service disruption:
+
+```python [expandable]
+# Python example of rotating a secret
+from julep import Julep
+import uuid
+
+client = Julep(api_key="your_api_key")
+
+# Generate temporary name
+temp_name = f"stripe_key_rotation_{uuid.uuid4().hex[:8]}"
+
+# Create new secret with temp name
+client.secrets.create(
+    name=temp_name,
+    value="sk_new_value...",
+    description="New Stripe API key (rotation)"
+)
+
+# Test the new key works
+# ...
+
+# If valid, delete old secret and rename new one
+client.secrets.delete(name="stripe_api_key")
+client.secrets.update(
+    name=temp_name,
+    new_name="stripe_api_key",
+    description="Stripe API key"
+)
+```
+
+### Error Handling
+
+For graceful handling of authentication and configuration errors:
+
+```yaml [expandable]
+steps:
+  - kind: try_catch
+    try:
+      - kind: tool_call
+        tool: external_api
+        operation: fetch_data
+        arguments:
+          url: "https://api.example.com/data"
+          headers:
+            Authorization: "Bearer $ secrets.api_key"
+    catch:
+      - kind: if_else
+        if: "$ error.type == 'AuthenticationError'"
+        then:
+          - kind: prompt
+            model: gpt-4
+            prompt: "API key authentication failed. Please suggest troubleshooting steps."
+        else:
+          - kind: prompt
+            model: gpt-4
+            prompt: "An error occurred: {{ error.message }}"
+```
+
+## Next Steps
+
+- [Secrets Management](/advanced/secrets-management) - Learn about advanced secrets management
+- [Complex Workflows](/guides/advanced/complex-workflows) - Build complex workflows with integrations
+- [Multi-Agent Systems](/guides/advanced/multi-agent-systems) - Coordinate multiple agents with integrations

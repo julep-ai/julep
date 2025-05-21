@@ -33,7 +33,9 @@ from .routers import (
     healthz,
     internal,
     jobs,
+    projects,
     responses,
+    secrets,
     sessions,
     tasks,
     users,
@@ -279,7 +281,9 @@ else:
     app.include_router(files.router, dependencies=[Depends(get_api_key)])
     app.include_router(docs.router, dependencies=[Depends(get_api_key)])
     app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
+    app.include_router(secrets.router, dependencies=[Depends(get_api_key)])
     app.include_router(internal.router)
+    app.include_router(projects.router, dependencies=[Depends(get_api_key)])
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(healthz.router)
 
@@ -452,12 +456,12 @@ async def litellm_api_error(request: Request, exc: APIError):
 
 
 def main(
-    host="127.0.0.1",
-    port=8000,
-    backlog=4096,
-    timeout_keep_alive=30,
+    host: str = "127.0.0.1",
+    port: int = 8000,
+    backlog: int = 4096,
+    timeout_keep_alive: int = 30,
     workers=None,
-    log_level="info",
+    log_level: str = "info",
 ) -> None:
     uvicorn.run(
         app,
