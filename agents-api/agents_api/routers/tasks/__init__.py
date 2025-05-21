@@ -8,5 +8,4 @@ from .list_execution_transitions import list_execution_transitions
 from .list_task_executions import list_task_executions
 from .list_tasks import list_tasks
 from .router import router
-from .stream_transitions_events import stream_transitions_events
 from .update_execution import update_execution

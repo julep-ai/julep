@@ -1,0 +1,14 @@
+query Transitions($executionId: uuid!, $limit: Int = 100, $offset: Int = 0) {
+  transitions(
+    where: {execution_id: {_eq: $executionId}}
+    order_by: {created_at: asc}
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    type
+    step_label
+    output
+    created_at
+  }
+}

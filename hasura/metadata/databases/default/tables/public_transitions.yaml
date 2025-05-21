@@ -5,3 +5,19 @@ object_relationships:
   - name: execution
     using:
       foreign_key_constraint_on: execution_id
+select_permissions:
+  - role: api_user
+    permission:
+      columns:
+        - id
+        - execution_id
+        - type
+        - step_label
+        - output
+        - created_at
+      filter:
+        execution_id:
+          _eq: X-Hasura-Execution-Id
+      subscription_root_fields:
+        - select_stream
+        - select
