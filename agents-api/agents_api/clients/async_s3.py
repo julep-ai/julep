@@ -23,7 +23,11 @@ async def setup() -> AioBaseClient:
         await client.head_bucket(Bucket=blob_store_bucket)
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "404":
-            await client.create_bucket(Bucket=blob_store_bucket)
+            try:
+                await client.create_bucket(Bucket=blob_store_bucket)
+            except botocore.exceptions.ClientError as create_err:
+                if create_err.response["Error"]["Code"] != "BucketAlreadyExists":
+                    raise create_err
         else:
             raise e
 
