@@ -32,17 +32,9 @@
 
 # **Julep AI Changelog for 21 May 2025** ✨
 
-- **Major Feature**: Introduced **Projects** for organizing agents, users, files, and sessions under user-defined projects; includes a new `projects` table, linking tables for project memberships, and a `project_sessions` view for grouping sessions by project ([#1423](https://github.com/julep-ai/julep/pull/1423)).
+- **Major Feature**: Introduced **Projects** for organizing agents, users, files, and sessions under user-defined projects; includes a new `projects` table, linking tables for project memberships, and a `project_sessions` view for grouping sessions by project.
 - **Major Feature**: Added **Secrets** management for secure storage of API keys and other sensitive values (encrypted at rest); provides CRUD API endpoints to create, list, update, and delete secrets ([#1312](https://github.com/julep-ai/julep/pull/1312)).
 - **Major Enhancement**: Added GitHub Actions workflow to automate README translation using Claude, replacing the previous Python-based workflow ([#1433](https://github.com/julep-ai/julep/pull/1433)).
-- **Enhancement**: Introduced a lightweight Docker Compose file and `dev-up` task for rapid local iteration; enforced OpenAPI codegen freshness via CI and pre-commit hooks ([#1431](https://github.com/julep-ai/julep/pull/1431)).
-- **Enhancement**: Enabled text-only queries in vector search models for improved document search capabilities ([#1430](https://github.com/julep-ai/julep/pull/1430)).
-- **Enhancement**: Refactored database schema and queries to rename `custom_api_used` column to `custom_key_used` for better clarity and consistency ([#1429](https://github.com/julep-ai/julep/pull/1429)).
-- **Feature**: Added new API endpoints to list agents and users participating in a session (exposed in OpenAPI) ([#1428](https://github.com/julep-ai/julep/pull/1428)).
-- **Feature**: Added user and agent file CRUD routes, exposing new file management endpoints in OpenAPI ([#1427](https://github.com/julep-ai/julep/pull/1427)).
-- **Critical Fix**: Corrected the `project_sessions` view implementation to ensure session-participants are properly associated with their projects ([#1432](https://github.com/julep-ai/julep/pull/1432)).
-- **Critical Migration**: Normalized the `session_lookup` table to use a party-based model, with full up/down migrations and cleanup of legacy owner tables ([#1426](https://github.com/julep-ai/julep/pull/1426)).
-- **Enhancement**: Added a signed file URL resolver for secure file access and smoother workflow integrations ([#1425](https://github.com/julep-ai/julep/pull/1425)).
 
 > Note: This summary includes the most significant code-related PRs in the last month. For the full PR list, see: [Recent Pull Requests](https://github.com/julep-ai/julep/pulls?q=is:pr+created:>=2025-04-21).
 
