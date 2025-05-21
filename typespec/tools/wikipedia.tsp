@@ -34,13 +34,13 @@ model WikipediaIntegrationDef extends BaseIntegrationDef {
 model WikipediaProviderCard extends BaseProviderCard {
     provider: "wikipedia" = "wikipedia";
     setup: null = null;
-    methods: ProviderMethod<WikipediaSearchArguments, WikipediaSearchOutput>[] = #[
-        #{
+    methods: ProviderMethod<WikipediaSearchArguments, WikipediaSearchOutput>[] = [
+        {
             method: "search",
             description: "Search for a page on Wikipedia",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://www.wikipedia.org/",
         docs: "https://www.wikipedia.org/wiki/Main_Page",
         icon: "https://www.wikipedia.org/static/favicon/wikipedia.ico",

@@ -50,13 +50,13 @@ model ArxivSearchOutput {
 model ArxivProviderCard extends BaseProviderCard {
     provider: "arxiv" = "arxiv";
     setup: null = null;
-    methods: ProviderMethod<ArxivSearchArguments, ArxivSearchOutput>[] = #[
-        #{
+    methods: ProviderMethod<ArxivSearchArguments, ArxivSearchOutput>[] = [
+        {
             method: "search",
             description: "Search with Arxiv",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://pypi.org/project/arxiv/",
         docs: "https://info.arxiv.org/help/api/index.html",
         icon: "https://arxiv.com/favicon.ico",

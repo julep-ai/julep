@@ -33,13 +33,13 @@ model FfmpegIntegrationDef extends BaseIntegrationDef {
 model FfmpegProviderCard extends BaseProviderCard {
     provider: "ffmpeg" = "ffmpeg";
     setup: null = null;
-    methods: ProviderMethod<FfmpegSearchArguments, FfmpegSearchOutput>[] = #[
-        #{
+    methods: ProviderMethod<FfmpegSearchArguments, FfmpegSearchOutput>[] = [
+        {
             method: "bash_cmd",
             description: "Run FFmpeg bash command",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://ffmpeg.org/",
         docs: "https://ffmpeg.org/documentation.html",
         icon: "https://upload.wikimedia.org/wikipedia/commons/5/5f/FFmpeg_Logo_new.svg",

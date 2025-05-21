@@ -61,32 +61,32 @@ alias BrowserbaseOutput = BrowserbaseSessionOutput | BrowserbaseContextOutput | 
 model BrowserbaseProviderCard extends BaseProviderCard {
     provider: "browserbase" = "browserbase";
     setup: BrowserbaseSetup;
-    methods: ProviderMethod<BrowserbaseArguments, BrowserbaseOutput>[] = #[
-        #{
+    methods: ProviderMethod<BrowserbaseArguments, BrowserbaseOutput>[] = [
+        {
             method: "list_sessions",
             description: "List the sessions in the browserbase context",
         },
-        #{
+        {
             method: "create_session",
             description: "Create a new session in the browserbase context",
         },
-        #{
+        {
             method: "get_session",
             description: "Get a session from the browserbase context",
         },
-        #{
+        {
             method: "complete_session",
             description: "Complete a session in the browserbase context",
         },
-        #{
+        {
             method: "get_live_urls",
             description: "Get live URLs from the browserbase context",
         },
-        #{
+        {
             method: "install_extension_from_github",
             description: "Install an extension from GitHub to the browserbase context",
         },
-        #{
+        {
             method: "get_connect_url",
             description: "Get the connection URL for a session",
         }

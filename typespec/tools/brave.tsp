@@ -39,13 +39,13 @@ model BraveSearchOutput {
 model BraveProviderCard extends BaseProviderCard {
     provider: "brave" = "brave";
     setup: BraveSearchSetup;
-    methods: ProviderMethod<BraveSearchArguments, BraveSearchOutput>[] = #[
-        #{
+    methods: ProviderMethod<BraveSearchArguments, BraveSearchOutput>[] = [
+        {
             method: "search",
             description: "Search with Brave",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://brave.com/",
         docs: "https://brave.com/docs/",
         icon: "https://brave.com/favicon.ico",

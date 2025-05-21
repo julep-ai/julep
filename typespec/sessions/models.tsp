@@ -22,7 +22,7 @@ model BaseDocSearch {
     lang: string = "en-US";
 
     /** Metadata filter to apply to the search */
-    metadata_filter: MetadataFilter = #{};
+    metadata_filter: MetadataFilter = {};
 
     /** The number of search messages to use for the search. */
     @minValue(1)

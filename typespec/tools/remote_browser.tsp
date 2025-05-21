@@ -83,13 +83,13 @@ model RemoteBrowserIntegrationDef extends BaseIntegrationDef {
 model RemoteBrowserProviderCard extends BaseProviderCard {
     provider: "remote_browser" = "remote_browser";
     setup: RemoteBrowserSetup;
-    methods: ProviderMethod<RemoteBrowserArguments, RemoteBrowserOutput>[] = #[
-        #{
+    methods: ProviderMethod<RemoteBrowserArguments, RemoteBrowserOutput>[] = [
+        {
             method: "perform_action",
             description: "Perform an action in the remote browser",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://playwright.dev/",
         docs: "https://playwright.dev/docs/api/class-page",
         icon: "https://playwright.dev/favicon.ico",

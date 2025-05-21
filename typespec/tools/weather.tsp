@@ -35,13 +35,13 @@ model WeatherIntegrationDef extends BaseIntegrationDef {
 model WeatherProviderCard extends BaseProviderCard {
     provider: "weather" = "weather";
     setup: WeatherSetup;
-    methods: ProviderMethod<WeatherGetArguments, WeatherGetOutput>[] = #[
-        #{
+    methods: ProviderMethod<WeatherGetArguments, WeatherGetOutput>[] = [
+        {
             method: "get",
             description: "Get the current weather for a city",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://www.weatherapi.com/",
         docs: "https://www.weatherapi.com/docs/",
         icon: "https://www.weatherapi.com/favicon.ico",

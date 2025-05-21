@@ -68,7 +68,7 @@ model Task {
     input_schema: Record<unknown> | null = null;
 
     /** Tools defined specifically for this task not included in the Agent itself. */
-    tools: TaskTool[] = #[];
+    tools: TaskTool[] = [];
 
     /** Whether to inherit tools from the parent agent or not. Defaults to false. */
     inherit_tools: boolean = false;

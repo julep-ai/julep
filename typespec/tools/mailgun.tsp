@@ -55,13 +55,13 @@ model MailgunIntegrationDef extends BaseIntegrationDef {
 model MailgunProviderCard extends BaseProviderCard {
     provider: "mailgun" = "mailgun";
     setup: MailgunSetup;
-    methods: ProviderMethod<MailgunSendEmailArguments, MailgunSendEmailOutput>[] = #[
-        #{
+    methods: ProviderMethod<MailgunSendEmailArguments, MailgunSendEmailOutput>[] = [
+        {
             method: "send_email",
             description: "Send an email using Mailgun",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://www.mailgun.com/",
         docs: "https://documentation.mailgun.com/",
         icon: "https://mailgun.com/favicon.ico",

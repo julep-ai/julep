@@ -47,13 +47,13 @@ model LlamaParseIntegrationDef extends BaseIntegrationDef {
 model LlamaParseProviderCard extends BaseProviderCard {
     provider: "llama_parse" = "llama_parse";
     setup: LlamaParseSetup;
-    methods: ProviderMethod<LlamaParseFetchArguments, LlamaParseFetchOutput>[] = #[
-        #{
+    methods: ProviderMethod<LlamaParseFetchArguments, LlamaParseFetchOutput>[] = [
+        {
             method: "parse",
             description: "Parse and Extract the Files",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://www.llamaindex.ai/",
         docs: "https://docs.cloud.llamaindex.ai/llamaparse/getting_started",
         icon: "https://www.llamaindex.ai/favicon.ico",
