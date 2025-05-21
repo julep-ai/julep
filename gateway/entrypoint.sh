@@ -7,7 +7,7 @@ GATEWAY_PORT=${GATEWAY_PORT:-80}
 TEMPORAL_UI_PUBLIC_URL=${TEMPORAL_UI_PUBLIC_URL:-http://temporal-ui-public:8080}
 HASURA_URL=${HASURA_URL:-http://hasura:8080}
 
-for var_name in JWT_SHARED_KEY AGENTS_API_KEY
+for var_name in JWT_SECRET AGENTS_API_KEY
 do
     if [ -z "`eval echo \\\$$var_name`" ]; then
         echo "Error: Environment variable '$var_name' is not set."

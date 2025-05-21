@@ -62,8 +62,3 @@ interface TransitionEndpoints
             "List the Transitions of an Execution by id"
         > {}
 
-interface TransitionStreamEndpoints
-    extends ChildStreamEndpoint<
-            TransitionEvent,
-            "Stream events emitted by the given execution"
-        > {}

@@ -598,10 +598,10 @@ Generate a JWT Token (Only for Multi-Tenant Mode)
 
 To generate a JWT token, `jwt-cli` is required. Kindly install the same before proceeding with the next steps.
 
-Use the following command and replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token:
+Use the following command and replace `JWT_SECRET` with the corresponding key from your `.env` file to generate a JWT token:
 
 ```bash
-jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -d '+10 days' +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
+jwt encode --secret JWT_SECRET --alg HS512 --exp=$(date -d '+10 days' +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
 ```
 
 This command generates a JWT token that will be valid for 10 days.
@@ -618,6 +618,12 @@ client = Client(api_key="your_jwt_token")
 ```
 
 **Note:** SDK in Multi-Tenant mode, you need to generate a JWT token locally that acts as an API KEY to interact with the SDK. Furthermore, while initializing the client you will need to set the environment to `local_multi_tenant` and the api key to the JWT token you generated in the previous step. Whereas in Single-Tenant mode you can interact with the SDK directly without the need for the API KEY and set the environment to `local`.
+
+### Real-time transitions via Hasura
+
+The `hasura` service in `docker-compose.yml` exposes streaming subscriptions on port `8086`.
+Use the `TransitionsStream` subscription with the header `X-Hasura-Execution-Id` to
+receive live updates for an execution without polling.
 
 ### 7. Troubleshooting
 

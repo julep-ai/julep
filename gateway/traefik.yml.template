@@ -135,7 +135,7 @@ http:
             - iat
           Required: true
           Keys:
-            - $JWT_SHARED_KEY
+            - $JWT_SECRET
           JwtHeaders:
             X-Developer-Id: sub
           OpaHttpStatusField: allow_status_code

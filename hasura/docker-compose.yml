@@ -14,12 +14,12 @@ services:
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: naming_convention,streaming_subscriptions
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:?HASURA_ADMIN_SECRET is required}
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:?required}
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
       HASURA_GRAPHQL_JWT_SECRET: >-
         {
           "type":"HS512",
-          "key":"${JWT_SHARED_KEY:?required}",
+          "key":"${JWT_SECRET:?required}",
           "claims_map":{
             "x-hasura-allowed-roles":{"path":"$.hasura.all_roles","default":["user"]},
             "x-hasura-default-role":{"path":"$.hasura.all_roles[0]","default":"user"},

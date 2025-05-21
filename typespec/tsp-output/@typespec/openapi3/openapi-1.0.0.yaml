@@ -876,33 +876,6 @@ paths:
                         - transitions
                 required:
                   - items
-  /executions/{id}/transitions.stream:
-    get:
-      operationId: ExecutionTransitionsStreamRoute_stream
-      description: Stream events emitted by the given execution
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID of parent
-          schema:
-            $ref: '#/components/schemas/Common.uuid'
-        - name: next_token
-          in: query
-          required: true
-          description: Next page token
-          schema:
-            type: string
-            nullable: true
-            default: null
-          explode: false
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            text/event-stream:
-              schema:
-                type: string
   /files:
     post:
       operationId: FilesRoute_create

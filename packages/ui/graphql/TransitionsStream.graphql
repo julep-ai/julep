@@ -1,0 +1,13 @@
+subscription TransitionsStream($executionId: uuid!, $cursor: timestamptz!) {
+  transitions_stream(
+    batch_size: 100
+    cursor: {initial_value: {created_at: $cursor}, ordering: ASC}
+    where: {execution_id: {_eq: $executionId}}
+  ) {
+    id
+    type
+    step_label
+    output
+    created_at
+  }
+}
