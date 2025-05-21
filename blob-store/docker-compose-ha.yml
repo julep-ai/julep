@@ -25,7 +25,7 @@ services:
     <<: *seaweedfs-base
     ports:
       - 28080:28080  # Since 8080 is already used by agents-api, we use 28080
-      - 18081:18080
+      # - 18081:18080
     command: 'volume -max=8 -mserver="seaweedfs-master:9333" -dir=/data -ip.bind=0.0.0.0 -port=28080 -ip=seaweedfs-volume -metricsPort=9321 -preStopSeconds=3'
     healthcheck:
       test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:28080/healthz" ]
@@ -44,7 +44,7 @@ services:
     <<: *seaweedfs-base
     ports:
       - 28081:28081
-      - 18082:18081
+      # - 18082:18081
     command: 'volume -max=8 -mserver="seaweedfs-master:9333" -dir=/data -ip.bind=0.0.0.0 -port=28081 -ip=seaweedfs-volume2 -metricsPort=9322 -preStopSeconds=3'
     healthcheck:
       test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:28081/healthz" ]
@@ -63,7 +63,7 @@ services:
     <<: *seaweedfs-base
     ports:
       - 28082:28082
-      - 18083:18083
+      # - 18083:18083
     command: 'volume -max=8 -mserver="seaweedfs-master:9333" -dir=/data -ip.bind=0.0.0.0 -port=28082 -ip=seaweedfs-volume3 -metricsPort=9323 -preStopSeconds=3'
     healthcheck:
       test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:28082/healthz" ]
