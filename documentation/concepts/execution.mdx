@@ -235,6 +235,14 @@ curl -X GET 'https://api.julep.ai/api/executions/{execution_id}/status.stream' \
   -H 'Authorization: Bearer $JULEP_API_KEY'
 ```
 
+You'll be getting events that look like this:
+
+```bash
+data: {"execution_id":"068306ff-e0f3-7fe9-8000-0013626a759a","status":"starting","updated_at":"2025-05-23T12:54:24.565424Z","error":null,"transition_count":1,"metadata":{}}
+data: {"execution_id":"068306ff-e0f3-7fe9-8000-0013626a759a","status":"running","updated_at":"2025-05-23T12:54:30.903484Z","error":null,"transition_count":2,"metadata":{}}
+data: {"execution_id":"068306ff-e0f3-7fe9-8000-0013626a759a","status":"succeeded","updated_at":"2025-05-23T12:56:12.054067Z","error":null,"transition_count":3,"metadata":{}}
+```
+
 **Note:** This streaming endpoint is not yet available in the SDKs, but support is coming soon.
 
 ## Updating/Cancelling an Execution
