@@ -1,0 +1,7 @@
+repos:
+  - repo: local
+    hooks:
+      - id: codegen-freshness
+        language: system
+        entry: bash -c "scripts/generate_openapi_code.sh && git diff --exit-code"
+        pass_filenames: false
