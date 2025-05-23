@@ -40,6 +40,7 @@ async def get_execution_status(
     Get the current status, updated_at, and error for the given execution_id.
 
     Parameters:
+        developer_id (UUID): The ID of the developer.
         execution_id (UUID): The ID of the execution.
 
     Returns:
