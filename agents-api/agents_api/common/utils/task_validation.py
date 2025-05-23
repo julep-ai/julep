@@ -157,9 +157,9 @@ def validate_py_expression(
                 if isinstance(generator.target, ast.Name):
                     local_vars.add(generator.target.id)
                 elif isinstance(generator.target, ast.Tuple):
-                    for elt in generator.target.elts:
-                        if isinstance(elt, ast.Name):
-                            local_vars.add(elt.id)
+                    local_vars.update(
+                        elt.id for elt in generator.target.elts if isinstance(elt, ast.Name)
+                    )
 
         # Generator expressions
         elif isinstance(node, ast.GeneratorExp):
@@ -173,13 +173,11 @@ def validate_py_expression(
 
         # Lambda functions
         elif isinstance(node, ast.Lambda):
-            for arg in node.args.args:
-                local_vars.add(arg.arg)
+            local_vars.update(arg.arg for arg in node.args.args)
 
             # Handle args with default values
             if node.args.kwonlyargs:
-                for arg in node.args.kwonlyargs:
-                    local_vars.add(arg.arg)
+                local_vars.update(arg.arg for arg in node.args.kwonlyargs)
 
         # Assignment expressions (walrus operator)
         elif isinstance(node, ast.NamedExpr) and isinstance(node.target, ast.Name):

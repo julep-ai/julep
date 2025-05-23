@@ -56,7 +56,7 @@ def make_exception_handler(status: int) -> Callable[[Any, Any], Any]:
     A callable exception handler that logs the exception and returns a JSON response with the specified status code.
     """
 
-    async def _handler(request: Request, exc):
+    async def _handler(_request: Request, exc):
         exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
         logger.exception(exc)
         content = {"status_code": status, "message": exc_str, "data": None}
@@ -79,7 +79,7 @@ def register_exceptions(app: FastAPI) -> None:
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc: HTTPException):  # pylint: disable=unused-argument
+async def http_exception_handler(_request, exc: HTTPException):  # pylint: disable=unused-argument
     return JSONResponse(
         status_code=exc.status_code,
         content={"error": {"message": str(exc)}},

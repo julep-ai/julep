@@ -1,9 +1,9 @@
 import asyncio
 import base64
-import os
 import shutil
 import tempfile
 from functools import lru_cache
+from pathlib import Path
 
 from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -100,7 +100,7 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
         # Get the output filename from the last argument of the FFmpeg command
         cmd_parts = arguments.cmd.split()
         output_filename = cmd_parts[-1]  # e.g., "output.mp4"
-        output_path = os.path.join(temp_dir, output_filename)
+        output_path = Path(temp_dir) / output_filename
 
         # Modify FFmpeg command
         for i, part in enumerate(cmd_parts):
@@ -134,9 +134,9 @@ async def bash_cmd(arguments: FfmpegSearchArguments) -> FfmpegSearchOutput:
         stdout, stderr = await process.communicate()
         success = process.returncode == 0
 
-        if success and os.path.exists(output_path):
+        if success and Path(output_path).exists():
             # Read the output file
-            with open(output_path, "rb") as f:
+            with Path(output_path).open("rb") as f:
                 output_data = f.read()
                 # Convert to base64
                 output_base64 = base64.b64encode(output_data).decode("utf-8")

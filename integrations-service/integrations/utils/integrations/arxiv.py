@@ -1,5 +1,6 @@
 import base64
 import tempfile
+from pathlib import Path
 
 import arxiv
 from beartype import beartype
@@ -77,7 +78,7 @@ async def search(arguments: ArxivSearchArguments) -> ArxivSearchOutput:
         for result in search_results:
             with tempfile.TemporaryDirectory() as temp_dir:
                 result.download_pdf(dirpath=temp_dir, filename=f"{result.title}.pdf")
-                with open(f"{temp_dir}/{result.title}.pdf", "rb") as pdf_file:
+                with Path(f"{temp_dir}/{result.title}.pdf").open("rb") as pdf_file:
                     pdf_content = base64.b64encode(pdf_file.read()).decode("utf-8")
             results.append(create_arxiv_search_result(result, pdf_content))
     else:

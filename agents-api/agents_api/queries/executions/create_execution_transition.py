@@ -104,7 +104,7 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
 @beartype
 async def create_execution_transition(
     *,
-    developer_id: UUID,
+    _developer_id: UUID,
     execution_id: UUID,
     data: CreateTransitionRequest,
     # Only one of these needed
