@@ -3,6 +3,7 @@ from uuid import UUID
 
 from beartype import beartype
 
+from ...autogen.openapi_model import ExecutionStatusEvent
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
@@ -27,7 +28,7 @@ LIMIT 1;
 
 
 @rewrap_exceptions(common_db_exceptions("execution", ["get_status"]))
-@wrap_in_class(dict, one=True)
+@wrap_in_class(ExecutionStatusEvent, one=True)
 @pg_query
 @beartype
 async def get_execution_status(

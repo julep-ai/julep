@@ -7,6 +7,7 @@ from anyio.streams.memory import MemoryObjectSendStream
 from fastapi import Depends, Request
 from sse_starlette.sse import EventSourceResponse
 
+from ...autogen.openapi_model import ExecutionStatusEvent
 from ...dependencies.developer_id import get_developer_id
 from ...queries.executions.get_execution_status import (
     get_execution_status as get_execution_status_query,
@@ -33,7 +34,7 @@ async def execution_status_publisher(
                 break
             # Fetch latest execution status via SQL query
             try:
-                row = await get_execution_status_query(
+                execution_status_event: ExecutionStatusEvent = await get_execution_status_query(
                     developer_id=x_developer_id,
                     execution_id=execution_id,
                 )
@@ -42,12 +43,12 @@ async def execution_status_publisher(
                 await anyio.sleep(STREAM_POLL_INTERVAL)
                 continue
 
-            if row:
-                updated_at = row.get("updated_at")
+            if execution_status_event:
+                updated_at = execution_status_event.updated_at
                 if updated_at and updated_at != last_updated_at:
                     last_updated_at = updated_at
                     try:
-                        await send_chan.send({"data": row})
+                        await send_chan.send({"data": execution_status_event.model_dump_json()})
                     except anyio.BrokenResourceError:
                         break
             # wait before polling again
