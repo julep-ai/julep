@@ -35,6 +35,8 @@ async def main() -> None:
 
     client = await temporal.get_client_with_metrics()
     worker = create_worker(client)
+    if hasattr(worker, "_workflow_worker") and worker._workflow_worker:
+        worker._workflow_worker._deadlock_timeout_seconds = 60
 
     async with lifespan(app):
         # Start the worker to listen for and process tasks
