@@ -22,6 +22,7 @@ async def execution_status_publisher(
     send_chan: MemoryObjectSendStream,
     execution_id: UUID,
     x_developer_id: UUID,
+    request: Request,
 ):
     async with send_chan:
         last_updated_at: str | None = None
@@ -34,6 +35,9 @@ async def execution_status_publisher(
 
         async with httpx.AsyncClient(timeout=30) as client:
             while True:
+                # exit loop if client disconnected
+                if await request.is_disconnected():
+                    break
                 # GraphQL query to fetch latest execution status
                 query = """
                 query ExecutionStatus($execution_id: uuid!) {
@@ -48,17 +52,25 @@ async def execution_status_publisher(
                 }
                 """
                 payload = {"query": query, "variables": {"execution_id": str(execution_id)}}
-                resp = await client.post(
-                    hasura_url + "/v1/graphql", json=payload, headers=headers
-                )
-                resp.raise_for_status()
-                result = resp.json().get("data", {}).get("latest_executions", [])
+                try:
+                    resp = await client.post(
+                        hasura_url + "/v1/graphql", json=payload, headers=headers
+                    )
+                    resp.raise_for_status()
+                    result = resp.json().get("data", {}).get("latest_executions", [])
+                except httpx.HTTPError:
+                    # transient error: wait and retry
+                    await anyio.sleep(STREAM_POLL_INTERVAL)
+                    continue
                 if result:
                     row = result[0]
                     updated_at = row.get("updated_at")
                     if updated_at and updated_at != last_updated_at:
                         last_updated_at = updated_at
-                        await send_chan.send({"data": row})
+                        try:
+                            await send_chan.send({"data": row})
+                        except anyio.BrokenResourceError:
+                            break
                 # wait before polling again
                 await anyio.sleep(STREAM_POLL_INTERVAL)
 
@@ -82,7 +94,7 @@ async def stream_execution_status(
     return EventSourceResponse(
         recv_chan,
         data_sender_callable=partial(
-            execution_status_publisher, send_chan, execution_id, x_developer_id
+            execution_status_publisher, send_chan, execution_id, x_developer_id, request
         ),
         send_timeout=STREAM_TIMEOUT,
     )
