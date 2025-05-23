@@ -1,0 +1,7 @@
+table:
+  name: temporal_executions_lookup
+  schema: public
+object_relationships:
+  - name: execution
+    using:
+      foreign_key_constraint_on: execution_id

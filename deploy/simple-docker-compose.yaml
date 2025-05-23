@@ -76,7 +76,7 @@ services:
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://default:${REDIS_PASSWORD:-redis}@litellm-redis:6379
+      REDIS_URL: redis://default:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@litellm-redis:6379
       GROQ_API_KEY: ${GROQ_API_KEY}
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
@@ -104,7 +104,7 @@ services:
   litellm-db:
     environment:
       POSTGRES_DB: ${LITELM_POSTGRES_DB:-litellm}
-      POSTGRES_PASSWORD: ${LITELM_POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${LITELLM_POSTGRES_PASSWORD:?LITELLM_POSTGRES_PASSWORD is required}
       POSTGRES_USER: ${LITELM_POSTGRES_USER:-llmproxy}
     healthcheck:
       test:
@@ -125,7 +125,7 @@ services:
 
   litellm-redis:
     environment:
-      REDIS_ARGS: --requirepass ${REDIS_PASSWORD:-redis}
+      REDIS_ARGS: --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     image: redis/redis-stack-server
     networks:
       default: null
@@ -139,7 +139,7 @@ services:
   memory-store:
     image: timescale/timescaledb-ha:pg16
     environment:
-      POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${MEMORY_STORE_PASSWORD:?MEMORY_STORE_PASSWORD is required}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "127.0.0.1:5432:5432"
@@ -159,7 +159,7 @@ services:
   vectorizer:
     image: timescale/pgai-vectorizer-worker:v0.2.1
     environment:
-      PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:${MEMORY_STORE_PASSWORD:-postgres}@memory-store:5432/postgres
+      PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:${MEMORY_STORE_PASSWORD:?MEMORY_STORE_PASSWORD is required}@memory-store:5432/postgres
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     command: [ "--poll-interval", "2s" ]
     ports:
@@ -178,7 +178,7 @@ services:
       sleep 86400;
       done"
     environment:
-      PGPASSWORD: ${MEMORY_STORE_PASSWORD:-postgres}
+      PGPASSWORD: ${MEMORY_STORE_PASSWORD:?MEMORY_STORE_PASSWORD is required}
     volumes:
       - memory_store_backup:/backup
     depends_on:
@@ -197,7 +197,7 @@ services:
       DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/temporal-postgres.yaml
       LOG_LEVEL: info
       POSTGRES_DB: ${TEMPORAL_POSTGRES_DB:-temporal}
-      POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD:-temporal}
+      POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD:?TEMPORAL_POSTGRES_PASSWORD is required}
       POSTGRES_SEEDS: temporal-db
       POSTGRES_TLS_CA_FILE: /cert/ca.crt
       POSTGRES_TLS_DISABLE_HOST_VERIFICATION: "false"
@@ -228,7 +228,7 @@ services:
   temporal-db:
     environment:
       POSTGRES_DB: ${TEMPORAL_POSTGRES_DB:-temporal}
-      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD:-temporal}
+      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD:?TEMPORAL_POSTGRES_PASSWORD is required}
       POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
     healthcheck:
       test:
@@ -273,7 +273,7 @@ services:
       AGENTS_API_PROTOCOL: http
       AGENTS_API_PUBLIC_PORT: "80"
       AGENTS_API_URL: http://agents-api:8080
-      PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
+      PG_DSN: ${PG_DSN:?PG_DSN is required}
       EMBEDDING_MODEL_ID: openai/text-embedding-3-large
       INTEGRATION_SERVICE_URL: http://integrations:8000
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
