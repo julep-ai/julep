@@ -5,7 +5,6 @@ from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import MailgunSendEmailArguments, MailgunSetup
-from ...env import mailgun_api_key  # Import env to access environment variables
 from ...models import MailgunSendEmailOutput
 
 
@@ -71,8 +70,8 @@ async def send_email(
     if not domain.startswith("email."):
         domain = "email." + domain
 
-    # Use API key from env or from setup
-    api_key = mailgun_api_key if setup.api_key == "DEMO_API_KEY" else setup.api_key
+    # Use API key from setup
+    api_key = setup.api_key
 
     # API URL
     url = f"https://api.mailgun.net/v3/{domain}/messages"
