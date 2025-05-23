@@ -68,6 +68,9 @@ namespace Api {
     @route("/agents/{id}/docs")
     interface AgentDocsRoute extends Docs.AgentEndpoints, Docs.BulkDeleteEndpoints<"Bulk delete Docs owned by an Agent"> {}
 
+    @route("/agents/{id}/files")
+    interface AgentFilesRoute extends Files.AgentEndpoints {}
+
     @route("/agents/{id}/search")
     interface AgentsDocsSearchRoute extends Docs.SearchEndpoints<"Search Docs owned by an Agent"> {}
 
@@ -82,6 +85,9 @@ namespace Api {
 
     @route("/users/{id}/docs")
     interface UserDocsRoute extends Docs.UserEndpoints, Docs.BulkDeleteEndpoints<"Bulk delete Docs owned by a User"> {}
+
+    @route("/users/{id}/files")
+    interface UserFilesRoute extends Files.UserEndpoints {}
 
     @route("/users/{id}/search")
     interface UserDocsSearchRoute extends Docs.SearchEndpoints<"Search Docs owned by a User"> {}
