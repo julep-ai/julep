@@ -58,6 +58,7 @@
 
 - **Other Breaking**: Removed fallback for `DEMO_*` placeholder credentials 💥
 - **Minor Docs**: Updated docs and cookbooks to remove `DEMO_API_KEY` references.
+- **Minor Docs**: Updated footer use-case links to the new `cookbooks/advanced` paths.
 
 > _This list covers the most significant code-related PRs merged to **main** on 21 May 2025.  
 > For everything else, see the full list of [recent pull requests](https://github.com/julep-ai/julep/pulls?q=is:pr+created:>=2025-04-21)._  
