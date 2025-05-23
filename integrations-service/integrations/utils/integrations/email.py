@@ -26,9 +26,6 @@ async def send(setup: EmailSetup, arguments: EmailArguments) -> EmailOutput:
     message["From"] = arguments.from_
     message["To"] = arguments.to
 
-    if setup.password == "DEMO_PASSWORD":
-        setup.password = mailgun_password
-
     with SMTP(setup.host, setup.port) as server:
         server.login(setup.user, setup.password)
         server.send_message(message)
