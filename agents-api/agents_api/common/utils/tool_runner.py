@@ -84,25 +84,23 @@ async def run_context_tool(
 ) -> ToolExecutionResult:
     """Execute a tool call within a workflow step context."""
 
-    arguments: dict[str, Any] = {}
-    if call.function and call.function.arguments:
-        with contextlib.suppress(Exception):
-            arguments = json.loads(call.function.arguments)
+    call_spec = call.model_dump()
+    arguments = call_spec[f"{call.type}"]["arguments"]
 
     if tool.type == "integration" and tool.integration:
         output = await execute_integration(context, tool.name, tool.integration, arguments)
-        return ToolExecutionResult(id=call.id or "", name=tool.name, output=output)
+        return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
     if tool.type == "system" and tool.system:
         system = tool.system.model_copy(update={"arguments": arguments})
         output = await execute_system(context, system)
-        return ToolExecutionResult(id=call.id or "", name=tool.name, output=output)
+        return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
     if tool.type == "api_call" and tool.api_call:
         output = await execute_api_call(tool.api_call, arguments)
-        return ToolExecutionResult(id=call.id or "", name=tool.name, output=output)
+        return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
-    return ToolExecutionResult(id=call.id or "", name=tool.name, output={})
+    return ToolExecutionResult(id=call.id, name=tool.name, output={})
 
 
 @beartype
@@ -114,44 +112,18 @@ def convert_litellm_to_chosen_tool_call(
     based on the tool's type. This preserves the internal tool type information.
     """
     # Parse arguments from the string
-    arguments_str = call.function.arguments
-    if arguments_str:
-        with contextlib.suppress(json.JSONDecodeError):
-            json.loads(arguments_str)
+    arguments_str = json.loads(call.function.arguments)
 
-    # Common fields for all tool types
-    base_args = {
-        "id": call.id,
-        "type": tool.type,  # Preserve the original tool type
-    }
+    tool_spec = tool.model_dump()
+    if "id" in tool_spec:
+        tool_spec.pop("id")
 
-    # Create appropriate tool call structure based on the tool type
-    if tool.type == "function":
-        return ChosenFunctionCall(
-            **base_args,
-            function=FunctionCallOption(
-                name=call.function.name,
-                arguments=arguments_str,  # Keep the original string format
-            ),
-        )
-    if tool.type == "integration":
-        # For integration tools, we need to structure it properly
-        return BaseChosenToolCall(
-            **base_args,
-            function=FunctionCallOption(
-                name=call.function.name,
-                arguments=arguments_str,  # Keep arguments as a string
-            ),
-        )
-    if tool.type == "api_call" or tool.type == "system":
-        return BaseChosenToolCall(
-            **base_args,
-            function=FunctionCallOption(name=call.function.name, arguments=arguments_str),
-        )
-    # For other tool types (like Anthropic tools)
+    # TODO: add computer_20241022, text_editor_20241022, bash_20241022
+    tool_spec[f"{tool.type}"]["arguments"] = arguments_str
+
     return BaseChosenToolCall(
-        **base_args,
-        function=FunctionCallOption(name=call.function.name, arguments=arguments_str),
+        id=call.id,
+        **tool_spec,
     )
 
 
@@ -164,7 +136,7 @@ async def run_llm_with_tools(
     run_tool_call: Callable[
         [Tool | CreateToolRequest, BaseChosenToolCall], Awaitable[ToolExecutionResult]
     ],  # TODO: Probably can be removed
-) -> ModelResponse:
+) -> list[dict]:
     """Run the LLM with a tool loop."""
 
     formatted_tools = [format_tool(t) for t in tools]
@@ -187,7 +159,7 @@ async def run_llm_with_tools(
         messages.append(choice.message.model_dump())
 
         if choice.finish_reason != "tool_calls" or not choice.message.tool_calls:
-            return response
+            return messages
 
         # Process ALL tool calls before continuing
         for litellm_call in choice.message.tool_calls:
@@ -210,7 +182,6 @@ async def run_llm_with_tools(
 
             # Convert LiteLLM call to appropriate internal format while preserving tool type
             internal_call = convert_litellm_to_chosen_tool_call(litellm_call, tool)
-
             # Execute the tool with the correctly typed call
             result = await run_tool_call(tool, internal_call)
             messages.append(format_tool_results_for_llm(result))
