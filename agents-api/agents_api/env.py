@@ -178,6 +178,17 @@ brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
 enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
 
 
+# Hasura GraphQL settings
+hasura_url: str = env.str(
+    "HASURA_URL",
+    default="http://hasura:8080",
+)
+hasura_admin_secret: str | None = env.str(
+    "HASURA_ADMIN_SECRET",
+    default=None,
+)
+
+
 # Secrets
 # -------
 def _validate_master_key(key: str | None) -> str:
