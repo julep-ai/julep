@@ -9,7 +9,7 @@ def convert_to_openai_tool(
     method: BaseProviderMethod | None = None,
 ) -> dict:
     method = method or provider.methods[0]
-    name = f"{provider.provider}_{method.method}"
+    name = f"{provider.provider}"
     description = method.description
     arguments = method.arguments.model_json_schema()
 
