@@ -35,7 +35,7 @@ async def execution_status_publisher(
 ):
     """
     Publishes execution status updates to the SSE stream.
-    
+
     Args:
         send_chan: Channel to send updates through
         execution_id: ID of the execution to monitor
@@ -47,9 +47,11 @@ async def execution_status_publisher(
         while True:
             # Exit loop if client disconnected
             if await request.is_disconnected():
-                logger.debug(f"Client disconnected from status stream for execution {execution_id}")
+                logger.debug(
+                    f"Client disconnected from status stream for execution {execution_id}"
+                )
                 break
-                
+
             # Fetch latest execution status via SQL query
             try:
                 execution_status_event: ExecutionStatusEvent = await get_execution_status_query(
@@ -58,7 +60,7 @@ async def execution_status_publisher(
                 )
             except Exception as e:
                 # Log the error and continue
-                logger.error(f"Error fetching status for execution {execution_id}: {str(e)}")
+                logger.error(f"Error fetching status for execution {execution_id}: {e!s}")
                 await anyio.sleep(STREAM_POLL_INTERVAL)
                 continue
 
@@ -66,28 +68,30 @@ async def execution_status_publisher(
                 logger.warning(f"No status found for execution {execution_id}")
                 await anyio.sleep(STREAM_POLL_INTERVAL)
                 continue
-                
+
             updated_at = execution_status_event.updated_at
             if updated_at and updated_at != last_updated_at:
                 last_updated_at = updated_at
                 try:
                     json_data = execution_status_event.model_dump_json()
                     await send_chan.send({"data": json_data})
-                    
+
                     # Log terminal states
                     if execution_status_event.status in TERMINAL_STATES:
                         logger.info(
                             f"Execution {execution_id} reached terminal state: {execution_status_event.status}"
                         )
                         break
-                        
+
                 except anyio.BrokenResourceError as e:
-                    logger.warning(f"Connection broken while sending status for execution {execution_id}: {str(e)}")
+                    logger.warning(
+                        f"Connection broken while sending status for execution {execution_id}: {e!s}"
+                    )
                     break
                 except Exception as e:
-                    logger.error(f"Error sending status for execution {execution_id}: {str(e)}")
+                    logger.error(f"Error sending status for execution {execution_id}: {e!s}")
                     # Continue the loop to try again
-            
+
             # Wait before polling again
             await anyio.sleep(STREAM_POLL_INTERVAL)
 
@@ -123,7 +127,7 @@ async def stream_execution_status(
 
         send_chan, recv_chan = anyio.create_memory_object_stream(max_buffer_size=1)
         logger.debug(f"Starting status stream for execution {execution_id}")
-        
+
         return EventSourceResponse(
             recv_chan,
             data_sender_callable=partial(
@@ -137,7 +141,7 @@ async def stream_execution_status(
         )
 
     except Exception as e:
-        error_message = f"Failed to start status stream for execution {execution_id}: {str(e)}"
+        error_message = f"Failed to start status stream for execution {execution_id}: {e!s}"
         logger.error(error_message)
         if isinstance(e, HTTPException):
             raise e
