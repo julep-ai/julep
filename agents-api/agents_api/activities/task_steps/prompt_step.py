@@ -1,18 +1,14 @@
 # AIDEV-NOTE: This module contains the activity for executing a prompt step, which interacts with the language model.
-from beartype import beartype
 import functools
+
+from beartype import beartype
 from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-
-from ...clients import (
-    litellm,  # We dont directly import `acompletion` so we can mock it
-)
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
-from ...env import debug
-from .base_evaluate import base_evaluate
 from ...common.utils.tool_runner import run_context_tool, run_llm_with_tools
+from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 

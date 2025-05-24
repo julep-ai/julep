@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-import json
 import contextlib
-from typing import Any, Awaitable, Callable, Sequence, cast, Union, TypeVar
+import json
+from collections.abc import Awaitable, Callable, Sequence
+from typing import Any
 
 from beartype import beartype
-from litellm.utils import ModelResponse
 from litellm.types.utils import ChatCompletionMessageToolCall
+from litellm.utils import ModelResponse
 
-from ...clients import litellm
+from ...activities.execute_api_call import execute_api_call
+from ...activities.execute_integration import execute_integration
+from ...activities.execute_system import execute_system
+from ...activities.tool_executor import format_tool_results_for_llm
 from ...autogen.openapi_model import (
     BaseChosenToolCall,
     ChosenFunctionCall,
@@ -17,12 +21,9 @@ from ...autogen.openapi_model import (
     Tool,
     ToolExecutionResult,
 )
-from ...activities.tool_executor import format_tool_results_for_llm
-from ...activities.execute_integration import execute_integration
-from ...activities.execute_system import execute_system
-from ...activities.execute_api_call import execute_api_call
+from ...clients import integrations, litellm
 from ...common.protocol.tasks import StepContext
-from ...clients import integrations
+
 
 # AIDEV-NOTE: Formats internal Tool definitions into the structure expected by the LLM (currently focused on OpenAI function tools and integrations).
 @beartype
@@ -106,8 +107,7 @@ async def run_context_tool(
 
 @beartype
 def convert_litellm_to_chosen_tool_call(
-    call: ChatCompletionMessageToolCall,
-    tool: Tool | CreateToolRequest
+    call: ChatCompletionMessageToolCall, tool: Tool | CreateToolRequest
 ) -> BaseChosenToolCall:
     """
     Convert a LiteLLM ChatCompletionMessageToolCall to the appropriate BaseChosenToolCall subtype
@@ -115,60 +115,45 @@ def convert_litellm_to_chosen_tool_call(
     """
     # Parse arguments from the string
     arguments_str = call.function.arguments
-    arguments = {}
     if arguments_str:
         with contextlib.suppress(json.JSONDecodeError):
-            arguments = json.loads(arguments_str)
-    
+            json.loads(arguments_str)
+
     # Common fields for all tool types
     base_args = {
         "id": call.id,
         "type": tool.type,  # Preserve the original tool type
     }
-    
+
     # Create appropriate tool call structure based on the tool type
     if tool.type == "function":
         return ChosenFunctionCall(
             **base_args,
             function=FunctionCallOption(
                 name=call.function.name,
-                arguments=arguments_str  # Keep the original string format
-            )
+                arguments=arguments_str,  # Keep the original string format
+            ),
         )
-    elif tool.type == "integration":
+    if tool.type == "integration":
         # For integration tools, we need to structure it properly
         return BaseChosenToolCall(
             **base_args,
             function=FunctionCallOption(
                 name=call.function.name,
-                arguments=arguments_str  # Keep arguments as a string
-            )
+                arguments=arguments_str,  # Keep arguments as a string
+            ),
         )
-    elif tool.type == "api_call":
+    if tool.type == "api_call" or tool.type == "system":
         return BaseChosenToolCall(
             **base_args,
-            function=FunctionCallOption(
-                name=call.function.name,
-                arguments=arguments_str
-            )
+            function=FunctionCallOption(name=call.function.name, arguments=arguments_str),
         )
-    elif tool.type == "system":
-        return BaseChosenToolCall(
-            **base_args,
-            function=FunctionCallOption(
-                name=call.function.name,
-                arguments=arguments_str
-            )
-        )
-    else:
-        # For other tool types (like Anthropic tools)
-        return BaseChosenToolCall(
-            **base_args,
-            function=FunctionCallOption(
-                name=call.function.name,
-                arguments=arguments_str
-            )
-        )
+    # For other tool types (like Anthropic tools)
+    return BaseChosenToolCall(
+        **base_args,
+        function=FunctionCallOption(name=call.function.name, arguments=arguments_str),
+    )
+
 
 @beartype
 async def run_llm_with_tools(
@@ -176,12 +161,14 @@ async def run_llm_with_tools(
     messages: list[dict],
     tools: Sequence[Tool | CreateToolRequest],
     settings: dict[str, Any],
-    run_tool_call: Callable[[Tool | CreateToolRequest, BaseChosenToolCall], Awaitable[ToolExecutionResult]], # TODO: Probably can be removed
+    run_tool_call: Callable[
+        [Tool | CreateToolRequest, BaseChosenToolCall], Awaitable[ToolExecutionResult]
+    ],  # TODO: Probably can be removed
 ) -> ModelResponse:
     """Run the LLM with a tool loop."""
 
     formatted_tools = [format_tool(t) for t in tools]
-    
+
     # Build a map of function name to tool
     tool_map = {}
     for t in tools:
@@ -206,26 +193,24 @@ async def run_llm_with_tools(
         for litellm_call in choice.message.tool_calls:
             # Get the function name from the call
             function_name = litellm_call.function.name
-            
+
             # Try to find the tool by name or handle integration tools
             tool = tool_map.get(function_name)
-            
+
             if tool is None:
                 # Create a dummy response for unknown tools to satisfy the API requirement
                 error_result = ToolExecutionResult(
-                    id=litellm_call.id, 
+                    id=litellm_call.id,
                     name=function_name,
                     output={},
-                    error=f"Tool '{function_name}' not found"
+                    error=f"Tool '{function_name}' not found",
                 )
                 messages.append(format_tool_results_for_llm(error_result))
                 continue
-            
+
             # Convert LiteLLM call to appropriate internal format while preserving tool type
             internal_call = convert_litellm_to_chosen_tool_call(litellm_call, tool)
-            
+
             # Execute the tool with the correctly typed call
             result = await run_tool_call(tool, internal_call)
             messages.append(format_tool_results_for_llm(result))
-
-
