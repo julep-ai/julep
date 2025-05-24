@@ -117,10 +117,8 @@ def convert_litellm_to_chosen_tool_call(
     arguments_str = call.function.arguments
     arguments = {}
     if arguments_str:
-        try:
+        with contextlib.suppress(json.JSONDecodeError):
             arguments = json.loads(arguments_str)
-        except json.JSONDecodeError:
-            pass  # Keep arguments as empty dict if parsing fails
     
     # Common fields for all tool types
     base_args = {
