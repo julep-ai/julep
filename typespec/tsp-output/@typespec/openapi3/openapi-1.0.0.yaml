@@ -1441,6 +1441,9 @@ paths:
                 anyOf:
                   - $ref: '#/components/schemas/Chat.ChunkChatResponse'
                   - $ref: '#/components/schemas/Chat.MessageChatResponse'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/Chat.ChunkChatResponse'
       requestBody:
         required: true
         content:
