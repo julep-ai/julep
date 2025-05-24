@@ -73,7 +73,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         **passed_settings,
     }
 
-    response: ModelResponse = await run_llm_with_tools(
+    responses: list[dict] = await run_llm_with_tools(
         messages=prompt,
         tools=all_tools,
         settings=completion_data,
@@ -81,21 +81,19 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     )
 
     if context.current_step.unwrap:
-        if len(response.choices) != 1:
-            msg = "Only one choice is supported"
-            raise ApplicationError(msg)
+        response = responses[-1]
 
-        choice = response.choices[0]
-        if choice.finish_reason == "tool_calls":
-            msg = "Tool calls cannot be unwrapped"
+        # TODO: Allow unwrapping of function tool calls
+        if response["tool_calls"] is not None:
+            msg = "Function tool calls unwrapping is not supported yet"
             raise ApplicationError(msg)
 
         return StepOutcome(
-            output=choice.message.content,
+            output=response["content"],
             next=None,
         )
 
     return StepOutcome(
-        output=response.model_dump(),
+        output=responses,
         next=None,
     )
