@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import json
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
@@ -15,9 +14,7 @@ from ...activities.execute_system import execute_system
 from ...activities.tool_executor import format_tool_results_for_llm
 from ...autogen.openapi_model import (
     BaseChosenToolCall,
-    ChosenFunctionCall,
     CreateToolRequest,
-    FunctionCallOption,
     Tool,
     ToolExecutionResult,
 )
