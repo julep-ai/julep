@@ -74,7 +74,7 @@ async def stream_chat_response(
     # Process all chunks
     async for chunk in model_response:
         if not collected_deltas:
-            collected_deltas = [{}] * len(chunk.choices or [])
+            collected_deltas = [{} for _ in range(len(chunk.choices or []))]
 
         collected_deltas = [
             _join_deltas(acc, choice.delta.model_dump())
