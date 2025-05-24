@@ -1,7 +1,9 @@
+from collections.abc import AsyncGenerator
 from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header
+from fastapi.responses import StreamingResponse
 from starlette.status import HTTP_201_CREATED
 from uuid_extensions import uuid7
 
@@ -24,19 +26,132 @@ from .router import router
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
+def with_mock_response(r: str | None = None):
+    def wrapper():
+        return r
+
+    return wrapper
+
+
+def _join_deltas(acc: dict, delta: dict) -> dict:
+    acc["content"] = (acc.get("content", "") or "") + (delta.pop("content", "") or "")
+    return {**acc, **delta}
+
+
+async def stream_chat_response(
+    model_response: litellm.CustomStreamWrapper,
+    developer_id: UUID,
+    doc_references: list[Any],
+    should_save: bool = False,
+    session_id: UUID | None = None,
+    model: str = "",
+    background_tasks: BackgroundTasks | None = None,
+) -> AsyncGenerator[str, None]:
+    """
+    Streams the chat response as Server-Sent Events.
+
+    Args:
+        model_response: The streaming model response from LiteLLM
+        developer_id: The developer ID for usage tracking
+        doc_references: Document references to include in the response
+        should_save: Whether to save the response to history
+        session_id: The session ID for saving response
+        model: The model name used for the response
+        background_tasks: Background tasks for saving responses
+    """
+    collected_deltas = []
+    # Variables to collect the complete response for saving to history if needed
+    default_role = "assistant"
+    default_finish_reason = "stop"
+
+    # Usage information will be collected from the stream response
+    usage_data = None
+
+    # Create initial response with metadata
+    response_id = uuid7()
+    created_time = utcnow()
+
+    # Process all chunks
+    async for chunk in model_response:
+        if not collected_deltas:
+            collected_deltas = [{} for _ in range(len(chunk.choices or []))]
+
+        collected_deltas = [
+            _join_deltas(acc, choice.delta.model_dump())
+            for acc, choice in zip(collected_deltas, chunk.choices)
+        ]
+
+        # Check if this chunk contains usage data
+        if hasattr(chunk, "usage") and chunk.usage:
+            usage_data = chunk.usage.model_dump()
+
+        # Create a proper ChunkChatResponse for each chunk
+        chunk_response = ChunkChatResponse(
+            id=response_id,
+            created_at=created_time,
+            docs=doc_references,
+            jobs=[],
+            # Only include usage on the final chunk
+            usage=usage_data,
+            choices=[
+                {
+                    **choice.model_dump(),
+                    "delta": {
+                        **choice.delta.model_dump(),
+                        "role": choice.delta.role or default_role,
+                    },
+                    "finish_reason": choice.finish_reason or default_finish_reason,
+                }
+                for choice in chunk.choices
+            ],
+        )
+
+        # Forward the chunk as a proper ChunkChatResponse
+        yield chunk_response.model_dump_json()
+
+    # Track token usage if available
+    if usage_data and usage_data.get("total_tokens", 0) > 0:
+        total_tokens_per_user.labels(str(developer_id)).inc(
+            amount=usage_data.get("total_tokens", 0)
+        )
+
+    # Save the complete response if requested
+    if should_save:
+        background_tasks.add_task(
+            create_entries,
+            developer_id=developer_id,
+            session_id=session_id,
+            data=[
+                CreateEntryRequest.from_model_input(
+                    model=model,
+                    **{
+                        **delta,
+                        "role": delta.get("role", default_role) or default_role,
+                        "finish_reason": delta.get("finish_reason", default_finish_reason)
+                        or default_finish_reason,
+                    },
+                    source="api_response",
+                )
+                for delta in collected_deltas
+            ],
+        )
+
+
 @router.post(
     "/sessions/{session_id}/chat",
     status_code=HTTP_201_CREATED,
     tags=["sessions", "chat"],
+    response_model=ChatResponse,
 )
 async def chat(
     developer: Annotated[Developer, Depends(get_developer_data)],
     session_id: UUID,
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
-    x_custom_api_key: str | None = Header(None, alias="X-Custom-Api-Key"),
+    x_custom_api_key: Annotated[str | None, Header(alias="X-Custom-Api-Key")] = None,
+    mock_response: Annotated[str | None, Depends(with_mock_response())] = None,
     connection_pool: Any = None,  # FIXME: Placeholder that should be removed
-) -> ChatResponse:
+) -> Any:
     """
     Initiates a chat session.
 
@@ -48,7 +163,7 @@ async def chat(
         x_custom_api_key (Optional[str]): The custom API key.
 
     Returns:
-        ChatResponse: The chat response.
+        ChatResponse or StreamingResponse: The chat response or streaming response.
     """
     (
         messages,
@@ -63,7 +178,7 @@ async def chat(
         chat_input=chat_input,
     )
 
-    # Use litellm for other models
+    # Prepare parameters for LiteLLM
     params = {
         "messages": messages,
         "tools": formatted_tools or None,
@@ -71,11 +186,18 @@ async def chat(
         "tags": developer.tags,
         "custom_api_key": x_custom_api_key,
     }
-    payload = {**settings, **params}
 
+    # Set streaming parameter based on chat_input.stream
+    if chat_input.stream:
+        params["stream"] = True
+        params["stream_options"] = {"include_usage": True}
+
+    payload = {**settings, **params, "mock_response": mock_response}
+
+    # Get response from LiteLLM (streaming or non-streaming)
     model_response = await litellm.acompletion(**payload)
 
-    # Save the input and the response to the session history
+    # Save the input messages to the session history if requested
     if chat_input.save:
         new_entries = [
             CreateEntryRequest.from_model_input(
@@ -86,15 +208,18 @@ async def chat(
             for msg in new_messages
         ]
 
-        # Add the response to the new entries
-        # FIXME: We need to save all the choices
-        new_entries.append(
-            CreateEntryRequest.from_model_input(
-                model=settings["model"],
-                **model_response.choices[0].model_dump()["message"],
-                source="api_response",
-            ),
-        )
+        # For non-streaming, save the response immediately
+        if not chat_input.stream:
+            # Add the response to the new entries
+            # FIXME: We need to save all the choices
+            new_entries.append(
+                CreateEntryRequest.from_model_input(
+                    model=settings["model"],
+                    **model_response.choices[0].model_dump()["message"],
+                    source="api_response",
+                ),
+            )
+
         background_tasks.add_task(
             create_entries,
             developer_id=developer.id,
@@ -102,21 +227,32 @@ async def chat(
             data=new_entries,
         )
 
+    # Handle streaming response
+    if chat_input.stream:
+        # Return streaming response using the unified function
+        return StreamingResponse(
+            stream_chat_response(
+                model_response=model_response,
+                developer_id=developer.id,
+                doc_references=doc_references,
+                should_save=chat_input.save,
+                session_id=session_id,
+                model=settings["model"],
+                background_tasks=background_tasks,
+            ),
+            media_type="text/event-stream",
+        )
+
+    # Handle non-streaming response
     # Adaptive context handling
     jobs = []
     if chat_context.session.context_overflow == "adaptive":
         # FIXME: Start the adaptive context workflow
         # SCRUM-8
-
-        # jobs = [await start_adaptive_context_workflow]
         msg = "Adaptive context is not yet implemented"
         raise NotImplementedError(msg)
 
-    # Return the response
-    # FIXME: Implement streaming for chat
-    chat_response_class = ChunkChatResponse if chat_input.stream else MessageChatResponse
-
-    chat_response: ChatResponse = chat_response_class(
+    chat_response = MessageChatResponse(
         id=uuid7(),
         created_at=utcnow(),
         jobs=jobs,
