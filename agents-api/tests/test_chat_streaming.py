@@ -31,7 +31,17 @@ async def collect_stream_content(response: StreamingResponse) -> list[dict]:
         # Ensure we're dealing with string data
         if isinstance(chunk, bytes):
             chunk = chunk.decode("utf-8")
-        chunks.append(json.loads(chunk))
+
+        # Handle SSE format: data: {JSON}\n\n
+        if chunk.startswith("data: "):
+            json_data = chunk[6:].strip()  # Remove 'data: ' prefix and whitespace
+            if json_data:  # Only parse non-empty data
+                chunks.append(json.loads(json_data))
+        else:
+            # Fallback for raw JSON (for backward compatibility)
+            chunk = chunk.strip()
+            if chunk:
+                chunks.append(json.loads(chunk))
     return chunks
 
 

@@ -107,7 +107,7 @@ async def stream_chat_response(
         )
 
         # Forward the chunk as a proper ChunkChatResponse
-        yield chunk_response.model_dump_json()
+        yield f"data: {chunk_response.model_dump_json()}\n\n"
 
     # Track token usage if available
     if usage_data and usage_data.get("total_tokens", 0) > 0:
