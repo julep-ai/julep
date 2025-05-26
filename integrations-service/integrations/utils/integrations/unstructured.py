@@ -7,9 +7,6 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from unstructured_client.models import operations, shared
 
 from ...autogen.Tools import UnstructuredPartitionArguments, UnstructuredSetup
-from ...env import (
-    unstructured_api_key,  # Import env to access environment variables
-)
 from ...models import UnstructuredParseOutput
 
 
@@ -27,9 +24,7 @@ async def parse(
     Parse documents into structured elements using Unstructured.io.
     """
 
-    # Use walrus operator to simplify assignment and condition
-    if (api_key := setup.unstructured_api_key) == "DEMO_API_KEY":
-        api_key = unstructured_api_key
+    api_key = setup.unstructured_api_key
 
     # Create a new client with all available parameters
     client = unstructured_client.UnstructuredClient(
