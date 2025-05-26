@@ -1,7 +1,35 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center" id="top">
- <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
+<img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Serverless%20AI%20Workflows%20for%20Data%20%26%20ML%20Teams&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" height=300 />
+
+<br>
+  <p>
+    <a href="https://dashboard.julep.ai">
+      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key" height="28">
+    </a>
+    <span>&nbsp;</span>
+    <a href="https://docs.julep.ai">
+      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=logo=gitbook&logoColor=white" alt="Documentation" height="28">
+    </a>
+  </p>
+  <p>
+   <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&amp;logo=npm&amp;link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk" alt="NPM Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://pypi.org/project/julep"><img src="https://img.shields.io/pypi/v/julep?style=social&amp;logo=python&amp;label=PyPI&amp;link=https%3A%2F%2Fpypi.org%2Fproject%2Fjulep" alt="PyPI - Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://hub.docker.com/u/julepai"><img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&amp;style=social&amp;logo=docker&amp;link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai" alt="Docker Image Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License" height="28"></a>
+  </p>
+  
+  <h3>
+    <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discord</a>
+    ·
+    <a href="https://x.com/julep_ai" rel="dofollow">𝕏</a>
+    ·
+    <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow">LinkedIn</a>
+  </h3>
 </div>
 
 <p align="center">
@@ -25,10 +53,26 @@
     <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License"></a>
 </p>
 
----
+<div align="center">
+  <h3><i>数据和 ML 团队的无服务器 AI 工作流程</i></h3>
+</div>
 
-> [!注意]
-> 从[此处](https://dashboard-dev.julep.ai)获取您的 API 密钥。
+## 🎉 公告：Julep Open Responses API（Alpha 版）
+
+<div style="padding: 15px; border-left: 4px solid #4CAF50; margin: 20px 0;">
+
+我们很高兴宣布推出我们的 Open Responses API！这个新 API 提供：
+
+1. **兼容 OpenAI 的接口** - 可直接替代您现有的代码
+2. **自托管、开源实现** - 适用于任何 LLM 后端
+3. **模型提供商不可知** - 连接到任何 LLM 提供商（OpenAI、Anthropic 等）
+
+Open Responses API 可以轻松地与您现有的应用程序集成，同时添加强大的新功能。
+
+准备好试用了吗？查看我们的 [Open Responses API 文档](https://docs.julep.ai/responses/quickstart) 开始使用！
+</div>
+
+Julep 是一个无服务器平台，帮助数据和 ML 团队构建复杂的 AI 工作流程。它提供了一个强大的基础，用于编排复杂的 AI 操作、管理交互中的状态，以及与您现有的数据基础设施和工具集成。
 
 <details>
 <summary><b>贡献🌟</b>（点击展开）</summary>
@@ -1639,10 +1683,15 @@ metadata_filter={“category”：“research_paper”}
 
 1. `git 克隆 https://github.com/julep-ai/julep.git`
 2. `cd julep`
-3. `docker 卷创建 cozo_backup`
-4. `docker 卷创建 cozo_data`
-5. `cp .env.example .env # <-- 编辑此文件`
-6. `docker compose --env-file .env --profile temporary-ui --profile single-tenant --profile self-hosted-db up --build`
+3. `docker 卷创建 grafana_data`
+4. `docker 卷创建 memory_store_data`
+5. `docker 卷创建 temporal-db-data`
+6. `docker 卷创建 prometheus_data`
+7. `docker 卷创建 seaweedfs_data`
+8. `docker 卷创建 seaweedfs_data2`
+9. `docker 卷创建 seaweedfs_data3`
+10. `cp .env.example .env # <-- 编辑此文件`
+11. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --build --force-recreate --watch`
 
 <div align="center">
     <a href="#top">
