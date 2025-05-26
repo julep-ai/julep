@@ -346,41 +346,40 @@ def _(
         headers["X-Developer-Id"] = str(test_developer_id)
 
     # Replace the execution_status_publisher with our simplified mock version
-    with patch(
-        "agents_api.routers.tasks.stream_execution_status.execution_status_publisher",
-        mock_sse_publisher,
+    with (
+        patch(
+            "agents_api.routers.tasks.stream_execution_status.execution_status_publisher",
+            mock_sse_publisher,
+        ),
+        client.stream("GET", url, headers=headers) as response,
     ):
-        # Make the request to the SSE endpoint using TestClient.stream
-        with client.stream("GET", url, headers=headers) as response:
-            # Verify response headers and status code
-            content_type = response.headers.get("content-type", "")
-            assert content_type.startswith("text/event-stream"), (
-                f"Unexpected content type: {content_type}"
-            )
-            assert response.status_code == 200
+        # Verify response headers and status code
+        content_type = response.headers.get("content-type", "")
+        assert content_type.startswith("text/event-stream"), (
+            f"Unexpected content type: {content_type}"
+        )
+        assert response.status_code == 200
 
-            # Read and parse events from the stream
-            received_events = []
-            max_attempts = 10  # Limit the number of attempts to avoid infinite loops
-            attempts = 0
+        # Read and parse events from the stream
+        received_events = []
+        max_attempts = 10  # Limit the number of attempts to avoid infinite loops
 
-            # Read the stream with a limit on attempts
-            for line in response.iter_lines():
-                if line:
-                    event_line = line.decode() if isinstance(line, bytes | bytearray) else line
-                    if event_line.startswith("data:"):
-                        # Parse JSON payload
-                        payload = event_line[len("data:") :].strip()
-                        data = json.loads(payload)
-                        received_events.append(data)
+        # Read the stream with a limit on attempts
+        for i, line in enumerate(response.iter_lines()):
+            if line:
+                event_line = line.decode() if isinstance(line, bytes | bytearray) else line
+                if event_line.startswith("data:"):
+                    # Parse JSON payload
+                    payload = event_line[len("data:") :].strip()
+                    data = json.loads(payload)
+                    received_events.append(data)
 
-                # Check if we've received all events or reached max attempts
-                attempts += 1
-                if len(received_events) >= len(mock_sse_responses) or attempts >= max_attempts:
-                    break
+            # Check if we've received all events or reached max attempts
+            if len(received_events) >= len(mock_sse_responses) or i >= max_attempts:
+                break
 
-            # Ensure we close the connection
-            response.close()
+        # Ensure we close the connection
+        response.close()
 
     # Verify we received the expected events
     assert len(received_events) == len(mock_sse_responses), (
