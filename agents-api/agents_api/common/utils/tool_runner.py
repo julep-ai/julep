@@ -83,9 +83,10 @@ async def run_context_tool(
 
     call_spec = call.model_dump()
     arguments = call_spec[f"{call.type}"]["arguments"]
+    setup = call_spec[f"{call.type}"]["setup"]
 
     if tool.type == "integration" and tool.integration:
-        output = await execute_integration(context, tool.name, tool.integration, arguments)
+        output = await execute_integration(context, tool.name, tool.integration, arguments, setup)
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
     if tool.type == "system" and tool.system:
@@ -114,6 +115,11 @@ def convert_litellm_to_chosen_tool_call(
     tool_spec = tool.model_dump()
     if "id" in tool_spec:
         tool_spec.pop("id")
+
+    setup = getattr(tool_spec, f"{tool.type}", {}).get("setup", {})
+    if setup:
+        setup = setup.model_dump()
+    tool_spec[f"{tool.type}"]["setup"] = setup
 
     # TODO: add computer_20241022, text_editor_20241022, bash_20241022
     tool_spec[f"{tool.type}"]["arguments"] = arguments_str
