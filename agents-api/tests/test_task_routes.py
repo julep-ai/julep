@@ -346,10 +346,13 @@ def _(
         headers["X-Developer-Id"] = str(test_developer_id)
 
     # Replace the execution_status_publisher with our simplified mock version
-    with patch(
-        "agents_api.routers.tasks.stream_execution_status.execution_status_publisher",
-        mock_sse_publisher,
-    ), client.stream("GET", url, headers=headers) as response:
+    with (
+        patch(
+            "agents_api.routers.tasks.stream_execution_status.execution_status_publisher",
+            mock_sse_publisher,
+        ),
+        client.stream("GET", url, headers=headers) as response,
+    ):
         # Verify response headers and status code
         content_type = response.headers.get("content-type", "")
         assert content_type.startswith("text/event-stream"), (
