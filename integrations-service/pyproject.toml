@@ -41,11 +41,10 @@ dependencies = [
 dev = [
     "datamodel-code-generator>=0.26.3",
     "poethepoet>=0.31.1",
-    "pyright>=1.1.389",
     "pytest>=8.3.3",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
-    "pytype>=2024.10.11",
+    "ty>=0.0.0a8",  # AIDEV-NOTE: switched from pytype/pyright to ty
     "ruff>=0.9.0",
 ]
 
