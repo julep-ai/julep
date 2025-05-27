@@ -50,9 +50,9 @@ async def execute_system(
             arguments[key] = value.to_list()
 
     # Convert all UUIDs to UUID objects
-    uuid_fields = ["agent_id", "user_id", "task_id", "session_id", "doc_id"]
+    uuid_fields = ["agent_id", "user_id", "task_id", "session_id", "doc_id", "owner_id", "developer_id"]
     for field in uuid_fields:
-        if field in arguments:
+        if field in arguments and not isinstance(arguments[field], UUID):
             arguments[field] = UUID(arguments[field])
 
     try:
@@ -143,7 +143,10 @@ async def execute_system(
                 user_id=user_id,
                 data=update_user_request,
             )
-
+        print("*" * 100)
+        print("ARGUMENTS")
+        print(arguments)
+        print("*" * 100)
         return await handler(**arguments)
     except BaseException as e:
         if activity.in_activity():

@@ -107,7 +107,10 @@ async def run_context_tool(
         system_dict = system.model_dump()
         system_def = SystemDef(**system_dict)
         output = await execute_system(context, system_def)
-        return ToolExecutionResult(id=call.id, name=tool.name, output=output.model_dump())
+        if hasattr(output, "model_dump"):
+            return ToolExecutionResult(id=call.id, name=tool.name, output=output.model_dump())
+        else:
+            return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
     if tool.type == "api_call" and tool.api_call:
         output = await execute_api_call(tool.api_call, arguments)
