@@ -187,10 +187,14 @@ def format_tool_results_for_llm(result: ToolExecutionResult) -> dict[str, Any]:
         # Handle serialization with custom JSON encoder
         try:
             if isinstance(result.output, dict):
-                formatted_result["content"] = json.dumps(result.output, default=lambda o: str(o))
+                formatted_result["content"] = json.dumps(
+                    result.output, default=lambda o: str(o)
+                )
             else:
                 formatted_result["content"] = str(result.output)
         except Exception as e:
-            formatted_result["content"] = json.dumps({"error": f"Failed to serialize tool output: {str(e)}"})
+            formatted_result["content"] = json.dumps({
+                "error": f"Failed to serialize tool output: {e!s}"
+            })
 
     return formatted_result

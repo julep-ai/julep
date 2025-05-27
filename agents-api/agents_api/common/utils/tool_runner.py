@@ -17,13 +17,14 @@ from ...activities.tool_executor import format_tool_results_for_llm
 from ...autogen.openapi_model import (
     BaseChosenToolCall,
     CreateToolRequest,
+    SystemDef,
     Tool,
     ToolExecutionResult,
-    SystemDef,
 )
 from ...clients import integrations, litellm
 from ...common.protocol.tasks import StepContext
 from ...common.utils.evaluator import get_handler_with_filtered_params
+
 
 # AIDEV-NOTE: Formats internal Tool definitions into the structure expected by the LLM (currently focused on OpenAI function tools and integrations).
 @beartype
@@ -56,7 +57,7 @@ def format_tool(tool: Tool | CreateToolRequest) -> dict:
     if tool.type == "system" and tool.system is not None:
         handler = get_handler_with_filtered_params(tool.system)
         sig = inspect.signature(handler)
-        fields = { 
+        fields = {
             name: (
                 param.annotation,
                 ... if param.default is inspect.Signature.empty else param.default,
@@ -64,7 +65,6 @@ def format_tool(tool: Tool | CreateToolRequest) -> dict:
             for name, param in sig.parameters.items()
         }
         Model = create_model(f"{handler.__name__.title()}Params", **fields)
-
 
         return {
             "type": "function",
