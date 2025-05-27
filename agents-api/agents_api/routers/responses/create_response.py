@@ -104,6 +104,7 @@ async def create_response(
         messages,
         doc_references,
         _formatted_tools,
+        _tools,
         settings,
         new_messages,
         chat_context,

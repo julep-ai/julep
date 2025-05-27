@@ -8,6 +8,7 @@ from ...autogen.openapi_model import (
     ChatInput,
     DocReference,
     RenderResponse,
+    Tool,
 )
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
@@ -20,6 +21,7 @@ from ...queries.chat.prepare_chat_context import prepare_chat_context
 from ...queries.secrets.list import list_secrets_query
 from ...queries.sessions.count_sessions import count_sessions as count_sessions_query
 from ..utils.model_validation import validate_model
+from ..utils.tool_runner import format_tool
 from .router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -47,20 +49,22 @@ async def render(
         RenderResponse: The rendered chat input.
     """
 
-    messages, doc_references, tools, *_ = await render_chat_input(
+    messages, doc_references, formatted_tools, _tools, *_ = await render_chat_input(
         developer=developer,
         session_id=session_id,
         chat_input=chat_input,
     )
 
-    return RenderResponse(messages=messages, docs=doc_references, tools=tools)
+    return RenderResponse(messages=messages, docs=doc_references, tools=formatted_tools)
 
 
 async def render_chat_input(
     developer: Developer,
     session_id: UUID,
     chat_input: ChatInput,
-) -> tuple[list[dict], list[DocReference], list[dict] | None, dict, list[dict], ChatContext]:
+) -> tuple[
+    list[dict], list[DocReference], list[dict], list[Tool], dict, list[dict], ChatContext
+]:
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
@@ -134,13 +138,7 @@ async def render_chat_input(
             if tool.name not in existing_tool_names:
                 tools.append(tool)
 
-    # Check if using Claude model and has specific tool types
-    is_claude_model = settings.get("model", "").lower().startswith("claude-3.5")
-
-    # Format tools for litellm
-    # formatted_tools = (
-    #     tools if is_claude_model else [format_tool(tool) for tool in tools]
-    # )
+    # Prepare tools for the model
 
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
@@ -193,11 +191,8 @@ async def render_chat_input(
                 },
             }
             formatted_tools.append(tool)
-
-    # If not using Claude model
-    # FIXME: Enable formatted_tools once format-tools PR is merged.
-    if not is_claude_model:
-        formatted_tools = None
+        else:
+            formatted_tools.append(format_tool(tool))
 
     # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
     # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
@@ -212,4 +207,12 @@ async def render_chat_input(
             for message in messages
         ]
 
-    return messages, doc_references, formatted_tools, settings, new_messages, chat_context
+    return (
+        messages,
+        doc_references,
+        formatted_tools,
+        tools,
+        settings,
+        new_messages,
+        chat_context,
+    )

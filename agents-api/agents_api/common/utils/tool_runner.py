@@ -3,7 +3,9 @@ from __future__ import annotations
 import inspect
 import json
 from collections.abc import Awaitable, Callable, Sequence
+from functools import partial
 from typing import Any
+from uuid import UUID
 
 from beartype import beartype
 from litellm.types.utils import ChatCompletionMessageToolCall
@@ -116,6 +118,110 @@ async def run_context_tool(
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
     return ToolExecutionResult(id=call.id, name=tool.name, output={})
+
+
+@beartype
+async def run_session_tool(
+    developer_id: UUID,
+    tool: Tool | CreateToolRequest,
+    call: BaseChosenToolCall,
+) -> ToolExecutionResult:
+    """Execute a tool call in the simpler session-chat context."""
+
+    call_spec = call.model_dump()
+    arguments = call_spec[f"{call.type}"]["arguments"] or {}
+    setup = call_spec[f"{call.type}"].get("setup", {}) or {}
+
+    if tool.type == "integration" and tool.integration:
+        integration = tool.integration
+        merged_args = arguments | (integration.arguments or {})
+        merged_setup = setup | (integration.setup.model_dump() if integration.setup else {})
+        output = await integrations.run_integration_service(
+            provider=integration.provider,
+            method=integration.method,
+            arguments=merged_args,
+            setup=merged_setup,
+        )
+        return ToolExecutionResult(id=call.id, name=tool.name, output=output)
+
+    if tool.type == "api_call" and tool.api_call:
+        output = await execute_api_call(tool.api_call, arguments)
+        return ToolExecutionResult(id=call.id, name=tool.name, output=output)
+
+    if tool.type == "system" and tool.system:
+        from ..app import app
+
+        system = tool.system.model_copy(update={"arguments": arguments})
+        arguments = system.arguments or {}
+        arguments["developer_id"] = developer_id
+
+        uuid_fields = [
+            "agent_id",
+            "user_id",
+            "task_id",
+            "session_id",
+            "doc_id",
+            "owner_id",
+            "developer_id",
+        ]
+        for field in uuid_fields:
+            if field in arguments and not isinstance(arguments[field], UUID):
+                arguments[field] = UUID(arguments[field])
+
+        handler = get_handler_with_filtered_params(system)
+        handler = partial(handler, connection_pool=getattr(app.state, "postgres_pool", None))
+        return await handler(**arguments)
+
+    # Basic echo implementation for function tools
+    return ToolExecutionResult(id=call.id, name=tool.name, output=arguments)
+
+
+@beartype
+async def run_session_llm_with_tools(
+    *,
+    developer_id: UUID,
+    messages: list[dict],
+    tools: Sequence[Tool | CreateToolRequest],
+    settings: dict[str, Any],
+) -> tuple[list[dict], ModelResponse]:
+    """Run the LLM with a tool loop for session chats."""
+
+    formatted_tools = [format_tool(t) for t in tools]
+    tool_map = {}
+    for t in tools:
+        if t.type == "integration" and t.integration is not None:
+            tool_map[t.integration.provider] = t
+        else:
+            tool_map[t.name] = t
+
+    while True:
+        response: ModelResponse = await litellm.acompletion(
+            tools=formatted_tools,
+            messages=messages,
+            **settings,
+        )
+        choice = response.choices[0]
+        messages.append(choice.message.model_dump())
+
+        if choice.finish_reason != "tool_calls" or not choice.message.tool_calls:
+            return messages, response
+
+        for llm_call in choice.message.tool_calls:
+            function_name = llm_call.function.name
+            tool = tool_map.get(function_name)
+            if tool is None:
+                error_result = ToolExecutionResult(
+                    id=llm_call.id,
+                    name=function_name,
+                    output={},
+                    error=f"Tool '{function_name}' not found",
+                )
+                messages.append(format_tool_results_for_llm(error_result))
+                continue
+
+            internal_call = convert_litellm_to_chosen_tool_call(llm_call, tool)
+            result = await run_session_tool(developer_id, tool, internal_call)
+            messages.append(format_tool_results_for_llm(result))
 
 
 @beartype

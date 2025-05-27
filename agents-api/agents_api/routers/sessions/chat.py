@@ -12,9 +12,9 @@ from ...autogen.openapi_model import (
     CreateEntryRequest,
     MessageChatResponse,
 )
-from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.utils.datetime import utcnow
+from ...common.utils.tool_runner import run_session_llm_with_tools
 from ...dependencies.developer_id import get_developer_data
 from ...queries.entries.create_entries import create_entries
 from .metrics import total_tokens_per_user
@@ -53,7 +53,8 @@ async def chat(
     (
         messages,
         doc_references,
-        formatted_tools,
+        _formatted_tools,
+        tools,
         settings,
         new_messages,
         chat_context,
@@ -63,17 +64,20 @@ async def chat(
         chat_input=chat_input,
     )
 
-    # Use litellm for other models
+    # Prepare parameters for the LLM call
     params = {
-        "messages": messages,
-        "tools": formatted_tools or None,
         "user": str(developer.id),
         "tags": developer.tags,
         "custom_api_key": x_custom_api_key,
     }
     payload = {**settings, **params}
 
-    model_response = await litellm.acompletion(**payload)
+    messages, model_response = await run_session_llm_with_tools(
+        developer_id=developer.id,
+        messages=messages,
+        tools=tools,
+        settings=payload,
+    )
 
     # Save the input and the response to the session history
     if chat_input.save:
