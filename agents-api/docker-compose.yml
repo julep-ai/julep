@@ -65,8 +65,8 @@ x--base-agents-api: &base-agents-api
   build:
     platforms:
       - linux/amd64
-    context: .
-    dockerfile: Dockerfile
+    context: ..
+    dockerfile: agents-api/Dockerfile
 
   restart: on-failure
 
@@ -116,8 +116,8 @@ services:
     build:
       platforms:
         - linux/amd64
-      context: .
-      dockerfile: Dockerfile.worker
+      context: ..
+      dockerfile: agents-api/Dockerfile.worker
 
     develop:
       watch:
