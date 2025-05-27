@@ -1,5 +1,15 @@
 from typing import Annotated, Any, Literal
 
+from agents_api.autogen.Tools import (
+    ApiCallDef,
+    Bash20241022Def,
+    Computer20241022Def,
+    FunctionDef,
+    SystemDef,
+    TextEditor20241022Def,
+)
+from agents_api.autogen.openapi_model import IntegrationDef
+
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 
@@ -69,30 +79,28 @@ class CreateToolRequest(BaseModel):
     """
     Description of the tool
     """
-    function: Any | None = None  # TODO: Change to FunctionDef
+    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: (  # TODO: Change to available integrations
-        Any | None
-    ) = None
+    integration: IntegrationDef | None = None
     """
     The integration to call
     """
-    system: Any | None = None  # TODO: Change to SystemDef
+    system: SystemDef | None = None
     """
     The system to call
     """
-    api_call: Any | None = None  # TODO: Change to ApiCallDef
+    api_call: ApiCallDef | None = None
     """
     The API call to make
     """
-    computer_20241022: Any | None = None  # TODO: Change to Computer20241022Def
+    computer_20241022: Computer20241022Def | None = None
     """
     (Alpha) Anthropic new tools
     """
-    text_editor_20241022: Any | None = None  # TODO: Change to TextEditor20241022Def
-    bash_20241022: Any | None = None  # TODO: Change to Bash20241022Def
+    text_editor_20241022: TextEditor20241022Def | None = None
+    bash_20241022: Bash20241022Def | None = None
 
 
 class CreateTaskRequest(BaseModel):
