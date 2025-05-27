@@ -5,10 +5,10 @@ from uuid import UUID
 
 import typer
 
-from .app import app, console, error_console
+from .app import app
 from .executions import create_execution
 from .logs import logs
-from .utils import get_julep_client
+from .utils import console, error_console, get_julep_client
 
 
 @app.command()

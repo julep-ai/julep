@@ -17,7 +17,7 @@ from rich.text import Text
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from .app import app, console, error_console, local_tz
+from .app import app
 from .models import (
     CreateAgentRequest,
     CreateTaskRequest,
@@ -29,11 +29,14 @@ from .models import (
     ToolAgentRelationship,
 )
 from .utils import (
+    console,
+    error_console,
     get_agent_id_from_expression,
     get_julep_client,
     get_julep_yaml,
     get_lock_file,
     get_related_agent_id,
+    local_tz,
     update_entity_force_remote,
     write_lock_file,
 )
