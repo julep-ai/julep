@@ -193,7 +193,7 @@ def main(pr_data: str) -> None:
         logging.info("Successfully saved changelog to CHANGELOG.md")
 
         # delete the pr_data.json file
-        os.remove("pr_data.json")
+        Path("pr_data.json").unlink()
         logging.info("Deleted pr_data.json file")
     except Exception as e:
         logging.error(f"Failed to generate changelog: {e!s}")
@@ -204,7 +204,7 @@ def main(pr_data: str) -> None:
 if __name__ == "__main__":
     try:
         # Read PR data from JSON file
-        with open("pr_data.json") as file:
+        with Path("pr_data.json").open() as file:
             pr_data = file.read()
         main(pr_data)
     except Exception as e:

@@ -38,7 +38,8 @@ def get_config(config_dir: Path = CONFIG_DIR) -> dict:
     if not (config_dir / CONFIG_FILE_NAME).exists():
         return {}
 
-    with open(config_dir / CONFIG_FILE_NAME) as f:
+    # AIDEV-NOTE: Use Path.open to satisfy lint rule PTH123
+    with (config_dir / CONFIG_FILE_NAME).open() as f:
         return yaml.safe_load(f) or {}
 
 
@@ -49,14 +50,14 @@ def get_julep_yaml(source: Path) -> dict:
         typer.echo("Error: julep.yaml not found in source directory")
         raise typer.Exit(1)
 
-    with open(source / "julep.yaml") as f:
+    with (source / "julep.yaml").open() as f:
         return yaml.safe_load(f)
 
 
 def write_julep_yaml(source: Path, julep_yaml_contents: dict):
     """Write the julep.yaml file"""
 
-    with open(source / "julep.yaml", "w") as f:
+    with (source / "julep.yaml").open("w") as f:
         yaml.dump(julep_yaml_contents, f)
 
 
@@ -64,7 +65,7 @@ def save_config(config: dict, config_dir: Path = CONFIG_DIR):
     """Save configuration to config file"""
     config_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(config_dir / CONFIG_FILE_NAME, "w") as f:
+    with (config_dir / CONFIG_FILE_NAME).open("w") as f:
         yaml.dump(config, f)
 
 
@@ -253,7 +254,7 @@ def add_entity_to_lock_file(
 
 def update_yaml_for_existing_entity(path: Path, data: dict):
     """Update the yaml file for an existing entity"""
-    with open(path, "w") as f:
+    with path.open("w") as f:
         yaml.dump(data, f)
 
 

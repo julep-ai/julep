@@ -79,7 +79,7 @@ async def event_publisher(
 async def stream_transitions_events(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     execution_id: UUID,
-    req: Request,
+    _req: Request,
     next_page_token: Annotated[str | None, Query()] = None,
 ):
     # Get temporal id

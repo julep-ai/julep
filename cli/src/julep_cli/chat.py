@@ -24,7 +24,7 @@ def chat(
         str | None,
         typer.Option("--situation", "-s", help="Situation to chat about"),
     ] = None,
-    settings: Annotated[
+    _settings: Annotated[
         str | None,
         typer.Option("--settings", help="Chat settings as a JSON string", parser=json.loads),
     ] = None,

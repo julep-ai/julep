@@ -85,9 +85,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     # Get settings and run llm
     agent_default_settings: dict = context.execution_input.agent.default_settings or {}
 
-    agent_model: str = (
-        context.execution_input.agent.model if context.execution_input.agent.model else "gpt-4o"
-    )
+    agent_model: str = context.execution_input.agent.model or "gpt-4o"
 
     excluded_keys = [
         "prompt",

@@ -32,7 +32,7 @@ from .router import router
 async def get_response(
     response_id: UUID,
     developer: Annotated[Developer, Depends(get_developer_data)],
-    include: Annotated[list[Includable], Query()] = [],
+    _include: Annotated[list[Includable], Query()] = [],
 ) -> Response:
     # TODO: Continue the implementation of the logic to get a response by id
 
