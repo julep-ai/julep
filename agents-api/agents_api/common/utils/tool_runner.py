@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import json
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
@@ -7,6 +8,7 @@ from typing import Any
 from beartype import beartype
 from litellm.types.utils import ChatCompletionMessageToolCall
 from litellm.utils import ModelResponse
+from pydantic import create_model
 
 from ...activities.execute_api_call import execute_api_call
 from ...activities.execute_integration import execute_integration
@@ -17,10 +19,11 @@ from ...autogen.openapi_model import (
     CreateToolRequest,
     Tool,
     ToolExecutionResult,
+    SystemDef,
 )
 from ...clients import integrations, litellm
 from ...common.protocol.tasks import StepContext
-
+from ...common.utils.evaluator import get_handler_with_filtered_params
 
 # AIDEV-NOTE: Formats internal Tool definitions into the structure expected by the LLM (currently focused on OpenAI function tools and integrations).
 @beartype
@@ -50,22 +53,34 @@ def format_tool(tool: Tool | CreateToolRequest) -> dict:
                 "parameters": tool.api_call.params_schema.model_dump(exclude_none=True),
             },
         }
-    # if tool.type == "system" and tool.system is not None:
-    #     return {
-    #         "type": "function",
-    #         "function": {
-    #             "name": tool.name,
-    #             "description": tool.description
-    #             or f"System {tool.system.resource}.{tool.system.operation}",
-    #             "parameters": {
-    #                 "type": "object",
-    #                 "additionalProperties": True,
-    #             },
-    #         },
-    #     }
+    if tool.type == "system" and tool.system is not None:
+        handler = get_handler_with_filtered_params(tool.system)
+        sig = inspect.signature(handler)
+        fields = { 
+            name: (
+                param.annotation,
+                ... if param.default is inspect._empty else param.default,
+            )
+            for name, param in sig.parameters.items()
+        }
+        Model = create_model(f"{handler.__name__.title()}Params", **fields)
+
+
+        return {
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description or inspect.getdoc(handler),
+                "parameters": Model.model_json_schema(),
+            },
+        }
     return {
         "type": "function",
-        "function": {"name": tool.name, "description": tool.description},
+        "function": {
+            "name": tool.name,
+            "description": tool.description,
+            "parameters": tool.function.parameters,
+        },
     }
 
 
@@ -89,8 +104,10 @@ async def run_context_tool(
 
     if tool.type == "system" and tool.system:
         system = tool.system.model_copy(update={"arguments": arguments})
-        output = await execute_system(context, system)
-        return ToolExecutionResult(id=call.id, name=tool.name, output=output)
+        system_dict = system.model_dump()
+        system_def = SystemDef(**system_dict)
+        output = await execute_system(context, system_def)
+        return ToolExecutionResult(id=call.id, name=tool.name, output=output.model_dump())
 
     if tool.type == "api_call" and tool.api_call:
         output = await execute_api_call(tool.api_call, arguments)
