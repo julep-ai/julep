@@ -1,7 +1,10 @@
 import json
+import sys
+from pathlib import Path
 from typing import Annotated
 
 import typer
+import yaml
 from rich.box import HEAVY_HEAD
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
@@ -9,6 +12,21 @@ from rich.text import Text
 
 from .app import agents_app, console, error_console
 from .utils import DateTimeEncoder, get_julep_client
+
+
+def _load_definition(path: str) -> dict:
+    """Load YAML or JSON agent definition from a file or stdin."""
+    # AIDEV-NOTE: Support both YAML and JSON for agent definition files.
+    raw = sys.stdin.read() if path == "-" else Path(path).read_text()
+
+    if path.endswith(".json"):
+        return json.loads(raw)
+
+    try:
+        return yaml.safe_load(raw)
+    except yaml.YAMLError:
+        return json.loads(raw)
+
 
 SINGLE_AGENT_TABLE_WIDTH = 100
 SINGLE_AGENT_COLUMN_WIDTH = 50
@@ -48,26 +66,56 @@ def create(
     """Create a new AI agent. Either provide a definition file or use the other options."""
 
     if definition:
-        # TODO: implement definition file parsing
-        error_console.print("Passing definition file is not implemented yet", highlight=True)
-        raise typer.Exit(1)
+        try:
+            payload = _load_definition(definition)
+        except Exception as e:
+            error_console.print(f"Error parsing definition file: {e}", highlight=True)
+            raise typer.Exit(1)
 
-    # Validate that either definition is provided or name/model
-    if not definition and not (name and model):
-        error_console.print(
-            "Error: Must provide either a definition file or name and model",
-            highlight=True,
-        )
-        raise typer.Exit(1)
-
-    try:
+        if name:
+            payload["name"] = name
+        if model:
+            payload["model"] = model
+        if about:
+            payload["about"] = about
         if metadata:
-            json.loads(metadata)
+            try:
+                payload["metadata"] = json.loads(metadata)
+            except json.JSONDecodeError as e:
+                error_console.print(f"Error parsing JSON: {e}", highlight=True)
+                raise typer.Exit(1)
         if default_settings:
-            json.loads(default_settings)
-    except json.JSONDecodeError as e:
-        error_console.print(f"Error parsing JSON: {e}", highlight=True)
-        raise typer.Exit(1)
+            try:
+                payload["default_settings"] = json.loads(default_settings)
+            except json.JSONDecodeError as e:
+                error_console.print(f"Error parsing JSON: {e}", highlight=True)
+                raise typer.Exit(1)
+        if instructions:
+            payload["instructions"] = instructions
+    else:
+        # Validate that either definition is provided or name/model
+        if not (name and model):
+            error_console.print(
+                "Error: Must provide either a definition file or name and model",
+                highlight=True,
+            )
+            raise typer.Exit(1)
+
+        try:
+            metadata_dict = json.loads(metadata) if metadata else None
+            default_settings_dict = json.loads(default_settings) if default_settings else None
+        except json.JSONDecodeError as e:
+            error_console.print(f"Error parsing JSON: {e}", highlight=True)
+            raise typer.Exit(1)
+
+        payload = {
+            "name": name,
+            "model": model,
+            "about": about,
+            "metadata": metadata_dict,
+            "default_settings": default_settings_dict,
+            "instructions": instructions,
+        }
 
     client = get_julep_client()
 
@@ -80,14 +128,7 @@ def create(
             create_agent_task = progress.add_task("Creating agent...", start=False)
             progress.start_task(create_agent_task)
 
-            agent = client.agents.create(
-                name=name,
-                model=model,
-                about=about,
-                default_settings=default_settings,
-                metadata=metadata,
-                instructions=instructions,
-            )
+            agent = client.agents.create(**payload)
 
         except Exception as e:
             error_console.print(f"Error creating agent: {e}", style="bold red", highlight=True)

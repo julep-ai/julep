@@ -458,9 +458,9 @@ Parent command for managing agents. Includes subcommands to create, update, dele
    - `--default-settings`, (optional): Default settings for the agent. Value is parsed as json.
    - `--metadata`, (optional): Metadata for the agent. Value is parsed as json.
    - `--instructions`, (optional): Instructions for the agent, repeat the option to add multiple.
-   - `--definition`, `-d` (optional): Path to an agent definition file.
+   - `--definition`, `-d` (optional): Path to an agent definition file (YAML or JSON).
 
-   Either provide a definition file or use the other options to create the agent.
+   Either provide a YAML/JSON definition file or use the other options to create the agent.
 
    **Example:**
 
@@ -1187,8 +1187,8 @@ The CLI supports reading from standard input (stdin) and writing to standard out
 
 Reading definition from stdin:
 ```bash
-cat agent.yaml | julep agents create -d -  # Read definition from stdin
-echo '{"name": "MyAgent"}' | julep agents create -i -  # Read JSON from stdin
+cat agent.yaml | julep agents create -d -  # Read YAML from stdin
+echo '{"name": "MyAgent"}' | julep agents create -d -  # Read JSON from stdin
 ```
 
 Piping between commands:
