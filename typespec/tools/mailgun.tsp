@@ -1,5 +1,5 @@
 import "../common";
-import "./models.tsp";
+import "./integrations.tsp";
 
 using Common;
 

@@ -1,5 +1,10 @@
 import "./endpoints.tsp";
-import "./models.tsp";
+import "./base.tsp";
+import "./functions.tsp";
+import "./integrations.tsp";
+import "./system.tsp";
+import "./api_call.tsp";
+import "./tool_definitions.tsp";
 import "./anthropic.tsp";
 import "./brave.tsp";
 import "./email.tsp";
