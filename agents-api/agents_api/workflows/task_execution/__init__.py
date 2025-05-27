@@ -509,7 +509,7 @@ class TaskExecutionWorkflow:
         workflow.logger.debug(
             f"Prompt step: Received unknown tool call: {tool_calls_input[0]['type']}",
         )
-        return WorkflowResult(state=PartialTransition(output=message))
+        return WorkflowResult(state=PartialTransition(output=messages))
 
     async def _handle_SetStep(
         self,

@@ -59,7 +59,7 @@ def format_tool(tool: Tool | CreateToolRequest) -> dict:
         fields = { 
             name: (
                 param.annotation,
-                ... if param.default is inspect._empty else param.default,
+                ... if param.default is inspect.Signature.empty else param.default,
             )
             for name, param in sig.parameters.items()
         }
