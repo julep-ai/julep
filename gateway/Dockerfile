@@ -10,8 +10,8 @@ RUN git clone ${PLUGIN_GIT_REPO} /plugins-local/src/${PLUGIN_MODULE} \
 
 #################
 
-# TODO: Upgrade to Traefik v3
-FROM traefik:v2.11
+# AIDEV-NOTE: Upgraded to Traefik v3 for metrics support
+FROM traefik:v3.0
 
 ENV GATEWAY_PORT=80
 ENV AGENTS_API_URL=""
