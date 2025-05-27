@@ -41,6 +41,15 @@ def format_tool(tool: Tool | CreateToolRequest) -> dict:
             provider=tool.integration.provider,
             method=tool.integration.method,
         )
+    if tool.type == "api_call" and tool.api_call is not None:
+        return {
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.api_call.params_schema.model_dump(exclude_none=True),
+            },
+        }
     # if tool.type == "system" and tool.system is not None:
     #     return {
     #         "type": "function",
@@ -48,19 +57,6 @@ def format_tool(tool: Tool | CreateToolRequest) -> dict:
     #             "name": tool.name,
     #             "description": tool.description
     #             or f"System {tool.system.resource}.{tool.system.operation}",
-    #             "parameters": {
-    #                 "type": "object",
-    #                 "additionalProperties": True,
-    #             },
-    #         },
-    #     }
-    # if tool.type == "api_call" and tool.api_call is not None:
-    #     return {
-    #         "type": "function",
-    #         "function": {
-    #             "name": tool.name,
-    #             "description": tool.description
-    #             or f"API call {tool.api_call.method} {tool.api_call.url}",
     #             "parameters": {
     #                 "type": "object",
     #                 "additionalProperties": True,
@@ -86,7 +82,9 @@ async def run_context_tool(
     setup = call_spec[f"{call.type}"]["setup"]
 
     if tool.type == "integration" and tool.integration:
-        output = await execute_integration(context, tool.name, tool.integration, arguments, setup)
+        output = await execute_integration(
+            context, tool.name, tool.integration, arguments, setup
+        )
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
     if tool.type == "system" and tool.system:

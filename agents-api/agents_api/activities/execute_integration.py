@@ -51,7 +51,7 @@ async def execute_integration(
     )
 
     arguments = arguments | (integration.arguments or {}) | merged_tool_args.get(tool_name, {})
-    
+
     # Convert integration.setup to dict if it's an object with model_dump method
     integration_setup = {}
     if integration.setup:

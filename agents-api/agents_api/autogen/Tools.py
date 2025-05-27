@@ -12,6 +12,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    RootModel,
     StrictBool,
 )
 
@@ -158,6 +159,10 @@ class ApiCallDef(BaseModel):
     """
     The parameters to send with the request
     """
+    params_schema: ParameterSchema | None = None
+    """
+    The schema of the parameters
+    """
     follow_redirects: StrictBool | None = None
     """
     Follow redirects
@@ -236,6 +241,10 @@ class ApiCallDefUpdate(BaseModel):
     params: str | dict[str, Any] | None = None
     """
     The parameters to send with the request
+    """
+    params_schema: ParameterSchemaUpdate | None = None
+    """
+    The schema of the parameters
     """
     follow_redirects: StrictBool | None = None
     """
@@ -671,7 +680,9 @@ class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
     pass
 
 
-class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(BrowserbaseGetSessionArgumentsUpdate):
+class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(
+    BrowserbaseGetSessionArgumentsUpdate
+):
     pass
 
 
@@ -1667,6 +1678,62 @@ class NamedToolChoice(BaseModel):
     function: FunctionCallOption | None = None
 
 
+class ParameterSchema(BaseModel):
+    """
+    JSON Schema for API call parameters
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: str = "object"
+    """
+    Schema type (usually 'object')
+    """
+    properties: dict[str, PropertyDefinition]
+    """
+    Properties definition for parameters
+    """
+    required: list[str] = []
+    """
+    List of required property names
+    """
+    additional_properties: Annotated[
+        StrictBool | None, Field(alias="additionalProperties")
+    ] = None
+    """
+    Whether to allow additional properties
+    """
+
+
+class ParameterSchemaUpdate(BaseModel):
+    """
+    JSON Schema for API call parameters
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: str = "object"
+    """
+    Schema type (usually 'object')
+    """
+    properties: dict[str, PropertyDefinitionUpdate] | None = None
+    """
+    Properties definition for parameters
+    """
+    required: list[str] = []
+    """
+    List of required property names
+    """
+    additional_properties: Annotated[
+        StrictBool | None, Field(alias="additionalProperties")
+    ] = None
+    """
+    Whether to allow additional properties
+    """
+
+
 class PatchToolRequest(BaseModel):
     """
     Payload for patching a tool
@@ -1744,6 +1811,58 @@ class PatchToolRequest(BaseModel):
     """
     text_editor_20241022: TextEditor20241022DefUpdate | None = None
     bash_20241022: Bash20241022DefUpdate | None = None
+
+
+class PropertyDefinition(BaseModel):
+    """
+    Property definition for parameter schema
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: str
+    """
+    Type of the property
+    """
+    description: str | None = None
+    """
+    Description of the property
+    """
+    enum: list[str] | None = None
+    """
+    Enum values if applicable
+    """
+    items: PropertyDefinition | None = None
+    """
+    Items definition for array types
+    """
+
+
+class PropertyDefinitionUpdate(BaseModel):
+    """
+    Property definition for parameter schema
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: str | None = None
+    """
+    Type of the property
+    """
+    description: str | None = None
+    """
+    Description of the property
+    """
+    enum: list[str] | None = None
+    """
+    Enum values if applicable
+    """
+    items: PropertyDefinitionUpdate | None = None
+    """
+    Items definition for array types
+    """
 
 
 class RemoteBrowserArguments(BaseModel):
@@ -2076,9 +2195,9 @@ class SystemDefUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    resource: Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None = (
-        None
-    )
+    resource: (
+        Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None
+    ) = None
     """
     Resource is the name of the resource to use
     """
@@ -2856,7 +2975,9 @@ class BrowserbaseCompleteSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
     arguments: BrowserbaseCompleteSessionArguments | None = None
 
 
-class BrowserbaseCompleteSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+class BrowserbaseCompleteSessionIntegrationDefUpdate(
+    BaseBrowserbaseIntegrationDefUpdate
+):
     """
     browserbase complete session integration definition
     """
@@ -3006,7 +3127,9 @@ class BrowserbaseGetSessionLiveUrlsIntegrationDef(BaseBrowserbaseIntegrationDef)
     arguments: BrowserbaseGetSessionLiveUrlsArguments | None = None
 
 
-class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(
+    BaseBrowserbaseIntegrationDefUpdate
+):
     """
     browserbase get session live urls integration definition
     """
@@ -3100,3 +3223,7 @@ class CloudinaryUploadIntegrationDefUpdate(BaseCloudinaryIntegrationDefUpdate):
     )
     method: Literal["media_upload"] = "media_upload"
     arguments: CloudinaryUploadArgumentsUpdate | None = None
+
+
+PropertyDefinition.model_rebuild()
+PropertyDefinitionUpdate.model_rebuild()

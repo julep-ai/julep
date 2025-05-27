@@ -443,16 +443,12 @@ class TaskExecutionWorkflow:
 
         messages = self.outcome.output
 
-        if (
-            step.unwrap
-            or not step.auto_run_tools
-            or messages[-1]["tool_calls"] is None
-        ):
+        if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
             workflow.logger.debug(f"Prompt step: Received response: {messages}")
             return WorkflowResult(state=PartialTransition(output=messages))
-    
+
         # TODO: make sure to include filtered function tool calls in the last message, or filter them from 2nd message
-        tool_calls_input = messages[-1]["tool_calls"] 
+        tool_calls_input = messages[-1]["tool_calls"]
         input_type = tool_calls_input[0]["type"]
 
         # TODO: What if the model requested multiple function tool calls?

@@ -2,7 +2,6 @@
 import functools
 
 from beartype import beartype
-from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 

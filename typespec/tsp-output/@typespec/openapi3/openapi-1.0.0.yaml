@@ -9222,6 +9222,10 @@ components:
             - type: object
               additionalProperties: {}
           description: The parameters to send with the request
+        params_schema:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ParameterSchema'
+          description: The schema of the parameters
         follow_redirects:
           type: boolean
           description: Follow redirects
@@ -9294,6 +9298,10 @@ components:
             - type: object
               additionalProperties: {}
           description: The parameters to send with the request
+        params_schema:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ParameterSchemaUpdate'
+          description: The schema of the parameters
         follow_redirects:
           type: boolean
           description: Follow redirects
@@ -11007,6 +11015,53 @@ components:
       properties:
         function:
           $ref: '#/components/schemas/Tools.FunctionCallOption'
+    Tools.ParameterSchema:
+      type: object
+      required:
+        - type
+        - properties
+      properties:
+        type:
+          type: string
+          description: Schema type (usually 'object')
+          default: object
+        properties:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Tools.PropertyDefinition'
+          description: Properties definition for parameters
+        required:
+          type: array
+          items:
+            type: string
+          description: List of required property names
+          default: []
+        additionalProperties:
+          type: boolean
+          description: Whether to allow additional properties
+      description: JSON Schema for API call parameters
+    Tools.ParameterSchemaUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Schema type (usually 'object')
+          default: object
+        properties:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Tools.PropertyDefinitionUpdate'
+          description: Properties definition for parameters
+        required:
+          type: array
+          items:
+            type: string
+          description: List of required property names
+          default: []
+        additionalProperties:
+          type: boolean
+          description: Whether to allow additional properties
+      description: JSON Schema for API call parameters
     Tools.PatchToolRequest:
       type: object
       properties:
@@ -11067,6 +11122,46 @@ components:
         bash_20241022:
           $ref: '#/components/schemas/Tools.Bash20241022DefUpdate'
       description: Payload for patching a tool
+    Tools.PropertyDefinition:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Type of the property
+        description:
+          type: string
+          description: Description of the property
+        enum:
+          type: array
+          items:
+            type: string
+          description: Enum values if applicable
+        items:
+          allOf:
+            - $ref: '#/components/schemas/Tools.PropertyDefinition'
+          description: Items definition for array types
+      description: Property definition for parameter schema
+    Tools.PropertyDefinitionUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Type of the property
+        description:
+          type: string
+          description: Description of the property
+        enum:
+          type: array
+          items:
+            type: string
+          description: Enum values if applicable
+        items:
+          allOf:
+            - $ref: '#/components/schemas/Tools.PropertyDefinitionUpdate'
+          description: Items definition for array types
+      description: Property definition for parameter schema
     Tools.RemoteBrowserArguments:
       type: object
       required:
