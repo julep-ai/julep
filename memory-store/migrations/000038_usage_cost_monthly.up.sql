@@ -4,7 +4,7 @@ WITH (timescaledb.continuous, timescaledb.materialized_only=false) AS
 SELECT
     developer_id,
     time_bucket('1 month', created_at) AS bucket_start,
-    SUM(cost) FILTER (WHERE NOT custom_api_used) AS monthly_cost
+    SUM(cost) FILTER (WHERE NOT custom_key_used) AS monthly_cost
 FROM usage
 GROUP BY developer_id, bucket_start
 WITH NO DATA;
