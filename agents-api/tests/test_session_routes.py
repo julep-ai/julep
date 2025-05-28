@@ -31,6 +31,22 @@ def _(make_request=make_request, agent=test_agent):
 
     assert response.status_code == 201
 
+@test("route: create session - invalid agent")
+def _(make_request=make_request, agent=test_agent):
+    data = {
+        "agent": str(uuid7()),
+        "situation": "test session about",
+    }
+
+    response = make_request(
+        method="POST",
+        url="/sessions",
+        json=data,
+    )
+
+    assert response.status_code == 400
+    assert "Invalid participant_id" in response.json()["detail"]
+
 
 @test("route: create or update session - create")
 def _(make_request=make_request, agent=test_agent):
