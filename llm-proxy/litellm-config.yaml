@@ -117,6 +117,12 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/ANTHROPIC_API_KEY
 
+- model_name: "claude-sonnet-4"
+  litellm_params:
+    model: "claude-sonnet-4-20250514"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
 # Groq models
 - model_name: "llama-3.1-70b"
   litellm_params:
@@ -267,11 +273,6 @@ model_list:
     model: vertex_ai/text-embedding-004
     # vertex_project: os.environ/GOOGLE_PROJECT_ID
     # vertex_location: os.environ/VERTEX_LOCATION
-
-- model_name: *
-  litellm_params:
-    model: *
-    tags: ["paid"]
 
 
 # -*= Free models =*-
