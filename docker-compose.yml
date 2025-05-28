@@ -1,14 +1,17 @@
-
 # TODO: Make docker compose setup production ready
 # SCRUM-30
 
 name: julep
 
 include:
-  - ./memory-store/docker-compose.yml
+  - path: ./memory-store/docker-compose.yml
+    profiles:
+      - local-db
   - ./gateway/docker-compose.yml
   - ./agents-api/docker-compose.yml
-  - ./scheduler/docker-compose.yml
+  - path: ./scheduler/docker-compose.yml
+    profiles:
+      - self-hosted-temporal
   - ./llm-proxy/docker-compose.yml
   - ./integrations-service/docker-compose.yml
   - ./monitoring/docker-compose.yml
