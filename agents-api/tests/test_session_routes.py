@@ -46,7 +46,10 @@ def _(make_request=make_request, agent=test_agent):
     )
 
     assert response.status_code == 400
-    assert response.json()["error"]["message"] == "The specified participant ID is invalid for the given participant type during create"
+    assert (
+        response.json()["error"]["message"]
+        == "The specified participant ID is invalid for the given participant type during create"
+    )
 
 
 @test("route: create or update session - create")
@@ -101,8 +104,11 @@ def _(make_request=make_request, agent=test_agent, session=test_session):
     )
 
     assert response.status_code == 400
-    assert response.json()["error"]["message"] == "The specified participant ID is invalid for the given participant type during create or update"
-    
+    assert (
+        response.json()["error"]["message"]
+        == "The specified participant ID is invalid for the given participant type during create or update"
+    )
+
 
 @test("route: get session - exists")
 def _(make_request=make_request, session=test_session):
