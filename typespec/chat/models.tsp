@@ -69,7 +69,7 @@ model CommonChatSettings {
 
     /** Up to 4 sequences where the API will stop generating further tokens. */
     @maxItems(4)
-    stop: string[] = #[];
+    stop: string[] = [];
 
     /** If specified, the system will make a best effort to sample deterministically for that particular seed value */
     @minValue(-1)
@@ -234,11 +234,11 @@ model BaseChatResponse {
 
     /** Background job IDs that may have been spawned from this interaction. */
     @visibility("read")
-    jobs: uuid[] = #[];
+    jobs: uuid[] = [];
 
     /** Documents referenced for this request (for citation purposes). */
     @visibility("read")
-    docs: DocReference[] = #[];
+    docs: DocReference[] = [];
 
     ...HasCreatedAt;
     ...HasId;
@@ -263,5 +263,5 @@ alias ChatResponse = ChunkChatResponse | MessageChatResponse;
 model RenderResponse extends ChatInputData {
     /** Documents referenced for this request (for citation purposes). */
     @visibility("read")
-    docs: DocReference[] = #[];
+    docs: DocReference[] = [];
 }

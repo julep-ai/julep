@@ -51,13 +51,13 @@ model SpiderIntegrationDef extends BaseIntegrationDef {
 model SpiderProviderCard extends BaseProviderCard {
     provider: "spider" = "spider";
     setup: SpiderSetup;
-    methods: ProviderMethod<SpiderFetchArguments, SpiderFetchOutput>[] = #[
-        #{
+    methods: ProviderMethod<SpiderFetchArguments, SpiderFetchOutput>[] = [
+        {
             method: "crawl",
             description: "Crawl a website and extract data",
         }
     ];
-    info: ProviderInfo = #{
+    info: ProviderInfo = {
         url: "https://spider.com/",
         docs: "https://spider.com/docs/",
         icon: "https://spider.com/favicon.ico",

@@ -115,7 +115,7 @@ model BaseDocSearchRequest {
     lang: string = "en-US";
 
     /** Metadata filter to apply to the search */
-    metadata_filter: MetadataFilter = #{};
+    metadata_filter: MetadataFilter = {};
 }
 
 model VectorDocSearchRequest extends BaseDocSearchRequest {
@@ -192,7 +192,7 @@ model DocSearchResponse {
 
 model BulkDeleteDocsRequest {
     /** Metadata filter to apply to the search */
-    metadata_filter: MetadataFilter = #{};
+    metadata_filter: MetadataFilter = {};
 
     /** Delete all docs */
     delete_all: boolean = false;

@@ -108,7 +108,7 @@ model BrowserbaseCreateSessionArguments {
     extensionId?: string;
 
     /** Browser settings */
-    browserSettings?: Record<unknown> = #{};
+    browserSettings?: Record<unknown> = {};
 
     /** Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout. */
     timeout?: uint16 = 3600;
@@ -201,5 +201,5 @@ model BrowserbaseGetSessionLiveUrlsOutput {
         title?: string;
         debuggerUrl?: url;
         debuggerFullscreenUrl?: url;
-    }[] = #[];
+    }[] = [];
 }

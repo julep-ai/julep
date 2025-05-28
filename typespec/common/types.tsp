@@ -45,7 +45,7 @@ model PaginationOptions {
     @query direction: sortDirection = "asc",
 
     /** Object to filter results by metadata */
-    @query metadata_filter: Record<unknown> = #{},
+    @query metadata_filter: Record<unknown> = {},
 }
 
 @events
