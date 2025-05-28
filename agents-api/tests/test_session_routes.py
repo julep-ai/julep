@@ -31,6 +31,7 @@ def _(make_request=make_request, agent=test_agent):
 
     assert response.status_code == 201
 
+
 @test("route: create session - invalid agent")
 def _(make_request=make_request, agent=test_agent):
     data = {
