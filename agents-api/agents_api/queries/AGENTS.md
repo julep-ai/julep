@@ -28,6 +28,16 @@ Key Points
 - Data validation and normalization
 - Project association handling
 
+### secrets/
+- Secure storage and retrieval of sensitive data
+- Key-value storage with encryption
+- Access control and validation
+
+### usage/
+- Usage tracking and cost calculation
+- User activity monitoring
+- Billing and analytics data
+
 ### executions/
 - Create and track task executions
 - Handle execution transitions

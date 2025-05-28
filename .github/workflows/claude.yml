@@ -19,9 +19,9 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
     steps:
       - name: Checkout repository
@@ -34,4 +34,10 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_instructions: >-
+            This is a monorepo with multiple different services.
+            The repo uses AGENTS.md as the file that contains instructions for
+            AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but
+            is just a symlink to the corresponding AGENTS.md (usually in the same dir).
 
