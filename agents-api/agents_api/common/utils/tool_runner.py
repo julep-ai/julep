@@ -176,6 +176,7 @@ async def run_llm_with_tools(
             **settings,
         )
         choice = response.choices[0]
+        # TODO: might need to filter ``role=tool_calls`` out of messages
         messages.append(choice.message.model_dump())
 
         if choice.finish_reason != "tool_calls" or not choice.message.tool_calls:
