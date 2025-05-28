@@ -76,6 +76,15 @@ def common_db_exceptions(
         ),
         lambda e: isinstance(e, asyncpg.RaiseError)
         and invalid_ref_re.match(str(e)): _invalid_reference_error,
+        # Invalid participant ID error
+        lambda e: isinstance(e, asyncpg.RaiseError)
+        and "Invalid participant_id:" in str(e): partialclass(
+            HTTPException,
+            status_code=400,
+            detail=get_operation_message(
+                "The specified participant ID is invalid for the given participant type"
+            ),
+        ),
         # Foreign key violations - usually means a referenced resource doesn't exist
         asyncpg.ForeignKeyViolationError: partialclass(
             HTTPException,
