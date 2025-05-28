@@ -86,6 +86,20 @@
           "title": "Name",
           "type": "string"
         },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
+        },
         "updated_at": {
           "format": "date-time",
           "readOnly": true,
@@ -459,6 +473,20 @@
           ],
           "title": "Schema"
         },
+        "secrets": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/SecretRef"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Secrets"
+        },
         "timeout": {
           "anyOf": [
             {
@@ -621,6 +649,20 @@
             }
           ],
           "title": "Schema"
+        },
+        "secrets": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/SecretRefUpdate"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Secrets"
         },
         "timeout": {
           "anyOf": [
@@ -3547,6 +3589,20 @@
           "minLength": 1,
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "required": [
@@ -3691,6 +3747,20 @@
           "pattern": "^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "required": [
@@ -3773,6 +3843,20 @@
           "minLength": 1,
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "required": [
@@ -3956,9 +4040,104 @@
           "pattern": "^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "title": "CreateOrUpdateUserRequest",
+      "type": "object"
+    },
+    "CreateProjectRequest": {
+      "description": "Payload for creating a project",
+      "properties": {
+        "canonical_name": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Canonical Name"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Metadata"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "CreateProjectRequest",
+      "type": "object"
+    },
+    "CreateSecretRequest": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Metadata"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "CreateSecretRequest",
       "type": "object"
     },
     "CreateSessionRequest": {
@@ -4442,6 +4621,20 @@
           "pattern": "^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "title": "CreateUserRequest",
@@ -5889,6 +6082,20 @@
           "title": "Name",
           "type": "string"
         },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
+        },
         "size": {
           "minimum": 1.0,
           "readOnly": true,
@@ -6867,6 +7074,22 @@
         "items"
       ],
       "title": "ListResponse[Execution]",
+      "type": "object"
+    },
+    "ListResponse_Project_": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Project"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "ListResponse[Project]",
       "type": "object"
     },
     "ListResponse_ResourceDeletedResponse_": {
@@ -8443,6 +8666,20 @@
             }
           ],
           "title": "Name"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "title": "PatchAgentRequest",
@@ -8756,9 +8993,85 @@
           "pattern": "^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "title": "PatchUserRequest",
+      "type": "object"
+    },
+    "Project": {
+      "description": "Project model",
+      "properties": {
+        "canonical_name": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Canonical Name"
+        },
+        "created_at": {
+          "format": "date-time",
+          "readOnly": true,
+          "title": "Created At",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "readOnly": true,
+          "title": "Id",
+          "type": "string"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Metadata"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "readOnly": true,
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "created_at",
+        "updated_at",
+        "name"
+      ],
+      "title": "Project",
       "type": "object"
     },
     "PromptItem-Input": {
@@ -9666,6 +9979,98 @@
         "json_schema"
       ],
       "title": "SchemaCompletionResponseFormat",
+      "type": "object"
+    },
+    "Secret": {
+      "description": "A secret that can be used in tasks and sessions",
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "readOnly": true,
+          "title": "Created At",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "id": {
+          "format": "uuid",
+          "readOnly": true,
+          "title": "Id",
+          "type": "string"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Metadata"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "readOnly": true,
+          "title": "Updated At",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "created_at",
+        "updated_at",
+        "name",
+        "value"
+      ],
+      "title": "Secret",
+      "type": "object"
+    },
+    "SecretRef": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "SecretRef",
+      "type": "object"
+    },
+    "SecretRefUpdate": {
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Name"
+        }
+      },
+      "title": "SecretRefUpdate",
       "type": "object"
     },
     "Session": {
@@ -12284,12 +12689,66 @@
           "minLength": 1,
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "required": [
         "name"
       ],
       "title": "UpdateAgentRequest",
+      "type": "object"
+    },
+    "UpdateSecretRequest": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Metadata"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "UpdateSecretRequest",
       "type": "object"
     },
     "UpdateSessionRequest": {
@@ -12590,6 +13049,20 @@
           "pattern": "^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         }
       },
       "title": "UpdateUserRequest",
@@ -12631,6 +13104,20 @@
           "pattern": "^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
           "title": "Name",
           "type": "string"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project"
         },
         "updated_at": {
           "format": "date-time",
@@ -14016,6 +14503,20 @@
       "minLength": 1,
       "title": "Name",
       "type": "string"
+    },
+    "project": {
+      "anyOf": [
+        {
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Project"
     }
   },
   "required": [

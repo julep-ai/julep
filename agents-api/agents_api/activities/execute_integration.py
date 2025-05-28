@@ -50,9 +50,17 @@ async def execute_integration(
         connection_pool=app.state.postgres_pool,
     )
 
-    arguments = merged_tool_args.get(tool_name, {}) | (integration.arguments or {}) | arguments
+    arguments = arguments | (integration.arguments or {}) | merged_tool_args.get(tool_name, {})
 
-    setup = merged_tool_setup.get(tool_name, {}) | (integration.setup or {}) | setup
+    # Convert integration.setup to dict if it's an object with model_dump method
+    integration_setup = {}
+    if integration.setup:
+        if hasattr(integration.setup, "model_dump"):
+            integration_setup = integration.setup.model_dump()
+        else:
+            integration_setup = integration.setup
+
+    setup = setup | integration_setup | merged_tool_setup.get(tool_name, {})
 
     try:
         # Handle dummy provider as a special case
