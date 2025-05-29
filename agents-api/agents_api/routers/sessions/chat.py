@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header
 from fastapi.responses import StreamingResponse
+from litellm.utils import Choices, Message, ModelResponse
 from starlette.status import HTTP_201_CREATED
 from uuid_extensions import uuid7
 
@@ -17,6 +18,7 @@ from ...autogen.openapi_model import (
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.utils.datetime import utcnow
+from ...common.utils.usage import track_usage
 from ...dependencies.developer_id import get_developer_data
 from ...queries.entries.create_entries import create_entries
 from .metrics import total_tokens_per_user
@@ -46,6 +48,9 @@ async def stream_chat_response(
     session_id: UUID | None = None,
     model: str = "",
     background_tasks: BackgroundTasks | None = None,
+    messages: list[dict] | None = None,
+    custom_api_key_used: bool = False,
+    developer_tags: list[str] | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Streams the chat response as Server-Sent Events.
@@ -58,8 +63,11 @@ async def stream_chat_response(
         session_id: The session ID for saving response
         model: The model name used for the response
         background_tasks: Background tasks for saving responses
+        messages: The original messages sent to the model (for usage tracking)
+        custom_api_used: Whether a custom API key was used
+        developer_tags: Tags associated with the developer (for metadata)
     """
-    collected_deltas = []
+    collected_output = []
     # Variables to collect the complete response for saving to history if needed
     default_role = "assistant"
     default_finish_reason = "stop"
@@ -69,16 +77,15 @@ async def stream_chat_response(
 
     # Create initial response with metadata
     response_id = uuid7()
-    created_time = utcnow()
 
     # Process all chunks
     async for chunk in model_response:
-        if not collected_deltas:
-            collected_deltas = [{} for _ in range(len(chunk.choices or []))]
+        if not collected_output:
+            collected_output = [{} for _ in range(len(chunk.choices or []))]
 
-        collected_deltas = [
+        collected_output = [
             _join_deltas(acc, choice.delta.model_dump())
-            for acc, choice in zip(collected_deltas, chunk.choices)
+            for acc, choice in zip(collected_output, chunk.choices)
         ]
 
         # Check if this chunk contains usage data
@@ -88,10 +95,9 @@ async def stream_chat_response(
         # Create a proper ChunkChatResponse for each chunk
         chunk_response = ChunkChatResponse(
             id=response_id,
-            created_at=created_time,
+            created_at=utcnow(),
             docs=doc_references,
             jobs=[],
-            # Only include usage on the final chunk
             usage=usage_data,
             choices=[
                 {
@@ -109,11 +115,36 @@ async def stream_chat_response(
         # Forward the chunk as a proper ChunkChatResponse
         yield f"data: {chunk_response.model_dump_json()}\n\n"
 
-    # Track token usage if available
+    # Track token usage with Prometheus metrics if available
     if usage_data and usage_data.get("total_tokens", 0) > 0:
         total_tokens_per_user.labels(str(developer_id)).inc(
             amount=usage_data.get("total_tokens", 0)
         )
+
+    # Track usage in database
+    await track_usage(
+        developer_id=developer_id,
+        model=model,
+        messages=messages or [],
+        response=ModelResponse(
+            id=str(response_id),
+            choices=[
+                Choices(
+                    message=Message(
+                        content=choice.get("content", ""),
+                        tool_calls=choice.get("tool_calls"),
+                    ),
+                )
+                for choice in collected_output
+            ],
+            usage=usage_data,
+        ),
+        custom_api_used=custom_api_key_used,
+        metadata={
+            "tags": developer_tags or [],
+            "streaming": True,
+        },
+    )
 
     # Save the complete response if requested
     if should_save:
@@ -125,14 +156,14 @@ async def stream_chat_response(
                 CreateEntryRequest.from_model_input(
                     model=model,
                     **{
-                        **delta,
-                        "role": delta.get("role", default_role) or default_role,
-                        "finish_reason": delta.get("finish_reason", default_finish_reason)
+                        **choice,
+                        "role": choice.get("role", default_role) or default_role,
+                        "finish_reason": choice.get("finish_reason", default_finish_reason)
                         or default_finish_reason,
                     },
                     source="api_response",
                 )
-                for delta in collected_deltas
+                for choice in collected_output
             ],
         )
 
@@ -151,7 +182,7 @@ async def chat(
     x_custom_api_key: Annotated[str | None, Header(alias="X-Custom-Api-Key")] = None,
     mock_response: Annotated[str | None, Depends(with_mock_response())] = None,
     connection_pool: Any = None,  # FIXME: Placeholder that should be removed
-) -> Any:
+) -> MessageChatResponse | StreamingResponse:
     """
     Initiates a chat session.
 
@@ -239,6 +270,9 @@ async def chat(
                 session_id=session_id,
                 model=settings["model"],
                 background_tasks=background_tasks,
+                messages=messages,
+                custom_api_key_used=x_custom_api_key is not None,
+                developer_tags=developer.tags,
             ),
             media_type="text/event-stream",
         )
