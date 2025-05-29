@@ -77,6 +77,7 @@ async def stream_chat_response(
 
     # Create initial response with metadata
     response_id = uuid7()
+    created_time = utcnow()
 
     # Process all chunks
     async for chunk in model_response:
@@ -95,7 +96,7 @@ async def stream_chat_response(
         # Create a proper ChunkChatResponse for each chunk
         chunk_response = ChunkChatResponse(
             id=response_id,
-            created_at=utcnow(),
+            created_at=created_time,
             docs=doc_references,
             jobs=[],
             usage=usage_data,
