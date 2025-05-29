@@ -1,0 +1,22 @@
+table:
+  name: developer_cost_monthly
+  schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - bucket_start
+        - developer_id
+        - monthly_cost
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      allow_aggregations: true
+      query_root_fields:
+        - select_aggregate
+        - select
+      subscription_root_fields:
+        - select_aggregate
+        - select
+        - select_stream
+    comment: ""

@@ -6,7 +6,7 @@ x--shared-environment: &shared-environment
   AGENTS_API_KEY_HEADER_NAME: "Authorization"
   AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
   ENABLE_RESPONSES: "True"
-  PG_DSN: ${PG_DSN:-postgres://postgres:postgres@memory-store:5432/postgres}
+  PG_DSN: ${PG_DSN:-postgres://postgres:${MEMORY_STORE_PASSWORD:?required}@memory-store:5432/postgres}
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-openai/text-embedding-3-large}
   INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
   TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}

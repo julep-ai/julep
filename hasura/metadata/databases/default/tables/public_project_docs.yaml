@@ -1,0 +1,37 @@
+table:
+  name: project_docs
+  schema: public
+array_relationships:
+  - name: project_docs
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          doc_id: doc_id
+        insertion_order: null
+        remote_table:
+          name: docs
+          schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - doc_id
+        - developer_id
+        - title
+        - content
+        - metadata
+        - created_at
+        - updated_at
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      allow_aggregations: true
+      query_root_fields:
+        - select_aggregate
+        - select
+      subscription_root_fields:
+        - select_aggregate
+        - select
+        - select_stream
+    comment: ""

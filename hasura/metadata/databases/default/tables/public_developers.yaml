@@ -1,0 +1,91 @@
+table:
+  name: developers
+  schema: public
+array_relationships:
+  - name: agents
+    using:
+      foreign_key_constraint_on:
+        column: developer_id
+        table:
+          name: agents
+          schema: public
+  - name: docs
+    using:
+      foreign_key_constraint_on:
+        column: developer_id
+        table:
+          name: docs
+          schema: public
+  - name: executions
+    using:
+      foreign_key_constraint_on:
+        column: developer_id
+        table:
+          name: executions
+          schema: public
+  - name: files
+    using:
+      foreign_key_constraint_on:
+        column: developer_id
+        table:
+          name: files
+          schema: public
+  - name: projects
+    using:
+      foreign_key_constraint_on:
+        column: developer_id
+        table:
+          name: projects
+          schema: public
+  - name: sessions
+    using:
+      foreign_key_constraint_on:
+        column: developer_id
+        table:
+          name: sessions
+          schema: public
+  - name: usages
+    using:
+      foreign_key_constraint_on:
+        column: developer_id
+        table:
+          name: usage
+          schema: public
+  - name: users
+    using:
+      foreign_key_constraint_on:
+        column: developer_id
+        table:
+          name: users
+          schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - developer_id
+        - email
+        - active
+        - settings
+        - created_at
+        - updated_at
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      query_root_fields:
+        - select
+        - select_by_pk
+      subscription_root_fields:
+        - select
+        - select_stream
+        - select_by_pk
+    comment: ""
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - settings
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      check: {}
+    comment: ""
