@@ -33,7 +33,7 @@ jobs:
 
       - name: Generate openapi code
         run: |
-          cd typespec; npm ci --legacy-peer-deps; cd -
+          cd typespec; npm ci; cd -
           export PATH=$PATH:$PWD/typespec/node_modules/.bin
           bash scripts/generate_openapi_code.sh
 
