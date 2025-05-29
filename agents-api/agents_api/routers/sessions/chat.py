@@ -64,7 +64,7 @@ async def stream_chat_response(
         model: The model name used for the response
         background_tasks: Background tasks for saving responses
         messages: The original messages sent to the model (for usage tracking)
-        custom_api_used: Whether a custom API key was used
+        custom_api_key_used: Whether a custom API key was used
         developer_tags: Tags associated with the developer (for metadata)
     """
     collected_output = []
