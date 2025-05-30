@@ -52,6 +52,19 @@ async def get_usage_records(dsn: str, developer_id: str, limit: int = 100):
     return [dict(record) for record in records]
 
 
+async def delete_usage_records(dsn: str, developer_id: str):
+    """Helper function to get usage records for testing."""
+    pool = await create_db_pool(dsn=dsn)
+
+    await pool.execute(
+        """
+        DELETE FROM usage
+        WHERE developer_id = $1
+        """,
+        developer_id,
+    )
+
+
 async def collect_stream_content(response: StreamingResponse) -> list[dict]:
     """Helper function to collect stream chunks in a list."""
     chunks = []
@@ -543,6 +556,8 @@ async def _(
     )
     final_count = len(final_records)
 
+    await delete_usage_records(dsn=dsn, developer_id=str(developer_id))
+
     # Verify a new usage record was created
     assert final_count == initial_count + 1
 
@@ -721,6 +736,7 @@ async def _(
         developer_id=str(developer_id),
     )
     final_count = len(final_records)
+    await delete_usage_records(dsn=dsn, developer_id=str(developer_id))
 
     # Verify a new usage record was created
     assert final_count == initial_count + 1
@@ -808,6 +824,7 @@ async def _(
         developer_id=str(developer_id),
     )
     final_count = len(final_records)
+    await delete_usage_records(dsn=dsn, developer_id=str(developer_id))
 
     # Verify a new usage record was created
     assert final_count == initial_count + 1
