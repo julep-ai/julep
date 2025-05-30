@@ -51,6 +51,7 @@ async def stream_chat_response(
     messages: list[dict] | None = None,
     custom_api_key_used: bool = False,
     developer_tags: list[str] | None = None,
+    connection_pool: Any = None,  # This is for testing purposes
 ) -> AsyncGenerator[str, None]:
     """
     Streams the chat response as Server-Sent Events.
@@ -66,6 +67,7 @@ async def stream_chat_response(
         messages: The original messages sent to the model (for usage tracking)
         custom_api_key_used: Whether a custom API key was used
         developer_tags: Tags associated with the developer (for metadata)
+        connection_pool: Connection pool for testing purposes
     """
     collected_output = []
     # Variables to collect the complete response for saving to history if needed
@@ -145,6 +147,7 @@ async def stream_chat_response(
             "tags": developer_tags or [],
             "streaming": True,
         },
+        connection_pool=connection_pool,
     )
 
     # Save the complete response if requested
@@ -182,7 +185,7 @@ async def chat(
     background_tasks: BackgroundTasks,
     x_custom_api_key: Annotated[str | None, Header(alias="X-Custom-Api-Key")] = None,
     mock_response: Annotated[str | None, Depends(with_mock_response())] = None,
-    connection_pool: Any = None,  # FIXME: Placeholder that should be removed
+    connection_pool: Any = None,  # This is for testing purposes
 ) -> MessageChatResponse | StreamingResponse:
     """
     Initiates a chat session.
@@ -274,6 +277,7 @@ async def chat(
                 messages=messages,
                 custom_api_key_used=x_custom_api_key is not None,
                 developer_tags=developer.tags,
+                connection_pool=connection_pool,
             ),
             media_type="text/event-stream",
         )

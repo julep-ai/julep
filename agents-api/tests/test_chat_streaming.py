@@ -3,7 +3,6 @@
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agents_api.app import app
 from agents_api.autogen.openapi_model import (
     ChatInput,
     CreateSessionRequest,
@@ -117,7 +116,6 @@ async def _(
 ):
     """Test that streaming responses follow the correct format."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
@@ -199,7 +197,6 @@ async def _(
 ):
     """Test that document references are included in streaming response."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
@@ -280,7 +277,6 @@ async def _(
 ):
     """Test that messages are saved to history when streaming with save=True."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
@@ -349,7 +345,6 @@ async def _(
 ):
     """Test that token usage is tracked in streaming responses."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
@@ -424,7 +419,6 @@ async def _(
 ):
     """Test that streaming works with a custom API key."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
@@ -487,7 +481,6 @@ async def _(
 ):
     """Test that streaming creates actual usage records in the database."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
@@ -577,7 +570,6 @@ async def _(
 ):
     """Test that streaming with custom API key sets custom_api_used correctly."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
@@ -664,7 +656,6 @@ async def _(
 ):
     """Test that streaming includes developer tags in usage metadata."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
@@ -755,7 +746,6 @@ async def _(
 ):
     """Test that streaming correctly tracks usage for different models."""
     pool = await create_db_pool(dsn=dsn)
-    app.state.postgres_pool = pool
 
     # Create a session
     session = await create_session(
