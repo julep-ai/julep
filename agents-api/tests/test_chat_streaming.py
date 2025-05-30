@@ -53,7 +53,7 @@ async def get_usage_records(dsn: str, developer_id: str, limit: int = 100):
 
 
 async def delete_usage_records(dsn: str, developer_id: str):
-    """Helper function to get usage records for testing."""
+    """Helper function to delete usage records for testing."""
     pool = await create_db_pool(dsn=dsn)
 
     await pool.execute(
