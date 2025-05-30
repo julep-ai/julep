@@ -147,7 +147,7 @@ async def create_response(
             )
 
     # Get initial model response
-    model_response = await litellm.acompletion(**payload)
+    model_response = await litellm.acompletion(**payload, stream=chat_input.stream)
 
     # Model response is a list of choices
     assistant_message = model_response.choices[0].message
@@ -207,7 +207,10 @@ async def create_response(
             response_payload = {**settings, **response_params}
 
             # Get model response
-            model_response = await litellm.acompletion(**response_payload)
+            model_response = await litellm.acompletion(
+                **response_payload,
+                stream=chat_input.stream,
+            )
             assistant_message = model_response.choices[0].message
 
             # Add the assistant message to the current messages
@@ -258,6 +261,15 @@ async def create_response(
                     )
                 )
 
+            new_entries.extend(
+                CreateEntryRequest.from_model_input(
+                    model=settings["model"],
+                    **choice.model_dump()["message"],
+                    source="api_response",
+                )
+                for choice in model_response.choices
+            )
+
             # Save all entries
             background_tasks.add_task(
                 create_entries,
@@ -277,14 +289,15 @@ async def create_response(
                 for msg in new_messages
             ]
 
-            # Add the response to the new entries
-            new_entries.append(
-                CreateEntryRequest.from_model_input(
-                    model=settings["model"],
-                    **model_response.choices[0].model_dump()["message"],
-                    source="api_response",
-                ),
-            )
+            # Persist all response choices
+            for choice in model_response.choices:
+                new_entries.append(
+                    CreateEntryRequest.from_model_input(
+                        model=settings["model"],
+                        **choice.model_dump()["message"],
+                        source="api_response",
+                    ),
+                )
             background_tasks.add_task(
                 create_entries,
                 developer_id=developer.id,
@@ -302,17 +315,24 @@ async def create_response(
         msg = "Adaptive context is not yet implemented"
         raise NotImplementedError(msg)
 
-    # Return the response
-    # FIXME: Implement streaming for chat
+    # Return the response with streaming support
     chat_response_class = ChunkChatResponse if chat_input.stream else MessageChatResponse
+
+    if chat_input.stream:
+        chunks = [chunk async for chunk in model_response]
+        usage = getattr(model_response, "usage", None)
+        choices = [chunk.model_dump() for chunk in chunks]
+    else:
+        usage = model_response.usage
+        choices = [choice.model_dump() for choice in model_response.choices]
 
     chat_response: ChatResponse = chat_response_class(
         id=uuid7(),
         created_at=utcnow(),
         jobs=jobs,
         docs=doc_references,
-        usage=model_response.usage.model_dump(),
-        choices=[choice.model_dump() for choice in model_response.choices],
+        usage=usage.model_dump() if usage else None,
+        choices=choices,
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(

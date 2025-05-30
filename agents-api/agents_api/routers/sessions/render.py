@@ -1,9 +1,12 @@
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
+from litellm.utils import token_counter
 from starlette.status import HTTP_200_OK
 
+from ...activities.task_steps.prompt_step import format_tool
 from ...autogen.openapi_model import (
     ChatInput,
     DocReference,
@@ -142,19 +145,25 @@ async def render_chat_input(
     #     tools if is_claude_model else [format_tool(tool) for tool in tools]
     # )
 
-    # FIXME: Truncate chat messages in the chat context
-    # SCRUM-7
+    # Truncate chat messages if context overflow strategy is set
     if chat_context.session.context_overflow == "truncate":
-        # messages = messages[-settings["max_tokens"] :]
-        msg = "Truncation is not yet implemented"
-        raise NotImplementedError(msg)
+        budget = chat_context.session.token_budget
+        if budget:
+            total = 0
+            truncated: list[dict] = []
+            for msg in reversed(messages):
+                total += token_counter(model=settings.get("model", ""), messages=[msg])
+                if total > budget:
+                    break
+                truncated.append(msg)
+            messages = list(reversed(truncated))
 
-    # FIXME: Hotfix for datetime not serializable. Needs investigation
+    # Serialize datetime fields for compatibility with LLM clients
     messages = [
         {
-            k: v
+            k: (v.isoformat() if isinstance(v, datetime) else v)
             for k, v in m.items()
-            if k in ["role", "content", "tool_calls", "tool_call_id", "user"]
+            if k in ["role", "content", "tool_calls", "tool_call_id", "user", "created_at"]
         }
         for m in messages
     ]
@@ -179,7 +188,7 @@ async def render_chat_input(
     for tool in tools:
         if tool.type == "computer_20241022" and tool.computer_20241022:
             function = tool.computer_20241022
-            tool = {
+            formatted = {
                 "type": tool.type,
                 "function": {
                     "name": tool.name,
@@ -192,12 +201,10 @@ async def render_chat_input(
                     else {},
                 },
             }
-            formatted_tools.append(tool)
+        else:
+            formatted = tool if is_claude_model else format_tool(tool)
 
-    # If not using Claude model
-    # FIXME: Enable formatted_tools once format-tools PR is merged.
-    if not is_claude_model:
-        formatted_tools = None
+        formatted_tools.append(formatted)
 
     # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
     # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
