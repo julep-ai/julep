@@ -36,7 +36,7 @@
   <h3><i>Serverless AI Workflows for Data & ML Teams</i></h3>
 </div>
 
-## 🎉 Announcing: Julep Open Responses API (Alpha)
+## 🎉 Announcing: Julep Open Responses API
 
 <div style="padding: 15px; border-left: 4px solid #4CAF50; margin: 20px 0;">
 
