@@ -1,0 +1,37 @@
+table:
+  name: latest_executions
+  schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - developer_id
+        - task_id
+        - task_version
+        - execution_id
+        - input
+        - metadata
+        - created_at
+        - updated_at
+        - status
+        - error
+        - transition_count
+        - output
+        - current_step
+        - next_step
+        - step_label
+        - task_token
+        - transition_metadata
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      limit: 1000
+      allow_aggregations: true
+      query_root_fields:
+        - select_aggregate
+        - select
+      subscription_root_fields:
+        - select_aggregate
+        - select
+        - select_stream
+    comment: ""

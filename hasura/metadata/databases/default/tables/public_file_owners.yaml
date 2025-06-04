@@ -1,0 +1,14 @@
+table:
+  name: file_owners
+  schema: public
+object_relationships:
+  - name: file
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          file_id: file_id
+        insertion_order: null
+        remote_table:
+          name: files
+          schema: public

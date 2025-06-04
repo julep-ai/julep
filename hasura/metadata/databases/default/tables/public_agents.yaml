@@ -1,0 +1,120 @@
+table:
+  name: agents
+  schema: public
+object_relationships:
+  - name: developer
+    using:
+      foreign_key_constraint_on: developer_id
+array_relationships:
+  - name: agent_doc_owners
+    using:
+      manual_configuration:
+        column_mapping:
+          agent_id: owner_id
+          developer_id: developer_id
+        insertion_order: null
+        remote_table:
+          name: doc_owners
+          schema: public
+  - name: project_agents
+    using:
+      foreign_key_constraint_on:
+        columns:
+          - developer_id
+          - agent_id
+        table:
+          name: project_agents
+          schema: public
+  - name: tasks
+    using:
+      manual_configuration:
+        column_mapping:
+          agent_id: agent_id
+          developer_id: developer_id
+        insertion_order: null
+        remote_table:
+          name: tasks
+          schema: public
+  - name: tools
+    using:
+      manual_configuration:
+        column_mapping:
+          agent_id: agent_id
+          developer_id: developer_id
+        insertion_order: null
+        remote_table:
+          name: tools
+          schema: public
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      set:
+        developer_id: X-Hasura-User-Id
+      columns:
+        - canonical_name
+        - name
+        - about
+        - instructions
+        - model
+        - metadata
+        - default_settings
+        - default_system_template
+    comment: ""
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - developer_id
+        - agent_id
+        - canonical_name
+        - name
+        - about
+        - instructions
+        - model
+        - created_at
+        - updated_at
+        - metadata
+        - default_settings
+        - default_system_template
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      limit: 1000
+      allow_aggregations: true
+      query_root_fields:
+        - select_aggregate
+        - select
+        - select_by_pk
+      subscription_root_fields:
+        - select_aggregate
+        - select
+        - select_stream
+        - select_by_pk
+    comment: ""
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - canonical_name
+        - name
+        - about
+        - instructions
+        - model
+        - metadata
+        - default_settings
+        - default_system_template
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      check: {}
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+    comment: ""
