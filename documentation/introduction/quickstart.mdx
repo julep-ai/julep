@@ -143,6 +143,8 @@ Now let's run the task with a specific topic:
 
 <CodeGroup>
   ```python Python
+  import time  # Add this import
+
   execution = client.executions.create(
       task_id=task.id,
       input={"topic": "a magical garden"}
@@ -153,11 +155,28 @@ Now let's run the task with a specific topic:
       print(result.status)
       time.sleep(1)
 
+  # Debug flag - set to False for production
+  DEBUG = True
+
   if result.status == "succeeded":
-      print(result.output)
+      if DEBUG:
+          print("\n" + "="*60)
+          print("FULL API RESPONSE (DEBUG MODE)")
+          print("="*60)
+          print(result.output)
+          print("="*60)
+      
+      # Extract and display the story content nicely
+      story = result.output['choices'][0]['message']['content']
+      print("\n" + "="*50)
+      print("GENERATED STORY")
+      print("="*50)
+      print(story)
+      print("="*50)
   else:
       print(f"Error: {result.error}")
   ```
+  
 
   ```javascript Node.js [expandable]
   const execution = await client.executions.create(
@@ -176,13 +195,39 @@ Now let's run the task with a specific topic:
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
+  // Debug flag - set to false for production
+  const DEBUG = true;
+
   if (result.status === 'succeeded') {
-    console.log(result.output);
+    if (DEBUG) {
+      console.log('\n' + '='.repeat(60));
+      console.log('FULL API RESPONSE (DEBUG MODE)');
+      console.log('='.repeat(60));
+      console.log(result.output);
+      console.log('='.repeat(60));
+    }
+    
+    // Extract and display the story content nicely
+    const story = result.output.choices[0].message.content;
+    console.log('\n' + '='.repeat(50));
+    console.log('GENERATED STORY');
+    console.log('='.repeat(50));
+    console.log(story);
+    console.log('='.repeat(50));
   } else {
     console.error(`Error: ${result.error}`);
   }
   ```
 </CodeGroup>
+
+### Understanding the Output
+
+The task execution returns a structured response. For development and debugging, you might want to see both the full API response and the clean story output:
+
+- **Full API Response**: Contains metadata like token usage, model info, and the complete response structure
+- **Story Content**: The actual generated story extracted from `result.output['choices'][0]['message']['content']`
+
+You can toggle between development and production modes using the `DEBUG` flag.
 
 ### Next Steps
 
