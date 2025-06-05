@@ -50,13 +50,13 @@
               {
                 "group": "Tutorials",
                 "pages": [
-                  "tutorials/browser-use",
-                  "tutorials/rag-chatbot",
                   "tutorials/trip-planning",
                   "tutorials/trip-planning-input",
                   "tutorials/trip-planning-tools",
                   "tutorials/trip-planning-workflow",
                   "tutorials/trip-planning-running",
+                  "tutorials/browser-use",
+                  "tutorials/rag-chatbot",
                   "tutorials/video-processing"
                 ]
               },
