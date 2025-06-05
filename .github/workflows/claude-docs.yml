@@ -1,0 +1,119 @@
+name: Claude Docs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number"
+        required: true
+
+jobs:
+  docs-gate:
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event_name == 'workflow_dispatch' ||
+            (github.event_name == 'pull_request' &&
+             github.event.pull_request.user.login != 'claude-doc-bot') }}
+
+    outputs:
+      pr_number:     ${{ steps.resolve.outputs.number }}
+      should_update: ${{ steps.gate.outputs.result }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+
+      - name: PR number
+        id: resolve
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Save PR patch
+        run: gh pr diff ${{ steps.resolve.outputs.number }} --patch > diff.patch
+        env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+      
+      - name: Gate
+        id: gate
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_model:   claude-3-haiku-20240307
+          github_token:      ${{ secrets.GITHUB_TOKEN }}
+          input_files:       diff.patch
+          direct_prompt: |
+            You are a senior technical-writer.  
+            Look at *diff.patch* (unified diff).  
+            Reply with the single word **UPDATE** if the patch
+            a) adds new user-visible functionality,
+            b) changes or removes existing behaviour,
+            c) deprecates anything,  
+            otherwise reply **SKIP**.
+
+  update-docs:
+    needs: docs-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues:   write
+
+    if: ${{ github.event_name == 'workflow_dispatch' ||
+            (needs.docs-gate.result == 'success' &&
+             needs.docs-gate.outputs.should_update == 'UPDATE') }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Resolve PR number
+        id: resolve
+        run:   |
+          PR="${{ needs.docs-gate.outputs.pr_number }}"
+          [[ -z "$PR" ]] && PR="${{ github.event.inputs.pr_number }}"
+          [[ -z "$PR" ]] && PR="${{ github.event.pull_request.number }}"
+          if [[ -z "$PR" ]]; then
+            echo "::error::Unable to determine PR number."
+            exit 1
+          fi
+          echo "number=$PR" >> "$GITHUB_OUTPUT"
+
+      - name: Save PR patch
+        run: gh pr diff ${{ steps.resolve.outputs.number }} --patch > diff.patch
+        env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+
+      - name: Claude changes docs
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_model:   claude-3-sonnet-20240229
+          github_token:      ${{ secrets.GITHUB_TOKEN }}
+          input_files:       diff.patch
+          allowed_tools:     "Edit,Replace"
+          direct_prompt: |
+            You are the team’s documentation bot.  
+            1. Read *diff.patch*.  
+            2. For any change that affects users, **edit** files under *documentation/***  
+               (Mintlify structure) so docs stay accurate.  
+            3. Append a bullet to **CHANGELOG.md** under **## Unreleased**. 
+            4. Commit the edits.  
+            If diff.patch has no user-visible change, do nothing.
+          custom_instructions: |
+            AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).
+
+      - name: Commit & push
+        run: |
+          git config user.name  "claude-bot"
+          git config user.email "claude-bot@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add -A
+            git commit -m "docs: auto-update via Claude"
+            git push
+          fi
