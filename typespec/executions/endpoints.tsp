@@ -67,3 +67,9 @@ interface TransitionStreamEndpoints
             TransitionEvent,
             "Stream events emitted by the given execution"
         > {}
+
+interface ExecutionStatusStreamEndpoints
+    extends ChildStreamEndpoint<
+            ExecutionStatusEvent,
+            "Stream the status of an execution"
+        > {}
