@@ -1,0 +1,54 @@
+name: Claude Docs (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number"
+        required: true
+
+jobs:
+  update-docs:
+    name: Manual Doc Update
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Save PR patch
+        run: gh pr diff ${{ github.event.inputs.pr_number }} --patch > diff.patch
+        env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+
+      - name: Claude changes docs
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_model:   claude-3-sonnet-20240229
+          github_token:      ${{ secrets.GITHUB_TOKEN }}
+          input_files:       diff.patch
+          allowed_tools:     "Edit,Replace"
+          direct_prompt: |
+            You are the team’s documentation bot.  
+            1. Read *diff.patch*.  
+            2. For any change that affects users, **edit** files under *documentation/***  
+               (Mintlify structure) so docs stay accurate.  
+            3. Append a bullet to **CHANGELOG.md** under **## Unreleased**. 
+            4. Commit the edits.  
+            If diff.patch has no user-visible change, do nothing.
+          custom_instructions: |
+            AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).
+
+      - name: Commit & push
+        run: |
+          git config user.name  "claude-bot"
+          git config user.email "claude-bot@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add -A
+            git commit -m "docs: auto-update via Claude"
+            git push
+          fi
