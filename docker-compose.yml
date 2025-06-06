@@ -14,6 +14,7 @@ include:
   - ./monitoring/docker-compose.yml
   - ./blob-store/docker-compose-ha.yml
   - ./hasura/docker-compose.yml
+  - ./analytics/docker-compose.yml
   # - ./code-interpreter/docker-compose.yml
   # - ./embedding-service/docker-compose.yml
 
