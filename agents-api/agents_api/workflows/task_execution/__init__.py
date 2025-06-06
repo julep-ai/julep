@@ -441,20 +441,17 @@ class TaskExecutionWorkflow:
         if self.outcome is None:
             return WorkflowResult(state=PartialTransition(output=None))
 
-        message = self.outcome.output
+        messages = self.outcome.output
 
-        if (
-            step.unwrap
-            or not step.auto_run_tools
-            or message["choices"][0]["finish_reason"] != "tool_calls"
-        ):
-            workflow.logger.debug(f"Prompt step: Received response: {message}")
-            return WorkflowResult(state=PartialTransition(output=message))
+        if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
+            workflow.logger.debug(f"Prompt step: Received response: {messages}")
+            return WorkflowResult(state=PartialTransition(output=messages))
 
-        choice = message["choices"][0]
-        tool_calls_input = choice["message"]["tool_calls"]
+        # TODO: make sure to include filtered function tool calls in the last message, or filter them from 2nd message
+        tool_calls_input = messages[-1]["tool_calls"]
         input_type = tool_calls_input[0]["type"]
 
+        # TODO: What if the model requested multiple function tool calls?
         if input_type == "function":
             workflow.logger.debug("Prompt step: Received FUNCTION tool call")
 
@@ -469,7 +466,7 @@ class TaskExecutionWorkflow:
 
             # Feed the tool call results back to the model
             if self.context is not None:
-                self.context.current_step.prompt.append(message)
+                self.context.current_step.prompt.append(messages)
                 self.context.current_step.prompt.append(tool_calls_results)
             new_response = await workflow.execute_activity(
                 task_steps.prompt_step,
@@ -512,7 +509,7 @@ class TaskExecutionWorkflow:
         workflow.logger.debug(
             f"Prompt step: Received unknown tool call: {tool_calls_input[0]['type']}",
         )
-        return WorkflowResult(state=PartialTransition(output=message))
+        return WorkflowResult(state=PartialTransition(output=messages))
 
     async def _handle_SetStep(
         self,

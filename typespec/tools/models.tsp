@@ -204,6 +204,36 @@ model SystemDef {
     arguments?: FunctionParameters;
 }
 
+/** JSON Schema for API call parameters */
+model ParameterSchema {
+  /** Schema type (usually 'object') */
+  type: string = "object";
+  
+  /** Properties definition for parameters */
+  properties: Record<PropertyDefinition>;
+  
+  /** List of required property names */
+  required?: string[] = #[];
+  
+  /** Whether to allow additional properties */
+  additionalProperties?: boolean;
+}
+
+/** Property definition for parameter schema */
+model PropertyDefinition {
+  /** Type of the property */
+  type: string;
+  
+  /** Description of the property */
+  description?: string;
+  
+  /** Enum values if applicable */
+  `enum`?: string[];
+  
+  /** Items definition for array types */
+  items?: PropertyDefinition;
+}
+
 /** API call definition */
 model ApiCallDef {
     /** The HTTP method to use */
@@ -239,6 +269,9 @@ model ApiCallDef {
     /** The parameters to send with the request */
     params?: string | Record<unknown>;
 
+    /** The schema of the parameters */
+    params_schema?: ParameterSchema;
+
     /** Follow redirects */
     follow_redirects?: boolean;
 
@@ -248,7 +281,6 @@ model ApiCallDef {
     /** Whether to include the content in the response */
     include_response_content?: boolean = true;
 }
-
 
 model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
