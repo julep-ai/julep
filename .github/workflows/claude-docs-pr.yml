@@ -1,22 +1,15 @@
-name: Claude Docs
+name: Claude Docs (PR)
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: "PR number"
-        required: true
-
 jobs:
   docs-gate:
+    name: Documentation Gate
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'workflow_dispatch' ||
-            (github.event_name == 'pull_request' &&
-             github.event.pull_request.user.login != 'claude-doc-bot') }}
+    if: ${{ github.event.pull_request.user.login != 'claude-doc-bot' }}
 
     outputs:
       pr_number:     ${{ steps.resolve.outputs.number }}
@@ -26,20 +19,14 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
-
       - name: PR number
         id: resolve
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
 
       - name: Save PR patch
         run: gh pr diff ${{ steps.resolve.outputs.number }} --patch > diff.patch
         env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
-      
+
       - name: Gate
         id: gate
         uses: anthropics/claude-code-action@beta
@@ -58,35 +45,22 @@ jobs:
             otherwise reply **SKIP**.
 
   update-docs:
+    name: Update Documentation
     needs: docs-gate
+    if: ${{ needs.docs-gate.result == 'success' &&
+             needs.docs-gate.outputs.should_update == 'UPDATE' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-      issues:   write
-
-    if: ${{ github.event_name == 'workflow_dispatch' ||
-            (needs.docs-gate.result == 'success' &&
-             needs.docs-gate.outputs.should_update == 'UPDATE') }}
+      issues: write
 
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
-      - name: Resolve PR number
-        id: resolve
-        run:   |
-          PR="${{ needs.docs-gate.outputs.pr_number }}"
-          [[ -z "$PR" ]] && PR="${{ github.event.inputs.pr_number }}"
-          [[ -z "$PR" ]] && PR="${{ github.event.pull_request.number }}"
-          if [[ -z "$PR" ]]; then
-            echo "::error::Unable to determine PR number."
-            exit 1
-          fi
-          echo "number=$PR" >> "$GITHUB_OUTPUT"
-
       - name: Save PR patch
-        run: gh pr diff ${{ steps.resolve.outputs.number }} --patch > diff.patch
+        run: gh pr diff ${{ needs.docs-gate.outputs.pr_number }} --patch > diff.patch
         env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
 
       - name: Claude changes docs
