@@ -94,6 +94,16 @@ http:
       service: service-hasura
       priority: 3
 
+    analytics:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/analytics`)
+      middlewares:
+        - corsHeaders
+        - analytics-strip-prefix
+      service: service-analytics
+      priority: 1
+
   middlewares:
     corsHeaders:
       headers:
@@ -146,6 +156,12 @@ http:
           - /tasks-ui
         forceSlash: false
 
+    analytics-strip-prefix:
+      stripprefix:
+        prefixes:
+          - /analytics
+        forceSlash: false
+
   services:
     service-agents-api:
       loadBalancer:
@@ -164,6 +180,12 @@ http:
         passHostHeader: false
         servers:
           - url: $HASURA_URL
+
+    service-analytics:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: ${ANALYTICS_URL:-http://analytics:3000}
 
 experimental:
   localPlugins:
