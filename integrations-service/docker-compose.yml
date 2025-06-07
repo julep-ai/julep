@@ -27,8 +27,8 @@ services:
     build:
       platforms:
         - linux/amd64
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: integrations-service/Dockerfile
 
     environment:
       <<: *shared-environment

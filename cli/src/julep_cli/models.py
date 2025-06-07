@@ -1,6 +1,15 @@
 from typing import Annotated, Any, Literal
 
+# pyright: reportCallIssue=false
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
+
+from .tool_models import (
+    ApiCallDef,
+    Bash20241022Def,
+    Computer20241022Def,
+    FunctionDef,
+    TextEditor20241022Def,
+)
 
 
 class CreateAgentRequest(BaseModel):
@@ -8,9 +17,9 @@ class CreateAgentRequest(BaseModel):
     Payload for creating an agent
     """
 
-    model_config = ConfigDict(
+    model_config = ConfigDict(  # pyright: ignore[call-issue]
         populate_by_name=True,
-    )
+    )  # pyright: ignore[call-issue]
     metadata: dict[str, Any] | None = None
     name: Annotated[str, Field(max_length=255, min_length=1)]
     """
@@ -46,9 +55,9 @@ class CreateToolRequest(BaseModel):
     Payload for creating a tool
     """
 
-    model_config = ConfigDict(
+    model_config = ConfigDict(  # pyright: ignore[call-issue]
         populate_by_name=True,
-    )
+    )  # pyright: ignore[call-issue]
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
@@ -69,7 +78,7 @@ class CreateToolRequest(BaseModel):
     """
     Description of the tool
     """
-    function: Any | None = None  # TODO: Change to FunctionDef
+    function: FunctionDef | None = None
     """
     The function to call
     """
@@ -83,16 +92,16 @@ class CreateToolRequest(BaseModel):
     """
     The system to call
     """
-    api_call: Any | None = None  # TODO: Change to ApiCallDef
+    api_call: ApiCallDef | None = None
     """
     The API call to make
     """
-    computer_20241022: Any | None = None  # TODO: Change to Computer20241022Def
+    computer_20241022: Computer20241022Def | None = None
     """
     (Alpha) Anthropic new tools
     """
-    text_editor_20241022: Any | None = None  # TODO: Change to TextEditor20241022Def
-    bash_20241022: Any | None = None  # TODO: Change to Bash20241022Def
+    text_editor_20241022: TextEditor20241022Def | None = None
+    bash_20241022: Bash20241022Def | None = None
 
 
 class CreateTaskRequest(BaseModel):
@@ -100,9 +109,9 @@ class CreateTaskRequest(BaseModel):
     Payload for creating a task
     """
 
-    model_config = ConfigDict(
+    model_config = ConfigDict(  # pyright: ignore[call-issue]
         populate_by_name=True,
-    )
+    )  # pyright: ignore[call-issue]
     name: Annotated[str, Field(max_length=255, min_length=1)]
     """
     The name of the task.

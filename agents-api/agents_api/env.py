@@ -8,10 +8,10 @@ import random
 from pprint import pprint
 from typing import TYPE_CHECKING, Any
 
-from environs import Env
+from julep_common.env import compute_gunicorn_workers, init_env
 
 # Initialize the Env object for environment variable parsing.
-env: Any = Env()
+env: Any = init_env()
 
 # Debug
 # -----
@@ -38,10 +38,7 @@ gunicorn_cpu_divisor: int = env.int("GUNICORN_CPU_DIVISOR", default=4)
 secrets_cache_ttl: int = env.int("SECRETS_CACHE_TTL", default=120)
 
 raw_workers: str | None = env.str("GUNICORN_WORKERS", default=None)
-if raw_workers and raw_workers.strip():
-    gunicorn_workers: int = int(raw_workers)
-else:
-    gunicorn_workers: int = max(multiprocessing.cpu_count() // gunicorn_cpu_divisor, 1)
+gunicorn_workers: int = compute_gunicorn_workers(raw_workers, gunicorn_cpu_divisor)
 
 
 # Tasks

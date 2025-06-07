@@ -1,10 +1,7 @@
-import multiprocessing
-
-from environs import Env
+from julep_common.env import compute_gunicorn_workers, init_env
 
 # Initialize the Env object for environment variable parsing.
-env = Env()
-env.read_env()  # Read .env file, if it exists
+env = init_env()
 
 # Load environment variables
 browserbase_api_key = env.str("BROWSERBASE_API_KEY", default=None)
@@ -27,7 +24,4 @@ algolia_application_id = env.str("ALGOLIA_APPLICATION_ID", default=None)
 gunicorn_cpu_divisor: int = env.int("GUNICORN_CPU_DIVISOR", default=4)
 
 raw_workers: str | None = env.str("GUNICORN_WORKERS", default=None)
-if raw_workers and raw_workers.strip():
-    gunicorn_workers: int = int(raw_workers)
-else:
-    gunicorn_workers: int = max(multiprocessing.cpu_count() // gunicorn_cpu_divisor, 1)
+gunicorn_workers: int = compute_gunicorn_workers(raw_workers, gunicorn_cpu_divisor)
