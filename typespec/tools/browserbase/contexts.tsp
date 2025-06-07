@@ -4,8 +4,8 @@ using Common;
 
 namespace Tools;
 
-// TODO: Implement these
 /** browserbase context provider */
+// AIDEV-NOTE: fleshed out browserbase context models
 model BrowserbaseContextIntegrationDef extends BaseBrowserbaseIntegrationDef {
     /** The specific method of the integration to call */
     method?: "create_context" = "create_context";

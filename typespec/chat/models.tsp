@@ -164,6 +164,9 @@ model ChatInputData {
     /** (Advanced) List of tools that are provided in addition to agent's default set of tools. */
     tools: CreateToolRequest[] | null = null;
 
+    /** Allow the model to return multiple tool calls in parallel */
+    parallel_tool_calls?: boolean = true; // AIDEV-NOTE: enables parallel tool calls
+
     /** Can be one of existing tools given to the agent earlier or the ones provided in this request. */
     tool_choice?: ToolChoiceOption;
 }
