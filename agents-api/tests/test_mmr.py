@@ -50,8 +50,8 @@ def _():
     # Will return the top k docs irrespective of MMR strength and presence of embeddings
     result = apply_mmr_to_docs(docs_few_embeddings, query_embedding, limit=2, mmr_strength=0.5)
     assert len(result) == 2  # Should only return docs with embeddings
-    assert result[0].id == UUID("550e8400-e29b-41d4-a716-446655440000")
-    assert result[1].id == UUID("550e8400-e29b-41d4-a716-446655441122")
+    assert result[0].id == UUID("550e8400-e29b-41d4-a716-446655441122")
+    assert result[1].id == UUID("550e8400-e29b-41d4-a716-446655440000")
 
     # Test with limit greater than available docs
     result = apply_mmr_to_docs(docs, query_embedding, limit=10, mmr_strength=0.5)

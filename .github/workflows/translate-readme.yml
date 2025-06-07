@@ -1,40 +1,31 @@
-name: Translate ReadME
-
-# on:
-#   push:
-#     paths:
-#       - "README.md"
+name: Translate README
+on:
+  pull_request:
+    paths:
+      - "README.md"
+      - ".github/README-*.md"
 
 jobs:
-  readme-translator:
+  translate_readme:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python v3.10.12
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@beta
         with:
-          python-version: "3.10.12"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install deep-translator git+https://github.com/Jwink3101/parmapper
-
-      - name: Run translator script
-        run: python scripts/readme_translator.py
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(readme): translate README.md"
-          title: "Translate README.md"
-          body: "This PR updates the translated versions of README.md"
-          branch: "translate-readme"
-          delete-branch: true
-          add-paths: |
-            README.md
-            README-*.md
+          direct_prompt: >-
+            Use the root README.md to review the .github/README-{lang}.md files
+            to see if they are correctly translated and if needed
+            make changes as necessary. Keep the contents exactly the same, just
+            translated to the target languages.
+    
+          custom_instructions: >-
+            This is a monorepo with multiple different services.
+            The repo uses AGENTS.md as the file that contains instructions for
+            AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but
+            is just a symlink to the corresponding AGENTS.md (usually in the same dir).
+    
+          anthropic_model: ${{ vars.TRANSLATOR_CLAUDE_MODEL }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          allowed_tools: "Bash(npm install),Bash(npm run test),Edit,Replace,NotebookEditCell"
+          disallowed_tools: "TaskOutput,KillTask"

@@ -3,9 +3,6 @@ from spider import AsyncSpider
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import SpiderFetchArguments, SpiderSetup
-from ...env import (
-    spider_api_key,  # Import env to access environment variables
-)
 from ...models import SpiderOutput, SpiderResponse
 
 
@@ -29,9 +26,7 @@ async def execute_spider_method(
     setup: SpiderSetup,
     arguments: SpiderFetchArguments,
 ) -> SpiderOutput:
-    # Use walrus operator to simplify assignment and condition
-    if (api_key := setup.spider_api_key) == "DEMO_API_KEY":
-        api_key = spider_api_key
+    api_key = setup.spider_api_key
     # Initialize the final result list
     final_result = []
     # Initialize the results variable

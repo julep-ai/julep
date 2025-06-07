@@ -965,6 +965,13 @@ julep run --task "Generate Story" --input '{"idea": "A cat who learns to fly"}'
 1. Submits the task for execution with the provided input.
 2. If `--wait` is specified, waits for the task to complete and outputs the final result.
 
+**Error handling example:**
+
+```bash
+julep run --task invalid-id --input '{}'
+# -> Error creating execution: Task not found
+```
+
 ---
 
 ### Execution Management

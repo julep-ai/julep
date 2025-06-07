@@ -839,6 +839,33 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Executions.UpdateExecutionRequest'
+  /executions/{id}/status.stream:
+    get:
+      operationId: ExecutionStatusStreamRoute_stream
+      description: Stream the status of an execution
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - name: next_token
+          in: query
+          required: true
+          description: Next page token
+          schema:
+            type: string
+            nullable: true
+            default: null
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            text/event-stream:
+              schema:
+                type: string
   /executions/{id}/transitions:
     get:
       operationId: ExecutionTransitionsRoute_list
@@ -1414,6 +1441,9 @@ paths:
                 anyOf:
                   - $ref: '#/components/schemas/Chat.ChunkChatResponse'
                   - $ref: '#/components/schemas/Chat.MessageChatResponse'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/Chat.ChunkChatResponse'
       requestBody:
         required: true
         content:

@@ -16,7 +16,7 @@ from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from litellm.exceptions import APIError
+from litellm.exceptions import APIError, BadRequestError
 from pydantic import ValidationError
 from temporalio.service import RPCError
 
@@ -435,6 +435,21 @@ async def prompt_too_big_error(request: Request, exc: PromptTooBigError):
                 "code": "prompt_too_big",
                 "type": "PromptTooBigError",
                 "fix": "Reduce the size of your prompt or use a model with a larger context window",
+            }
+        },
+    )
+
+
+@app.exception_handler(BadRequestError)
+async def litellm_bad_request_error(request: Request, exc: BadRequestError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "error": {
+                "message": str(exc),
+                "code": "llm_bad_request",
+                "type": "LLMServiceBadRequest",
+                "fix": "Check request payload for invalid or missing fields",
             }
         },
     )

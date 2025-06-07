@@ -1,4 +1,5 @@
-"""This module contains functions for querying session data from the PostgreSQL database."""
+"""Query builder for counting sessions belonging to a specific developer."""
+# AIDEV-NOTE: Returns a single integer representing the number of sessions.
 
 from uuid import UUID
 

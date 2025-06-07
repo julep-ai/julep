@@ -68,6 +68,37 @@ model_list:
     api_key: os.environ/OPENAI_API_KEY
     tags: ["paid"]
 
+- model_name: "gpt-4.1"
+  litellm_params:
+    model: "openai/gpt-4.1"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-4.1-mini"
+  litellm_params:
+    model: "openai/gpt-4.1-mini"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-4.1-nano"
+  litellm_params:
+    model: "openai/gpt-4.1-nano"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "o4-mini"
+  litellm_params:
+    model: "openai/o4-mini"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+# TODO: uncomment after integrating litellm.image_generation
+# - model_name: "gpt-image-1"
+#   litellm_params:
+#     model: "openai/gpt-image-1"
+#     tags: ["paid"]
+#     api_key: os.environ/OPENAI_API_KEY
+
 # Anthropic models
 - model_name: "claude-3.5-sonnet-20240620"
   litellm_params:
@@ -117,6 +148,18 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/ANTHROPIC_API_KEY
 
+- model_name: "claude-sonnet-4"
+  litellm_params:
+    model: "claude-sonnet-4-20250514"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
+- model_name: "claude-opus-4"
+  litellm_params:
+    model: "claude-opus-4-20250514"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
 # Groq models
 - model_name: "llama-3.1-70b"
   litellm_params:
@@ -130,6 +173,19 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/GROQ_API_KEY
 
+- model_name: "meta-llama/Llama-Guard-4-12B"
+  litellm_params:
+    model: "groq/meta-llama/Llama-Guard-4-12B"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "gemma2-9b-it"
+  litellm_params:
+    model: "groq/gemma2-9b-it"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+    
+    
 # OpenRouter models
 - model_name: "mistral-large-2411"
   litellm_params:
@@ -209,7 +265,25 @@ model_list:
     api_key: os.environ/OPENROUTER_API_KEY
     tags: ["free"]
 
+- model_name: "amazon/nova-lite-v1"
+  litellm_params:
+    model: "openrouter/amazon/nova-lite-v1"
+    api_key: os.environ/AMAZON_API_KEY
+    tags: ["paid"]
 
+- model_name: "amazon/nova-micro-v1"
+  litellm_params:
+    model: "openrouter/amazon/nova-micro-v1"
+    api_key: os.environ/AMAZON_API_KEY
+    tags: ["paid"]
+    
+- model_name: "amazon/nova-pro-v1"
+  litellm_params:
+    model: "openrouter/amazon/nova-pro-v1"
+    api_key: os.environ/AMAZON_API_KEY
+    tags: ["paid"]
+    
+    
 # Cerebras Models
 - model_name: "cerebras/llama-3.1-8b"
   litellm_params:

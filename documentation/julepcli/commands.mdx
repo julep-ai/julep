@@ -253,6 +253,10 @@ Following are the available commands.
 
     # Run task that doesn't require input (empty object)
     julep run --task "00000000-0000-0000-0000-000000000000" --input '{}'
+
+    # Invalid task ID
+    julep run --task bad-id --input '{}'
+    # -> Error creating execution: Task not found
     ```
   </Tab>
 
