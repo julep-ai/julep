@@ -71,7 +71,6 @@ The `julep-cli` CLI tool provides a comprehensive command-line interface for int
         - [Standard Input/Output Handling](#standard-inputoutput-handling)
         - [Quiet Mode](#quiet-mode)
         - [Color Output](#color-output)
-  - [TODO](#todo)
 
 ---
 
@@ -1225,4 +1224,3 @@ julep agents list --color     # Force enable colored output
 
 ---
 
-## TODO
