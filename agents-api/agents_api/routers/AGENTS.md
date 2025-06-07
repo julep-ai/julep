@@ -42,9 +42,33 @@ Key Points
 - Embeddings generation
 - Vector and text search capabilities
 
-### users/ and files/
+### users/
 - User management and authentication
+- User CRUD operations
+
+### files/
 - File upload, download, and management
+- File metadata and storage
+
+### secrets/
+- Secret management for secure storage
+- Create, update, delete, and list secrets
+
+### responses/
+- Response management for task executions
+- Response creation and retrieval
+
+### healthz/
+- Health check endpoints
+- Service status monitoring
+
+### internal/
+- Internal API endpoints
+- System-level operations
+
+### jobs/
+- Job management and scheduling
+- Background task coordination
 
 ## Common Patterns
 - Most endpoints require developer_id authentication

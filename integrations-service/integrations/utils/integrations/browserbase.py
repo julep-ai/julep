@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import os
 import tempfile
@@ -20,10 +21,6 @@ from ...autogen.Tools import (
     BrowserbaseListSessionsArguments,
     BrowserbaseSetup,
 )
-from ...env import (
-    browserbase_api_key,
-    browserbase_project_id,
-)
 from ...models import (
     BrowserbaseCompleteSessionOutput,
     BrowserbaseCreateSessionOutput,
@@ -35,11 +32,6 @@ from ...models.browserbase import BrowserbaseExtensionOutput
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
-    setup.api_key = browserbase_api_key if setup.api_key == "DEMO_API_KEY" else setup.api_key
-    setup.project_id = (
-        browserbase_project_id if setup.project_id == "DEMO_PROJECT_ID" else setup.project_id
-    )
-
     return Browserbase(
         api_key=setup.api_key,
     )
@@ -81,9 +73,6 @@ async def create_session(
     arguments: BrowserbaseCreateSessionArguments,
 ) -> BrowserbaseCreateSessionOutput:
     client = get_browserbase_client(setup)
-
-    if arguments.project_id == "DEMO_PROJECT_ID":
-        arguments.project_id = browserbase_project_id
 
     # Convert browser settings using TypeAdapter
     browser_settings = TypeAdapter(BrowserSettings).validate_python(arguments.browser_settings)
@@ -189,7 +178,7 @@ async def get_live_urls(
     client = get_browserbase_client(setup)
     try:
         # Use the debug() method to get live URLs
-        urls: SessionLiveURLs = client.sessions.debug(id=arguments.id)
+        urls: SessionLiveURLs = await asyncio.to_thread(client.sessions.debug, id=arguments.id)
         return BrowserbaseGetSessionLiveUrlsOutput(urls=urls)
     except Exception as e:
         print(f"Error getting debug URLs: {e}")

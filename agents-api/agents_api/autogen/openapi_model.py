@@ -544,3 +544,20 @@ Includable = Literal[
     "message.input_image.image_url",
     "computer_call_output.output.image_url",
 ]
+
+
+# Manually implemented ExecutionStatusEvent model. Rationale:
+# ----------------------------------------------------------
+# The Typespec ExecutionStatusEvent model is not generated correctly by
+# the OpenAPI generator, as it is used in the `/executions/{id}/status.stream`
+# SSE endpoint, which is not natively supported by OpenAPI. See:
+# https://www.speakeasy.com/openapi/content/server-sent-events
+class ExecutionStatusEvent(BaseModel):
+    """Represents a status update event for an execution."""
+
+    execution_id: UUID
+    status: ExecutionStatus  # type: ignore
+    updated_at: AwareDatetime
+    error: str | None = None
+    transition_count: int | None = None
+    metadata: dict[str, Any]

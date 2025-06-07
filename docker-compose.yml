@@ -12,7 +12,7 @@ include:
   - ./llm-proxy/docker-compose.yml
   - ./integrations-service/docker-compose.yml
   - ./monitoring/docker-compose.yml
-  - ./blob-store/docker-compose.yml
+  - ./blob-store/docker-compose-ha.yml
   - ./hasura/docker-compose.yml
   # - ./code-interpreter/docker-compose.yml
   # - ./embedding-service/docker-compose.yml
