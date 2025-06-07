@@ -70,7 +70,6 @@ The `julep` CLI tool provides a comprehensive command-line interface for interac
         - [Standard Input/Output Handling](#standard-inputoutput-handling)
         - [Quiet Mode](#quiet-mode)
         - [Color Output](#color-output)
-  - [TODO](#todo)
 
 ---
 
@@ -1245,6 +1244,3 @@ julep agents list --color     # Force enable colored output
 - `NO_COLOR`: Set this to any value to disable color output
 - `FORCE_COLOR`: Set this to any value to force color output
 
-## TODO
-
-- [x] Add `julep import agent --id <agent_id> --output=<path>`
