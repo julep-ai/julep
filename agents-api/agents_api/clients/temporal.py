@@ -27,6 +27,7 @@ from ..env import (
     temporal_task_queue,
     temporal_worker_url,
 )
+from ..telemetry import telemetry
 from ..worker.codec import pydantic_data_converter
 
 
@@ -125,7 +126,7 @@ async def run_task_execution_workflow(
 
     current_input: dict = current_input or execution_input.arguments
 
-    return await client.start_workflow(
+    result = await client.start_workflow(
         TaskExecutionWorkflow.run,
         args=[execution_input, start, current_input],
         task_queue=temporal_task_queue,
@@ -136,6 +137,11 @@ async def run_task_execution_workflow(
             SearchAttributePair(execution_id_key, str(execution_id)),
         ]),
     )
+
+    if telemetry and getattr(telemetry, "workflows_counter", None):
+        telemetry.workflows_counter.add(1)
+
+    return result
 
 
 async def get_workflow_handle(
