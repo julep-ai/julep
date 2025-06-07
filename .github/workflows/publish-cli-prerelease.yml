@@ -1,6 +1,10 @@
 name: Publish CLI Prerelease to PyPI
 
 # AIDEV-NOTE: Auto-publish CLI package to PyPI for prerelease versions only
+permissions:
+  contents: write
+  packages: write
+
 on:
   push:
     branches:
