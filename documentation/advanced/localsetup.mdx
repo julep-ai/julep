@@ -53,7 +53,7 @@ You can run the project in two different modes: **Single Tenant** or **Multi-Ten
 Run the project in single-tenant mode:
 
 ```bash
-docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --build --force-recreate --watch
+docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public --profile self-hosted-temporal --profile local-db up --build --force-recreate --watch
 ```
 
 > **Note:** In single-tenant mode, you can interact with the SDK directly without the need for the API KEY.
@@ -62,7 +62,8 @@ docker compose --env-file .env --profile temporal-ui --profile single-tenant --p
 Run the project in multi-tenant mode:
 
 ```bash
-docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --build --force-recreate --watch
+docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public --profile self-hosted-temporal --profile local-db up --build --force-recreate --watch
+
 ```
 
 > **Note:** In multi-tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK.
