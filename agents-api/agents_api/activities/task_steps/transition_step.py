@@ -1,5 +1,4 @@
 import asyncio
-from typing import cast
 
 from beartype import beartype
 from fastapi import HTTPException
@@ -56,7 +55,7 @@ async def transition_step(
         )
 
     except Exception as e:
-        if isinstance(e, HTTPException) and cast(HTTPException, e).status_code == 429:
+        if isinstance(e, HTTPException) and e.status_code == 429:
             await wf_handle.signal(
                 TaskExecutionWorkflow.set_last_error,
                 LastErrorInput(last_error=TooManyRequestsError()),

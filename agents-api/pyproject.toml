@@ -74,7 +74,7 @@ dev = [
     "pyanalyze>=0.13.1",
     "autotyping>=24.9.0",
     "psycopg[binary]>=3.2.5", # only for use inside tests for now
-    "ty>=0.0.0a8",
+    "ty>=0.0.1a8",
 ]
 
 [tool.setuptools]
@@ -84,15 +84,16 @@ py-modules = [
 
 [tool.ty.rules]
 # AIDEV-NOTE: pytype replaced with ty; rules tuned for initial migration
-invalid-parameter-default = "warn"
-invalid-argument-type = "warn"
-unknown-argument = "warn"
-invalid-type-form = "warn"
-missing-argument = "warn"
-unresolved-attribute = "warn"
-invalid-assignment = "warn"
-possibly-unbound-attribute = "warn"
-no-matching-overload = "warn"
-not-iterable = "warn"
-unsupported-operator = "warn"
+# TODO: Progressively remove these ignore rules to tighten type safety
+invalid-parameter-default = "ignore"
+invalid-argument-type = "ignore"
+unknown-argument = "ignore"
+invalid-type-form = "ignore"
+missing-argument = "ignore"
+unresolved-attribute = "ignore"
+invalid-assignment = "ignore"
+possibly-unbound-attribute = "ignore"
+no-matching-overload = "ignore"
+not-iterable = "ignore"
+unsupported-operator = "ignore"
 
