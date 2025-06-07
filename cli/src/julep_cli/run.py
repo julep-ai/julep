@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
+import julep
 import typer
-
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .app import app, console, error_console
@@ -56,15 +56,24 @@ def run(
     if input:
         try:
             task_input = json.loads(input)
-        except json.JSONDecodeError:
-            msg = "Input must be valid JSON"
+            if not isinstance(task_input, dict):
+                msg = "Input must be a JSON object (dictionary)"
+                raise typer.BadParameter(msg)
+        except json.JSONDecodeError as e:
+            msg = f"Input must be valid JSON: {e}"
             raise typer.BadParameter(msg)
     elif input_file:
         try:
             with open(input_file) as f:
                 task_input = json.load(f)
-        except (json.JSONDecodeError, FileNotFoundError) as e:
-            msg = f"Error reading input file: {e}"
+            if not isinstance(task_input, dict):
+                msg = "Input file must contain a JSON object (dictionary)"
+                raise typer.BadParameter(msg)
+        except FileNotFoundError as e:
+            msg = f"Input file not found: {e}"
+            raise typer.BadParameter(msg)
+        except json.JSONDecodeError as e:
+            msg = f"Input file must be valid JSON: {e}"
             raise typer.BadParameter(msg)
 
     client = get_julep_client()
@@ -81,6 +90,35 @@ def run(
             progress.start_task(run_task)
 
             execution = create_execution(client, str(task), task_input)
+        except Exception as e:
+            error_console.print(
+                f"[bold red]Error creating execution: {e}[/bold red]",
+                highlight=True,
+            )
+            raise typer.Exit(1)
+
+    console.print(
+        f"Execution created successfully! Execution ID: {execution.id}",
+    )
+
+    # AIDEV-NOTE: Execute task via Julep API with specific error handling for different failure types
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+        console=console,
+    ) as progress:
+        try:
+            run_task = progress.add_task("Creating execution...", start=False)
+            progress.start_task(run_task)
+
+            execution = create_execution(client, str(task), task_input)
+        except julep.NotFoundError as e:
+            error_console.print(
+                f"[bold red]Task not found: {e}[/bold red]",
+                highlight=True,
+            )
+            raise typer.Exit(1)
         except Exception as e:
             error_console.print(
                 f"[bold red]Error creating execution: {e}[/bold red]",
