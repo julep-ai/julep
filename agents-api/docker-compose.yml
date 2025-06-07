@@ -52,6 +52,8 @@ x--shared-environment: &shared-environment
   GUNICORN_CPU_DIVISOR: ${GUNICORN_CPU_DIVISOR:-4}
   GUNICORN_WORKERS: ${GUNICORN_WORKERS}
   SECRETS_MASTER_KEY: ${SECRETS_MASTER_KEY}
+  HASURA_URL: ${HASURA_URL:-http://hasura:8080}
+  HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:-hasura_admin_secret}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}

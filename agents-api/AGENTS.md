@@ -46,6 +46,9 @@ Key Uses
 - Task activities (activities/)
 - Background worker processing (worker/)
 - Common utilities and protocol definitions (common/)
+- Dependencies for authentication and middleware (dependencies/)
+- Recursive summarization for message history (rec_sum/)
+- Metrics collection and monitoring (metrics/)
 
 ## Key Concepts
 - Projects: Organizational units for grouping related resources

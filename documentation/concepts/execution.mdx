@@ -219,6 +219,32 @@ Example:
     Check out the API reference [here](/api-reference/executions) or SDK reference (Python [here](/sdks/python/reference#executions) or JavaScript [here](/sdks/nodejs/reference#executions) for more details on different operations you can perform on executions.
 </Tip>
 
+## Streaming Execution Status Updates
+
+You can subscribe to real-time status updates using the Server-Sent Events (SSE) endpoint. Each event conforms to the `ExecutionStatusEvent` schema and includes the following fields:
+
+- **execution_id**: The UUID of the execution.
+- **status**: The current execution status.
+- **updated_at**: ISO 8601 timestamp of the update.
+- **error**: Error message if the execution failed.
+- **transition_count**: Number of transitions that have occurred.
+- **metadata**: Arbitrary metadata for the event.
+
+```bash
+curl -X GET 'https://api.julep.ai/api/executions/{execution_id}/status.stream' \
+  -H 'Authorization: Bearer $JULEP_API_KEY'
+```
+
+You'll be getting events that look like this:
+
+```bash
+data: {"execution_id":"068306ff-e0f3-7fe9-8000-0013626a759a","status":"starting","updated_at":"2025-05-23T12:54:24.565424Z","error":null,"transition_count":1,"metadata":{}}
+data: {"execution_id":"068306ff-e0f3-7fe9-8000-0013626a759a","status":"running","updated_at":"2025-05-23T12:54:30.903484Z","error":null,"transition_count":2,"metadata":{}}
+data: {"execution_id":"068306ff-e0f3-7fe9-8000-0013626a759a","status":"succeeded","updated_at":"2025-05-23T12:56:12.054067Z","error":null,"transition_count":3,"metadata":{}}
+```
+
+**Note:** This streaming endpoint is not yet available in the SDKs, but support is coming soon.
+
 ## Updating/Cancelling an Execution
 
 To update or cancel an execution, you can use the `change_status` method in the SDKs.

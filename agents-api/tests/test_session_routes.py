@@ -32,6 +32,26 @@ def _(make_request=make_request, agent=test_agent):
     assert response.status_code == 201
 
 
+@test("route: create session - invalid agent")
+def _(make_request=make_request, agent=test_agent):
+    data = {
+        "agent": str(uuid7()),
+        "situation": "test session about",
+    }
+
+    response = make_request(
+        method="POST",
+        url="/sessions",
+        json=data,
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.json()["error"]["message"]
+        == "The specified participant ID is invalid for the given participant type during create"
+    )
+
+
 @test("route: create or update session - create")
 def _(make_request=make_request, agent=test_agent):
     session_id = uuid7()
@@ -68,6 +88,26 @@ def _(make_request=make_request, session=test_session, agent=test_agent):
     )
 
     assert response.status_code == 201, f"{response.json()}"
+
+
+@test("route: create or update session - invalid agent")
+def _(make_request=make_request, agent=test_agent, session=test_session):
+    data = {
+        "agent": str(uuid7()),
+        "situation": "test session about",
+    }
+
+    response = make_request(
+        method="POST",
+        url=f"/sessions/{session.id}",
+        json=data,
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.json()["error"]["message"]
+        == "The specified participant ID is invalid for the given participant type during create or update"
+    )
 
 
 @test("route: get session - exists")

@@ -1,16 +1,10 @@
 name: Translate README
 on:
-  workflow_dispatch:
-  push:
+  pull_request:
     paths:
       - "README.md"
       - ".github/README-*.md"
 
-  pull_request:
-    types: ["ready_for_review"]
-    paths:
-      - "README.md"
-      - ".github/README-*.md"
 jobs:
   translate_readme:
     runs-on: ubuntu-latest
@@ -30,7 +24,7 @@ jobs:
             AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but
             is just a symlink to the corresponding AGENTS.md (usually in the same dir).
     
-          anthropic_model: ${{ vars.TRANSLATOR_CLAUDE_MODEL || "claude-3-5-haiku-latest" }}
+          anthropic_model: ${{ vars.TRANSLATOR_CLAUDE_MODEL }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           allowed_tools: "Bash(npm install),Bash(npm run test),Edit,Replace,NotebookEditCell"
