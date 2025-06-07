@@ -28,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -65,8 +65,7 @@ jobs:
       - name: Run linting and type checking
         if: steps.prerelease.outputs.is_prerelease == 'true'
         run: |
-          uv run poe lint
-          uv run poe typecheck
+          uv run poe check
           
       - name: Run tests
         if: steps.prerelease.outputs.is_prerelease == 'true'
@@ -102,7 +101,7 @@ jobs:
           verbose: true
           
       - name: Create GitHub Release
-        if: steps.prerelease.outputs.is_prerelease == 'true' && steps.check_pypi.outputs.version_exists == 'false'
+        if: steps.check_pypi.outputs.version_exists == 'false'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
