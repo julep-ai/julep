@@ -3,7 +3,6 @@ from langchain_community.utilities import OpenWeatherMapAPIWrapper
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import WeatherGetArguments, WeatherSetup
-from ...env import openweather_api_key  # Import env to access environment variables
 from ...models import WeatherGetOutput
 
 
@@ -20,10 +19,6 @@ async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGet
 
     location = arguments.location
 
-    # Use walrus operator to simplify assignment and condition
-    if (api_key := setup.openweathermap_api_key) == "DEMO_API_KEY":
-        api_key = openweather_api_key
-
-    weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=api_key)
+    weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=setup.openweathermap_api_key)
     result = weather.run(location)
     return WeatherGetOutput(result=result)

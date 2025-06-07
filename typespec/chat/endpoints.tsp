@@ -36,6 +36,16 @@ interface Endpoints {
         @bodyRoot
         @doc("Response from the model")
         body: ChatResponse;
+    } | {
+        @statusCode _: "200";
+        
+        @header
+        @doc("Content type for streaming responses")
+        "content-type": "text/event-stream";
+
+        @bodyRoot
+        @doc("Streaming response from the model")
+        body: ChunkChatResponse;
     };
 }
 
