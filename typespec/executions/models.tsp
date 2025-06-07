@@ -64,6 +64,26 @@ model Execution {
     ...HasId;
 }
 
+model ExecutionStatusEvent {
+    /** The ID of the execution */
+    execution_id: Execution.id;
+
+    /** The status of the execution */
+    status: ExecutionStatus;
+
+    /** The updated_at timestamp of the execution */
+    updated_at: string;
+
+    /** The error of the execution if it failed */
+    error?: string;
+
+    /** The number of transitions in this execution */
+    transition_count?: uint8;
+
+    /** The metadata of the execution */
+    ...HasMetadata
+}
+
 /** Payload for creating an execution */
 @withVisibility("create")
 model CreateExecutionRequest {

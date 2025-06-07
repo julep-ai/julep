@@ -1,6 +1,8 @@
 # Git
 .git/
 
+.codex/
+
 # Build and distribution directories
 **/dist/
 **/build/

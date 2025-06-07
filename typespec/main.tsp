@@ -125,6 +125,9 @@ namespace Api {
     @route("/executions/{id}/transitions.stream")
     interface ExecutionTransitionsStreamRoute extends Executions.TransitionStreamEndpoints {}
 
+    @route("/executions/{id}/status.stream")
+    interface ExecutionStatusStreamRoute extends Executions.ExecutionStatusStreamEndpoints {}
+
     @route("/jobs")
     interface JobRoute extends Jobs.Endpoints {}
 

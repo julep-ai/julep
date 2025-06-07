@@ -44,6 +44,17 @@ input_schema:
       description: The text to summarize
 ```
 
+<Warning>
+  **⚠️ Workflow Input Size Warning**: Avoid passing extremely large objects as input to your workflows, as this can cause execution failures. Large inputs (such as massive JSON objects, extensive arrays, or huge text files) may exceed memory limits or hit serialization constraints.
+
+  **What to do instead:**
+  - **Break large data into smaller chunks** and process them iteratively
+  - **Use file uploads** and pass file references instead of raw content
+  - **Implement pagination** for large datasets
+
+  **Rule of thumb:** If your input data is larger than a few megabytes, consider alternative approaches.
+</Warning>
+
 ### Tools
 
 Tools are functions that can be used by an agent to perform tasks. Julep supports:
