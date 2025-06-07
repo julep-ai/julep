@@ -1,11 +1,18 @@
 # Tests for task routes
 
+import json
+from unittest.mock import patch
+from uuid import UUID
+
 from agents_api.autogen.openapi_model import (
+    ExecutionStatusEvent,
     Transition,
 )
+from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
 from agents_api.queries.executions.create_execution_transition import (
     create_execution_transition,
 )
+from fastapi.testclient import TestClient
 from uuid_extensions import uuid7
 from ward import skip, test
 
@@ -287,3 +294,137 @@ async def _(make_request=make_request, task=test_task):
         execution = response.json()
 
         assert execution["status"] == "running"
+
+
+@test("route: stream execution status SSE endpoint")
+def _(
+    client: TestClient = client,
+    test_execution_started=test_execution_started,
+    test_developer_id=test_developer_id,
+):
+    # Mock SSE response data that simulates a progressing execution
+    mock_sse_responses = [
+        ExecutionStatusEvent(
+            execution_id=UUID("068306ff-e0f3-7fe9-8000-0013626a759a"),
+            status="starting",
+            updated_at="2025-05-23T12:54:24.565424Z",
+            error=None,
+            transition_count=1,
+            metadata={},
+        ),
+        ExecutionStatusEvent(
+            execution_id=UUID("068306ff-e0f3-7fe9-8000-0013626a759a"),
+            status="running",
+            updated_at="2025-05-23T12:54:30.903484Z",
+            error=None,
+            transition_count=2,
+            metadata={},
+        ),
+        ExecutionStatusEvent(
+            execution_id=UUID("068306ff-e0f3-7fe9-8000-0013626a759a"),
+            status="succeeded",
+            updated_at="2025-05-23T12:56:12.054067Z",
+            error=None,
+            transition_count=3,
+            metadata={},
+        ),
+    ]
+
+    # Simple mock SSE server that immediately returns all events
+    async def mock_sse_publisher(send_chan, *args, **kwargs):
+        """Mock publisher that sends all events at once and then exits"""
+        async with send_chan:
+            for response in mock_sse_responses:
+                await send_chan.send({"data": response.model_dump_json()})
+
+    execution = test_execution_started
+    url = f"/executions/{execution.id}/status.stream"
+
+    # Prepare authentication headers
+    headers = {api_key_header_name: api_key}
+    if multi_tenant_mode:
+        headers["X-Developer-Id"] = str(test_developer_id)
+
+    # Replace the execution_status_publisher with our simplified mock version
+    with (
+        patch(
+            "agents_api.routers.tasks.stream_execution_status.execution_status_publisher",
+            mock_sse_publisher,
+        ),
+        client.stream("GET", url, headers=headers) as response,
+    ):
+        # Verify response headers and status code
+        content_type = response.headers.get("content-type", "")
+        assert content_type.startswith("text/event-stream"), (
+            f"Unexpected content type: {content_type}"
+        )
+        assert response.status_code == 200
+
+        # Read and parse events from the stream
+        received_events = []
+        max_attempts = 10  # Limit the number of attempts to avoid infinite loops
+
+        # Read the stream with a limit on attempts
+        for i, line in enumerate(response.iter_lines()):
+            if line:
+                event_line = line.decode() if isinstance(line, bytes | bytearray) else line
+                if event_line.startswith("data:"):
+                    # Parse JSON payload
+                    payload = event_line[len("data:") :].strip()
+                    data = json.loads(payload)
+                    received_events.append(data)
+
+            # Check if we've received all events or reached max attempts
+            if len(received_events) >= len(mock_sse_responses) or i >= max_attempts:
+                break
+
+        # Ensure we close the connection
+        response.close()
+
+    # Verify we received the expected events
+    assert len(received_events) == len(mock_sse_responses), (
+        f"Expected {len(mock_sse_responses)} events, got {len(received_events)}"
+    )
+
+    # Verify the status progression
+    assert received_events[0]["status"] == "starting"
+    assert received_events[1]["status"] == "running"
+    assert received_events[2]["status"] == "succeeded"
+
+    # Verify other fields
+    for i, event in enumerate(received_events):
+        assert event["execution_id"] == "068306ff-e0f3-7fe9-8000-0013626a759a"
+        assert isinstance(event["updated_at"], str)
+        assert event["transition_count"] == i + 1
+
+
+@test("route: stream execution status SSE endpoint - non-existing execution")
+def _(client: TestClient = client, test_developer_id=test_developer_id):
+    # Create a random UUID for a non-existing execution
+    non_existing_execution_id = uuid7()
+    url = f"/executions/{non_existing_execution_id}/status.stream"
+
+    # Prepare authentication headers
+    headers = {api_key_header_name: api_key}
+    if multi_tenant_mode:
+        headers["X-Developer-Id"] = str(test_developer_id)
+
+    # Make the request to the SSE endpoint - should return a 404 error
+    response = client.get(url, headers=headers)
+
+    # Verify response status code is 404
+    assert response.status_code == 404
+
+    # Parse the error response
+    error_data = response.json()
+
+    # Verify error structure
+    assert "error" in error_data
+    assert "message" in error_data["error"]
+    assert "code" in error_data["error"]
+    assert "type" in error_data["error"]
+
+    # Verify specific error details
+    assert f"Execution {non_existing_execution_id} not found" in error_data["error"]["message"]
+    assert error_data["error"]["code"] == "http_404"
+    assert error_data["error"]["type"] == "http_error"

@@ -64,6 +64,7 @@ The integrations-service is a FastAPI-based microservice that provides a unified
 
 4. Communications
    - `email` - Email sending capabilities
+   - `mailgun` - Mailgun email service integration
    - `weather` - Weather information
 
 ### API Structure

@@ -5,7 +5,6 @@ from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...autogen.Tools import AlgoliaSearchArguments, AlgoliaSetup
-from ...env import algolia_api_key, algolia_application_id
 from ...models import AlgoliaSearchOutput
 
 
@@ -20,11 +19,8 @@ async def search(setup: AlgoliaSetup, arguments: AlgoliaSearchArguments) -> Algo
     Searches for content in an Algolia index asynchronously.
     """
 
-    # Use walrus operator to simplify assignment and condition
-    if (api_key := setup.algolia_api_key) == "DEMO_API_KEY":
-        api_key = algolia_api_key
-    if (application_id := setup.algolia_application_id) == "DEMO_APPLICATION_ID":
-        application_id = algolia_application_id
+    api_key = setup.algolia_api_key
+    application_id = setup.algolia_application_id
 
     # Build the search request
     search_params = {

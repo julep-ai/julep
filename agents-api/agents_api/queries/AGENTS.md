@@ -8,6 +8,7 @@ Key Points
 - Validate SQL syntax with `poe check`.
 - Add new queries in `queries/` and index them if needed.
 - Tests reside under `agents-api/tests/`.
+- Add `AIDEV-NOTE` anchors at the top of query modules to clarify module purpose.
 
 # Queries
 
@@ -26,6 +27,16 @@ Key Points
 - CRUD operations for core resources
 - Data validation and normalization
 - Project association handling
+
+### secrets/
+- Secure storage and retrieval of sensitive data
+- Key-value storage with encryption
+- Access control and validation
+
+### usage/
+- Usage tracking and cost calculation
+- User activity monitoring
+- Billing and analytics data
 
 ### executions/
 - Create and track task executions
