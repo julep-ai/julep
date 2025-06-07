@@ -1,7 +1,7 @@
 [tasks]
 format = "ruff format"
 lint = "ruff check"
-typecheck = "ty check src/julep_cli"
+typecheck = "pyright --threads 8 --skipunannotated julep_cli"
 check = [
     "lint",
     "format",
