@@ -74,7 +74,7 @@ const braveSearch = await client.agents.tools.create(agentId, {
     provider: 'brave',
     method: 'search',
     setup: {
-      api_key: process.env.BRAVE_API_KEY
+      brave_api_key: process.env.BRAVE_API_KEY
     }
   }
 });
@@ -213,7 +213,7 @@ try {
     integration: {
       provider: 'brave',
       setup: {
-        api_key: process.env.BRAVE_API_KEY
+        brave_api_key: process.env.BRAVE_API_KEY
       }
     }
   });
