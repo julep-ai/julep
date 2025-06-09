@@ -12,6 +12,54 @@ from ...queries.usage.create_usage_record import create_usage_record
 
 
 @beartype
+def extract_provider_from_model(model: str) -> str | None:
+    """
+    Extract the provider from a model name.
+
+    Args:
+        model (str): The model name (e.g., "gpt-4", "claude-3-sonnet", "openai/gpt-4")
+
+    Returns:
+        str | None: The provider name (e.g., "openai", "anthropic") or None if unknown
+    """
+    # Handle prefixed models (e.g., "openai/gpt-4")
+    if "/" in model:
+        provider_prefix = model.split("/")[0].lower()
+        # Map some common prefixes
+        provider_mapping = {
+            "openai": "openai",
+            "anthropic": "anthropic",
+            "google": "google",
+            "meta-llama": "meta",
+            "mistralai": "mistral",
+            "openrouter": "openrouter",
+        }
+        if provider_prefix in provider_mapping:
+            return provider_mapping[provider_prefix]
+
+    # Detect based on model name patterns
+    model_lower = model.lower()
+
+    if any(
+        pattern in model_lower
+        for pattern in ["gpt-", "o1-", "text-davinci", "text-ada", "text-babbage", "text-curie"]
+    ):
+        return "openai"
+    if any(pattern in model_lower for pattern in ["claude-", "claude"]):
+        return "anthropic"
+    if any(pattern in model_lower for pattern in ["gemini-", "palm-", "bison", "gecko"]):
+        return "google"
+    if any(pattern in model_lower for pattern in ["llama-", "llama2", "llama3", "meta-llama"]):
+        return "meta"
+    if any(pattern in model_lower for pattern in ["mistral-", "mixtral-"]):
+        return "mistral"
+    if any(pattern in model_lower for pattern in ["qwen-", "qwen2"]):
+        return "qwen"
+
+    return None
+
+
+@beartype
 async def track_usage(
     *,
     developer_id: UUID,
@@ -21,6 +69,10 @@ async def track_usage(
     custom_api_used: bool = False,
     metadata: dict[str, Any] = {},
     connection_pool: Any = None,  # This is for testing purposes
+    session_id: UUID | None = None,
+    execution_id: UUID | None = None,
+    transition_id: UUID | None = None,
+    entry_id: UUID | None = None,
 ) -> None:
     """
     Tracks token usage and costs for an LLM API call.
@@ -32,6 +84,10 @@ async def track_usage(
         response (ModelResponse): The response from the LLM API call.
         custom_api_used (bool): Whether a custom API key was used.
         metadata (dict): Additional metadata about the usage.
+        session_id (UUID | None): The session that generated this usage.
+        execution_id (UUID | None): The task execution that generated this usage.
+        transition_id (UUID | None): The specific transition step that generated this usage.
+        entry_id (UUID | None): The chat entry that generated this usage.
 
     Returns:
         None
@@ -62,7 +118,11 @@ async def track_usage(
     # Map the model name to the actual model name
     actual_model = model
 
+    # Extract provider from model name
+    provider = extract_provider_from_model(actual_model)
+
     # Create usage record
+    # AIDEV-NOTE: 1472:: Updated to pass new context fields and provider for better tracking
     await create_usage_record(
         developer_id=developer_id,
         model=actual_model,
@@ -71,8 +131,23 @@ async def track_usage(
         custom_api_used=custom_api_used,
         metadata={
             "request_id": response.id if hasattr(response, "id") else None,
+            "input_messages": messages,
+            "output_content": [
+                choice.message.content
+                for choice in response.choices
+                if hasattr(choice, "message")
+                and choice.message
+                and hasattr(choice.message, "content")
+            ]
+            if response.choices
+            else None,
             **metadata,
         },
+        session_id=session_id,
+        execution_id=execution_id,
+        transition_id=transition_id,
+        entry_id=entry_id,
+        provider=provider,
         connection_pool=connection_pool,
     )
 
