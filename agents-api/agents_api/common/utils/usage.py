@@ -18,6 +18,11 @@ async def track_usage(
     model: str,
     messages: list[dict],
     response: ModelResponse,
+    execution_id: UUID | None = None,
+    transition_id: UUID | None = None,
+    session_id: UUID | None = None,
+    entry_id: UUID | None = None,
+    provider: str | None = None,
     custom_api_used: bool = False,
     metadata: dict[str, Any] = {},
     connection_pool: Any = None,  # This is for testing purposes
@@ -30,6 +35,11 @@ async def track_usage(
         model (str): The model used for the API call.
         messages (list[dict]): The messages sent to the model.
         response (ModelResponse): The response from the LLM API call.
+        execution_id (UUID | None): Execution that triggered the call.
+        transition_id (UUID | None): Transition that invoked the call.
+        session_id (UUID | None): Session the call belongs to.
+        entry_id (UUID | None): Entry that prompted the call.
+        provider (str | None): LLM provider used.
         custom_api_used (bool): Whether a custom API key was used.
         metadata (dict): Additional metadata about the usage.
 
@@ -68,6 +78,11 @@ async def track_usage(
         model=actual_model,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
+        execution_id=execution_id,
+        transition_id=transition_id,
+        session_id=session_id,
+        entry_id=entry_id,
+        provider=provider,
         custom_api_used=custom_api_used,
         metadata={
             "request_id": response.id if hasattr(response, "id") else None,
@@ -84,6 +99,11 @@ async def track_embedding_usage(
     model: str,
     inputs: list[str],
     response: Any,
+    execution_id: UUID | None = None,
+    transition_id: UUID | None = None,
+    session_id: UUID | None = None,
+    entry_id: UUID | None = None,
+    provider: str | None = None,
     custom_api_used: bool = False,
     metadata: dict[str, Any] = {},
 ) -> None:
@@ -95,6 +115,11 @@ async def track_embedding_usage(
         model (str): The model used for the embedding.
         inputs (list[str]): The inputs sent for embedding.
         response (Any): The response from the embedding API call.
+        execution_id (UUID | None): Execution that triggered the call.
+        transition_id (UUID | None): Transition that invoked the call.
+        session_id (UUID | None): Session the call belongs to.
+        entry_id (UUID | None): Entry that prompted the call.
+        provider (str | None): LLM provider used.
         custom_api_used (bool): Whether a custom API key was used.
         metadata (dict): Additional metadata about the usage.
 
@@ -120,6 +145,11 @@ async def track_embedding_usage(
         model=actual_model,
         prompt_tokens=prompt_tokens,
         completion_tokens=0,  # Embeddings don't have completion tokens
+        execution_id=execution_id,
+        transition_id=transition_id,
+        session_id=session_id,
+        entry_id=entry_id,
+        provider=provider,
         custom_api_used=custom_api_used,
         metadata=metadata,
     )
