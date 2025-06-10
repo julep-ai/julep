@@ -177,7 +177,9 @@ brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
 # Feature Flags
 # -------------
 unleash_url: str = env.str("UNLEASH_URL", default="http://localhost:4242/api")
-unleash_api_token: str = env.str("UNLEASH_API_TOKEN", default="default:development.unleash-insecure-api-token")
+unleash_api_token: str = env.str(
+    "UNLEASH_API_TOKEN", default="default:development.unleash-insecure-api-token"
+)
 unleash_app_name: str = env.str("UNLEASH_APP_NAME", default="agents-api")
 
 # Responses Flag
