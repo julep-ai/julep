@@ -33,7 +33,7 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model:   claude-3-5-sonnet-20241022
+          model:   claude-sonnet-4-20250514
           github_token:      ${{ secrets.GITHUB_TOKEN }}
           allowed_tools:     "Read"
           direct_prompt: |
@@ -69,7 +69,7 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model:   claude-3-7-sonnet-20250219
+          model:   claude-sonnet-4-20250514
           github_token:      ${{ secrets.GITHUB_TOKEN }}
           allowed_tools:     "Read,Edit,Replace"
           direct_prompt: |
