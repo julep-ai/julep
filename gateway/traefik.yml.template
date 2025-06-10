@@ -249,7 +249,7 @@ http:
       loadBalancer:
         passHostHeader: false
         servers:
-          - url: ${ANALYTICS_URL:-http://analytics:3000}
+          - url: $ANALYTICS_URL
 
 experimental:
   localPlugins:
