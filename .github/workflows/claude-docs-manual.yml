@@ -22,7 +22,8 @@ jobs:
 
       - name: Save PR patch
         run: gh pr diff ${{ github.event.inputs.pr_number }} --patch > diff.patch
-        env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Claude changes docs
         uses: anthropics/claude-code-action@beta

@@ -25,7 +25,8 @@ jobs:
 
       - name: Save PR patch
         run: gh pr diff ${{ steps.resolve.outputs.number }} --patch > diff.patch
-        env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Gate
         id: gate
