@@ -141,7 +141,7 @@ http:
       service: service-analytics
       priority: 2
 
-    # General Analytics/Metabase proxy - keep /analytics prefix since Metabase is configured for it
+    # General Analytics/Metabase proxy - strip /analytics prefix for backend requests
     # ONLY accessible via iframe from dashboard
     analytics:
       entryPoints:
@@ -149,6 +149,7 @@ http:
       rule: PathPrefix(`/analytics/`)
       middlewares:
         - corsHeaders
+        - analytics-strip-prefix
       service: service-analytics
       priority: 1
 
