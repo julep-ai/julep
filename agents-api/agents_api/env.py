@@ -173,6 +173,13 @@ zerogpt_url: str = env.str(
 desklib_url: str = env.str("DESKLIB_URL", default="http://35.243.190.233/detect")
 sapling_url: str = env.str("SAPLING_URL", default="https://api.sapling.ai/api/v1/aidetect")
 brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
+
+# Feature Flags
+# -------------
+unleash_url: str = env.str("UNLEASH_URL", default="http://localhost:4242/api")
+unleash_api_token: str = env.str("UNLEASH_API_TOKEN", default="default:development.unleash-insecure-api-token")
+unleash_app_name: str = env.str("UNLEASH_APP_NAME", default="agents-api")
+
 # Responses Flag
 # ---------------
 enable_responses: bool = env.bool("ENABLE_RESPONSES", default=False)
@@ -230,6 +237,9 @@ environment: dict[str, Any] = {
     "enable_responses": enable_responses,
     "free_tier_cost_limit": free_tier_cost_limit,
     "secrets_master_key": secrets_master_key,
+    "unleash_url": unleash_url,
+    "unleash_api_token": unleash_api_token,
+    "unleash_app_name": unleash_app_name,
 }
 
 if debug or testing:
