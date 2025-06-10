@@ -15,13 +15,28 @@ RUN if command -v apk > /dev/null; then \
         echo "No supported package manager found"; exit 1; \
     fi
 
+# Create metabase user if it doesn't exist
+RUN if ! id metabase >/dev/null 2>&1; then \
+        echo "Creating metabase user"; \
+        useradd -r -s /bin/false -d /opt/metabase metabase; \
+    else \
+        echo "metabase user already exists"; \
+    fi
+
+# Create app directory and set ownership
+RUN mkdir -p /app && chown metabase:metabase /app
+
 # Copy initialization scripts
 COPY init-metabase-db.sh /app/init-metabase-db.sh
 COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/init-metabase-db.sh /app/entrypoint.sh
+RUN chmod +x /app/init-metabase-db.sh /app/entrypoint.sh && \
+    chown metabase:metabase /app/init-metabase-db.sh /app/entrypoint.sh
 
-# Switch back to metabase user
+# Switch to metabase user
 USER metabase
+
+# Show available users for debugging
+RUN echo "Available users:" && cat /etc/passwd | cut -d: -f1 | head -10
 
 # AIDEV-NOTE: Custom image with database initialization support
 
