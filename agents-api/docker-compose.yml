@@ -54,6 +54,9 @@ x--shared-environment: &shared-environment
   SECRETS_MASTER_KEY: ${SECRETS_MASTER_KEY}
   HASURA_URL: ${HASURA_URL:-http://hasura:8080}
   HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:-hasura_admin_secret}
+  UNLEASH_URL: ${UNLEASH_URL:-http://localhost:4242/api}
+  UNLEASH_API_TOKEN: ${UNLEASH_API_TOKEN:-default:development.unleash-insecure-api-token}
+  UNLEASH_APP_NAME: ${UNLEASH_APP_NAME:-agents-api}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}
