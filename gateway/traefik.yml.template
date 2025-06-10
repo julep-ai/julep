@@ -102,7 +102,6 @@ http:
       rule: PathPrefix(`/app/`)
       middlewares:
         - corsHeaders
-        - analytics-iframe-headers
         - analytics-cache-headers
       service: service-analytics
       priority: 5
@@ -115,7 +114,6 @@ http:
       rule: PathRegexp(`^/analytics/app/app/(dist|fonts|img|css)/(.*)`)
       middlewares:
         - corsHeaders
-        - analytics-iframe-headers
         - analytics-cache-headers
         - analytics-strip-app-double
       service: service-analytics
@@ -129,7 +127,6 @@ http:
       rule: PathRegexp(`^/analytics/(dist|fonts|img|css|app/dist|app/fonts|app/img|app/css)/(.*)`)
       middlewares:
         - corsHeaders
-        - analytics-iframe-headers
         - analytics-cache-headers
         - analytics-strip-prefix
       service: service-analytics
@@ -143,7 +140,6 @@ http:
       rule: PathPrefix(`/analytics/`)
       middlewares:
         - corsHeaders
-        - analytics-iframe-headers
         - analytics-strip-prefix
       service: service-analytics
       priority: 1
@@ -210,12 +206,6 @@ http:
       replacepathregex:
         regex: "^/analytics/app/app/(.*)"
         replacement: "/app/$1"
-
-    analytics-iframe-headers:
-      headers:
-        customresponseheaders:
-          X-Frame-Options: "SAMEORIGIN"
-          Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ws: wss:; frame-ancestors 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
 
     analytics-cache-headers:
       headers:
