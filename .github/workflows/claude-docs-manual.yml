@@ -31,8 +31,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           anthropic_model:   claude-3-sonnet-20240229
           github_token:      ${{ secrets.GITHUB_TOKEN }}
-          input_files:       diff.patch
-          allowed_tools:     "Edit,Replace"
+          allowed_tools:     "Read,Edit,Replace"
           direct_prompt: |
             You are the team’s documentation bot.  
             1. Read *diff.patch*.  

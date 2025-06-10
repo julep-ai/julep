@@ -35,10 +35,10 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           anthropic_model:   claude-3-haiku-20240307
           github_token:      ${{ secrets.GITHUB_TOKEN }}
-          input_files:       diff.patch
+          allowed_tools:     "Read"
           direct_prompt: |
             You are a senior technical-writer.  
-            Look at *diff.patch* (unified diff).  
+            Read *diff.patch* (unified diff).  
             Reply with the single word **UPDATE** if the patch
             a) adds new user-visible functionality,
             b) changes or removes existing behaviour,
@@ -72,7 +72,7 @@ jobs:
           anthropic_model:   claude-3-sonnet-20240229
           github_token:      ${{ secrets.GITHUB_TOKEN }}
           input_files:       diff.patch
-          allowed_tools:     "Edit,Replace"
+          allowed_tools:     "Read,Edit,Replace"
           direct_prompt: |
             You are the team’s documentation bot.  
             1. Read *diff.patch*.  
