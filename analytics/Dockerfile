@@ -3,7 +3,17 @@ FROM metabase/metabase:latest
 
 # Install PostgreSQL client for database initialization
 USER root
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
+# Check if we're on Alpine (apk) or Debian/Ubuntu (apt-get) and install postgresql-client accordingly  
+RUN if command -v apk > /dev/null; then \
+        apk add --no-cache postgresql-client; \
+    elif command -v apt-get > /dev/null; then \
+        apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*; \
+    elif command -v yum > /dev/null; then \
+        yum install -y postgresql; \
+    else \
+        echo "No supported package manager found"; exit 1; \
+    fi
 
 # Copy initialization scripts
 COPY init-metabase-db.sh /app/init-metabase-db.sh
