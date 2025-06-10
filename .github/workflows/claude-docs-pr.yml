@@ -33,7 +33,7 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          anthropic_model:   claude-3-haiku-20240307
+          anthropic_model:   claude-3-sonnet-20240229
           github_token:      ${{ secrets.GITHUB_TOKEN }}
           allowed_tools:     "Read"
           direct_prompt: |
@@ -71,7 +71,6 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           anthropic_model:   claude-3-sonnet-20240229
           github_token:      ${{ secrets.GITHUB_TOKEN }}
-          input_files:       diff.patch
           allowed_tools:     "Read,Edit,Replace"
           direct_prompt: |
             You are the team’s documentation bot.  
