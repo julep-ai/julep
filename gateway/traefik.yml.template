@@ -119,7 +119,7 @@ http:
       service: service-analytics
       priority: 4
 
-    # Metabase static assets - strip /analytics prefix completely
+    # Metabase static assets - keep /analytics prefix since Metabase is configured for it
     # ONLY accessible via iframe from dashboard
     analytics-static-assets:
       entryPoints:
@@ -128,11 +128,20 @@ http:
       middlewares:
         - corsHeaders
         - analytics-cache-headers
-        - analytics-strip-prefix
       service: service-analytics
       priority: 3
 
-    # General Analytics/Metabase proxy - strip /analytics prefix completely
+    # Redirect /analytics to /analytics/ (without trailing slash to with trailing slash)
+    analytics-redirect:
+      entryPoints:
+        - web
+      rule: Path(`/analytics`)
+      middlewares:
+        - analytics-redirect-with-slash
+      service: service-analytics
+      priority: 2
+
+    # General Analytics/Metabase proxy - keep /analytics prefix since Metabase is configured for it
     # ONLY accessible via iframe from dashboard
     analytics:
       entryPoints:
@@ -140,7 +149,6 @@ http:
       rule: PathPrefix(`/analytics/`)
       middlewares:
         - corsHeaders
-        - analytics-strip-prefix
       service: service-analytics
       priority: 1
 
@@ -211,6 +219,11 @@ http:
       headers:
         customresponseheaders:
           Cache-Control: "public, max-age=86400"
+
+    analytics-redirect-with-slash:
+      redirectRegex:
+        regex: "^/analytics$"
+        replacement: "/analytics/"
 
   services:
     service-agents-api:
