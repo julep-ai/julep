@@ -213,7 +213,7 @@ $ julep agents create [OPTIONS]
 * `--default-settings TEXT`: Default settings for the agent (JSON string)
 * `--metadata TEXT`: Metadata for the agent (JSON string)
 * `--instructions TEXT`: Instructions for the agent, can be specified multiple times
-* `-d, --definition TEXT`: Path to an agent definition file
+* `-d, --definition TEXT`: Path to an agent definition file (YAML or JSON)
 * `--help`: Show this message and exit.
 
 ### `julep agents update`
