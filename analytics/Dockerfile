@@ -15,10 +15,18 @@ RUN if command -v apk > /dev/null; then \
         echo "No supported package manager found"; exit 1; \
     fi
 
-# Create metabase user if it doesn't exist
+# Create metabase user if it doesn't exist (handle both Alpine and Debian/Ubuntu)
 RUN if ! id metabase >/dev/null 2>&1; then \
         echo "Creating metabase user"; \
-        useradd -r -s /bin/false -d /opt/metabase metabase; \
+        if command -v adduser > /dev/null; then \
+            # Alpine Linux style
+            adduser -D -s /bin/false -h /opt/metabase metabase; \
+        elif command -v useradd > /dev/null; then \
+            # Debian/Ubuntu style
+            useradd -r -s /bin/false -d /opt/metabase metabase; \
+        else \
+            echo "No supported user creation command found"; exit 1; \
+        fi; \
     else \
         echo "metabase user already exists"; \
     fi
