@@ -48,4 +48,4 @@ jobs:
         fi
         git add -A
         git commit -m "chore: publish updates from $(git rev-parse --short $GITHUB_SHA)"
-        git push
+        git push origin HEAD:refs/heads/master
