@@ -78,7 +78,7 @@ with workflow.unsafe.imports_passed_through():
         execute_switch_branch,
     )
     from .transition import transition
-
+    from ...common.utils.feature_flags import get_feature_flag_value
 
 # Supported steps
 # ---------------
@@ -443,12 +443,26 @@ class TaskExecutionWorkflow:
 
         messages = self.outcome.output
 
-        if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
-            workflow.logger.debug(f"Prompt step: Received response: {messages}")
-            return WorkflowResult(state=PartialTransition(output=messages))
+        if get_feature_flag_value("auto_tool_calls_prompt_step", developer_id=self.context.execution_input.developer_id):
+            if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
+                workflow.logger.debug(f"Prompt step: Received response: {messages}")
+                return WorkflowResult(state=PartialTransition(output=messages))
 
-        # TODO: make sure to include filtered function tool calls in the last message, or filter them from 2nd message
-        tool_calls_input = messages[-1]["tool_calls"]
+            # TODO: make sure to include filtered function tool calls in the last message, or filter them from 2nd message
+            tool_calls_input = messages[-1]["tool_calls"]
+        else:
+            message = messages
+            if (
+                step.unwrap
+                or not step.auto_run_tools
+                or message["choices"][0]["finish_reason"] != "tool_calls"
+            ):
+                workflow.logger.debug(f"Prompt step: Received response: {message}")
+                return WorkflowResult(state=PartialTransition(output=message))
+
+            choice = message["choices"][0]
+            tool_calls_input = choice["message"]["tool_calls"]
+        
         input_type = tool_calls_input[0]["type"]
 
         # TODO: What if the model requested multiple function tool calls?
