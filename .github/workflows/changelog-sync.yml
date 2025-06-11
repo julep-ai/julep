@@ -40,7 +40,7 @@ jobs:
 
     - name: Commit & push if there are changes
       env:
-        BLOT_TOKEN: ${{ secrets.BLOT_GIT_TOKEN }}
+        BLOT_TOKEN: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
         cd updates-repo
         if [ -n "$(git status --porcelain)" ]; then
