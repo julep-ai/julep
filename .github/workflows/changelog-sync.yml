@@ -22,15 +22,16 @@ jobs:
 
     - name: Configure git identity
       run: |
-        git config --global user.name  "${{ secrets.BLOT_GIT_USERNAME }}"
+        git config --global user.name  "Julep Workflow"
         git config --global user.email "${{ secrets.BLOT_GIT_USERNAME }}"
 
     - name: Clone Blot repo (shallow)
       env:
-        BLOT_TOKEN: ${{ secrets.BLOT_GIT_PASSWORD }}
+        BLOT_USERNAME: ${{ secrets.BLOT_GIT_USERNAME }}
+        BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
         git clone --depth 1 \
-          https://julepworkflows:${BLOT_TOKEN}@blot.im/clients/git/end/julepchangelog.git \
+          https://${BLOT_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git \
           updates-repo
 
     - name: Copy updated files into Blot working tree
@@ -40,7 +41,7 @@ jobs:
 
     - name: Commit & push if there are changes
       env:
-        BLOT_TOKEN: ${{ secrets.BLOT_GIT_PASSWORD }}
+        BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
         cd updates-repo
         if [ -n "$(git status --porcelain)" ]; then
