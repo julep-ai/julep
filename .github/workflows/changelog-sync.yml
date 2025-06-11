@@ -45,7 +45,7 @@ jobs:
         if [ -n "$(git status --porcelain)" ]; then
           git add -A
           git commit -m "chore: publish updates from $(git rev-parse --short $GITHUB_SHA)"
-          git push origin HEAD:master
+          git push origin HEAD:refs/heads/master
         else
           echo "No changes to publish"
         fi
