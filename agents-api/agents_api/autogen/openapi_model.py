@@ -379,7 +379,7 @@ class ToolExecutionResult(BaseModel):
 
     id: str
     name: str | None = None
-    output: dict[str, Any]
+    output: dict[str, Any] | list[Any] | str
     error: str | None = None
 
 
