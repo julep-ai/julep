@@ -25,12 +25,12 @@ jobs:
         git config --global user.name  "${{ secrets.BLOT_GIT_USERNAME }}"
         git config --global user.email "${{ secrets.BLOT_GIT_USERNAME }}"
 
-    - name: Clone Blot repo (shallow)
+    - name: Clone Blot repo
       env:
         BLOT_USERNAME: ${{ secrets.BLOT_GIT_USERNAME }}
         BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
-        git clone --depth 1 \
+        git clone \
           https://${BLOT_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git \
           updates-repo
 
@@ -42,10 +42,10 @@ jobs:
     - name: Commit & push if there are changes
       working-directory: updates-repo
       run: |
-        if [ -n "$(git status --porcelain)" ]; then
-          git add -A
-          git commit -m "chore: publish updates from $(git rev-parse --short $GITHUB_SHA)"
-          git push origin HEAD:refs/heads/master
-        else
+        if [ -z "$(git status --porcelain)" ]; then
           echo "No changes to publish"
+          exit 0
         fi
+        git add -A
+        git commit -m "chore: publish updates from $(git rev-parse --short $GITHUB_SHA)"
+        git push
