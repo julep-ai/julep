@@ -5,36 +5,11 @@ Provides convenience functions for feature flag management.
 
 
 from agents_api.clients.feature_flags import FeatureFlagContext, get_feature_flag_client
-from agents_api.env import testing
 
 
 def get_environment() -> str:
     """Get current environment for feature flag context."""
-    return "testing" if testing else "development"
-
-
-# Convenience functions for specific feature flags
-def is_auto_tool_calls_enabled(developer_id: str | None = None) -> bool:
-    """
-    Check if automatic tool calls feature is enabled.
-
-    This convenience function provides a clean API for checking the auto_tool_calls
-    feature flag with proper developer targeting and environment context.
-
-    Args:
-        developer_id: Developer ID for targeting (optional)
-
-    Returns:
-        True if auto tool calls is enabled, False otherwise
-    """
-    context: FeatureFlagContext = {"environment": get_environment()}
-    if developer_id:
-        context["developer_id"] = developer_id
-
-    return get_feature_flag_client().is_enabled(
-        "auto_tool_calls", default_value=False, context=context
-    )
-
+    return "development"
 
 def get_feature_flag_value(
     flag_name: str,
