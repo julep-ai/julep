@@ -60,6 +60,7 @@ with workflow.unsafe.imports_passed_through():
         WorkflowResult,
     )
     from ...common.retry_policies import DEFAULT_RETRY_POLICY
+    from ...common.utils.feature_flags import get_feature_flag_value
     from ...env import (
         debug,
         task_max_parallelism,
@@ -78,7 +79,6 @@ with workflow.unsafe.imports_passed_through():
         execute_switch_branch,
     )
     from .transition import transition
-    from ...common.utils.feature_flags import get_feature_flag_value
 
 # Supported steps
 # ---------------
@@ -443,7 +443,10 @@ class TaskExecutionWorkflow:
 
         messages = self.outcome.output
 
-        if get_feature_flag_value("auto_tool_calls_prompt_step", developer_id=self.context.execution_input.developer_id):
+        if get_feature_flag_value(
+            "auto_tool_calls_prompt_step",
+            developer_id=self.context.execution_input.developer_id,
+        ):
             if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
                 workflow.logger.debug(f"Prompt step: Received response: {messages}")
                 return WorkflowResult(state=PartialTransition(output=messages))
@@ -462,7 +465,7 @@ class TaskExecutionWorkflow:
 
             choice = message["choices"][0]
             tool_calls_input = choice["message"]["tool_calls"]
-        
+
         input_type = tool_calls_input[0]["type"]
 
         # TODO: What if the model requested multiple function tool calls?

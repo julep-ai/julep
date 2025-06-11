@@ -3,13 +3,13 @@ Feature flags utility module for Julep agents-api.
 Provides convenience functions for feature flag management.
 """
 
-
 from agents_api.clients.feature_flags import FeatureFlagContext, get_feature_flag_client
 
 
 def get_environment() -> str:
     """Get current environment for feature flag context."""
     return "development"
+
 
 def get_feature_flag_value(
     flag_name: str,
