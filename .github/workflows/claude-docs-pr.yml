@@ -1,7 +1,14 @@
 name: Claude Docs (PR)
 
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+#     paths-ignore:
+#       - "changelog/**"
+
 on:
   pull_request:
+    branches: [main]
     types: [opened, synchronize, reopened]
     paths-ignore:
       - "changelog/**"
