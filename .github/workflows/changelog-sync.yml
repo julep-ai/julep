@@ -22,7 +22,7 @@ jobs:
 
     - name: Configure git identity
       run: |
-        git config --global user.name  "Julep Workflow"
+        git config --global user.name  "${{ secrets.BLOT_GIT_USERNAME }}"
         git config --global user.email "${{ secrets.BLOT_GIT_USERNAME }}"
 
     - name: Clone Blot repo (shallow)
@@ -40,14 +40,12 @@ jobs:
           changelog/ updates-repo/
 
     - name: Commit & push if there are changes
-      env:
-        BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
+      working-directory: updates-repo
       run: |
-        cd updates-repo
         if [ -n "$(git status --porcelain)" ]; then
           git add -A
           git commit -m "chore: publish updates from $(git rev-parse --short $GITHUB_SHA)"
-          git push origin main
+          git push origin HEAD:master
         else
           echo "No changes to publish"
         fi
