@@ -40,8 +40,8 @@ jobs:
           changelog/ updates-repo/
 
     - name: Commit & push if there are changes
-      working-directory: updates-repo
       run: |
+        cd updates-repo
         if [ -z "$(git status --porcelain)" ]; then
           echo "No changes to publish"
           exit 0
