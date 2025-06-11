@@ -31,7 +31,7 @@ jobs:
         BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
         git clone --depth 1 \
-          https://${BLOT_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git \
+          https://julepworkflow:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git \
           updates-repo
 
     - name: Copy updated files into Blot working tree
