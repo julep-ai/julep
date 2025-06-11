@@ -30,7 +30,7 @@ jobs:
         BLOT_USERNAME: ${{ secrets.BLOT_GIT_USERNAME }}
         BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
-        git clone \
+        git clone --single-branch --branch master \
           https://${BLOT_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git \
           updates-repo
 
