@@ -1,0 +1,52 @@
+name: Sync changelog with Blot
+
+# on:
+#   push:
+#     branches: [dev]  #todo: change to main after testing on dev
+#     paths: ["changelog/**"]
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: ["changelog/**"]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Configure git identity
+      run: |
+        git config --global user.name  "${{ secrets.BLOT_GIT_USERNAME }}"
+        git config --global user.email "${{ secrets.BLOT_GIT_USERNAME }}"
+
+    - name: Clone Blot repo (shallow)
+      env:
+        BLOT_TOKEN: ${{ secrets.BLOT_GIT_PASSWORD }}
+      run: |
+        git clone --depth 1 \
+          https://julepworkflows:${BLOT_TOKEN}@blot.im/clients/git/end/julepchangelog.git \
+          updates-repo
+
+    - name: Copy updated files into Blot working tree
+      run: |
+        rsync -a --delete \
+          changelog/ updates-repo/
+
+    - name: Commit & push if there are changes
+      env:
+        BLOT_TOKEN: ${{ secrets.BLOT_GIT_TOKEN }}
+      run: |
+        cd updates-repo
+        if [ -n "$(git status --porcelain)" ]; then
+          git add -A
+          git commit -m "chore: publish updates from $(git rev-parse --short $GITHUB_SHA)"
+          git push origin main
+        else
+          echo "No changes to publish"
+        fi
