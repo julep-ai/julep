@@ -55,7 +55,7 @@ jobs:
           exit 1
         fi
 
-        if ! rsync -a --delete changelog/ ${{ runner.temp }}/julepchangelog/; then
+        if ! rsync -a --delete --exclude='.git/' --exclude='.gitignore' changelog/ ${{ runner.temp }}/julepchangelog/; then
           echo "Error: Failed to sync files"
           exit 1
         fi
