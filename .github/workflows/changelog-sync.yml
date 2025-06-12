@@ -32,17 +32,21 @@ jobs:
         BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
         # URL-encode the username (replace @ with %40)
-        ENCODED_USERNAME=${BLOT_USERNAME//@/%40}
+        export ENCODED_USERNAME=${BLOT_USERNAME//@/%40}
+
+        # Clone into a directory outside the current git repo to avoid conflicts
+        cd ${{ runner.temp }}
+        
         if ! git clone \
-          "https://${ENCODED_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git" \
-          updates-repo; then
+          "https://${ENCODED_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git" ; then
           echo "Error: Failed to clone Blot repository"
           exit 1
         fi
-        # Ensure we're on a branch (not detached HEAD)
-        cd updates-repo
-        git checkout -B main || git checkout -B master
-        cd ..
+
+        # Get the default branch and ensure we're on it
+        cd julepchangelog
+        git checkout -B master origin/master
+        cd ${{ github.workspace }}
 
     - name: Copy updated files into Blot working tree
       run: |
@@ -50,28 +54,41 @@ jobs:
           echo "Error: changelog directory not found"
           exit 1
         fi
-        if ! rsync -a --delete changelog/ updates-repo/; then
+
+        if ! rsync -a --delete changelog/ ${{ runner.temp }}/julepchangelog/; then
           echo "Error: Failed to sync files"
           exit 1
         fi
 
     - name: Commit & push if there are changes
+      env:
+        BLOT_USERNAME: ${{ secrets.BLOT_GIT_USERNAME }}
+        BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
-        if [ -z "$(git -C updates-repo status --porcelain)" ]; then
+        cd ${{ runner.temp }}/julepchangelog
+        
+        if [ -z "$(git status --porcelain)" ]; then
          echo "No changes to publish"
          exit 0
         fi
-        if ! git -C updates-repo add -A; then
+
+        if ! git add -A; then
           echo "Error: Failed to stage changes"
           exit 1
         fi
-        if ! git -C updates-repo commit -m "chore: publish updates"; then
+
+        if ! git commit -m "chore: publish updates"; then
           echo "Error: Failed to commit changes"
           exit 1
         fi
-        if ! git -C updates-repo push; then
-          echo "Error: Failed to push changes"
+
+        # URL-encode the username (replace @ with %40)
+        export ENCODED_USERNAME=${BLOT_USERNAME//@/%40}
+        
+        if ! git push "https://${ENCODED_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git" master; then
+          echo "Error: Failed to push changes to branch master"
           exit 1
         fi
+
         echo "Successfully synced changelog to Blot"
 
