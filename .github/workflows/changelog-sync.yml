@@ -9,6 +9,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths: ["changelog/**"]
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -30,14 +31,29 @@ jobs:
         BLOT_USERNAME: ${{ secrets.BLOT_GIT_USERNAME }}
         BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
       run: |
-        git clone --single-branch --branch master \
-          https://${BLOT_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git \
-          updates-repo
+        # URL-encode the username (replace @ with %40)
+        ENCODED_USERNAME=${BLOT_USERNAME//@/%40}
+        if ! git clone \
+          "https://${ENCODED_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git" \
+          updates-repo; then
+          echo "Error: Failed to clone Blot repository"
+          exit 1
+        fi
+        # Ensure we're on a branch (not detached HEAD)
+        cd updates-repo
+        git checkout -B main || git checkout -B master
+        cd ..
 
     - name: Copy updated files into Blot working tree
       run: |
-        rsync -a --delete \
-          changelog/ updates-repo/
+        if [ ! -d "changelog" ]; then
+          echo "Error: changelog directory not found"
+          exit 1
+        fi
+        if ! rsync -a --delete changelog/ updates-repo/; then
+          echo "Error: Failed to sync files"
+          exit 1
+        fi
 
     - name: Commit & push if there are changes
       run: |
@@ -45,7 +61,17 @@ jobs:
          echo "No changes to publish"
          exit 0
         fi
-        git -C updates-repo add -A
-        git -C updates-repo commit -m "chore: publish updates"
-        git -C updates-repo push
-        
+        if ! git -C updates-repo add -A; then
+          echo "Error: Failed to stage changes"
+          exit 1
+        fi
+        if ! git -C updates-repo commit -m "chore: publish updates"; then
+          echo "Error: Failed to commit changes"
+          exit 1
+        fi
+        if ! git -C updates-repo push; then
+          echo "Error: Failed to push changes"
+          exit 1
+        fi
+        echo "Successfully synced changelog to Blot"
+
