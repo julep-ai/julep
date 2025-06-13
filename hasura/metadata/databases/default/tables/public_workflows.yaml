@@ -1,0 +1,15 @@
+table:
+  name: workflows
+  schema: public
+object_relationships:
+  - name: task
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          task_id: task_id
+          version: version
+        insertion_order: null
+        remote_table:
+          name: tasks
+          schema: public

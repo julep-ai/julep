@@ -1,0 +1,97 @@
+table:
+  name: tasks
+  schema: public
+object_relationships:
+  - name: agent
+    using:
+      manual_configuration:
+        column_mapping:
+          agent_id: agent_id
+          developer_id: developer_id
+        insertion_order: null
+        remote_table:
+          name: agents
+          schema: public
+array_relationships:
+  - name: executions
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          task_id: task_id
+          version: task_version
+        insertion_order: null
+        remote_table:
+          name: executions
+          schema: public
+  - name: workflows
+    using:
+      manual_configuration:
+        column_mapping:
+          developer_id: developer_id
+          task_id: task_id
+          version: version
+        insertion_order: null
+        remote_table:
+          name: workflows
+          schema: public
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      columns:
+        - agent_id
+        - task_id
+        - version
+        - name
+        - description
+        - input_schema
+        - inherit_tools
+        - metadata
+    comment: ""
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - canonical_name
+        - agent_id
+        - task_id
+        - version
+        - name
+        - description
+        - input_schema
+        - inherit_tools
+        - created_at
+        - updated_at
+        - metadata
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+    comment: ""
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - agent_id
+        - version
+        - name
+        - description
+        - input_schema
+        - inherit_tools
+        - metadata
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+      check:
+        developer_id:
+          _eq: X-Hasura-User-Id
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        developer_id:
+          _eq: X-Hasura-User-Id
+    comment: ""

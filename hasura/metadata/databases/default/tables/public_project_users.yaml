@@ -1,0 +1,12 @@
+table:
+  name: project_users
+  schema: public
+object_relationships:
+  - name: project
+    using:
+      foreign_key_constraint_on: project_id
+  - name: user
+    using:
+      foreign_key_constraint_on:
+        - user_id
+        - developer_id

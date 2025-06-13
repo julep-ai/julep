@@ -1,0 +1,3 @@
+table:
+  name: usage_cost_monthly
+  schema: public

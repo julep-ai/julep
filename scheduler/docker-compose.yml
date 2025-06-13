@@ -4,7 +4,7 @@ x--temporal-base: &temporal-base
   image: temporalio/auto-setup:1.25.2
   hostname: temporal
   environment:
-    - POSTGRES_PWD=${TEMPORAL_POSTGRES_PASSWORD}
+    - POSTGRES_PWD=${TEMPORAL_POSTGRES_PASSWORD:?TEMPORAL_POSTGRES_PASSWORD is required}
     - POSTGRES_DB=${TEMPORAL_POSTGRES_DB:-temporal}
     - POSTGRES_SEEDS=${TEMPORAL_POSTGRES_HOST:-temporal-db}
     - DB_HOST=${TEMPORAL_POSTGRES_HOST:-temporal-db}
@@ -52,7 +52,7 @@ services:
     environment:
       - POSTGRES_DB=${TEMPORAL_POSTGRES_DB:-temporal}
       - POSTGRES_USER=${TEMPORAL_POSTGRES_USER:-temporal}
-      - POSTGRES_PASSWORD=${TEMPORAL_POSTGRES_PASSWORD}
+      - POSTGRES_PASSWORD=${TEMPORAL_POSTGRES_PASSWORD:?TEMPORAL_POSTGRES_PASSWORD is required}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d ${TEMPORAL_POSTGRES_DB:-temporal} -U ${TEMPORAL_POSTGRES_USER:-temporal}" ]
 
