@@ -20,6 +20,7 @@ async def track_usage(
     response: ModelResponse,
     custom_api_used: bool = False,
     metadata: dict[str, Any] = {},
+    connection_pool: Any = None,  # This is for testing purposes
 ) -> None:
     """
     Tracks token usage and costs for an LLM API call.
@@ -72,6 +73,7 @@ async def track_usage(
             "request_id": response.id if hasattr(response, "id") else None,
             **metadata,
         },
+        connection_pool=connection_pool,
     )
 
 

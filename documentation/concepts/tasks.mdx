@@ -75,7 +75,7 @@ tools:
     provider: brave
     method: search
     setup:
-      api_key: <BRAVE_API_KEY>
+      brave_api_key: <BRAVE_API_KEY>
 ```
 
 ### Sub-Workflows
@@ -198,7 +198,7 @@ tools:
   integration:
     provider: weather
     setup:
-      api_key: OPENWEATHERMAP_API_KEY
+      openweathermap_api_key: OPENWEATHERMAP_API_KEY
 
 main:
 - tool: get_weather_info
@@ -519,7 +519,7 @@ client.agents.tools.create(
     integration:
       provider: weather
       setup:
-        api_key: "your_openweathermap_api_key"
+        openweathermap_api_key: "your_openweathermap_api_key"
   """)
 
 task = client.tasks.create(
@@ -544,7 +544,7 @@ await client.agents.tools.create(
     integration:
       provider: weather
       setup:
-        api_key: "your_openweathermap_api_key"
+        openweathermap_api_key: "your_openweathermap_api_key"
   `)
 );
 
@@ -576,7 +576,7 @@ task = client.tasks.create(
       integration:
         provider: weather
         setup:
-          api_key: "your_openweathermap_api_key"
+          openweathermap_api_key: "your_openweathermap_api_key"
     main:
       - tool: get_weather_info
         arguments:
@@ -596,7 +596,7 @@ task = await client.tasks.create(
       integration:
         provider: weather
         setup:
-          api_key: "your_openweathermap_api_key"
+          openweathermap_api_key: "your_openweathermap_api_key"
     main:
       - tool: get_weather_info
         arguments:

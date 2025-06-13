@@ -63,7 +63,10 @@
 > _This list covers the most significant code-related PRs merged to **main** on 21 May 2025.  
 > For everything else, see the full list of [recent pull requests](https://github.com/julep-ai/julep/pulls?q=is:pr+created:>=2025-04-21)._  
 
----
+# **Julep AI Changelog for 15 May 2025** ✨
+
+- **Minor Feature**: Updated `julep run` to execute tasks via the API with clearer error reporting ✨
+- **Minor Docs**: Added examples for task execution and error handling in CLI docs 📚
 
 # **Julep AI Changelog for 9 May 2025** ✨
 

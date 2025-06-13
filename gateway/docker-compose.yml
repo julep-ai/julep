@@ -12,6 +12,7 @@ services:
       - AGENTS_API_KEY=${AGENTS_API_KEY}
       - AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME:-Authorization}
       - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL:-INFO}
+      - ANALYTICS_URL=${ANALYTICS_URL:-http://analytics:3000}
     container_name: gateway
     profiles:
       - multi-tenant

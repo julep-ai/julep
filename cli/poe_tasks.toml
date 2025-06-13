@@ -1,7 +1,7 @@
 [tasks]
 format = "ruff format"
 lint = "ruff check"
-typecheck = "pyright --threads 8 --skipunannotated julep_cli"
+typecheck = "ty check"
 check = [
     "lint",
     "format",
@@ -10,4 +10,4 @@ check = [
 
 [tasks.test]
 env = { JULEP_CLI_TESTING = "true", PYTHONPATH = "{PYTHONPATH}:." }
-cmd = "ward test --exclude .venv"
+cmd = "pytest tests/ -v"

@@ -224,7 +224,7 @@ index_page:
     label: docs
 
 # Step #1 - Process each content chunk in parallel
-- over: $ "[(steps[0].input.content, chunk) for chunk in _['documents']]"
+- over: "$ [(steps[0].input.content, chunk) for chunk in _['chunks']]"
   parallelism: 3
   map:
     prompt: 
@@ -251,7 +251,7 @@ index_page:
 - evaluate:
     final_chunks: |
       $ [
-        NEWLINE.join([chunk, succint]) for chunk, succint in zip(steps[1].input.documents, _)
+        NEWLINE.join([chunk, succint]) for chunk, succint in zip(steps[1].input.chunks, _)
       ]
 
 # Step #3 - Create a new document and add it to the agent docs store
@@ -260,7 +260,7 @@ index_page:
   map:
     tool: create_agent_doc
     arguments:
-      agent_id: "00000000-0000-0000-0000-000000000000" # <--- This is the agent id of the agent you want to add the document to
+      agent_id: "$ str(agent.id)" # <--- This is the agent id of the agent you want to add the document to
       data:
         metadata:
           source: "jina_crawler"
@@ -277,7 +277,7 @@ main:
 # Step 0: Get the content of the product page
 - tool: get_page
   arguments:
-  url: $ "https://r.jina.ai/" + steps[0].input.url
+    url: $ "https://r.jina.ai/" + steps[0].input.url
 
 # Step 1: Chunk the content
 - evaluate:

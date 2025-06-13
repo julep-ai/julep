@@ -221,6 +221,8 @@ Example:
 
 ## Streaming Execution Status Updates
 
+### Using the raw SSE endpoint
+
 You can subscribe to real-time status updates using the Server-Sent Events (SSE) endpoint. Each event conforms to the `ExecutionStatusEvent` schema and includes the following fields:
 
 - **execution_id**: The UUID of the execution.
@@ -243,7 +245,34 @@ data: {"execution_id":"068306ff-e0f3-7fe9-8000-0013626a759a","status":"running",
 data: {"execution_id":"068306ff-e0f3-7fe9-8000-0013626a759a","status":"succeeded","updated_at":"2025-05-23T12:56:12.054067Z","error":null,"transition_count":3,"metadata":{}}
 ```
 
-**Note:** This streaming endpoint is not yet available in the SDKs, but support is coming soon.
+### Using the Python SDK `AsyncClient`
+
+<CodeGroup>
+```python Python
+from julep import AsyncClient
+
+client = AsyncClient(api_key="YOUR_API_KEY")
+execution_id = "YOUR_EXECUTION_ID"
+
+# Subscribe to the live status stream (async generator)
+status_stream = await client.executions.status.stream(execution_id=execution_id)
+
+# Consume events in real-time using async for
+async for event in status_stream:
+    print("Execution status:", event.status, "updated at", event.updated_at)
+
+
+```
+</CodeGroup>
+
+<Tip>
+This approach relies on Python's async / await syntax. Make sure to:
+
+1. Use `AsyncClient` not `Client`.
+2. `await client.executions.status.stream(...)` to obtain the async generator.
+3. Iterate with `async for` to consume events.
+
+</Tip>
 
 ## Updating/Cancelling an Execution
 
