@@ -1,10 +1,10 @@
 BEGIN;
 
--- Create api_keys table with bcrypt hashing for api_key_hash
+-- Create api_keys table with encryption for api_key_encrypted (following secrets pattern)
 CREATE TABLE IF NOT EXISTS api_keys (
     api_key_id UUID NOT NULL,
     developer_id UUID NOT NULL,
-    api_key_hash TEXT NOT NULL,
+    api_key_encrypted BYTEA NOT NULL,
     name TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -38,22 +38,33 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_name ON api_keys(name);
 CREATE INDEX IF NOT EXISTS idx_api_keys_metadata ON api_keys USING gin(metadata);
 CREATE INDEX IF NOT EXISTS idx_api_keys_deleted_at ON api_keys(deleted_at) WHERE deleted_at IS NULL;
 
--- Helper functions for bcrypt hashing and verification
-CREATE OR REPLACE FUNCTION hash_api_key(api_key TEXT) 
-RETURNS TEXT AS $$
+-- Helper functions for encryption/decryption (following secrets pattern)
+CREATE OR REPLACE FUNCTION encrypt_api_key(
+    p_value TEXT,
+    p_key TEXT
+) RETURNS BYTEA AS $$
 BEGIN
-    RETURN crypt(api_key, gen_salt('bf', 12));
+    RETURN pgp_sym_encrypt(
+        p_value,
+        p_key,
+        'cipher-algo=aes256'
+    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION verify_api_key(api_key TEXT, hash TEXT) 
-RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION decrypt_api_key(
+    p_encrypted_value BYTEA,
+    p_key TEXT
+) RETURNS TEXT AS $$
 BEGIN
-    RETURN crypt(api_key, hash) = hash;
+    RETURN pgp_sym_decrypt(
+        p_encrypted_value,
+        p_key
+    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Add comment to table
-COMMENT ON TABLE api_keys IS 'Stores API keys with bcrypt hashing for developers';
+COMMENT ON TABLE api_keys IS 'Stores API keys with encryption for developers';
 
 COMMIT; 

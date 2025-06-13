@@ -160,7 +160,7 @@
                   },
                   "columns": [
                     "name",
-                    "api_key_hash",
+                    "api_key_encrypted",
                     "metadata"
                   ]
                 },
