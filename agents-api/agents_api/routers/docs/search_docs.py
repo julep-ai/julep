@@ -3,7 +3,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 import numpy as np
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 
 from ...autogen.openapi_model import (
     DocReference,
@@ -12,6 +12,7 @@ from ...autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
+from ...clients import litellm
 from ...common.utils.get_doc_search import get_search_fn_and_params
 from ...common.utils.mmr import apply_mmr_to_docs
 from ...dependencies.developer_id import get_developer_id
@@ -36,6 +37,23 @@ async def search_user_docs(
     Returns:
         DocSearchResponse: The search results.
     """
+
+    # AIDEV-NOTE: automatically embed text when only raw text is provided
+    if isinstance(search_params, VectorDocSearchRequest) and search_params.vector is None:
+        if not search_params.text:
+            raise HTTPException(status_code=400, detail="text is required for vector search")
+        [search_params.vector, *_] = await litellm.aembedding(
+            inputs=search_params.text,
+            embed_instruction="Represent the query for retrieving supporting documents: ",
+            user=str(x_developer_id),
+        )
+
+    if isinstance(search_params, HybridDocSearchRequest) and search_params.vector is None:
+        [search_params.vector, *_] = await litellm.aembedding(
+            inputs=search_params.text,
+            embed_instruction="Represent the query for retrieving supporting documents: ",
+            user=str(x_developer_id),
+        )
 
     # Get the search function and params here
     search_fn, params = get_search_fn_and_params(search_params)
@@ -89,6 +107,23 @@ async def search_agent_docs(
     Returns:
         DocSearchResponse: The search results.
     """
+
+    # AIDEV-NOTE: automatically embed text when only raw text is provided
+    if isinstance(search_params, VectorDocSearchRequest) and search_params.vector is None:
+        if not search_params.text:
+            raise HTTPException(status_code=400, detail="text is required for vector search")
+        [search_params.vector, *_] = await litellm.aembedding(
+            inputs=search_params.text,
+            embed_instruction="Represent the query for retrieving supporting documents: ",
+            user=str(x_developer_id),
+        )
+
+    if isinstance(search_params, HybridDocSearchRequest) and search_params.vector is None:
+        [search_params.vector, *_] = await litellm.aembedding(
+            inputs=search_params.text,
+            embed_instruction="Represent the query for retrieving supporting documents: ",
+            user=str(x_developer_id),
+        )
 
     # Get the search function and params here
     search_fn, params = get_search_fn_and_params(search_params)
