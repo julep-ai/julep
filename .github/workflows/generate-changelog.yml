@@ -22,11 +22,7 @@ jobs:
       - name: Collect merged PRs from the last two weeks
         id: collect_prs
         run: |
-          if [[ "$OSTYPE" == "darwin"* ]]; then
-            date_threshold=$(date -v-14d +"%Y-%m-%d")
-          else
-            date_threshold=$(date -d '-14 days' +"%Y-%m-%d")
-          fi
+          date_threshold=$(date -d '-14 days' +"%Y-%m-%d")
 
           echo "Fetching merged PRs since $date_threshold..."
 
