@@ -1138,6 +1138,32 @@
             ]
           }
         ],
+        "functions": [
+          {
+            "function": {
+              "name": "encrypt_api_key",
+              "schema": "public"
+            },
+            "permissions": [
+              {
+                "role": "user",
+                "permission": {}
+              }
+            ]
+          },
+          {
+            "function": {
+              "name": "decrypt_api_key",
+              "schema": "public"
+            },
+            "permissions": [
+              {
+                "role": "user",
+                "permission": {}
+              }
+            ]
+          }
+        ],
         "configuration": {
           "connection_info": {
             "database_url": {
