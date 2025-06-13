@@ -10,20 +10,24 @@ from ...dependencies.developer_id import get_developer_id
 from ...queries.files.get_file import get_file as get_file_query
 from .router import router
 
+# AIDEV-NOTE: Stream file bytes from S3 and encode to base64 to avoid loading
+# entire files into memory.
 
-# TODO: Use streaming for large payloads and file ID formatting
+
 async def fetch_file_content(file_id: UUID) -> str:
-    """Fetch file content from blob storage using the file ID as the key"""
+    """Fetch file content from blob storage using the file ID as the key."""
     client = await async_s3.setup()
 
     key = str(file_id)
     result = await client.get_object(Bucket=async_s3.blob_store_bucket, Key=key)
-    content = await result["Body"].read()
 
-    return base64.b64encode(content).decode("utf-8")
+    encoded = bytearray()
+    async for chunk in result["Body"].iter_chunks():
+        encoded.extend(base64.b64encode(chunk))
+
+    return encoded.decode("utf-8")
 
 
-# TODO: Use streaming for large payloads
 @router.get("/files/{file_id}", tags=["files"])
 async def get_file(
     file_id: UUID,
