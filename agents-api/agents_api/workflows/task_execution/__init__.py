@@ -523,6 +523,17 @@ class TaskExecutionWorkflow:
 
         output = self.outcome.output
         workflow.logger.debug(f"Set step: Completed evaluation with output: {output}")
+
+        # AIDEV-NOTE: Persist evaluated values so subsequent GetStep operations
+        # can retrieve them via workflow.memo_value.
+        if isinstance(output, dict):
+            for key, value in output.items():
+                workflow.upsert_memo({key: value})
+        else:
+            workflow.logger.error(
+                "SetStep output must be a dictionary for memo storage",
+            )
+
         return WorkflowResult(state=PartialTransition(output=output))
 
     async def _handle_GetStep(
