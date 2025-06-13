@@ -125,6 +125,7 @@ async def stream_chat_response(
         )
 
     # Track usage in database
+    # AIDEV-NOTE: 1472:: Updated to pass session_id for better usage tracking
     await track_usage(
         developer_id=developer_id,
         model=model,
@@ -147,6 +148,7 @@ async def stream_chat_response(
             "tags": developer_tags or [],
             "streaming": True,
         },
+        session_id=session_id,
         connection_pool=connection_pool,
     )
 
@@ -214,12 +216,14 @@ async def chat(
     )
 
     # Prepare parameters for LiteLLM
+    # AIDEV-NOTE: 1472:: session_id added to params for usage tracking analytics
     params = {
         "messages": messages,
         "tools": formatted_tools or None,
         "user": str(developer.id),
         "tags": developer.tags,
         "custom_api_key": x_custom_api_key,
+        "session_id": session_id,
     }
 
     # Set streaming parameter based on chat_input.stream
