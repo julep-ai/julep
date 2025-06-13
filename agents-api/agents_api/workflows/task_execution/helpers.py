@@ -1,7 +1,7 @@
 # AIDEV-NOTE: Helper functions for TaskExecution workflow orchestration, including validation and branch execution.
 import asyncio
 from datetime import timedelta
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from temporalio import workflow
 from temporalio.common import SearchAttributeKey, SearchAttributePair, TypedSearchAttributes
@@ -49,7 +49,9 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
     if execution_input.task is None:
         msg = "Execution input task cannot be None"
         raise ApplicationError(msg)
-    return execution_input.task
+
+    # AIDEV-NOTE: Type cast to help type checker understand that task is not None after the check
+    return cast(TaskSpecDef, execution_input.task)
 
 
 async def base_evaluate_activity(
