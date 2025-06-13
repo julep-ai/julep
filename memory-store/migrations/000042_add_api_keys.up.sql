@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     metadata JSONB DEFAULT '{}'::jsonb,
     deleted_at TIMESTAMPTZ DEFAULT NULL,
     CONSTRAINT pk_api_keys PRIMARY KEY (developer_id, api_key_id),
-    CONSTRAINT uq_api_keys_unique UNIQUE(developer_id, name),
+    CONSTRAINT uq_api_keys_unique UNIQUE(developer_id, name) WHERE deleted_at IS NULL,
     CONSTRAINT ct_api_keys_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object'),
     CONSTRAINT ct_api_keys_name_valid_identifier CHECK (name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
     CONSTRAINT fk_api_keys_developer FOREIGN KEY (developer_id) REFERENCES developers(developer_id)
