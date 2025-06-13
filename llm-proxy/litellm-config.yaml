@@ -31,6 +31,12 @@ model_list:
     api_key: os.environ/GEMINI_API_KEY
     tags: ["paid"]
 
+- model_name: gemini-2.5-pro-preview-06-05
+  litellm_params:
+    model: gemini/gemini-2.5-pro-preview-06-05
+    api_key: os.environ/GEMINI_API_KEY
+    tags: ["paid"]
+
 # OpenAI models
 - model_name: "gpt-4-turbo"
   litellm_params:
