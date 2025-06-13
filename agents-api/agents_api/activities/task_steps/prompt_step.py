@@ -107,6 +107,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     passed_settings.update(passed_settings.pop("settings", {}) or {})
     passed_settings["user"] = str(context.execution_input.developer_id)
 
+    # AIDEV-NOTE: Evaluate python expressions in settings before calling the LLM
+    passed_settings = await base_evaluate(passed_settings, context)
+
     if not passed_settings.get("tools"):
         passed_settings.pop("tool_choice", None)
 
