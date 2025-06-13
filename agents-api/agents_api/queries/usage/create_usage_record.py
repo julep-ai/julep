@@ -96,6 +96,11 @@ INSERT INTO usage (
     model,
     prompt_tokens,
     completion_tokens,
+    execution_id,
+    transition_id,
+    session_id,
+    entry_id,
+    provider,
     cost,
     estimated,
     custom_api_used,
@@ -106,10 +111,15 @@ VALUES (
     $2, -- model
     $3, -- prompt_tokens
     $4, -- completion_tokens
-    $5, -- cost
-    $6, -- estimated
-    $7, -- custom_api_used
-    $8  -- metadata
+    $5, -- execution_id
+    $6, -- transition_id
+    $7, -- session_id
+    $8, -- entry_id
+    $9, -- provider
+    $10, -- cost
+    $11, -- estimated
+    $12, -- custom_api_used
+    $13  -- metadata
 )
 RETURNING *;
 """
@@ -125,6 +135,12 @@ async def create_usage_record(
     model: str,
     prompt_tokens: int,
     completion_tokens: int,
+    execution_id: UUID | None = None,
+    transition_id: UUID | None = None,
+    session_id: UUID | None = None,
+    entry_id: UUID | None = None,
+    provider: str | None = None,
+    # AIDEV-NOTE: new parameters capture context for each usage record
     custom_api_used: bool = False,
     estimated: bool = False,
     metadata: dict[str, Any] | None = None,
@@ -137,6 +153,11 @@ async def create_usage_record(
         model (str): The model used for the API call.
         prompt_tokens (int): Number of tokens in the prompt.
         completion_tokens (int): Number of tokens in the completion.
+        execution_id (UUID | None): Execution that triggered the call.
+        transition_id (UUID | None): Transition that invoked the call.
+        session_id (UUID | None): Session the call belongs to.
+        entry_id (UUID | None): Entry that prompted the call.
+        provider (str | None): LLM provider used.
         custom_api_used (bool): Whether a custom API key was used.
         estimated (bool): Whether the token count is estimated.
         metadata (dict | None): Additional metadata about the usage.
@@ -173,6 +194,11 @@ async def create_usage_record(
         model,
         prompt_tokens,
         completion_tokens,
+        execution_id,
+        transition_id,
+        session_id,
+        entry_id,
+        provider,
         total_cost,
         estimated,
         custom_api_used,
