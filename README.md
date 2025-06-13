@@ -568,6 +568,8 @@ docker volume create memory_store_data
 docker volume create temporal-db-data
 docker volume create prometheus_data
 docker volume create seaweedfs_data
+docker volume create seaweedfs_data2
+docker volume create seaweedfs_data3
 ```
 
 ### 5. Run the Project using Docker Compose
