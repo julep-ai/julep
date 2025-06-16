@@ -1,4 +1,14 @@
-<sup><div align="center">[English](README.md) | [中文翻译](./.github/README-CN.md) | [日本語翻訳](./.github/README-JA.md) | [French](./.github/README-FR.md)</div></sup>
+<sup><div align="center">
+  <!-- Keep these links. Translations will automatically update with the README. -->
+  [Deutsch](https://www.readme-i18n.com/julep-ai/julep?lang=de) | 
+  [Español](https://www.readme-i18n.com/julep-ai/julep?lang=es) | 
+  [français](https://www.readme-i18n.com/julep-ai/julep?lang=fr) | 
+  [日本語](https://www.readme-i18n.com/julep-ai/julep?lang=ja) | 
+  [한국어](https://www.readme-i18n.com/julep-ai/julep?lang=ko) | 
+  [Português](https://www.readme-i18n.com/julep-ai/julep?lang=pt) | 
+  [Русский](https://www.readme-i18n.com/julep-ai/julep?lang=ru) | 
+  [中文](https://www.readme-i18n.com/julep-ai/julep?lang=zh)
+</div></sup>
 
 <div align="center" id="top">
 <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Serverless%20AI%20Workflows%20for%20Data%20%26%20ML%20Teams&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" height=300 />
