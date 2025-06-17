@@ -24,3 +24,11 @@ class IntegrationExecutionException(BaseToolsException):
             f"Error in executing {integration_str}: {error}",
             http_code=500,
         )
+
+
+# AIDEV-NOTE: Exception raised when a tool definition fails validation.
+class ToolValidationError(BaseToolsException):
+    """Exception raised for invalid tool definitions."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, http_code=400)
