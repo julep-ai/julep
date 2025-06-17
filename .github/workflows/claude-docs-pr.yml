@@ -1,11 +1,5 @@
 name: Claude Docs (PR)
 
-# on:
-#   pull_request:
-#     types: [opened, synchronize, reopened]
-#     paths-ignore:
-#       - "changelog/**"
-
 on:
   pull_request:
     branches: [main]
@@ -89,15 +83,6 @@ jobs:
                (Mintlify structure) so docs stay accurate.
             3. Commit the edits.  
             If diff.patch has no user-visible change, do nothing.
+            4. Finally, stage, commit and push the edits with a clear message.
           custom_instructions: |
             AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).
-
-      - name: Commit & push
-        run: |
-          git config user.name  "claude-bot"
-          git config user.email "claude-bot@users.noreply.github.com"
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git add -A
-            git commit -m "docs: auto-update via Claude [skip-claude]"
-            git push
-          fi

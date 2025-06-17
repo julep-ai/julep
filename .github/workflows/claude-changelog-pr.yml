@@ -62,15 +62,5 @@ jobs:
                     tags: [${{ env.CHANGELOG_TAG }}]
                     ---
                     ```
-               b. **Update** `Templates/index-template/home-summary.html` so the home page shows the newest entry's title, date and bullet list.
+               b. **Update** `Templates/index-template/home-summary.html` so the home page shows the newest entry's title, date and bullet list (only if the PR is on main).
             4. Finally, stage, commit and push the edits with a clear message.
-
-      - name: Commit & push
-        run: |
-          git config user.name  "claude-bot"
-          git config user.email "claude-bot@users.noreply.github.com"
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git add -A
-            git commit -m "changelog: auto-update via Claude [skip-claude]"
-            git push
-          fi 
