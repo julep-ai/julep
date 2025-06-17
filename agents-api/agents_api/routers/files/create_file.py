@@ -37,3 +37,43 @@ async def create_file(
     await upload_file_content(file.id, data.content)
 
     return file
+
+
+@router.post("/users/{user_id}/files", status_code=HTTP_201_CREATED, tags=["files"])
+async def create_user_file(
+    user_id: UUID,
+    data: CreateFileRequest,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+) -> File:
+    """Create a file owned by a user."""
+    # AIDEV-NOTE: new route for associating files with users
+    file = await create_file_query(
+        developer_id=x_developer_id,
+        owner_type="user",
+        owner_id=user_id,
+        data=data,
+    )
+
+    await upload_file_content(file.id, data.content)
+
+    return file
+
+
+@router.post("/agents/{agent_id}/files", status_code=HTTP_201_CREATED, tags=["files"])
+async def create_agent_file(
+    agent_id: UUID,
+    data: CreateFileRequest,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+) -> File:
+    """Create a file owned by an agent."""
+    # AIDEV-NOTE: new route for associating files with agents
+    file = await create_file_query(
+        developer_id=x_developer_id,
+        owner_type="agent",
+        owner_id=agent_id,
+        data=data,
+    )
+
+    await upload_file_content(file.id, data.content)
+
+    return file
