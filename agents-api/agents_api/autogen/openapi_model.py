@@ -80,6 +80,11 @@ class InputChatMLMessage(Message):
     pass
 
 
+# AIDEV-NOTE: forbid extra fields to prevent silently ignoring invalid message attributes
+Message.model_config = ConfigDict(**{**Message.model_config, "extra": "forbid"})
+InputChatMLMessage.model_config = ConfigDict(**{**Message.model_config, "extra": "forbid"})
+
+
 IntegrationDef = (
     BraveIntegrationDef
     | EmailIntegrationDef
