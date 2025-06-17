@@ -17,48 +17,47 @@ alias BrowserbaseSessionMethod =
       "complete_session"
     | /** Get the connection URL for a session */
       "get_connect_url"
-    | // TODO: Implement these
+    | /** Upload files for the session */
+      "create_session_uploads"
+    | /** Retrieve session downloads */
       "get_session_downloads"
-    | "get_logs"
-    | "get_recordings";
+    | /** Retrieve logs for the session */
+      "get_logs"
+    | /** Retrieve recordings for the session */
+      "get_recordings";
 
 alias BrowserbaseSessionIntegrationDef =
     | BrowserbaseListSessionsIntegrationDef
     | BrowserbaseCreateSessionIntegrationDef
     | BrowserbaseGetSessionIntegrationDef
     | BrowserbaseCompleteSessionIntegrationDef
-    | BrowserbaseGetSessionLiveUrlsIntegrationDef;
-//
-// TODO: Implement these
-// | BrowserbaseCreateSessionUploadsIntegrationDef
-// | BrowserbaseGetSessionDownloadsIntegrationDef
-// | BrowserbaseGetLogsIntegrationDef
-// | BrowserbaseGetRecordingsIntegrationDef
+    | BrowserbaseGetSessionLiveUrlsIntegrationDef
+    | BrowserbaseCreateSessionUploadsIntegrationDef
+    | BrowserbaseGetSessionDownloadsIntegrationDef
+    | BrowserbaseGetLogsIntegrationDef
+    | BrowserbaseGetRecordingsIntegrationDef;
 
 alias BrowserbaseSessionArguments =
     | BrowserbaseListSessionsArguments
     | BrowserbaseCreateSessionArguments
     | BrowserbaseGetSessionArguments
     | BrowserbaseCompleteSessionArguments
-    | BrowserbaseGetSessionLiveUrlsArguments;
-//
-// TODO: Implement these
-// | BrowserbaseCreateSessionUploadsArguments
-// | BrowserbaseGetSessionDownloadsArguments
-// | BrowserbaseGetLogsArguments
-// | BrowserbaseGetRecordingsArguments
+    | BrowserbaseGetSessionLiveUrlsArguments
+    | BrowserbaseCreateSessionUploadsArguments
+    | BrowserbaseGetSessionDownloadsArguments
+    | BrowserbaseGetLogsArguments
+    | BrowserbaseGetRecordingsArguments;
 
 alias BrowserbaseSessionOutput =
     | BrowserbaseListSessionsOutput
     | BrowserbaseCreateSessionOutput
     | BrowserbaseGetSessionOutput
     | BrowserbaseCompleteSessionOutput
-    | BrowserbaseGetSessionLiveUrlsOutput;
-//
-// TODO: Implement these
-// | BrowserbaseGetSessionDownloadsOutput
-// | BrowserbaseGetLogsOutput
-// | BrowserbaseGetRecordingsOutput
+    | BrowserbaseGetSessionLiveUrlsOutput
+    | BrowserbaseCreateSessionUploadsOutput
+    | BrowserbaseGetSessionDownloadsOutput
+    | BrowserbaseGetLogsOutput
+    | BrowserbaseGetRecordingsOutput;
 
 /** browserbase list sessions integration definition */
 model BrowserbaseListSessionsIntegrationDef
@@ -202,4 +201,64 @@ model BrowserbaseGetSessionLiveUrlsOutput {
         debuggerUrl?: url;
         debuggerFullscreenUrl?: url;
     }[] = #[];
+}
+
+/** Upload files for a session */ // AIDEV-NOTE: fleshed out browserbase session support
+model BrowserbaseCreateSessionUploadsIntegrationDef
+    extends BaseBrowserbaseIntegrationDef {
+    method: "create_session_uploads" = "create_session_uploads";
+    arguments?: BrowserbaseCreateSessionUploadsArguments;
+}
+
+model BrowserbaseCreateSessionUploadsArguments {
+    id: string;
+    files: Record<unknown>[] = #[];
+}
+
+model BrowserbaseCreateSessionUploadsOutput {
+    success: boolean;
+}
+
+/** Retrieve session downloads */
+model BrowserbaseGetSessionDownloadsIntegrationDef
+    extends BaseBrowserbaseIntegrationDef {
+    method: "get_session_downloads" = "get_session_downloads";
+    arguments?: BrowserbaseGetSessionDownloadsArguments;
+}
+
+model BrowserbaseGetSessionDownloadsArguments {
+    id: string;
+}
+
+model BrowserbaseGetSessionDownloadsOutput {
+    files: url[] = #[];
+}
+
+/** Retrieve session logs */
+model BrowserbaseGetLogsIntegrationDef extends BaseBrowserbaseIntegrationDef {
+    method: "get_logs" = "get_logs";
+    arguments?: BrowserbaseGetLogsArguments;
+}
+
+model BrowserbaseGetLogsArguments {
+    id: string;
+}
+
+model BrowserbaseGetLogsOutput {
+    logs: string[] = #[];
+}
+
+/** Retrieve session recordings */
+model BrowserbaseGetRecordingsIntegrationDef
+    extends BaseBrowserbaseIntegrationDef {
+    method: "get_recordings" = "get_recordings";
+    arguments?: BrowserbaseGetRecordingsArguments;
+}
+
+model BrowserbaseGetRecordingsArguments {
+    id: string;
+}
+
+model BrowserbaseGetRecordingsOutput {
+    recordings: url[] = #[];
 }
