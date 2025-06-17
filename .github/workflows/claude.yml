@@ -36,7 +36,7 @@ jobs:
           anthropic_api_key: ${{ secrets.CLAUDE_CODE_API_KEY }}
           
           # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
-          # model: "claude-opus-4-20250514"
+          model: "claude-opus-4-20250514"
           
           # Optional: Customize the trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
@@ -48,10 +48,11 @@ jobs:
           # allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
           
           # Optional: Add custom instructions for Claude to customize its behavior for your project
-          # custom_instructions: |
-          #   Follow our coding standards
-          #   Ensure all new code has tests
-          #   Use TypeScript for new files
+          custom_instructions: >-
+            This is a monorepo with multiple different services.
+            The repo uses AGENTS.md as the file that contains instructions for
+            AI agents (instead of CLAUDE.md files). CLAUDE.md still exists but
+            is just a symlink to the corresponding AGENTS.md (usually in the same dir).
           
           # Optional: Custom environment variables for Claude
           # claude_env: |
