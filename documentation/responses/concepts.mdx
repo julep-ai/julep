@@ -28,7 +28,7 @@ The Responses API offers a streamlined way to interact with language models with
 
 ### 2.1. Response Configuration Options
 
-When creating a response, you can leverage these configuration options to tailor the experience:
+When creating a response, you can leverage these configuration options to tailor the experience. The API always returns a single response, so the deprecated `n` parameter is no longer needed:
 
 | Option                | Type                                     | Description                                                                                       | Default        | Status        |
 |-----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------|----------------|---------------|
@@ -41,8 +41,6 @@ When creating a response, you can leverage these configuration options to tailor
 | `max_tokens`          | `integer` \| `null`                      | Maximum number of tokens to generate                                                              | `None`         | Implemented   |
 | `temperature`         | `number`                                 | Controls randomness in response generation (0 to 1)                                               | `1`            | Implemented   |
 | `top_p`               | `number`                                 | Controls diversity in token selection (0 to 1)                                                    | `1`            | Implemented   |
-| `n`                   | `integer` \| `null`                      | Number of responses to generate                                                                   | `None`         | Implemented   |
-| `stop`                | `string` \| `array` \| `null`            | Sequence(s) where the model should stop generating                                                | `None`         | Implemented   |
 | `presence_penalty`    | `number` \| `null`                       | Penalty for new tokens based on presence in text so far                                           | `None`         | Implemented   |
 | `frequency_penalty`   | `number` \| `null`                       | Penalty for new tokens based on frequency in text so far                                          | `None`         | Implemented   |
 | `logit_bias`          | `object` \| `null`                       | Modify likelihood of specific tokens appearing                                                    | `None`         | Implemented   |

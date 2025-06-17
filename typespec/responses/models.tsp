@@ -40,7 +40,6 @@ model CreateResponse {
   max_tokens?: int32;
   temperature?: float = 1.0;
   top_p?: float = 1.0;
-  n?: int32;
   stop?: string | string[];
   presence_penalty?: float;
   frequency_penalty?: float;
