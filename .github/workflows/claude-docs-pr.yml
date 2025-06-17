@@ -75,7 +75,7 @@ jobs:
         env: 
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Claude changes docs & changelog
+      - name: Claude changes docs
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -85,21 +85,8 @@ jobs:
           direct_prompt: |
             You are the team's documentation bot.  
             1. Read *diff.patch*.  
-            2. For any change that affects users:
-              1. **edit** files under *documentation/***  
+            2. For any change that affects users, **edit** files under *documentation/***  
                (Mintlify structure) so docs stay accurate.
-              2. **create** new file in *changelog/***
-                named `{YYYY}-{MM}-{DD}.md`** containing a bulleted list 
-                of the changes (don't include unnecessary details).
-                - File front-matter:
-                  ```
-                  ---
-                  title: "Julep AI Changelog – {human-readable-date}"
-                  date:  {YYYY}-{MM}-{DD}
-                  tags: [changelog]
-                  ---
-                  ```  
-               - If the file already exists, append to its bullet list.
             3. Commit the edits.  
             If diff.patch has no user-visible change, do nothing.
           custom_instructions: |

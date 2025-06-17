@@ -1,0 +1,76 @@
+name: Claude Changelog (PR)
+
+on:
+  pull_request:
+    branches: [main, dev]
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "changelog/**"
+
+jobs:
+  changelog:
+    name: Update Changelog
+    runs-on: ubuntu-latest
+    if: ${{ github.event.sender.login != 'github-actions[bot]' && github.event.pull_request.user.login != 'claude-doc-bot' && contains(github.event.pull_request.title, '[skip-claude]') == false }}
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Save PR patch
+        run: gh pr diff ${{ github.event.pull_request.number }} --patch > diff.patch
+        env:
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Set changelog directory
+        id: set_cl_dir
+        run: |
+          if [[ "${{ github.event.pull_request.base.ref }}" == "dev" ]]; then
+            echo "CHANGELOG_DIR=changelog/dev" >> "$GITHUB_ENV"
+            echo "CHANGELOG_TAG=dev" >> "$GITHUB_ENV"
+          else
+            echo "CHANGELOG_DIR=changelog/main" >> "$GITHUB_ENV"
+            echo "CHANGELOG_TAG=main" >> "$GITHUB_ENV"
+          fi
+
+      - name: Claude updates changelog & home summary
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model:   claude-sonnet-4-20250514
+          github_token:      ${{ secrets.GITHUB_TOKEN }}
+          allowed_tools:     "Read,Edit,Replace"
+          direct_prompt: |
+            You are the team's *changelog* bot. Follow these rules strictly:
+
+            1. Read the unified diff in *diff.patch*.
+            2. Decide if the patch introduces any user-visible change (new feature, behaviour change, deprecation, bug fix).  
+               • If **no user-visible change** – *do nothing*: exit without writing, committing, or replying.
+            3. If **yes**:
+               a. **Create or update** file in *${{ env.CHANGELOG_DIR }}* named `{YYYY}-{MM}-{DD}.md` with a concise bullet list of the changes.
+                  • Begin each bullet with a past-tense verb (e.g. "Added", "Fixed").
+                  • Keep bullets short (< 100 chars).
+                  • Ensure the file contains YAML front-matter:
+                    ```
+                    ---
+                    title: "Julep AI Changelog"
+                    date:  {YYYY}-{MM}-{DD}
+                    tags: [${{ env.CHANGELOG_TAG }}]
+                    ---
+                    ```
+               b. **Update** `Templates/index-template/home-summary.html` so the home page shows the newest entry's title, date and bullet list.
+            4. Finally, stage, commit and push the edits with a clear message.
+
+      - name: Commit & push
+        run: |
+          git config user.name  "claude-bot"
+          git config user.email "claude-bot@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add -A
+            git commit -m "changelog: auto-update via Claude [skip-claude]"
+            git push
+          fi 
