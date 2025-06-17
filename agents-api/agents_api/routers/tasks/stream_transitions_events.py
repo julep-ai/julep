@@ -25,49 +25,60 @@ from .router import router
 STREAM_TIMEOUT = 10 * 60  # 10 minutes
 
 
-# Create a function to publish events to the client
-# TODO: Unnest and simplify this function
+# Extract transition events from different workflow event types
+def _transition_events(event) -> list[dict]:
+    """Return transition events encoded in the given history event."""
+    match event.event_type:
+        case EventType.EVENT_TYPE_ACTIVITY_TASK_COMPLETED:
+            payloads = event.activity_task_completed_event_attributes.result.payloads
+        case EventType.EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_COMPLETED:
+            payloads = event.child_workflow_execution_completed_event_attributes.result.payloads
+        case EventType.EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED:
+            payloads = event.workflow_execution_completed_event_attributes.result.payloads
+        case _:
+            return []
+
+    events: list[dict] = []
+    for payload in payloads:
+        try:
+            data_item = from_payload_data(payload.data)
+        except Exception as e:
+            logging.warning(f"Could not decode payload: {e}")
+            continue
+
+        if isinstance(data_item, TransitionEvent):
+            events.append({
+                "type": data_item.type,
+                "output": data_item.output,
+                "created_at": data_item.created_at.isoformat(),
+            })
+    return events
+
+
 async def event_publisher(
     inner_send_chan: MemoryObjectSendStream,
     history_events: WorkflowHistoryEventAsyncIterator,
 ):
+    """Publish workflow transition events to the SSE channel."""  # AIDEV-NOTE
     async with inner_send_chan:
         try:
             async for event in history_events:
-                # TODO: We should get the workflow-completed event as well and use that to close the stream
-                if event.event_type == EventType.EVENT_TYPE_ACTIVITY_TASK_COMPLETED:
-                    payloads = event.activity_task_completed_event_attributes.result.payloads
-
-                    for payload in payloads:
-                        try:
-                            data_item = from_payload_data(payload.data)
-
-                        except Exception as e:
-                            logging.warning(f"Could not decode payload: {e}")
-                            continue
-
-                        if not isinstance(data_item, TransitionEvent):
-                            continue
-
-                        # FIXME: This does NOT return the last event (and maybe other events)
-                        transition_event_dict = {
-                            "type": data_item.type,
-                            "output": data_item.output,
-                            "created_at": data_item.created_at.isoformat(),
+                for transition_event in _transition_events(event):
+                    next_page_token = (
+                        b64encode(history_events.next_page_token).decode("ascii")
+                        if history_events.next_page_token
+                        else None
+                    )
+                    await inner_send_chan.send({
+                        "data": {
+                            "transition": transition_event,
+                            "next_page_token": next_page_token,
                         }
+                    })
 
-                        next_page_token = (
-                            b64encode(history_events.next_page_token).decode("ascii")
-                            if history_events.next_page_token
-                            else None
-                        )
-
-                        await inner_send_chan.send({
-                            "data": {
-                                "transition": transition_event_dict,
-                                "next_page_token": next_page_token,
-                            },
-                        })
+                if event.event_type == EventType.EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED:
+                    await inner_send_chan.send({"closing": True})
+                    return
 
         except anyio.get_cancelled_exc_class() as e:
             with anyio.move_on_after(STREAM_TIMEOUT, shield=True):
