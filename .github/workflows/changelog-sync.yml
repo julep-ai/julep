@@ -9,6 +9,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths: ["changelog/**"]
+  workflow_run:
+       workflows: ["Claude Changelog (PR)"]
+       types: [completed]
   workflow_dispatch:
 
 jobs:
