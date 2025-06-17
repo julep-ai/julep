@@ -5,6 +5,8 @@ from typing import ParamSpec, TypeVar
 
 from prometheus_client import Counter
 
+from ..telemetry import telemetry
+
 P = ParamSpec("P")
 T = TypeVar("T")
 
@@ -67,6 +69,8 @@ def query_metrics(metric_label: str, id_field_name: str = "developer_id"):
             async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
                 fld_id = kwargs.get(id_field_name, "not_set")
                 counter.labels(fld_id, metric_label).inc()
+                if telemetry and getattr(telemetry, "queries_counter", None):
+                    telemetry.queries_counter.add(1)
                 start_time = time.time()
                 result = await func(*args, **kwargs)
                 end_time = time.time() - start_time
@@ -80,6 +84,8 @@ def query_metrics(metric_label: str, id_field_name: str = "developer_id"):
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             fld_id = kwargs.get(id_field_name, "not_set")
             counter.labels(fld_id, metric_label).inc()
+            if telemetry and getattr(telemetry, "queries_counter", None):
+                telemetry.queries_counter.add(1)
             start_time = time.time()
             result = func(*args, **kwargs)
             end_time = time.time() - start_time

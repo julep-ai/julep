@@ -40,6 +40,7 @@ from .routers import (
     tasks,
     users,
 )
+from .telemetry import init_telemetry
 
 if not sentry_dsn:
     print("Sentry DSN not found. Sentry will not be enabled.")
@@ -49,6 +50,8 @@ else:
         enable_tracing=True,
         traces_sample_rate=1.0,
     )
+
+init_telemetry(app)
 
 
 logger: logging.Logger = logging.getLogger(__name__)
