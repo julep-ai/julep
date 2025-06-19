@@ -309,6 +309,18 @@ model_list:
     api_key: os.environ/CEREBRAS_API_KEY
     tags: ["paid"]
 
+- model_name: "cerebras/deepseek-r1-distill-llama-70b"
+  litellm_params:
+    model: "cerebras/deepseek-r1-distill-llama-70b"
+    api_key: os.environ/CEREBRAS_API_KEY
+    tags: ["paid"]
+
+- model_name: "cerebras/quen-3-32b"
+  litellm_params:
+    model: "cerebras/quen-3-32b"
+    api_key: os.environ/CEREBRAS_API_KEY
+    tags: ["paid"]
+
 # -*= Embedding models =*-
 # ------------------------
 
