@@ -16,6 +16,25 @@
       ],
       "env": {}
     },
+    "search": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {}
+     },
+    "gitingest-mcp": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/puravparab/gitingest-mcp",
+        "gitingest-mcp"
+      ],
+      "env": {}
+    },
     "firecrawl": {
       "type": "stdio",
       "command": "npx",
