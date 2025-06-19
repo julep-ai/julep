@@ -176,7 +176,7 @@ def get_entity_from_lock_file(
     type: str,
     id: str,
     project_dir: Path = Path.cwd(),
-) -> LockedEntity:
+) -> LockedEntity | None:
     """
     Get the contents of lock file
     """

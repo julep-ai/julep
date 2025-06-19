@@ -94,6 +94,65 @@ http:
       service: service-hasura
       priority: 3
 
+    # Handle direct /app/ routes (when Metabase generates URLs without /analytics prefix)
+    # ONLY accessible via iframe from dashboard
+    analytics-app-direct:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/app/`)
+      middlewares:
+        - corsHeaders
+        - analytics-cache-headers
+      service: service-analytics
+      priority: 5
+
+    # Handle double /app/ pattern for Metabase static assets
+    # ONLY accessible via iframe from dashboard  
+    analytics-app-double-assets:
+      entryPoints:
+        - web
+      rule: PathRegexp(`^/analytics/app/app/(dist|fonts|img|css)/(.*)`)
+      middlewares:
+        - corsHeaders
+        - analytics-cache-headers
+        - analytics-strip-app-double
+      service: service-analytics
+      priority: 4
+
+    # Metabase static assets - keep /analytics prefix since Metabase is configured for it
+    # ONLY accessible via iframe from dashboard
+    analytics-static-assets:
+      entryPoints:
+        - web
+      rule: PathRegexp(`^/analytics/(dist|fonts|img|css|app/dist|app/fonts|app/img|app/css)/(.*)`)
+      middlewares:
+        - corsHeaders
+        - analytics-cache-headers
+      service: service-analytics
+      priority: 3
+
+    # Redirect /analytics to /analytics/ (without trailing slash to with trailing slash)
+    analytics-redirect:
+      entryPoints:
+        - web
+      rule: Path(`/analytics`)
+      middlewares:
+        - analytics-redirect-with-slash
+      service: service-analytics
+      priority: 2
+
+    # General Analytics/Metabase proxy - strip /analytics prefix for backend requests
+    # ONLY accessible via iframe from dashboard
+    analytics:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/analytics/`)
+      middlewares:
+        - corsHeaders
+        - analytics-strip-prefix
+      service: service-analytics
+      priority: 1
+
   middlewares:
     corsHeaders:
       headers:
@@ -146,6 +205,27 @@ http:
           - /tasks-ui
         forceSlash: false
 
+    analytics-strip-prefix:
+      stripprefix:
+        prefixes:
+          - /analytics
+        forceSlash: false
+
+    analytics-strip-app-double:
+      replacepathregex:
+        regex: "^/analytics/app/app/(.*)"
+        replacement: "/app/$1"
+
+    analytics-cache-headers:
+      headers:
+        customresponseheaders:
+          Cache-Control: "public, max-age=86400"
+
+    analytics-redirect-with-slash:
+      redirectRegex:
+        regex: "^/analytics$"
+        replacement: "/analytics/"
+
   services:
     service-agents-api:
       loadBalancer:
@@ -164,6 +244,12 @@ http:
         passHostHeader: false
         servers:
           - url: $HASURA_URL
+
+    service-analytics:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $ANALYTICS_URL
 
 experimental:
   localPlugins:
