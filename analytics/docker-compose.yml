@@ -3,9 +3,6 @@ name: julep-analytics
 services:
   analytics:
     image: metabase/metabase:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: julep-analytics
     profiles:
       - multi-tenant
