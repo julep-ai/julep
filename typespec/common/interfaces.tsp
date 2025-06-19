@@ -83,7 +83,7 @@ interface PatchEndpoint<
     Type,
     DocString extends valueof string = "Patch resource by its id (merge changes with existing values)"
 > {
-    @patch
+    @patch(#{implicitOptionality: true})
     @doc(DocString)
     patch(
         @path
@@ -242,7 +242,7 @@ interface ChildPatchEndpoint<
     Type,
     DocString extends valueof string = "Patch a resource owned by the given parent using its id"
 > {
-    @patch
+    @patch(#{implicitOptionality: true})
     @doc(DocString)
     patch(
         @path

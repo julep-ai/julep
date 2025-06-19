@@ -45,7 +45,7 @@ model Agent {
 }
 
 /** Payload for updating a agent */
-@withVisibility("create", "update")
+@withVisibility(Lifecycle.Create, Lifecycle.Update)
 model UpdateAgentRequest {
     ...Agent;
 }
@@ -54,7 +54,7 @@ model UpdateAgentRequest {
 model PatchAgentRequest is UpdateAgentRequest {}
 
 /** Payload for creating a agent (and associated documents) */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateAgentRequest {
     ...UpdateAgentRequest;
 }

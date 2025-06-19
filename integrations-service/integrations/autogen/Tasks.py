@@ -267,7 +267,7 @@ class ElseModel(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -425,7 +425,7 @@ class ForeachStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -512,8 +512,7 @@ class IfElseWorkflowStep(BaseModel):
         | SwitchStep
         | ForeachStep
         | ParallelStep
-        | Else
-        | None,
+        | Else,
         Field(alias="else"),
     ] = None
     """
@@ -531,7 +530,7 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -576,8 +575,7 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
         | SwitchStepUpdateItem
         | ForeachStepUpdateItem
         | ParallelStepUpdateItem
-        | ElseModel
-        | None,
+        | ElseModel,
         Field(alias="else"),
     ] = None
     """
@@ -673,7 +671,7 @@ class MainModel(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -746,7 +744,7 @@ class ParallelStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -839,10 +837,7 @@ class PromptItem(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: Annotated[
-        list[str] | list[Content | ContentModel | ContentModel1] | str | None,
-        Field(...),
-    ]
+    content: list[str] | list[Content | ContentModel | ContentModel1] | str
     """
     The content parts of the message
     """
@@ -926,7 +921,7 @@ class PromptStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -1091,7 +1086,7 @@ class SwitchStepUpdateItem(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -1240,7 +1235,7 @@ class ThenModel(BaseModel):
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """

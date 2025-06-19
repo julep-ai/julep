@@ -28,7 +28,7 @@ model User {
 }
 
 /** Payload for updating a user */
-@withVisibility("create", "update")
+@withVisibility(Lifecycle.Create, Lifecycle.Update)
 model UpdateUserRequest {
     ...User;
 }

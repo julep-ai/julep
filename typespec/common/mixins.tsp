@@ -1,5 +1,8 @@
+import "@typespec/http";
 import "./scalars.tsp";
 import "./types.tsp";
+
+using TypeSpec.Http;
 
 namespace Common;
 
@@ -9,25 +12,25 @@ namespace Common;
 
 model HasCreatedAtOptional {
     /** When this resource was created as UTC date-time */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     created_at?: utcDateTime;
 }
 
 model HasCreatedAt {
     /** When this resource was created as UTC date-time */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     created_at: utcDateTime;
 }
 
 model HasUpdatedAt {
     /** When this resource was updated as UTC date-time */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     updated_at: utcDateTime;
 }
 
 model HasDeletedAt {
     /** When this resource was deleted as UTC date-time */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     deleted_at: utcDateTime;
 }
 
@@ -37,12 +40,12 @@ model HasTimestamps {
 }
 
 model HasIdOptional {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     id?: uuid;
 }
 
 model HasId {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     @key
     id: uuid;
 }
@@ -54,6 +57,6 @@ model HasMetadata {
 
 model HasJobs {
     /** IDs (if any) of jobs created as part of this request */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     jobs: uuid[] = #[];
 }

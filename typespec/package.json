@@ -3,14 +3,14 @@
   "version": "0.4.0",
   "type": "module",
   "dependencies": {
-    "@typespec/compiler": "0.61.x",
-    "@typespec/events": "0.61.x",
-    "@typespec/http": "0.61.x",
-    "@typespec/openapi": "0.61.x",
-    "@typespec/openapi3": "0.61.x",
-    "@typespec/rest": "0.61.x",
-    "@typespec/sse": "0.61.x",
-    "@typespec/versioning": "0.61.x"
+    "@typespec/compiler": "~1.1.0",
+    "@typespec/events": "~0.71.0",
+    "@typespec/http": "~1.1.0",
+    "@typespec/openapi": "~1.1.0",
+    "@typespec/openapi3": "~1.1.0",
+    "@typespec/rest": "~0.71.0",
+    "@typespec/sse": "~0.71.0",
+    "@typespec/versioning": "~0.71.0"
   },
   "private": true
 }

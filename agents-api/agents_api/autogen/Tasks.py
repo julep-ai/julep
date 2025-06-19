@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
+from .Common import JinjaTemplate
 from .Tools import (
     ChosenBash20241022,
     ChosenComputer20241022,
@@ -222,15 +223,15 @@ class Else(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})] = (
-        "map_reduce"
-    )
+    kind_: Annotated[
+        Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})
+    ] = "map_reduce"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -238,7 +239,15 @@ class Else(BaseModel):
     """
     The variable to iterate over
     """
-    map: EvaluateStep | ToolCallStep | PromptStep | GetStep | SetStep | LogStep | YieldStep
+    map: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | YieldStep
+    )
     """
     The steps to run for each iteration
     """
@@ -266,13 +275,13 @@ class ElseModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -312,13 +321,15 @@ class ErrorWorkflowStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["error"], Field(json_schema_extra={"readOnly": True})] = "error"
+    kind_: Annotated[Literal["error"], Field(json_schema_extra={"readOnly": True})] = (
+        "error"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -332,15 +343,15 @@ class EvaluateStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["evaluate"], Field(json_schema_extra={"readOnly": True})] = (
-        "evaluate"
-    )
+    kind_: Annotated[
+        Literal["evaluate"], Field(json_schema_extra={"readOnly": True})
+    ] = "evaluate"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -402,15 +413,15 @@ class ForeachStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["foreach"], Field(json_schema_extra={"readOnly": True})] = (
-        "foreach"
-    )
+    kind_: Annotated[
+        Literal["foreach"], Field(json_schema_extra={"readOnly": True})
+    ] = "foreach"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -424,13 +435,13 @@ class ForeachStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -444,13 +455,15 @@ class GetStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["get"], Field(json_schema_extra={"readOnly": True})] = "get"
+    kind_: Annotated[Literal["get"], Field(json_schema_extra={"readOnly": True})] = (
+        "get"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -464,15 +477,15 @@ class IfElseWorkflowStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["if_else"], Field(json_schema_extra={"readOnly": True})] = (
-        "if_else"
-    )
+    kind_: Annotated[
+        Literal["if_else"], Field(json_schema_extra={"readOnly": True})
+    ] = "if_else"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -517,8 +530,7 @@ class IfElseWorkflowStep(BaseModel):
         | SwitchStep
         | ForeachStep
         | ParallelStep
-        | Else
-        | None,
+        | Else,
         Field(alias="else"),
     ] = None
     """
@@ -530,13 +542,13 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -581,8 +593,7 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
         | SwitchStepUpdateItem
         | ForeachStepUpdateItem
         | ParallelStepUpdateItem
-        | ElseModel
-        | None,
+        | ElseModel,
         Field(alias="else"),
     ] = None
     """
@@ -612,13 +623,15 @@ class LogStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["log"], Field(json_schema_extra={"readOnly": True})] = "log"
+    kind_: Annotated[Literal["log"], Field(json_schema_extra={"readOnly": True})] = (
+        "log"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -632,15 +645,15 @@ class Main(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})] = (
-        "map_reduce"
-    )
+    kind_: Annotated[
+        Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})
+    ] = "map_reduce"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -648,7 +661,15 @@ class Main(BaseModel):
     """
     The variable to iterate over
     """
-    map: EvaluateStep | ToolCallStep | PromptStep | GetStep | SetStep | LogStep | YieldStep
+    map: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | YieldStep
+    )
     """
     The steps to run for each iteration
     """
@@ -672,13 +693,13 @@ class MainModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -718,21 +739,27 @@ class ParallelStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["parallel"], Field(json_schema_extra={"readOnly": True})] = (
-        "parallel"
-    )
+    kind_: Annotated[
+        Literal["parallel"], Field(json_schema_extra={"readOnly": True})
+    ] = "parallel"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
     parallel: Annotated[
         list[
-            EvaluateStep | ToolCallStep | PromptStep | GetStep | SetStep | LogStep | YieldStep
+            EvaluateStep
+            | ToolCallStep
+            | PromptStep
+            | GetStep
+            | SetStep
+            | LogStep
+            | YieldStep
         ],
         Field(max_length=100),
     ]
@@ -745,13 +772,13 @@ class ParallelStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -844,10 +871,7 @@ class PromptItem(BaseModel):
     The role of the message
     """
     tool_call_id: str | None = None
-    content: Annotated[
-        list[str] | list[Content | ContentModel | ContentModel1] | str | None,
-        Field(...),
-    ]
+    content: list[str] | list[Content | ContentModel | ContentModel1] | str
     """
     The content parts of the message
     """
@@ -877,13 +901,15 @@ class PromptStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["prompt"], Field(json_schema_extra={"readOnly": True})] = "prompt"
+    kind_: Annotated[Literal["prompt"], Field(json_schema_extra={"readOnly": True})] = (
+        "prompt"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -925,13 +951,13 @@ class PromptStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -973,13 +999,15 @@ class ReturnStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["return"], Field(json_schema_extra={"readOnly": True})] = "return"
+    kind_: Annotated[Literal["return"], Field(json_schema_extra={"readOnly": True})] = (
+        "return"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -996,13 +1024,15 @@ class SetStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["set"], Field(json_schema_extra={"readOnly": True})] = "set"
+    kind_: Annotated[Literal["set"], Field(json_schema_extra={"readOnly": True})] = (
+        "set"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -1038,13 +1068,15 @@ class SleepStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["sleep"], Field(json_schema_extra={"readOnly": True})] = "sleep"
+    kind_: Annotated[Literal["sleep"], Field(json_schema_extra={"readOnly": True})] = (
+        "sleep"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -1070,13 +1102,15 @@ class SwitchStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["switch"], Field(json_schema_extra={"readOnly": True})] = "switch"
+    kind_: Annotated[Literal["switch"], Field(json_schema_extra={"readOnly": True})] = (
+        "switch"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -1090,13 +1124,13 @@ class SwitchStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -1181,7 +1215,9 @@ class TaskTool(CreateToolRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    inherited: Annotated[StrictBool, Field(json_schema_extra={"readOnly": True})] = False
+    inherited: Annotated[StrictBool, Field(json_schema_extra={"readOnly": True})] = (
+        False
+    )
     """
     Read-only: Whether the tool was inherited or not. Only applies within tasks.
     """
@@ -1195,15 +1231,15 @@ class Then(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})] = (
-        "map_reduce"
-    )
+    kind_: Annotated[
+        Literal["map_reduce"], Field(json_schema_extra={"readOnly": True})
+    ] = "map_reduce"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -1211,7 +1247,15 @@ class Then(BaseModel):
     """
     The variable to iterate over
     """
-    map: EvaluateStep | ToolCallStep | PromptStep | GetStep | SetStep | LogStep | YieldStep
+    map: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | YieldStep
+    )
     """
     The steps to run for each iteration
     """
@@ -1239,13 +1283,13 @@ class ThenModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
-    kind_: str | None = None
+    kind_: str
     """
     Discriminator property for BaseWorkflowStep.
     """
@@ -1285,15 +1329,15 @@ class ToolCallStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["tool_call"], Field(json_schema_extra={"readOnly": True})] = (
-        "tool_call"
-    )
+    kind_: Annotated[
+        Literal["tool_call"], Field(json_schema_extra={"readOnly": True})
+    ] = "tool_call"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -1429,15 +1473,15 @@ class WaitForInputStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["wait_for_input"], Field(json_schema_extra={"readOnly": True})] = (
-        "wait_for_input"
-    )
+    kind_: Annotated[
+        Literal["wait_for_input"], Field(json_schema_extra={"readOnly": True})
+    ] = "wait_for_input"
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -1451,13 +1495,15 @@ class YieldStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Annotated[Literal["yield"], Field(json_schema_extra={"readOnly": True})] = "yield"
+    kind_: Annotated[Literal["yield"], Field(json_schema_extra={"readOnly": True})] = (
+        "yield"
+    )
     """
     The kind of step
     """
-    label: Annotated[str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")] = (
-        None
-    )
+    label: Annotated[
+        str | None, Field(max_length=120, pattern="^[^0-9]|^[0-9]+[^0-9].*$")
+    ] = None
     """
     The label of this step for referencing it from other steps
     """
@@ -1467,7 +1513,8 @@ class YieldStep(BaseModel):
     VALIDATION: Should resolve to a defined subworkflow.
     """
     arguments: (
-        dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str] | Literal["_"]
+        dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
+        | Literal["_"]
     ) = "_"
     """
     The input parameters for the subworkflow (defaults to last step output)
