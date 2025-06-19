@@ -24,12 +24,12 @@ model Secret {
   value: string;
 }
 
-@withVisibility("create", "update")
+@withVisibility(Lifecycle.Create, Lifecycle.Update)
 model UpdateSecretRequest {
     ...Secret;
 }
 
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateSecretRequest {
     ...UpdateSecretRequest;
 }

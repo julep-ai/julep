@@ -29,19 +29,18 @@ using Versions;
 //
 
 /** Julep is a backend for creating stateful AI apps with background tasks and long-term memory easily. */
-@service({
-    name: "julep-api",
+@service(#{
     title: "Julep API",
 })
 @versioned(ApiVersions)
-@info({
+@info(#{
     termsOfService: "https://julep.ai/terms",
-    contact: {
+    contact: #{
         name: "Julep AI",
         url: "https://julep.ai",
         email: "developers@julep.ai",
     },
-    license: {
+    license: #{
         name: "Apache 2.0",
         url: "https://www.apache.org/licenses/LICENSE-2.0.html",
     },

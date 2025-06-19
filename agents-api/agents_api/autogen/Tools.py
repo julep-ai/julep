@@ -12,6 +12,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    RootModel,
     StrictBool,
 )
 
@@ -394,48 +395,9 @@ class BaseIntegrationDef(BaseModel):
     """
 
 
-class BaseIntegrationDefUpdate(BaseModel):
+class BaseIntegrationDefUpdate(BaseIntegrationDef):
     """
     Integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    provider: (
-        Literal[
-            "dummy",
-            "weather",
-            "wikipedia",
-            "spider",
-            "brave",
-            "browserbase",
-            "email",
-            "mailgun",
-            "remote_browser",
-            "llama_parse",
-            "ffmpeg",
-            "cloudinary",
-            "arxiv",
-            "unstructured",
-            "algolia",
-        ]
-        | None
-    ) = None
-    """
-    The provider of the integration
-    """
-    method: str | None = None
-    """
-    The specific method of the integration to call
-    """
-    setup: Any | None = None
-    """
-    The setup parameters the integration accepts
-    """
-    arguments: Any | None = None
-    """
-    The arguments to pre-apply to the integration call
     """
 
 
@@ -671,7 +633,9 @@ class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
     pass
 
 
-class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(BrowserbaseGetSessionArgumentsUpdate):
+class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(
+    BrowserbaseGetSessionArgumentsUpdate
+):
     pass
 
 
@@ -2076,9 +2040,9 @@ class SystemDefUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    resource: Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None = (
-        None
-    )
+    resource: (
+        Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None
+    ) = None
     """
     Resource is the name of the resource to use
     """
@@ -2856,7 +2820,9 @@ class BrowserbaseCompleteSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
     arguments: BrowserbaseCompleteSessionArguments | None = None
 
 
-class BrowserbaseCompleteSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+class BrowserbaseCompleteSessionIntegrationDefUpdate(
+    BaseBrowserbaseIntegrationDefUpdate
+):
     """
     browserbase complete session integration definition
     """
@@ -3006,7 +2972,9 @@ class BrowserbaseGetSessionLiveUrlsIntegrationDef(BaseBrowserbaseIntegrationDef)
     arguments: BrowserbaseGetSessionLiveUrlsArguments | None = None
 
 
-class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(
+    BaseBrowserbaseIntegrationDefUpdate
+):
     """
     browserbase get session live urls integration definition
     """

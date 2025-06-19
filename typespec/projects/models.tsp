@@ -27,7 +27,7 @@ model Project {
 }
 
 /** Payload for updating a project */
-@withVisibility("create", "update")
+@withVisibility(Lifecycle.Create, Lifecycle.Update)
 model UpdateProjectRequest {
     ...Project;
 }
@@ -36,7 +36,7 @@ model UpdateProjectRequest {
 model PatchProjectRequest is UpdateProjectRequest {}
 
 /** Payload for creating a project */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateProjectRequest {
     ...UpdateProjectRequest;
 }
