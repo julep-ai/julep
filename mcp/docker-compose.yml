@@ -1,0 +1,38 @@
+name: julep-mcp
+
+services:
+  mcp:
+    image: julepai/mcp:${TAG:-dev}
+    environment:
+      - JULEP_API_KEY=${JULEP_API_KEY}
+      - AGENTS_API_URL=${AGENTS_API_URL:-http://agents-api:8080}
+      - TRANSPORT=http
+      - PORT=3000
+    container_name: mcp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./src
+          target: /app/src
+        - action: rebuild
+          path: Dockerfile
+    networks:
+      - default
+
+networks:
+  default:
+    name: julep_default
+    external: true

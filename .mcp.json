@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "llmtxt.dev": {
+      "type": "sse",
+      "url": "https://mcp.llmtxt.dev/sse"
+    },
     "deepwiki": {
       "type": "http",
       "url": "https://mcp.deepwiki.com/mcp"
@@ -41,6 +45,24 @@
       "args": [
         "-y",
         "firecrawl-mcp"
+      ],
+      "env": {}
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {}
+    },
+    "typespec-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-typespec@latest"
       ],
       "env": {}
     }
