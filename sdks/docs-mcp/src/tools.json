@@ -1,0 +1,8 @@
+[
+  {
+    "tool": {
+      "name": "search",
+      "description": "Search across the Julep documentation to fetch relevant context for a given query"
+    }
+  }
+]

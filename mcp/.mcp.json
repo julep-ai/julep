@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "julep-mcp": {
+      "type": "stdio",
+      "command": "npm",
+      "args": [
+        "start"
+      ],
+      "env": {
+        "JULEP_API_KEY": "your-julep-api-key-here"
+      }
+    }
+  }
+}

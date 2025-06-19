@@ -153,6 +153,17 @@ http:
       service: service-analytics
       priority: 1
 
+    # MCP (Model Context Protocol) Server
+    mcp:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/mcp`)
+      middlewares:
+        - corsHeaders
+        - mcp-strip-prefix
+      service: service-mcp
+      priority: 3
+
   middlewares:
     corsHeaders:
       headers:
@@ -226,6 +237,12 @@ http:
         regex: "^/analytics$"
         replacement: "/analytics/"
 
+    mcp-strip-prefix:
+      stripprefix:
+        prefixes:
+          - /mcp
+        forceSlash: false
+
   services:
     service-agents-api:
       loadBalancer:
@@ -250,6 +267,12 @@ http:
         passHostHeader: false
         servers:
           - url: $ANALYTICS_URL
+
+    service-mcp:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: http://mcp:3000
 
 experimental:
   localPlugins:
