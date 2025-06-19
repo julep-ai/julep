@@ -4,10 +4,10 @@ run-name: ${{ github.actor }} is linting the code
 on:
   pull_request:
     paths:
-      - 'agents-api/**'
+      - 'modules/agents-api/**'
   push:
     paths:
-      - 'agents-api/**'
+      - 'modules/agents-api/**'
 
 jobs:
   Lint-And-Format:
@@ -31,13 +31,13 @@ jobs:
 
       - name: Set up python and install dependencies
         run: |
-          cd agents-api
+          cd modules/agents-api
           uv python install
           uv sync --all-extras --dev
 
       - name: Lint and format
         run: |
-          cd agents-api
+          cd modules/agents-api
           uv run poe format
           uv run poe lint
 

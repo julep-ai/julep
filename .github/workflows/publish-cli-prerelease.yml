@@ -11,7 +11,7 @@ on:
       - dev
       - main
     paths:
-      - 'cli/**'
+      - 'modules/cli/**'
   workflow_dispatch:
 
 jobs:

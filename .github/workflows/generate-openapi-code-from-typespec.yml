@@ -4,10 +4,10 @@ run-name: ${{ github.actor }} is generating openapi code
 on:
   pull_request:
     paths:
-      - 'typespec/**'
+      - 'modules/typespec/**'
   push:
     paths:
-      - 'typespec/**'
+      - 'modules/typespec/**'
 
 jobs:
   Typecheck:
@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 'latest'
           cache: npm
-          cache-dependency-path: 'typespec/package-lock.json'
+          cache-dependency-path: 'modules/typespec/package-lock.json'
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -33,7 +33,7 @@ jobs:
 
       - name: Generate openapi code
         run: |
-          cd typespec; npm ci; cd -
+          cd modules/typespec; npm ci; cd -
           export PATH=$PATH:$PWD/typespec/node_modules/.bin
           bash scripts/generate_openapi_code.sh
 

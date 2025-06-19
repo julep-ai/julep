@@ -4,10 +4,10 @@ run-name: ${{ github.actor }} is typechecking the code
 on:
   pull_request:
     paths:
-      - 'agents-api/**'
+      - 'modules/agents-api/**'
   push:
     paths:
-      - 'agents-api/**'
+      - 'modules/agents-api/**'
 
 jobs:
   Typecheck:
@@ -39,13 +39,13 @@ jobs:
 
       - name: Set up python and install dependencies
         run: |
-          cd integrations-service
+          cd modules/integrations-service
           uv python install
           uv sync --all-extras --dev
 
       - name: Typecheck
         run: |
-          cd agents-api
+          cd modules/agents-api
           uv run poe typecheck
 
 concurrency:

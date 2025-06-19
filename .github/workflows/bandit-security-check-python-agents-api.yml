@@ -4,10 +4,10 @@ run-name: ${{ github.actor }} is checking the security of the code
 on:
   pull_request:
     paths:
-      - 'agents-api/**'
+      - 'modules/agents-api/**'
   push:
     paths:
-      - 'agents-api/**'
+      - 'modules/agents-api/**'
 
 jobs:
   bandit_check:

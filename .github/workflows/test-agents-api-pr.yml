@@ -4,10 +4,10 @@ run-name: ${{ github.actor }} is testing the code
 on:
   pull_request:
     paths:
-      - 'agents-api/**'
+      - 'modules/agents-api/**'
   push:
     paths:
-      - 'agents-api/**'
+      - 'modules/agents-api/**'
 
 jobs:
   Test:
@@ -31,7 +31,7 @@ jobs:
 
       - name: Set up python and install dependencies
         run: |
-          cd agents-api
+          cd modules/agents-api
           uv python install
           uv sync --all-extras --dev
 
@@ -39,7 +39,7 @@ jobs:
         env:
           SECRETS_MASTER_KEY: ${{ secrets.SECRETS_MASTER_KEY }}
         run: |
-          cd agents-api
+          cd modules/agents-api
           uv run poe test --fail-limit 3
 
 concurrency:

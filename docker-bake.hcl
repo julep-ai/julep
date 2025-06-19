@@ -19,7 +19,7 @@ group "default" {
 }
 
 target "agents-api" {
-  context = "./agents-api"
+  context = "./modules/agents-api"
   dockerfile = "Dockerfile"
   tags = [
     "julepai/agents-api:${TAG}",
@@ -28,7 +28,7 @@ target "agents-api" {
 }
 
 target "agents-api-worker" {
-  context = "./agents-api"
+  context = "./modules/agents-api"
   dockerfile = "Dockerfile.worker"
   tags = [
     "julepai/worker:${TAG}",
@@ -37,7 +37,7 @@ target "agents-api-worker" {
 }
 
 target "memory-store" {
-  context = "./memory-store"
+  context = "./modules/memory-store"
   dockerfile = "Dockerfile"
   tags = [
     "julepai/memory-store:${TAG}",
@@ -46,7 +46,7 @@ target "memory-store" {
 }
 
 target "integrations" {
-  context = "./integrations-service"
+  context = "./modules/integrations-service"
   dockerfile = "Dockerfile"
   tags = [
     "julepai/integrations:${TAG}",
@@ -55,7 +55,7 @@ target "integrations" {
 }
 
 target "gateway" {
-  context = "./gateway"
+  context = "./modules/gateway"
   dockerfile = "Dockerfile"
   tags = [
     "julepai/gateway:${TAG}",
@@ -64,7 +64,7 @@ target "gateway" {
 }
 
 target "blob-store" {
-  context = "./blob-store"
+  context = "./modules/blob-store"
   dockerfile = "Dockerfile"
   tags = [
     "julepai/blob-store:${TAG}",
