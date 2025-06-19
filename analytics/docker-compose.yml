@@ -15,8 +15,8 @@ services:
       MB_DB_DBNAME: metabase
       MB_DB_PORT: 5432
       MB_DB_USER: postgres
-      MB_DB_PASS: ${MEMORY_STORE_PASSWORD:-julep_secure_password}
-      MB_DB_HOST: memory-store
+      MB_DB_PASS: ${METABASE_DB_PASSWORD:-metabase_secure_password}
+      MB_DB_HOST: metabase-db
       
       # Metabase settings
       MB_SITE_URL: https://${JULEP_HOST:-localhost}/analytics
@@ -34,5 +34,28 @@ services:
       retries: 3
       start_period: 60s
     depends_on:
-      memory-store:
+      metabase-db:
         condition: service_healthy
+  
+  metabase-db:
+    image: postgres:latest
+    container_name: julep-metabase-db
+    profiles:
+      - multi-tenant
+    hostname: metabase-db
+    restart: unless-stopped
+    volumes:
+      - metabase-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=metabase
+      - POSTGRES_PASSWORD=${METABASE_DB_PASSWORD:-metabase_secure_password}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U metabase -d metabaseappdb']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  metabase-db-data:
+    external: true
