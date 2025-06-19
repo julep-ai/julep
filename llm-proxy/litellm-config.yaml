@@ -315,9 +315,9 @@ model_list:
     api_key: os.environ/CEREBRAS_API_KEY
     tags: ["paid"]
 
-- model_name: "cerebras/quen-3-32b"
+- model_name: "cerebras/qwen-3-32b"
   litellm_params:
-    model: "cerebras/quen-3-32b"
+    model: "cerebras/qwen-3-32b"
     api_key: os.environ/CEREBRAS_API_KEY
     tags: ["paid"]
 
