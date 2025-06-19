@@ -1,0 +1,11 @@
+{
+  "name": "JulepCustom",
+  "author": "Julep AI",
+  "version": "0.1.0",
+  "description": "Custom minimal template with main/dev channels",
+  "locals": {
+    "site": {
+      "title": "Julep Changelog"
+    }
+  }
+} 

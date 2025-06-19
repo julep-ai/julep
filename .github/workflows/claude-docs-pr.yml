@@ -1,0 +1,88 @@
+name: Claude Docs (PR)
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "changelog/**"
+
+jobs:
+  docs-gate:
+    name: Documentation Gate
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event.sender.login != 'github-actions[bot]' && github.event.pull_request.user.login != 'claude-doc-bot' && contains(github.event.pull_request.title, '[skip-claude]') == false }}
+
+    outputs:
+      pr_number:     ${{ steps.resolve.outputs.number }}
+      should_update: ${{ steps.gate.outputs.result }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: PR number
+        id: resolve
+        run: echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Save PR patch
+        run: gh pr diff ${{ steps.resolve.outputs.number }} --patch > diff.patch
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Gate
+        id: gate
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model:   claude-sonnet-4-20250514
+          github_token:      ${{ secrets.GITHUB_TOKEN }}
+          allowed_tools:     "Read"
+          direct_prompt: |
+            You are a senior technical-writer.  
+            Read *diff.patch* (unified diff).  
+            Reply with the single word **UPDATE** if the patch
+            a) adds new user-visible functionality,
+            b) changes or removes existing behaviour,
+            c) deprecates anything,  
+            otherwise reply **SKIP**.
+
+  update-docs:
+    name: Update Documentation
+    needs: docs-gate
+    if: ${{ github.event.sender.login != 'github-actions[bot]' &&
+            needs.docs-gate.result == 'success' &&
+            needs.docs-gate.outputs.should_update == 'UPDATE' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Save PR patch
+        run: gh pr diff ${{ needs.docs-gate.outputs.pr_number }} --patch > diff.patch
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Claude changes docs
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model:   claude-sonnet-4-20250514
+          github_token:      ${{ secrets.GITHUB_TOKEN }}
+          allowed_tools:     "Read,Edit,Replace"
+          direct_prompt: |
+            You are the team's documentation bot.  
+            1. Read *diff.patch*.  
+            2. For any change that affects users, **edit** files under *documentation/***  
+               (Mintlify structure) so docs stay accurate.
+            3. Commit the edits.  
+            If diff.patch has no user-visible change, do nothing.
+            4. Finally, stage, commit and push the edits with a clear message.
+          custom_instructions: |
+            AGENTS.md replaces CLAUDE.md (CLAUDE.md is a symlink).

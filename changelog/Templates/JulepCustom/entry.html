@@ -1,0 +1,15 @@
+{{> head}}
+{{> header}}
+
+<main class="container entry-page">
+  <article>
+    <h1 class="entry-title">{{title}}</h1>
+    <p class="entry-meta">{{date}}</p>
+    {{{html}}}
+    {{#tags}}
+      <span class="entry-tag">#{{.}}</span>
+    {{/tags}}
+  </article>
+</main>
+
+{{> footer}} 

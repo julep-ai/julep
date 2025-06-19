@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  {{> head}}
+  <body>
+
+    {{> header}}
+
+    <h1>Archives</h1>
+
+    {{#archives}}
+      {{#months}}
+      <hr>
+      <h3 class="archive">{{month}} {{year}}&nbsp;&nbsp;<small>{{entries.length}} post{{s}}</small></h3>
+
+      <small>
+      {{#entries}}
+      <a class="archive" href="{{{url}}}">{{title}}</a>{{^last}}&nbsp;&nbsp;·&nbsp;{{/last}}
+      {{/entries}}
+      </small>
+
+      <br>
+      {{/months}}
+    {{/archives}}
+
+    {{> footer}}
+
+  </body>
+</html>

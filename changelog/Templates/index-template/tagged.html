@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  {{> head}}
+  <body>
+    {{> header}}
+
+    <h1>{{tag}}</h1>
+
+    <hr class="full">
+
+    <small style="margin-top: -.625em;display: block;">
+    All posts tagged {{tag}}:
+    </small>
+
+    {{#entries}}
+    <a href="{{{url}}}" class="row"><b>{{title}}</b> {{#date}}&nbsp;·&nbsp; <span style="white-space: nowrap;">{{date}}</span>{{/date}}</a>
+    {{/entries}}
+
+    {{> footer}}
+
+  </body>
+</html>

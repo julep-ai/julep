@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  {{> head}}
+  <body>
+
+    {{> header}}
+
+    {{^pagination.previous}}
+      {{> home-summary}}
+      <hr class="full">
+    {{/pagination.previous}}
+
+    <small style="margin-top: -.625em;display: block;">
+    {{#pagination.previous}}Page {{pagination.current}} of {{pagination.total}}{{/pagination.previous}}
+    {{^pagination.previous}}Latest posts:{{/pagination.previous}}
+    </small>
+
+    <br><br>
+
+    {{#entries}}
+    <a href="{{{url}}}" class="row"><b>{{title}}</b>&nbsp;{{#date}}&nbsp;·&nbsp;&nbsp;<span style="white-space: nowrap;">{{date}}</span>{{/date}}</a>
+    {{/entries}}
+
+    <br><br><br>
+
+    {{#pagination}}
+
+      {{#previous}}
+      <a class="menu" href="/page/{{previous}}">&larr;&nbsp;Newer posts</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      {{/previous}}
+
+      {{#next}}
+      <a class="menu" href="/page/{{next}}">Next page &rarr;</a>
+      {{/next}}
+
+      <hr class="full">
+
+      <div style="text-align: right;">
+      <small>Page {{current}} of {{total}}</small>
+      </div>
+
+    {{/pagination}}
+
+    <br>
+
+    {{> footer}}
+  </body>
+</html>
