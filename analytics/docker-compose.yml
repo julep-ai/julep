@@ -2,7 +2,7 @@ name: julep-analytics
 
 services:
   analytics:
-    image: julepai/analytics:${TAG:-dev}
+    image: metabase/metabase:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -16,7 +16,7 @@ services:
       MB_DB_PORT: 5432
       MB_DB_USER: postgres
       MB_DB_PASS: ${METABASE_DB_PASSWORD:-metabase_secure_password}
-      MB_DB_HOST: metabase-db
+      MB_DB_HOST: analytics-db
       
       # Metabase settings
       MB_SITE_URL: https://${JULEP_HOST:-localhost}/analytics
@@ -34,18 +34,18 @@ services:
       retries: 3
       start_period: 60s
     depends_on:
-      metabase-db:
+      analytics-db:
         condition: service_healthy
   
-  metabase-db:
+  analytics-db:
     image: postgres:latest
-    container_name: julep-metabase-db
+    container_name: julep-analytics-db
     profiles:
       - multi-tenant
-    hostname: metabase-db
+    hostname: analytics-db
     restart: unless-stopped
     volumes:
-      - metabase-db-data:/var/lib/postgresql/data
+      - analytics-db-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=metabase
@@ -57,5 +57,5 @@ services:
       retries: 5
 
 volumes:
-  metabase-db-data:
+  analytics-db-data:
     external: true
