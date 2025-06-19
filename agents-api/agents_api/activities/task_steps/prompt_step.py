@@ -106,6 +106,19 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     )
     passed_settings.update(passed_settings.pop("settings", {}) or {})
     passed_settings["user"] = str(context.execution_input.developer_id)
+    # AIDEV-NOTE: 1472:: Add execution context to passed_settings for usage tracking
+    passed_settings["execution_id"] = str(context.execution_input.execution.execution_id)
+    if (
+        hasattr(context.execution_input.execution, "session_id")
+        and context.execution_input.execution.session_id
+    ):
+        passed_settings["session_id"] = str(context.execution_input.execution.session_id)
+    if (
+        hasattr(context, "cursor")
+        and hasattr(context.cursor, "transition_id")
+        and context.cursor.transition_id
+    ):
+        passed_settings["transition_id"] = str(context.cursor.transition_id)
 
     if not passed_settings.get("tools"):
         passed_settings.pop("tool_choice", None)

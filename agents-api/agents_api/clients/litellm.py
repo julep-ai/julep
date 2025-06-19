@@ -109,6 +109,7 @@ async def acompletion(
     if user and isinstance(response, ModelResponse):
         try:
             model = response.model
+            # AIDEV-NOTE: 1472:: Extract context fields from kwargs/settings if available and pass to track_usage
             await track_usage(
                 developer_id=UUID(user),
                 model=model,
@@ -116,6 +117,10 @@ async def acompletion(
                 response=response,
                 custom_api_used=custom_api_key is not None,
                 metadata={"tags": kwargs.get("tags", [])},
+                session_id=kwargs.get("session_id"),
+                execution_id=kwargs.get("execution_id"),
+                transition_id=kwargs.get("transition_id"),
+                entry_id=kwargs.get("entry_id"),
             )
         except Exception as e:
             # Log error but don't fail the request if usage tracking fails
