@@ -66,33 +66,31 @@ BEGIN
 END $$;
 
 -- Helper functions for encryption/decryption (following secrets pattern)
--- Modified to return composite types so they can be tracked by Hasura
+-- Modified to return SETOF composite types so they return tables that Hasura can track
 CREATE OR REPLACE FUNCTION encrypt_api_key(
     p_value TEXT,
     p_key TEXT
-) RETURNS encrypted_api_key_result AS $$
+) RETURNS SETOF encrypted_api_key_result AS $$
 BEGIN
-    RETURN ROW(
+    RETURN QUERY SELECT 
         pgp_sym_encrypt(
             p_value,
             p_key,
             'cipher-algo=aes256'
-        )
-    )::encrypted_api_key_result;
+        ) AS encrypted_value;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION decrypt_api_key(
     p_encrypted_value BYTEA,
     p_key TEXT
-) RETURNS decrypted_api_key_result AS $$
+) RETURNS SETOF decrypted_api_key_result AS $$
 BEGIN
-    RETURN ROW(
+    RETURN QUERY SELECT 
         pgp_sym_decrypt(
             p_encrypted_value,
             p_key
-        )
-    )::decrypted_api_key_result;
+        ) AS decrypted_value;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
