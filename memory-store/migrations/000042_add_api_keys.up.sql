@@ -42,29 +42,57 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_name ON api_keys(name);
 CREATE INDEX IF NOT EXISTS idx_api_keys_metadata ON api_keys USING gin(metadata);
 CREATE INDEX IF NOT EXISTS idx_api_keys_deleted_at ON api_keys(deleted_at) WHERE deleted_at IS NULL;
 
+-- Create composite types for function return values (so they can be tracked by Hasura)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_type WHERE typname = 'encrypted_api_key_result'
+    ) THEN
+        CREATE TYPE encrypted_api_key_result AS (
+            encrypted_value BYTEA
+        );
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_type WHERE typname = 'decrypted_api_key_result'
+    ) THEN
+        CREATE TYPE decrypted_api_key_result AS (
+            decrypted_value TEXT
+        );
+    END IF;
+END $$;
+
 -- Helper functions for encryption/decryption (following secrets pattern)
+-- Modified to return composite types so they can be tracked by Hasura
 CREATE OR REPLACE FUNCTION encrypt_api_key(
     p_value TEXT,
     p_key TEXT
-) RETURNS BYTEA AS $$
+) RETURNS encrypted_api_key_result AS $$
 BEGIN
-    RETURN pgp_sym_encrypt(
-        p_value,
-        p_key,
-        'cipher-algo=aes256'
-    );
+    RETURN ROW(
+        pgp_sym_encrypt(
+            p_value,
+            p_key,
+            'cipher-algo=aes256'
+        )
+    )::encrypted_api_key_result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION decrypt_api_key(
     p_encrypted_value BYTEA,
     p_key TEXT
-) RETURNS TEXT AS $$
+) RETURNS decrypted_api_key_result AS $$
 BEGIN
-    RETURN pgp_sym_decrypt(
-        p_encrypted_value,
-        p_key
-    );
+    RETURN ROW(
+        pgp_sym_decrypt(
+            p_encrypted_value,
+            p_key
+        )
+    )::decrypted_api_key_result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
