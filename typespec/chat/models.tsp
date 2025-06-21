@@ -171,6 +171,7 @@ model ChatInputData {
 model ChatInput extends ChatInputData {
     ...MemoryAccessOptions;
     ...InputChatSettings;
+    ...HasMetadata;
 }
 
 model BaseTokenLogProb {
