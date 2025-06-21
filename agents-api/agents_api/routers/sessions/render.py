@@ -81,7 +81,7 @@ async def render_chat_input(
     chat_context.merge_settings(chat_input)
     settings: dict = chat_context.settings or {}
 
-    # await validate_model(settings.get("model"))
+    await validate_model(settings.get("model"))
 
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(
