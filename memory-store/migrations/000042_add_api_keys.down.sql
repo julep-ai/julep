@@ -1,6 +1,6 @@
 BEGIN;
 
--- Drop helper functions (now using RETURNS TABLE syntax)
+-- Drop helper functions
 DROP FUNCTION IF EXISTS decrypt_api_key(BYTEA, TEXT);
 DROP FUNCTION IF EXISTS encrypt_api_key(TEXT, TEXT);
 

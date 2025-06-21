@@ -43,31 +43,28 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_metadata ON api_keys USING gin(metadata)
 CREATE INDEX IF NOT EXISTS idx_api_keys_deleted_at ON api_keys(deleted_at) WHERE deleted_at IS NULL;
 
 -- Helper functions for encryption/decryption (following secrets pattern)
--- Modified to return TABLE so they can be tracked by Hasura  
 CREATE OR REPLACE FUNCTION encrypt_api_key(
     p_value TEXT,
     p_key TEXT
-) RETURNS TABLE(encrypted_value BYTEA) AS $$
+) RETURNS BYTEA AS $$
 BEGIN
-    RETURN QUERY SELECT 
-        pgp_sym_encrypt(
-            p_value,
-            p_key,
-            'cipher-algo=aes256'
-        );
+    RETURN pgp_sym_encrypt(
+        p_value,
+        p_key,
+        'cipher-algo=aes256'
+    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION decrypt_api_key(
     p_encrypted_value BYTEA,
     p_key TEXT
-) RETURNS TABLE(decrypted_value TEXT) AS $$
+) RETURNS TEXT AS $$
 BEGIN
-    RETURN QUERY SELECT 
-        pgp_sym_decrypt(
-            p_encrypted_value,
-            p_key
-        );
+    RETURN pgp_sym_decrypt(
+        p_encrypted_value,
+        p_key
+    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
