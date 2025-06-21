@@ -3,11 +3,9 @@
 from ward import test
 
 from tests.fixtures import (
-    client,
     make_request,
     patch_embed_acompletion,
     test_agent,
-    test_developer_id,
     test_session,
 )
 
@@ -20,8 +18,8 @@ async def _(
     mocks=patch_embed_acompletion,
 ):
     """Test that metadata from chat request is available in system template."""
-    (embed, acompletion) = mocks
-    
+    (_embed, acompletion) = mocks
+
     # Prepare chat request with metadata
     chat_data = {
         "messages": [
@@ -37,28 +35,28 @@ async def _(
             "priority": "high",
         },
     }
-    
+
     # Make the chat request
     response = make_request(
         method="POST",
         url=f"/sessions/{session.id}/chat",
         json=chat_data,
     )
-    
+
     assert response.status_code == 201
-    
+
     # Check that the completion was called
     acompletion.assert_called_once()
-    
+
     # Get the actual call arguments
     call_args = acompletion.call_args
     messages = call_args[1]["messages"]
-    
+
     # The system message should be the first message
     assert len(messages) > 0
     system_message = messages[0]
     assert system_message["role"] == "system"
-    
+
     # Since we're mocking, we can't test the actual template rendering,
     # but we can verify the metadata was included in the request
     assert "metadata" in chat_data
@@ -73,8 +71,8 @@ async def _(
     mocks=patch_embed_acompletion,
 ):
     """Test that metadata can contain nested objects and arrays."""
-    (embed, acompletion) = mocks
-    
+    (_embed, acompletion) = mocks
+
     # Complex metadata structure
     chat_data = {
         "messages": [
@@ -107,16 +105,16 @@ async def _(
             ],
         },
     }
-    
+
     # Make the chat request
     response = make_request(
         method="POST",
         url=f"/sessions/{session.id}/chat",
         json=chat_data,
     )
-    
+
     assert response.status_code == 201
-    
+
     # Verify the LLM was called
     acompletion.assert_called_once()
 
@@ -128,8 +126,8 @@ async def _(
     mocks=patch_embed_acompletion,
 ):
     """Test that empty or null metadata doesn't cause issues."""
-    (embed, acompletion) = mocks
-    
+    (_embed, acompletion) = mocks
+
     # Test with empty metadata
     chat_data_empty = {
         "messages": [
@@ -140,15 +138,15 @@ async def _(
         ],
         "metadata": {},
     }
-    
+
     response = make_request(
         method="POST",
         url=f"/sessions/{session.id}/chat",
         json=chat_data_empty,
     )
-    
+
     assert response.status_code == 201
-    
+
     # Test with null metadata (by not including it)
     chat_data_null = {
         "messages": [
@@ -158,15 +156,15 @@ async def _(
             }
         ],
     }
-    
+
     response = make_request(
         method="POST",
         url=f"/sessions/{session.id}/chat",
         json=chat_data_null,
     )
-    
+
     assert response.status_code == 201
-    
+
     # Both calls should succeed
     assert acompletion.call_count == 2
 
