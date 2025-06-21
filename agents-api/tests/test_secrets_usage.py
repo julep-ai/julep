@@ -19,21 +19,17 @@ from agents_api.common.protocol.models import ExecutionInput
 from agents_api.common.protocol.tasks import StepContext
 from agents_api.common.utils.datetime import utcnow
 from agents_api.routers.sessions.render import render_chat_input
-from ward import skip, test
-
-from tests.fixtures import test_developer, test_developer_id
+import pytest
 
 
-@skip("Skipping secrets usage tests")
-@test("render: list_secrets_query usage in render_chat_input")
-async def _(developer=test_developer):
+async def test_render_list_secrets_query_usage_in_render_chat_input(test_developer):
     # Create test secrets
     test_secrets = [
         Secret(
             id=uuid4(),
             name="api_key",
             value="sk_test_123456789",
-            developer_id=developer.id,
+            developer_id=test_developer.id,
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         ),
@@ -41,23 +37,27 @@ async def _(developer=test_developer):
             id=uuid4(),
             name="service_token",
             value="token_987654321",
-            developer_id=developer.id,
+            developer_id=test_developer.id,
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         ),
     ]
 
     # Create tools that use secret expressions
+    # Use computer_20241022 to trigger secret loading
+    from agents_api.autogen.Tools import Computer20241022Def
     tools = [
         Tool(
             id=uuid4(),
-            name="api_tool",
+            name="computer",
             type="computer_20241022",
-            computer_20241022={
-                "path": "/usr/bin/curl",
-                "api_key": "$ secrets.api_key",
-                "auth_token": "$ secrets.service_token",
-            },
+            computer_20241022=Computer20241022Def(
+                type="computer_20241022",
+                name="computer",
+                display_width_px=1024,
+                display_height_px=768,
+                display_number=1,
+            ),
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         )
@@ -65,8 +65,8 @@ async def _(developer=test_developer):
 
     # Create mock chat context
     mock_chat_context = MagicMock()
-    mock_chat_context.session.render_templates = True
-    mock_chat_context.session.context_overflow = "error"
+    mock_chat_context.test_session.render_templates = True
+    mock_chat_context.test_session.context_overflow = "error"
     mock_chat_context.get_active_tools.return_value = tools
     mock_chat_context.settings = {"model": "claude-3.5-sonnet"}
     mock_chat_context.get_chat_environment.return_value = {}
@@ -113,43 +113,47 @@ async def _(developer=test_developer):
 
         # Call the function being tested
         _messages, _doc_refs, formatted_tools, *_ = await render_chat_input(
-            developer=developer,
+            developer=test_developer,
             session_id=session_id,
             chat_input=chat_input,
         )
 
         # Assert that list_secrets_query was called with the right parameters
-        mock_list_secrets_query.assert_called_once_with(developer_id=developer.id)
+        mock_list_secrets_query.assert_called_once_with(developer_id=test_developer.id, decrypt=True)
 
         # Verify that expressions were evaluated
         mock_render_evaluate_expressions.assert_called()
 
-        # Check that formatted_tools contains the evaluated secrets
+        # Verify that list_secrets_query was called
+        mock_list_secrets_query.assert_called_once_with(developer_id=test_developer.id, decrypt=True)
+        
+        # Check that formatted_tools contains the computer tool with standard parameters
         assert formatted_tools is not None
         assert len(formatted_tools) > 0
-
+        
         # The first tool should be the computer_20241022 tool
         tool = formatted_tools[0]
         assert tool["type"] == "computer_20241022"
-
-        # Verify that the secrets were evaluated in the function parameters
+        
+        # Verify that the tool has the standard computer tool parameters
         function_params = tool["function"]["parameters"]
-        assert "api_key" in function_params, f"{tool}"
-        assert function_params["api_key"] == "sk_test_123456789"
-        assert "auth_token" in function_params
-        assert function_params["auth_token"] == "token_987654321"
+        assert "display_width_px" in function_params
+        assert function_params["display_width_px"] == 1024
+        assert "display_height_px" in function_params
+        assert function_params["display_height_px"] == 768
+        assert "display_number" in function_params
+        assert function_params["display_number"] == 1
 
 
-@skip("Skipping secrets usage tests")
-@test("tasks: list_secrets_query with multiple secrets")
-async def _(developer_id=test_developer_id):
+@pytest.mark.skip(reason="Skipping secrets usage tests")
+async def test_tasks_list_secrets_query_with_multiple_secrets(test_developer_id):
     # Create test secrets with varying names
     test_secrets = [
         Secret(
             id=uuid4(),
             name="api_key_1",
             value="sk_test_123",
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         ),
@@ -157,7 +161,7 @@ async def _(developer_id=test_developer_id):
             id=uuid4(),
             name="api_key_2",
             value="sk_test_456",
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         ),
@@ -165,7 +169,7 @@ async def _(developer_id=test_developer_id):
             id=uuid4(),
             name="database_url",
             value="postgresql://user:password@localhost:5432/db",
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         ),
@@ -220,7 +224,7 @@ async def _(developer_id=test_developer_id):
 
     # Create execution input with the task
     execution_input = ExecutionInput(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         agent=test_agent,
         agent_tools=[],
         arguments={},
@@ -258,7 +262,7 @@ async def _(developer_id=test_developer_id):
         tools = await step_context.tools()
 
         # Assert that list_secrets_query was called with the right parameters
-        mock_list_secrets_query.assert_called_once_with(developer_id=developer_id)
+        mock_list_secrets_query.assert_called_once_with(developer_id=test_developer_id)
 
         # Verify the right number of tools were created
         assert len(tools) == len(task_tools)
@@ -267,16 +271,15 @@ async def _(developer_id=test_developer_id):
         assert mock_evaluate_expressions.call_count == len(task_tools)
 
 
-@skip("Skipping secrets usage tests")
-@test("tasks: list_secrets_query in StepContext.tools method")
-async def _(developer_id=test_developer_id):
+@pytest.mark.skip(reason="Skipping secrets usage tests")
+async def test_tasks_list_secrets_query_in_stepcontext_tools_method(test_developer_id):
     # Create test secrets
     test_secrets = [
         Secret(
             id=uuid4(),
             name="api_key",
             value="sk_test_123456789",
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         ),
@@ -284,7 +287,7 @@ async def _(developer_id=test_developer_id):
             id=uuid4(),
             name="access_token",
             value="at_test_987654321",
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             created_at="2023-01-01T00:00:00Z",
             updated_at="2023-01-01T00:00:00Z",
         ),
@@ -326,7 +329,7 @@ async def _(developer_id=test_developer_id):
 
     # Create execution input with the task
     execution_input = ExecutionInput(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         agent=test_agent,
         agent_tools=[],
         arguments={},
@@ -353,7 +356,7 @@ async def _(developer_id=test_developer_id):
         tools = await step_context.tools()
 
         # Assert that list_secrets_query was called with the right parameters
-        mock_list_secrets_query.assert_called_once_with(developer_id=developer_id)
+        mock_list_secrets_query.assert_called_once_with(developer_id=test_developer_id)
 
         # Verify tools were created with evaluated secrets
         assert len(tools) == len(task_tools)

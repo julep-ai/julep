@@ -17,18 +17,16 @@ from agents_api.queries.entries import (
 )
 from fastapi import HTTPException
 from uuid_extensions import uuid7
-from ward import raises, test
+import pytest
 
-from tests.fixtures import pg_dsn, test_developer, test_developer_id, test_session
 
 MODEL = "gpt-4o-mini"
 
 
-@test("query: create entry no session")
-async def _(dsn=pg_dsn, developer=test_developer):
+async def test_query_create_entry_no_session(pg_dsn, test_developer):
     """Test the addition of a new entry to the database."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     test_entry = CreateEntryRequest.from_model_input(
         model=MODEL,
         role="user",
@@ -36,114 +34,108 @@ async def _(dsn=pg_dsn, developer=test_developer):
         content="test entry content",
     )
 
-    with raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         await create_entries(
-            developer_id=developer.id,
+            developer_id=test_developer.id,
             session_id=uuid7(),
             data=[test_entry],
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    assert exc_info.raised.status_code == 404
+    assert exc_info.value.status_code == 404
 
 
-@test("query: list entries sql - no session")
-async def _(dsn=pg_dsn, developer=test_developer):
+async def test_query_list_entries_sql_no_session(pg_dsn, test_developer):
     """Test the retrieval of entries from the database."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
-    with raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         await list_entries(
-            developer_id=developer.id,
+            developer_id=test_developer.id,
             session_id=uuid7(),
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    assert exc_info.raised.status_code == 404
+    assert exc_info.value.status_code == 404
 
 
-@test("query: list entries sql, invalid limit")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def test_query_list_entries_sql_invalid_limit(pg_dsn, test_developer_id):
     """Test that listing entries with an invalid limit raises an exception."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
-    with raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         await list_entries(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             session_id=uuid7(),
             limit=1001,
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    assert exc_info.raised.status_code == 400
-    assert exc_info.raised.detail == "Limit must be between 1 and 1000"
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Limit must be between 1 and 1000"
 
-    with raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         await list_entries(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             session_id=uuid7(),
             limit=0,
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    assert exc_info.raised.status_code == 400
-    assert exc_info.raised.detail == "Limit must be between 1 and 1000"
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Limit must be between 1 and 1000"
 
 
-@test("query: list entries sql, invalid offset")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def test_query_list_entries_sql_invalid_offset(pg_dsn, test_developer_id):
     """Test that listing entries with an invalid offset raises an exception."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
-    with raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         await list_entries(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             session_id=uuid7(),
             offset=-1,
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    assert exc_info.raised.status_code == 400
-    assert exc_info.raised.detail == "Offset must be >= 0"
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Offset must be >= 0"
 
 
-@test("query: list entries sql, invalid sort by")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def test_query_list_entries_sql_invalid_sort_by(pg_dsn, test_developer_id):
     """Test that listing entries with an invalid sort by raises an exception."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
-    with raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         await list_entries(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             session_id=uuid7(),
             sort_by="invalid",
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    assert exc_info.raised.status_code == 400
-    assert exc_info.raised.detail == "Invalid sort field"
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Invalid sort field"
 
 
-@test("query: list entries sql, invalid sort direction")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def test_query_list_entries_sql_invalid_sort_direction(pg_dsn, test_developer_id):
     """Test that listing entries with an invalid sort direction raises an exception."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
-    with raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         await list_entries(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             session_id=uuid7(),
             direction="invalid",
             connection_pool=pool,
         )  # type: ignore[not-callable]
-    assert exc_info.raised.status_code == 400
-    assert exc_info.raised.detail == "Invalid sort direction"
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Invalid sort direction"
 
 
-@test("query: list entries sql - session exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+async def test_query_list_entries_sql_session_exists(pg_dsn, test_developer_id, test_session):
     """Test the retrieval of entries from the database."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     test_entry = CreateEntryRequest.from_model_input(
         model=MODEL,
         role="user",
@@ -159,15 +151,15 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     )
 
     await create_entries(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         data=[test_entry, internal_entry],
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
     result = await list_entries(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
@@ -177,11 +169,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert result is not None
 
 
-@test("query: get history sql - session exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+async def test_query_get_history_sql_session_exists(pg_dsn, test_developer_id, test_session):
     """Test the retrieval of entry history from the database."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     test_entry = CreateEntryRequest.from_model_input(
         model=MODEL,
         role="user",
@@ -197,15 +188,15 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     )
 
     await create_entries(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         data=[test_entry, internal_entry],
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
     result = await get_history(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
@@ -216,11 +207,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert result.entries[0].id
 
 
-@test("query: delete entries sql - session exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+async def test_query_delete_entries_sql_session_exists(pg_dsn, test_developer_id, test_session):
     """Test the deletion of entries from the database."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     test_entry = CreateEntryRequest.from_model_input(
         model=MODEL,
         role="user",
@@ -236,8 +226,8 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     )
 
     created_entries = await create_entries(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         data=[test_entry, internal_entry],
         connection_pool=pool,
     )  # type: ignore[not-callable]
@@ -245,15 +235,15 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     entry_ids = [entry.id for entry in created_entries]
 
     await delete_entries(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         entry_ids=entry_ids,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
     result = await list_entries(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 

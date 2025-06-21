@@ -1,13 +1,10 @@
 """Tests for validation error handlers and suggestion generation in web.py."""
 
 from agents_api.web import _format_location, _get_error_suggestions
-from ward import test
-
-from .fixtures import make_request
+import pytest
 
 
-@test("format_location: formats error location paths correctly")
-async def _():
+async def test_format_location_function_formats_error_locations_correctly():
     """Test the _format_location function formats error locations correctly."""
     # Test empty location
     assert _format_location([]) == ""
@@ -28,8 +25,7 @@ async def _():
     )
 
 
-@test("get_error_suggestions: generates helpful suggestions for missing fields")
-async def _():
+async def test_get_error_suggestions_generates_helpful_suggestions_for_missing_fields():
     """Test the _get_error_suggestions function generates useful suggestions for missing fields."""
     error = {"type": "missing"}
     suggestions = _get_error_suggestions(error)
@@ -39,8 +35,7 @@ async def _():
     assert "Add this required field" in suggestions["fix"]
 
 
-@test("get_error_suggestions: generates helpful suggestions for type errors")
-async def _():
+async def test_get_error_suggestions_generates_helpful_suggestions_for_type_errors():
     """Test the _get_error_suggestions function generates useful suggestions for type errors."""
     # String type error
     error = {"type": "type_error", "expected_type": "string"}
@@ -61,8 +56,7 @@ async def _():
     assert suggestions["example"] == "42"
 
 
-@test("get_error_suggestions: generates helpful suggestions for string length errors")
-async def _():
+async def test_get_error_suggestions_generates_helpful_suggestions_for_string_length_errors():
     """Test the _get_error_suggestions function generates useful suggestions for string length errors."""
     # Min length error
     error = {"type": "value_error.str.min_length", "limit_value": 5}
@@ -82,8 +76,7 @@ async def _():
     assert "at most 10 characters" in suggestions["fix"]
 
 
-@test("get_error_suggestions: generates helpful suggestions for number range errors")
-async def _():
+async def test_get_error_suggestions_generates_helpful_suggestions_for_number_range_errors():
     """Test the _get_error_suggestions function generates useful suggestions for number range errors."""
     # Min value error
     error = {"type": "value_error.number.not_ge", "limit_value": 5}
@@ -104,8 +97,7 @@ async def _():
     assert suggestions["example"] == "100"
 
 
-@test("validation_error_handler: returns formatted error response for validation errors")
-async def _(make_request=make_request):
+async def test_validation_error_handler_returns_formatted_error_response_for_validation_errors(make_request):
     """Test that validation errors return a well-formatted error response with helpful suggestions."""
     # Create an invalid request to trigger a validation error
     response = make_request(
@@ -145,10 +137,7 @@ async def _(make_request=make_request):
     assert has_fix, "Expected at least one error with a 'fix' suggestion"
 
 
-@test(
-    "validation_error_suggestions: function generates helpful suggestions for all error types"
-)
-async def _():
+async def test_validation_error_suggestions_function_generates_helpful_suggestions_for_all_error_types():
     """Test that _get_error_suggestions handles all potential error types appropriately."""
     from agents_api.web import _get_error_suggestions
 

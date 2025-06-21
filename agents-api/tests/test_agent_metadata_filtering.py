@@ -6,19 +6,16 @@ from agents_api.autogen.openapi_model import CreateAgentRequest
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.agents.list_agents import list_agents
-from ward import test
-
-from .fixtures import pg_dsn, test_developer_id
+import pytest
 
 
-@test("query: list_agents with metadata filtering")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def test_query_list_agents_with_metadata_filtering(pg_dsn, test_developer_id):
     """Test that list_agents correctly filters by metadata."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create test agents with different metadata
     agent1 = await create_agent(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateAgentRequest(
             name="Test Agent 1",
             about="Test agent with specific metadata",
@@ -29,7 +26,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     )
 
     agent2 = await create_agent(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateAgentRequest(
             name="Test Agent 2",
             about="Test agent with different metadata",
@@ -41,7 +38,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     # List agents with specific metadata filter
     agents_filtered = await list_agents(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         metadata_filter={"filter_key": "filter_value"},
         connection_pool=pool,
     )
@@ -53,7 +50,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     # List agents with shared metadata
     agents_shared = await list_agents(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         metadata_filter={"shared": "common"},
         connection_pool=pool,
     )
@@ -64,14 +61,13 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     assert any(a.id == agent2.id for a in agents_shared)
 
 
-@test("query: list_agents with SQL injection attempt in metadata filter")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def test_query_list_agents_with_sql_injection_attempt_in_metadata_filter(pg_dsn, test_developer_id):
     """Test that list_agents safely handles metadata filters with SQL injection attempts."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a test agent with normal metadata
     agent_normal = await create_agent(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateAgentRequest(
             name="Normal Agent",
             about="Agent with normal metadata",
@@ -83,7 +79,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     # Create a test agent with special characters in metadata
     agent_special = await create_agent(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateAgentRequest(
             name="Special Agent",
             about="Agent with special metadata",
@@ -95,7 +91,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     # Attempt normal metadata filtering
     agents_normal = await list_agents(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         metadata_filter={"test_key": "test_value"},
         connection_pool=pool,
     )
@@ -114,7 +110,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
     for injection_filter in injection_filters:
         # These should safely execute without error
         agents_injection = await list_agents(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             metadata_filter=injection_filter,
             connection_pool=pool,
         )
@@ -126,7 +122,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id):
 
     # Test for agent with special characters in metadata
     agents_special = await list_agents(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         metadata_filter={"special' SELECT * FROM agents--": "special_value"},
         connection_pool=pool,
     )

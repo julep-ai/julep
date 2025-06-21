@@ -13,14 +13,11 @@ from agents_api.queries.tools.get_tool import get_tool
 from agents_api.queries.tools.list_tools import list_tools
 from agents_api.queries.tools.patch_tool import patch_tool
 from agents_api.queries.tools.update_tool import update_tool
-from ward import test
-
-from tests.fixtures import pg_dsn, test_agent, test_developer_id, test_tool
+import pytest
 
 
-@test("query: create tool")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
-    pool = await create_db_pool(dsn=dsn)
+async def test_create_tool(pg_dsn, test_developer_id, test_agent):
+    pool = await create_db_pool(dsn=pg_dsn)
     function = {
         "name": "hello_world",
         "description": "A function that prints hello world",
@@ -34,8 +31,8 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     }
 
     result = await create_tools(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=[CreateToolRequest(**tool)],
         connection_pool=pool,
     )
@@ -44,9 +41,8 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
     assert isinstance(result[0], Tool)
 
 
-@test("query: delete tool")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_delete_tool(pg_dsn, test_developer_id, test_agent):
+    pool = await create_db_pool(dsn=pg_dsn)
     function = {
         "name": "temp_temp",
         "description": "A function that prints hello world",
@@ -59,42 +55,40 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent):
         "type": "function",
     }
 
-    [tool, *_] = await create_tools(
-        developer_id=developer_id,
-        agent_id=agent.id,
+    [created_tool, *_] = await create_tools(
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=[CreateToolRequest(**tool)],
         connection_pool=pool,
     )
 
     result = await delete_tool(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        tool_id=tool.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
+        tool_id=created_tool.id,
         connection_pool=pool,
     )
 
     assert result is not None
 
 
-@test("query: get tool")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, tool=test_tool, agent=test_agent):
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_get_tool(pg_dsn, test_developer_id, test_tool, test_agent):
+    pool = await create_db_pool(dsn=pg_dsn)
     result = await get_tool(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        tool_id=tool.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
+        tool_id=test_tool.id,
         connection_pool=pool,
     )
 
     assert result is not None, "Result is None"
 
 
-@test("query: list tools")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_list_tools(pg_dsn, test_developer_id, test_agent, test_tool):
+    pool = await create_db_pool(dsn=pg_dsn)
     result = await list_tools(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         connection_pool=pool,
     )
 
@@ -105,9 +99,8 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=t
     )
 
 
-@test("query: patch tool")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_patch_tool(pg_dsn, test_developer_id, test_agent, test_tool):
+    pool = await create_db_pool(dsn=pg_dsn)
     patch_data = PatchToolRequest(
         name="patched_tool",
         function={
@@ -117,9 +110,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=t
     )
 
     result = await patch_tool(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        tool_id=tool.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
+        tool_id=test_tool.id,
         data=patch_data,
         connection_pool=pool,
     )
@@ -127,9 +120,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=t
     assert result is not None
 
     tool = await get_tool(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        tool_id=tool.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
+        tool_id=test_tool.id,
         connection_pool=pool,
     )
 
@@ -138,9 +131,8 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=t
     assert tool.function.parameters
 
 
-@test("query: update tool")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=test_tool):
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_update_tool(pg_dsn, test_developer_id, test_agent, test_tool):
+    pool = await create_db_pool(dsn=pg_dsn)
     update_data = UpdateToolRequest(
         name="updated_tool",
         description="An updated description",
@@ -151,9 +143,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=t
     )
 
     result = await update_tool(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        tool_id=tool.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
+        tool_id=test_tool.id,
         data=update_data,
         connection_pool=pool,
     )
@@ -161,9 +153,9 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, tool=t
     assert result is not None
 
     tool = await get_tool(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        tool_id=tool.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
+        tool_id=test_tool.id,
         connection_pool=pool,
     )
 

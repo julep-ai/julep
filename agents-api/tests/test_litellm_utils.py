@@ -3,11 +3,10 @@ from unittest.mock import patch
 from agents_api.clients.litellm import acompletion
 from agents_api.common.utils.llm_providers import get_api_key_env_var_name
 from litellm.types.utils import ModelResponse
-from ward import test
+import pytest
 
 
-@test("litellm_utils: acompletion - no tools")
-async def _():
+async def test_litellm_utils_acompletion_no_tools():
     with patch("agents_api.clients.litellm._acompletion") as mock_acompletion:
         mock_acompletion.return_value = ModelResponse(
             id="test-id",
@@ -26,8 +25,7 @@ async def _():
         assert "tool_calls" not in called_messages[0]
 
 
-@test("litellm_utils: get_api_key_env_var_name")
-async def _():
+async def test_litellm_utils_get_api_key_env_var_name():
     with patch("agents_api.common.utils.llm_providers.get_config") as mock_get_config:
         mock_get_config.return_value = {
             "model_list": [

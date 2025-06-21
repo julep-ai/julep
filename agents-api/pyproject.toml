@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "aiobotocore>=2.15.2",
-  "anyio>=4.4.0",
+  "anyio>=4.8.0",
   "arrow>=1.3.0",
   "async-lru>=2.0.4",
   "beartype>=0.18.5",
@@ -72,11 +72,26 @@ dev = [
     "ruff>=0.9.0",
     "sqlvalidator>=0.0.20",
     "testcontainers[postgres,localstack]>=4.9.0",
-    "ward>=0.68.0b0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.5.0",
     "pyanalyze>=0.13.1",
     "autotyping>=24.9.0",
     "psycopg[binary]>=3.2.5", # only for use inside tests for now
     "ty>=0.0.0a8",
+    "pytest-testmon>=2.1.3",
+    "pytest-fast-first>=1.0.5",
+    "pytest-modified-env>=0.1.0",
+    "pytest-sugar>=1.0.0",
+    "pytest-watcher>=0.4.3",
+    "pytest-mock>=3.14.1",
+    # "pytest-instafail>=0.5.0",
+    # "pytest-tldr>=0.2.5",
+    # "pytest-check>=2.5.3",
+    "pytest-codeblocks>=0.17.0",
+    "pytest-profiling>=1.8.1",
+    # "pytest-asyncio-cooperative>=0.39.0",
 ]
 
 [tool.setuptools]
@@ -96,4 +111,35 @@ possibly-unbound-attribute = "warn"
 no-matching-overload = "warn"
 not-iterable = "warn"
 unsupported-operator = "warn"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+norecursedirs = ["docs", "*.egg-info", ".git", ".tox", ".pytype", ".venv"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "workflow: marks tests as workflow tests",
+]
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "--cov=agents_api",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    # "-vv",
+    "--testmon",
+    # "--instafail",
+    "-p no:pastebin",
+    "-p no:nose",
+    "-p no:doctest",
+]
 

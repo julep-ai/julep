@@ -14,15 +14,8 @@ from agents_api.routers.sessions.chat import _join_deltas, chat
 from fastapi import BackgroundTasks
 from starlette.responses import StreamingResponse
 from uuid_extensions import uuid7
-from ward import skip, test
-
-from .fixtures import (
-    pg_dsn,
-    test_agent,
-    test_developer,
-    test_developer_id,
-)
-
+import pytest
+# Fixtures are now defined in conftest.py and automatically available to tests
 
 async def get_usage_records(dsn: str, developer_id: str, limit: int = 100):
     """Helper function to get usage records for testing."""
@@ -86,8 +79,7 @@ async def collect_stream_content(response: StreamingResponse) -> list[dict]:
     return chunks
 
 
-@test("join_deltas: Test correct behavior")
-async def _():
+async def test_join_deltas_test_correct_behavior():
     """Test that join_deltas works properly to merge deltas."""
     # Test initial case where content needs to be added
     acc = {"content": ""}
@@ -120,21 +112,20 @@ async def _():
     assert result == {"content": "Hello", "role": "assistant"}
 
 
-@test("chat: Test streaming response format")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+async def test_chat_test_streaming_response_format(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that streaming responses follow the correct format."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for streaming format",
         ),
         connection_pool=pool,
@@ -161,7 +152,7 @@ async def _(
         # Call the chat function with mock response that includes finish_reason
         mock_response = "This is a test response"
         response = await chat(
-            developer=developer,
+            developer=test_developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
@@ -201,21 +192,20 @@ async def _(
         assert "".join(resulting_content) == mock_response
 
 
-@test("chat: Test streaming with document references")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+async def test_chat_test_streaming_with_document_references(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that document references are included in streaming response."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for streaming with documents",
         ),
         connection_pool=pool,
@@ -226,13 +216,13 @@ async def _(
         DocReference(
             id=str(uuid7()),
             title="Test Document 1",
-            owner={"id": developer_id, "role": "user"},
+            owner={"id": test_developer_id, "role": "user"},
             snippet={"index": 0, "content": "Test snippet 1"},
         ),
         DocReference(
             id=str(uuid7()),
             title="Test Document 2",
-            owner={"id": developer_id, "role": "user"},
+            owner={"id": test_developer_id, "role": "user"},
             snippet={"index": 0, "content": "Test snippet 2"},
         ),
     ]
@@ -258,7 +248,7 @@ async def _(
         # Call the chat function with mock response that includes finish_reason
         mock_response = "This is a test response"
         response = await chat(
-            developer=developer,
+            developer=test_developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
@@ -280,22 +270,21 @@ async def _(
                 assert "snippet" in doc_ref
 
 
-@skip("Skipping message history saving test")
-@test("chat: Test streaming with message history saving")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+@pytest.mark.skip(reason="Skipping message history saving test")
+async def test_chat_test_streaming_with_message_history_saving(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that messages are saved to history when streaming with save=True."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for streaming with history",
         ),
         connection_pool=pool,
@@ -329,7 +318,7 @@ async def _(
         # Call the chat function with mock response that includes finish_reason
         mock_response = "This is a test response"
         response = await chat(
-            developer=developer,
+            developer=test_developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
@@ -341,29 +330,28 @@ async def _(
         # Verify create_entries was called for user messages
         create_entries_mock.assert_called_once()
         call_args = create_entries_mock.call_args[1]
-        assert call_args["developer_id"] == developer_id
-        assert call_args["session_id"] == session.id
+        assert call_args["developer_id"] == test_developer_id
+        assert call_args["session_id"] == test_session.id
         # Verify we're saving the user message
         assert len(call_args["data"]) == 1
         assert call_args["data"][0].role == "user"
         assert call_args["data"][0].content == "Hello"
 
 
-@test("chat: Test streaming with usage tracking")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+async def test_chat_test_streaming_with_usage_tracking(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that token usage is tracked in streaming responses."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for streaming usage tracking",
         ),
         connection_pool=pool,
@@ -396,7 +384,7 @@ async def _(
         # Call the chat function with mock response that includes finish_reason and usage
         mock_response = "This is a test response"
         response = await chat(
-            developer=developer,
+            developer=test_developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
@@ -415,7 +403,7 @@ async def _(
         # Verify that track_usage was called for database tracking
         track_usage_mock.assert_called_once()
         call_args = track_usage_mock.call_args[1]
-        assert call_args["developer_id"] == developer_id
+        assert call_args["developer_id"] == test_developer_id
         assert call_args["model"] == "gpt-4o-mini"
         assert call_args["messages"] == [{"role": "user", "content": "Hello"}]
         assert call_args["custom_api_used"] is False
@@ -423,21 +411,20 @@ async def _(
         assert call_args["metadata"]["streaming"] is True
 
 
-@test("chat: Test streaming with custom API key")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+async def test_chat_test_streaming_with_custom_api_key(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that streaming works with a custom API key."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for streaming with custom API key",
         ),
         connection_pool=pool,
@@ -465,7 +452,7 @@ async def _(
         custom_api_key = "test-api-key"
         mock_response = "This is a test response"
         response = await chat(
-            developer=developer,
+            developer=test_developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
@@ -485,21 +472,20 @@ async def _(
         assert len(parsed_chunks) > 0
 
 
-@test("chat: Test streaming creates actual usage records in database")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+async def test_chat_test_streaming_creates_actual_usage_records_in_database(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that streaming creates actual usage records in the database."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for streaming usage database tracking",
         ),
         connection_pool=pool,
@@ -518,8 +504,8 @@ async def _(
 
     # Get initial usage record count
     initial_records = await get_usage_records(
-        dsn=dsn,
-        developer_id=str(developer_id),
+        dsn=pg_dsn,
+        developer_id=str(test_developer_id),
     )
     initial_count = len(initial_records)
 
@@ -533,7 +519,7 @@ async def _(
         # Call the chat function with mock response
         mock_response = "This is a test response"
         response = await chat(
-            developer=developer,
+            developer=test_developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
@@ -551,12 +537,12 @@ async def _(
 
     # Get usage records after streaming
     final_records = await get_usage_records(
-        dsn=dsn,
-        developer_id=str(developer_id),
+        dsn=pg_dsn,
+        developer_id=str(test_developer_id),
     )
     final_count = len(final_records)
 
-    await delete_usage_records(dsn=dsn, developer_id=str(developer_id))
+    await delete_usage_records(dsn=pg_dsn, developer_id=str(test_developer_id))
 
     # Verify a new usage record was created
     assert final_count == initial_count + 1
@@ -565,7 +551,7 @@ async def _(
     latest_record = final_records[0]  # Records are ordered by created_at DESC
 
     # Verify the usage record details
-    assert str(latest_record["developer_id"]) == str(developer_id)  # UUID comparison
+    assert str(latest_record["developer_id"]) == str(test_developer_id)  # UUID comparison
     assert latest_record["model"] == "gpt-4o-mini"
     assert latest_record["prompt_tokens"] > 0
     assert latest_record["completion_tokens"] > 0
@@ -576,21 +562,20 @@ async def _(
     assert "tags" in latest_record["metadata"]
 
 
-@test("chat: Test streaming with custom API key creates correct usage record")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+async def test_chat_test_streaming_with_custom_api_key_creates_correct_usage_record(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that streaming with custom API key sets custom_api_used correctly."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for custom API usage tracking",
         ),
         connection_pool=pool,
@@ -609,8 +594,8 @@ async def _(
 
     # Get initial usage record count
     initial_records = await get_usage_records(
-        dsn=dsn,
-        developer_id=str(developer_id),
+        dsn=pg_dsn,
+        developer_id=str(test_developer_id),
     )
     initial_count = len(initial_records)
 
@@ -625,7 +610,7 @@ async def _(
         custom_api_key = "test-custom-api-key"
         mock_response = "This is a test response"
         response = await chat(
-            developer=developer,
+            developer=test_developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
@@ -643,8 +628,8 @@ async def _(
 
     # Get usage records after streaming
     final_records = await get_usage_records(
-        dsn=dsn,
-        developer_id=str(developer_id),
+        dsn=pg_dsn,
+        developer_id=str(test_developer_id),
     )
     final_count = len(final_records)
 
@@ -655,28 +640,27 @@ async def _(
     latest_record = final_records[0]  # Records are ordered by created_at DESC
 
     # Verify the usage record details for custom API usage
-    assert str(latest_record["developer_id"]) == str(developer_id)  # UUID comparison
+    assert str(latest_record["developer_id"]) == str(test_developer_id)  # UUID comparison
     assert latest_record["model"] == "gpt-4o-mini"
     assert latest_record["custom_api_used"] is True  # This should be True for custom API
     assert "streaming" in latest_record["metadata"]
     assert latest_record["metadata"]["streaming"] is True
 
 
-@test("chat: Test streaming usage tracking with developer tags")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+async def test_chat_test_streaming_usage_tracking_with_developer_tags(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that streaming includes developer tags in usage metadata."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for tags in usage tracking",
         ),
         connection_pool=pool,
@@ -695,13 +679,13 @@ async def _(
 
     # Mock developer with tags
     test_tags = ["tag1", "tag2", "test"]
-    developer_with_tags = developer
+    developer_with_tags = test_developer
     developer_with_tags.tags = test_tags
 
     # Get initial usage record count
     initial_records = await get_usage_records(
-        dsn=dsn,
-        developer_id=str(developer_id),
+        dsn=pg_dsn,
+        developer_id=str(test_developer_id),
     )
     initial_count = len(initial_records)
 
@@ -732,11 +716,11 @@ async def _(
 
     # Get usage records after streaming
     final_records = await get_usage_records(
-        dsn=dsn,
-        developer_id=str(developer_id),
+        dsn=pg_dsn,
+        developer_id=str(test_developer_id),
     )
     final_count = len(final_records)
-    await delete_usage_records(dsn=dsn, developer_id=str(developer_id))
+    await delete_usage_records(dsn=pg_dsn, developer_id=str(test_developer_id))
 
     # Verify a new usage record was created
     assert final_count == initial_count + 1
@@ -745,7 +729,7 @@ async def _(
     latest_record = final_records[0]  # Records are ordered by created_at DESC
 
     # Verify the usage record includes developer tags
-    assert str(latest_record["developer_id"]) == str(developer_id)  # UUID comparison
+    assert str(latest_record["developer_id"]) == str(test_developer_id)  # UUID comparison
     assert latest_record["model"] == "gpt-4o-mini"
     assert "streaming" in latest_record["metadata"]
     assert latest_record["metadata"]["streaming"] is True
@@ -753,21 +737,20 @@ async def _(
     assert latest_record["metadata"]["tags"] == test_tags
 
 
-@test("chat: Test streaming usage tracking with different models")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+async def test_chat_test_streaming_usage_tracking_with_different_models(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
     """Test that streaming correctly tracks usage for different models."""
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a session
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session for different model usage tracking",
         ),
         connection_pool=pool,
@@ -788,8 +771,8 @@ async def _(
 
     # Get initial usage record count
     initial_records = await get_usage_records(
-        dsn=dsn,
-        developer_id=str(developer_id),
+        dsn=pg_dsn,
+        developer_id=str(test_developer_id),
     )
     initial_count = len(initial_records)
 
@@ -803,7 +786,7 @@ async def _(
         # Call the chat function
         mock_response = "This is a test response"
         response = await chat(
-            developer=developer,
+            developer=test_developer,
             session_id=session.id,
             chat_input=chat_input,
             background_tasks=BackgroundTasks(),
@@ -820,11 +803,11 @@ async def _(
 
     # Get usage records after streaming
     final_records = await get_usage_records(
-        dsn=dsn,
-        developer_id=str(developer_id),
+        dsn=pg_dsn,
+        developer_id=str(test_developer_id),
     )
     final_count = len(final_records)
-    await delete_usage_records(dsn=dsn, developer_id=str(developer_id))
+    await delete_usage_records(dsn=pg_dsn, developer_id=str(test_developer_id))
 
     # Verify a new usage record was created
     assert final_count == initial_count + 1
@@ -833,7 +816,7 @@ async def _(
     latest_record = final_records[0]  # Records are ordered by created_at DESC
 
     # Verify the usage record has the correct model
-    assert str(latest_record["developer_id"]) == str(developer_id)  # UUID comparison
+    assert str(latest_record["developer_id"]) == str(test_developer_id)  # UUID comparison
     assert latest_record["model"] == test_model
     assert latest_record["prompt_tokens"] > 0
     assert latest_record["completion_tokens"] > 0

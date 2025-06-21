@@ -1,9 +1,16 @@
+"""
+Pytest configuration and fixtures for agents-api tests.
+Migrated from Ward fixtures.py
+"""
+
 import os
 import random
 import string
 from unittest.mock import patch
 from uuid import UUID
 
+import pytest
+import pytest_asyncio
 from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
     CreateDocRequest,
@@ -15,6 +22,8 @@ from agents_api.autogen.openapi_model import (
     CreateToolRequest,
     CreateTransitionRequest,
     CreateUserRequest,
+    PatchTaskRequest,
+    UpdateTaskRequest,
 )
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.utils.memory import total_size
@@ -42,7 +51,6 @@ from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
-from ward import fixture
 
 from .utils import (
     get_localstack,
@@ -53,41 +61,86 @@ from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
 )
 
+# AIDEV-NOTE: Fix Pydantic forward reference issues
+# Import all step types first
+from agents_api.autogen.Tasks import (
+    EvaluateStep,
+    ErrorWorkflowStep,
+    ForeachStep,
+    GetStep,
+    IfElseWorkflowStep,
+    LogStep,
+    ParallelStep,
+    PromptStep,
+    ReturnStep,
+    SetStep,
+    SleepStep,
+    SwitchStep,
+    ToolCallStep,
+    WaitForInputStep,
+    YieldStep,
+)
 
-@fixture(scope="global")
+# Rebuild models to resolve forward references
+try:
+    CreateTaskRequest.model_rebuild()
+    CreateExecutionRequest.model_rebuild()
+    PatchTaskRequest.model_rebuild()
+    UpdateTaskRequest.model_rebuild()
+    # Also rebuild any workflow step models that might have forward refs
+    EvaluateStep.model_rebuild()
+    ForeachStep.model_rebuild()
+    IfElseWorkflowStep.model_rebuild()
+    ParallelStep.model_rebuild()
+    PromptStep.model_rebuild()
+    SwitchStep.model_rebuild()
+    ToolCallStep.model_rebuild()
+    WaitForInputStep.model_rebuild()
+    YieldStep.model_rebuild()
+except Exception:
+    pass  # Models might already be rebuilt
+
+# Configure pytest-asyncio
+pytest_asyncio.fixture_scope = "function"
+
+
+# Session-scoped fixtures (equivalent to Ward's global scope)
+@pytest.fixture(scope="session")
 def pg_dsn():
-    with get_pg_dsn() as pg_dsn:
-        os.environ["PG_DSN"] = pg_dsn
-
+    """PostgreSQL DSN for testing."""
+    with get_pg_dsn() as dsn:
+        os.environ["PG_DSN"] = dsn
         try:
-            yield pg_dsn
+            yield dsn
         finally:
             del os.environ["PG_DSN"]
 
 
-@fixture(scope="global")
+@pytest.fixture(scope="session")
 def test_developer_id():
+    """Test developer ID."""
     if not multi_tenant_mode:
         return UUID(int=0)
-
     return uuid7()
 
 
-@fixture(scope="global")
-async def test_developer(dsn=pg_dsn, developer_id=test_developer_id):
-    pool = await create_db_pool(dsn=dsn)
+@pytest.fixture
+async def test_developer(pg_dsn, test_developer_id):
+    """Test developer fixture."""
+    pool = await create_db_pool(dsn=pg_dsn)
     return await get_developer(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         connection_pool=pool,
     )
 
 
-@fixture(scope="test")
-async def test_project(dsn=pg_dsn, developer=test_developer):
-    pool = await create_db_pool(dsn=dsn)
-
+# Function-scoped fixtures (equivalent to Ward's test scope)
+@pytest.fixture
+async def test_project(pg_dsn, test_developer):
+    """Create a test project."""
+    pool = await create_db_pool(dsn=pg_dsn)
     return await create_project(
-        developer_id=developer.id,
+        developer_id=test_developer.id,
         data=CreateProjectRequest(
             name="Test Project",
             metadata={"test": "test"},
@@ -96,36 +149,37 @@ async def test_project(dsn=pg_dsn, developer=test_developer):
     )
 
 
-@fixture(scope="test")
+@pytest.fixture
 def patch_embed_acompletion():
+    """Patch embed and acompletion functions."""
     output = {"role": "assistant", "content": "Hello, world!"}
     with patch_embed_acompletion_ctx(output) as (embed, acompletion):
         yield embed, acompletion
 
 
-@fixture(scope="test")
-async def test_agent(dsn=pg_dsn, developer=test_developer, project=test_project):
-    pool = await create_db_pool(dsn=dsn)
-
+@pytest.fixture
+async def test_agent(pg_dsn, test_developer, test_project):
+    """Create a test agent."""
+    pool = await create_db_pool(dsn=pg_dsn)
     return await create_agent(
-        developer_id=developer.id,
+        developer_id=test_developer.id,
         data=CreateAgentRequest(
             model="gpt-4o-mini",
             name="test agent",
             about="test agent about",
             metadata={"test": "test"},
-            project=project.canonical_name,
+            project=test_project.canonical_name,
         ),
         connection_pool=pool,
     )
 
 
-@fixture(scope="test")
-async def test_user(dsn=pg_dsn, developer=test_developer):
-    pool = await create_db_pool(dsn=dsn)
-
+@pytest.fixture
+async def test_user(pg_dsn, test_developer):
+    """Create a test user."""
+    pool = await create_db_pool(dsn=pg_dsn)
     return await create_user(
-        developer_id=developer.id,
+        developer_id=test_developer.id,
         data=CreateUserRequest(
             name="test user",
             about="test user about",
@@ -134,11 +188,12 @@ async def test_user(dsn=pg_dsn, developer=test_developer):
     )
 
 
-@fixture(scope="test")
-async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
-    pool = await create_db_pool(dsn=dsn)
+@pytest.fixture
+async def test_file(pg_dsn, test_developer, test_user):
+    """Create a test file."""
+    pool = await create_db_pool(dsn=pg_dsn)
     return await create_file(
-        developer_id=developer.id,
+        developer_id=test_developer.id,
         data=CreateFileRequest(
             name="Hello",
             description="World",
@@ -149,11 +204,12 @@ async def test_file(dsn=pg_dsn, developer=test_developer, user=test_user):
     )
 
 
-@fixture(scope="test")
-async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
-    pool = await create_db_pool(dsn=dsn)
+@pytest.fixture
+async def test_doc(pg_dsn, test_developer, test_agent):
+    """Create a test document."""
+    pool = await create_db_pool(dsn=pg_dsn)
     resp = await create_doc(
-        developer_id=developer.id,
+        developer_id=test_developer.id,
         data=CreateDocRequest(
             title="Hello",
             content=["World", "World2", "World3"],
@@ -161,82 +217,82 @@ async def test_doc(dsn=pg_dsn, developer=test_developer, agent=test_agent):
             embed_instruction="Embed the document",
         ),
         owner_type="agent",
-        owner_id=agent.id,
+        owner_id=test_agent.id,
         connection_pool=pool,
     )
-
-    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
-    # ensuring it's up-to-date before executing queries.
-    # This can be achieved by executing a REINDEX command
+    
+    # Explicitly Refresh Indices
     await pool.execute("REINDEX DATABASE")
-
-    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
-
+    
+    doc = await get_doc(developer_id=test_developer.id, doc_id=resp.id, connection_pool=pool)
+    yield doc
+    
     # TODO: Delete the doc
     # await delete_doc(
-    #     developer_id=developer.id,
+    #     developer_id=test_developer.id,
     #     doc_id=resp.id,
     #     owner_type="agent",
-    #     owner_id=agent.id,
+    #     owner_id=test_agent.id,
     #     connection_pool=pool,
     # )
 
 
-@fixture(scope="test")
-async def test_doc_with_embedding(dsn=pg_dsn, developer=test_developer, doc=test_doc):
-    pool = await create_db_pool(dsn=dsn)
+@pytest.fixture
+async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
+    """Create a test document with embeddings."""
+    pool = await create_db_pool(dsn=pg_dsn)
     embedding_with_confidence_0 = make_vector_with_similarity(d=0.0)
     make_vector_with_similarity(d=0.5)
     make_vector_with_similarity(d=-0.5)
     embedding_with_confidence_1_neg = make_vector_with_similarity(d=-1.0)
+    
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
         VALUES ($1, $2, 0, 0, $3, $4)
     """,
-        developer.id,
-        doc.id,
-        doc.content[0] if isinstance(doc.content, list) else doc.content,
+        test_developer.id,
+        test_doc.id,
+        test_doc.content[0] if isinstance(test_doc.content, list) else test_doc.content,
         f"[{', '.join([str(x) for x in [1.0] * 1024])}]",
     )
-
-    # Insert embedding with confidence 0 with respect to unit vector
+    
+    # Insert embedding with confidence 0
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
         VALUES ($1, $2, 1, 1, $3, $4)
         """,
-        developer.id,
-        doc.id,
+        test_developer.id,
+        test_doc.id,
         "Test content 1",
         f"[{', '.join([str(x) for x in embedding_with_confidence_0])}]",
     )
-
-    # Insert embedding with confidence -1 with respect to unit vector
+    
+    # Insert embedding with confidence -1
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
         VALUES ($1, $2, 2, 2, $3, $4)
         """,
-        developer.id,
-        doc.id,
+        test_developer.id,
+        test_doc.id,
         "Test content 2",
         f"[{', '.join([str(x) for x in embedding_with_confidence_1_neg])}]",
     )
-
-    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
-    # ensuring it's up-to-date before executing queries.
-    # This can be achieved by executing a REINDEX command
+    
+    # Explicitly Refresh Indices
     await pool.execute("REINDEX DATABASE")
+    
+    yield await get_doc(developer_id=test_developer.id, doc_id=test_doc.id, connection_pool=pool)
 
-    yield await get_doc(developer_id=developer.id, doc_id=doc.id, connection_pool=pool)
 
-
-@fixture(scope="test")
-async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
-    pool = await create_db_pool(dsn=dsn)
+@pytest.fixture
+async def test_user_doc(pg_dsn, test_developer, test_user):
+    """Create a test document owned by a user."""
+    pool = await create_db_pool(dsn=pg_dsn)
     resp = await create_doc(
-        developer_id=developer.id,
+        developer_id=test_developer.id,
         data=CreateDocRequest(
             title="Hello",
             content=["World", "World2", "World3"],
@@ -244,33 +300,26 @@ async def test_user_doc(dsn=pg_dsn, developer=test_developer, user=test_user):
             embed_instruction="Embed the document",
         ),
         owner_type="user",
-        owner_id=user.id,
+        owner_id=test_user.id,
         connection_pool=pool,
     )
-
-    # Explicitly Refresh Indices: After inserting data, run a command to refresh the index,
-    # ensuring it's up-to-date before executing queries.
-    # This can be achieved by executing a REINDEX command
+    
+    # Explicitly Refresh Indices
     await pool.execute("REINDEX DATABASE")
-
-    yield await get_doc(developer_id=developer.id, doc_id=resp.id, connection_pool=pool)
-
+    
+    doc = await get_doc(developer_id=test_developer.id, doc_id=resp.id, connection_pool=pool)
+    yield doc
+    
     # TODO: Delete the doc
-    # await delete_doc(
-    #     developer_id=developer.id,
-    #     doc_id=resp.id,
-    #     owner_type="user",
-    #     owner_id=user.id,
-    #     connection_pool=pool,
-    # )
 
 
-@fixture(scope="test")
-async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
-    pool = await create_db_pool(dsn=dsn)
+@pytest.fixture
+async def test_task(pg_dsn, test_developer, test_agent):
+    """Create a test task."""
+    pool = await create_db_pool(dsn=pg_dsn)
     return await create_task(
-        developer_id=developer.id,
-        agent_id=agent.id,
+        developer_id=test_developer.id,
+        agent_id=test_agent.id,
         task_id=uuid7(),
         data=CreateTaskRequest(
             name="test task",
@@ -283,41 +332,43 @@ async def test_task(dsn=pg_dsn, developer=test_developer, agent=test_agent):
     )
 
 
-@fixture(scope="test")
+@pytest.fixture
 async def random_email():
+    """Generate a random email address."""
     return f"{''.join([random.choice(string.ascii_lowercase) for _ in range(10)])}@mail.com"
 
 
-@fixture(scope="test")
-async def test_new_developer(dsn=pg_dsn, email=random_email):
-    pool = await create_db_pool(dsn=dsn)
+@pytest.fixture
+async def test_new_developer(pg_dsn, random_email):
+    """Create a new test developer."""
+    pool = await create_db_pool(dsn=pg_dsn)
     dev_id = uuid7()
     await create_developer(
-        email=email,
+        email=random_email,
         active=True,
         tags=["tag1"],
         settings={"key1": "val1"},
         developer_id=dev_id,
         connection_pool=pool,
     )
-
+    
     return await get_developer(
         developer_id=dev_id,
         connection_pool=pool,
     )
 
 
-@fixture(scope="test")
+@pytest.fixture
 async def test_session(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    test_user=test_user,
-    test_agent=test_agent,
+    pg_dsn,
+    test_developer_id,
+    test_user,
+    test_agent,
 ):
-    pool = await create_db_pool(dsn=dsn)
-
+    """Create a test session."""
+    pool = await create_db_pool(dsn=pg_dsn)
     return await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
             agent=test_agent.id,
             user=test_user.id,
@@ -328,21 +379,22 @@ async def test_session(
     )
 
 
-@fixture(scope="global")
+@pytest.fixture
 async def test_execution(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    task=test_task,
+    pg_dsn,
+    test_developer_id,
+    test_task,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    """Create a test execution."""
+    pool = await create_db_pool(dsn=pg_dsn)
     workflow_handle = WorkflowHandle(
         client=None,
         id="blah",
     )
-
+    
     execution = await create_execution(
-        developer_id=developer_id,
-        task_id=task.id,
+        developer_id=test_developer_id,
+        task_id=test_task.id,
         data=CreateExecutionRequest(input={"test": "test"}),
         connection_pool=pool,
     )
@@ -354,27 +406,29 @@ async def test_execution(
     yield execution
 
 
-@fixture
+@pytest.fixture
 def custom_scope_id():
+    """Generate a custom scope ID."""
     return uuid7()
 
 
-@fixture(scope="test")
+@pytest.fixture
 async def test_execution_started(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    task=test_task,
-    scope_id=custom_scope_id,
+    pg_dsn,
+    test_developer_id,
+    test_task,
+    custom_scope_id,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    """Create a started test execution."""
+    pool = await create_db_pool(dsn=pg_dsn)
     workflow_handle = WorkflowHandle(
         client=None,
         id="blah",
     )
-
+    
     execution = await create_execution(
-        developer_id=developer_id,
-        task_id=task.id,
+        developer_id=test_developer_id,
+        task_id=test_task.id,
         data=CreateExecutionRequest(input={"test": "test"}),
         connection_pool=pool,
     )
@@ -383,12 +437,12 @@ async def test_execution_started(
         workflow_handle=workflow_handle,
         connection_pool=pool,
     )
-
-    actual_scope_id = scope_id or uuid7()
-
+    
+    actual_scope_id = custom_scope_id or uuid7()
+    
     # Start the execution
     await create_execution_transition(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
             type="init",
@@ -401,17 +455,18 @@ async def test_execution_started(
     yield execution
 
 
-@fixture(scope="global")
+@pytest.fixture
 async def test_transition(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    execution=test_execution_started,
+    pg_dsn,
+    test_developer_id,
+    test_execution_started,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    """Create a test transition."""
+    pool = await create_db_pool(dsn=pg_dsn)
     scope_id = uuid7()
     transition = await create_execution_transition(
-        developer_id=developer_id,
-        execution_id=execution.id,
+        developer_id=test_developer_id,
+        execution_id=test_execution_started.id,
         data=CreateTransitionRequest(
             type="step",
             output={},
@@ -423,27 +478,28 @@ async def test_transition(
     yield transition
 
 
-@fixture(scope="test")
+@pytest.fixture
 async def test_tool(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    """Create a test tool."""
+    pool = await create_db_pool(dsn=pg_dsn)
     function = {
         "description": "A function that prints hello world",
         "parameters": {"type": "object", "properties": {}},
     }
-
+    
     tool_spec = {
         "function": function,
         "name": "hello_world1",
         "type": "function",
     }
-
+    
     [tool, *_] = await create_tools(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=[CreateToolRequest(**tool_spec)],
         connection_pool=pool,
     )
@@ -457,78 +513,91 @@ SAMPLE_MODELS = [
 ]
 
 
-@fixture(scope="global")
-def client(_dsn=pg_dsn):
+@pytest.fixture(scope="session")
+def client(pg_dsn):
+    """Test client fixture."""
     with (
-        TestClient(app=app) as client,
+        TestClient(app=app) as test_client,
         patch(
             "agents_api.routers.utils.model_validation.get_model_list",
             return_value=SAMPLE_MODELS,
         ),
     ):
-        yield client
+        yield test_client
 
 
-@fixture(scope="global")
-async def make_request(client=client, developer_id=test_developer_id):
+@pytest.fixture
+async def make_request(client, test_developer_id):
+    """Factory fixture for making authenticated requests."""
     def _make_request(method, url, **kwargs):
         headers = kwargs.pop("headers", {})
         headers = {
             **headers,
             api_key_header_name: api_key,
         }
-
+        
         if multi_tenant_mode:
-            headers["X-Developer-Id"] = str(developer_id)
-
+            headers["X-Developer-Id"] = str(test_developer_id)
+        
         headers["Content-Length"] = str(total_size(kwargs.get("json", {})))
-
+        
         return client.request(method, url, headers=headers, **kwargs)
-
+    
     return _make_request
 
 
-@fixture(scope="global")
+@pytest_asyncio.fixture
 async def s3_client():
+    """S3 client fixture."""
     with get_localstack() as localstack:
         s3_endpoint = localstack.get_url()
-
+        
         session = get_session()
-        s3_client = await session.create_client(
+        s3 = await session.create_client(
             "s3",
             endpoint_url=s3_endpoint,
             aws_access_key_id=localstack.env["AWS_ACCESS_KEY_ID"],
             aws_secret_access_key=localstack.env["AWS_SECRET_ACCESS_KEY"],
         ).__aenter__()
-
-        app.state.s3_client = s3_client
-
+        
+        app.state.s3_client = s3
+        
         try:
-            yield s3_client
+            yield s3
         finally:
-            await s3_client.close()
+            await s3.close()
             app.state.s3_client = None
 
 
-@fixture(scope="test")
-async def clean_secrets(dsn=pg_dsn, developer_id=test_developer_id):
+@pytest.fixture
+async def clean_secrets(pg_dsn, test_developer_id):
+    """Fixture to clean up secrets before and after tests."""
     async def purge() -> None:
-        pool = await create_db_pool(dsn=dsn)
+        pool = await create_db_pool(dsn=pg_dsn)
         try:
             secrets = await list_secrets(
-                developer_id=developer_id,
+                developer_id=test_developer_id,
                 connection_pool=pool,
             )
             for secret in secrets:
                 await delete_secret(
                     secret_id=secret.id,
-                    developer_id=developer_id,
+                    developer_id=test_developer_id,
                     connection_pool=pool,
                 )
         finally:
             # pool is closed in *the same* loop it was created in
             await pool.close()
-
+    
     await purge()
     yield
     await purge()
+
+
+# Markers for test categorization
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line("markers", "slow: marks tests as slow")
+    config.addinivalue_line("markers", "integration: marks tests as integration tests")
+    config.addinivalue_line("markers", "unit: marks tests as unit tests")
+    config.addinivalue_line("markers", "workflow: marks tests as workflow tests")

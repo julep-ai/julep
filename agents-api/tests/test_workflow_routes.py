@@ -1,18 +1,14 @@
-# Tests for task queries
-
+import pytest
 from uuid_extensions import uuid7
-from ward import test
-
-from tests.fixtures import make_request, test_agent
 from tests.utils import patch_testing_temporal
 
 
-@test("workflow route: evaluate step single")
-async def _(
-    make_request=make_request,
-    agent=test_agent,
+async def test_workflow_route_evaluate_step_single(
+    make_request,
+    test_agent,
 ):
-    agent_id = str(agent.id)
+    """workflow route: evaluate step single"""
+    agent_id = str(test_agent.id)
     task_id = str(uuid7())
 
     async with patch_testing_temporal():
@@ -38,12 +34,12 @@ async def _(
         ).raise_for_status()
 
 
-@test("workflow route: evaluate step single with yaml")
-async def _(
-    make_request=make_request,
-    agent=test_agent,
+async def test_workflow_route_evaluate_step_single_with_yaml(
+    make_request,
+    test_agent,
 ):
-    agent_id = str(agent.id)
+    """workflow route: evaluate step single with yaml"""
+    agent_id = str(test_agent.id)
 
     async with patch_testing_temporal():
         task_data = """
@@ -80,12 +76,12 @@ main:
         ).raise_for_status()
 
 
-@test("workflow route: evaluate step single with yaml - nested")
-async def _(
-    make_request=make_request,
-    agent=test_agent,
+async def test_workflow_route_evaluate_step_single_with_yaml_nested(
+    make_request,
+    test_agent,
 ):
-    agent_id = str(agent.id)
+    """workflow route: evaluate step single with yaml - nested"""
+    agent_id = str(test_agent.id)
 
     async with patch_testing_temporal():
         task_data = """
@@ -125,12 +121,12 @@ main:
         ).raise_for_status()
 
 
-@test("workflow route: create or update: evaluate step single with yaml")
-async def _(
-    make_request=make_request,
-    agent=test_agent,
+async def test_workflow_route_create_or_update_evaluate_step_single_with_yaml(
+    make_request,
+    test_agent,
 ):
-    agent_id = str(agent.id)
+    """workflow route: create or update: evaluate step single with yaml"""
+    agent_id = str(test_agent.id)
     task_id = str(uuid7())
 
     async with patch_testing_temporal():

@@ -24,7 +24,7 @@ Julep is a serverless platform for building AI workflows and agents. It helps da
 | #: | AI *may* do                                                            | AI *must NOT* do                                                                    |
 |---|------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
 | G-0 | Whenever unsure about something that's related to the project, ask the developer for clarification before making changes.    |  ❌ Write changes or use tools when you are not sure about something project specific, or if you don't have context for a particular feature/decision. |
-| G-1 | Generate code **only inside** relevant source directories (e.g., `agents_api/` for the main API, `cli/src/` for the CLI, `integrations/` for integration-specific code) or explicitly pointed files.    | ❌ Touch `tests/`, `SPEC.md`, or any `*_spec.py` / `*.ward` files (humans own tests & specs). |
+| G-1 | Generate code **only inside** relevant source directories (e.g., `agents_api/` for the main API, `cli/src/` for the CLI, `integrations/` for integration-specific code) or explicitly pointed files.    | ❌ Touch `tests/`, `SPEC.md`, or any `*_spec.py` files (humans own tests & specs). |
 | G-2 | Add/update **`AIDEV-NOTE:` anchor comments** near non-trivial edited code. | ❌ Delete or mangle existing `AIDEV-` comments.                                     |
 | G-3 | Follow lint/style configs (`pyproject.toml`, `.ruff.toml`, `.pre-commit-config.yaml`). Use the project's configured linter, if available, instead of manually re-formatting code. | ❌ Re-format code to any other style.                                               |
 | G-4 | For changes >300 LOC or >3 files, **ask for confirmation**.            | ❌ Refactor large modules without human guidance.                                     |
@@ -41,8 +41,8 @@ Use `poe` tasks for consistency (they ensure correct environment variables and c
 poe format           # ruff format
 poe lint             # ruff check
 poe typecheck        # pytype --config pytype.toml (for agents-api) / pyright (for cli)
-poe test             # ward test --exclude .venv (pytest for integrations-service)
-poe test --search "pattern" # Run specific tests by Ward pattern
+poe test             # pytest (for all services)
+poe test -k "pattern" # Run specific tests by pytest pattern
 poe check            # format + lint + type + SQL validation
 poe codegen          # generate API code (e.g., OpenAPI from TypeSpec)
 ```
@@ -186,13 +186,13 @@ async def create_entry(
 
 ---
 
-## 9. Ward testing framework
+## 9. Pytest testing framework
 
-*   Use descriptive test names: `@test("Descriptive name of what is being tested")`.
+*   Use descriptive test names in function names: `def test_descriptive_name_of_what_is_being_tested():`.
 *   Activate virtual environment: `source .venv/bin/activate`.
 *   Ensure correct working directory (e.g., `agents-api/`) and `PYTHONPATH=$PWD` for script-based tests.
-*   Filter tests: `poe test --search "pattern_to_match"` (do NOT use `-p`).
-*   Limit failures for faster feedback: `poe test --fail-limit 1 --search "pattern_to_match"`.
+*   Filter tests: `poe test -k "pattern_to_match"`.
+*   Stop on first failure for faster feedback: `poe test -x -k "pattern_to_match"`.
 
 ---
 
@@ -207,7 +207,7 @@ async def create_entry(
 
 ## 11. Common pitfalls
 
-*   Mixing pytest & ward syntax (ward uses `@test()` decorator, not pytest fixtures/classes).
+*   Forgetting to use pytest fixtures properly or mixing test framework patterns.
 *   Forgetting to `source .venv/bin/activate`.
 *   Wrong current working directory (CWD) or `PYTHONPATH` for commands/tests (e.g., ensure you are in `agents-api/` not root for some `agents-api` tasks).
 *   Large AI refactors in a single commit (makes `git bisect` difficult).
@@ -258,7 +258,7 @@ This section provides pointers to important files and common patterns within the
 *   **Execution**: The runtime instance and state of a task being performed by an agent. Core model in `typespec/executions/models.tsp`.
 *   **POE (PoeThePoet)**: The task runner used in this project for development tasks like formatting, linting, testing, and code generation (configured in `pyproject.toml`).
 *   **TypeSpec**: The language used to define API schemas. It is the source of truth for API models, which are then generated into Python Pydantic models in `autogen/` directories.
-*   **Ward**: The primary Python testing framework used for unit and integration tests in most components (e.g., `agents-api`, `cli`).
+*   **Pytest**: The primary Python testing framework used for unit and integration tests in all components.
 *   **Temporal**: The distributed workflow engine used to orchestrate complex, long-running tasks and ensure their reliable execution.
 *   **AIDEV-NOTE/TODO/QUESTION**: Specially formatted comments to provide inline context or tasks for AI assistants and developers.
 

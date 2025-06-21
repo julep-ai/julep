@@ -1,15 +1,10 @@
-# Tests for file routes
-
+import pytest
 import base64
 import hashlib
 
-from ward import test
 
-from tests.fixtures import make_request, s3_client, test_project
-
-
-@test("route: create file")
-async def _(make_request=make_request, s3_client=s3_client):
+async def test_route_create_file(make_request, s3_client):
+    """route: create file"""
     data = {
         "name": "Test File",
         "description": "This is a test file.",
@@ -26,14 +21,14 @@ async def _(make_request=make_request, s3_client=s3_client):
     assert response.status_code == 201
 
 
-@test("route: create file with project")
-async def _(make_request=make_request, s3_client=s3_client, project=test_project):
+async def test_route_create_file_with_project(make_request, s3_client, test_project):
+    """route: create file with project"""
     data = {
         "name": "Test File with Project",
         "description": "This is a test file with project.",
         "mime_type": "text/plain",
         "content": "eyJzYW1wbGUiOiAidGVzdCJ9",
-        "project": project.canonical_name,
+        "project": test_project.canonical_name,
     }
 
     response = make_request(
@@ -43,11 +38,11 @@ async def _(make_request=make_request, s3_client=s3_client, project=test_project
     )
 
     assert response.status_code == 201
-    assert response.json()["project"] == project.canonical_name
+    assert response.json()["project"] == test_project.canonical_name
 
 
-@test("route: delete file")
-async def _(make_request=make_request, s3_client=s3_client):
+async def test_route_delete_file(make_request, s3_client):
+    """route: delete file"""
     data = {
         "name": "Test File",
         "description": "This is a test file.",
@@ -78,8 +73,8 @@ async def _(make_request=make_request, s3_client=s3_client):
     assert response.status_code == 404
 
 
-@test("route: get file")
-async def _(make_request=make_request, s3_client=s3_client):
+async def test_route_get_file(make_request, s3_client):
+    """route: get file"""
     data = {
         "name": "Test File",
         "description": "This is a test file.",
@@ -110,8 +105,8 @@ async def _(make_request=make_request, s3_client=s3_client):
     assert result["hash"] == expected_hash
 
 
-@test("route: list files")
-async def _(make_request=make_request, s3_client=s3_client):
+async def test_route_list_files(make_request, s3_client):
+    """route: list files"""
     response = make_request(
         method="GET",
         url="/files",
@@ -120,15 +115,15 @@ async def _(make_request=make_request, s3_client=s3_client):
     assert response.status_code == 200
 
 
-@test("route: list files with project filter")
-async def _(make_request=make_request, s3_client=s3_client, project=test_project):
+async def test_route_list_files_with_project_filter(make_request, s3_client, test_project):
+    """route: list files with project filter"""
     # First create a file with the project
     data = {
         "name": "Test File for Project Filter",
         "description": "This is a test file for project filtering.",
         "mime_type": "text/plain",
         "content": "eyJzYW1wbGUiOiAidGVzdCJ9",
-        "project": project.canonical_name,
+        "project": test_project.canonical_name,
     }
 
     make_request(
@@ -142,7 +137,7 @@ async def _(make_request=make_request, s3_client=s3_client, project=test_project
         method="GET",
         url="/files",
         params={
-            "project": project.canonical_name,
+            "project": test_project.canonical_name,
         },
     )
 
@@ -151,4 +146,4 @@ async def _(make_request=make_request, s3_client=s3_client, project=test_project
 
     assert isinstance(files, list)
     assert len(files) > 0
-    assert any(file["project"] == project.canonical_name for file in files)
+    assert any(file["project"] == test_project.canonical_name for file in files)

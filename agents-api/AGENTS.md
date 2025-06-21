@@ -21,8 +21,8 @@ Key Uses
 - Code style guidelines:
   - Follows root `AGENTS.md` Python standards (FastAPI, async/await, ruff formatting).
 - Testing instructions:
-  - Tests live under `agents-api/tests/` using `ward`.
-  - Run specific tests: `poe test --search "pattern" --fail-limit 1`.
+  - Tests live under `agents-api/tests/` using `pytest`.
+  - Run specific tests: `poe test -k "pattern" -x`.
 - Repository etiquette:
   - Tag AI-generated commits with `[AI]`.
 - Developer environment:

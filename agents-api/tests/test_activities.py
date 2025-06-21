@@ -3,13 +3,12 @@ from agents_api.env import temporal_task_queue
 from agents_api.workflows.demo import DemoWorkflow
 from agents_api.workflows.task_execution.helpers import DEFAULT_RETRY_POLICY
 from uuid_extensions import uuid7
-from ward import test
+import pytest
 
 from .utils import patch_testing_temporal
 
 
-@test("activity: call demo workflow via temporal client")
-async def _():
+async def test_activity_call_demo_workflow_via_temporal_client():
     async with patch_testing_temporal() as (_, mock_get_client):
         client = await temporal.get_client()
 
