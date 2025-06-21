@@ -11,11 +11,15 @@ CREATE TABLE IF NOT EXISTS api_keys (
     metadata JSONB DEFAULT '{}'::jsonb,
     deleted_at TIMESTAMPTZ DEFAULT NULL,
     CONSTRAINT pk_api_keys PRIMARY KEY (developer_id, api_key_id),
-    CONSTRAINT uq_api_keys_unique UNIQUE(developer_id, name) WHERE deleted_at IS NULL,
     CONSTRAINT ct_api_keys_metadata_is_object CHECK (jsonb_typeof(metadata) = 'object'),
     CONSTRAINT ct_api_keys_name_valid_identifier CHECK (name ~ '^[a-zA-Z][a-zA-Z0-9_]*$'),
     CONSTRAINT fk_api_keys_developer FOREIGN KEY (developer_id) REFERENCES developers(developer_id)
 );
+
+-- Create partial unique index instead of constraint with WHERE clause
+CREATE UNIQUE INDEX IF NOT EXISTS uq_api_keys_developer_id_name 
+    ON api_keys (developer_id, name) 
+    WHERE deleted_at IS NULL;
 
 -- Create trigger function for updated_at
 CREATE OR REPLACE FUNCTION update_api_keys_timestamp()
@@ -67,4 +71,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Add comment to table
 COMMENT ON TABLE api_keys IS 'Stores API keys with encryption for developers';
 
-COMMIT; 
+COMMIT;
