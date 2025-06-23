@@ -1,0 +1,574 @@
+---
+title: System Templates
+description: Learn how to use Jinja2 templates to create dynamic system prompts for your AI agents
+icon: code-merge
+---
+
+<Info>
+System templates allow you to create dynamic, context-aware prompts for your AI agents using Jinja2 templating. This guide covers everything you need to know about creating and customizing system templates.
+</Info>
+
+## Overview
+
+System templates in Julep are **Jinja2 templates** that define the initial system prompt for your AI agents. They allow you to:
+
+- Create dynamic prompts that adapt based on context
+- Include user information, session data, and other variables
+- Implement conditional logic for different scenarios
+- Maintain consistency across agent interactions
+- Inject custom metadata at the message level for dynamic behavior
+
+## Template Hierarchy
+
+Julep uses a three-level hierarchy for system templates:
+
+1. **Agent Default Template**: Defined when creating an agent
+2. **Session Template**: Can override the agent's default template for specific sessions
+3. **Chat Metadata**: Can inject dynamic variables at the individual message level
+
+<Note>
+The session template takes precedence over the agent's default template. Chat metadata is available in both cases.
+</Note>
+
+## Default System Template
+
+When you create an agent without specifying a custom template, Julep uses this default template:
+
+```jinja
+{%- if agent.name -%}
+You are {{agent.name}}.{{" "}}
+{%- endif -%}
+
+{%- if agent.about -%}
+About you: {{agent.about}}.{{" "}}
+{%- endif -%}
+
+{%- if user.name -%}
+You are talking to {{user.name}}.{{" "}}
+{%- endif -%}
+
+{%- if user.about -%}
+About the user: {{user.about}}.{{" "}}
+{%- endif -%}
+
+{{agent.instructions}}
+
+{%- if tools -%}
+You have access to these tools:
+{%- for tool in tools -%}
+{%- if tool.type == "function" -%}
+- {{tool.function.name}}
+{%- if tool.function.description -%}: {{tool.function.description}}{%- endif -%}
+{%- else -%}
+- {{ 0/0 }} {# Error: Other tool types aren't supported yet #}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+
+{%- if docs -%}
+Relevant documents:
+{%- for doc in docs -%}
+{{doc.title}}
+{%- if doc.content -%}:
+<document>
+{{doc.content}}
+</document>
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+```
+
+## Template Variables
+
+The following variables are available in your system templates:
+
+### Core Variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `agent` | Object | The agent's configuration and details |
+| `agent.name` | String | The agent's name |
+| `agent.about` | String | Description of the agent |
+| `agent.instructions` | Array/String | Agent's instructions |
+| `user` | Object | Information about the current user |
+| `user.name` | String | The user's name |
+| `user.about` | String | Description of the user |
+| `session` | Object | Current session information |
+| `session.situation` | String | The session's context/situation |
+
+### Dynamic Variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `tools` | Array | Available tools for the agent |
+| `docs` | Array | Relevant documents from searches |
+| `metadata` | Object | Custom metadata passed in chat requests |
+
+## Creating Custom Templates
+
+### Basic Example
+
+Here's a simple custom template for a customer service agent:
+
+<CodeGroup>
+
+```python python
+agent = client.agents.create(
+    name="Customer Support Agent",
+    model="gpt-4",
+    about="A helpful customer service representative",
+    instructions=[
+        "Be polite and professional",
+        "Always offer to help further"
+    ],
+    default_system_template="""
+You are {{agent.name}}, a customer service representative.
+
+{%- if metadata.priority == "high" -%}
+⚠️ HIGH PRIORITY CUSTOMER - Provide expedited service
+{%- endif -%}
+
+{%- if metadata.customer_tier == "premium" -%}
+Premium customer - Offer enhanced support options
+{%- endif -%}
+
+Your guidelines:
+{{agent.instructions}}
+
+{%- if user.name -%}
+Customer name: {{user.name}}
+{%- endif -%}
+"""
+)
+```
+
+```javascript javascript
+const agent = await client.agents.create({
+  name: "Customer Support Agent",
+  model: "gpt-4",
+  about: "A helpful customer service representative",
+  instructions: [
+    "Be polite and professional",
+    "Always offer to help further"
+  ],
+  default_system_template: `
+You are {{agent.name}}, a customer service representative.
+
+{%- if metadata.priority == "high" -%}
+⚠️ HIGH PRIORITY CUSTOMER - Provide expedited service
+{%- endif -%}
+
+{%- if metadata.customer_tier == "premium" -%}
+Premium customer - Offer enhanced support options
+{%- endif -%}
+
+Your guidelines:
+{{agent.instructions}}
+
+{%- if user.name -%}
+Customer name: {{user.name}}
+{%- endif -%}
+`
+});
+```
+
+</CodeGroup>
+
+### Advanced Example with Conditional Logic
+
+<CodeGroup>
+
+```python python
+template = """
+{%- if agent.name -%}
+You are {{agent.name}}.
+{%- endif -%}
+
+{# Mood-based personality adjustment #}
+{%- if metadata.mood == "friendly" -%}
+Be warm, conversational, and use a friendly tone.
+{%- elif metadata.mood == "professional" -%}
+Maintain a formal, business-appropriate tone.
+{%- elif metadata.mood == "playful" -%}
+Feel free to be creative and add appropriate humor.
+{%- else -%}
+Respond in a balanced, helpful manner.
+{%- endif -%}
+
+{# Language preferences #}
+{%- if metadata.language -%}
+Respond in {{metadata.language}}.
+{%- endif -%}
+
+{# Expertise areas #}
+{%- if metadata.expertise -%}
+You are an expert in:
+{%- for skill in metadata.expertise -%}
+- {{skill}}
+{%- endfor -%}
+{%- endif -%}
+
+{# Include instructions #}
+{{agent.instructions}}
+
+{# Tool availability #}
+{%- if tools -%}
+Available tools:
+{%- for tool in tools -%}
+- {{tool.function.name}}: {{tool.function.description}}
+{%- endfor -%}
+{%- endif -%}
+"""
+
+# Using the template with metadata
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[
+        {"role": "user", "content": "Help me with Python"}
+    ],
+    metadata={
+        "mood": "friendly",
+        "language": "English",
+        "expertise": ["Python", "Machine Learning", "Data Science"]
+    }
+)
+```
+
+```javascript javascript
+const template = `
+{%- if agent.name -%}
+You are {{agent.name}}.
+{%- endif -%}
+
+{# Mood-based personality adjustment #}
+{%- if metadata.mood == "friendly" -%}
+Be warm, conversational, and use a friendly tone.
+{%- elif metadata.mood == "professional" -%}
+Maintain a formal, business-appropriate tone.
+{%- elif metadata.mood == "playful" -%}
+Feel free to be creative and add appropriate humor.
+{%- else -%}
+Respond in a balanced, helpful manner.
+{%- endif -%}
+
+{# Language preferences #}
+{%- if metadata.language -%}
+Respond in {{metadata.language}}.
+{%- endif -%}
+
+{# Expertise areas #}
+{%- if metadata.expertise -%}
+You are an expert in:
+{%- for skill in metadata.expertise -%}
+- {{skill}}
+{%- endfor -%}
+{%- endif -%}
+
+{# Include instructions #}
+{{agent.instructions}}
+
+{# Tool availability #}
+{%- if tools -%}
+Available tools:
+{%- for tool in tools -%}
+- {{tool.function.name}}: {{tool.function.description}}
+{%- endfor -%}
+{%- endif -%}
+`;
+
+// Using the template with metadata
+const response = await client.sessions.chat({
+  sessionId: session.id,
+  messages: [
+    { role: "user", content: "Help me with Python" }
+  ],
+  metadata: {
+    mood: "friendly",
+    language: "English",
+    expertise: ["Python", "Machine Learning", "Data Science"]
+  }
+});
+```
+
+</CodeGroup>
+
+## Using Chat Metadata
+
+The `metadata` field in chat requests allows you to pass dynamic variables that can be used in your system templates. This enables message-level customization without modifying the agent or session.
+
+### Example: Dynamic Instructions
+
+<CodeGroup>
+
+```python python
+# Create an agent with a metadata-aware template
+agent = client.agents.create(
+    name="Adaptive Assistant",
+    default_system_template="""
+You are {{agent.name}}.
+
+{%- if metadata.instructions -%}
+Special instructions for this conversation:
+{{metadata.instructions}}
+{%- endif -%}
+
+{%- if metadata.constraints -%}
+Important constraints:
+{%- for constraint in metadata.constraints -%}
+- {{constraint}}
+{%- endfor -%}
+{%- endif -%}
+"""
+)
+
+# Use metadata to modify behavior per message
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[{"role": "user", "content": "Write a story"}],
+    metadata={
+        "instructions": "Write in the style of Edgar Allan Poe",
+        "constraints": [
+            "Keep it under 200 words",
+            "Include a raven",
+            "End with a twist"
+        ]
+    }
+)
+```
+
+```javascript javascript
+// Create an agent with a metadata-aware template
+const agent = await client.agents.create({
+  name: "Adaptive Assistant",
+  default_system_template: `
+You are {{agent.name}}.
+
+{%- if metadata.instructions -%}
+Special instructions for this conversation:
+{{metadata.instructions}}
+{%- endif -%}
+
+{%- if metadata.constraints -%}
+Important constraints:
+{%- for constraint in metadata.constraints -%}
+- {{constraint}}
+{%- endfor -%}
+{%- endif -%}
+`
+});
+
+// Use metadata to modify behavior per message
+const response = await client.sessions.chat({
+  sessionId: session.id,
+  messages: [{ role: "user", content: "Write a story" }],
+  metadata: {
+    instructions: "Write in the style of Edgar Allan Poe",
+    constraints: [
+      "Keep it under 200 words",
+      "Include a raven",
+      "End with a twist"
+    ]
+  }
+});
+```
+
+</CodeGroup>
+
+## Session vs Agent Templates
+
+You can override an agent's default template at the session level:
+
+<CodeGroup>
+
+```python python
+# Agent with default template
+agent = client.agents.create(
+    name="Multi-purpose Assistant",
+    default_system_template="You are a helpful assistant."
+)
+
+# Session with custom template
+session = client.sessions.create(
+    agent_id=agent.id,
+    system_template="""
+You are a technical writing assistant.
+Focus on clarity, accuracy, and proper documentation structure.
+{%- if metadata.doc_type -%}
+You are writing a {{metadata.doc_type}}.
+{%- endif -%}
+"""
+)
+```
+
+```javascript javascript
+// Agent with default template
+const agent = await client.agents.create({
+  name: "Multi-purpose Assistant",
+  default_system_template: "You are a helpful assistant."
+});
+
+// Session with custom template
+const session = await client.sessions.create({
+  agentId: agent.id,
+  system_template: `
+You are a technical writing assistant.
+Focus on clarity, accuracy, and proper documentation structure.
+{%- if metadata.doc_type -%}
+You are writing a {{metadata.doc_type}}.
+{%- endif -%}
+`
+});
+```
+
+</CodeGroup>
+
+<Tip>
+Use session templates when you need different behavior for the same agent in different contexts (e.g., customer service vs internal support).
+</Tip>
+
+## Jinja2 Features
+
+System templates support the full range of Jinja2 features:
+
+### Conditionals
+
+```jinja
+{%- if user.subscription_level == "premium" -%}
+You have access to advanced features.
+{%- elif user.subscription_level == "basic" -%}
+Some features may be limited.
+{%- else -%}
+Welcome! Consider upgrading for more features.
+{%- endif -%}
+```
+
+### Loops
+
+```jinja
+{%- if metadata.topics -%}
+Focus on these topics:
+{%- for topic in metadata.topics -%}
+- {{topic}}
+{%- endfor -%}
+{%- endif -%}
+```
+
+### Filters
+
+```jinja
+Agent name in uppercase: {{agent.name|upper}}
+Word count limit: {{metadata.word_limit|default(500)}}
+```
+
+### Comments
+
+```jinja
+{# This is a comment and won't appear in the output #}
+```
+
+## Best Practices
+
+<Accordion title="1. Keep Templates Focused">
+Avoid overly complex templates. If your template is becoming too large, consider breaking the logic into different agents or sessions.
+</Accordion>
+
+<Accordion title="2. Use Meaningful Variable Names">
+When using metadata, choose clear, descriptive keys:
+- ✅ `metadata.customer_tier`
+- ❌ `metadata.ct`
+</Accordion>
+
+<Accordion title="3. Provide Fallbacks">
+Always handle cases where variables might be missing:
+```jinja
+{{metadata.language|default("English")}}
+```
+</Accordion>
+
+<Accordion title="4. Test Template Rendering">
+Test your templates with various metadata combinations to ensure they render correctly in all scenarios.
+</Accordion>
+
+## Common Patterns
+
+### Multi-language Support
+
+```jinja
+{%- if metadata.language == "es" -%}
+Eres un asistente útil. Responde en español.
+{%- elif metadata.language == "fr" -%}
+Vous êtes un assistant utile. Répondez en français.
+{%- else -%}
+You are a helpful assistant. Respond in English.
+{%- endif -%}
+```
+
+### Role-based Access
+
+```jinja
+{%- if metadata.user_role == "admin" -%}
+You have full access to all operations and sensitive information.
+{%- elif metadata.user_role == "user" -%}
+Provide general assistance. Do not share sensitive information.
+{%- endif -%}
+```
+
+### Context-aware Behavior
+
+```jinja
+{%- if metadata.context == "code_review" -%}
+Focus on code quality, security issues, and best practices.
+{%- elif metadata.context == "debugging" -%}
+Help identify and fix issues. Ask clarifying questions.
+{%- elif metadata.context == "learning" -%}
+Explain concepts clearly with examples. Be patient and thorough.
+{%- endif -%}
+```
+
+## Debugging Templates
+
+To debug template rendering issues:
+
+1. **Check Variable Availability**: Ensure all referenced variables exist
+2. **Validate Jinja2 Syntax**: Use a Jinja2 linter or validator
+3. **Test Incrementally**: Add template features one at a time
+4. **Use the Render Endpoint**: Test template rendering without making chat requests
+
+<CodeGroup>
+
+```python python
+# Test template rendering
+render_result = client.sessions.render(
+    session_id=session.id,
+    messages=[{"role": "user", "content": "Test"}],
+    metadata={"test_var": "test_value"}
+)
+
+# Inspect the rendered system message
+print(render_result.messages[0]["content"])
+```
+
+```javascript javascript
+// Test template rendering
+const renderResult = await client.sessions.render({
+  sessionId: session.id,
+  messages: [{ role: "user", content: "Test" }],
+  metadata: { test_var: "test_value" }
+});
+
+// Inspect the rendered system message
+console.log(renderResult.messages[0].content);
+```
+
+</CodeGroup>
+
+## Related Topics
+
+- [Agents](/concepts/agents) - Learn more about agent configuration
+- [Sessions](/concepts/sessions) - Understand session management
+- [Tasks](/concepts/tasks) - Create complex workflows with templates
+- [Tool Integration](/integrations/tools) - Add tools referenced in templates
+
+<Note>
+System templates are rendered server-side before being sent to the language model. This ensures security and consistency across all API clients.
+</Note>
