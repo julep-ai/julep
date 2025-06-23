@@ -1,14 +1,15 @@
 name: Sync changelog with Blot
 
-# on:
-#   push:
-#     branches: [dev]  #todo: change to main after testing on dev
-#     paths: ["changelog/**"]
-
 on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths: ["changelog/**"]
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - "changelog/**"
   workflow_run:
        workflows: ["Claude Changelog (PR)"]
        types: [completed]
