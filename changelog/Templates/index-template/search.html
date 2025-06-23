@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  {{> head}}
+  <body>
+    {{> header}}
+
+    <form action='/search'>
+      <input name="q" type="text" placeholder="Enter a search term..." value="{{#query}}{{query}}{{/query}}" autofocus/>
+      <input type="submit" value="Search">
+    </form>
+
+    <br>
+
+    {{#query}}
+    {{^entries}}
+    <p>Sorry, nothing found for “{{query}}”</p>
+    {{/entries}}
+    {{/query}}
+
+    {{#entries}}
+    <a href="{{{url}}}" class="row"><b>{{title}}</b> {{#date}}&nbsp;·&nbsp; <span style="white-space: nowrap;">{{date}}</span>{{/date}}</a>
+    {{/entries}}
+
+    {{> footer}}
+
+  </body>
+</html>
