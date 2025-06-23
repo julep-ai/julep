@@ -40,7 +40,7 @@ async def search_docs_by_text(
     k: int = 3,
     metadata_filter: dict[str, Any] | None = None,
     search_language: str | None = "english_unaccent",
-    trigram_similarity_threshold: float = 0.5,  # Higher threshold to catch fewer spelling errors
+    trigram_similarity_threshold: float | None = None,  # Set to None to disable trigram search
     extract_keywords: bool = False,
 ) -> tuple[str, list]:
     """

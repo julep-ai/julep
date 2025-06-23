@@ -3436,6 +3436,10 @@ components:
       description: |-
         For canonical names (machine-friendly identifiers)
         Must start with a letter and can only contain letters, numbers, and underscores
+    Common.content:
+      type: string
+      maxLength: 30000
+      description: Contents of a document
     Common.displayName:
       type: string
       minLength: 1
@@ -3486,29 +3490,6 @@ components:
       maxLength: 40
       pattern: ^[^\W0-9]\w*$
       description: Valid python identifier names
-    Docs.BaseDocSearchRequest:
-      type: object
-      required:
-        - limit
-        - lang
-        - metadata_filter
-      properties:
-        limit:
-          type: integer
-          format: uint16
-          minimum: 1
-          maximum: 50
-          description: The limit of documents to return
-          default: 10
-        lang:
-          type: string
-          description: The language to be used for text-only search. Support for other languages coming soon.
-          default: en-US
-        metadata_filter:
-          type: object
-          additionalProperties: {}
-          description: Metadata filter to apply to the search
-          default: {}
     Docs.BulkDeleteDocsRequest:
       type: object
       required:
@@ -3540,11 +3521,11 @@ components:
           description: Title describing what this document contains
         content:
           anyOf:
-            - type: string
+            - $ref: '#/components/schemas/Common.content'
             - type: array
               items:
-                type: string
-          description: Contents of the document
+                $ref: '#/components/schemas/Common.content'
+          description: Contents of the document. Each string is limited to 30k characters.
         embed_instruction:
           type: string
           nullable: true
@@ -3694,33 +3675,53 @@ components:
     Docs.HybridDocSearchRequest:
       type: object
       required:
+        - limit
+        - metadata_filter
+        - text
+        - lang
+        - trigram_similarity_threshold
+        - vector
         - confidence
         - alpha
-        - text
-        - vector
-        - trigram_similarity_threshold
         - k_multiplier
       properties:
+        limit:
+          type: integer
+          format: uint16
+          minimum: 1
+          maximum: 50
+          description: The limit of documents to return
+          default: 10
+        metadata_filter:
+          type: object
+          additionalProperties: {}
+          description: Metadata filter to apply to the search
+          default: {}
+        text:
+          type: string
+          description: Text to use in the search
+        lang:
+          type: string
+          description: The language to be used for text search. Support for other languages coming soon.
+          default: en-US
+        trigram_similarity_threshold:
+          type: number
+          nullable: true
+          minimum: 0
+          maximum: 1
+          description: Trigram similarity threshold for fuzzy matching. Set to null to disable trigram search.
+          default: null
+        vector:
+          type: array
+          items:
+            type: number
+          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
         confidence:
           type: number
           minimum: -1
           maximum: 1
           description: The confidence cutoff level
           default: 0.5
-        alpha:
-          type: number
-          minimum: 0
-          maximum: 1
-          description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-          default: 0.5
-        text:
-          type: string
-          description: Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
-        vector:
-          type: array
-          items:
-            type: number
-          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
         mmr_strength:
           type: number
           minimum: 0
@@ -3728,20 +3729,19 @@ components:
           exclusiveMaximum: true
           description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
-        trigram_similarity_threshold:
+        alpha:
           type: number
           minimum: 0
           maximum: 1
-          description: The trigram_similarity_threshold cutoff level
-          default: 0.6
+          description: The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+          default: 0.5
         k_multiplier:
           type: integer
           format: int8
-          minimum: 0
-          description: The k_multiplier cutoff level to control how many intermediate results to fetch before final scoring
-          default: 7
-      allOf:
-        - $ref: '#/components/schemas/Docs.BaseDocSearchRequest'
+          minimum: 1
+          maximum: 10
+          description: The k_multiplier to control how many intermediate results to fetch before final scoring
+          default: 5
     Docs.MultipleEmbedQueryRequest:
       type: object
       required:
@@ -3790,37 +3790,69 @@ components:
     Docs.TextOnlyDocSearchRequest:
       type: object
       required:
+        - limit
+        - metadata_filter
         - text
+        - lang
         - trigram_similarity_threshold
       properties:
+        limit:
+          type: integer
+          format: uint16
+          minimum: 1
+          maximum: 50
+          description: The limit of documents to return
+          default: 10
+        metadata_filter:
+          type: object
+          additionalProperties: {}
+          description: Metadata filter to apply to the search
+          default: {}
         text:
           type: string
-          description: Text to use in the search.
+          description: Text to use in the search
+        lang:
+          type: string
+          description: The language to be used for text search. Support for other languages coming soon.
+          default: en-US
         trigram_similarity_threshold:
           type: number
+          nullable: true
           minimum: 0
           maximum: 1
-          description: The trigram_similarity_threshold cutoff level
-          default: 0.6
-      allOf:
-        - $ref: '#/components/schemas/Docs.BaseDocSearchRequest'
+          description: Trigram similarity threshold for fuzzy matching. Set to null to disable trigram search.
+          default: null
     Docs.VectorDocSearchRequest:
       type: object
       required:
-        - confidence
+        - limit
+        - metadata_filter
         - vector
+        - confidence
       properties:
+        limit:
+          type: integer
+          format: uint16
+          minimum: 1
+          maximum: 50
+          description: The limit of documents to return
+          default: 10
+        metadata_filter:
+          type: object
+          additionalProperties: {}
+          description: Metadata filter to apply to the search
+          default: {}
+        vector:
+          type: array
+          items:
+            type: number
+          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
         confidence:
           type: number
           minimum: -1
           maximum: 1
           description: The confidence cutoff level
           default: 0.5
-        vector:
-          type: array
-          items:
-            type: number
-          description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
         mmr_strength:
           type: number
           minimum: 0
@@ -3828,8 +3860,6 @@ components:
           exclusiveMaximum: true
           description: MMR Strength (mmr_strength = 1 - mmr_lambda)
           default: 0.5
-      allOf:
-        - $ref: '#/components/schemas/Docs.BaseDocSearchRequest'
     Entries.BaseEntry:
       type: object
       required:

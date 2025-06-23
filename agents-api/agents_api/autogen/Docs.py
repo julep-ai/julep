@@ -8,23 +8,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
-
-class BaseDocSearchRequest(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    limit: Annotated[int, Field(ge=1, le=50)] = 10
-    """
-    The limit of documents to return
-    """
-    lang: str = "en-US"
-    """
-    The language to be used for text-only search. Support for other languages coming soon.
-    """
-    metadata_filter: dict[str, Any] = {}
-    """
-    Metadata filter to apply to the search
-    """
+from .Common import Content
 
 
 class BulkDeleteDocsRequest(BaseModel):
@@ -54,9 +38,9 @@ class CreateDocRequest(BaseModel):
     """
     Title describing what this document contains
     """
-    content: str | list[str]
+    content: Content | list[Content]
     """
-    Contents of the document
+    Contents of the document. Each string is limited to 30k characters.
     """
     embed_instruction: str | None = None
     """
@@ -161,37 +145,49 @@ class EmbedQueryResponse(BaseModel):
     """
 
 
-class HybridDocSearchRequest(BaseDocSearchRequest):
+class HybridDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
+    limit: Annotated[int, Field(ge=1, le=50)] = 10
     """
-    The confidence cutoff level
+    The limit of documents to return
     """
-    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
+    metadata_filter: dict[str, Any] = {}
     """
-    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    Metadata filter to apply to the search
     """
     text: str
     """
-    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+    Text to use in the search
+    """
+    lang: str = "en-US"
+    """
+    The language to be used for text search. Support for other languages coming soon.
+    """
+    trigram_similarity_threshold: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
+    """
+    Trigram similarity threshold for fuzzy matching. Set to null to disable trigram search.
     """
     vector: list[float]
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
+    """
+    The confidence cutoff level
+    """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
     MMR Strength (mmr_strength = 1 - mmr_lambda)
     """
-    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     """
-    The trigram_similarity_threshold cutoff level
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
-    k_multiplier: Annotated[int, Field(ge=0)] = 7
+    k_multiplier: Annotated[int, Field(ge=1, le=10)] = 5
     """
-    The k_multiplier cutoff level to control how many intermediate results to fetch before final scoring
+    The k_multiplier to control how many intermediate results to fetch before final scoring
     """
 
 
@@ -232,31 +228,51 @@ class Snippet(BaseModel):
     embedding: list[float] | None = None
 
 
-class TextOnlyDocSearchRequest(BaseDocSearchRequest):
+class TextOnlyDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    limit: Annotated[int, Field(ge=1, le=50)] = 10
+    """
+    The limit of documents to return
+    """
+    metadata_filter: dict[str, Any] = {}
+    """
+    Metadata filter to apply to the search
+    """
     text: str
     """
-    Text to use in the search.
+    Text to use in the search
     """
-    trigram_similarity_threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.6
+    lang: str = "en-US"
     """
-    The trigram_similarity_threshold cutoff level
+    The language to be used for text search. Support for other languages coming soon.
+    """
+    trigram_similarity_threshold: Annotated[float | None, Field(ge=0.0, le=1.0)] = None
+    """
+    Trigram similarity threshold for fuzzy matching. Set to null to disable trigram search.
     """
 
 
-class VectorDocSearchRequest(BaseDocSearchRequest):
+class VectorDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
+    limit: Annotated[int, Field(ge=1, le=50)] = 10
     """
-    The confidence cutoff level
+    The limit of documents to return
+    """
+    metadata_filter: dict[str, Any] = {}
+    """
+    Metadata filter to apply to the search
     """
     vector: list[float]
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
+    confidence: Annotated[float, Field(ge=-1.0, le=1.0)] = 0.5
+    """
+    The confidence cutoff level
     """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """

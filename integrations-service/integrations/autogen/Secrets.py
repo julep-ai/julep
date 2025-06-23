@@ -60,4 +60,5 @@ class Secret(BaseModel):
     """
 
 
-UpdateSecretRequest = CreateSecretRequest
+class UpdateSecretRequest(CreateSecretRequest):
+    pass

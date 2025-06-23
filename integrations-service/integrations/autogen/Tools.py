@@ -447,7 +447,8 @@ class Bash20241022Def(BaseModel):
     name: str = "bash"
 
 
-Bash20241022DefUpdate = Bash20241022Def
+class Bash20241022DefUpdate(Bash20241022Def):
+    pass
 
 
 class BraveIntegrationDef(BaseIntegrationDef):
@@ -666,10 +667,12 @@ class BrowserbaseGetSessionArgumentsUpdate(BaseModel):
     id: str | None = None
 
 
-BrowserbaseGetSessionLiveUrlsArguments = BrowserbaseGetSessionArguments
+class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
+    pass
 
 
-BrowserbaseGetSessionLiveUrlsArgumentsUpdate = BrowserbaseGetSessionArgumentsUpdate
+class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(BrowserbaseGetSessionArgumentsUpdate):
+    pass
 
 
 class BrowserbaseListSessionsArguments(BaseModel):
@@ -993,7 +996,10 @@ class Computer20241022Def(BaseModel):
     """
 
 
-Computer20241022DefUpdate = Computer20241022Def
+class Computer20241022DefUpdate(Computer20241022Def):
+    """
+    Anthropic new tools
+    """
 
 
 class CreateToolRequest(BaseModel):
@@ -2118,7 +2124,8 @@ class TextEditor20241022Def(BaseModel):
     name: str = "str_replace_editor"
 
 
-TextEditor20241022DefUpdate = TextEditor20241022Def
+class TextEditor20241022DefUpdate(TextEditor20241022Def):
+    pass
 
 
 class Tool(BaseModel):
