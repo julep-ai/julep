@@ -100,8 +100,8 @@ async def create_doc(
 
         for idx, content in enumerate(data.content):
             # Convert Content object to string if needed
-            content_str = content.root if hasattr(content, 'root') else content
-            
+            content_str = content.root if hasattr(content, "root") else content
+
             doc_params = [
                 developer_id,
                 current_doc_id,
@@ -139,8 +139,8 @@ async def create_doc(
 
     else:
         # Convert Content object to string if needed
-        content_str = data.content.root if hasattr(data.content, 'root') else data.content
-        
+        content_str = data.content.root if hasattr(data.content, "root") else data.content
+
         # Create the doc record
         doc_params = [
             developer_id,
