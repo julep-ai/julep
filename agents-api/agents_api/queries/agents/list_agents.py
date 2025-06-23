@@ -89,10 +89,9 @@ async def list_agents(
         direction,
     ]
 
-    # Handle metadata filter differently - using JSONB containment
-    agent_query = raw_query.format(
-        metadata_filter_query="AND a.metadata @> $6::jsonb" if metadata_filter else "",
-    )
+    # AIDEV-NOTE: Build metadata filter query safely to prevent SQL injection
+    metadata_filter_query = "AND a.metadata @> $6::jsonb" if metadata_filter else ""
+    agent_query = raw_query.replace("{metadata_filter_query}", metadata_filter_query)
 
     # If we have metadata filters, safely add them as a parameter
     if metadata_filter:

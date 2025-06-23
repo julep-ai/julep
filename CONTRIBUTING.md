@@ -179,6 +179,27 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
    - Add new tests for new functionality
    - Ensure all tests pass before submitting your changes
 
+### Security Guidelines
+
+When contributing code that interacts with databases:
+
+1. **SQL Injection Prevention**
+   - NEVER use string formatting for SQL queries (f-strings, .format(), %)
+   - ALWAYS use the SQL safety utilities from `agents-api/agents_api/queries/sql_utils.py`
+   - Use `SafeQueryBuilder` for complex queries with dynamic conditions
+   - Use `safe_format_query` for simple queries with ORDER BY clauses
+   - All user inputs must be parameterized using placeholder syntax ($1, $2, etc.)
+
+2. **Input Validation**
+   - Validate and sanitize all user inputs before using in queries
+   - Use whitelisting for sort fields and directions
+   - Check identifier patterns with `sanitize_identifier()`
+
+3. **Testing Security**
+   - Add tests for any new query functions that handle user input
+   - See `agents-api/tests/test_sql_injection_prevention.py` for examples
+   - Ensure your code passes SQL injection prevention tests
+
 5. **Submit a Pull Request**
    - Provide a clear description of your changes
    - Reference any related issues

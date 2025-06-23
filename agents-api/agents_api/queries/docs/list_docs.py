@@ -11,8 +11,8 @@ from beartype.vale import Is
 
 from ...autogen.openapi_model import Doc
 from ...common.utils.db_exceptions import common_db_exceptions
+from ..sql_utils import SafeQueryBuilder
 from ..utils import (
-    build_metadata_filter_conditions,
     make_num_validator,
     pg_query,
     rewrap_exceptions,
@@ -105,18 +105,19 @@ async def list_docs(
 
     # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
     metadata_filter = metadata_filter if metadata_filter is not None else {}
-    # Start with the base query
-    query = base_docs_query
-    params = [developer_id, include_without_embeddings, owner_type, owner_id]
 
-    # Add metadata filtering before GROUP BY using the utility function with table alias
-    metadata_conditions, params = build_metadata_filter_conditions(
-        params, metadata_filter, table_alias="d."
+    # Build query using SafeQueryBuilder to prevent SQL injection
+    builder = SafeQueryBuilder(
+        base_docs_query, [developer_id, include_without_embeddings, owner_type, owner_id]
     )
-    query += metadata_conditions
+
+    # Add metadata filtering using SafeQueryBuilder's condition system
+    if metadata_filter:
+        for key, value in metadata_filter.items():
+            builder.add_condition(" AND d.metadata->>{}::text = {}", key, str(value))
 
     # Add GROUP BY clause
-    query += """
+    builder.add_raw_condition("""
     GROUP BY
         d.doc_id,
         d.developer_id,
@@ -126,12 +127,12 @@ async def list_docs(
         d.embedding_dimensions,
         d.language,
         d.metadata,
-        d.created_at"""
+        d.created_at""")
 
-    # Add sorting and pagination
-    query += (
-        f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
+    # Add sorting and pagination with validation
+    builder.add_order_by(
+        sort_by, direction, allowed_fields={"created_at", "updated_at"}, table_prefix=""
     )
-    params.extend([limit, offset])
+    builder.add_limit_offset(limit, offset)
 
-    return query, params
+    return builder.build()

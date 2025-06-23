@@ -10,6 +10,10 @@ The `agents-api` project serves as the foundation of the agent management system
 
 The `models` module encapsulates all data interactions with the CozoDB database, providing a structured way to perform CRUD operations and other specific data manipulations across various entities.
 
+### Queries
+
+The `queries` module contains database query builders organized by resource types. It includes critical SQL safety utilities in `sql_utils.py` to prevent SQL injection attacks through parameterized queries and input validation.
+
 ### Routers
 
 The `routers` module handles HTTP routing for different parts of the application, directing incoming HTTP requests to the appropriate handler functions.

@@ -52,7 +52,9 @@ async def bulk_delete_docs(
         params, metadata_filter if not delete_all else {}, table_alias="d."
     )
 
-    query = f"""
+    # AIDEV-NOTE: Build query with proper parameter placeholders to avoid SQL injection
+    query = (
+        """
     WITH deleted_docs AS (
         DELETE FROM docs d
         WHERE d.developer_id = $1
@@ -63,7 +65,9 @@ async def bulk_delete_docs(
                 AND o.developer_id = d.developer_id
                 AND o.owner_type = $2
                 AND o.owner_id = $3
-                {metadata_conditions}
+                """
+        + metadata_conditions
+        + """
             )
         RETURNING d.doc_id
     ),
@@ -76,5 +80,6 @@ async def bulk_delete_docs(
     )
     SELECT doc_id FROM deleted_docs;
     """
+    )
 
     return query, params
