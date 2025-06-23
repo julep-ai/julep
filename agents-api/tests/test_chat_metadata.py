@@ -179,10 +179,10 @@ async def _(
     pg_dsn=pg_dsn,
 ):
     """Test that metadata is properly rendered in custom system templates."""
-    from agents_api.queries.sessions.create_session import create_session
-    from agents_api.clients.pg import create_db_pool
     from agents_api.autogen.Sessions import CreateSessionRequest
-    
+    from agents_api.clients.pg import create_db_pool
+    from agents_api.queries.sessions.create_session import create_session
+
     # Create a custom system template that uses metadata
     custom_system_template = """
 {%- if agent.name -%}
@@ -201,20 +201,20 @@ Current mood: {{metadata.mood}}
 Respond in: {{metadata.language}}
 {%- endif -%}
 """
-    
+
     # Create a session with the custom system template
     pool = await create_db_pool(dsn=pg_dsn)
     session_data = CreateSessionRequest(
         agent=test_agent.id,
         system_template=custom_system_template,
     )
-    
+
     session = await create_session(
         developer_id=test_developer_id,
         data=session_data,
         connection_pool=pool,
     )
-    
+
     # Make a render request with metadata
     render_data = {
         "messages": [
@@ -230,33 +230,35 @@ Respond in: {{metadata.language}}
         },
         "recall": False,
     }
-    
+
     response = make_request(
         method="POST",
         url=f"/sessions/{session.id}/render",
         json=render_data,
     )
-    
+
     assert response.status_code == 200
-    
+
     # Parse the response
     result = response.json()
-    
+
     # Check that messages were rendered
     assert "messages" in result
     messages = result["messages"]
     assert len(messages) >= 2  # System message + user message
-    
+
     # Find the system message
     system_message = next((msg for msg in messages if msg["role"] == "system"), None)
     assert system_message is not None
-    
+
     # Verify that metadata was rendered in the system message
     system_content = system_message["content"]
-    assert "Custom instructions: You are very rude. Try to make fun of the user" in system_content
+    assert (
+        "Custom instructions: You are very rude. Try to make fun of the user" in system_content
+    )
     assert "Current mood: sarcastic" in system_content
     assert "Respond in: English with a British accent" in system_content
-    
+
     # Also verify the agent name is rendered
     assert f"You are {test_agent.name}" in system_content
 
@@ -269,10 +271,10 @@ async def _(
     pg_dsn=pg_dsn,
 ):
     """Test complex conditional logic with metadata in system templates."""
-    from agents_api.queries.sessions.create_session import create_session
-    from agents_api.clients.pg import create_db_pool
     from agents_api.autogen.Sessions import CreateSessionRequest
-    
+    from agents_api.clients.pg import create_db_pool
+    from agents_api.queries.sessions.create_session import create_session
+
     # Create a template with complex conditional logic
     complex_template = """
 {%- if agent.name -%}
@@ -303,20 +305,20 @@ Important restrictions:
 {%- endfor -%}
 {%- endif -%}
 """
-    
+
     # Create session with complex template
     pool = await create_db_pool(dsn=pg_dsn)
     session_data = CreateSessionRequest(
         agent=test_agent.id,
         system_template=complex_template,
     )
-    
+
     session = await create_session(
         developer_id=test_developer_id,
         data=session_data,
         connection_pool=pool,
     )
-    
+
     # Test with different metadata configurations
     test_cases = [
         {
@@ -329,7 +331,7 @@ Important restrictions:
                 "Be as helpful and supportive as possible",
                 "You are an expert in:",
                 "- Python",
-                "- Machine Learning", 
+                "- Machine Learning",
                 "- Data Science",
                 "Important restrictions:",
                 "* No code execution",
@@ -349,40 +351,41 @@ Important restrictions:
             ],
         },
     ]
-    
+
     for test_case in test_cases:
         render_data = {
             "messages": [{"role": "user", "content": "Test"}],
             "metadata": test_case["metadata"],
             "recall": False,
         }
-        
+
         response = make_request(
             method="POST",
             url=f"/sessions/{session.id}/render",
             json=render_data,
         )
-        
+
         assert response.status_code == 200
         result = response.json()
-        
+
         # Find system message
         system_message = next(
-            (msg for msg in result["messages"] if msg["role"] == "system"), 
-            None
+            (msg for msg in result["messages"] if msg["role"] == "system"), None
         )
         assert system_message is not None
-        
+
         # Check expected content
         for expected in test_case["expected_content"]:
-            assert expected in system_message["content"], \
+            assert expected in system_message["content"], (
                 f"Expected '{expected}' in system message but it was not found"
-        
+            )
+
         # Check not expected content (if specified)
         if "not_expected" in test_case:
             for not_expected in test_case["not_expected"]:
-                assert not_expected not in system_message["content"], \
+                assert not_expected not in system_message["content"], (
                     f"Did not expect '{not_expected}' in system message but it was found"
+                )
 
 
 # TODO: Add streaming test when streaming mock is fixed
