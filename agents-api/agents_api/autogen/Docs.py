@@ -177,7 +177,7 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     """
     Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
     """
-    vector: list[float]
+    vector: list[float] | None = None
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
@@ -254,9 +254,13 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     """
     The confidence cutoff level
     """
-    vector: list[float]
+    vector: list[float] | None = None
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
+    text: str | None = None
+    """
+    Text to use in the search. If `vector` is not provided, this text will be automatically embedded.
     """
     mmr_strength: Annotated[float, Field(ge=0.0, lt=1.0)] = 0.5
     """
