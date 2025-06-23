@@ -110,6 +110,7 @@
                   "advanced/types-of-task-steps",
                   "advanced/chat",
                   "advanced/render",
+                  "advanced/system-templates",
                   "advanced/files",
                   "advanced/secrets-management",
                   "advanced/architecture-deep-dive",

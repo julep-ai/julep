@@ -93,7 +93,9 @@ class ComputerToolCall(BaseModel):
     """
     An identifier used when responding to the tool call with output.
     """
-    action: Click | DoubleClick | Drag | KeyPress | Move | Screenshot | Scroll | Type | Wait
+    action: (
+        Click | DoubleClick | Drag | KeyPress | Move | Screenshot | Scroll | Type | Wait
+    )
     """
     The action to perform.
     """
@@ -226,7 +228,9 @@ class CreateResponse(BaseModel):
     reasoning: Reasoning | None = None
     text: Text | None = None
     tool_choice: Literal["auto", "none"] | ToolChoice | None = None
-    tools: list[FunctionTool | WebSearchTool | FileSearchTool | ComputerTool] | None = None
+    tools: list[FunctionTool | WebSearchTool | FileSearchTool | ComputerTool] | None = (
+        None
+    )
     truncation: Literal["disabled", "auto"] | None = None
     metadata: dict[str, Any] | None = None
 
@@ -713,7 +717,9 @@ class Response(BaseModel):
     store: StrictBool = True
     temperature: float = 1
     text: Text | None = None
-    tool_choice: ToolChoiceTypes | ToolChoiceFunction | Literal["auto", "none", "required"]
+    tool_choice: (
+        ToolChoiceTypes | ToolChoiceFunction | Literal["auto", "none", "required"]
+    )
     tools: list[FunctionTool | WebSearchTool | FileSearchTool | ComputerTool]
     top_p: float = 1
     truncation: Literal["disabled", "auto"]
@@ -922,7 +928,7 @@ class ToolChoiceTypes(BaseModel):
 
     Allowed values are:
     - `file_search`
-    - `web_search_preview`
+    - `web_search_preview` 
     - `computer_use_preview`
     """
 
