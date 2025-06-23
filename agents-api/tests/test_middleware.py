@@ -235,7 +235,11 @@ async def test_middleware_cant_create_session_when_cost_limit_is_reached(make_re
     pool = await create_db_pool(dsn=pg_dsn)
     developer_id = uuid7()
     email = f'test-{developer_id}@example.com'
-    await create_developer(email=email, active=True, tags=[], settings={}, developer_id=developer_id, connection_pool=pool)
+    try:
+        await create_developer(email=email, active=True, tags=[], settings={}, developer_id=developer_id, connection_pool=pool)
+    finally:
+        await pool.close()
+    
     mock_user_cost_data = {'active': True, 'cost': float(free_tier_cost_limit) + 1.0, 'developer_id': developer_id, 'tags': []}
     with patch('agents_api.web.get_usage_cost', new=AsyncMock(return_value=mock_user_cost_data)):
         response = make_request(method='POST', url='/sessions', json={'agent_id': str(test_agent.id)}, headers={'X-Developer-Id': str(developer_id)})
@@ -248,12 +252,16 @@ async def test_middleware_cant_delete_session_when_cost_limit_is_reached(make_re
     pool = await create_db_pool(dsn=pg_dsn)
     developer_id = uuid7()
     email = f'test-{developer_id}@example.com'
-    await create_developer(email=email, active=True, tags=[], settings={}, developer_id=developer_id, connection_pool=pool)
+    try:
+        await create_developer(email=email, active=True, tags=[], settings={}, developer_id=developer_id, connection_pool=pool)
+    finally:
+        await pool.close()
+    
     mock_responses = [{'active': True, 'cost': float(free_tier_cost_limit) - 0.5, 'developer_id': developer_id, 'tags': []}, {'active': True, 'cost': float(free_tier_cost_limit) + 1.0, 'developer_id': developer_id, 'tags': []}]
     mock_get_usage_cost = AsyncMock()
     mock_get_usage_cost.side_effect = mock_responses
     with patch('agents_api.web.get_usage_cost', new=mock_get_usage_cost):
-        session_response = make_request(method='POST', url='/sessions', json={'agent': str(test_agent.id)}, headers={'X-Developer-Id': str(developer_id)})
+        session_response = make_request(method='POST', url='/sessions', json={'agent_id': str(test_agent.id)}, headers={'X-Developer-Id': str(developer_id)})
         assert session_response.status_code == status.HTTP_201_CREATED
         session_id = session_response.json()['id']
         delete_response = make_request(method='DELETE', url=f'/sessions/{session_id}', headers={'X-Developer-Id': str(developer_id)})

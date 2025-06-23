@@ -660,9 +660,10 @@ async def test_query_search_docs_by_embedding_with_different_confidence_levels(
     confidence_tests = [
         (0.99, 0),  # Very high similarity threshold - should find no results
         (0.7, 1),  # High similarity - should find 1 result (the embedding with all 1.0s)
-        (0.3, 2),  # Medium similarity - should find 2 results (including 0.3-0.7 embedding)
-        (-0.8, 3),  # Low similarity - should find 3 results (including -0.8 to 0.8 embedding)
-        (-1.0, 4),  # Lowest similarity - should find all 4 results (including alternating -1/1)
+        (0.3, 2),  # Medium similarity - should find 2 results (including 0.5 similarity embedding)
+        (-0.3, 3),  # Low similarity - should find 3 results (including 0 similarity embedding)
+        (-0.8, 4),  # Lower similarity - should find 4 results (including -0.5 similarity)
+        (-1.0, 5),  # Lowest similarity - should find all 5 results (including -1 similarity)
     ]
 
     for confidence, expected_min_results in confidence_tests:
@@ -686,7 +687,11 @@ async def test_query_search_docs_by_embedding_with_different_confidence_levels(
 
         if results:
             # Verify that all returned results meet the confidence threshold
+            # Distance uses cosine distance (0=identical, 2=opposite)
+            # The SQL converts confidence to search_threshold = 1.0 - confidence
+            # and filters results where distance <= search_threshold
+            search_threshold = 1.0 - confidence
             for result in results:
-                assert result.distance >= confidence, (
-                    f"Result distance {result.distance} is below confidence threshold {confidence}"
+                assert result.distance <= search_threshold, (
+                    f"Result distance {result.distance} exceeds search threshold {search_threshold} (confidence={confidence})"
                 )

@@ -242,10 +242,11 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
     """Create a test document with embeddings."""
     pool = await create_db_pool(dsn=pg_dsn)
     embedding_with_confidence_0 = make_vector_with_similarity(d=0.0)
-    make_vector_with_similarity(d=0.5)
-    make_vector_with_similarity(d=-0.5)
+    embedding_with_confidence_0_5 = make_vector_with_similarity(d=0.5)
+    embedding_with_confidence_neg_0_5 = make_vector_with_similarity(d=-0.5)
     embedding_with_confidence_1_neg = make_vector_with_similarity(d=-1.0)
     
+    # Insert embedding with all 1.0s (similarity = 1.0)
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
@@ -269,7 +270,7 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
         f"[{', '.join([str(x) for x in embedding_with_confidence_0])}]",
     )
     
-    # Insert embedding with confidence -1
+    # Insert embedding with confidence 0.5
     await pool.execute(
         """
         INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
@@ -278,6 +279,30 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
         test_developer.id,
         test_doc.id,
         "Test content 2",
+        f"[{', '.join([str(x) for x in embedding_with_confidence_0_5])}]",
+    )
+    
+    # Insert embedding with confidence -0.5
+    await pool.execute(
+        """
+        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
+        VALUES ($1, $2, 3, 3, $3, $4)
+        """,
+        test_developer.id,
+        test_doc.id,
+        "Test content 3",
+        f"[{', '.join([str(x) for x in embedding_with_confidence_neg_0_5])}]",
+    )
+    
+    # Insert embedding with confidence -1
+    await pool.execute(
+        """
+        INSERT INTO docs_embeddings_store (developer_id, doc_id, index, chunk_seq, chunk, embedding)
+        VALUES ($1, $2, 4, 4, $3, $4)
+        """,
+        test_developer.id,
+        test_doc.id,
+        "Test content 4",
         f"[{', '.join([str(x) for x in embedding_with_confidence_1_neg])}]",
     )
     
@@ -552,15 +577,25 @@ async def s3_client():
     with get_localstack() as localstack:
         s3_endpoint = localstack.get_url()
         
+        from botocore.config import Config
+        
         session = get_session()
         s3 = await session.create_client(
             "s3",
             endpoint_url=s3_endpoint,
             aws_access_key_id=localstack.env["AWS_ACCESS_KEY_ID"],
             aws_secret_access_key=localstack.env["AWS_SECRET_ACCESS_KEY"],
+            config=Config(s3={'addressing_style': 'path'})
         ).__aenter__()
         
         app.state.s3_client = s3
+        
+        # Create the bucket if it doesn't exist
+        from agents_api.env import blob_store_bucket
+        try:
+            await s3.head_bucket(Bucket=blob_store_bucket)
+        except Exception:
+            await s3.create_bucket(Bucket=blob_store_bucket)
         
         try:
             yield s3
