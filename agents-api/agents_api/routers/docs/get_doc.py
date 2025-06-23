@@ -17,7 +17,5 @@ async def get_doc(
 ) -> Doc:
     # AIDEV-NOTE: include_embeddings parameter added to reduce bandwidth when embeddings not needed
     return await get_doc_query(
-        developer_id=x_developer_id, 
-        doc_id=doc_id,
-        include_embeddings=include_embeddings
+        developer_id=x_developer_id, doc_id=doc_id, include_embeddings=include_embeddings
     )
