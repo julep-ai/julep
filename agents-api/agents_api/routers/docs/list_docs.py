@@ -22,7 +22,9 @@ async def list_user_docs(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
+    include_embeddings: bool = True,
 ) -> ListResponse[Doc]:
+    # AIDEV-NOTE: include_embeddings parameter exposed to reduce bandwidth when embeddings not needed
     docs = await list_docs_query(
         developer_id=x_developer_id,
         owner_type="user",
@@ -32,6 +34,7 @@ async def list_user_docs(
         sort_by=sort_by,
         direction=direction,
         metadata_filter=metadata_filter.model_dump(mode="json"),
+        include_embeddings=include_embeddings,
     )
 
     return ListResponse[Doc](items=docs)
@@ -49,7 +52,9 @@ async def list_agent_docs(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
+    include_embeddings: bool = True,
 ) -> ListResponse[Doc]:
+    # AIDEV-NOTE: include_embeddings parameter exposed to reduce bandwidth when embeddings not needed
     docs = await list_docs_query(
         developer_id=x_developer_id,
         owner_type="agent",
@@ -59,6 +64,7 @@ async def list_agent_docs(
         sort_by=sort_by,
         direction=direction,
         metadata_filter=metadata_filter.model_dump(mode="json"),
+        include_embeddings=include_embeddings,
     )
 
     return ListResponse[Doc](items=docs)

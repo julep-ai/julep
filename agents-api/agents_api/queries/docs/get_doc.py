@@ -87,18 +87,23 @@ async def get_doc(
     *,
     developer_id: UUID,
     doc_id: UUID,
+    include_embeddings: bool = True,
 ) -> tuple[str, list]:
     """
-    Fetch a single doc with its embedding, grouping all content chunks and embeddings.
+    Fetch a single doc with or without embeddings, grouping all content chunks.
 
     Parameters:
         developer_id (UUID): The ID of the developer.
         doc_id (UUID): The ID of the document.
+        include_embeddings (bool): Whether to include embeddings in the response.
+            Defaults to True for backward compatibility.
 
     Returns:
         tuple[str, list]: SQL query and parameters for fetching the document.
     """
+    # AIDEV-NOTE: Bandwidth optimization - use doc_without_embedding_query when embeddings not needed
+    query = doc_with_embedding_query if include_embeddings else doc_without_embedding_query
     return (
-        doc_with_embedding_query,
+        query,
         [developer_id, doc_id],
     )

@@ -2243,6 +2243,17 @@
           "title": "Messages",
           "type": "array"
         },
+        "metadata": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Metadata"
+        },
         "min_p": {
           "anyOf": [
             {
@@ -3291,7 +3302,7 @@
       "title": "Computer20241022DefUpdate",
       "type": "object"
     },
-    "Content": {
+    "Content-Output": {
       "properties": {
         "text": {
           "title": "Text",
@@ -3617,11 +3628,11 @@
         "content": {
           "anyOf": [
             {
-              "type": "string"
+              "$ref": "#/$defs/agents_api__autogen__Common__Content"
             },
             {
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/agents_api__autogen__Common__Content"
               },
               "type": "array"
             }
@@ -5516,7 +5527,7 @@
               "items": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/Content"
+                    "$ref": "#/$defs/Content-Output"
                   },
                   {
                     "$ref": "#/$defs/agents_api__autogen__Entries__ContentModel3"
@@ -6502,8 +6513,9 @@
           "type": "number"
         },
         "k_multiplier": {
-          "default": 7,
-          "minimum": 0.0,
+          "default": 5,
+          "maximum": 10.0,
+          "minimum": 1.0,
           "title": "K Multiplier",
           "type": "integer"
         },
@@ -6536,11 +6548,17 @@
           "type": "string"
         },
         "trigram_similarity_threshold": {
-          "default": 0.6,
-          "maximum": 1.0,
-          "minimum": 0.0,
-          "title": "Trigram Similarity Threshold",
-          "type": "number"
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trigram Similarity Threshold"
         },
         "vector": {
           "items": {
@@ -7933,7 +7951,7 @@
               "items": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/Content"
+                    "$ref": "#/$defs/agents_api__autogen__Chat__Content"
                   },
                   {
                     "$ref": "#/$defs/ContentModel7"
@@ -8046,7 +8064,7 @@
               "items": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/Content"
+                    "$ref": "#/$defs/Content-Output"
                   },
                   {
                     "$ref": "#/$defs/ContentModel7"
@@ -9088,7 +9106,7 @@
               "items": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/Content"
+                    "$ref": "#/$defs/agents_api__autogen__Tasks__Content"
                   },
                   {
                     "$ref": "#/$defs/agents_api__autogen__Tasks__ContentModel"
@@ -9202,7 +9220,7 @@
               "items": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/Content"
+                    "$ref": "#/$defs/Content-Output"
                   },
                   {
                     "$ref": "#/$defs/agents_api__autogen__Tasks__ContentModel"
@@ -11580,11 +11598,17 @@
           "type": "string"
         },
         "trigram_similarity_threshold": {
-          "default": 0.6,
-          "maximum": 1.0,
-          "minimum": 0.0,
-          "title": "Trigram Similarity Threshold",
-          "type": "number"
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trigram Similarity Threshold"
         }
       },
       "required": [
@@ -13233,11 +13257,6 @@
           "title": "Confidence",
           "type": "number"
         },
-        "lang": {
-          "default": "en-US",
-          "title": "Lang",
-          "type": "string"
-        },
         "limit": {
           "default": 10,
           "maximum": 50.0,
@@ -13759,6 +13778,25 @@
       "title": "YieldStep",
       "type": "object"
     },
+    "agents_api__autogen__Chat__Content": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "default": "text",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "Content",
+      "type": "object"
+    },
     "agents_api__autogen__Chat__ContentModel-Input": {
       "description": "Anthropic image content part",
       "properties": {
@@ -13911,6 +13949,11 @@
       "title": "ContentModel3",
       "type": "object"
     },
+    "agents_api__autogen__Common__Content": {
+      "maxLength": 30000,
+      "title": "Content",
+      "type": "string"
+    },
     "agents_api__autogen__Entries__ContentModel": {
       "description": "Anthropic image content part",
       "properties": {
@@ -14022,6 +14065,25 @@
         "image_url"
       ],
       "title": "ContentModel3",
+      "type": "object"
+    },
+    "agents_api__autogen__Tasks__Content": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "default": "text",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "Content",
       "type": "object"
     },
     "agents_api__autogen__Tasks__ContentModel": {

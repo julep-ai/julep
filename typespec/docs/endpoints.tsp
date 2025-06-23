@@ -18,17 +18,58 @@ namespace Docs;
 //
 
 interface UserEndpoints
-    extends ChildLimitOffsetPagination<Doc, "List Docs owned by a User">,
-        ChildDeleteEndpoint<"Delete a Doc for this User">,
-        ChildCreateEndpoint<CreateDocRequest, Doc, "Create a Doc for this User"> {}
+    extends ChildDeleteEndpoint<"Delete a Doc for this User">,
+        ChildCreateEndpoint<CreateDocRequest, Doc, "Create a Doc for this User"> {
+    @get
+    @doc("List Docs owned by a User")
+    list(
+        @path
+        @doc("ID of parent")
+        id: uuid,
+
+        ...PaginationOptions,
+        
+        @query
+        @doc("Whether to include embeddings in the response")
+        include_embeddings?: boolean = true,
+    ): {
+        items: Doc[];
+    };
+}
 
 interface AgentEndpoints
-    extends ChildLimitOffsetPagination<Doc, "List Docs owned by an Agent">,
-        ChildDeleteEndpoint<"Delete a Doc for this Agent">,
-        ChildCreateEndpoint<CreateDocRequest, Doc, "Create a Doc for this Agent"> {}
+    extends ChildDeleteEndpoint<"Delete a Doc for this Agent">,
+        ChildCreateEndpoint<CreateDocRequest, Doc, "Create a Doc for this Agent"> {
+    @get
+    @doc("List Docs owned by an Agent")
+    list(
+        @path
+        @doc("ID of parent")
+        id: uuid,
 
-interface IndividualDocEndpoints
-    extends GetEndpoint<Doc, "Get Doc by id"> {}
+        ...PaginationOptions,
+        
+        @query
+        @doc("Whether to include embeddings in the response")
+        include_embeddings?: boolean = true,
+    ): {
+        items: Doc[];
+    };
+}
+
+interface IndividualDocEndpoints {
+    @get
+    @doc("Get Doc by id")
+    get(
+        @path
+        @doc("ID of the resource")
+        id: uuid,
+        
+        @query
+        @doc("Whether to include embeddings in the response")
+        include_embeddings?: boolean = true,
+    ): Doc;
+}
 
 interface SearchEndpoints<DocString extends valueof string = "Search for documents"> {
     @doc(DocString)
