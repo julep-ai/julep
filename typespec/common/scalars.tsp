@@ -48,6 +48,10 @@ alias sortBy = "created_at" | "updated_at";
 /** Sort direction */
 alias sortDirection = "asc" | "desc";
 
+/** Contents of a document */
+@maxLength(30000)
+scalar content extends string;
+
 @minValue(-100.0)
 @maxValue(100.0)
 scalar logit_bias extends float32;

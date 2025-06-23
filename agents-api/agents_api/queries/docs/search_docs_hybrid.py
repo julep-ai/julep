@@ -50,7 +50,8 @@ async def search_docs_hybrid(
     metadata_filter: dict[str, Any] | None = None,
     search_language: str = "english_unaccent",
     confidence: int | float = 0.5,
-    trigram_similarity_threshold: float = 0.5,  # Lower threshold to catch more spelling errors
+    trigram_similarity_threshold: float
+    | None = None,  # Lower threshold to catch more spelling errors
     k_multiplier: int = 7,  # Higher multiplier to include more candidates with the enhanced fuzzy matching
     extract_keywords: bool = False,
 ) -> tuple[str, list]:
