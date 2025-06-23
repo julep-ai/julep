@@ -137,6 +137,40 @@ async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc):
     assert doc_test.content is not None
 
 
+@test("query: get doc with embeddings")
+async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc_with_embedding):
+    pool = await create_db_pool(dsn=dsn)
+    # Get doc with embeddings (default behavior)
+    doc_with_emb = await get_doc(
+        developer_id=developer.id,
+        doc_id=doc.id,
+        include_embeddings=True,
+        connection_pool=pool,
+    )
+    assert isinstance(doc_with_emb, Doc)
+    assert doc_with_emb.id == doc.id
+    assert doc_with_emb.embeddings is not None
+    assert len(doc_with_emb.embeddings) > 0
+
+
+@test("query: get doc without embeddings")
+async def _(dsn=pg_dsn, developer=test_developer, doc=test_doc_with_embedding):
+    pool = await create_db_pool(dsn=dsn)
+    # Get doc without embeddings
+    doc_without_emb = await get_doc(
+        developer_id=developer.id,
+        doc_id=doc.id,
+        include_embeddings=False,
+        connection_pool=pool,
+    )
+    assert isinstance(doc_without_emb, Doc)
+    assert doc_without_emb.id == doc.id
+    assert doc_without_emb.title is not None
+    assert doc_without_emb.content is not None
+    # Embeddings should be None when not included
+    assert doc_without_emb.embeddings is None
+
+
 @test("query: list user docs")
 async def _(dsn=pg_dsn, developer=test_developer, user=test_user):
     pool = await create_db_pool(dsn=dsn)
@@ -340,6 +374,40 @@ async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
 
     assert len(docs_list) >= 1
     assert any(d.id == doc_agent.id for d in docs_list)
+
+
+@test("query: list docs without embeddings")
+async def _(dsn=pg_dsn, developer=test_developer, agent=test_agent):
+    pool = await create_db_pool(dsn=dsn)
+
+    # Create a doc owned by the agent
+    doc_agent = await create_doc(
+        developer_id=developer.id,
+        data=CreateDocRequest(
+            title="Agent List Test No Embeddings",
+            content="Some agent doc content for testing without embeddings",
+            metadata={"test": "test_no_embeddings"},
+            embed_instruction="Embed the document",
+        ),
+        owner_type="agent",
+        owner_id=agent.id,
+        connection_pool=pool,
+    )
+
+    # List agent's docs without embeddings
+    docs_list = await list_docs(
+        developer_id=developer.id,
+        owner_type="agent",
+        owner_id=agent.id,
+        include_embeddings=False,
+        connection_pool=pool,
+    )
+
+    assert len(docs_list) >= 1
+    # Find the doc we just created
+    created_doc = next((d for d in docs_list if d.id == doc_agent.id), None)
+    assert created_doc is not None
+    assert created_doc.embeddings is None  # Embeddings should be None when excluded
 
     # Create a doc with a different metadata
     doc_agent_different_metadata = await create_doc(
