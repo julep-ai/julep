@@ -5,21 +5,21 @@
 name: julep
 
 include:
-  - ./modules/memory-store/docker-compose.yml
-  - ./modules/gateway/docker-compose.yml
-  - ./modules/agents-api/docker-compose.yml
-  - ./modules/scheduler/docker-compose.yml
-  - ./modules/llm-proxy/docker-compose.yml
-  - ./modules/integrations-service/docker-compose.yml
-  - ./modules/monitoring/docker-compose.yml
-  - ./modules/blob-store/docker-compose-ha.yml
-  - ./modules/hasura/docker-compose.yml
-  - ./modules/analytics/docker-compose.yml
+  - ./src/memory-store/docker-compose.yml
+  - ./src/gateway/docker-compose.yml
+  - ./src/agents-api/docker-compose.yml
+  - ./src/scheduler/docker-compose.yml
+  - ./src/llm-proxy/docker-compose.yml
+  - ./src/integrations-service/docker-compose.yml
+  - ./src/monitoring/docker-compose.yml
+  - ./src/blob-store/docker-compose-ha.yml
+  - ./src/hasura/docker-compose.yml
+  - ./src/analytics/docker-compose.yml
   # - ./code-interpreter/docker-compose.yml
   # - ./embedding-service/docker-compose.yml
 
   # TODO: Enable after testing
-  # - ./modules/monitoring/docker-compose.yml
+  # - ./src/monitoring/docker-compose.yml
 
 ### Notes on authentication
 
