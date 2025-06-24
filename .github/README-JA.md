@@ -1,7 +1,35 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center" id="top">
- <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
+<img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Serverless%20AI%20Workflows%20for%20Data%20%26%20ML%20Teams&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&forks=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" height=300 />
+
+<br>
+  <p>
+    <a href="https://dashboard.julep.ai">
+      <img src="https://img.shields.io/badge/Get_API_Key-FF5733?style=logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAxTDMgNXYxNGw5IDQgOS00VjVsLTktNHptMCAyLjh2MTYuNEw1IDE2LjJWNi44bDctMy4yem0yIDguMmwtMi0yLTIgMiAyIDIgMi0yeiIvPjwvc3ZnPg==" alt="Get API Key" height="28">
+    </a>
+    <span>&nbsp;</span>
+    <a href="https://docs.julep.ai">
+      <img src="https://img.shields.io/badge/Documentation-4B32C3?style=logo=gitbook&logoColor=white" alt="Documentation" height="28">
+    </a>
+  </p>
+  <p>
+   <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&amp;logo=npm&amp;link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk" alt="NPM Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://pypi.org/project/julep"><img src="https://img.shields.io/pypi/v/julep?style=social&amp;logo=python&amp;label=PyPI&amp;link=https%3A%2F%2Fpypi.org%2Fproject%2Fjulep" alt="PyPI - Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://hub.docker.com/u/julepai"><img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&amp;style=social&amp;logo=docker&amp;link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai" alt="Docker Image Version" height="28"></a>
+    <span>&nbsp;</span>
+    <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License" height="28"></a>
+  </p>
+  
+  <h3>
+    <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discord</a>
+    ·
+    <a href="https://x.com/julep_ai" rel="dofollow">𝕏</a>
+    ·
+    <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow">LinkedIn</a>
+  </h3>
 </div>
 
 <p align="center">
@@ -25,10 +53,26 @@
     <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License"></a>
 </p>
 
----
+<div align="center">
+  <h3><i>データと ML チームのためのサーバーレス AI ワークフロー</i></h3>
+</div>
 
-> [!注意]
-> API キーを [こちら](https://dashboard-dev.julep.ai) から取得します。
+## 🎉 発表：Julep Open Responses API（Alpha版）
+
+<div style="padding: 15px; border-left: 4px solid #4CAF50; margin: 20px 0;">
+
+私たちは新しいOpen Responses APIの立ち上げを発表できることを嬉しく思います！この新しいAPIは次のような特徴を提供します：
+
+1. **OpenAI互換インターフェース** - 既存のコードにそのまま置き換え可能
+2. **セルフホスト型、オープンソース実装** - あらゆるLLMバックエンドで動作
+3. **モデルプロバイダーに依存しない** - どのLLMプロバイダー（OpenAI、Anthropicなど）にも接続可能
+
+Open Responses APIは、強力な新機能を追加しながら、既存のアプリケーションと簡単に統合できます。
+
+試してみる準備はできましたか？[Open Responses APIドキュメント](https://docs.julep.ai/responses/quickstart)をチェックして始めましょう！
+</div>
+
+Julepは、データおよびMLチームが高度なAIワークフローを構築するのに役立つサーバーレスプラットフォームです。複雑なAI操作のオーケストレーション、対話間の状態管理、既存のデータインフラストラクチャやツールとの統合のための堅牢な基盤を提供します。
 
 <details>
 <summary><b>貢献🌟</b>（クリックして拡大）</summary>
@@ -1641,10 +1685,15 @@ metadata_filter={"category": "研究論文"}
 
 1. `git clone https://github.com/julep-ai/julep.git`
 2. `cd ジュレップ`
-3. `docker volume create cozo_backup`
-4. docker ボリュームを作成します cozo_data
-5. `cp .env.example .env # <-- このファイルを編集します`
-6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
+3. `docker volume create grafana_data`
+4. `docker volume create memory_store_data`
+5. `docker volume create temporal-db-data`
+6. `docker volume create prometheus_data`
+7. `docker volume create seaweedfs_data`
+8. `docker volume create seaweedfs_data2`
+9. `docker volume create seaweedfs_data3`
+10. `cp .env.example .env # <-- このファイルを編集します`
+11. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db --profile blob-store --profile temporal-ui-public up --build --force-recreate --watch`
 
 <div align="center">
     <a href="#top">
