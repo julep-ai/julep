@@ -1,0 +1,23 @@
+{
+  "name": "@julep/docs-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server generated for julep documentation (https://docs.julep.ai)",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "author": "Julep Developers",
+  "dependencies": {
+    "@mintlify/openapi-types": "^0.0.0",
+    "@mintlify/validation": "^0.1.320",
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "axios": "^1.8.1",
+    "dashify": "^2.0.0",
+    "js-yaml": "^4.1.0",
+    "trieve-ts-sdk": "^0.0.62"
+  }
+}
