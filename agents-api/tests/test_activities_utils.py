@@ -33,7 +33,9 @@ def test_evaluator_humanize_text_alpha():
         mock_litellm_completion.return_value = MagicMock(
             choices=[
                 MagicMock(
-                    message=MagicMock(content="Mock LLM Response (humanized text from LLM)")
+                    message=MagicMock(
+                        content="Mock LLM Response (humanized text from LLM)"
+                    )
                 )
             ]
         )

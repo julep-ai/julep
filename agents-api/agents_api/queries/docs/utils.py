@@ -45,7 +45,9 @@ def transform_doc(d: dict) -> dict:
     if embeddings:
         if isinstance(embeddings, str):
             embeddings = json.loads(embeddings) if embeddings.strip() else None
-        elif isinstance(embeddings, list) and all(isinstance(e, str) for e in embeddings):
+        elif isinstance(embeddings, list) and all(
+            isinstance(e, str) for e in embeddings
+        ):
             embeddings = [json.loads(e) for e in embeddings if e.strip()]
 
     if embeddings and all((e is None) for e in embeddings):

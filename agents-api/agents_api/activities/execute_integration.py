@@ -50,7 +50,9 @@ async def execute_integration(
         connection_pool=app.state.postgres_pool,
     )
 
-    arguments = merged_tool_args.get(tool_name, {}) | (integration.arguments or {}) | arguments
+    arguments = (
+        merged_tool_args.get(tool_name, {}) | (integration.arguments or {}) | arguments
+    )
 
     setup = merged_tool_setup.get(tool_name, {}) | (integration.setup or {}) | setup
 

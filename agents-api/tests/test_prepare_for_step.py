@@ -150,7 +150,9 @@ async def test_utility_get_workflow_name():
         next=TransitionTarget(workflow="main", step=1, scope_id=uuid.uuid4()),
     )
 
-    transition.current = TransitionTarget(workflow="main", step=0, scope_id=uuid.uuid4())
+    transition.current = TransitionTarget(
+        workflow="main", step=0, scope_id=uuid.uuid4()
+    )
     transition.next = TransitionTarget(workflow="main", step=1, scope_id=uuid.uuid4())
     assert get_workflow_name(transition) == "main"
 
@@ -162,8 +164,12 @@ async def test_utility_get_workflow_name():
     transition.next = None
     assert get_workflow_name(transition) == "main"
 
-    transition.current = TransitionTarget(workflow="subworkflow", step=0, scope_id=uuid.uuid4())
-    transition.next = TransitionTarget(workflow="subworkflow", step=1, scope_id=uuid.uuid4())
+    transition.current = TransitionTarget(
+        workflow="subworkflow", step=0, scope_id=uuid.uuid4()
+    )
+    transition.next = TransitionTarget(
+        workflow="subworkflow", step=1, scope_id=uuid.uuid4()
+    )
     assert get_workflow_name(transition) == "subworkflow"
 
     transition.current = TransitionTarget(
@@ -216,11 +222,15 @@ async def test_utility_get_workflow_name_raises():
         get_workflow_name(transition)
 
     with pytest.raises(AssertionError):
-        transition.current = TransitionTarget(workflow="PAR:`", step=0, scope_id=uuid.uuid4())
+        transition.current = TransitionTarget(
+            workflow="PAR:`", step=0, scope_id=uuid.uuid4()
+        )
         get_workflow_name(transition)
 
     with pytest.raises(AssertionError):
-        transition.current = TransitionTarget(workflow="`", step=0, scope_id=uuid.uuid4())
+        transition.current = TransitionTarget(
+            workflow="`", step=0, scope_id=uuid.uuid4()
+        )
         get_workflow_name(transition)
 
     with pytest.raises(AssertionError):

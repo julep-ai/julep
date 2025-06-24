@@ -49,4 +49,6 @@ async def list_secrets_query(
     )
 
 
-list_secrets = rewrap_exceptions(common_db_exceptions("secret", ["list"]))(list_secrets_query)
+list_secrets = rewrap_exceptions(common_db_exceptions("secret", ["list"]))(
+    list_secrets_query
+)

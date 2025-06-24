@@ -43,4 +43,6 @@ class UserDocNotFoundError(BaseUserException):
 
     def __init__(self, user_id: UUID | str, doc_id: UUID | str) -> None:
         # Construct an error message indicating the document and user involved in the error.
-        super().__init__(f"Doc {doc_id!s} not found for user {user_id!s}", http_code=404)
+        super().__init__(
+            f"Doc {doc_id!s} not found for user {user_id!s}", http_code=404
+        )

@@ -96,7 +96,9 @@ async def get_history(
 
     # AIDEV-NOTE: avoid mutable default args; initialize allowed_sources
     allowed_sources = (
-        allowed_sources if allowed_sources is not None else ["api_request", "api_response"]
+        allowed_sources
+        if allowed_sources is not None
+        else ["api_request", "api_response"]
     )
     return (
         history_query,

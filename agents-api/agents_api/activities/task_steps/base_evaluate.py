@@ -64,4 +64,6 @@ async def base_evaluate(
         # NOTE: We limit the number of inputs to 50 to avoid excessive memory usage
         values.update(await context.prepare_for_step(limit=50))
 
-    return evaluate_expressions(exprs, values=values, extra_lambda_strs=extra_lambda_strs)
+    return evaluate_expressions(
+        exprs, values=values, extra_lambda_strs=extra_lambda_strs
+    )

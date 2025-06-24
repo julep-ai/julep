@@ -88,14 +88,17 @@ async def convert_create_response(
             )
         except HTTPException as e:
             if e.status_code == 404:
-                raise HTTPException(status_code=404, detail="previous_response_id not found")
+                raise HTTPException(
+                    status_code=404, detail="previous_response_id not found"
+                )
             raise e
 
     session = await create_session_query(
         developer_id=developer_id,
         data=CreateSessionRequest(
             agent=agent.id,
-            system_template=create_response.instructions or "You are a helpful assistant.",
+            system_template=create_response.instructions
+            or "You are a helpful assistant.",
             metadata=create_response.metadata,
         ),
     )
@@ -149,7 +152,8 @@ async def convert_create_response(
                 if isinstance(input_item.content, str):
                     messages.append(
                         Message(
-                            role=input_item.role, content=[Content(text=input_item.content)]
+                            role=input_item.role,
+                            content=[Content(text=input_item.content)],
                         )
                     )
                 # Handle the case where the content inside the input item is a list of content items
@@ -173,7 +177,9 @@ async def convert_create_response(
                             content = [ContentModel7(image_url=image_url)]
 
                         if content:
-                            messages.append(Message(role=input_item.role, content=content))
+                            messages.append(
+                                Message(role=input_item.role, content=content)
+                            )
                         else:
                             msg = f"Unsupported content type: {content_item.type}. Content item: {content_item}"
                             raise ValueError(msg)
@@ -295,7 +301,10 @@ async def convert_create_response(
                                 "type": "object",
                                 "properties": {
                                     "query": {"type": "string"},
-                                    "domains": {"type": "array", "items": {"type": "string"}},
+                                    "domains": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                    },
                                     "search_context_size": {"type": "integer"},
                                     "user_location": {"type": "string"},
                                 },

@@ -140,7 +140,10 @@ async def test_utility_text_to_keywords_split_chunks_true():
         ),
         ('Find "machine learning" algorithms', {"machine", "learning"}),
         # Multiple quoted phrases
-        ('"data science" and "machine learning"', {"machine", "learning", "data", "science"}),
+        (
+            '"data science" and "machine learning"',
+            {"machine", "learning", "data", "science"},
+        ),
         # Edge cases
         ("", set()),
         (
@@ -162,11 +165,18 @@ async def test_utility_text_to_keywords_split_chunks_true():
         # Test duplicate keyword handling
         (
             "John Doe is great. John Doe is awesome.",
-            {"John Doe"},  # Should only include "John Doe" once even with split_chunks=True
+            {
+                "John Doe"
+            },  # Should only include "John Doe" once even with split_chunks=True
         ),
         (
             "Software Engineer at Google. Also, a Software Engineer.",
-            {"Also", "Google", "Software", "Engineer"},  # When split, each word appears once
+            {
+                "Also",
+                "Google",
+                "Software",
+                "Engineer",
+            },  # When split, each word appears once
         ),
     ]
 

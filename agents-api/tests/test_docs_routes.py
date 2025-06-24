@@ -4,14 +4,21 @@ from .utils import patch_testing_temporal
 async def test_route_create_user_doc(make_request, test_user):
     async with patch_testing_temporal():
         data = {"title": "Test User Doc", "content": ["This is a test user document."]}
-        response = make_request(method="POST", url=f"/users/{test_user.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/users/{test_user.id}/docs", json=data
+        )
         assert response.status_code == 201
 
 
 async def test_route_create_agent_doc(make_request, test_agent):
     async with patch_testing_temporal():
-        data = {"title": "Test Agent Doc", "content": ["This is a test agent document."]}
-        response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+        data = {
+            "title": "Test Agent Doc",
+            "content": ["This is a test agent document."],
+        }
+        response = make_request(
+            method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+        )
         assert response.status_code == 201
 
 
@@ -23,25 +30,35 @@ async def test_route_create_agent_doc_with_duplicate_title_should_fail(
             "title": "Test Duplicate Doc",
             "content": ["This is a test duplicate document."],
         }
-        response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+        )
         assert response.status_code == 201
-        response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+        )
         assert response.status_code == 409
-        response = make_request(method="POST", url=f"/users/{test_user.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/users/{test_user.id}/docs", json=data
+        )
         assert response.status_code == 201
 
 
 async def test_route_delete_doc(make_request, test_agent):
     async with patch_testing_temporal():
         data = {"title": "Test Agent Doc", "content": "This is a test agent document."}
-        response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+        )
         doc_id = response.json()["id"]
         response = make_request(method="GET", url=f"/docs/{doc_id}")
         assert response.status_code == 200
         assert response.json()["id"] == doc_id
         assert response.json()["title"] == "Test Agent Doc"
         assert response.json()["content"] == ["This is a test agent document."]
-        response = make_request(method="DELETE", url=f"/agents/{test_agent.id}/docs/{doc_id}")
+        response = make_request(
+            method="DELETE", url=f"/agents/{test_agent.id}/docs/{doc_id}"
+        )
         assert response.status_code == 202
         response = make_request(method="GET", url=f"/docs/{doc_id}")
         assert response.status_code == 404
@@ -49,8 +66,13 @@ async def test_route_delete_doc(make_request, test_agent):
 
 async def test_route_get_doc(make_request, test_agent):
     async with patch_testing_temporal():
-        data = {"title": "Test Agent Doc", "content": ["This is a test agent document."]}
-        response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+        data = {
+            "title": "Test Agent Doc",
+            "content": ["This is a test agent document."],
+        }
+        response = make_request(
+            method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+        )
         doc_id = response.json()["id"]
         response = make_request(method="GET", url=f"/docs/{doc_id}")
         assert response.status_code == 200
@@ -159,14 +181,18 @@ async def test_route_bulk_delete_agent_docs(make_request, test_agent):
             "content": ["This is a test document for bulk deletion."],
             "metadata": {"bulk_test": "true", "index": str(i)},
         }
-        response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+        )
         assert response.status_code == 201
     data = {
         "title": "Non Bulk Test Doc",
         "content": ["This document should not be deleted."],
         "metadata": {"bulk_test": "false"},
     }
-    response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+    response = make_request(
+        method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+    )
     assert response.status_code == 201
     response = make_request(method="GET", url=f"/agents/{test_agent.id}/docs")
     assert response.status_code == 200
@@ -194,7 +220,9 @@ async def test_route_bulk_delete_user_docs_metadata_filter(make_request, test_us
             "content": ["This is a user test document for bulk deletion."],
             "metadata": {"user_bulk_test": "true", "index": str(i)},
         }
-        response = make_request(method="POST", url=f"/users/{test_user.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/users/{test_user.id}/docs", json=data
+        )
         assert response.status_code == 201
     response = make_request(method="GET", url=f"/users/{test_user.id}/docs")
     assert response.status_code == 200
@@ -221,7 +249,9 @@ async def test_route_bulk_delete_agent_docs_delete_all_true(make_request, test_a
             "content": ["This is a test document for delete_all."],
             "metadata": {"test_type": "delete_all_test", "index": str(i)},
         }
-        response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+        )
         assert response.status_code == 201
     response = make_request(method="GET", url=f"/agents/{test_agent.id}/docs")
     assert response.status_code == 200
@@ -247,7 +277,9 @@ async def test_route_bulk_delete_agent_docs_delete_all_false(make_request, test_
             "content": ["This document should not be deleted by empty filter."],
             "metadata": {"test_type": "safety_test"},
         }
-        response = make_request(method="POST", url=f"/agents/{test_agent.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/agents/{test_agent.id}/docs", json=data
+        )
         assert response.status_code == 201
     response = make_request(method="GET", url=f"/agents/{test_agent.id}/docs")
     assert response.status_code == 200
@@ -276,7 +308,9 @@ async def test_route_bulk_delete_user_docs_delete_all_true(make_request, test_us
             "content": ["This is a user test document for delete_all."],
             "metadata": {"test_type": "user_delete_all_test"},
         }
-        response = make_request(method="POST", url=f"/users/{test_user.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/users/{test_user.id}/docs", json=data
+        )
         assert response.status_code == 201
     response = make_request(method="GET", url=f"/users/{test_user.id}/docs")
     assert response.status_code == 200
@@ -302,7 +336,9 @@ async def test_route_bulk_delete_user_docs_delete_all_false(make_request, test_u
             "content": ["This user document should not be deleted by empty filter."],
             "metadata": {"test_type": "user_safety_test"},
         }
-        response = make_request(method="POST", url=f"/users/{test_user.id}/docs", json=data)
+        response = make_request(
+            method="POST", url=f"/users/{test_user.id}/docs", json=data
+        )
         assert response.status_code == 201
     response = make_request(method="GET", url=f"/users/{test_user.id}/docs")
     assert response.status_code == 200

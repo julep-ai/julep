@@ -144,7 +144,9 @@ async def test_chat_test_streaming_response_format(
             MagicMock(),  # chat_context
         )
 
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -240,7 +242,9 @@ async def test_chat_test_streaming_with_document_references(
             MagicMock(),  # chat_context
         )
 
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -307,7 +311,10 @@ async def test_chat_test_streaming_with_message_history_saving(
     create_entries_mock = AsyncMock()
 
     with (
-        patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
+        patch(
+            "agents_api.routers.sessions.chat.render_chat_input",
+            side_effect=mock_render,
+        ),
         patch("agents_api.routers.sessions.chat.create_entries", create_entries_mock),
     ):
         # Create chat input with stream=True and save=True
@@ -374,7 +381,10 @@ async def test_chat_test_streaming_with_usage_tracking(
     track_usage_mock = AsyncMock()
 
     with (
-        patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render),
+        patch(
+            "agents_api.routers.sessions.chat.render_chat_input",
+            side_effect=mock_render,
+        ),
         patch("agents_api.routers.sessions.chat.track_usage", track_usage_mock),
     ):
         # Create chat input with stream=True
@@ -443,7 +453,9 @@ async def test_chat_test_streaming_with_custom_api_key(
             MagicMock(),  # chat_context
         )
 
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -511,7 +523,9 @@ async def test_chat_test_streaming_creates_actual_usage_records_in_database(
     )
     initial_count = len(initial_records)
 
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -553,7 +567,9 @@ async def test_chat_test_streaming_creates_actual_usage_records_in_database(
     latest_record = final_records[0]  # Records are ordered by created_at DESC
 
     # Verify the usage record details
-    assert str(latest_record["developer_id"]) == str(test_developer_id)  # UUID comparison
+    assert str(latest_record["developer_id"]) == str(
+        test_developer_id
+    )  # UUID comparison
     assert latest_record["model"] == "gpt-4o-mini"
     assert latest_record["prompt_tokens"] > 0
     assert latest_record["completion_tokens"] > 0
@@ -601,7 +617,9 @@ async def test_chat_test_streaming_with_custom_api_key_creates_correct_usage_rec
     )
     initial_count = len(initial_records)
 
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -642,9 +660,13 @@ async def test_chat_test_streaming_with_custom_api_key_creates_correct_usage_rec
     latest_record = final_records[0]  # Records are ordered by created_at DESC
 
     # Verify the usage record details for custom API usage
-    assert str(latest_record["developer_id"]) == str(test_developer_id)  # UUID comparison
+    assert str(latest_record["developer_id"]) == str(
+        test_developer_id
+    )  # UUID comparison
     assert latest_record["model"] == "gpt-4o-mini"
-    assert latest_record["custom_api_used"] is True  # This should be True for custom API
+    assert (
+        latest_record["custom_api_used"] is True
+    )  # This should be True for custom API
     assert "streaming" in latest_record["metadata"]
     assert latest_record["metadata"]["streaming"] is True
 
@@ -691,7 +713,9 @@ async def test_chat_test_streaming_usage_tracking_with_developer_tags(
     )
     initial_count = len(initial_records)
 
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -731,7 +755,9 @@ async def test_chat_test_streaming_usage_tracking_with_developer_tags(
     latest_record = final_records[0]  # Records are ordered by created_at DESC
 
     # Verify the usage record includes developer tags
-    assert str(latest_record["developer_id"]) == str(test_developer_id)  # UUID comparison
+    assert str(latest_record["developer_id"]) == str(
+        test_developer_id
+    )  # UUID comparison
     assert latest_record["model"] == "gpt-4o-mini"
     assert "streaming" in latest_record["metadata"]
     assert latest_record["metadata"]["streaming"] is True
@@ -778,7 +804,9 @@ async def test_chat_test_streaming_usage_tracking_with_different_models(
     )
     initial_count = len(initial_records)
 
-    with patch("agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -818,7 +846,9 @@ async def test_chat_test_streaming_usage_tracking_with_different_models(
     latest_record = final_records[0]  # Records are ordered by created_at DESC
 
     # Verify the usage record has the correct model
-    assert str(latest_record["developer_id"]) == str(test_developer_id)  # UUID comparison
+    assert str(latest_record["developer_id"]) == str(
+        test_developer_id
+    )  # UUID comparison
     assert latest_record["model"] == test_model
     assert latest_record["prompt_tokens"] > 0
     assert latest_record["completion_tokens"] > 0

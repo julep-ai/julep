@@ -38,7 +38,9 @@ async def test_query_create_agent_sql(pg_dsn, test_developer_id):
     )  # type: ignore[not-callable]
 
 
-async def test_query_create_agent_with_project_sql(pg_dsn, test_developer_id, test_project):
+async def test_query_create_agent_with_project_sql(
+    pg_dsn, test_developer_id, test_project
+):
     """Test that an agent can be successfully created with a project."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -169,7 +171,9 @@ async def test_query_update_agent_with_project_sql(
     assert result.project == test_project.canonical_name
 
 
-async def test_query_update_agent_project_does_not_exist(pg_dsn, test_developer_id, test_agent):
+async def test_query_update_agent_project_does_not_exist(
+    pg_dsn, test_developer_id, test_agent
+):
     """Test that an existing agent's information can be successfully updated with a project that does not exist."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -251,7 +255,9 @@ async def test_query_patch_agent_with_project_sql(
     assert result.project == test_project.canonical_name
 
 
-async def test_query_patch_agent_project_does_not_exist(pg_dsn, test_developer_id, test_agent):
+async def test_query_patch_agent_project_does_not_exist(
+    pg_dsn, test_developer_id, test_agent
+):
     """Test that an agent can be successfully patched with a project that does not exist."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -280,7 +286,9 @@ async def test_query_get_agent_not_exists_sql(pg_dsn, test_developer_id):
     pool = await create_db_pool(dsn=pg_dsn)
 
     with pytest.raises(Exception):
-        await get_agent(agent_id=agent_id, developer_id=test_developer_id, connection_pool=pool)  # type: ignore[not-callable]
+        await get_agent(
+            agent_id=agent_id, developer_id=test_developer_id, connection_pool=pool
+        )  # type: ignore[not-callable]
 
 
 async def test_query_get_agent_exists_sql(pg_dsn, test_developer_id, test_agent):

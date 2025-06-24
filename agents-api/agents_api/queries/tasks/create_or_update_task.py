@@ -193,14 +193,16 @@ async def create_or_update_task(
         workflow_name = workflow.get("name")
         steps = workflow.get("steps", [])
         for step_idx, step in enumerate(steps):
-            workflow_params.append([
-                developer_id,  # $1
-                task_id,  # $2
-                workflow_name,  # $3
-                step_idx,  # $4
-                step["kind_"],  # $5
-                step,  # $6
-            ])
+            workflow_params.append(
+                [
+                    developer_id,  # $1
+                    task_id,  # $2
+                    workflow_name,  # $3
+                    step_idx,  # $4
+                    step["kind_"],  # $5
+                    step,  # $6
+                ]
+            )
 
     return [
         (

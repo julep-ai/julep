@@ -16,5 +16,7 @@ async def get_api_key(
     user_api_key = (user_api_key or "").replace("Bearer ", "").strip()
 
     if user_api_key != api_key:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Could not validate API KEY")
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN, detail="Could not validate API KEY"
+        )
     return user_api_key

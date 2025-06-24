@@ -11,7 +11,9 @@ from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.secrets.update import update_secret
 
 
-async def test_create_secret_agent(pg_dsn, test_developer_id, test_agent, clean_secrets):
+async def test_create_secret_agent(
+    pg_dsn, test_developer_id, test_agent, clean_secrets
+):
     pool = await create_db_pool(dsn=pg_dsn)
 
     # Create secret with both developer_id
@@ -82,7 +84,9 @@ async def test_query_list_secrets(clean_secrets, pg_dsn, test_developer_id):
     assert any(secret.value == "sk_test_list_2" for secret in secrets)
 
 
-async def test_query_list_secrets_decrypt_false(clean_secrets, pg_dsn, test_developer_id):
+async def test_query_list_secrets_decrypt_false(
+    clean_secrets, pg_dsn, test_developer_id
+):
     pool = await create_db_pool(dsn=pg_dsn)
 
     # Create test secrets first - use unique but valid identifiers
@@ -153,7 +157,9 @@ async def test_query_get_secret_by_name(clean_secrets, pg_dsn, test_developer_id
     assert retrieved_secret.value == "sk_get_test_1"
 
 
-async def test_query_get_secret_by_name_decrypt_false(clean_secrets, pg_dsn, test_developer_id):
+async def test_query_get_secret_by_name_decrypt_false(
+    clean_secrets, pg_dsn, test_developer_id
+):
     pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a test secret first
@@ -231,7 +237,9 @@ async def test_query_update_secret(clean_secrets, pg_dsn, test_developer_id):
     assert partial_update.name == updated_name  # Should remain from previous update
     assert partial_update.description == partial_description  # Should be updated
     assert partial_update.value == "ENCRYPTED"  # Should remain from previous update
-    assert partial_update.metadata == updated_metadata  # Should remain from previous update
+    assert (
+        partial_update.metadata == updated_metadata
+    )  # Should remain from previous update
 
 
 async def test_query_delete_secret(clean_secrets, pg_dsn, test_developer_id):

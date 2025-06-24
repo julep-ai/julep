@@ -132,9 +132,11 @@ async def run_task_execution_workflow(
         id=str(job_id),
         run_timeout=timedelta(days=31),
         retry_policy=DEFAULT_RETRY_POLICY,
-        search_attributes=TypedSearchAttributes([
-            SearchAttributePair(execution_id_key, str(execution_id)),
-        ]),
+        search_attributes=TypedSearchAttributes(
+            [
+                SearchAttributePair(execution_id_key, str(execution_id)),
+            ]
+        ),
     )
 
 

@@ -5,7 +5,9 @@ from pydantic import BaseModel
 
 def dict_like(pydantic_model_class: type[BaseModel]) -> BeartypeValidator:
     required_fields_set: set[str] = {
-        field for field, info in pydantic_model_class.model_fields.items() if info.is_required()
+        field
+        for field, info in pydantic_model_class.model_fields.items()
+        if info.is_required()
     }
 
     return Is[

@@ -26,7 +26,11 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 from ...autogen.openapi_model import SystemDef
 from ...common.nlp import nlp
 from . import yaml
-from .humanization_utils import humanize_paragraph, reassemble_markdown, split_with_langchain
+from .humanization_utils import (
+    humanize_paragraph,
+    reassemble_markdown,
+    split_with_langchain,
+)
 
 # Security limits
 MAX_STRING_LENGTH = 1_000_000  # 1MB
@@ -678,7 +682,9 @@ def get_handler_with_filtered_params(system: SystemDef) -> Callable:
 
     # Remove problematic parameters
     filtered_handler.__signature__ = sig.replace(
-        parameters=[p for p in sig.parameters.values() if p.name not in parameters_to_exclude],
+        parameters=[
+            p for p in sig.parameters.values() if p.name not in parameters_to_exclude
+        ],
     )
 
     return filtered_handler
@@ -706,10 +712,14 @@ def get_handler(system: SystemDef) -> Callable:
     from ...queries.sessions.create_or_update_session import (
         create_or_update_session as create_or_update_session_query,
     )
-    from ...queries.sessions.create_session import create_session as create_session_query
+    from ...queries.sessions.create_session import (
+        create_session as create_session_query,
+    )
     from ...queries.sessions.get_session import get_session as get_session_query
     from ...queries.sessions.list_sessions import list_sessions as list_sessions_query
-    from ...queries.sessions.update_session import update_session as update_session_query
+    from ...queries.sessions.update_session import (
+        update_session as update_session_query,
+    )
     from ...queries.tasks.create_task import create_task as create_task_query
     from ...queries.tasks.delete_task import delete_task as delete_task_query
     from ...queries.tasks.get_task import get_task as get_task_query
@@ -796,7 +806,9 @@ def get_handler(system: SystemDef) -> Callable:
             return delete_task_query
 
         case _:
-            msg = f"System call not implemented for {system.resource}.{system.operation}"
+            msg = (
+                f"System call not implemented for {system.resource}.{system.operation}"
+            )
             raise NotImplementedError(msg)
 
 

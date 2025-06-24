@@ -19,7 +19,9 @@ def generate_call_id() -> str:
 # AIDEV-TODO: Refactor this function for constructing tool calls and move it to a more appropriate location.
 # FIXME: This shouldn't be here, and shouldn't be done this way. Should be refactored.
 # AIDEV-NOTE: Constructs a dictionary representing a tool call based on the tool definition and arguments.
-def construct_tool_call(tool: CreateToolRequest | Tool, arguments: dict, call_id: str) -> dict:
+def construct_tool_call(
+    tool: CreateToolRequest | Tool, arguments: dict, call_id: str
+) -> dict:
     return {
         tool.type: {
             "arguments": arguments,

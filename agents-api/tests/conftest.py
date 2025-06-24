@@ -217,7 +217,9 @@ async def test_doc(pg_dsn, test_developer, test_agent):
     # Explicitly Refresh Indices
     await pool.execute("REINDEX DATABASE")
 
-    doc = await get_doc(developer_id=test_developer.id, doc_id=resp.id, connection_pool=pool)
+    doc = await get_doc(
+        developer_id=test_developer.id, doc_id=resp.id, connection_pool=pool
+    )
     yield doc
 
     # TODO: Delete the doc
@@ -327,7 +329,9 @@ async def test_user_doc(pg_dsn, test_developer, test_user):
     # Explicitly Refresh Indices
     await pool.execute("REINDEX DATABASE")
 
-    doc = await get_doc(developer_id=test_developer.id, doc_id=resp.id, connection_pool=pool)
+    doc = await get_doc(
+        developer_id=test_developer.id, doc_id=resp.id, connection_pool=pool
+    )
     yield doc
 
     # TODO: Delete the doc
@@ -584,9 +588,9 @@ def localstack_container():
     """Session-scoped LocalStack container."""
     from testcontainers.localstack import LocalStackContainer
 
-    localstack = LocalStackContainer(image="localstack/localstack:s3-latest").with_services(
-        "s3"
-    )
+    localstack = LocalStackContainer(
+        image="localstack/localstack:s3-latest"
+    ).with_services("s3")
     localstack.start()
 
     try:
@@ -644,7 +648,9 @@ async def s3_client(localstack_container):
             await client.head_bucket(Bucket="default")
         except Exception:
             with contextlib.suppress(Exception):
-                await client.create_bucket(Bucket="default")  # Bucket might already exist
+                await client.create_bucket(
+                    Bucket="default"
+                )  # Bucket might already exist
 
         yield client
 

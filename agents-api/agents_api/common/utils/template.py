@@ -81,7 +81,8 @@ async def render_template_nested[T: (str, dict, list[dict | list[dict]], None)](
             return await render_template_string(input, variables, check)
         case dict():
             return {
-                k: await render_template_nested(v, variables, check) for k, v in input.items()
+                k: await render_template_nested(v, variables, check)
+                for k, v in input.items()
             }
         case list():
             return [await render_template_nested(v, variables, check) for v in input]

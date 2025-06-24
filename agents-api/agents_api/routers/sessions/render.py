@@ -60,7 +60,9 @@ async def render_chat_input(
     developer: Developer,
     session_id: UUID,
     chat_input: ChatInput,
-) -> tuple[list[dict], list[DocReference], list[dict] | None, dict, list[dict], ChatContext]:
+) -> tuple[
+    list[dict], list[DocReference], list[dict] | None, dict, list[dict], ChatContext
+]:
     # check if the developer is paid
     if "paid" not in developer.tags:
         # get the session length
@@ -111,7 +113,9 @@ async def render_chat_input(
             "role": "system",
             "content": system_template,
         }
-        system_messages: list[dict] = await render_template([system_message], variables=env)
+        system_messages: list[dict] = await render_template(
+            [system_message], variables=env
+        )
         past_messages = system_messages + past_messages
 
     # Render the incoming messages
@@ -212,4 +216,11 @@ async def render_chat_input(
             for message in messages
         ]
 
-    return messages, doc_references, formatted_tools, settings, new_messages, chat_context
+    return (
+        messages,
+        doc_references,
+        formatted_tools,
+        settings,
+        new_messages,
+        chat_context,
+    )

@@ -50,7 +50,9 @@ async def test_query_create_user_sql(pg_dsn, test_developer_id):
     assert user.about == "test user about"
 
 
-async def test_query_create_user_with_project_sql(pg_dsn, test_developer_id, test_project):
+async def test_query_create_user_with_project_sql(
+    pg_dsn, test_developer_id, test_project
+):
     """Test that a user can be successfully created with a project."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -185,7 +187,9 @@ async def test_query_update_user_with_project_sql(
     assert update_result.project == test_project.canonical_name
 
 
-async def test_query_update_user_project_does_not_exist(pg_dsn, test_developer_id, test_user):
+async def test_query_update_user_project_does_not_exist(
+    pg_dsn, test_developer_id, test_user
+):
     """Test that an existing user's information can be successfully updated with a project that does not exist."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -406,7 +410,9 @@ async def test_query_patch_user_with_project_sql(
     assert patch_result.project == test_project.canonical_name
 
 
-async def test_query_patch_user_project_does_not_exist(pg_dsn, test_developer_id, test_user):
+async def test_query_patch_user_project_does_not_exist(
+    pg_dsn, test_developer_id, test_user
+):
     """Test that a user can be successfully patched with a project that does not exist."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -450,4 +456,6 @@ async def test_query_delete_user_sql(pg_dsn, test_developer_id, test_user):
     except Exception:
         pass
     else:
-        assert False, "Expected an exception to be raised when retrieving a deleted user."
+        assert False, (
+            "Expected an exception to be raised when retrieving a deleted user."
+        )

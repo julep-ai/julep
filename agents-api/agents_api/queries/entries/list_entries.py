@@ -93,7 +93,9 @@ async def list_entries(
 
     # AIDEV-NOTE: avoid mutable default args; initialize lists
     allowed_sources = (
-        allowed_sources if allowed_sources is not None else ["api_request", "api_response"]
+        allowed_sources
+        if allowed_sources is not None
+        else ["api_request", "api_response"]
     )
     exclude_relations = exclude_relations if exclude_relations is not None else []
     query = list_entries_query.format(

@@ -131,7 +131,9 @@ async def create_or_update_agent(
 
     # Ensure instructions is a list
     data.instructions = (
-        data.instructions if isinstance(data.instructions, list) else [data.instructions]
+        data.instructions
+        if isinstance(data.instructions, list)
+        else [data.instructions]
     )
 
     # Convert default_settings to dict if it exists

@@ -94,7 +94,9 @@ async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
             # Extract query directly for web_search_preview type
             query = tool_call.get("query", "")
 
-            web_search_call = WebPreviewToolCall(id=tool_id, query=query, name=tool_name)
+            web_search_call = WebPreviewToolCall(
+                id=tool_id, query=query, name=tool_name
+            )
             return await execute_web_search_tool(web_search_call)
 
         if tool_type == "function":
@@ -143,7 +145,9 @@ async def execute_tool_call(tool_call: dict[str, Any]) -> ToolExecutionResult:
                         error="No search query found in the web search function call",
                     )
 
-                web_search_call = WebPreviewToolCall(id=tool_id, query=query, name=tool_name)
+                web_search_call = WebPreviewToolCall(
+                    id=tool_id, query=query, name=tool_name
+                )
                 return await execute_web_search_tool(web_search_call)
 
         # Unsupported tool type
@@ -185,7 +189,9 @@ def format_tool_results_for_llm(result: ToolExecutionResult) -> dict[str, Any]:
         formatted_result["content"] = json.dumps({"error": result.error})
     else:
         formatted_result["content"] = (
-            json.dumps(result.output) if isinstance(result.output, dict) else str(result.output)
+            json.dumps(result.output)
+            if isinstance(result.output, dict)
+            else str(result.output)
         )
 
     return formatted_result

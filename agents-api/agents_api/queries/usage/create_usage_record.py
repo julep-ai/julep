@@ -86,7 +86,9 @@ output_costs_fallback = [
 ]
 combined_output_costs = output_costs_litellm + output_costs_fallback
 AVG_OUTPUT_COST_PER_TOKEN = (
-    sum(combined_output_costs) / len(combined_output_costs) if combined_output_costs else 0
+    sum(combined_output_costs) / len(combined_output_costs)
+    if combined_output_costs
+    else 0
 )
 
 # Define the raw SQL query
@@ -166,7 +168,9 @@ async def create_usage_record(
                 AVG_INPUT_COST_PER_TOKEN * prompt_tokens
                 + AVG_OUTPUT_COST_PER_TOKEN * completion_tokens
             )
-            print(f"No fallback pricing found for model {model}, using avg costs: {total_cost}")
+            print(
+                f"No fallback pricing found for model {model}, using avg costs: {total_cost}"
+            )
 
     params = [
         developer_id,

@@ -99,7 +99,9 @@ async def test_query_create_usage_record_properly_calculates_costs(
     assert record["cost"] == cost
 
 
-async def test_query_create_usage_record_with_custom_api_key(pg_dsn, test_developer_id) -> None:
+async def test_query_create_usage_record_with_custom_api_key(
+    pg_dsn, test_developer_id
+) -> None:
     pool = await create_db_pool(dsn=pg_dsn)
     response = await create_usage_record(
         developer_id=test_developer_id,
@@ -157,9 +159,7 @@ async def test_query_create_usage_record_with_fallback_pricing_with_model_not_in
     actual_call = mock_print.call_args_list[-1].args[0]
     total_cost = AVG_INPUT_COST_PER_TOKEN * 100 + AVG_OUTPUT_COST_PER_TOKEN * 100
 
-    expected_call = (
-        f"No fallback pricing found for model {unknown_model}, using avg costs: {total_cost}"
-    )
+    expected_call = f"No fallback pricing found for model {unknown_model}, using avg costs: {total_cost}"
 
     assert len(response) == 1
     record = response[0]
@@ -168,8 +168,12 @@ async def test_query_create_usage_record_with_fallback_pricing_with_model_not_in
     assert expected_call == actual_call
 
 
-async def test_utils_track_usage_with_response_usage_available(test_developer_id) -> None:
-    with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
+async def test_utils_track_usage_with_response_usage_available(
+    test_developer_id,
+) -> None:
+    with patch(
+        "agents_api.common.utils.usage.create_usage_record"
+    ) as mock_create_usage_record:
         response = ModelResponse(
             usage=Usage(
                 prompt_tokens=100,
@@ -189,7 +193,9 @@ async def test_utils_track_usage_with_response_usage_available(test_developer_id
 
 
 async def test_utils_track_usage_without_response_usage(test_developer_id) -> None:
-    with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
+    with patch(
+        "agents_api.common.utils.usage.create_usage_record"
+    ) as mock_create_usage_record:
         response = ModelResponse(
             usage=None,
             choices=[
@@ -206,7 +212,9 @@ async def test_utils_track_usage_without_response_usage(test_developer_id) -> No
         prompt_tokens = token_counter(model="gpt-4o-mini", messages=messages)
         completion_tokens = token_counter(
             model="gpt-4o-mini",
-            messages=[{"content": choice.message.content} for choice in response.choices],
+            messages=[
+                {"content": choice.message.content} for choice in response.choices
+            ],
         )
 
         await track_usage(
@@ -221,8 +229,12 @@ async def test_utils_track_usage_without_response_usage(test_developer_id) -> No
         assert call_args["completion_tokens"] == completion_tokens
 
 
-async def test_utils_track_embedding_usage_with_response_usage(test_developer_id) -> None:
-    with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
+async def test_utils_track_embedding_usage_with_response_usage(
+    test_developer_id,
+) -> None:
+    with patch(
+        "agents_api.common.utils.usage.create_usage_record"
+    ) as mock_create_usage_record:
         response = ModelResponse(
             usage=Usage(
                 prompt_tokens=150,
@@ -245,8 +257,12 @@ async def test_utils_track_embedding_usage_with_response_usage(test_developer_id
         assert call_args["model"] == "text-embedding-3-large"
 
 
-async def test_utils_track_embedding_usage_without_response_usage(test_developer_id) -> None:
-    with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
+async def test_utils_track_embedding_usage_without_response_usage(
+    test_developer_id,
+) -> None:
+    with patch(
+        "agents_api.common.utils.usage.create_usage_record"
+    ) as mock_create_usage_record:
         response = ModelResponse()
         response.usage = None
 

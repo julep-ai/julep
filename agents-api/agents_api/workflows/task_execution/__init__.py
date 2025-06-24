@@ -349,7 +349,9 @@ class TaskExecutionWorkflow:
 
         result = None
         if self.context is not None:
-            result = await asyncio.sleep(total_seconds, result=self.context.current_input)
+            result = await asyncio.sleep(
+                total_seconds, result=self.context.current_input
+            )
 
         return WorkflowResult(state=PartialTransition(output=result))
 
@@ -361,7 +363,9 @@ class TaskExecutionWorkflow:
             return WorkflowResult(state=PartialTransition(output=None))
 
         output = self.outcome.output
-        workflow.logger.debug(f"Evaluate step: Completed evaluation with output: {output}")
+        workflow.logger.debug(
+            f"Evaluate step: Completed evaluation with output: {output}"
+        )
         return WorkflowResult(state=PartialTransition(output=output))
 
     async def _handle_ErrorWorkflowStep(
@@ -475,7 +479,9 @@ class TaskExecutionWorkflow:
                 task_steps.prompt_step,
                 self.context,
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
+                    seconds=30
+                    if debug or testing
+                    else temporal_schedule_to_close_timeout,
                 ),
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -595,7 +601,9 @@ class TaskExecutionWorkflow:
                 execute_integration,
                 args=[self.context, tool_name, integration, arguments],
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
+                    seconds=30
+                    if debug or testing
+                    else temporal_schedule_to_close_timeout,
                 ),
                 retry_policy=DEFAULT_RETRY_POLICY,
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
@@ -641,7 +649,9 @@ class TaskExecutionWorkflow:
                     arguments,
                 ],
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
+                    seconds=30
+                    if debug or testing
+                    else temporal_schedule_to_close_timeout,
                 ),
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
@@ -658,7 +668,9 @@ class TaskExecutionWorkflow:
                 execute_system,
                 args=[self.context, system_call],
                 schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
+                    seconds=30
+                    if debug or testing
+                    else temporal_schedule_to_close_timeout,
                 ),
                 heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
             )
@@ -670,7 +682,9 @@ class TaskExecutionWorkflow:
         meth = getattr(self, f"_handle_{type(step).__name__}", None)
         if not meth:
             step_name = (
-                type(self.context.current_step).__name__ if self.context is not None else None
+                type(self.context.current_step).__name__
+                if self.context is not None
+                else None
             )
             workflow.logger.error(f"Unhandled step type: {step_name}")
             msg = "Not implemented"
@@ -740,12 +754,16 @@ class TaskExecutionWorkflow:
                     context,
                     #
                     schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout,
                     ),
                     retry_policy=DEFAULT_RETRY_POLICY,
                     heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 )
-                workflow.logger.debug(f"Step {context.cursor.step} completed successfully")
+                workflow.logger.debug(
+                    f"Step {context.cursor.step} completed successfully"
+                )
             else:
                 outcome = await self.eval_step_exprs(context.current_step)
         except Exception as e:
@@ -754,7 +772,9 @@ class TaskExecutionWorkflow:
             if isinstance(e, CancelledError):
                 workflow.logger.info(f"Step {context.cursor.step} cancelled")
                 if not getattr(e, "transitioned", False):
-                    await transition(context, type="cancelled", output="Workflow Cancelled")
+                    await transition(
+                        context, type="cancelled", output="Workflow Cancelled"
+                    )
                 raise
             workflow.logger.error(f"Error in step {context.cursor.step}: {e!s}")
             if not getattr(e, "transitioned", False):
@@ -790,7 +810,9 @@ class TaskExecutionWorkflow:
             if isinstance(e, CancelledError | AsyncioCancelledError):
                 workflow.logger.info(f"Step {context.cursor.step} cancelled")
                 if not getattr(e, "transitioned", False):
-                    await transition(context, type="cancelled", output="Workflow Cancelled")
+                    await transition(
+                        context, type="cancelled", output="Workflow Cancelled"
+                    )
                 raise
             workflow.logger.error(f"Error in step {context.cursor.step}: {e}")
             if not getattr(e, "transitioned", False):

@@ -114,7 +114,9 @@ async def test_route_list_files(make_request, s3_client):
     assert response.status_code == 200
 
 
-async def test_route_list_files_with_project_filter(make_request, s3_client, test_project):
+async def test_route_list_files_with_project_filter(
+    make_request, s3_client, test_project
+):
     """route: list files with project filter"""
     # First create a file with the project
     data = {

@@ -36,7 +36,9 @@ async def event_publisher(
             async for event in history_events:
                 # TODO: We should get the workflow-completed event as well and use that to close the stream
                 if event.event_type == EventType.EVENT_TYPE_ACTIVITY_TASK_COMPLETED:
-                    payloads = event.activity_task_completed_event_attributes.result.payloads
+                    payloads = (
+                        event.activity_task_completed_event_attributes.result.payloads
+                    )
 
                     for payload in payloads:
                         try:
@@ -62,12 +64,14 @@ async def event_publisher(
                             else None
                         )
 
-                        await inner_send_chan.send({
-                            "data": {
-                                "transition": transition_event_dict,
-                                "next_page_token": next_page_token,
-                            },
-                        })
+                        await inner_send_chan.send(
+                            {
+                                "data": {
+                                    "transition": transition_event_dict,
+                                    "next_page_token": next_page_token,
+                                },
+                            }
+                        )
 
         except anyio.get_cancelled_exc_class() as e:
             with anyio.move_on_after(STREAM_TIMEOUT, shield=True):
@@ -94,7 +98,9 @@ async def stream_transitions_events(
         handle_id=temporal_data["id"],
     )
 
-    next_page_token: bytes | None = b64decode(next_page_token) if next_page_token else None
+    next_page_token: bytes | None = (
+        b64decode(next_page_token) if next_page_token else None
+    )
 
     history_events = workflow_handle.fetch_history_events(
         page_size=1,

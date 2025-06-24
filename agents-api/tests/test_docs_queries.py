@@ -268,7 +268,9 @@ async def test_query_list_user_docs_invalid_sort_by(pg_dsn, test_developer, test
     assert exc.value.detail == "Invalid sort field"
 
 
-async def test_query_list_user_docs_invalid_sort_direction(pg_dsn, test_developer, test_user):
+async def test_query_list_user_docs_invalid_sort_direction(
+    pg_dsn, test_developer, test_user
+):
     pool = await create_db_pool(dsn=pg_dsn)
 
     await create_doc(
@@ -605,7 +607,9 @@ async def test_query_search_docs_by_embedding(
     assert test_doc_with_embedding.embeddings is not None
 
     # Get query embedding by averaging the embeddings (list of floats)
-    query_embedding = [sum(k) / len(k) for k in zip(*test_doc_with_embedding.embeddings)]
+    query_embedding = [
+        sum(k) / len(k) for k in zip(*test_doc_with_embedding.embeddings)
+    ]
 
     # Search using the correct parameter types
     result = await search_docs_by_embedding(
@@ -630,7 +634,9 @@ async def test_query_search_docs_by_hybrid(
     pool = await create_db_pool(dsn=pg_dsn)
 
     # Get query embedding by averaging the embeddings (list of floats)
-    query_embedding = [sum(k) / len(k) for k in zip(*test_doc_with_embedding.embeddings)]
+    query_embedding = [
+        sum(k) / len(k) for k in zip(*test_doc_with_embedding.embeddings)
+    ]
 
     # Search using the correct parameter types
     result = await search_docs_hybrid(
@@ -705,7 +711,9 @@ async def test_query_search_docs_by_embedding_with_different_confidence_levels(
             connection_pool=pool,
         )
 
-        print(f"\nSearch results with confidence {confidence} (threshold={1.0 - confidence}):")
+        print(
+            f"\nSearch results with confidence {confidence} (threshold={1.0 - confidence}):"
+        )
         for r in results:
             print(f"- Doc ID: {r.id}, Distance: {r.distance}")
 
@@ -726,7 +734,9 @@ async def test_query_search_docs_by_embedding_with_different_confidence_levels(
                 test_developer.id,
                 test_agent.id,
             )
-            print(f"\nDEBUG: All embeddings with distances for confidence {confidence}:")
+            print(
+                f"\nDEBUG: All embeddings with distances for confidence {confidence}:"
+            )
             for row in debug_results:
                 print(
                     f"  Doc {row['doc_id']}, Index {row['index']}: distance={row['distance']}"

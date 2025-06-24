@@ -46,7 +46,6 @@ def uuid7(
     as_type: None = ...,
     time_func: Callable[[], int] = ...,
 ) -> _uuid.UUID: ...
-
 @overload
 def uuid7(
     ns: int | None = ...,
@@ -54,7 +53,6 @@ def uuid7(
     as_type: Literal["uuid"] = ...,
     time_func: Callable[[], int] = ...,
 ) -> _uuid.UUID: ...
-
 @overload
 def uuid7(
     ns: int | None = ...,
@@ -62,7 +60,6 @@ def uuid7(
     as_type: Literal["str", "hex"] = ...,
     time_func: Callable[[], int] = ...,
 ) -> str: ...
-
 @overload
 def uuid7(
     ns: int | None = ...,
@@ -70,7 +67,6 @@ def uuid7(
     as_type: Literal["int"] = ...,
     time_func: Callable[[], int] = ...,
 ) -> int: ...
-
 @overload
 def uuid7(
     ns: int | None = ...,
@@ -78,12 +74,9 @@ def uuid7(
     as_type: Literal["bytes"] = ...,
     time_func: Callable[[], int] = ...,
 ) -> bytes: ...
-
 def uuid7(*args, **kwargs):  # type: ignore[override]
     """Runtime implementation lives in the real package – stub only."""
 
 def uuid7str(ns: int | None = ...) -> str: ...
-
 def check_timing_precision(timing_func: Callable[[], int] | None = ...) -> str: ...
-
 def uuid_to_datetime(value: _uuid.UUID) -> _dt.datetime: ...

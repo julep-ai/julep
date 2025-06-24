@@ -4,7 +4,11 @@ from datetime import timedelta
 from typing import Any, TypeVar
 
 from temporalio import workflow
-from temporalio.common import SearchAttributeKey, SearchAttributePair, TypedSearchAttributes
+from temporalio.common import (
+    SearchAttributeKey,
+    SearchAttributePair,
+    TypedSearchAttributes,
+)
 from temporalio.exceptions import ActivityError, ApplicationError, ChildWorkflowError
 
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
@@ -109,9 +113,11 @@ async def continue_as_child(
             ],
             retry_policy=DEFAULT_RETRY_POLICY,
             memo=workflow.memo() | user_state,
-            search_attributes=TypedSearchAttributes([
-                SearchAttributePair(execution_id_key, str(execution_id)),
-            ]),
+            search_attributes=TypedSearchAttributes(
+                [
+                    SearchAttributePair(execution_id_key, str(execution_id)),
+                ]
+            ),
         )
     except Exception as e:
         # Unwrap nested ChildWorkflowError causes
@@ -224,7 +230,9 @@ async def execute_foreach_step(
     for i, item in enumerate(items):
         separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
 
-        foreach_wf_name = f"{separated_workflow_name}[{context.cursor.step}].foreach[{i}]"
+        foreach_wf_name = (
+            f"{separated_workflow_name}[{context.cursor.step}].foreach[{i}]"
+        )
         foreach_task = task.model_copy()
         foreach_task.workflows = [
             Workflow(name=foreach_wf_name, steps=[do_step]),
@@ -273,7 +281,9 @@ async def execute_map_reduce_step(
     for i, item in enumerate(items):
         separated_workflow_name = SEPARATOR + context.cursor.workflow + SEPARATOR
 
-        workflow_name = f"{separated_workflow_name}[{context.cursor.step}].mapreduce[{i}]"
+        workflow_name = (
+            f"{separated_workflow_name}[{context.cursor.step}].mapreduce[{i}]"
+        )
         map_reduce_task = task.model_copy()
         map_reduce_task.workflows = [
             Workflow(name=workflow_name, steps=[map_defn]),
@@ -331,7 +341,9 @@ async def execute_map_reduce_step_parallel(
 
     # If parallelism is 1, we're effectively running sequentially
     if parallelism == 1:
-        workflow.logger.warning("Parallelism is set to 1, falling back to sequential execution")
+        workflow.logger.warning(
+            "Parallelism is set to 1, falling back to sequential execution"
+        )
         # Fall back to sequential map-reduce
         # Note: 'workflow' parameter is missing here, but it's not needed because
         # 'workflow' is imported at the top of the file (`from temporalio import workflow`)

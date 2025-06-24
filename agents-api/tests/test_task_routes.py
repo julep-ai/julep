@@ -25,7 +25,9 @@ def test_route_unauthorized_should_fail(client, test_agent):
         "name": "test user",
         "main": [{"kind_": "evaluate", "evaluate": {"additionalProp1": "value1"}}],
     }
-    response = client.request(method="POST", url=f"/agents/{test_agent.id!s}/tasks", json=data)
+    response = client.request(
+        method="POST", url=f"/agents/{test_agent.id!s}/tasks", json=data
+    )
     assert response.status_code == 403
 
 
@@ -35,7 +37,9 @@ def test_route_create_task(make_request, test_agent):
         "name": "test user",
         "main": [{"kind_": "evaluate", "evaluate": {"additionalProp1": "value1"}}],
     }
-    response = make_request(method="POST", url=f"/agents/{test_agent.id!s}/tasks", json=data)
+    response = make_request(
+        method="POST", url=f"/agents/{test_agent.id!s}/tasks", json=data
+    )
     assert response.status_code == 201
 
 
@@ -74,7 +78,9 @@ def test_route_get_task_exists(make_request, test_task):
     assert response.status_code == 200
 
 
-async def test_route_list_all_execution_transition(make_request, test_execution_started):
+async def test_route_list_all_execution_transition(
+    make_request, test_execution_started
+):
     response = make_request(
         method="GET", url=f"/executions/{test_execution_started.id!s}/transitions"
     )
@@ -119,7 +125,9 @@ async def test_route_list_a_single_execution_transition(
 
 def test_route_list_task_executions(make_request, test_execution):
     """route: list task executions"""
-    response = make_request(method="GET", url=f"/tasks/{test_execution.task_id!s}/executions")
+    response = make_request(
+        method="GET", url=f"/tasks/{test_execution.task_id!s}/executions"
+    )
     assert response.status_code == 200
     response = response.json()
     executions = response["items"]
@@ -134,7 +142,9 @@ def test_route_list_tasks(make_request, test_agent):
         "name": "test user",
         "main": [{"kind_": "evaluate", "evaluate": {"additionalProp1": "value1"}}],
     }
-    response = make_request(method="POST", url=f"/agents/{test_agent.id!s}/tasks", json=data)
+    response = make_request(
+        method="POST", url=f"/agents/{test_agent.id!s}/tasks", json=data
+    )
     assert response.status_code == 201
     response = make_request(method="GET", url=f"/agents/{test_agent.id!s}/tasks")
     assert response.status_code == 200
@@ -154,7 +164,9 @@ async def test_route_update_execution(make_request, test_task):
         execution = response.json()
         data = {"status": "running"}
         execution_id = execution["id"]
-        response = make_request(method="PUT", url=f"/executions/{execution_id}", json=data)
+        response = make_request(
+            method="PUT", url=f"/executions/{execution_id}", json=data
+        )
         assert response.status_code == 200
         execution_id = response.json()["id"]
         response = make_request(method="GET", url=f"/executions/{execution_id}")
@@ -221,7 +233,9 @@ def test_route_stream_execution_status_sse_endpoint(
         max_attempts = 10
         for i, line in enumerate(response.iter_lines()):
             if line:
-                event_line = line.decode() if isinstance(line, bytes | bytearray) else line
+                event_line = (
+                    line.decode() if isinstance(line, bytes | bytearray) else line
+                )
                 if event_line.startswith("data:"):
                     payload = event_line[len("data:") :].strip()
                     data = json.loads(payload)
@@ -257,6 +271,9 @@ def test_route_stream_execution_status_sse_endpoint_non_existing_execution(
     assert "message" in error_data["error"]
     assert "code" in error_data["error"]
     assert "type" in error_data["error"]
-    assert f"Execution {non_existing_execution_id} not found" in error_data["error"]["message"]
+    assert (
+        f"Execution {non_existing_execution_id} not found"
+        in error_data["error"]["message"]
+    )
     assert error_data["error"]["code"] == "http_404"
     assert error_data["error"]["type"] == "http_error"

@@ -81,7 +81,9 @@ async def create_execution(
         data["metadata"] = data.get("metadata", {})
         execution_data = data
 
-    if execution_data["output"] is not None and not isinstance(execution_data["output"], dict):
+    if execution_data["output"] is not None and not isinstance(
+        execution_data["output"], dict
+    ):
         execution_data["output"] = {OUTPUT_UNNEST_KEY: execution_data["output"]}
 
     return (

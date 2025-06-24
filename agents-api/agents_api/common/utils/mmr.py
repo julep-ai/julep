@@ -102,7 +102,9 @@ def maximal_marginal_relevance(
             if i in idxs:
                 continue
             redundant_score = max(similarity_to_selected[i])
-            equation_score = lambda_mult * query_score - (1 - lambda_mult) * redundant_score
+            equation_score = (
+                lambda_mult * query_score - (1 - lambda_mult) * redundant_score
+            )
             if equation_score > best_score:
                 best_score = equation_score
                 idx_to_add = i
@@ -113,7 +115,10 @@ def maximal_marginal_relevance(
 
 @beartype
 def apply_mmr_to_docs(
-    docs: list[DocReference], query_embedding: np.ndarray, limit: int, mmr_strength: float
+    docs: list[DocReference],
+    query_embedding: np.ndarray,
+    limit: int,
+    mmr_strength: float,
 ) -> list[DocReference]:
     """
     Apply Maximal Marginal Relevance to a list of document references.

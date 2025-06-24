@@ -26,11 +26,13 @@ from ..utils import rewrap_exceptions
 T = TypeVar("T")
 
 
-@rewrap_exceptions({
-    ValidationError: partialclass(HTTPException, status_code=400),
-    TypeError: partialclass(HTTPException, status_code=400),
-    **common_db_exceptions("history", ["get"]),
-})
+@rewrap_exceptions(
+    {
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+        **common_db_exceptions("history", ["get"]),
+    }
+)
 @beartype
 async def gather_messages(
     *,
@@ -84,7 +86,9 @@ async def gather_messages(
     # Get messages to search from
     search_messages = [
         msg
-        for msg in (past_messages + new_raw_messages)[-(recall_options.num_search_messages) :]
+        for msg in (past_messages + new_raw_messages)[
+            -(recall_options.num_search_messages) :
+        ]
         if isinstance(msg["content"], str) and msg["role"] in ["user", "assistant"]
     ]
 
@@ -105,7 +109,9 @@ async def gather_messages(
         )
 
     # Get query text from last message
-    query_text = search_messages[-1]["content"].strip()[: recall_options.max_query_length]
+    query_text = search_messages[-1]["content"].strip()[
+        : recall_options.max_query_length
+    ]
 
     # Get owners to search docs from
     active_agent_id = chat_context.get_active_agent().id

@@ -34,7 +34,9 @@ async def test_query_get_usage_cost_returns_zero_when_no_usage_records_exist(
     expected_cost = Decimal("0")
 
     # Get the usage cost
-    cost_record = await get_usage_cost(developer_id=clean_developer_id, connection_pool=pool)
+    cost_record = await get_usage_cost(
+        developer_id=clean_developer_id, connection_pool=pool
+    )
 
     # Verify the record
     assert cost_record is not None, "Should have a cost record"
@@ -87,13 +89,17 @@ async def test_query_get_usage_cost_returns_the_correct_cost_when_records_exist(
     expected_cost = record1[0]["cost"] + record2[0]["cost"]
 
     # Force the continuous aggregate to refresh
-    await pool.execute("CALL refresh_continuous_aggregate('usage_cost_monthly', NULL, NULL)")
+    await pool.execute(
+        "CALL refresh_continuous_aggregate('usage_cost_monthly', NULL, NULL)"
+    )
 
     # Give a small delay for the view to update
     await asyncio.sleep(0.1)
 
     # Get the usage cost
-    cost_record = await get_usage_cost(developer_id=clean_developer_id, connection_pool=pool)
+    cost_record = await get_usage_cost(
+        developer_id=clean_developer_id, connection_pool=pool
+    )
 
     # Verify the record
     assert cost_record is not None, "Should have a cost record"
@@ -149,7 +155,9 @@ async def test_query_get_usage_cost_returns_correct_results_for_custom_api_usage
     expected_cost = non_custom_cost[0]["cost"]
 
     # Force the continuous aggregate to refresh
-    await pool.execute("CALL refresh_continuous_aggregate('usage_cost_monthly', NULL, NULL)")
+    await pool.execute(
+        "CALL refresh_continuous_aggregate('usage_cost_monthly', NULL, NULL)"
+    )
 
     # Give a small delay for the view to update
     await asyncio.sleep(0.1)
@@ -165,7 +173,9 @@ async def test_query_get_usage_cost_returns_correct_results_for_custom_api_usage
     )
 
 
-async def test_query_get_usage_cost_handles_inactive_developers_correctly(pg_dsn) -> None:
+async def test_query_get_usage_cost_handles_inactive_developers_correctly(
+    pg_dsn,
+) -> None:
     """Test that get_usage_cost correctly handles inactive developers."""
     pool = await create_db_pool(dsn=pg_dsn)
 
@@ -194,7 +204,9 @@ async def test_query_get_usage_cost_handles_inactive_developers_correctly(pg_dsn
     expected_cost = record[0]["cost"]
 
     # Force the continuous aggregate to refresh
-    await pool.execute("CALL refresh_continuous_aggregate('usage_cost_monthly', NULL, NULL)")
+    await pool.execute(
+        "CALL refresh_continuous_aggregate('usage_cost_monthly', NULL, NULL)"
+    )
 
     # Give a small delay for the view to update
     await asyncio.sleep(0.1)
@@ -203,7 +215,9 @@ async def test_query_get_usage_cost_handles_inactive_developers_correctly(pg_dsn
     cost_record = await get_usage_cost(developer_id=dev_id, connection_pool=pool)
 
     # Verify the record
-    assert cost_record is not None, "Should have a cost record even for inactive developers"
+    assert cost_record is not None, (
+        "Should have a cost record even for inactive developers"
+    )
     assert cost_record["developer_id"] == dev_id
     assert cost_record["active"] is False, "Developer should be marked as inactive"
     assert cost_record["cost"] == expected_cost, (
@@ -270,7 +284,9 @@ async def test_query_get_usage_cost_sorts_by_month_correctly_and_returns_the_mos
     )
 
     # Force the continuous aggregate to refresh
-    await pool.execute("CALL refresh_continuous_aggregate('usage_cost_monthly', NULL, NULL)")
+    await pool.execute(
+        "CALL refresh_continuous_aggregate('usage_cost_monthly', NULL, NULL)"
+    )
 
     # Give a small delay for the view to update
     await asyncio.sleep(0.1)

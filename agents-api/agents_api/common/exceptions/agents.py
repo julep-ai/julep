@@ -39,7 +39,9 @@ class AgentToolNotFoundError(BaseAgentException):
 
     def __init__(self, agent_id: UUID | str, tool_id: UUID | str) -> None:
         # Initialize the exception with a message indicating the missing tool and agent ID.
-        super().__init__(f"Tool {tool_id!s} not found for agent {agent_id!s}", http_code=404)
+        super().__init__(
+            f"Tool {tool_id!s} not found for agent {agent_id!s}", http_code=404
+        )
 
 
 # AIDEV-NOTE: Exception raised when a requested document associated with an agent cannot be found.
@@ -53,7 +55,9 @@ class AgentDocNotFoundError(BaseAgentException):
 
     def __init__(self, agent_id: UUID | str, doc_id: UUID | str) -> None:
         # Initialize the exception with a message indicating the missing document and agent ID.
-        super().__init__(f"Doc {doc_id!s} not found for agent {agent_id!s}", http_code=404)
+        super().__init__(
+            f"Doc {doc_id!s} not found for agent {agent_id!s}", http_code=404
+        )
 
 
 # AIDEV-NOTE: Exception raised when a requested agent model is not recognized or valid.

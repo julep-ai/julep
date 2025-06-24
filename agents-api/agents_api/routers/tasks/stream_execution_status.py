@@ -54,13 +54,17 @@ async def execution_status_publisher(
 
             # Fetch latest execution status via SQL query
             try:
-                execution_status_event: ExecutionStatusEvent = await get_execution_status_query(
-                    developer_id=x_developer_id,
-                    execution_id=execution_id,
+                execution_status_event: ExecutionStatusEvent = (
+                    await get_execution_status_query(
+                        developer_id=x_developer_id,
+                        execution_id=execution_id,
+                    )
                 )
             except Exception as e:
                 # Log the error and continue
-                logger.error(f"Error fetching status for execution {execution_id}: {e!s}")
+                logger.error(
+                    f"Error fetching status for execution {execution_id}: {e!s}"
+                )
                 await anyio.sleep(STREAM_POLL_INTERVAL)
                 continue
 
@@ -89,7 +93,9 @@ async def execution_status_publisher(
                     )
                     break
                 except Exception as e:
-                    logger.error(f"Error sending status for execution {execution_id}: {e!s}")
+                    logger.error(
+                        f"Error sending status for execution {execution_id}: {e!s}"
+                    )
                     # Continue the loop to try again
 
             # Wait before polling again
@@ -141,7 +147,9 @@ async def stream_execution_status(
         )
 
     except Exception as e:
-        error_message = f"Failed to start status stream for execution {execution_id}: {e!s}"
+        error_message = (
+            f"Failed to start status stream for execution {execution_id}: {e!s}"
+        )
         logger.error(error_message)
         if isinstance(e, HTTPException):
             raise e

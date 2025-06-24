@@ -148,11 +148,13 @@ def _transform(d):
     }
 
 
-@rewrap_exceptions({
-    ValidationError: partialclass(HTTPException, status_code=400),
-    TypeError: partialclass(HTTPException, status_code=400),
-    **common_db_exceptions("chat", ["get"]),
-})
+@rewrap_exceptions(
+    {
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+        **common_db_exceptions("chat", ["get"]),
+    }
+)
 @wrap_in_class(
     ChatContext,
     one=True,

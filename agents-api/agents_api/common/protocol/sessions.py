@@ -56,7 +56,9 @@ class ChatContext(SessionData):
         """
         Get the active agent from the session data.
         """
-        requested_agent: UUID | None = cast(UUID, self.settings and self.settings.get("agent"))
+        requested_agent: UUID | None = cast(
+            UUID, self.settings and self.settings.get("agent")
+        )
 
         if requested_agent:
             assert requested_agent in [agent.id for agent in self.agents], (

@@ -192,7 +192,9 @@ class StepContext(BaseModel):
         )
 
         if step_tools != "all":
-            if not all(tool and isinstance(tool, CreateToolRequest) for tool in step_tools):
+            if not all(
+                tool and isinstance(tool, CreateToolRequest) for tool in step_tools
+            ):
                 msg = "Invalid tools for step (ToolRef not supported yet)"
                 raise ApplicationError(msg)
 
@@ -208,7 +210,10 @@ class StepContext(BaseModel):
                 args=[
                     "list_secrets_query",
                     "secrets.list",
-                    {"developer_id": self.execution_input.developer_id, "decrypt": True},
+                    {
+                        "developer_id": self.execution_input.developer_id,
+                        "decrypt": True,
+                    },
                 ],
                 schedule_to_close_timeout=timedelta(days=31),
                 retry_policy=DEFAULT_RETRY_POLICY,
@@ -236,7 +241,9 @@ class StepContext(BaseModel):
             return task_tools
 
         # Remove duplicates from agent_tools
-        filtered_tools = [t for t in agent_tools if t.name not in (x.name for x in tools)]
+        filtered_tools = [
+            t for t in agent_tools if t.name not in (x.name for x in tools)
+        ]
 
         return filtered_tools + task_tools
 
@@ -346,7 +353,9 @@ class StepContext(BaseModel):
         dump["state"] = state
         dump["steps"] = steps
         dump["inputs"] = {i: step["input"] for i, step in steps.items()}
-        dump["outputs"] = {i: step["output"] for i, step in steps.items() if "output" in step}
+        dump["outputs"] = {
+            i: step["output"] for i, step in steps.items() if "output" in step
+        }
         return dump | {"_": current_input}
 
 

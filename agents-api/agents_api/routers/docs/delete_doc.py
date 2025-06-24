@@ -10,7 +10,9 @@ from ...queries.docs.delete_doc import delete_doc as delete_doc_query
 from .router import router
 
 
-@router.delete("/agents/{agent_id}/docs/{doc_id}", status_code=HTTP_202_ACCEPTED, tags=["docs"])
+@router.delete(
+    "/agents/{agent_id}/docs/{doc_id}", status_code=HTTP_202_ACCEPTED, tags=["docs"]
+)
 async def delete_agent_doc(
     doc_id: UUID,
     agent_id: UUID,
@@ -24,7 +26,9 @@ async def delete_agent_doc(
     )
 
 
-@router.delete("/users/{user_id}/docs/{doc_id}", status_code=HTTP_202_ACCEPTED, tags=["docs"])
+@router.delete(
+    "/users/{user_id}/docs/{doc_id}", status_code=HTTP_202_ACCEPTED, tags=["docs"]
+)
 async def delete_user_doc(
     doc_id: UUID,
     user_id: UUID,

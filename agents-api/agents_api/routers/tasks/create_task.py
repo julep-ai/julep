@@ -24,7 +24,9 @@ async def create_task(
         if data.input_schema is not None:
             validate(None, data.input_schema)
     except SchemaError:
-        raise HTTPException(detail="Invalid input schema", status_code=HTTP_400_BAD_REQUEST)
+        raise HTTPException(
+            detail="Invalid input schema", status_code=HTTP_400_BAD_REQUEST
+        )
     except ValidationError:
         pass
 

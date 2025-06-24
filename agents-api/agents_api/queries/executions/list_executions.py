@@ -45,19 +45,21 @@ LIMIT $5 OFFSET $6;
 """
 
 
-@rewrap_exceptions({
-    asyncpg.InvalidRowCountInLimitClauseError: partialclass(
-        HTTPException,
-        status_code=400,
-        detail="Invalid limit clause",
-    ),
-    asyncpg.InvalidRowCountInResultOffsetClauseError: partialclass(
-        HTTPException,
-        status_code=400,
-        detail="Invalid offset clause",
-    ),
-    **common_db_exceptions("execution", ["list"]),
-})
+@rewrap_exceptions(
+    {
+        asyncpg.InvalidRowCountInLimitClauseError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid limit clause",
+        ),
+        asyncpg.InvalidRowCountInResultOffsetClauseError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid offset clause",
+        ),
+        **common_db_exceptions("execution", ["list"]),
+    }
+)
 @wrap_in_class(
     Execution,
     transform=lambda d: {

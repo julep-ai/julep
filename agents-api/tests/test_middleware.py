@@ -49,7 +49,9 @@ async def test_middleware_inactive_free_user_receives_forbidden_response(client)
     with patch(
         "agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)
     ):
-        response = client.get("/test-inactive-user", headers={"X-Developer-Id": developer_id})
+        response = client.get(
+            "/test-inactive-user", headers={"X-Developer-Id": developer_id}
+        )
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "Invalid user account" in response.text
         assert "invalid_user_account" in response.text
@@ -288,15 +290,24 @@ def test_middleware_forbidden_if_user_is_not_found(client):
 
     developer_id = str(uuid.uuid4())
     with patch(
-        "agents_api.web.get_usage_cost", new=AsyncMock(side_effect=asyncpg.NoDataFoundError())
+        "agents_api.web.get_usage_cost",
+        new=AsyncMock(side_effect=asyncpg.NoDataFoundError()),
     ):
-        response = client.get("/test-user-not-found", headers={"X-Developer-Id": developer_id})
+        response = client.get(
+            "/test-user-not-found", headers={"X-Developer-Id": developer_id}
+        )
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "Invalid user account" in response.text
         assert "invalid_user_account" in response.text
-    http_404_error = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    with patch("agents_api.web.get_usage_cost", new=AsyncMock(side_effect=http_404_error)):
-        response = client.get("/test-404-error", headers={"X-Developer-Id": developer_id})
+    http_404_error = HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="Not found"
+    )
+    with patch(
+        "agents_api.web.get_usage_cost", new=AsyncMock(side_effect=http_404_error)
+    ):
+        response = client.get(
+            "/test-404-error", headers={"X-Developer-Id": developer_id}
+        )
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "Invalid user account" in response.text
         assert "invalid_user_account" in response.text
@@ -313,8 +324,12 @@ def test_middleware_hand_over_all_the_http_errors_except_of_404(client):
     http_500_error = HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Server error"
     )
-    with patch("agents_api.web.get_usage_cost", new=AsyncMock(side_effect=http_500_error)):
-        response = client.get("/test-500-error", headers={"X-Developer-Id": developer_id})
+    with patch(
+        "agents_api.web.get_usage_cost", new=AsyncMock(side_effect=http_500_error)
+    ):
+        response = client.get(
+            "/test-500-error", headers={"X-Developer-Id": developer_id}
+        )
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
@@ -325,7 +340,9 @@ def test_middleware_invalid_uuid_returns_bad_request(client):
     async def test_invalid_uuid():
         return {"status": "success", "message": "valid UUID"}
 
-    response = client.get("/test-invalid-uuid", headers={"X-Developer-Id": "invalid-uuid"})
+    response = client.get(
+        "/test-invalid-uuid", headers={"X-Developer-Id": "invalid-uuid"}
+    )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Invalid developer ID" in response.text
     assert "invalid_developer_id" in response.text
@@ -348,7 +365,9 @@ def test_middleware_valid_user_passes_through(client):
     with patch(
         "agents_api.web.get_usage_cost", new=AsyncMock(return_value=mock_user_cost_data)
     ):
-        response = client.get("/test-valid-user", headers={"X-Developer-Id": developer_id})
+        response = client.get(
+            "/test-valid-user", headers={"X-Developer-Id": developer_id}
+        )
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["message"] == "valid user"
 

@@ -26,7 +26,10 @@ async def test_construct_tool_call_correctly_formats_function_tool():
         type="function",
         function={
             "description": "A test function",
-            "parameters": {"type": "object", "properties": {"param1": {"type": "string"}}},
+            "parameters": {
+                "type": "object",
+                "properties": {"param1": {"type": "string"}},
+            },
         },
     )
 
@@ -65,7 +68,9 @@ async def test_construct_tool_call_correctly_formats_system_tool():
     assert tool_call["type"] == "system"
     assert tool_call["system"]["resource"] == "doc"
     assert tool_call["system"]["operation"] == "get"
-    assert tool_call["system"]["resource_id"] == UUID("00000000-0000-0000-0000-000000000000")
+    assert tool_call["system"]["resource_id"] == UUID(
+        "00000000-0000-0000-0000-000000000000"
+    )
     assert tool_call["system"]["subresource"] == "doc"
     assert tool_call["system"]["arguments"] == arguments
 
@@ -78,7 +83,10 @@ async def test_construct_tool_call_works_with_tool_objects_not_just_createtoolre
         type="function",
         function={
             "description": "A test function",
-            "parameters": {"type": "object", "properties": {"param1": {"type": "string"}}},
+            "parameters": {
+                "type": "object",
+                "properties": {"param1": {"type": "string"}},
+            },
         },
         agent_id=UUID("00000000-0000-0000-0000-000000000000"),
         developer_id=UUID("00000000-0000-0000-0000-000000000000"),

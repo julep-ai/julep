@@ -44,13 +44,17 @@ async def execute_api_call(
             merged_headers = (arg_headers or {}) | (api_call.headers or {})
 
             # Allow follow_redirects to be overridden by request_args
-            follow_redirects = request_args.pop("follow_redirects", api_call.follow_redirects)
+            follow_redirects = request_args.pop(
+                "follow_redirects", api_call.follow_redirects
+            )
 
             # Log the request (debug level)
             if activity.in_activity():
                 activity.logger.debug(f"Making API call: {method} to {url}")
 
-            include_response_content = request_args.pop("include_response_content", None)
+            include_response_content = request_args.pop(
+                "include_response_content", None
+            )
 
             # Execute the HTTP request
             response = await client.request(
@@ -66,7 +70,9 @@ async def execute_api_call(
                 response.raise_for_status()
             except httpx.HTTPStatusError as e:
                 # For HTTP errors, include response body in the error for debugging
-                error_body = e.response.text[:500] if e.response.text else "(empty body)"
+                error_body = (
+                    e.response.text[:500] if e.response.text else "(empty body)"
+                )
                 if activity.in_activity():
                     activity.logger.error(
                         f"HTTP error {e.response.status_code} in API call: {e!s}\n"
@@ -81,7 +87,9 @@ async def execute_api_call(
             }
 
             if include_response_content or api_call.include_response_content:
-                response_dict.update({"content": b64encode(response.content).decode("ascii")})
+                response_dict.update(
+                    {"content": b64encode(response.content).decode("ascii")}
+                )
 
             # Try to parse JSON response if possible
             try:

@@ -53,14 +53,18 @@ def test_route_create_or_update_session_update(make_request, test_session, test_
         "metadata": {"test": "test"},
         "system_template": "test system template",
     }
-    response = make_request(method="POST", url=f"/sessions/{test_session.id}", json=data)
+    response = make_request(
+        method="POST", url=f"/sessions/{test_session.id}", json=data
+    )
     assert response.status_code == 201, f"{response.json()}"
 
 
 def test_route_create_or_update_session_invalid_agent(make_request, test_session):
     """route: create or update session - invalid agent"""
     data = {"agent": str(uuid7()), "situation": "test session about"}
-    response = make_request(method="POST", url=f"/sessions/{test_session.id}", json=data)
+    response = make_request(
+        method="POST", url=f"/sessions/{test_session.id}", json=data
+    )
     assert response.status_code == 400
     assert (
         response.json()["error"]["message"]
@@ -114,7 +118,9 @@ def test_route_get_session_history(make_request, test_session):
 def test_route_patch_session(make_request, test_session):
     """route: patch session"""
     data = {"situation": "test session about"}
-    response = make_request(method="PATCH", url=f"/sessions/{test_session.id}", json=data)
+    response = make_request(
+        method="PATCH", url=f"/sessions/{test_session.id}", json=data
+    )
     assert response.status_code == 200
 
 

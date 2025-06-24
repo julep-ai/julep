@@ -14,7 +14,12 @@ from .router import router
 @router.get("/healthz", tags=["healthz"])
 async def check_health() -> dict:
     # Run all health checks concurrently
-    postgres_status, temporal_status, litellm_status, integration_status = await asyncio.gather(
+    (
+        postgres_status,
+        temporal_status,
+        litellm_status,
+        integration_status,
+    ) = await asyncio.gather(
         check_postgres(),
         check_temporal(),
         check_litellm(),
