@@ -22,3 +22,41 @@ async def list_files(
         file.content = await fetch_file_content(file.id)
 
     return files
+
+
+@router.get("/users/{user_id}/files", tags=["files"])
+async def list_user_files(
+    user_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+) -> list[File]:
+    """List files owned by a user."""
+    # AIDEV-NOTE: added user-specific file listing
+    files = await list_files_query(
+        developer_id=x_developer_id,
+        owner_type="user",
+        owner_id=user_id,
+    )
+
+    for file in files:
+        file.content = await fetch_file_content(file.id)
+
+    return files
+
+
+@router.get("/agents/{agent_id}/files", tags=["files"])
+async def list_agent_files(
+    agent_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+) -> list[File]:
+    """List files owned by an agent."""
+    # AIDEV-NOTE: added agent-specific file listing
+    files = await list_files_query(
+        developer_id=x_developer_id,
+        owner_type="agent",
+        owner_id=agent_id,
+    )
+
+    for file in files:
+        file.content = await fetch_file_content(file.id)
+
+    return files

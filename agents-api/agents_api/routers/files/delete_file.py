@@ -30,3 +30,47 @@ async def delete_file(
     await delete_file_content(file_id)
 
     return resource_deleted
+
+
+@router.delete(
+    "/users/{user_id}/files/{file_id}", status_code=HTTP_202_ACCEPTED, tags=["files"]
+)
+async def delete_user_file(
+    file_id: UUID,
+    user_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+) -> ResourceDeletedResponse:
+    """Delete a user-owned file."""
+    # AIDEV-NOTE: added user-specific file deletion
+    resource_deleted = await delete_file_query(
+        developer_id=x_developer_id,
+        file_id=file_id,
+        owner_type="user",
+        owner_id=user_id,
+    )
+
+    await delete_file_content(file_id)
+
+    return resource_deleted
+
+
+@router.delete(
+    "/agents/{agent_id}/files/{file_id}", status_code=HTTP_202_ACCEPTED, tags=["files"]
+)
+async def delete_agent_file(
+    file_id: UUID,
+    agent_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+) -> ResourceDeletedResponse:
+    """Delete an agent-owned file."""
+    # AIDEV-NOTE: added agent-specific file deletion
+    resource_deleted = await delete_file_query(
+        developer_id=x_developer_id,
+        file_id=file_id,
+        owner_type="agent",
+        owner_id=agent_id,
+    )
+
+    await delete_file_content(file_id)
+
+    return resource_deleted
