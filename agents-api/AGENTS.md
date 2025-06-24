@@ -75,3 +75,35 @@ Key Uses
 - Expression validation checks syntax, undefined names, unsafe operations
 - Task validation checks all expressions in workflow steps
 - Security: Sandbox with limited function/module access
+
+## SQL Safety Requirements
+- ALWAYS use the SQL utilities from `agents_api/queries/sql_utils.py`
+- NEVER use string formatting (f-strings, .format(), %) for SQL queries
+- Use `SafeQueryBuilder` for complex queries with dynamic WHERE, ORDER BY, LIMIT
+- Use `safe_format_query` for simple ORDER BY validation
+- All sort fields must be whitelisted explicitly
+- Run SQL injection tests: `poe test --search "sql_injection_prevention"`
+
+### Example Usage
+```python
+# For complex queries
+from agents_api.queries.sql_utils import SafeQueryBuilder
+
+builder = SafeQueryBuilder("SELECT * FROM docs WHERE developer_id = $1", [dev_id])
+if metadata_filter:
+    for key, value in metadata_filter.items():
+        builder.add_condition(" AND metadata->>{}::text = {}", key, str(value))
+builder.add_order_by("created_at", "desc", allowed_fields={"created_at", "updated_at"})
+builder.add_limit_offset(limit, offset)
+query, params = builder.build()
+
+# For simple ORDER BY queries
+from agents_api.queries.sql_utils import safe_format_query
+
+query = safe_format_query(
+    "SELECT * FROM entries ORDER BY {sort_by} {direction}",
+    sort_by="created_at",
+    direction="desc",
+    allowed_sort_fields={"created_at", "timestamp"}
+)
+```

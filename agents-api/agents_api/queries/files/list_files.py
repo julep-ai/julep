@@ -11,6 +11,7 @@ from beartype.vale import Is
 
 from ...autogen.openapi_model import File
 from ...common.utils.db_exceptions import common_db_exceptions
+from ..sql_utils import SafeQueryBuilder
 from ..utils import make_num_validator, pg_query, rewrap_exceptions, wrap_in_class
 
 # Base query for listing files
@@ -62,25 +63,22 @@ async def list_files(
     """
     Lists files with optional owner and project filtering, pagination, and sorting.
     """
-    # Start with the base query
-    query = base_files_query
-    params = [developer_id]
-    param_index = 2
+    # Build query using SafeQueryBuilder to prevent SQL injection
+    builder = SafeQueryBuilder(base_files_query, [developer_id])
 
     # Add owner filtering
     if owner_type and owner_id:
-        query += f" AND fo.owner_type = ${param_index} AND fo.owner_id = ${param_index + 1}"
-        params.extend([owner_type, owner_id])
-        param_index += 2
+        builder.add_condition(" AND fo.owner_type = {}", owner_type)
+        builder.add_condition(" AND fo.owner_id = {}", owner_id)
 
     # Add project filtering
     if project:
-        query += f" AND p.canonical_name = ${param_index}"
-        params.append(project)
-        param_index += 1
+        builder.add_condition(" AND p.canonical_name = {}", project)
 
-    # Add sorting and pagination
-    query += f" ORDER BY f.{sort_by} {direction} LIMIT ${param_index} OFFSET ${param_index + 1}"
-    params.extend([limit, offset])
+    # Add sorting and pagination with validation
+    builder.add_order_by(
+        sort_by, direction, allowed_fields={"created_at", "updated_at"}, table_prefix="f."
+    )
+    builder.add_limit_offset(limit, offset)
 
-    return query, params
+    return builder.build()

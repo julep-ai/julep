@@ -78,6 +78,28 @@ async def process_data(data: dict) -> Result:
         raise ValidationError(f"Missing required field: {e}") from e
 ```
 
+**SQL Safety patterns**:
+- NEVER use string formatting for SQL queries (f-strings, .format(), string concatenation)
+- ALWAYS use parameterized queries with `$1, $2, $3` placeholders
+- Use `SafeQueryBuilder` from `agents_api.queries.sql_utils` for complex dynamic queries
+- Use `safe_format_query` for simple queries with validated ORDER BY clauses
+- Validate all identifiers with `sanitize_identifier()` when needed
+- Whitelist allowed sort fields and directions
+
+Example:
+```python
+from agents_api.queries.sql_utils import SafeQueryBuilder
+
+# Good - using SafeQueryBuilder
+builder = SafeQueryBuilder("SELECT * FROM agents WHERE developer_id = $1", [dev_id])
+builder.add_condition(" AND status = {}", status)
+builder.add_order_by(sort_field, direction, allowed_fields={"created_at", "name"})
+query, params = builder.build()
+
+# Bad - NEVER do this
+query = f"SELECT * FROM agents WHERE status = '{status}' ORDER BY {sort_field}"
+```
+
 ---
 
 ## 4. Project layout & Core Components
@@ -213,6 +235,7 @@ async def create_entry(
 *   Large AI refactors in a single commit (makes `git bisect` difficult).
 *   Delegating test/spec writing entirely to AI (can lead to false confidence).
 *   **Note about `src/`**: Only the `cli` component has a `src/` directory. For `agents-api`, code is directly in `agents_api/`. Follow the existing pattern for each component.
+*   **SQL Injection vulnerabilities**: Using string formatting (f-strings, .format(), %) for SQL queries instead of parameterized queries and the SQL safety utilities in `agents_api/queries/sql_utils.py`.
 
 ---
 

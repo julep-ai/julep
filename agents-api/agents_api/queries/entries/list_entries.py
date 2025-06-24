@@ -9,6 +9,7 @@ from ...autogen.openapi_model import Entry
 from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
+from ..sql_utils import safe_format_query
 from ..utils import make_num_validator, pg_query, rewrap_exceptions, wrap_in_class
 
 # Query for checking if the session exists
@@ -43,7 +44,7 @@ WHERE e.session_id = $1
     AND (er.relation IS NULL OR er.relation != ALL($6))
     AND e.created_at >= $7
     AND e.created_at >= (select created_at from sessions where session_id = $1 LIMIT 1)
-ORDER BY e.{sort_by} {direction} -- safe to interpolate
+ORDER BY e.{sort_by} {direction}
 LIMIT $3
 OFFSET $4;
 """
@@ -96,9 +97,14 @@ async def list_entries(
         allowed_sources if allowed_sources is not None else ["api_request", "api_response"]
     )
     exclude_relations = exclude_relations if exclude_relations is not None else []
-    query = list_entries_query.format(
+
+    # AIDEV-NOTE: Use safe_format_query to prevent SQL injection in ORDER BY clause
+    query = safe_format_query(
+        list_entries_query,
         sort_by=sort_by,
         direction=direction,
+        allowed_sort_fields={"created_at", "timestamp"},
+        table_prefix="",
     )
 
     # Parameters for the entry query
