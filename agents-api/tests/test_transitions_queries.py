@@ -15,26 +15,17 @@ from agents_api.queries.executions.create_execution_transition import (
 )
 from asyncpg import Pool
 from uuid_extensions import uuid7
-from ward import test
 
-from tests.fixtures import (
-    custom_scope_id,
+
+async def test_query_list_execution_inputs_data(
     pg_dsn,
     test_developer_id,
+    custom_scope_id,
     test_execution_started,
-    test_task,
-)
-
-
-@test("query: list execution inputs data")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    scope_id=custom_scope_id,
-    execution_started=test_execution_started,
 ):
-    pool = await create_db_pool(dsn=dsn)
-    execution = execution_started
+    pool = await create_db_pool(dsn=pg_dsn)
+    execution = test_execution_started
+    scope_id = custom_scope_id
 
     data = []
 
@@ -94,7 +85,7 @@ async def _(
 
     for transition in data:
         await create_execution_transition(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             execution_id=execution.id,
             data=transition,
             connection_pool=pool,
@@ -113,15 +104,15 @@ async def _(
     assert transitions[2].output == {"inside_evaluate": "inside evaluate"}
 
 
-@test("query: list execution state data")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    scope_id=custom_scope_id,
-    execution_started=test_execution_started,
+async def test_query_list_execution_state_data(
+    pg_dsn,
+    test_developer_id,
+    custom_scope_id,
+    test_execution_started,
 ):
-    pool = await create_db_pool(dsn=dsn)
-    execution = execution_started
+    pool = await create_db_pool(dsn=pg_dsn)
+    execution = test_execution_started
+    scope_id = custom_scope_id
 
     data = []
 
@@ -146,7 +137,7 @@ async def _(
 
     for transition in data:
         await create_execution_transition(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             execution_id=execution.id,
             data=transition,
             connection_pool=pool,
@@ -263,17 +254,17 @@ async def create_transition(
     )
 
 
-@test("query: list execution inputs data: search_window")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    scope_id=custom_scope_id,
-    task=test_task,
+async def test_query_list_execution_inputs_data_search_window(
+    pg_dsn,
+    test_developer_id,
+    custom_scope_id,
+    test_task,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
+    scope_id = custom_scope_id
 
     execution_id = await create_execution(
-        pool, developer_id, task.id, utcnow() - timedelta(weeks=1)
+        pool, test_developer_id, test_task.id, utcnow() - timedelta(weeks=1)
     )
 
     await create_transition(
@@ -318,17 +309,17 @@ async def _(
     assert transitions_without_search_window[1].output == {"step_step": "step step"}
 
 
-@test("query: list execution state data: search_window")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    scope_id=custom_scope_id,
-    task=test_task,
+async def test_query_list_execution_state_data_search_window(
+    pg_dsn,
+    test_developer_id,
+    custom_scope_id,
+    test_task,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
+    scope_id = custom_scope_id
 
     execution_id = await create_execution(
-        pool, developer_id, task.id, utcnow() - timedelta(weeks=1)
+        pool, test_developer_id, test_task.id, utcnow() - timedelta(weeks=1)
     )
 
     await create_transition(

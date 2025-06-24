@@ -1,5 +1,3 @@
-# Tests for session queries
-
 from agents_api.autogen.openapi_model import (
     ChatInput,
     CreateAgentRequest,
@@ -13,55 +11,40 @@ from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.chat.gather_messages import gather_messages
 from agents_api.queries.chat.prepare_chat_context import prepare_chat_context
 from agents_api.queries.sessions.create_session import create_session
-from ward import test
-
-from .fixtures import (
-    make_request,
-    patch_embed_acompletion,
-    pg_dsn,
-    test_agent,
-    test_developer,
-    test_developer_id,
-    test_session,
-    test_tool,
-    test_user,
-)
 
 
-@test("chat: check that patching libs works")
-async def _(
-    _=patch_embed_acompletion,
-):
+async def test_chat_check_that_patching_libs_works(patch_embed_acompletion):
+    """chat: check that patching libs works"""
     assert (await litellm.acompletion(model="gpt-4o-mini", messages=[])).id == "fake_id"
     assert (await litellm.aembedding())[0][0] == 1.0  # pytype: disable=missing-parameter
 
 
-@test("chat: check that non-recall gather_messages works")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    session=test_session,
-    tool=test_tool,
-    user=test_user,
-    mocks=patch_embed_acompletion,
+async def test_chat_check_that_non_recall_gather_messages_works(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    test_session,
+    test_tool,
+    test_user,
+    patch_embed_acompletion,
 ):
-    (embed, _) = mocks
+    """chat: check that non-recall gather_messages works"""
+    embed, _ = patch_embed_acompletion
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     chat_context = await prepare_chat_context(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )
 
-    session_id = session.id
+    session_id = test_session.id
 
     messages = [{"role": "user", "content": "hello"}]
 
     past_messages, doc_references = await gather_messages(
-        developer=developer,
+        developer=test_developer,
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=False),
@@ -77,31 +60,30 @@ async def _(
     embed.assert_not_called()
 
 
-@test("chat: check that gather_messages works")
-async def _(
-    developer=test_developer,
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    # session=test_session,
-    tool=test_tool,
-    user=test_user,
-    mocks=patch_embed_acompletion,
+async def test_chat_check_that_gather_messages_works(
+    test_developer,
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    test_tool,
+    test_user,
+    patch_embed_acompletion,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    """chat: check that gather_messages works"""
+    pool = await create_db_pool(dsn=pg_dsn)
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session about",
         ),
         connection_pool=pool,
     )
 
-    (embed, acompletion) = mocks
+    embed, acompletion = patch_embed_acompletion
 
     chat_context = await prepare_chat_context(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         session_id=session.id,
         connection_pool=pool,
     )
@@ -111,7 +93,7 @@ async def _(
     messages = [{"role": "user", "content": "hello"}]
 
     past_messages, doc_references = await gather_messages(
-        developer=developer,
+        developer=test_developer,
         session_id=session_id,
         chat_context=chat_context,
         chat_input=ChatInput(messages=messages, recall=True),
@@ -125,19 +107,19 @@ async def _(
     acompletion.assert_not_called()
 
 
-@test("chat: check that chat route calls both mocks")
-async def _(
-    make_request=make_request,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    mocks=patch_embed_acompletion,
-    dsn=pg_dsn,
+async def test_chat_check_that_chat_route_calls_both_mocks(
+    make_request,
+    test_developer_id,
+    test_agent,
+    patch_embed_acompletion,
+    pg_dsn,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    """chat: check that chat route calls both mocks"""
+    pool = await create_db_pool(dsn=pg_dsn)
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session about",
             recall_options={
                 "mode": "hybrid",
@@ -153,7 +135,7 @@ async def _(
         connection_pool=pool,
     )
 
-    (embed, acompletion) = mocks
+    embed, acompletion = patch_embed_acompletion
 
     response = make_request(
         method="POST",
@@ -167,19 +149,19 @@ async def _(
     acompletion.assert_called_once()
 
 
-@test("chat: check that render route works and does not call completion mock")
-async def _(
-    make_request=make_request,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    mocks=patch_embed_acompletion,
-    dsn=pg_dsn,
+async def test_chat_check_that_render_route_works_and_does_not_call_completion_mock(
+    make_request,
+    test_developer_id,
+    test_agent,
+    patch_embed_acompletion,
+    pg_dsn,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    """chat: check that render route works and does not call completion mock"""
+    pool = await create_db_pool(dsn=pg_dsn)
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session about",
             recall_options={
                 "mode": "hybrid",
@@ -195,7 +177,7 @@ async def _(
         connection_pool=pool,
     )
 
-    (embed, acompletion) = mocks
+    embed, acompletion = patch_embed_acompletion
 
     response = make_request(
         method="POST",
@@ -217,19 +199,19 @@ async def _(
     acompletion.assert_not_called()
 
 
-@test("query: prepare chat context")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    session=test_session,
-    tool=test_tool,
-    user=test_user,
+async def test_query_prepare_chat_context(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    test_session,
+    test_tool,
+    test_user,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    """query: prepare chat context"""
+    pool = await create_db_pool(dsn=pg_dsn)
     context = await prepare_chat_context(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )
 
@@ -237,12 +219,11 @@ async def _(
     assert len(context.toolsets) > 0
 
 
-@test("chat: test system template merging logic")
-async def _(
-    make_request=make_request,
-    developer_id=test_developer_id,
-    dsn=pg_dsn,
-    mocks=patch_embed_acompletion,
+async def test_chat_test_system_template_merging_logic(
+    make_request,
+    test_developer_id,
+    pg_dsn,
+    patch_embed_acompletion,
 ):
     """Test that the system template merging logic works correctly.
 
@@ -251,7 +232,7 @@ async def _(
     - If session.system_template is set (regardless of whether agent.default_system_template is set),
       use the session's template.
     """
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
 
     # Create an agent with a default system template
     agent_default_template = (
@@ -265,7 +246,7 @@ async def _(
     )
 
     agent = await create_agent(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=agent_data,
         connection_pool=pool,
     )
@@ -277,7 +258,7 @@ async def _(
     )
 
     session1 = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=session1_data,
         connection_pool=pool,
     )
@@ -291,7 +272,7 @@ async def _(
     )
 
     session2 = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=session2_data,
         connection_pool=pool,
     )
@@ -332,14 +313,16 @@ async def _(
     assert agent_data.name.upper() in messages1[0]["content"]
 
 
-@test("chat: validate the recall options for different modes in chat context")
-async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
-    pool = await create_db_pool(dsn=dsn)
+async def test_chat_validate_the_recall_options_for_different_modes_in_chat_context(
+    test_agent, pg_dsn, test_developer_id
+):
+    """chat: validate the recall options for different modes in chat context"""
+    pool = await create_db_pool(dsn=pg_dsn)
 
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=CreateSessionRequest(
-            agent=agent.id,
+            agent=test_agent.id,
             situation="test session about",
             system_template="test system template",
         ),
@@ -347,7 +330,7 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
     )
 
     chat_context = await prepare_chat_context(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         session_id=session.id,
         connection_pool=pool,
     )
@@ -362,7 +345,7 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
 
     # Create a session with a hybrid recall options to hybrid mode
     data = CreateSessionRequest(
-        agent=agent.id,
+        agent=test_agent.id,
         situation="test session about",
         system_template="test system template",
         recall_options={
@@ -381,14 +364,14 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
     )
 
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=data,
         connection_pool=pool,
     )
 
     # assert session.recall_options == data.recall_options
     chat_context = await prepare_chat_context(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         session_id=session.id,
         connection_pool=pool,
     )
@@ -416,7 +399,7 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
 
     # Update session to have a new recall options to text mode
     data = CreateSessionRequest(
-        agent=agent.id,
+        agent=test_agent.id,
         situation="test session about",
         system_template="test system template",
         recall_options={
@@ -431,14 +414,14 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
     )
 
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=data,
         connection_pool=pool,
     )
 
     # assert session.recall_options == data.recall_options
     chat_context = await prepare_chat_context(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         session_id=session.id,
         connection_pool=pool,
     )
@@ -465,7 +448,7 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
 
     # Update session to have a new recall options to vector mode
     data = CreateSessionRequest(
-        agent=agent.id,
+        agent=test_agent.id,
         situation="test session about",
         system_template="test system template",
         recall_options={
@@ -480,14 +463,14 @@ async def _(agent=test_agent, dsn=pg_dsn, developer_id=test_developer_id):
     )
 
     session = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         data=data,
         connection_pool=pool,
     )
 
     # assert session.recall_options == data.recall_options
     chat_context = await prepare_chat_context(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         session_id=session.id,
         connection_pool=pool,
     )

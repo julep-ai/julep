@@ -1,6 +1,7 @@
 import uuid
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from agents_api.autogen.openapi_model import (
     Agent,
     Execution,
@@ -19,11 +20,9 @@ from agents_api.common.protocol.tasks import (
 )
 from agents_api.common.utils.datetime import utcnow
 from agents_api.workflows.task_execution.helpers import execute_map_reduce_step_parallel
-from ward import raises, test
 
 
-@test("execute_map_reduce_step_parallel: parallelism must be greater than 1")
-async def _():
+async def test_execute_map_reduce_step_parallel_parallelism_must_be_greater_than_1():
     async def _resp():
         return "response"
 
@@ -91,7 +90,7 @@ async def _():
         workflow.execute_child_workflow.return_value = run_mock
         workflow.execute_activity.return_value = _resp()
 
-        with raises(AssertionError):
+        with pytest.raises(AssertionError):
             await execute_map_reduce_step_parallel(
                 context=context,
                 map_defn=step.map,
@@ -102,8 +101,7 @@ async def _():
             )
 
 
-@test("execute_map_reduce_step_parallel: returned true")
-async def _():
+async def test_execute_map_reduce_step_parallel_returned_true():
     async def _resp():
         return "response"
 
@@ -189,8 +187,7 @@ async def _():
         assert result == workflow_result
 
 
-@test("execute_map_reduce_step_parallel: returned false")
-async def _():
+async def test_execute_map_reduce_step_parallel_returned_false():
     async def _resp():
         return ["response 1", "response 2"]
 

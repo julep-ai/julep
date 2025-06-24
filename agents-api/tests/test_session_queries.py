@@ -3,6 +3,7 @@
 # Tests verify the SQL queries without actually executing them against a database.
 # """
 
+import pytest
 from agents_api.autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
     CreateSessionRequest,
@@ -23,30 +24,22 @@ from agents_api.queries.sessions import (
     update_session,
 )
 from uuid_extensions import uuid7
-from ward import raises, test
 
-from tests.fixtures import (
-    pg_dsn,
-    test_agent,
-    test_developer_id,
-    test_session,
-    test_user,
-)
+# Fixtures from conftest.py: pg_dsn, test_agent, test_developer_id, test_session, test_user
 
 
-@test("query: create session sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
+async def test_query_create_session_sql(pg_dsn, test_developer_id, test_agent, test_user):
     """Test that a session can be successfully created."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     session_id = uuid7()
     data = CreateSessionRequest(
-        users=[user.id],
-        agents=[agent.id],
+        users=[test_user.id],
+        agents=[test_agent.id],
         system_template="test system template",
     )
     result = await create_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         session_id=session_id,
         data=data,
         connection_pool=pool,
@@ -57,19 +50,20 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=t
     assert result.id == session_id
 
 
-@test("query: create or update session sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=test_user):
+async def test_query_create_or_update_session_sql(
+    pg_dsn, test_developer_id, test_agent, test_user
+):
     """Test that a session can be successfully created or updated."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     session_id = uuid7()
     data = CreateOrUpdateSessionRequest(
-        users=[user.id],
-        agents=[agent.id],
+        users=[test_user.id],
+        agents=[test_agent.id],
         system_template="test system template",
     )
     result = await create_or_update_session(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         session_id=session_id,
         data=data,
         connection_pool=pool,
@@ -81,43 +75,40 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, agent=test_agent, user=t
     assert result.updated_at is not None
 
 
-@test("query: get session exists")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+async def test_query_get_session_exists(pg_dsn, test_developer_id, test_session):
     """Test retrieving an existing session."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     result = await get_session(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Session)
-    assert result.id == session.id
+    assert result.id == test_session.id
 
 
-@test("query: get session does not exist")
-async def _(dsn=pg_dsn, developer_id=test_developer_id):
+async def test_query_get_session_does_not_exist(pg_dsn, test_developer_id):
     """Test retrieving a non-existent session."""
 
     session_id = uuid7()
-    pool = await create_db_pool(dsn=dsn)
-    with raises(Exception):
+    pool = await create_db_pool(dsn=pg_dsn)
+    with pytest.raises(Exception):
         await get_session(
             session_id=session_id,
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             connection_pool=pool,
         )  # type: ignore[not-callable]
 
 
-@test("query: list sessions")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+async def test_query_list_sessions(pg_dsn, test_developer_id, test_session):
     """Test listing sessions with default pagination."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     result = await list_sessions(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         limit=10,
         offset=0,
         connection_pool=pool,
@@ -125,16 +116,15 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
 
     assert isinstance(result, list)
     assert len(result) >= 1
-    assert any(s.id == session.id for s in result)
+    assert any(s.id == test_session.id for s in result)
 
 
-@test("query: list sessions with filters")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+async def test_query_list_sessions_with_filters(pg_dsn, test_developer_id, test_session):
     """Test listing sessions with specific filters."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     result = await list_sessions(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         limit=10,
         offset=0,
         connection_pool=pool,
@@ -147,13 +137,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     )
 
 
-@test("query: count sessions")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+async def test_query_count_sessions(pg_dsn, test_developer_id, test_session):
     """Test counting the number of sessions for a developer."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     count = await count_sessions(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
@@ -161,85 +150,82 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
     assert count["count"] >= 1
 
 
-@test("query: update session sql")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    session=test_session,
-    agent=test_agent,
-    user=test_user,
+async def test_query_update_session_sql(
+    pg_dsn,
+    test_developer_id,
+    test_session,
+    test_agent,
+    test_user,
 ):
     """Test that an existing session's information can be successfully updated."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = UpdateSessionRequest(
         token_budget=1000,
         forward_tool_calls=True,
         system_template="updated system template",
     )
     result = await update_session(
-        session_id=session.id,
-        developer_id=developer_id,
+        session_id=test_session.id,
+        developer_id=test_developer_id,
         data=data,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Session)
-    assert result.updated_at > session.created_at
+    assert result.updated_at > test_session.created_at
 
     updated_session = await get_session(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )  # type: ignore[not-callable]
     assert updated_session.forward_tool_calls is True
 
 
-@test("query: patch session sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session, agent=test_agent):
+async def test_query_patch_session_sql(pg_dsn, test_developer_id, test_session, test_agent):
     """Test that a session can be successfully patched."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = PatchSessionRequest(
         metadata={"test": "metadata"},
     )
     result = await patch_session(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         data=data,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
     assert result is not None
     assert isinstance(result, Session)
-    assert result.updated_at > session.created_at
+    assert result.updated_at > test_session.created_at
 
     patched_session = await get_session(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )  # type: ignore[not-callable]
     assert patched_session.metadata == {"test": "metadata"}
 
 
-@test("query: delete session sql")
-async def _(dsn=pg_dsn, developer_id=test_developer_id, session=test_session):
+async def test_query_delete_session_sql(pg_dsn, test_developer_id, test_session):
     """Test that a session can be successfully deleted."""
 
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     delete_result = await delete_session(
-        developer_id=developer_id,
-        session_id=session.id,
+        developer_id=test_developer_id,
+        session_id=test_session.id,
         connection_pool=pool,
     )  # type: ignore[not-callable]
 
     assert delete_result is not None
     assert isinstance(delete_result, ResourceDeletedResponse)
 
-    with raises(Exception):
+    with pytest.raises(Exception):
         await get_session(
-            developer_id=developer_id,
-            session_id=session.id,
+            developer_id=test_developer_id,
+            session_id=test_session.id,
             connection_pool=pool,
         )  # type: ignore[not-callable]

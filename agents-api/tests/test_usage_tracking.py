@@ -15,16 +15,14 @@ from agents_api.queries.usage.create_usage_record import (
 )
 from litellm import cost_per_token
 from litellm.utils import Message, ModelResponse, Usage, token_counter
-from ward import test
-
-from .fixtures import pg_dsn, test_developer_id
 
 
-@test("query: create_usage_record creates a record with correct parameters")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_create_usage_record_creates_a_single_record(
+    pg_dsn, test_developer_id
+) -> None:
+    pool = await create_db_pool(dsn=pg_dsn)
     response = await create_usage_record(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         model="gpt-4o-mini",
         prompt_tokens=100,
         completion_tokens=100,
@@ -32,7 +30,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     )
     assert len(response) == 1
     record = response[0]
-    assert record["developer_id"] == developer_id
+    assert record["developer_id"] == test_developer_id
     assert record["model"] == "gpt-4o-mini"
     assert record["prompt_tokens"] == 100
     assert record["completion_tokens"] == 100
@@ -43,9 +41,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert isinstance(record["created_at"], datetime)
 
 
-@test("query: create_usage_record handles different model names correctly")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_create_usage_record_handles_different_model_names_correctly(
+    pg_dsn, test_developer_id
+) -> None:
+    pool = await create_db_pool(dsn=pg_dsn)
     models = [
         "gpt-4o-mini",
         "claude-3.5-sonnet",
@@ -66,7 +65,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     ]
     for model in models:
         response = await create_usage_record(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             model=model,
             prompt_tokens=100,
             completion_tokens=100,
@@ -77,11 +76,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
         assert record["model"] == model
 
 
-@test("query: create_usage_record properly calculates costs")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_create_usage_record_properly_calculates_costs(
+    pg_dsn, test_developer_id
+) -> None:
+    pool = await create_db_pool(dsn=pg_dsn)
     response = await create_usage_record(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         model="gpt-4o-mini",
         prompt_tokens=2041,
         completion_tokens=34198,
@@ -99,11 +99,10 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert record["cost"] == cost
 
 
-@test("query: create_usage_record with custom API key")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_create_usage_record_with_custom_api_key(pg_dsn, test_developer_id) -> None:
+    pool = await create_db_pool(dsn=pg_dsn)
     response = await create_usage_record(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         model="gpt-4o-mini",
         prompt_tokens=100,
         completion_tokens=100,
@@ -123,11 +122,12 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert record["cost"] == cost
 
 
-@test("query: create_usage_record with fallback pricing")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_create_usage_record_with_fallback_pricing(
+    pg_dsn, test_developer_id
+) -> None:
+    pool = await create_db_pool(dsn=pg_dsn)
     response = await create_usage_record(
-        developer_id=developer_id,
+        developer_id=test_developer_id,
         model="meta-llama/llama-4-maverick:free",
         prompt_tokens=100,
         completion_tokens=100,
@@ -140,14 +140,15 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert record["estimated"] is True
 
 
-@test("query: create_usage_record with fallback pricing with model not in fallback pricing")
-async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
-    pool = await create_db_pool(dsn=dsn)
+async def test_query_create_usage_record_with_fallback_pricing_with_model_not_in_fallback_pricing(
+    pg_dsn, test_developer_id
+) -> None:
+    pool = await create_db_pool(dsn=pg_dsn)
 
     with patch("builtins.print") as mock_print:
         unknown_model = "unknown-model-name"
         response = await create_usage_record(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             model=unknown_model,
             prompt_tokens=100,
             completion_tokens=100,
@@ -167,8 +168,7 @@ async def _(dsn=pg_dsn, developer_id=test_developer_id) -> None:
     assert expected_call == actual_call
 
 
-@test("utils: track_usage with response.usage available")
-async def _(developer_id=test_developer_id) -> None:
+async def test_utils_track_usage_with_response_usage_available(test_developer_id) -> None:
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse(
             usage=Usage(
@@ -178,7 +178,7 @@ async def _(developer_id=test_developer_id) -> None:
         )
 
         await track_usage(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             model="gpt-4o-mini",
             messages=[],
             response=response,
@@ -188,8 +188,7 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["completion_tokens"] == 100
 
 
-@test("utils: track_usage without response.usage")
-async def _(developer_id=test_developer_id) -> None:
+async def test_utils_track_usage_without_response_usage(test_developer_id) -> None:
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse(
             usage=None,
@@ -211,7 +210,7 @@ async def _(developer_id=test_developer_id) -> None:
         )
 
         await track_usage(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             model="gpt-4o-mini",
             messages=messages,
             response=response,
@@ -222,8 +221,7 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["completion_tokens"] == completion_tokens
 
 
-@test("utils: track_embedding_usage with response.usage")
-async def _(developer_id=test_developer_id) -> None:
+async def test_utils_track_embedding_usage_with_response_usage(test_developer_id) -> None:
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse(
             usage=Usage(
@@ -235,7 +233,7 @@ async def _(developer_id=test_developer_id) -> None:
         inputs = ["This is a test input for embedding"]
 
         await track_embedding_usage(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             model="text-embedding-3-large",
             inputs=inputs,
             response=response,
@@ -247,8 +245,7 @@ async def _(developer_id=test_developer_id) -> None:
         assert call_args["model"] == "text-embedding-3-large"
 
 
-@test("utils: track_embedding_usage without response.usage")
-async def _(developer_id=test_developer_id) -> None:
+async def test_utils_track_embedding_usage_without_response_usage(test_developer_id) -> None:
     with patch("agents_api.common.utils.usage.create_usage_record") as mock_create_usage_record:
         response = ModelResponse()
         response.usage = None
@@ -262,7 +259,7 @@ async def _(developer_id=test_developer_id) -> None:
         )
 
         await track_embedding_usage(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             model="text-embedding-3-large",
             inputs=inputs,
             response=response,

@@ -21,8 +21,8 @@ Key Uses
 - Code style guidelines:
   - Follows root `AGENTS.md` Python standards (FastAPI, async/await, ruff formatting).
 - Testing instructions:
-  - Tests live under `agents-api/tests/` using `ward`.
-  - Run specific tests: `poe test --search "pattern" --fail-limit 1`.
+  - Tests live under `agents-api/tests/` using `pytest`.
+  - Run specific tests: `poe test -k "pattern" -x`.
 - Repository etiquette:
   - Tag AI-generated commits with `[AI]`.
 - Developer environment:
@@ -75,3 +75,18 @@ Key Uses
 - Expression validation checks syntax, undefined names, unsafe operations
 - Task validation checks all expressions in workflow steps
 - Security: Sandbox with limited function/module access
+
+## Testing Framework
+- AIDEV-NOTE: Successfully migrated from Ward to pytest (2025-06-24)
+- All test files now use pytest conventions (test_* functions)
+- Fixtures centralized in conftest.py with pytest_asyncio for async tests
+- S3 client fixture fixed for async event loop compatibility using AsyncExitStack
+- Usage cost tests updated to use dynamic pricing from litellm
+- All Ward imports removed, migration complete
+- Run tests: `poe test` or `poe test -k "pattern"` for specific tests
+- Stop on first failure: `poe test -x`
+
+## Type Checking
+- AIDEV-NOTE: autogen/openapi_model.py is handwritten, not auto-generated
+- Type checking errors from openapi_model.py are intentional (dynamic type property patches)
+- Use `ty check` for extremely fast type checking (pytype replacement)

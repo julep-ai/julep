@@ -142,7 +142,7 @@ def test_backwards_compatibility_cases():
 
     # Test curly brace template syntax
     expression = "Hello {{name}}"
-    result = validate_py_expression(expression)
+    result = validate_py_expression(expression, expected_variables={"name"})
 
     assert all(len(issues) == 0 for issues in result.values()), (
         "Curly brace template should be valid"

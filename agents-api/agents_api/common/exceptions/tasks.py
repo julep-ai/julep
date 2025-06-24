@@ -93,7 +93,7 @@ NON_RETRYABLE_ERROR_TYPES = (
     beartype.roar.BeartypeDecorHintNonpepException,
     beartype.roar.BeartypeDecorHintPepException,
     beartype.roar.BeartypeDecorHintPepUnsupportedException,
-    beartype.roar.BeartypeDecorHintTypeException,
+    beartype.roar.BeartypeDecorHintPepException,  # Replaced BeartypeDecorHintTypeException
     beartype.roar.BeartypeDecorParamException,
     beartype.roar.BeartypeDecorParamNameException,
     beartype.roar.BeartypeCallHintParamViolation,

@@ -3,7 +3,6 @@ from uuid import UUID
 import numpy as np
 from agents_api.autogen.Docs import DocOwner, DocReference, Snippet
 from agents_api.common.utils.mmr import apply_mmr_to_docs
-from ward import test
 
 
 def create_test_doc(doc_id, embedding=None):
@@ -21,8 +20,8 @@ def create_test_doc(doc_id, embedding=None):
     )
 
 
-@test("utility: test to apply_mmr_to_docs")
-def _():
+def test_apply_mmr_to_docs():
+    """Test utility: test to apply_mmr_to_docs."""
     # Create test documents with embeddings
     docs = [
         create_test_doc("550e8400-e29b-41d4-a716-446655440000", np.array([0.1, 0.2, 0.3])),
@@ -58,8 +57,8 @@ def _():
     assert len(result) == 5  # Only 5 docs have embeddings
 
 
-@test("utility: test mmr with different mmr_strength values")
-def _():
+def test_mmr_with_different_mmr_strength_values():
+    """Test utility: test mmr with different mmr_strength values."""
     # Create test documents with embeddings
     docs = [
         create_test_doc(
@@ -98,8 +97,8 @@ def _():
     assert UUID("550e8400-e29b-41d4-a716-446655440005") in [doc.id for doc in result_diverse]
 
 
-@test("utility: test mmr with empty docs list")
-def _():
+def test_mmr_with_empty_docs_list():
+    """Test utility: test mmr with empty docs list."""
     query_embedding = np.array([0.3, 0.3, 0.3])
 
     # Test with empty docs list

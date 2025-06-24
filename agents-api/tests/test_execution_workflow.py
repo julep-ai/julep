@@ -4,6 +4,7 @@ import asyncio
 import json
 from unittest.mock import patch
 
+import pytest
 import yaml
 from agents_api.autogen.openapi_model import (
     CreateExecutionRequest,
@@ -14,31 +15,23 @@ from agents_api.queries.tasks.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 from google.protobuf.json_format import MessageToDict
 from litellm import Choices, ModelResponse
-from ward import raises, skip, test
 
-from .fixtures import (
-    pg_dsn,
-    s3_client,
-    test_agent,
-    test_developer_id,
-)
 from .utils import patch_integration_service, patch_testing_temporal
 
 
-@skip("needs to be fixed")
-@test("workflow: evaluate step single")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_evaluate_step_single(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -50,7 +43,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -65,20 +58,19 @@ async def _(
         assert result["hello"] == "world"
 
 
-@skip("needs to be fixed")
-@test("workflow: evaluate step multiple")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_evaluate_step_multiple(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -93,7 +85,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -108,20 +100,19 @@ async def _(
         assert result["hello"] == "world"
 
 
-@skip("needs to be fixed")
-@test("workflow: variable access in expressions")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_variable_access_in_expressions(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -136,7 +127,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -151,20 +142,19 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: yield step")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_yield_step(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -186,7 +176,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -201,20 +191,19 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: sleep step")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_sleep_step(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -237,7 +226,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -252,20 +241,19 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: return step direct")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_return_step_direct(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -282,7 +270,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -297,20 +285,19 @@ async def _(
         assert result["value"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: return step nested")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_return_step_nested(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -334,7 +321,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -349,20 +336,19 @@ async def _(
         assert result["value"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: log step")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_log_step(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -385,7 +371,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -400,20 +386,19 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: log step expression fail")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_log_step_expression_fail(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -435,9 +420,9 @@ async def _(
     )
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
-        with raises(BaseException):
+        with pytest.raises(BaseException):
             execution, handle = await start_execution(
-                developer_id=developer_id,
+                developer_id=test_developer_id,
                 task_id=task.id,
                 data=data,
                 connection_pool=pool,
@@ -452,20 +437,19 @@ async def _(
             assert result["hello"] == data.input["test"]
 
 
-@skip("workflow: thread race condition")
-@test("workflow: system call - list agents")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="workflow: thread race condition")
+async def test_workflow_system_call_list_agents(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="Test system tool task",
             description="List agents using system call",
@@ -491,9 +475,9 @@ async def _(
     )
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
-        pool = await create_db_pool(dsn=dsn)
+        pool = await create_db_pool(dsn=pg_dsn)
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -514,20 +498,19 @@ async def _(
         assert all("id" in agent for agent in result)
 
 
-@skip("needs to be fixed")
-@test("workflow: tool call api_call")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_tool_call_api_call(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             inherit_tools=True,
             name="test task",
@@ -560,7 +543,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -575,21 +558,20 @@ async def _(
         assert result["hello"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: tool call api_call test retry")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_tool_call_api_call_test_retry(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
     status_codes_to_retry = ",".join(str(code) for code in (408, 429, 503, 504))
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             inherit_tools=True,
             name="test task",
@@ -619,7 +601,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         _execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -648,20 +630,19 @@ async def _(
         assert num_retries >= 2
 
 
-@skip("needs to be fixed")
-@test("workflow: tool call integration dummy")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_tool_call_integration_dummy(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -688,7 +669,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -703,20 +684,19 @@ async def _(
         assert result["test"] == data.input["test"]
 
 
-@skip("needs to be fixed")
-@test("workflow: tool call integration mocked weather")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_tool_call_integration_mocked_weather(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -747,7 +727,7 @@ async def _(
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         with patch_integration_service(expected_output) as mock_integration_service:
             execution, handle = await start_execution(
-                developer_id=developer_id,
+                developer_id=test_developer_id,
                 task_id=task.id,
                 data=data,
                 connection_pool=pool,
@@ -763,20 +743,19 @@ async def _(
             assert result == expected_output
 
 
-@skip("needs to be fixed")
-@test("workflow: wait for input step start")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_wait_for_input_step_start(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -790,7 +769,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -826,20 +805,19 @@ async def _(
         assert "wait_for_input_step" in activities_scheduled
 
 
-@skip("needs to be fixed")
-@test("workflow: foreach wait for input step start")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_foreach_wait_for_input_step_start(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -858,7 +836,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -894,15 +872,14 @@ async def _(
         assert "for_each_step" in activities_scheduled
 
 
-@skip("needs to be fixed")
-@test("workflow: if-else step")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_if_else_step(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task_def = CreateTaskRequest(
@@ -919,15 +896,15 @@ async def _(
     )
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=task_def,
         connection_pool=pool,
     )
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -943,20 +920,19 @@ async def _(
         assert result["hello"] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
-@skip("needs to be fixed")
-@test("workflow: switch step")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_switch_step(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -985,7 +961,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -1001,20 +977,19 @@ async def _(
         assert result["hello"] == "world"
 
 
-@skip("needs to be fixed")
-@test("workflow: for each step")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_for_each_step(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -1033,7 +1008,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -1049,15 +1024,14 @@ async def _(
         assert result[0]["hello"] == "world"
 
 
-@skip("needs to be fixed")
-@test("workflow: map reduce step")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_map_reduce_step(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     map_step = {
@@ -1075,15 +1049,15 @@ async def _(
     }
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(**task_def),
         connection_pool=pool,
     )
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -1099,73 +1073,180 @@ async def _(
         assert [r["res"] for r in result] == ["a", "b", "c"]
 
 
-for p in [1, 3, 5]:
+# Create separate test functions for each parallelism value
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_map_reduce_step_parallel_1(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
+):
+    pool = await create_db_pool(dsn=pg_dsn)
+    data = CreateExecutionRequest(input={"test": "input"})
 
-    @skip("needs to be fixed")
-    @test(f"workflow: map reduce step parallel (parallelism={p})")
-    async def _(
-        dsn=pg_dsn,
+    map_step = {
+        "over": "'a b c d'.split()",
+        "map": {
+            "evaluate": {"res": "_ + '!'"},
+        },
+        "parallelism": 1,
+    }
+
+    task_def = {
+        "name": "test task",
+        "description": "test task about",
+        "input_schema": {"type": "object", "additionalProperties": True},
+        "main": [map_step],
+    }
+
+    task = await create_task(
         developer_id=test_developer_id,
-        agent=test_agent,
-        _s3_client=s3_client,  # Adding coz blob store might be used
-    ):
-        pool = await create_db_pool(dsn=dsn)
-        data = CreateExecutionRequest(input={"test": "input"})
+        agent_id=test_agent.id,
+        data=CreateTaskRequest(**task_def),
+        connection_pool=pool,
+    )
 
-        map_step = {
-            "over": "'a b c d'.split()",
-            "map": {
-                "evaluate": {"res": "_ + '!'"},
-            },
-            "parallelism": p,
-        }
-
-        task_def = {
-            "name": "test task",
-            "description": "test task about",
-            "input_schema": {"type": "object", "additionalProperties": True},
-            "main": [map_step],
-        }
-
-        task = await create_task(
-            developer_id=developer_id,
-            agent_id=agent.id,
-            data=CreateTaskRequest(**task_def),
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=test_developer_id,
+            task_id=task.id,
+            data=data,
             connection_pool=pool,
         )
 
-        async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
-            execution, handle = await start_execution(
-                developer_id=developer_id,
-                task_id=task.id,
-                data=data,
-                connection_pool=pool,
-            )
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
 
-            assert handle is not None
-            assert execution.task_id == task.id
-            assert execution.input == data.input
+        mock_run_task_execution_workflow.assert_called_once()
 
-            mock_run_task_execution_workflow.assert_called_once()
-
-            result = await handle.result()
-            assert [r["res"] for r in result] == [
-                "a!",
-                "b!",
-                "c!",
-                "d!",
-            ]
+        result = await handle.result()
+        assert [r["res"] for r in result] == [
+            "a!",
+            "b!",
+            "c!",
+            "d!",
+        ]
 
 
-@skip("needs to be fixed")
-@test("workflow: prompt step (python expression)")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_map_reduce_step_parallel_3(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    map_step = {
+        "over": "'a b c d'.split()",
+        "map": {
+            "evaluate": {"res": "_ + '!'"},
+        },
+        "parallelism": 3,
+    }
+
+    task_def = {
+        "name": "test task",
+        "description": "test task about",
+        "input_schema": {"type": "object", "additionalProperties": True},
+        "main": [map_step],
+    }
+
+    task = await create_task(
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
+        data=CreateTaskRequest(**task_def),
+        connection_pool=pool,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=test_developer_id,
+            task_id=task.id,
+            data=data,
+            connection_pool=pool,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert [r["res"] for r in result] == [
+            "a!",
+            "b!",
+            "c!",
+            "d!",
+        ]
+
+
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_map_reduce_step_parallel_5(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
+):
+    pool = await create_db_pool(dsn=pg_dsn)
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    map_step = {
+        "over": "'a b c d'.split()",
+        "map": {
+            "evaluate": {"res": "_ + '!'"},
+        },
+        "parallelism": 5,
+    }
+
+    task_def = {
+        "name": "test task",
+        "description": "test task about",
+        "input_schema": {"type": "object", "additionalProperties": True},
+        "main": [map_step],
+    }
+
+    task = await create_task(
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
+        data=CreateTaskRequest(**task_def),
+        connection_pool=pool,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=test_developer_id,
+            task_id=task.id,
+            data=data,
+            connection_pool=pool,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert [r["res"] for r in result] == [
+            "a!",
+            "b!",
+            "c!",
+            "d!",
+        ]
+
+
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_prompt_step_python_expression(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
+):
+    pool = await create_db_pool(dsn=pg_dsn)
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
@@ -1178,8 +1259,8 @@ async def _(
         data = CreateExecutionRequest(input={"test": "input"})
 
         task = await create_task(
-            developer_id=developer_id,
-            agent_id=agent.id,
+            developer_id=test_developer_id,
+            agent_id=test_agent.id,
             data=CreateTaskRequest(
                 name="test task",
                 description="test task about",
@@ -1196,7 +1277,7 @@ async def _(
 
         async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
             execution, handle = await start_execution(
-                developer_id=developer_id,
+                developer_id=test_developer_id,
                 task_id=task.id,
                 data=data,
                 connection_pool=pool,
@@ -1214,15 +1295,14 @@ async def _(
             assert result["role"] == "assistant"
 
 
-@skip("needs to be fixed")
-@test("workflow: prompt step")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_prompt_step(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
@@ -1235,8 +1315,8 @@ async def _(
         data = CreateExecutionRequest(input={"test": "input"})
 
         task = await create_task(
-            developer_id=developer_id,
-            agent_id=agent.id,
+            developer_id=test_developer_id,
+            agent_id=test_agent.id,
             data=CreateTaskRequest(
                 name="test task",
                 description="test task about",
@@ -1258,7 +1338,7 @@ async def _(
 
         async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
             execution, handle = await start_execution(
-                developer_id=developer_id,
+                developer_id=test_developer_id,
                 task_id=task.id,
                 data=data,
                 connection_pool=pool,
@@ -1276,15 +1356,14 @@ async def _(
             assert result["role"] == "assistant"
 
 
-@skip("needs to be fixed")
-@test("workflow: prompt step unwrap")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    _s3_client=s3_client,  # Adding coz blob store might be used
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_prompt_step_unwrap(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
+    s3_client,  # Adding coz blob store might be used
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
@@ -1297,8 +1376,8 @@ async def _(
         data = CreateExecutionRequest(input={"test": "input"})
 
         task = await create_task(
-            developer_id=developer_id,
-            agent_id=agent.id,
+            developer_id=test_developer_id,
+            agent_id=test_agent.id,
             data=CreateTaskRequest(
                 name="test task",
                 description="test task about",
@@ -1321,7 +1400,7 @@ async def _(
 
         async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
             execution, handle = await start_execution(
-                developer_id=developer_id,
+                developer_id=test_developer_id,
                 task_id=task.id,
                 data=data,
                 connection_pool=pool,
@@ -1337,19 +1416,18 @@ async def _(
             assert result == "Hello, world!"
 
 
-@skip("needs to be fixed")
-@test("workflow: set and get steps")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_set_and_get_steps(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     data = CreateExecutionRequest(input={"test": "input"})
 
     task = await create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
+        developer_id=test_developer_id,
+        agent_id=test_agent.id,
         data=CreateTaskRequest(
             name="test task",
             description="test task about",
@@ -1364,7 +1442,7 @@ async def _(
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
         execution, handle = await start_execution(
-            developer_id=developer_id,
+            developer_id=test_developer_id,
             task_id=task.id,
             data=data,
             connection_pool=pool,
@@ -1380,14 +1458,13 @@ async def _(
         assert result == "test_value"
 
 
-@skip("needs to be fixed")
-@test("workflow: execute yaml task")
-async def _(
-    dsn=pg_dsn,
-    developer_id=test_developer_id,
-    agent=test_agent,
+@pytest.mark.skip(reason="needs to be fixed")
+async def test_workflow_execute_yaml_task(
+    pg_dsn,
+    test_developer_id,
+    test_agent,
 ):
-    pool = await create_db_pool(dsn=dsn)
+    pool = await create_db_pool(dsn=pg_dsn)
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[
@@ -1411,15 +1488,15 @@ async def _(
         data = CreateExecutionRequest(input=input)
 
         task = await create_task(
-            developer_id=developer_id,
-            agent_id=agent.id,
+            developer_id=test_developer_id,
+            agent_id=test_agent.id,
             data=CreateTaskRequest(**task_definition),
             connection_pool=pool,
         )
 
         async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
             execution, handle = await start_execution(
-                developer_id=developer_id,
+                developer_id=test_developer_id,
                 task_id=task.id,
                 data=data,
                 connection_pool=pool,

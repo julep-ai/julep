@@ -3,11 +3,9 @@ Tests for metadata filter utility functions to prevent SQL injection
 """
 
 from agents_api.queries.utils import build_metadata_filter_conditions
-from ward import test
 
 
-@test("utility: build_metadata_filter_conditions with empty filter")
-async def _():
+async def test_utility_build_metadata_filter_conditions_with_empty_filter():
     """Test the build_metadata_filter_conditions utility with empty metadata filter."""
     base_params = ["param1", "param2"]
     metadata_filter = {}
@@ -21,8 +19,7 @@ async def _():
     # So we skip the identity check
 
 
-@test("utility: build_metadata_filter_conditions with simple filter")
-async def _():
+async def test_utility_build_metadata_filter_conditions_with_simple_filter():
     """Test the build_metadata_filter_conditions utility with simple metadata filter."""
     base_params = ["param1", "param2"]
     metadata_filter = {"key": "value"}
@@ -34,8 +31,7 @@ async def _():
     assert params == ["param1", "param2", "key", "value"]
 
 
-@test("utility: build_metadata_filter_conditions with multiple filters")
-async def _():
+async def test_utility_build_metadata_filter_conditions_with_multiple_filters():
     """Test the build_metadata_filter_conditions utility with multiple metadata filters."""
     base_params = ["param1", "param2"]
     metadata_filter = {"key1": "value1", "key2": "value2"}
@@ -47,8 +43,7 @@ async def _():
     assert params == ["param1", "param2", "key1", "value1", "key2", "value2"]
 
 
-@test("utility: build_metadata_filter_conditions with table alias")
-async def _():
+async def test_utility_build_metadata_filter_conditions_with_table_alias():
     """Test the build_metadata_filter_conditions with table alias."""
     base_params = ["param1", "param2"]
     metadata_filter = {"key": "value"}
@@ -63,8 +58,7 @@ async def _():
     assert params == ["param1", "param2", "key", "value"]
 
 
-@test("utility: build_metadata_filter_conditions with SQL injection attempts")
-async def _():
+async def test_utility_build_metadata_filter_conditions_with_sql_injection_attempts():
     """Test that the build_metadata_filter_conditions prevents SQL injection."""
     base_params = ["param1", "param2"]
 
