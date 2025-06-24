@@ -9,7 +9,6 @@ from agents_api.queries.secrets.delete import delete_secret
 from agents_api.queries.secrets.get_by_name import get_secret_by_name
 from agents_api.queries.secrets.list import list_secrets
 from agents_api.queries.secrets.update import update_secret
-import pytest
 
 
 async def test_create_secret_agent(pg_dsn, test_developer_id, test_agent, clean_secrets):

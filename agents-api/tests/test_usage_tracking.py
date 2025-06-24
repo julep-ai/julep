@@ -15,10 +15,11 @@ from agents_api.queries.usage.create_usage_record import (
 )
 from litellm import cost_per_token
 from litellm.utils import Message, ModelResponse, Usage, token_counter
-import pytest
 
 
-async def test_query_create_usage_record_creates_a_single_record(pg_dsn, test_developer_id) -> None:
+async def test_query_create_usage_record_creates_a_single_record(
+    pg_dsn, test_developer_id
+) -> None:
     pool = await create_db_pool(dsn=pg_dsn)
     response = await create_usage_record(
         developer_id=test_developer_id,
@@ -40,7 +41,9 @@ async def test_query_create_usage_record_creates_a_single_record(pg_dsn, test_de
     assert isinstance(record["created_at"], datetime)
 
 
-async def test_query_create_usage_record_handles_different_model_names_correctly(pg_dsn, test_developer_id) -> None:
+async def test_query_create_usage_record_handles_different_model_names_correctly(
+    pg_dsn, test_developer_id
+) -> None:
     pool = await create_db_pool(dsn=pg_dsn)
     models = [
         "gpt-4o-mini",
@@ -73,7 +76,9 @@ async def test_query_create_usage_record_handles_different_model_names_correctly
         assert record["model"] == model
 
 
-async def test_query_create_usage_record_properly_calculates_costs(pg_dsn, test_developer_id) -> None:
+async def test_query_create_usage_record_properly_calculates_costs(
+    pg_dsn, test_developer_id
+) -> None:
     pool = await create_db_pool(dsn=pg_dsn)
     response = await create_usage_record(
         developer_id=test_developer_id,
@@ -117,7 +122,9 @@ async def test_query_create_usage_record_with_custom_api_key(pg_dsn, test_develo
     assert record["cost"] == cost
 
 
-async def test_query_create_usage_record_with_fallback_pricing(pg_dsn, test_developer_id) -> None:
+async def test_query_create_usage_record_with_fallback_pricing(
+    pg_dsn, test_developer_id
+) -> None:
     pool = await create_db_pool(dsn=pg_dsn)
     response = await create_usage_record(
         developer_id=test_developer_id,
@@ -133,7 +140,9 @@ async def test_query_create_usage_record_with_fallback_pricing(pg_dsn, test_deve
     assert record["estimated"] is True
 
 
-async def test_query_create_usage_record_with_fallback_pricing_with_model_not_in_fallback_pricing(pg_dsn, test_developer_id) -> None:
+async def test_query_create_usage_record_with_fallback_pricing_with_model_not_in_fallback_pricing(
+    pg_dsn, test_developer_id
+) -> None:
     pool = await create_db_pool(dsn=pg_dsn)
 
     with patch("builtins.print") as mock_print:

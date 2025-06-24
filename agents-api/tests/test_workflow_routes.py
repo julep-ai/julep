@@ -1,5 +1,5 @@
-import pytest
 from uuid_extensions import uuid7
+
 from tests.utils import patch_testing_temporal
 
 

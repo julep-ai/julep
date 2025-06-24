@@ -1,6 +1,7 @@
 import uuid
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from agents_api.autogen.openapi_model import (
     Agent,
     Execution,
@@ -19,7 +20,6 @@ from agents_api.common.protocol.tasks import (
 )
 from agents_api.common.utils.datetime import utcnow
 from agents_api.workflows.task_execution.helpers import execute_map_reduce_step_parallel
-import pytest
 
 
 async def test_execute_map_reduce_step_parallel_parallelism_must_be_greater_than_1():

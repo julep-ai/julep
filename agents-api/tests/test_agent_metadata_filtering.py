@@ -6,7 +6,6 @@ from agents_api.autogen.openapi_model import CreateAgentRequest
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.agents.create_agent import create_agent
 from agents_api.queries.agents.list_agents import list_agents
-import pytest
 
 
 async def test_query_list_agents_with_metadata_filtering(pg_dsn, test_developer_id):
@@ -61,7 +60,9 @@ async def test_query_list_agents_with_metadata_filtering(pg_dsn, test_developer_
     assert any(a.id == agent2.id for a in agents_shared)
 
 
-async def test_query_list_agents_with_sql_injection_attempt_in_metadata_filter(pg_dsn, test_developer_id):
+async def test_query_list_agents_with_sql_injection_attempt_in_metadata_filter(
+    pg_dsn, test_developer_id
+):
     """Test that list_agents safely handles metadata filters with SQL injection attempts."""
     pool = await create_db_pool(dsn=pg_dsn)
 

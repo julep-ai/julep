@@ -1,7 +1,6 @@
 """Tests for validation error handlers and suggestion generation in web.py."""
 
 from agents_api.web import _format_location, _get_error_suggestions
-import pytest
 
 
 async def test_format_location_function_formats_error_locations_correctly():
@@ -97,7 +96,9 @@ async def test_get_error_suggestions_generates_helpful_suggestions_for_number_ra
     assert suggestions["example"] == "100"
 
 
-async def test_validation_error_handler_returns_formatted_error_response_for_validation_errors(make_request):
+async def test_validation_error_handler_returns_formatted_error_response_for_validation_errors(
+    make_request,
+):
     """Test that validation errors return a well-formatted error response with helpful suggestions."""
     # Create an invalid request to trigger a validation error
     response = make_request(

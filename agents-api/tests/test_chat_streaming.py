@@ -3,6 +3,7 @@
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from agents_api.autogen.openapi_model import (
     ChatInput,
     CreateSessionRequest,
@@ -14,8 +15,9 @@ from agents_api.routers.sessions.chat import _join_deltas, chat
 from fastapi import BackgroundTasks
 from starlette.responses import StreamingResponse
 from uuid_extensions import uuid7
-import pytest
+
 # Fixtures are now defined in conftest.py and automatically available to tests
+
 
 async def get_usage_records(dsn: str, developer_id: str, limit: int = 100):
     """Helper function to get usage records for testing."""

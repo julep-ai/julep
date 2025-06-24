@@ -3,7 +3,6 @@ from agents_api.env import temporal_task_queue
 from agents_api.workflows.demo import DemoWorkflow
 from agents_api.workflows.task_execution.helpers import DEFAULT_RETRY_POLICY
 from uuid_extensions import uuid7
-import pytest
 
 from .utils import patch_testing_temporal
 

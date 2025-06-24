@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import Mock, call, patch
 
 import aiohttp
+import pytest
 from agents_api.activities import task_steps
 from agents_api.activities.execute_api_call import execute_api_call
 from agents_api.activities.execute_integration import execute_integration
@@ -55,10 +56,9 @@ from agents_api.env import (
 )
 from agents_api.workflows.task_execution import TaskExecutionWorkflow
 from aiohttp import test_utils
+from pytest import raises
 from temporalio.exceptions import ApplicationError
 from temporalio.workflow import _NotInWorkflowEventLoopError
-import pytest
-from pytest import raises
 
 
 async def test_task_execution_workflow_handle_function_tool_call_step():

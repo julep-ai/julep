@@ -25,6 +25,20 @@ from agents_api.autogen.openapi_model import (
     PatchTaskRequest,
     UpdateTaskRequest,
 )
+
+# AIDEV-NOTE: Fix Pydantic forward reference issues
+# Import all step types first
+from agents_api.autogen.Tasks import (
+    EvaluateStep,
+    ForeachStep,
+    IfElseWorkflowStep,
+    ParallelStep,
+    PromptStep,
+    SwitchStep,
+    ToolCallStep,
+    WaitForInputStep,
+    YieldStep,
+)
 from agents_api.clients.pg import create_db_pool
 from agents_api.common.utils.memory import total_size
 from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
@@ -47,38 +61,16 @@ from agents_api.queries.tasks.create_task import create_task
 from agents_api.queries.tools.create_tools import create_tools
 from agents_api.queries.users.create_user import create_user
 from agents_api.web import app
-from aiobotocore.session import get_session
 from fastapi.testclient import TestClient
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
 
 from .utils import (
-    get_localstack,
     get_pg_dsn,
     make_vector_with_similarity,
 )
 from .utils import (
     patch_embed_acompletion as patch_embed_acompletion_ctx,
-)
-
-# AIDEV-NOTE: Fix Pydantic forward reference issues
-# Import all step types first
-from agents_api.autogen.Tasks import (
-    EvaluateStep,
-    ErrorWorkflowStep,
-    ForeachStep,
-    GetStep,
-    IfElseWorkflowStep,
-    LogStep,
-    ParallelStep,
-    PromptStep,
-    ReturnStep,
-    SetStep,
-    SleepStep,
-    SwitchStep,
-    ToolCallStep,
-    WaitForInputStep,
-    YieldStep,
 )
 
 # Rebuild models to resolve forward references
@@ -220,13 +212,13 @@ async def test_doc(pg_dsn, test_developer, test_agent):
         owner_id=test_agent.id,
         connection_pool=pool,
     )
-    
+
     # Explicitly Refresh Indices
     await pool.execute("REINDEX DATABASE")
-    
+
     doc = await get_doc(developer_id=test_developer.id, doc_id=resp.id, connection_pool=pool)
     yield doc
-    
+
     # TODO: Delete the doc
     # await delete_doc(
     #     developer_id=test_developer.id,
@@ -245,7 +237,7 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
     embedding_with_confidence_0_5 = make_vector_with_similarity(d=0.5)
     embedding_with_confidence_neg_0_5 = make_vector_with_similarity(d=-0.5)
     embedding_with_confidence_1_neg = make_vector_with_similarity(d=-1.0)
-    
+
     # Insert embedding with all 1.0s (similarity = 1.0)
     await pool.execute(
         """
@@ -257,7 +249,7 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
         test_doc.content[0] if isinstance(test_doc.content, list) else test_doc.content,
         f"[{', '.join([str(x) for x in [1.0] * 1024])}]",
     )
-    
+
     # Insert embedding with confidence 0
     await pool.execute(
         """
@@ -269,7 +261,7 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
         "Test content 1",
         f"[{', '.join([str(x) for x in embedding_with_confidence_0])}]",
     )
-    
+
     # Insert embedding with confidence 0.5
     await pool.execute(
         """
@@ -281,7 +273,7 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
         "Test content 2",
         f"[{', '.join([str(x) for x in embedding_with_confidence_0_5])}]",
     )
-    
+
     # Insert embedding with confidence -0.5
     await pool.execute(
         """
@@ -293,7 +285,7 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
         "Test content 3",
         f"[{', '.join([str(x) for x in embedding_with_confidence_neg_0_5])}]",
     )
-    
+
     # Insert embedding with confidence -1
     await pool.execute(
         """
@@ -305,11 +297,13 @@ async def test_doc_with_embedding(pg_dsn, test_developer, test_doc):
         "Test content 4",
         f"[{', '.join([str(x) for x in embedding_with_confidence_1_neg])}]",
     )
-    
+
     # Explicitly Refresh Indices
     await pool.execute("REINDEX DATABASE")
-    
-    yield await get_doc(developer_id=test_developer.id, doc_id=test_doc.id, connection_pool=pool)
+
+    yield await get_doc(
+        developer_id=test_developer.id, doc_id=test_doc.id, connection_pool=pool
+    )
 
 
 @pytest.fixture
@@ -328,13 +322,13 @@ async def test_user_doc(pg_dsn, test_developer, test_user):
         owner_id=test_user.id,
         connection_pool=pool,
     )
-    
+
     # Explicitly Refresh Indices
     await pool.execute("REINDEX DATABASE")
-    
+
     doc = await get_doc(developer_id=test_developer.id, doc_id=resp.id, connection_pool=pool)
     yield doc
-    
+
     # TODO: Delete the doc
 
 
@@ -376,7 +370,7 @@ async def test_new_developer(pg_dsn, random_email):
         developer_id=dev_id,
         connection_pool=pool,
     )
-    
+
     return await get_developer(
         developer_id=dev_id,
         connection_pool=pool,
@@ -416,7 +410,7 @@ async def test_execution(
         client=None,
         id="blah",
     )
-    
+
     execution = await create_execution(
         developer_id=test_developer_id,
         task_id=test_task.id,
@@ -450,7 +444,7 @@ async def test_execution_started(
         client=None,
         id="blah",
     )
-    
+
     execution = await create_execution(
         developer_id=test_developer_id,
         task_id=test_task.id,
@@ -462,9 +456,9 @@ async def test_execution_started(
         workflow_handle=workflow_handle,
         connection_pool=pool,
     )
-    
+
     actual_scope_id = custom_scope_id or uuid7()
-    
+
     # Start the execution
     await create_execution_transition(
         developer_id=test_developer_id,
@@ -515,13 +509,13 @@ async def test_tool(
         "description": "A function that prints hello world",
         "parameters": {"type": "object", "properties": {}},
     }
-    
+
     tool_spec = {
         "function": function,
         "name": "hello_world1",
         "type": "function",
     }
-    
+
     [tool, *_] = await create_tools(
         developer_id=test_developer_id,
         agent_id=test_agent.id,
@@ -539,8 +533,15 @@ SAMPLE_MODELS = [
 
 
 @pytest.fixture(scope="session")
-def client(pg_dsn):
+def client(pg_dsn, localstack_container):
     """Test client fixture."""
+    import os
+
+    # Set S3 environment variables before creating TestClient
+    os.environ["S3_ACCESS_KEY"] = localstack_container.env["AWS_ACCESS_KEY_ID"]
+    os.environ["S3_SECRET_KEY"] = localstack_container.env["AWS_SECRET_ACCESS_KEY"]
+    os.environ["S3_ENDPOINT"] = localstack_container.get_url()
+
     with (
         TestClient(app=app) as test_client,
         patch(
@@ -550,63 +551,81 @@ def client(pg_dsn):
     ):
         yield test_client
 
+    # Clean up env vars
+    for key in ["S3_ACCESS_KEY", "S3_SECRET_KEY", "S3_ENDPOINT"]:
+        if key in os.environ:
+            del os.environ[key]
+
 
 @pytest.fixture
 async def make_request(client, test_developer_id):
     """Factory fixture for making authenticated requests."""
+
     def _make_request(method, url, **kwargs):
         headers = kwargs.pop("headers", {})
         headers = {
             **headers,
             api_key_header_name: api_key,
         }
-        
+
         if multi_tenant_mode:
             headers["X-Developer-Id"] = str(test_developer_id)
-        
+
         headers["Content-Length"] = str(total_size(kwargs.get("json", {})))
-        
+
         return client.request(method, url, headers=headers, **kwargs)
-    
+
     return _make_request
 
 
-@pytest_asyncio.fixture
-async def s3_client():
-    """S3 client fixture."""
-    with get_localstack() as localstack:
-        s3_endpoint = localstack.get_url()
-        
-        from botocore.config import Config
-        
-        session = get_session()
-        s3 = await session.create_client(
-            "s3",
-            endpoint_url=s3_endpoint,
-            aws_access_key_id=localstack.env["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=localstack.env["AWS_SECRET_ACCESS_KEY"],
-            config=Config(s3={'addressing_style': 'path'})
-        ).__aenter__()
-        
-        app.state.s3_client = s3
-        
-        # Create the bucket if it doesn't exist
-        from agents_api.env import blob_store_bucket
-        try:
-            await s3.head_bucket(Bucket=blob_store_bucket)
-        except Exception:
-            await s3.create_bucket(Bucket=blob_store_bucket)
-        
-        try:
-            yield s3
-        finally:
-            await s3.close()
-            app.state.s3_client = None
+@pytest.fixture(scope="session")
+def localstack_container():
+    """Session-scoped LocalStack container."""
+    from testcontainers.localstack import LocalStackContainer
+
+    localstack = LocalStackContainer(image="localstack/localstack:s3-latest").with_services(
+        "s3"
+    )
+    localstack.start()
+
+    try:
+        yield localstack
+    finally:
+        localstack.stop()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def disable_s3_cache():
+    """Disable async_s3 cache during tests to avoid event loop issues."""
+    from agents_api.clients import async_s3
+
+    # Check if the functions are wrapped with alru_cache
+    if hasattr(async_s3.setup, "__wrapped__"):
+        # Save original functions
+        original_setup = async_s3.setup.__wrapped__
+        original_exists = async_s3.exists.__wrapped__
+        original_list_buckets = async_s3.list_buckets.__wrapped__
+
+        # Replace cached functions with uncached versions
+        async_s3.setup = original_setup
+        async_s3.exists = original_exists
+        async_s3.list_buckets = original_list_buckets
+
+    yield
+
+
+@pytest.fixture
+def s3_client():
+    """S3 client fixture that works with TestClient's event loop."""
+    # The TestClient's lifespan will create the S3 client
+    # The disable_s3_cache fixture ensures we don't have event loop issues
+    yield
 
 
 @pytest.fixture
 async def clean_secrets(pg_dsn, test_developer_id):
     """Fixture to clean up secrets before and after tests."""
+
     async def purge() -> None:
         pool = await create_db_pool(dsn=pg_dsn)
         try:
@@ -623,7 +642,7 @@ async def clean_secrets(pg_dsn, test_developer_id):
         finally:
             # pool is closed in *the same* loop it was created in
             await pool.close()
-    
+
     await purge()
     yield
     await purge()

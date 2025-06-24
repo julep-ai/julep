@@ -107,7 +107,9 @@ async def test_query_create_or_update_user_sql(pg_dsn, test_developer_id):
     assert user.about == "test user about"
 
 
-async def test_query_create_or_update_user_with_project_sql(pg_dsn, test_developer_id, test_project):
+async def test_query_create_or_update_user_with_project_sql(
+    pg_dsn, test_developer_id, test_project
+):
     """Test that a user can be successfully created or updated with a project."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -145,7 +147,9 @@ async def test_query_update_user_sql(pg_dsn, test_developer_id, test_user):
     assert update_result.updated_at > test_user.created_at
 
 
-async def test_query_update_user_with_project_sql(pg_dsn, test_developer_id, test_user, test_project):
+async def test_query_update_user_with_project_sql(
+    pg_dsn, test_developer_id, test_user, test_project
+):
     """Test that an existing user's information can be successfully updated with a project."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -244,7 +248,9 @@ async def test_query_list_users_sql(pg_dsn, test_developer_id, test_user):
     assert all(isinstance(user, User) for user in result)
 
 
-async def test_query_list_users_with_project_filter_sql(pg_dsn, test_developer_id, test_project):
+async def test_query_list_users_with_project_filter_sql(
+    pg_dsn, test_developer_id, test_project
+):
     """Test that listing users with a project filter returns the correct users."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -262,7 +268,9 @@ async def test_query_list_users_with_project_filter_sql(pg_dsn, test_developer_i
 
     # Now fetch with project filter
     result = await list_users(
-        developer_id=test_developer_id, project=test_project.canonical_name, connection_pool=pool
+        developer_id=test_developer_id,
+        project=test_project.canonical_name,
+        connection_pool=pool,
     )  # type: ignore[not-callable]
 
     assert isinstance(result, list)
@@ -359,7 +367,9 @@ async def test_query_patch_user_sql(pg_dsn, test_developer_id, test_user):
     assert patch_result.updated_at > test_user.created_at
 
 
-async def test_query_patch_user_with_project_sql(pg_dsn, test_developer_id, test_user, test_project):
+async def test_query_patch_user_with_project_sql(
+    pg_dsn, test_developer_id, test_user, test_project
+):
     """Test that a user can be successfully patched with a project."""
 
     pool = await create_db_pool(dsn=pg_dsn)

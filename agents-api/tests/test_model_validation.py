@@ -1,9 +1,8 @@
 from unittest.mock import patch
 
+import pytest
 from agents_api.routers.utils.model_validation import validate_model
 from fastapi import HTTPException
-import pytest
-
 
 SAMPLE_MODELS = [
     {"id": "gpt-4o-mini"},

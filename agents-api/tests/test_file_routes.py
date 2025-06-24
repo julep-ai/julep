@@ -1,4 +1,3 @@
-import pytest
 import base64
 import hashlib
 

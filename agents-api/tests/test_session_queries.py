@@ -3,6 +3,7 @@
 # Tests verify the SQL queries without actually executing them against a database.
 # """
 
+import pytest
 from agents_api.autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
     CreateSessionRequest,
@@ -23,7 +24,6 @@ from agents_api.queries.sessions import (
     update_session,
 )
 from uuid_extensions import uuid7
-import pytest
 
 # Fixtures from conftest.py: pg_dsn, test_agent, test_developer_id, test_session, test_user
 
@@ -50,7 +50,9 @@ async def test_query_create_session_sql(pg_dsn, test_developer_id, test_agent, t
     assert result.id == session_id
 
 
-async def test_query_create_or_update_session_sql(pg_dsn, test_developer_id, test_agent, test_user):
+async def test_query_create_or_update_session_sql(
+    pg_dsn, test_developer_id, test_agent, test_user
+):
     """Test that a session can be successfully created or updated."""
 
     pool = await create_db_pool(dsn=pg_dsn)

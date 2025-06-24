@@ -1,6 +1,5 @@
 import spacy
 from agents_api.common.nlp import clean_keyword, extract_keywords, text_to_keywords
-import pytest
 
 
 async def test_utility_clean_keyword():

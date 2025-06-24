@@ -95,7 +95,9 @@ async def test_query_create_or_update_agent_sql(pg_dsn, test_developer_id):
     )  # type: ignore[not-callable]
 
 
-async def test_query_create_or_update_agent_with_project_sql(pg_dsn, test_developer_id, test_project):
+async def test_query_create_or_update_agent_with_project_sql(
+    pg_dsn, test_developer_id, test_project
+):
     """Test that an agent can be successfully created or updated with a project."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -142,7 +144,9 @@ async def test_query_update_agent_sql(pg_dsn, test_developer_id, test_agent):
     assert result.metadata == {"hello": "world"}
 
 
-async def test_query_update_agent_with_project_sql(pg_dsn, test_developer_id, test_agent, test_project):
+async def test_query_update_agent_with_project_sql(
+    pg_dsn, test_developer_id, test_agent, test_project
+):
     """Test that an existing agent's information can be successfully updated with a project."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -211,7 +215,9 @@ async def test_query_patch_agent_sql(pg_dsn, test_developer_id, test_agent):
     assert result.default_settings["temperature"] == 1.0
 
 
-async def test_query_patch_agent_with_project_sql(pg_dsn, test_developer_id, test_agent, test_project):
+async def test_query_patch_agent_with_project_sql(
+    pg_dsn, test_developer_id, test_agent, test_project
+):
     """Test that an agent can be successfully patched with a project."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -307,7 +313,9 @@ async def test_query_list_agents_sql(pg_dsn, test_developer_id):
     assert all(isinstance(agent, Agent) for agent in result)
 
 
-async def test_query_list_agents_with_project_filter_sql(pg_dsn, test_developer_id, test_project):
+async def test_query_list_agents_with_project_filter_sql(
+    pg_dsn, test_developer_id, test_project
+):
     """Test that listing agents with a project filter returns the correct agents."""
 
     pool = await create_db_pool(dsn=pg_dsn)

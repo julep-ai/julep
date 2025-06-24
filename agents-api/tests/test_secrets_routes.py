@@ -1,74 +1,120 @@
 """Tests for secrets routes."""
-import pytest
+
 from uuid import uuid4
+
 # Fixtures from conftest.py: client, make_request, test_developer_id
+
 
 def test_route_unauthorized_secrets_route_should_fail(client):
     """route: unauthorized secrets route should fail"""
-    data = {'name': f'test_secret_{uuid4().hex[:8]}', 'description': 'Test secret for listing', 'value': 'sk_list_test_123456789'}
-    response = client.request(method='GET', url='/secrets', json=data)
+    data = {
+        "name": f"test_secret_{uuid4().hex[:8]}",
+        "description": "Test secret for listing",
+        "value": "sk_list_test_123456789",
+    }
+    response = client.request(method="GET", url="/secrets", json=data)
     assert response.status_code == 403
+
 
 def test_route_create_secret(make_request, test_developer_id):
     """route: create secret"""
-    data = { 'name': f'test_secret_{uuid4().hex[:8]}', 'description': 'Test secret for API integration', 'value': 'sk_test_123456789', 'metadata': {'service': 'test-service', 'environment': 'test'}}
-    response = make_request(method='POST', url='/secrets', json=data)
+    data = {
+        "name": f"test_secret_{uuid4().hex[:8]}",
+        "description": "Test secret for API integration",
+        "value": "sk_test_123456789",
+        "metadata": {"service": "test-service", "environment": "test"},
+    }
+    response = make_request(method="POST", url="/secrets", json=data)
     assert response.status_code == 201
     result = response.json()
-    assert result['name'] == data['name']
-    assert result['description'] == data['description']
-    assert result['value'] == 'ENCRYPTED'
-    assert result['metadata'] == data['metadata']
+    assert result["name"] == data["name"]
+    assert result["description"] == data["description"]
+    assert result["value"] == "ENCRYPTED"
+    assert result["metadata"] == data["metadata"]
+
 
 def test_route_list_secrets(make_request, test_developer_id):
     """route: list secrets"""
-    secret_name = f'list_test_secret_{uuid4().hex[:8]}'
-    data = { 'name': secret_name, 'description': 'Test secret for listing', 'value': 'sk_list_test_123456789', 'metadata': {'service': 'test-service', 'environment': 'test'}}
-    make_request(method='POST', url='/secrets', json=data)
-    response = make_request(method='GET', url='/secrets')
+    secret_name = f"list_test_secret_{uuid4().hex[:8]}"
+    data = {
+        "name": secret_name,
+        "description": "Test secret for listing",
+        "value": "sk_list_test_123456789",
+        "metadata": {"service": "test-service", "environment": "test"},
+    }
+    make_request(method="POST", url="/secrets", json=data)
+    response = make_request(method="GET", url="/secrets")
     assert response.status_code == 200
     secrets = response.json()
     assert isinstance(secrets, list)
     assert len(secrets) > 0
-    assert any((secret['name'] == secret_name for secret in secrets))
-    assert all((secret['value'] == 'ENCRYPTED' for secret in secrets))
+    assert any(secret["name"] == secret_name for secret in secrets)
+    assert all(secret["value"] == "ENCRYPTED" for secret in secrets)
+
 
 def test_route_update_secret(make_request, test_developer_id):
     """route: update secret"""
-    original_name = f'update_test_secret_{uuid4().hex[:8]}'
-    create_data = { 'name': original_name, 'description': 'Original description', 'value': 'sk_original_value', 'metadata': {'original': True}}
-    create_response = make_request(method='POST', url='/secrets', json=create_data)
-    secret_id = create_response.json()['id']
-    updated_name = f'updated_secret_{uuid4().hex[:8]}'
-    update_data = { 'name': updated_name, 'description': 'Updated description', 'value': 'sk_updated_value', 'metadata': {'updated': True, 'timestamp': 'now'}}
-    update_response = make_request(method='PUT', url=f'/secrets/{secret_id}', json=update_data)
+    original_name = f"update_test_secret_{uuid4().hex[:8]}"
+    create_data = {
+        "name": original_name,
+        "description": "Original description",
+        "value": "sk_original_value",
+        "metadata": {"original": True},
+    }
+    create_response = make_request(method="POST", url="/secrets", json=create_data)
+    secret_id = create_response.json()["id"]
+    updated_name = f"updated_secret_{uuid4().hex[:8]}"
+    update_data = {
+        "name": updated_name,
+        "description": "Updated description",
+        "value": "sk_updated_value",
+        "metadata": {"updated": True, "timestamp": "now"},
+    }
+    update_response = make_request(method="PUT", url=f"/secrets/{secret_id}", json=update_data)
     assert update_response.status_code == 200
     updated_secret = update_response.json()
-    assert updated_secret['name'] == updated_name
-    assert updated_secret['description'] == 'Updated description'
-    assert updated_secret['value'] == 'ENCRYPTED'
-    assert updated_secret['metadata'] == update_data['metadata']
+    assert updated_secret["name"] == updated_name
+    assert updated_secret["description"] == "Updated description"
+    assert updated_secret["value"] == "ENCRYPTED"
+    assert updated_secret["metadata"] == update_data["metadata"]
+
 
 def test_route_delete_secret(make_request, test_developer_id):
     """route: delete secret"""
-    delete_test_name = f'delete_test_secret_{uuid4().hex[:8]}'
-    create_data = { 'name': delete_test_name, 'description': 'Secret to be deleted', 'value': 'sk_delete_me', 'metadata': {'service': 'test-service', 'environment': 'test'}}
-    create_response = make_request(method='POST', url='/secrets', json=create_data)
-    secret_id = create_response.json()['id']
-    delete_response = make_request(method='DELETE', url=f'/secrets/{secret_id}')
+    delete_test_name = f"delete_test_secret_{uuid4().hex[:8]}"
+    create_data = {
+        "name": delete_test_name,
+        "description": "Secret to be deleted",
+        "value": "sk_delete_me",
+        "metadata": {"service": "test-service", "environment": "test"},
+    }
+    create_response = make_request(method="POST", url="/secrets", json=create_data)
+    secret_id = create_response.json()["id"]
+    delete_response = make_request(method="DELETE", url=f"/secrets/{secret_id}")
     assert delete_response.status_code == 202
-    list_response = make_request(method='GET', url='/secrets')
+    list_response = make_request(method="GET", url="/secrets")
     assert list_response.status_code == 200
     secrets = list_response.json()
-    deleted_secret_ids = [secret['id'] for secret in secrets]
+    deleted_secret_ids = [secret["id"] for secret in secrets]
     assert secret_id not in deleted_secret_ids
+
 
 def test_route_create_duplicate_secret_name_fails(make_request, test_developer_id):
     """route: create duplicate secret name fails"""
-    unique_name = f'unique_secret_{uuid4().hex[:8]}'
-    data = { 'name': unique_name, 'description': 'First secret with this name', 'value': 'sk_first_value', 'metadata': {'service': 'test-service', 'environment': 'test'}}
-    first_response = make_request(method='POST', url='/secrets', json=data)
+    unique_name = f"unique_secret_{uuid4().hex[:8]}"
+    data = {
+        "name": unique_name,
+        "description": "First secret with this name",
+        "value": "sk_first_value",
+        "metadata": {"service": "test-service", "environment": "test"},
+    }
+    first_response = make_request(method="POST", url="/secrets", json=data)
     assert first_response.status_code == 201
-    duplicate_data = { 'name': unique_name, 'description': 'Second secret with same name', 'value': 'sk_second_value', 'metadata': {'service': 'test-service', 'environment': 'test'}}
-    second_response = make_request(method='POST', url='/secrets', json=duplicate_data)
+    duplicate_data = {
+        "name": unique_name,
+        "description": "Second secret with same name",
+        "value": "sk_second_value",
+        "metadata": {"service": "test-service", "environment": "test"},
+    }
+    second_response = make_request(method="POST", url="/secrets", json=duplicate_data)
     assert second_response.status_code == 409

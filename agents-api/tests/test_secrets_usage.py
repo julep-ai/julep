@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+import pytest
 from agents_api.autogen.Agents import Agent
 from agents_api.autogen.openapi_model import (
     ChatInput,
@@ -19,7 +20,6 @@ from agents_api.common.protocol.models import ExecutionInput
 from agents_api.common.protocol.tasks import StepContext
 from agents_api.common.utils.datetime import utcnow
 from agents_api.routers.sessions.render import render_chat_input
-import pytest
 
 
 async def test_render_list_secrets_query_usage_in_render_chat_input(test_developer):
@@ -46,6 +46,7 @@ async def test_render_list_secrets_query_usage_in_render_chat_input(test_develop
     # Create tools that use secret expressions
     # Use computer_20241022 to trigger secret loading
     from agents_api.autogen.Tools import Computer20241022Def
+
     tools = [
         Tool(
             id=uuid4(),
@@ -119,22 +120,26 @@ async def test_render_list_secrets_query_usage_in_render_chat_input(test_develop
         )
 
         # Assert that list_secrets_query was called with the right parameters
-        mock_list_secrets_query.assert_called_once_with(developer_id=test_developer.id, decrypt=True)
+        mock_list_secrets_query.assert_called_once_with(
+            developer_id=test_developer.id, decrypt=True
+        )
 
         # Verify that expressions were evaluated
         mock_render_evaluate_expressions.assert_called()
 
         # Verify that list_secrets_query was called
-        mock_list_secrets_query.assert_called_once_with(developer_id=test_developer.id, decrypt=True)
-        
+        mock_list_secrets_query.assert_called_once_with(
+            developer_id=test_developer.id, decrypt=True
+        )
+
         # Check that formatted_tools contains the computer tool with standard parameters
         assert formatted_tools is not None
         assert len(formatted_tools) > 0
-        
+
         # The first tool should be the computer_20241022 tool
         tool = formatted_tools[0]
         assert tool["type"] == "computer_20241022"
-        
+
         # Verify that the tool has the standard computer tool parameters
         function_params = tool["function"]["parameters"]
         assert "display_width_px" in function_params

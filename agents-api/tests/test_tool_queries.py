@@ -13,7 +13,6 @@ from agents_api.queries.tools.get_tool import get_tool
 from agents_api.queries.tools.list_tools import list_tools
 from agents_api.queries.tools.patch_tool import patch_tool
 from agents_api.queries.tools.update_tool import update_tool
-import pytest
 
 
 async def test_create_tool(pg_dsn, test_developer_id, test_agent):

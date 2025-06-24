@@ -1,5 +1,6 @@
 # Tests for task queries
 
+import pytest
 from agents_api.autogen.openapi_model import (
     CreateTaskRequest,
     PatchTaskRequest,
@@ -16,7 +17,6 @@ from agents_api.queries.tasks.patch_task import patch_task
 from agents_api.queries.tasks.update_task import update_task
 from fastapi import HTTPException
 from uuid_extensions import uuid7
-import pytest
 
 
 async def test_query_create_task_sql(pg_dsn, test_developer_id, test_agent):
@@ -171,7 +171,9 @@ async def test_query_list_tasks_sql_with_filters(pg_dsn, test_developer_id, test
     assert all(task.metadata.get("test") is True for task in result)
 
 
-async def test_query_list_tasks_sql_no_filters(pg_dsn, test_developer_id, test_agent, test_task):
+async def test_query_list_tasks_sql_no_filters(
+    pg_dsn, test_developer_id, test_agent, test_task
+):
     """Test that a list of tasks can be successfully retrieved."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -188,7 +190,9 @@ async def test_query_list_tasks_sql_no_filters(pg_dsn, test_developer_id, test_a
     )
 
 
-async def test_query_list_tasks_sql_invalid_limit(pg_dsn, test_developer_id, test_agent, test_task):
+async def test_query_list_tasks_sql_invalid_limit(
+    pg_dsn, test_developer_id, test_agent, test_task
+):
     """Test that listing tasks with an invalid limit raises an exception."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -213,7 +217,9 @@ async def test_query_list_tasks_sql_invalid_limit(pg_dsn, test_developer_id, tes
     assert exc.value.detail == "Limit must be between 1 and 100"
 
 
-async def test_query_list_tasks_sql_invalid_offset(pg_dsn, test_developer_id, test_agent, test_task):
+async def test_query_list_tasks_sql_invalid_offset(
+    pg_dsn, test_developer_id, test_agent, test_task
+):
     """Test that listing tasks with an invalid offset raises an exception."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -228,7 +234,9 @@ async def test_query_list_tasks_sql_invalid_offset(pg_dsn, test_developer_id, te
     assert exc.value.detail == "Offset must be >= 0"
 
 
-async def test_query_list_tasks_sql_invalid_sort_by(pg_dsn, test_developer_id, test_agent, test_task):
+async def test_query_list_tasks_sql_invalid_sort_by(
+    pg_dsn, test_developer_id, test_agent, test_task
+):
     """Test that listing tasks with an invalid sort by raises an exception."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -243,7 +251,9 @@ async def test_query_list_tasks_sql_invalid_sort_by(pg_dsn, test_developer_id, t
     assert exc.value.detail == "Invalid sort field"
 
 
-async def test_query_list_tasks_sql_invalid_sort_direction(pg_dsn, test_developer_id, test_agent, test_task):
+async def test_query_list_tasks_sql_invalid_sort_direction(
+    pg_dsn, test_developer_id, test_agent, test_task
+):
     """Test that listing tasks with an invalid sort direction raises an exception."""
 
     pool = await create_db_pool(dsn=pg_dsn)

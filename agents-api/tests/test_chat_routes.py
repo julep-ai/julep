@@ -1,4 +1,3 @@
-import pytest
 from agents_api.autogen.openapi_model import (
     ChatInput,
     CreateAgentRequest,

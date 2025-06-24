@@ -3,7 +3,6 @@ Tests for metadata filter utility functions to prevent SQL injection
 """
 
 from agents_api.queries.utils import build_metadata_filter_conditions
-import pytest
 
 
 async def test_utility_build_metadata_filter_conditions_with_empty_filter():

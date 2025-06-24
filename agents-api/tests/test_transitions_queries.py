@@ -15,9 +15,6 @@ from agents_api.queries.executions.create_execution_transition import (
 )
 from asyncpg import Pool
 from uuid_extensions import uuid7
-import pytest
-
-
 
 
 async def test_query_list_execution_inputs_data(

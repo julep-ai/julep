@@ -5,7 +5,6 @@ from agents_api.activities.task_steps.tool_call_step import (
     generate_call_id,
 )
 from agents_api.autogen.openapi_model import CreateToolRequest, SystemDef, Tool
-import pytest
 
 
 async def test_generate_call_id_returns_call_id_with_proper_format():

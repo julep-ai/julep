@@ -1,21 +1,17 @@
-from uuid_extensions import uuid7
-
 import pytest
-
-from agents_api.autogen.Entries import ChatMLRole, Entry
-from agents_api.routers.sessions.exceptions import InputTooBigError
+from agents_api.autogen.Entries import Entry
+from uuid_extensions import uuid7
 
 # AIDEV-NOTE: Message truncation is not yet implemented - see render.py:149
 # These tests are skipped until truncation is implemented
 
+
 @pytest.mark.skip(reason="Truncation not yet implemented - see SCRUM-7")
 def test_empty_messages_truncation():
     """Test truncating empty messages list."""
-    messages: list[Entry] = []
     # When truncation is implemented, it should return the same empty list
     # result = truncate(messages, 10)
     # assert messages == result
-    pass
 
 
 @pytest.mark.skip(reason="Truncation not yet implemented - see SCRUM-7")
@@ -26,16 +22,15 @@ def test_do_not_truncate():
         "content2",
         "content3",
     ]
-    threshold = sum([len(c) // 3.5 for c in contents])
+    sum(len(c) // 3.5 for c in contents)
 
-    messages: list[Entry] = [
+    [
         Entry(session_id=uuid7(), role="user", content=contents[0]),
         Entry(session_id=uuid7(), role="assistant", content=contents[1]),
         Entry(session_id=uuid7(), role="user", content=contents[2]),
     ]
     # When implemented: result = truncate(messages, threshold)
     # assert messages == result
-    pass
 
 
 @pytest.mark.skip(reason="Truncation not yet implemented - see SCRUM-7")
@@ -50,9 +45,9 @@ def test_truncate_thoughts_partially():
         ("content6", True),
     ]
     session_ids = [uuid7()] * len(contents)
-    threshold = sum([len(c) // 3.5 for c, i in contents if i])
+    sum(len(c) // 3.5 for c, i in contents if i)
 
-    messages: list[Entry] = [
+    [
         Entry(
             session_id=session_ids[0],
             role="system",
@@ -84,7 +79,6 @@ def test_truncate_thoughts_partially():
     #     messages[4],
     #     messages[5],
     # ]
-    pass
 
 
 @pytest.mark.skip(reason="Truncation not yet implemented - see SCRUM-7")
@@ -99,9 +93,9 @@ def test_truncate_thoughts_partially_2():
         ("content6", True),
     ]
     session_ids = [uuid7()] * len(contents)
-    threshold = sum([len(c) // 3.5 for c, i in contents if i])
+    sum(len(c) // 3.5 for c, i in contents if i)
 
-    messages: list[Entry] = [
+    [
         Entry(
             session_id=session_ids[0],
             role="system",
@@ -132,7 +126,6 @@ def test_truncate_thoughts_partially_2():
     #     messages[4],
     #     messages[5],
     # ]
-    pass
 
 
 @pytest.mark.skip(reason="Truncation not yet implemented - see SCRUM-7")
@@ -148,9 +141,9 @@ def test_truncate_all_thoughts():
         ("content7", False),
     ]
     session_ids = [uuid7()] * len(contents)
-    threshold = sum([len(c) // 3.5 for c, i in contents if i])
+    sum(len(c) // 3.5 for c, i in contents if i)
 
-    messages: list[Entry] = [
+    [
         Entry(
             session_id=session_ids[0],
             role="system",
@@ -186,7 +179,6 @@ def test_truncate_all_thoughts():
     #     messages[4],
     #     messages[5],
     # ]
-    pass
 
 
 @pytest.mark.skip(reason="Truncation not yet implemented - see SCRUM-7")
@@ -208,9 +200,9 @@ def test_truncate_user_assistant_pairs():
         ("content13", False),
     ]
     session_ids = [uuid7()] * len(contents)
-    threshold = sum([len(c) // 3.5 for c, i in contents if i])
+    sum(len(c) // 3.5 for c, i in contents if i)
 
-    messages: list[Entry] = [
+    [
         Entry(
             session_id=session_ids[0],
             role="system",
@@ -258,7 +250,6 @@ def test_truncate_user_assistant_pairs():
     #     messages[10],
     #     messages[11],
     # ]
-    pass
 
 
 @pytest.mark.skip(reason="Truncation not yet implemented - see SCRUM-7")
@@ -277,10 +268,10 @@ def test_unable_to_truncate():
         ("content10", False),
     ]
     session_ids = [uuid7()] * len(contents)
-    threshold = sum([len(c) // 3.5 for c, i in contents if i])
-    all_tokens = sum([len(c) // 3.5 for c, _ in contents])
+    sum(len(c) // 3.5 for c, i in contents if i)
+    sum(len(c) // 3.5 for c, _ in contents)
 
-    messages: list[Entry] = [
+    [
         Entry(
             session_id=session_ids[0],
             role="system",
@@ -319,4 +310,3 @@ def test_unable_to_truncate():
     #     str(exc.value)
     #     == f"input is too big, {threshold} tokens required, but you got {all_tokens} tokens"
     # )
-    pass

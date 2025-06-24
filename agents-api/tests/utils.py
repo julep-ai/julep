@@ -105,10 +105,14 @@ def generate_transition(
 @asynccontextmanager
 async def patch_testing_temporal():
     # Set log level to ERROR to avoid spamming the console
+    # AIDEV-NOTE: Also suppress temporal_client warnings during test setup
     logger = logging.getLogger("temporalio")
+    client_logger = logging.getLogger("temporal_client")
     previous_log_level = logger.getEffectiveLevel()
+    previous_client_log_level = client_logger.getEffectiveLevel()
 
     logger.setLevel(logging.ERROR)
+    client_logger.setLevel(logging.ERROR)
 
     # Start a local Temporal environment
     async with await WorkflowEnvironment.start_time_skipping(
@@ -116,22 +120,32 @@ async def patch_testing_temporal():
     ) as env:
         # Create a worker with our workflows and start it
         worker = create_worker(client=env.client)
-        env.worker_task = asyncio.create_task(worker.run())
+        worker_task = asyncio.create_task(worker.run())
 
         # Mock the Temporal client
         mock_client = worker.client
 
-        with patch("agents_api.clients.temporal.get_client") as mock_get_client:
-            mock_get_client.return_value = mock_client
+        try:
+            with patch("agents_api.clients.temporal.get_client") as mock_get_client:
+                mock_get_client.return_value = mock_client
 
-            # Yield the worker and the mock client <---
-            yield worker, mock_get_client
+                # Yield the worker and the mock client <---
+                yield worker, mock_get_client
+        finally:
+            # Shutdown the worker
+            await worker.shutdown()
 
-        # Shutdown the worker
-        await worker.shutdown()
+            # Cancel the worker task if it's still running
+            if not worker_task.done():
+                worker_task.cancel()
+                try:
+                    await worker_task
+                except asyncio.CancelledError:
+                    pass  # Expected when task is cancelled
 
-    # Reset log level
+    # Reset log levels
     logger.setLevel(previous_log_level)
+    client_logger.setLevel(previous_client_log_level)
 
 
 @asynccontextmanager

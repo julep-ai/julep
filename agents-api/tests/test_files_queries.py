@@ -1,5 +1,6 @@
 # Tests for entry queries
 
+import pytest
 from agents_api.autogen.openapi_model import CreateFileRequest, File
 from agents_api.clients.pg import create_db_pool
 from agents_api.queries.files.create_file import create_file
@@ -7,9 +8,6 @@ from agents_api.queries.files.delete_file import delete_file
 from agents_api.queries.files.get_file import get_file
 from agents_api.queries.files.list_files import list_files
 from fastapi import HTTPException
-import pytest
-
-
 
 
 async def test_query_create_file(pg_dsn, test_developer):
@@ -98,7 +96,9 @@ async def test_query_create_user_file(pg_dsn, test_developer, test_user):
     assert any(f.id == file.id for f in files)
 
 
-async def test_query_create_user_file_with_project(pg_dsn, test_developer, test_user, test_project):
+async def test_query_create_user_file_with_project(
+    pg_dsn, test_developer, test_user, test_project
+):
     pool = await create_db_pool(dsn=pg_dsn)
     file = await create_file(
         developer_id=test_developer.id,
@@ -157,7 +157,9 @@ async def test_query_create_agent_file(pg_dsn, test_developer, test_agent):
     assert any(f.id == file.id for f in files)
 
 
-async def test_query_create_agent_file_with_project(pg_dsn, test_developer, test_agent, test_project):
+async def test_query_create_agent_file_with_project(
+    pg_dsn, test_developer, test_agent, test_project
+):
     pool = await create_db_pool(dsn=pg_dsn)
 
     file = await create_file(
@@ -333,7 +335,9 @@ async def test_query_list_user_files(pg_dsn, test_developer, test_user):
     assert any(f.id == file.id for f in files)
 
 
-async def test_query_list_user_files_with_project(pg_dsn, test_developer, test_user, test_project):
+async def test_query_list_user_files_with_project(
+    pg_dsn, test_developer, test_user, test_project
+):
     pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a file owned by the user with a project
@@ -392,7 +396,9 @@ async def test_query_list_agent_files(pg_dsn, test_developer, test_agent):
     assert any(f.id == file.id for f in files)
 
 
-async def test_query_list_agent_files_with_project(pg_dsn, test_developer, test_agent, test_project):
+async def test_query_list_agent_files_with_project(
+    pg_dsn, test_developer, test_agent, test_project
+):
     pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a file owned by the agent with a project

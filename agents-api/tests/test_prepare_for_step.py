@@ -1,6 +1,7 @@
 import uuid
 from unittest.mock import patch
 
+import pytest
 from agents_api.autogen.openapi_model import (
     Agent,
     Execution,
@@ -17,7 +18,6 @@ from agents_api.common.protocol.tasks import (
 from agents_api.common.utils.datetime import utcnow
 from agents_api.common.utils.workflows import get_workflow_name
 from uuid_extensions import uuid7
-import pytest
 
 from tests.utils import generate_transition
 

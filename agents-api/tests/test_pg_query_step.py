@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from agents_api.activities.pg_query_step import pg_query_step
-import pytest
 
 
 async def test_pg_query_step_correctly_calls_the_specified_query():

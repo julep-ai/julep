@@ -1,5 +1,6 @@
 # # Tests for execution queries
 
+import pytest
 from agents_api.autogen.openapi_model import (
     CreateExecutionRequest,
     CreateTransitionRequest,
@@ -18,9 +19,6 @@ from agents_api.queries.executions.lookup_temporal_data import lookup_temporal_d
 from fastapi import HTTPException
 from temporalio.client import WorkflowHandle
 from uuid_extensions import uuid7
-import pytest
-
-
 
 MODEL = "gpt-4o-mini"
 
@@ -219,7 +217,9 @@ async def test_query_create_execution_transition(pg_dsn, test_developer_id, test
     assert result.output == {"result": "test"}
 
 
-async def test_query_create_execution_transition_validate_transition_targets(pg_dsn, test_developer_id, test_execution):
+async def test_query_create_execution_transition_validate_transition_targets(
+    pg_dsn, test_developer_id, test_execution
+):
     pool = await create_db_pool(dsn=pg_dsn)
     scope_id = uuid7()
     await create_execution_transition(
@@ -289,7 +289,9 @@ async def test_query_create_execution_transition_with_execution_update(
     assert result.output == {"result": "test"}
 
 
-async def test_query_get_execution_with_transitions_count(pg_dsn, test_developer_id, test_execution_started):
+async def test_query_get_execution_with_transitions_count(
+    pg_dsn, test_developer_id, test_execution_started
+):
     pool = await create_db_pool(dsn=pg_dsn)
     result = await get_execution(
         execution_id=test_execution_started.id,

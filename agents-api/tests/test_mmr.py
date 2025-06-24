@@ -1,7 +1,6 @@
 from uuid import UUID
 
 import numpy as np
-import pytest
 from agents_api.autogen.Docs import DocOwner, DocReference, Snippet
 from agents_api.common.utils.mmr import apply_mmr_to_docs
 

@@ -3,7 +3,6 @@ from unittest.mock import patch
 from agents_api.clients.litellm import acompletion
 from agents_api.common.utils.llm_providers import get_api_key_env_var_name
 from litellm.types.utils import ModelResponse
-import pytest
 
 
 async def test_litellm_utils_acompletion_no_tools():
