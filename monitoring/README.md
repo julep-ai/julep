@@ -49,6 +49,16 @@ Navigate to `http://localhost:3000` in your web browser and use the login creden
 
 Navigate to `http://localhost:9090` in your web browser to access directly the web interface of prometheus.
 
+The bundled `prometheus.yml` scrapes metrics from additional services used by
+Julep:
+
+- **Temporal** for workflow metrics on port `15000`.
+- **LiteLLM** on port `4000`.
+- **Traefik** gateway metrics on port `8082`.
+
+These scrape targets are preconfigured so dashboards in Grafana automatically
+include data from these components.
+
 Stop and remove the containers. Use `-v` to remove the volumes if looking to erase all data.
 ```
 $ docker compose down -v

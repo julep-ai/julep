@@ -12,12 +12,46 @@ alerting:
     static_configs:
     - targets: []
 scrape_configs:
-- job_name: agents-api
-  honor_timestamps: true
-  scrape_interval: 5s
-  scrape_timeout: 3s
-  metrics_path: /metrics
-  scheme: http
-  follow_redirects: true
-  static_configs:
-  - targets: ['agents-api-multi-tenant:8080', 'worker:14000', 'temporal:15000']
+  # AIDEV-NOTE: agents-api and worker metrics
+  - job_name: agents-api
+    honor_timestamps: true
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
+    static_configs:
+      - targets: ['agents-api-multi-tenant:8080', 'worker:14000']
+
+  # AIDEV-NOTE: Temporal metrics endpoint
+  - job_name: temporal
+    honor_timestamps: true
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
+    static_configs:
+      - targets: ['temporal:15000', 'temporal-managed:15000']
+
+  # AIDEV-NOTE: LiteLLM metrics endpoint
+  - job_name: litellm
+    honor_timestamps: true
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
+    static_configs:
+      - targets: ['litellm:4000', 'litellm-managed:4000']
+
+  # AIDEV-NOTE: Traefik gateway metrics endpoint
+  - job_name: traefik
+    honor_timestamps: true
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
+    static_configs:
+      - targets: ['gateway:8082']
