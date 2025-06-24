@@ -142,6 +142,7 @@ model InputChatSettings extends InputDefaultChatSettings {
 }
 
 /** Usage statistics for the completion request */
+// AIDEV-NOTE: 1472:: This model is for API responses. Internal usage tracking with context fields is handled at the database level
 model CompletionUsage {
     /** Number of tokens in the generated completion */
     @visibility("read")

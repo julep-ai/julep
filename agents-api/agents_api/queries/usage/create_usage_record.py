@@ -89,6 +89,7 @@ AVG_OUTPUT_COST_PER_TOKEN = (
     sum(combined_output_costs) / len(combined_output_costs) if combined_output_costs else 0
 )
 
+# AIDEV-NOTE: 1472:: Updated query to include new reference fields and provider for better tracking
 # Define the raw SQL query
 usage_query = """
 INSERT INTO usage (
@@ -99,7 +100,12 @@ INSERT INTO usage (
     cost,
     estimated,
     custom_api_used,
-    metadata
+    metadata,
+    session_id,
+    execution_id,
+    transition_id,
+    entry_id,
+    provider
 )
 VALUES (
     $1, -- developer_id
@@ -109,7 +115,12 @@ VALUES (
     $5, -- cost
     $6, -- estimated
     $7, -- custom_api_used
-    $8  -- metadata
+    $8, -- metadata
+    $9, -- session_id
+    $10, -- execution_id
+    $11, -- transition_id
+    $12, -- entry_id
+    $13  -- provider
 )
 RETURNING *;
 """
@@ -128,6 +139,11 @@ async def create_usage_record(
     custom_api_used: bool = False,
     estimated: bool = False,
     metadata: dict[str, Any] | None = None,
+    session_id: UUID | None = None,
+    execution_id: UUID | None = None,
+    transition_id: UUID | None = None,
+    entry_id: UUID | None = None,
+    provider: str | None = None,
 ) -> tuple[str, list]:
     """
     Creates a usage record to track token usage and costs.
@@ -140,6 +156,11 @@ async def create_usage_record(
         custom_api_used (bool): Whether a custom API key was used.
         estimated (bool): Whether the token count is estimated.
         metadata (dict | None): Additional metadata about the usage.
+        session_id (UUID | None): The session that generated this usage.
+        execution_id (UUID | None): The task execution that generated this usage.
+        transition_id (UUID | None): The specific transition step that generated this usage.
+        entry_id (UUID | None): The chat entry that generated this usage.
+        provider (str | None): The actual LLM provider used (e.g., openai, anthropic, google).
 
     Returns:
         tuple[str, list]: SQL query and parameters for creating the usage record.
@@ -168,6 +189,7 @@ async def create_usage_record(
             )
             print(f"No fallback pricing found for model {model}, using avg costs: {total_cost}")
 
+    # AIDEV-NOTE: 1472:: Updated to include new reference fields and provider in params list
     params = [
         developer_id,
         model,
@@ -177,6 +199,11 @@ async def create_usage_record(
         estimated,
         custom_api_used,
         metadata or {},
+        session_id,
+        execution_id,
+        transition_id,
+        entry_id,
+        provider,
     ]
 
     return (
