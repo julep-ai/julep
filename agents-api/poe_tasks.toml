@@ -1,7 +1,7 @@
 [tasks]
 format = "ruff format"
 lint = "ruff check"
-typecheck = "pytype --config pytype.toml"
+typecheck = "ty check agents_api"
 validate-sql = "sqlvalidator --verbose-validate agents_api/"
 check = [
     "lint",

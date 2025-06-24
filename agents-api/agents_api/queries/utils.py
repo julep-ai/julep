@@ -12,6 +12,7 @@ from typing import (
     ParamSpec,
     TypeVar,
     cast,
+    overload,
 )
 
 import asyncpg
@@ -87,6 +88,26 @@ def prepare_pg_query_args(
 
 # AIDEV-NOTE: Decorator for executing PostgreSQL queries within a transaction.
 # Handles connection pooling, error handling, and result formatting.
+@overload
+def pg_query[**P](
+    func: Callable[P, PGQueryArgs | list[PGQueryArgs]],
+    debug: bool | None = None,
+    only_on_error: bool = False,
+    timeit: bool = False,
+    return_index: int = -1,
+) -> Callable[P, list[Record]]: ...
+
+
+@overload
+def pg_query[**P](
+    func: None = None,
+    debug: bool | None = None,
+    only_on_error: bool = False,
+    timeit: bool = False,
+    return_index: int = -1,
+) -> Callable[[Callable[P, PGQueryArgs | list[PGQueryArgs]]], Callable[P, list[Record]]]: ...
+
+
 @beartype
 def pg_query[**P](
     func: Callable[P, PGQueryArgs | list[PGQueryArgs]] | None = None,
@@ -94,10 +115,13 @@ def pg_query[**P](
     only_on_error: bool = False,
     timeit: bool = False,
     return_index: int = -1,
-) -> Callable[..., Callable[P, list[Record]]] | Callable[P, list[Record]]:
+) -> (
+    Callable[[Callable[P, PGQueryArgs | list[PGQueryArgs]]], Callable[P, list[Record]]]
+    | Callable[P, list[Record]]
+):
     def pg_query_dec(
         func: Callable[P, PGQueryArgs | list[PGQueryArgs]],
-    ) -> Callable[..., Callable[P, list[Record]]]:
+    ) -> Callable[P, list[Record]]:
         """
         Decorator that wraps a function that takes arbitrary arguments, and
         returns a (query string, variables) tuple.

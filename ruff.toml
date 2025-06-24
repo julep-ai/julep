@@ -11,7 +11,7 @@ exclude = [
     ".pants.d",
     ".pyenv",
     ".pytest_cache",
-    ".pytype",
+    ".ty",
     ".ruff_cache",
     ".svn",
     ".tox",

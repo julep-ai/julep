@@ -102,21 +102,21 @@ def type_property(self: BaseModel) -> str:
         if self.system
         else "api_call"
         if self.api_call
-        else None
+        else "unknown"
     )
 
 
 # Patch original Tool class to add 'type' property
-TaskTool.type = computed_field(property(type_property))
+setattr(TaskTool, "type", computed_field(property(type_property)))
 
 # Patch original Tool class to add 'type' property
-Tool.type = computed_field(property(type_property))
+setattr(Tool, "type", computed_field(property(type_property)))
 
 # Patch original UpdateToolRequest class to add 'type' property
-UpdateToolRequest.type = computed_field(property(type_property))
+setattr(UpdateToolRequest, "type", computed_field(property(type_property)))
 
 # Patch original PatchToolRequest class to add 'type' property
-PatchToolRequest.type = computed_field(property(type_property))
+setattr(PatchToolRequest, "type", computed_field(property(type_property)))
 
 
 # Patch Task Workflow Steps

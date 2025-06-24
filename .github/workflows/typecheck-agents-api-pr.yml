@@ -19,13 +19,13 @@ jobs:
       - name: Install libboost
         run: sudo apt-get install -y libboost-all-dev
 
-      - name: Cache pytype
+      - name: Cache ty
         uses: actions/cache@v4
         with:
-          path: agents-api/.pytype
-          key: ${{ runner.os }}-agents-api-pytype-${{ github.base_ref }}
+          path: agents-api/.ty
+          key: ${{ runner.os }}-agents-api-ty-${{ github.base_ref }}
           restore-keys: |
-            ${{ runner.os }}-agents-api-pytype-
+            ${{ runner.os }}-agents-api-ty-
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
