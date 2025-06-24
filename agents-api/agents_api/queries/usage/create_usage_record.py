@@ -98,7 +98,7 @@ INSERT INTO usage (
     completion_tokens,
     cost,
     estimated,
-    custom_api_used,
+    custom_key_used,
     metadata
 )
 VALUES (
@@ -108,10 +108,19 @@ VALUES (
     $4, -- completion_tokens
     $5, -- cost
     $6, -- estimated
-    $7, -- custom_api_used
+    $7, -- custom_key_used
     $8  -- metadata
 )
-RETURNING *;
+RETURNING
+    developer_id,
+    model,
+    prompt_tokens,
+    completion_tokens,
+    cost,
+    estimated,
+    custom_key_used AS custom_api_used,
+    metadata,
+    created_at;
 """
 
 
