@@ -34,8 +34,8 @@ jobs:
       - name: Generate openapi code
         run: |
           cd src/typespec; npm ci; cd -
-          export PATH=$PATH:$PWD/typespec/node_modules/.bin
-          bash scripts/generate_openapi_code.sh
+          export PATH=$PATH:$PWD/src/typespec/node_modules/.bin
+          bash src/scripts/generate_openapi_code.sh
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

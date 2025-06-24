@@ -55,7 +55,7 @@ jobs:
         if: steps.collect_prs.outputs.has_prs == 'true'
         id: generate_changelog
         run: |
-          if ! python scripts/generate_changelog.py; then
+          if ! python src/scripts/generate_changelog.py; then
             echo "Error: Failed to generate changelog"
             exit 1
           fi

@@ -18,7 +18,7 @@ jobs:
     - uses: mdegis/bandit-action@v1.0.1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        path: "./agents-api/agents_api"
+        path: "./src/agents-api/agents_api"
         level: high
         confidence: high
         # exit_zero: true

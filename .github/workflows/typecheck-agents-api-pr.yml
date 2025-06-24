@@ -22,7 +22,7 @@ jobs:
       - name: Cache pytype
         uses: actions/cache@v4
         with:
-          path: agents-api/.pytype
+          path: src/agents-api/.pytype
           key: ${{ runner.os }}-agents-api-pytype-${{ github.base_ref }}
           restore-keys: |
             ${{ runner.os }}-agents-api-pytype-
