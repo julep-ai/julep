@@ -47,6 +47,14 @@ class CreateSessionRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal[
+        "single_agent_no_user",
+        "single_agent_single_user",
+        "single_agent_multi_user",
+        "multi_agent_no_user",
+        "multi_agent_single_user",
+        "multi_agent_multi_user",
+    ]
     user: UUID | None = None
     """
     User ID of user associated with this session
@@ -89,7 +97,7 @@ class CreateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch = None
     """
     Recall options for the session
     """
@@ -164,6 +172,17 @@ class PatchSessionRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: (
+        Literal[
+            "single_agent_no_user",
+            "single_agent_single_user",
+            "single_agent_multi_user",
+            "multi_agent_no_user",
+            "multi_agent_single_user",
+            "multi_agent_multi_user",
+        ]
+        | None
+    ) = None
     situation: str | None = None
     """
     Session situation
@@ -196,9 +215,9 @@ class PatchSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: (
-        VectorDocSearchUpdate | TextOnlyDocSearchUpdate | HybridDocSearchUpdate | None
-    ) = None
+    recall_options: VectorDocSearchUpdate | TextOnlyDocSearchUpdate | HybridDocSearchUpdate = (
+        None
+    )
     """
     Recall options for the session
     """
@@ -209,6 +228,14 @@ class Session(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal[
+        "single_agent_no_user",
+        "single_agent_single_user",
+        "single_agent_multi_user",
+        "multi_agent_no_user",
+        "multi_agent_single_user",
+        "multi_agent_multi_user",
+    ]
     situation: str | None = None
     """
     Session situation
@@ -245,7 +272,7 @@ class Session(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch = None
     """
     Recall options for the session
     """
@@ -259,16 +286,13 @@ class Session(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
-    kind: str | None = None
-    """
-    Discriminator property for Session.
-    """
 
 
 class SingleAgentMultiUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal["single_agent_multi_user"] = "single_agent_multi_user"
     agent: UUID
     users: Annotated[list[UUID], Field(min_length=2)]
 
@@ -277,6 +301,7 @@ class SingleAgentNoUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal["single_agent_no_user"] = "single_agent_no_user"
     agent: UUID
 
 
@@ -284,6 +309,7 @@ class SingleAgentSingleUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal["single_agent_single_user"] = "single_agent_single_user"
     agent: UUID
     user: UUID
 
@@ -324,6 +350,14 @@ class UpdateSessionRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal[
+        "single_agent_no_user",
+        "single_agent_single_user",
+        "single_agent_multi_user",
+        "multi_agent_no_user",
+        "multi_agent_single_user",
+        "multi_agent_multi_user",
+    ]
     situation: str | None = None
     """
     Session situation
@@ -356,7 +390,7 @@ class UpdateSessionRequest(BaseModel):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch = None
     """
     Recall options for the session
     """
@@ -404,16 +438,14 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
         populate_by_name=True,
     )
     id: UUID
-    user: UUID | None = None
-    """
-    User ID of user associated with this session
-    """
-    users: list[UUID] | None = None
-    agent: UUID | None = None
-    """
-    Agent ID of agent associated with this session
-    """
-    agents: list[UUID] | None = None
+    kind: Literal[
+        "single_agent_no_user",
+        "single_agent_single_user",
+        "single_agent_multi_user",
+        "multi_agent_no_user",
+        "multi_agent_single_user",
+        "multi_agent_multi_user",
+    ]
     situation: str | None = None
     """
     Session situation
@@ -446,7 +478,7 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     Whether to forward tool calls to the model
     """
-    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch | None = None
+    recall_options: VectorDocSearch | TextOnlyDocSearch | HybridDocSearch = None
     """
     Recall options for the session
     """
@@ -457,6 +489,7 @@ class MultiAgentMultiUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal["multi_agent_multi_user"] = "multi_agent_multi_user"
     agents: Annotated[list[UUID], Field(min_length=2)]
     users: Annotated[list[UUID], Field(min_length=2)]
 
@@ -465,6 +498,7 @@ class MultiAgentNoUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal["multi_agent_no_user"] = "multi_agent_no_user"
     agents: Annotated[list[UUID], Field(min_length=2)]
 
 
@@ -472,5 +506,6 @@ class MultiAgentSingleUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind: Literal["multi_agent_single_user"] = "multi_agent_single_user"
     agents: Annotated[list[UUID], Field(min_length=2)]
     user: UUID

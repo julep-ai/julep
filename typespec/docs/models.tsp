@@ -25,28 +25,28 @@ model Doc {
     content: string | string[];
 
     /** Embeddings for the document */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     embeddings: float32[] | float32[][] | null = null;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     /** Modality of the document */
     modality?: string;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     /** Language of the document */
     language?: string;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     /** Embedding model used for the document */
     embedding_model?: string;
 
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     /** Dimensions of the embedding model */
     embedding_dimensions?: uint16;
 }
 
 /** Payload for creating a doc */
-@withVisibility("create")
+@withVisibility(Lifecycle.Create)
 model CreateDocRequest {
     ...HasId;
     ...HasMetadata;

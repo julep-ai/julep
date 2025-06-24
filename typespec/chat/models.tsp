@@ -35,7 +35,7 @@ enum FinishReason {
 /** Determines how the session accesses history and memories */
 model MemoryAccessOptions {
     /** DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) */
-    @visibility("read") // DISABLED
+    @visibility(Lifecycle.Read) // DISABLED
     remember: boolean = false;
 
     /** Whether previous memories and docs should be recalled or not */
@@ -144,15 +144,15 @@ model InputChatSettings extends InputDefaultChatSettings {
 /** Usage statistics for the completion request */
 model CompletionUsage {
     /** Number of tokens in the generated completion */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     completion_tokens?: uint32;
 
     /** Number of tokens in the prompt */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     prompt_tokens?: uint32;
 
     /** Total number of tokens used in the request (prompt + completion) */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     total_tokens?: uint32;
 }
 
@@ -185,7 +185,7 @@ model BaseTokenLogProb {
 
 model TokenLogProb extends BaseTokenLogProb {
     /** The log probabilities of the tokens */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     @minItems(1)
     top_logprobs: BaseTokenLogProb[];
 }
@@ -216,7 +216,7 @@ model SingleChatOutput extends BaseChatOutput {
 
 /** The output returned by the model. Note that, depending on the model provider, they might return more than one message. */
 model MultipleChatOutput extends BaseChatOutput {
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     @minItems(1)
     messages: ChatMLMessage[];
 }
@@ -234,11 +234,11 @@ model BaseChatResponse {
     usage?: CompletionUsage;
 
     /** Background job IDs that may have been spawned from this interaction. */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     jobs: uuid[] = #[];
 
     /** Documents referenced for this request (for citation purposes). */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     docs: DocReference[] = #[];
 
     ...HasCreatedAt;
@@ -263,6 +263,6 @@ alias ChatResponse = ChunkChatResponse | MessageChatResponse;
 
 model RenderResponse extends ChatInputData {
     /** Documents referenced for this request (for citation purposes). */
-    @visibility("read")
+    @visibility(Lifecycle.Read)
     docs: DocReference[] = #[];
 }
