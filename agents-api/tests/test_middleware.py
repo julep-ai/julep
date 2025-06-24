@@ -8,7 +8,9 @@ from unittest.mock import AsyncMock, patch
 import asyncpg
 import pytest
 from agents_api.app import app
+from agents_api.clients.pg import create_db_pool
 from agents_api.env import free_tier_cost_limit
+from agents_api.queries.developers.create_developer import create_developer
 from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 from pydantic import BaseModel

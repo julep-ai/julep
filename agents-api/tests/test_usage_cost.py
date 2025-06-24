@@ -19,15 +19,26 @@ async def test_query_get_usage_cost_returns_zero_when_no_usage_records_exist(
     """Test that get_usage_cost returns zero cost when no usage records exist."""
     pool = await create_db_pool(dsn=pg_dsn)
 
-    # Calculate expected cost
+    # Create a new developer ID for this test to ensure clean state
+    clean_developer_id = uuid7()
+    await create_developer(
+        email=f"clean-test-{clean_developer_id}@example.com",
+        active=True,
+        tags=["test"],
+        settings={},
+        developer_id=clean_developer_id,
+        connection_pool=pool,
+    )
+
+    # Calculate expected cost - should be 0 for new developer
     expected_cost = Decimal("0")
 
     # Get the usage cost
-    cost_record = await get_usage_cost(developer_id=test_developer_id, connection_pool=pool)
+    cost_record = await get_usage_cost(developer_id=clean_developer_id, connection_pool=pool)
 
     # Verify the record
     assert cost_record is not None, "Should have a cost record"
-    assert cost_record["developer_id"] == test_developer_id
+    assert cost_record["developer_id"] == clean_developer_id
     assert "cost" in cost_record, "Should have a cost field"
     assert isinstance(cost_record["cost"], Decimal), "Cost should be a Decimal"
     assert cost_record["cost"] == expected_cost, (
@@ -43,9 +54,20 @@ async def test_query_get_usage_cost_returns_the_correct_cost_when_records_exist(
     """Test that get_usage_cost returns the correct cost for a developer with usage records."""
     pool = await create_db_pool(dsn=pg_dsn)
 
+    # Create a new developer ID for this test to ensure clean state
+    clean_developer_id = uuid7()
+    await create_developer(
+        email=f"clean-test-{clean_developer_id}@example.com",
+        active=True,
+        tags=["test"],
+        settings={},
+        developer_id=clean_developer_id,
+        connection_pool=pool,
+    )
+
     # Create some usage records for the developer
     record1 = await create_usage_record(
-        developer_id=test_developer_id,
+        developer_id=clean_developer_id,
         model="gpt-4o-mini",
         prompt_tokens=1000,
         completion_tokens=2000,
@@ -53,7 +75,7 @@ async def test_query_get_usage_cost_returns_the_correct_cost_when_records_exist(
     )
 
     record2 = await create_usage_record(
-        developer_id=test_developer_id,
+        developer_id=clean_developer_id,
         model="gpt-4o-mini",
         prompt_tokens=500,
         completion_tokens=1500,
@@ -71,11 +93,11 @@ async def test_query_get_usage_cost_returns_the_correct_cost_when_records_exist(
     await asyncio.sleep(0.1)
 
     # Get the usage cost
-    cost_record = await get_usage_cost(developer_id=test_developer_id, connection_pool=pool)
+    cost_record = await get_usage_cost(developer_id=clean_developer_id, connection_pool=pool)
 
     # Verify the record
     assert cost_record is not None, "Should have a cost record"
-    assert cost_record["developer_id"] == test_developer_id
+    assert cost_record["developer_id"] == clean_developer_id
     assert "cost" in cost_record, "Should have a cost field"
     assert isinstance(cost_record["cost"], Decimal), "Cost should be a Decimal"
     assert cost_record["cost"] == expected_cost, (

@@ -48,7 +48,7 @@ async def test_workflow_sample_find_selector_start_with_bad_input_should_fail(
     ):
         task_def = sample_file.read()
 
-        async with patch_testing_temporal() as (_, temporal_client):
+        async with patch_testing_temporal():
             response = make_request(
                 method="POST",
                 url=f"/agents/{agent_id}/tasks/{task_id}",
@@ -85,7 +85,7 @@ async def test_workflow_sample_find_selector_start_with_correct_input(
     ):
         task_def = sample_file.read()
 
-        async with patch_testing_temporal() as (_, mock_temporal_client):
+        async with patch_testing_temporal():
             response = make_request(
                 method="POST",
                 url=f"/agents/{agent_id}/tasks/{task_id}",

@@ -85,3 +85,8 @@ Key Uses
 - All Ward imports removed, migration complete
 - Run tests: `poe test` or `poe test -k "pattern"` for specific tests
 - Stop on first failure: `poe test -x`
+
+## Type Checking
+- AIDEV-NOTE: autogen/openapi_model.py is handwritten, not auto-generated
+- Type checking errors from openapi_model.py are intentional (dynamic type property patches)
+- Use `ty check` for extremely fast type checking (pytype replacement)

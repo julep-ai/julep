@@ -333,7 +333,7 @@ async def test_chat_test_streaming_with_message_history_saving(
         create_entries_mock.assert_called_once()
         call_args = create_entries_mock.call_args[1]
         assert call_args["developer_id"] == test_developer_id
-        assert call_args["session_id"] == test_session.id
+        assert call_args["session_id"] == session.id
         # Verify we're saving the user message
         assert len(call_args["data"]) == 1
         assert call_args["data"][0].role == "user"

@@ -3,6 +3,7 @@ Pytest configuration and fixtures for agents-api tests.
 Migrated from Ward fixtures.py
 """
 
+import contextlib
 import os
 import random
 import string
@@ -615,11 +616,37 @@ def disable_s3_cache():
 
 
 @pytest.fixture
-def s3_client():
+async def s3_client(localstack_container):
     """S3 client fixture that works with TestClient's event loop."""
-    # The TestClient's lifespan will create the S3 client
-    # The disable_s3_cache fixture ensures we don't have event loop issues
-    yield
+    from contextlib import AsyncExitStack
+
+    from aiobotocore.session import get_session
+
+    # AIDEV-NOTE: Fixed S3 client fixture with proper LocalStack integration
+    # to resolve NoSuchKey errors in file route tests
+
+    # Create async S3 client using LocalStack
+    session = get_session()
+
+    async with AsyncExitStack() as stack:
+        client = await stack.enter_async_context(
+            session.create_client(
+                "s3",
+                aws_access_key_id=localstack_container.env["AWS_ACCESS_KEY_ID"],
+                aws_secret_access_key=localstack_container.env["AWS_SECRET_ACCESS_KEY"],
+                endpoint_url=localstack_container.get_url(),
+                region_name="us-east-1",
+            )
+        )
+
+        # Ensure default bucket exists
+        try:
+            await client.head_bucket(Bucket="default")
+        except Exception:
+            with contextlib.suppress(Exception):
+                await client.create_bucket(Bucket="default")  # Bucket might already exist
+
+        yield client
 
 
 @pytest.fixture

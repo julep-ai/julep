@@ -1,4 +1,5 @@
 # ruff: noqa: F401, F403, F405
+# AIDEV-NOTE: This file is handwritten, not auto-generated like other files in autogen/
 import ast
 from typing import Annotated, Any, Generic, Literal, Self, TypeVar, get_args
 from uuid import UUID
@@ -103,20 +104,20 @@ def type_property(self: BaseModel) -> str:
         else "api_call"
         if self.api_call
         else None
-    )
+    )  # type: ignore[invalid-return-type]
 
 
 # Patch original Tool class to add 'type' property
-TaskTool.type = computed_field(property(type_property))
+TaskTool.type = computed_field(property(type_property))  # type: ignore[invalid-attribute-access]
 
 # Patch original Tool class to add 'type' property
-Tool.type = computed_field(property(type_property))
+Tool.type = computed_field(property(type_property))  # type: ignore[invalid-attribute-access]
 
 # Patch original UpdateToolRequest class to add 'type' property
-UpdateToolRequest.type = computed_field(property(type_property))
+UpdateToolRequest.type = computed_field(property(type_property))  # type: ignore[invalid-attribute-access]
 
 # Patch original PatchToolRequest class to add 'type' property
-PatchToolRequest.type = computed_field(property(type_property))
+PatchToolRequest.type = computed_field(property(type_property))  # type: ignore[invalid-attribute-access]
 
 
 # Patch Task Workflow Steps

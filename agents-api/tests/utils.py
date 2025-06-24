@@ -3,7 +3,7 @@ import logging
 import math
 import os
 import subprocess
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, suppress
 from typing import Any
 from unittest.mock import patch
 from uuid import UUID
@@ -138,10 +138,8 @@ async def patch_testing_temporal():
             # Cancel the worker task if it's still running
             if not worker_task.done():
                 worker_task.cancel()
-                try:
+                with suppress(asyncio.CancelledError):
                     await worker_task
-                except asyncio.CancelledError:
-                    pass  # Expected when task is cancelled
 
     # Reset log levels
     logger.setLevel(previous_log_level)

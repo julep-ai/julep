@@ -46,10 +46,11 @@ def validate_execution_input(execution_input: ExecutionInput) -> TaskSpecDef:
     Raises:
         ApplicationError: If task is None
     """
-    if execution_input.task is None:
+    task = execution_input.task
+    if task is None:
         msg = "Execution input task cannot be None"
         raise ApplicationError(msg)
-    return execution_input.task
+    return task
 
 
 async def base_evaluate_activity(

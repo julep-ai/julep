@@ -122,6 +122,12 @@ def test_query_patch_user_with_project(make_request, test_user, test_project):
 
 def test_query_list_users(make_request):
     """query: list users"""
+    # First create a user to ensure there's at least one
+    data = {"name": "test user for list", "about": "test user about"}
+    create_response = make_request(method="POST", url="/users", json=data)
+    assert create_response.status_code == 201
+
+    # Now list users
     response = make_request(method="GET", url="/users")
     assert response.status_code == 200
     response = response.json()
