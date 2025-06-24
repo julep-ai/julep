@@ -43,7 +43,9 @@ async def get_response(
     )
 
     if not session_history.entries:
-        raise HTTPException(status_code=404, detail="Provided response id does not exist")
+        raise HTTPException(
+            status_code=404, detail="Provided response id does not exist"
+        )
 
     last_entries = []
 
@@ -126,7 +128,9 @@ async def get_response(
         reasoning=None,
         store=True,
         temperature=1.0,
-        text=Text(format=ResponseFormatText(type="text")),  # FIXME: Add the correct format
+        text=Text(
+            format=ResponseFormatText(type="text")
+        ),  # FIXME: Add the correct format
         tool_choice="auto",
         tools=[],
         top_p=1.0,

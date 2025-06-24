@@ -24,7 +24,9 @@ def setup():
         endpoint_url=s3_endpoint,
         aws_access_key_id=s3_access_key,
         aws_secret_access_key=s3_secret_key,
-        config=botocore.config.Config(signature_version="s3v4", retries={"max_attempts": 3}),
+        config=botocore.config.Config(
+            signature_version="s3v4", retries={"max_attempts": 3}
+        ),
     )
 
     try:

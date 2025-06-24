@@ -56,7 +56,9 @@ async def track_usage(
         ]
 
         completion_tokens = (
-            token_counter(model=model, messages=completion_content) if completion_content else 0
+            token_counter(model=model, messages=completion_content)
+            if completion_content
+            else 0
         )
 
     # Map the model name to the actual model name

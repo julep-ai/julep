@@ -87,7 +87,8 @@ async def acompletion(
     # NOTE: This is a fix for Mistral API, which expects a different message format
     if model[7:].startswith("mistral"):
         messages = [
-            {"role": message["role"], "content": message["content"]} for message in messages
+            {"role": message["role"], "content": message["content"]}
+            for message in messages
         ]
 
     for message in messages:
@@ -203,7 +204,10 @@ async def get_model_list(*, custom_api_key: str | None = None) -> list[dict]:
         ret = get_valid_models()
         return [{"id": model_name} for model_name in ret]
 
-    headers = {"accept": "application/json", "x-api-key": custom_api_key or litellm_master_key}
+    headers = {
+        "accept": "application/json",
+        "x-api-key": custom_api_key or litellm_master_key,
+    }
 
     async with (
         aiohttp.ClientSession() as session,

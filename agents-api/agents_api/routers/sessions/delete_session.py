@@ -10,9 +10,13 @@ from ...queries.sessions.delete_session import delete_session as delete_session_
 from .router import router
 
 
-@router.delete("/sessions/{session_id}", status_code=HTTP_202_ACCEPTED, tags=["sessions"])
+@router.delete(
+    "/sessions/{session_id}", status_code=HTTP_202_ACCEPTED, tags=["sessions"]
+)
 async def delete_session(
     session_id: UUID,
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceDeletedResponse:
-    return await delete_session_query(developer_id=x_developer_id, session_id=session_id)
+    return await delete_session_query(
+        developer_id=x_developer_id, session_id=session_id
+    )

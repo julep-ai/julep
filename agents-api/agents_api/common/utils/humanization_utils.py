@@ -50,7 +50,9 @@ Return only the rewritten text without explanations or meta-commentary.""",
 
 def text_translate(text: str, src_lang, target_lang):
     try:
-        return GoogleTranslator(source=src_lang, target=target_lang).translate(text=text)
+        return GoogleTranslator(source=src_lang, target=target_lang).translate(
+            text=text
+        )
     except Exception:
         return text
 
@@ -60,8 +62,12 @@ def mix_translate(text: str, src_lang, target_lang):
     Translate the given text from src_lang to target_lang and back to src_lang using googletrans.
     """
     try:
-        translated = GoogleTranslator(source=src_lang, target=target_lang).translate(text=text)
-        return GoogleTranslator(source=target_lang, target=src_lang).translate(text=translated)
+        translated = GoogleTranslator(source=src_lang, target=target_lang).translate(
+            text=text
+        )
+        return GoogleTranslator(source=target_lang, target=src_lang).translate(
+            text=translated
+        )
 
     except Exception:
         return text

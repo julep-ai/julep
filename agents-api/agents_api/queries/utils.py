@@ -64,20 +64,32 @@ def prepare_pg_query_args(
     for query_arg in query_args:
         match query_arg:
             case (query, variables) | (query, variables, "fetch"):
-                batch.append((
-                    "fetch",
-                    AsyncPGFetchArgs(query=query, args=variables, timeout=query_timeout),
-                ))
+                batch.append(
+                    (
+                        "fetch",
+                        AsyncPGFetchArgs(
+                            query=query, args=variables, timeout=query_timeout
+                        ),
+                    )
+                )
             case (query, variables, "fetchmany"):
-                batch.append((
-                    "fetchmany",
-                    AsyncPGFetchArgs(query=query, args=[variables], timeout=query_timeout),
-                ))
+                batch.append(
+                    (
+                        "fetchmany",
+                        AsyncPGFetchArgs(
+                            query=query, args=[variables], timeout=query_timeout
+                        ),
+                    )
+                )
             case (query, variables, "fetchrow"):
-                batch.append((
-                    "fetchrow",
-                    AsyncPGFetchArgs(query=query, args=variables, timeout=query_timeout),
-                ))
+                batch.append(
+                    (
+                        "fetchrow",
+                        AsyncPGFetchArgs(
+                            query=query, args=variables, timeout=query_timeout
+                        ),
+                    )
+                )
             case _:
                 msg = "Invalid query arguments"
                 raise ValueError(msg)
@@ -136,7 +148,9 @@ def pg_query[**P](
                         query = payload["query"]
                         args = sanitize_string(payload["args"])
                         timeout = payload.get("timeout")
-                        results: list[Record] = await method(query, *args, timeout=timeout)
+                        results: list[Record] = await method(
+                            query, *args, timeout=timeout
+                        )
                         if method_name == "fetchrow":
                             results = (
                                 [results]
@@ -154,7 +168,9 @@ def pg_query[**P](
 
                     end = timeit and time.perf_counter()
 
-                    timeit and print(f"PostgreSQL query time: {end - start:.2f} seconds")
+                    timeit and print(
+                        f"PostgreSQL query time: {end - start:.2f} seconds"
+                    )
 
             except Exception as e:
                 if only_on_error and debug:
@@ -296,11 +312,15 @@ def rewrap_exceptions(
         nonlocal mapping
 
         for check, transform in mapping.items():
-            should_catch = isinstance(error, check) if isinstance(check, type) else check(error)
+            should_catch = (
+                isinstance(error, check) if isinstance(check, type) else check(error)
+            )
 
             if should_catch:
                 new_error = (
-                    transform(str(error)) if isinstance(transform, type) else transform(error)
+                    transform(str(error))
+                    if isinstance(transform, type)
+                    else transform(error)
                 )
 
                 setattr(new_error, "__cause__", error)

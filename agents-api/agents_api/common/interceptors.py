@@ -20,7 +20,12 @@ from temporalio.client import (
     StartWorkflowInput,
     WorkflowHandle,
 )
-from temporalio.exceptions import ActivityError, ApplicationError, FailureError, TemporalError
+from temporalio.exceptions import (
+    ActivityError,
+    ApplicationError,
+    FailureError,
+    TemporalError,
+)
 from temporalio.service import RPCError
 from temporalio.worker import (
     ActivityInboundInterceptor,
@@ -301,7 +306,9 @@ class CustomWorkflowOutboundInterceptor(WorkflowOutboundInterceptor):
         )
 
     # @offload_to_blob_store
-    async def start_child_workflow(self, input: StartChildWorkflowInput) -> ChildWorkflowHandle:
+    async def start_child_workflow(
+        self, input: StartChildWorkflowInput
+    ) -> ChildWorkflowHandle:
         input.args = [offload_if_large(arg) for arg in input.args]
         return await handle_execution_with_errors(
             super().start_child_workflow,
@@ -348,7 +355,9 @@ class CustomOutboundInterceptor(OutboundInterceptor):
     """
 
     # @offload_to_blob_store
-    async def start_workflow(self, input: StartWorkflowInput) -> WorkflowHandle[Any, Any]:
+    async def start_workflow(
+        self, input: StartWorkflowInput
+    ) -> WorkflowHandle[Any, Any]:
         """
         interceptor for outbound workflow calls
         """

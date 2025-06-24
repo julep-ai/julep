@@ -1,18 +1,10 @@
 import inspect
+import time
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import ParamSpec, TypeVar
 
-from prometheus_client import Counter
-
-P = ParamSpec("P")
-T = TypeVar("T")
-
-
-import time
-from typing import ParamSpec, TypeVar
-
-from prometheus_client import Histogram, Summary
+from prometheus_client import Counter, Histogram, Summary
 from prometheus_client.utils import INF
 
 P = ParamSpec("P")

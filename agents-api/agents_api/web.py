@@ -183,7 +183,9 @@ def _get_error_suggestions(error: dict) -> dict:
 
     elif "min_length" in error_type:
         if "limit_value" in error:
-            suggestions["fix"] = f"Value must have at least {error['limit_value']} characters"
+            suggestions["fix"] = (
+                f"Value must have at least {error['limit_value']} characters"
+            )
             try:
                 limit = int(error["limit_value"])
                 suggestions["example"] = "x" * limit
@@ -192,7 +194,9 @@ def _get_error_suggestions(error: dict) -> dict:
 
     elif "max_length" in error_type:
         if "limit_value" in error:
-            suggestions["fix"] = f"Value must have at most {error['limit_value']} characters"
+            suggestions["fix"] = (
+                f"Value must have at most {error['limit_value']} characters"
+            )
             suggestions["note"] = (
                 f"Current value exceeds the maximum length of {error['limit_value']} characters"
             )
@@ -210,7 +214,9 @@ def _get_error_suggestions(error: dict) -> dict:
 
     elif "not_le" in error_type:
         if "limit_value" in error:
-            suggestions["fix"] = f"Value must be less than or equal to {error['limit_value']}"
+            suggestions["fix"] = (
+                f"Value must be less than or equal to {error['limit_value']}"
+            )
             suggestions["example"] = f"{error['limit_value']}"
 
     elif "not_gt" in error_type:
@@ -235,10 +241,14 @@ def _get_error_suggestions(error: dict) -> dict:
         suggestions["fix"] = "Provide valid JSON format"
 
     elif "uuid" in error_type:
-        suggestions["fix"] = "Provide a valid UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)"
+        suggestions["fix"] = (
+            "Provide a valid UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)"
+        )
 
     elif "datetime" in error_type:
-        suggestions["fix"] = "Provide a valid ISO 8601 datetime (e.g., 2023-01-01T12:00:00Z)"
+        suggestions["fix"] = (
+            "Provide a valid ISO 8601 datetime (e.g., 2023-01-01T12:00:00Z)"
+        )
 
     elif "url" in error_type:
         suggestions["fix"] = "Provide a valid URL (e.g., https://example.com)"

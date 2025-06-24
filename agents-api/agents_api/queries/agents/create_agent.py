@@ -101,7 +101,9 @@ async def create_agent_query(
             data.canonical_name or generate_canonical_name(),
             data.name,
             data.about,
-            data.instructions if isinstance(data.instructions, list) else [data.instructions],
+            data.instructions
+            if isinstance(data.instructions, list)
+            else [data.instructions],
             data.model,
             data.metadata or {},
             data.default_settings or {},

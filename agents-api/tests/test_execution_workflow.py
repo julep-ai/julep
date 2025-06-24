@@ -625,7 +625,9 @@ async def test_workflow_tool_call_api_call_test_retry(
 
         # NOTE: super janky but works
         events_strings = [json.dumps(event) for event in events]
-        num_retries = len([event for event in events_strings if "execute_api_call" in event])
+        num_retries = len(
+            [event for event in events_strings if "execute_api_call" in event]
+        )
 
         assert num_retries >= 2
 
@@ -800,7 +802,9 @@ async def test_workflow_wait_for_input_step_start(
             for event in events
             if "ACTIVITY_TASK_SCHEDULED" in event["eventType"]
         ]
-        activities_scheduled = [activity for activity in activities_scheduled if activity]
+        activities_scheduled = [
+            activity for activity in activities_scheduled if activity
+        ]
 
         assert "wait_for_input_step" in activities_scheduled
 
@@ -867,7 +871,9 @@ async def test_workflow_foreach_wait_for_input_step_start(
             for event in events
             if "ACTIVITY_TASK_SCHEDULED" in event["eventType"]
         ]
-        activities_scheduled = [activity for activity in activities_scheduled if activity]
+        activities_scheduled = [
+            activity for activity in activities_scheduled if activity
+        ]
 
         assert "for_each_step" in activities_scheduled
 
@@ -1468,7 +1474,9 @@ async def test_workflow_execute_yaml_task(
     mock_model_response = ModelResponse(
         id="fake_id",
         choices=[
-            Choices(message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"}),
+            Choices(
+                message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"}
+            ),
         ],
         created=0,
         object="text_completion",

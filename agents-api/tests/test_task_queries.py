@@ -268,7 +268,9 @@ async def test_query_list_tasks_sql_invalid_sort_direction(
     assert exc.value.detail == "Invalid sort direction"
 
 
-async def test_query_update_task_sql_exists(pg_dsn, test_developer_id, test_agent, test_task):
+async def test_query_update_task_sql_exists(
+    pg_dsn, test_developer_id, test_agent, test_task
+):
     """Test that a task can be successfully updated."""
 
     pool = await create_db_pool(dsn=pg_dsn)

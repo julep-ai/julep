@@ -72,7 +72,9 @@ def common_db_exceptions(
         and "content already exists" in str(e).lower(): partialclass(
             HTTPException,
             status_code=409,
-            detail=get_operation_message(f"A {resource_name} with this content already exists"),
+            detail=get_operation_message(
+                f"A {resource_name} with this content already exists"
+            ),
         ),
         lambda e: isinstance(e, asyncpg.RaiseError)
         and invalid_ref_re.match(str(e)): _invalid_reference_error,
@@ -131,7 +133,9 @@ def common_db_exceptions(
         asyncpg.InvalidTextRepresentationError: partialclass(
             HTTPException,
             status_code=400,
-            detail=get_operation_message(f"Invalid text format in {resource_name} data"),
+            detail=get_operation_message(
+                f"Invalid text format in {resource_name} data"
+            ),
         ),
         # Numeric value out of range
         asyncpg.NumericValueOutOfRangeError: partialclass(
@@ -153,7 +157,9 @@ def common_db_exceptions(
         asyncpg.NotNullViolationError: partialclass(
             HTTPException,
             status_code=400,
-            detail=get_operation_message(f"Required {resource_name} field cannot be null"),
+            detail=get_operation_message(
+                f"Required {resource_name} field cannot be null"
+            ),
         ),
         # Python standard exceptions
         ValueError: partialclass(
@@ -169,7 +175,9 @@ def common_db_exceptions(
         AttributeError: partialclass(
             HTTPException,
             status_code=404,
-            detail=get_operation_message(f"Required attribute not found for {resource_name}"),
+            detail=get_operation_message(
+                f"Required attribute not found for {resource_name}"
+            ),
         ),
         KeyError: partialclass(
             HTTPException,
@@ -187,7 +195,9 @@ def common_db_exceptions(
             HTTPException,
             status_code=422,
             detail={
-                "message": get_operation_message(f"Validation failed for {resource_name}"),
+                "message": get_operation_message(
+                    f"Validation failed for {resource_name}"
+                ),
                 "code": "validation_error",
                 "details": e.errors(),
             },
@@ -217,24 +227,28 @@ def common_db_exceptions(
     # Add operation-specific exceptions
     if operations:
         if "delete" in operations:
-            exceptions.update({
-                # Handle cases where deletion is blocked by dependent records
-                lambda e: isinstance(e, asyncpg.ForeignKeyViolationError)
-                and "still referenced" in str(e): partialclass(
-                    HTTPException,
-                    status_code=409,
-                    detail=f"Cannot delete {resource_name} because it is still referenced by other records",
-                ),
-            })
+            exceptions.update(
+                {
+                    # Handle cases where deletion is blocked by dependent records
+                    lambda e: isinstance(e, asyncpg.ForeignKeyViolationError)
+                    and "still referenced" in str(e): partialclass(
+                        HTTPException,
+                        status_code=409,
+                        detail=f"Cannot delete {resource_name} because it is still referenced by other records",
+                    ),
+                }
+            )
 
         if "update" in operations:
-            exceptions.update({
-                # Handle cases where update would affect multiple rows
-                asyncpg.CardinalityViolationError: partialclass(
-                    HTTPException,
-                    status_code=409,
-                    detail=f"Update would affect multiple {resource_name} records",
-                ),
-            })
+            exceptions.update(
+                {
+                    # Handle cases where update would affect multiple rows
+                    asyncpg.CardinalityViolationError: partialclass(
+                        HTTPException,
+                        status_code=409,
+                        detail=f"Update would affect multiple {resource_name} records",
+                    ),
+                }
+            )
 
     return exceptions

@@ -48,7 +48,9 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
     # Make sure the current/next targets are valid
     match data.type:
         case "finish_branch" | "finish":
-            assert data.next is None, "Next target must be None for finish/finish_branch"
+            assert data.next is None, (
+                "Next target must be None for finish/finish_branch"
+            )
 
             # FIXME: HACK: Fix this and uncomment
             # The above assertion is now implemented and uncommented

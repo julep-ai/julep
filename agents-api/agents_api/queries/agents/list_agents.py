@@ -11,13 +11,14 @@ from beartype import beartype
 from ...autogen.openapi_model import Agent
 from ...common.utils.db_exceptions import common_db_exceptions
 from ..utils import (
+    build_metadata_filter_conditions,
     pg_query,
     rewrap_exceptions,
     wrap_in_class,
 )
 
-# Define the raw SQL query
-raw_query = """
+# Define the base SQL query without dynamic parts
+base_query = """
 SELECT
     a.agent_id,
     a.developer_id,
@@ -37,13 +38,17 @@ FROM
 LEFT JOIN project_agents pa ON a.agent_id = pa.agent_id AND a.developer_id = pa.developer_id
 LEFT JOIN projects p ON pa.project_id = p.project_id AND pa.developer_id = p.developer_id
 WHERE
-    a.developer_id = $1 {metadata_filter_query}
+    a.developer_id = $1
+"""
+
+# ORDER BY clause template
+order_by_clause = """
 ORDER BY
-    CASE WHEN $4 = 'created_at' AND $5 = 'asc' THEN a.created_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN a.created_at END DESC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'asc' THEN a.updated_at END ASC NULLS LAST,
-    CASE WHEN $4 = 'updated_at' AND $5 = 'desc' THEN a.updated_at END DESC NULLS LAST
-LIMIT $2 OFFSET $3;
+    CASE WHEN $2 = 'created_at' AND $3 = 'asc' THEN a.created_at END ASC NULLS LAST,
+    CASE WHEN $2 = 'created_at' AND $3 = 'desc' THEN a.created_at END DESC NULLS LAST,
+    CASE WHEN $2 = 'updated_at' AND $3 = 'asc' THEN a.updated_at END ASC NULLS LAST,
+    CASE WHEN $2 = 'updated_at' AND $3 = 'desc' THEN a.updated_at END DESC NULLS LAST
+LIMIT $4 OFFSET $5;
 """
 
 
@@ -78,27 +83,30 @@ async def list_agents(
         Tuple of (query, params)
     """
 
-    # AIDEV-NOTE: avoid mutable default; initialize metadata_filter
-    metadata_filter = metadata_filter if metadata_filter is not None else {}
-    # Initialize parameters
+    # Initialize base parameters
     params = [
         developer_id,
-        limit,
-        offset,
         sort_by,
         direction,
+        limit,
+        offset,
     ]
 
-    # Handle metadata filter differently - using JSONB containment
-    agent_query = raw_query.format(
-        metadata_filter_query="AND a.metadata @> $6::jsonb" if metadata_filter else "",
-    )
+    # Start building the query
+    query = base_query
 
-    # If we have metadata filters, safely add them as a parameter
+    # Add metadata filter conditions if provided
     if metadata_filter:
-        params.append(metadata_filter)
+        # Use the existing utility function to build metadata filter conditions
+        filter_conditions, filter_params = build_metadata_filter_conditions(
+            base_params=params,
+            metadata_filter=metadata_filter,
+            table_alias="a.",
+        )
+        query += filter_conditions
+        params = filter_params
 
-    return (
-        agent_query,
-        params,
-    )
+    # Add ORDER BY and LIMIT clauses
+    query += order_by_clause
+
+    return (query, params)

@@ -96,7 +96,9 @@ async def test_workflow_sample_find_selector_start_with_correct_input(
 
             input_data = {
                 "screenshot_base64": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA",
-                "network_requests": [{"request": {}, "response": {"body": "Lady Gaga"}}],
+                "network_requests": [
+                    {"request": {}, "response": {"body": "Lady Gaga"}}
+                ],
                 "parameters": ["name"],
             }
             execution_data = {"input": input_data}

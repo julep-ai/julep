@@ -16,7 +16,9 @@ from ..retry_policies import DEFAULT_RETRY_POLICY
 
 
 @alru_cache(ttl=secrets_cache_ttl)
-async def get_secret_by_name(developer_id: UUID, name: str, decrypt: bool = False) -> Secret:
+async def get_secret_by_name(
+    developer_id: UUID, name: str, decrypt: bool = False
+) -> Secret:
     # FIXME: Should use workflow.in_workflow() instead ?
     try:
         secret = await workflow.execute_activity(

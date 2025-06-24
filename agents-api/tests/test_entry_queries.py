@@ -131,7 +131,9 @@ async def test_query_list_entries_sql_invalid_sort_direction(pg_dsn, test_develo
     assert exc_info.value.detail == "Invalid sort direction"
 
 
-async def test_query_list_entries_sql_session_exists(pg_dsn, test_developer_id, test_session):
+async def test_query_list_entries_sql_session_exists(
+    pg_dsn, test_developer_id, test_session
+):
     """Test the retrieval of entries from the database."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -168,7 +170,9 @@ async def test_query_list_entries_sql_session_exists(pg_dsn, test_developer_id, 
     assert result is not None
 
 
-async def test_query_get_history_sql_session_exists(pg_dsn, test_developer_id, test_session):
+async def test_query_get_history_sql_session_exists(
+    pg_dsn, test_developer_id, test_session
+):
     """Test the retrieval of entry history from the database."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -206,7 +210,9 @@ async def test_query_get_history_sql_session_exists(pg_dsn, test_developer_id, t
     assert result.entries[0].id
 
 
-async def test_query_delete_entries_sql_session_exists(pg_dsn, test_developer_id, test_session):
+async def test_query_delete_entries_sql_session_exists(
+    pg_dsn, test_developer_id, test_session
+):
     """Test the deletion of entries from the database."""
 
     pool = await create_db_pool(dsn=pg_dsn)

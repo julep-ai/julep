@@ -16,7 +16,9 @@ from agents_api.queries.sessions.create_session import create_session
 async def test_chat_check_that_patching_libs_works(patch_embed_acompletion):
     """chat: check that patching libs works"""
     assert (await litellm.acompletion(model="gpt-4o-mini", messages=[])).id == "fake_id"
-    assert (await litellm.aembedding())[0][0] == 1.0  # pytype: disable=missing-parameter
+    assert (await litellm.aembedding())[0][
+        0
+    ] == 1.0  # pytype: disable=missing-parameter
 
 
 async def test_chat_check_that_non_recall_gather_messages_works(
@@ -264,7 +266,9 @@ async def test_chat_test_system_template_merging_logic(
     )
 
     # Create a session with a system template (should override agent's default)
-    session_template = "This is the session's system template: {{session.situation.upper()}}"
+    session_template = (
+        "This is the session's system template: {{session.situation.upper()}}"
+    )
     session2_data = CreateSessionRequest(
         agent=agent.id,
         situation="test session with template",
@@ -395,7 +399,10 @@ async def test_chat_validate_the_recall_options_for_different_modes_in_chat_cont
         chat_context.session.recall_options.trigram_similarity_threshold
         == data.recall_options.trigram_similarity_threshold
     )
-    assert chat_context.session.recall_options.k_multiplier == data.recall_options.k_multiplier
+    assert (
+        chat_context.session.recall_options.k_multiplier
+        == data.recall_options.k_multiplier
+    )
 
     # Update session to have a new recall options to text mode
     data = CreateSessionRequest(
@@ -490,5 +497,7 @@ async def test_chat_validate_the_recall_options_for_different_modes_in_chat_cont
         chat_context.session.recall_options.metadata_filter
         == data.recall_options.metadata_filter
     )
-    assert chat_context.session.recall_options.confidence == data.recall_options.confidence
+    assert (
+        chat_context.session.recall_options.confidence == data.recall_options.confidence
+    )
     assert chat_context.session.recall_options.mmr_strength == 0.5

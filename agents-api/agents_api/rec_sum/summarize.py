@@ -56,7 +56,10 @@ async def summarize_messages(
     offset = 0
 
     # Remove the system prompt if present
-    if chat_session[0]["role"] == "system" and chat_session[0].get("name") != "entities":
+    if (
+        chat_session[0]["role"] == "system"
+        and chat_session[0].get("name") != "entities"
+    ):
         chat_session = chat_session[1:]
 
         # The indices are not matched up correctly

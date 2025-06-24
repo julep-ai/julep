@@ -3,7 +3,11 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from ...autogen.openapi_model import CreateTaskRequest, PatchTaskRequest, UpdateTaskRequest
+from ...autogen.openapi_model import (
+    CreateTaskRequest,
+    PatchTaskRequest,
+    UpdateTaskRequest,
+)
 from ...common.protocol.models import task_to_spec
 from ...common.utils.evaluator import ALLOWED_FUNCTIONS, stdlib
 from ...env import enable_backwards_compatibility_for_syntax
@@ -198,9 +202,9 @@ def validate_py_expression(
     # Find undefined names, excluding locally defined variables
     undefined_names = referenced_names - allowed_names - expected_variables - local_vars
     if undefined_names:
-        issues["undefined_names"].extend([
-            f"Undefined name: '{name}'" for name in undefined_names
-        ])
+        issues["undefined_names"].extend(
+            [f"Undefined name: '{name}'" for name in undefined_names]
+        )
 
     # Check for potentially unsafe operations
     for node in ast.walk(tree):
@@ -324,11 +328,13 @@ def _validate_step_expressions(
             ):
                 issues = validate_py_expression(eval_value)
                 if any(issues.values()):  # If we found any issues
-                    step_issues.append({
-                        "location": f"{loc_prefix}{step_type}.{eval_key}",
-                        "expression": eval_value,
-                        "issues": issues,
-                    })
+                    step_issues.append(
+                        {
+                            "location": f"{loc_prefix}{step_type}.{eval_key}",
+                            "expression": eval_value,
+                            "issues": issues,
+                        }
+                    )
 
     elif step_type == "if":
         # For "if" steps, the condition is the value of the "if" key itself
@@ -336,11 +342,13 @@ def _validate_step_expressions(
         if isinstance(condition, str):
             issues = validate_py_expression(condition)
             if any(issues.values()):
-                step_issues.append({
-                    "location": f"{loc_prefix}{step_type}",
-                    "expression": condition,
-                    "issues": issues,
-                })
+                step_issues.append(
+                    {
+                        "location": f"{loc_prefix}{step_type}",
+                        "expression": condition,
+                        "issues": issues,
+                    }
+                )
 
         # Check "then" and "else" branches for expressions
         for branch in ["then", "else"]:
@@ -356,11 +364,13 @@ def _validate_step_expressions(
         if "if_" in step_data and isinstance(step_data["if_"], str):
             issues = validate_py_expression(step_data["if_"])
             if any(issues.values()):
-                step_issues.append({
-                    "location": f"{loc_prefix}{step_type}.if",
-                    "expression": step_data["if_"],
-                    "issues": issues,
-                })
+                step_issues.append(
+                    {
+                        "location": f"{loc_prefix}{step_type}.if",
+                        "expression": step_data["if_"],
+                        "issues": issues,
+                    }
+                )
 
         # Check then and else branches
         for branch, key in [("then", "then"), ("else", "else_")]:
@@ -375,11 +385,13 @@ def _validate_step_expressions(
         if "case" in step_data and isinstance(step_data["case"], str):
             issues = validate_py_expression(step_data["case"])
             if any(issues.values()):
-                step_issues.append({
-                    "location": f"{loc_prefix}{step_type}.case",
-                    "expression": step_data["case"],
-                    "issues": issues,
-                })
+                step_issues.append(
+                    {
+                        "location": f"{loc_prefix}{step_type}.case",
+                        "expression": step_data["case"],
+                        "issues": issues,
+                    }
+                )
 
         # For match statements, check all cases in "cases" array
         if "cases" in step_data and isinstance(step_data["cases"], list):
@@ -391,17 +403,21 @@ def _validate_step_expressions(
                 ):
                     issues = validate_py_expression(case_item["case"])
                     if any(issues.values()):
-                        step_issues.append({
-                            "location": f"{loc_prefix}{step_type}.cases[{case_idx}].case",
-                            "expression": case_item["case"],
-                            "issues": issues,
-                        })
+                        step_issues.append(
+                            {
+                                "location": f"{loc_prefix}{step_type}.cases[{case_idx}].case",
+                                "expression": case_item["case"],
+                                "issues": issues,
+                            }
+                        )
 
                 # Check for nested structure inside each case's "then" field
                 if "then" in case_item and isinstance(case_item["then"], dict):
                     nested_step = case_item["then"]
                     nested_location = f"{loc_prefix}{step_type}.cases[{case_idx}].then"
-                    nested_issues = _validate_step_expressions(nested_step, nested_location)
+                    nested_issues = _validate_step_expressions(
+                        nested_step, nested_location
+                    )
                     step_issues.extend(nested_issues)
 
     elif step_type in ["foreach", "map"]:
@@ -409,11 +425,13 @@ def _validate_step_expressions(
         if "in" in step_data and isinstance(step_data["in"], str):
             issues = validate_py_expression(step_data["in"])
             if any(issues.values()):
-                step_issues.append({
-                    "location": f"{loc_prefix}{step_type}.in",
-                    "expression": step_data["in"],
-                    "issues": issues,
-                })
+                step_issues.append(
+                    {
+                        "location": f"{loc_prefix}{step_type}.in",
+                        "expression": step_data["in"],
+                        "issues": issues,
+                    }
+                )
 
         # Check for nested structure in do field
         if "do" in step_data and isinstance(step_data["do"], dict):
@@ -432,26 +450,34 @@ def _validate_step_expressions(
             ):
                 issues = validate_py_expression(arg_value)
                 if any(issues.values()):
-                    step_issues.append({
-                        "location": f"{loc_prefix}{step_type}.arguments.{arg_key}",
-                        "expression": arg_value,
-                        "issues": issues,
-                    })
+                    step_issues.append(
+                        {
+                            "location": f"{loc_prefix}{step_type}.arguments.{arg_key}",
+                            "expression": arg_value,
+                            "issues": issues,
+                        }
+                    )
 
     # Also recursively validate any other string values that could be expressions
     for key, value in step_data.items():
         if (
             isinstance(value, str)
-            and (value.strip().startswith(("$", "_")) or "{{" in value or value.strip() == "_")
+            and (
+                value.strip().startswith(("$", "_"))
+                or "{{" in value
+                or value.strip() == "_"
+            )
             and key not in ["if_", "case"]
         ):  # Skip keys we've already checked
             issues = validate_py_expression(value)
             if any(issues.values()):
-                step_issues.append({
-                    "location": f"{loc_prefix}{step_type}.{key}",
-                    "expression": value,
-                    "issues": issues,
-                })
+                step_issues.append(
+                    {
+                        "location": f"{loc_prefix}{step_type}.{key}",
+                        "expression": value,
+                        "issues": issues,
+                    }
+                )
 
     return step_issues
 

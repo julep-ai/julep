@@ -5,18 +5,17 @@ import simpleeval
 from beartype import beartype
 from box import Box
 from openai import BaseModel
-
-# Increase the max string length to 2048000
-simpleeval.MAX_STRING_LENGTH = 2048000
-
-MAX_COLLECTION_SIZE = 1000  # Maximum number of variables allowed in evaluator
-
 from simpleeval import SimpleEval
 from temporalio import activity
 
 from ..exceptions.executions import EvaluateError
 from ..utils.task_validation import backwards_compatibility
 from .evaluator import get_evaluator
+
+# Increase the max string length to 2048000
+simpleeval.MAX_STRING_LENGTH = 2048000
+
+MAX_COLLECTION_SIZE = 1000  # Maximum number of variables allowed in evaluator
 
 
 # Recursive evaluation helper function
@@ -65,7 +64,9 @@ def evaluate_expressions(
     if values is None:
         values = {}
     # Handle PyExpression objects and strings similarly
-    if isinstance(exprs, str) or (hasattr(exprs, "root") and isinstance(exprs.root, str)):
+    if isinstance(exprs, str) or (
+        hasattr(exprs, "root") and isinstance(exprs.root, str)
+    ):
         input_len = 1
     else:
         input_len = len(exprs)
@@ -90,7 +91,9 @@ def evaluate_expressions(
             extra_lambdas[k] = eval(v)
 
     # Turn the nested dict values from pydantic to dicts where possible
-    values = {k: v.model_dump() if isinstance(v, BaseModel) else v for k, v in values.items()}
+    values = {
+        k: v.model_dump() if isinstance(v, BaseModel) else v for k, v in values.items()
+    }
 
     # frozen_box doesn't work coz we need some mutability in the values
     values = Box(values, frozen_box=False, conversion_box=True)

@@ -102,7 +102,9 @@ async def test_task_execution_workflow_handle_function_tool_call_step():
             step=step,
         )
         assert result == WorkflowResult(
-            state=PartialTransition(type="resume", output="function_tool_call_response"),
+            state=PartialTransition(
+                type="resume", output="function_tool_call_response"
+            ),
         )
         workflow.execute_activity.assert_called_once_with(
             task_steps.raise_complete_async,
@@ -156,7 +158,9 @@ async def test_task_execution_workflow_handle_integration_tool_call_step():
     with (
         patch("agents_api.workflows.task_execution.workflow") as workflow,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch(
+            "agents_api.common.protocol.tasks.list_secrets_query"
+        ) as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -222,12 +226,17 @@ async def test_task_execution_workflow_handle_integration_tool_call_step_integra
         ),
     )
     outcome = StepOutcome(
-        output={"type": "integration", "integration": {"name": "tool1", "arguments": {}}},
+        output={
+            "type": "integration",
+            "integration": {"name": "tool1", "arguments": {}},
+        },
     )
     with (
         patch("agents_api.workflows.task_execution.workflow") as workflow,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch(
+            "agents_api.common.protocol.tasks.list_secrets_query"
+        ) as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -301,7 +310,9 @@ async def test_task_execution_workflow_handle_api_call_tool_call_step():
     with (
         patch("agents_api.workflows.task_execution.workflow") as workflow,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch(
+            "agents_api.common.protocol.tasks.list_secrets_query"
+        ) as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -397,7 +408,9 @@ async def test_task_execution_workflow_handle_api_call_tool_call_step_with_metho
     with (
         patch("agents_api.workflows.task_execution.workflow") as workflow,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch(
+            "agents_api.common.protocol.tasks.list_secrets_query"
+        ) as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -684,7 +697,9 @@ async def test_task_execution_workflow_handle_switch_step_index_is_positive():
         result = await wf.handle_step(
             step=step,
         )
-        assert result == WorkflowResult(state=PartialTransition(output="switch_response"))
+        assert result == WorkflowResult(
+            state=PartialTransition(output="switch_response")
+        )
 
 
 async def test_task_execution_workflow_handle_switch_step_index_is_negative():
@@ -766,7 +781,9 @@ async def test_task_execution_workflow_handle_switch_step_index_is_zero():
         result = await wf.handle_step(
             step=step,
         )
-        assert result == WorkflowResult(state=PartialTransition(output="switch_response"))
+        assert result == WorkflowResult(
+            state=PartialTransition(output="switch_response")
+        )
 
 
 async def test_task_execution_workflow_handle_prompt_step_unwrap_is_true():
@@ -928,7 +945,10 @@ async def test_task_execution_workflow_handle_prompt_step_function_call():
     )
     message = {
         "choices": [
-            {"finish_reason": "tool_calls", "message": {"tool_calls": [{"type": "function"}]}},
+            {
+                "finish_reason": "tool_calls",
+                "message": {"tool_calls": [{"type": "function"}]},
+            },
         ],
     }
     outcome = StepOutcome(output=message)
@@ -941,24 +961,28 @@ async def test_task_execution_workflow_handle_prompt_step_function_call():
         assert await wf.handle_step(step=step) == WorkflowResult(
             state=PartialTransition(output="function_call", type="resume"),
         )
-        workflow.execute_activity.assert_has_calls([
-            call(
-                task_steps.raise_complete_async,
-                args=[context, [{"type": "function"}]],
-                schedule_to_close_timeout=timedelta(days=31),
-                retry_policy=DEFAULT_RETRY_POLICY,
-                heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
-            ),
-            call(
-                task_steps.prompt_step,
-                context,
-                schedule_to_close_timeout=timedelta(
-                    seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
+        workflow.execute_activity.assert_has_calls(
+            [
+                call(
+                    task_steps.raise_complete_async,
+                    args=[context, [{"type": "function"}]],
+                    schedule_to_close_timeout=timedelta(days=31),
+                    retry_policy=DEFAULT_RETRY_POLICY,
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
                 ),
-                retry_policy=DEFAULT_RETRY_POLICY,
-                heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
-            ),
-        ])
+                call(
+                    task_steps.prompt_step,
+                    context,
+                    schedule_to_close_timeout=timedelta(
+                        seconds=30
+                        if debug or testing
+                        else temporal_schedule_to_close_timeout,
+                    ),
+                    retry_policy=DEFAULT_RETRY_POLICY,
+                    heartbeat_timeout=timedelta(seconds=temporal_heartbeat_timeout),
+                ),
+            ]
+        )
 
 
 async def test_task_execution_workflow_evaluate_foreach_step_expressions():
@@ -1032,7 +1056,9 @@ async def test_task_execution_workflow_evaluate_foreach_step_expressions():
             new=base_evaluate,
         ):
             result = await wf.eval_step_exprs(
-                ForeachStep(foreach=ForeachDo(in_="$ 1 + 2", do=YieldStep(workflow="wf1"))),
+                ForeachStep(
+                    foreach=ForeachDo(in_="$ 1 + 2", do=YieldStep(workflow="wf1"))
+                ),
             )
 
         assert result == StepOutcome(output=3)
@@ -1263,7 +1289,9 @@ async def test_task_execution_workflow_evaluate_wait_for_input_step_expressions(
             new=base_evaluate,
         ):
             result = await wf.eval_step_exprs(
-                WaitForInputStep(wait_for_input=WaitForInputInfo(info={"x": "$ 1 + 2"})),
+                WaitForInputStep(
+                    wait_for_input=WaitForInputInfo(info={"x": "$ 1 + 2"})
+                ),
             )
 
         assert result == StepOutcome(output={"x": 3})
@@ -1706,9 +1734,13 @@ async def test_task_execution_workflow_evaluate_tool_call_expressions():
             "agents_api.common.protocol.tasks.list_execution_state_data",
             return_value=[],
         ),
-        patch("agents_api.workflows.task_execution.generate_call_id") as generate_call_id,
+        patch(
+            "agents_api.workflows.task_execution.generate_call_id"
+        ) as generate_call_id,
         patch("agents_api.common.protocol.tasks.workflow") as context_workflow,
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets,
+        patch(
+            "agents_api.common.protocol.tasks.list_secrets_query"
+        ) as mock_list_secrets,
     ):
         # Set up the mock to raise the expected exception
         context_workflow.execute_activity.side_effect = _NotInWorkflowEventLoopError(
@@ -1911,4 +1943,6 @@ async def test_task_execution_workflow_evaluate_yield_expressions_assertion():
                 new=base_evaluate,
             ),
         ):
-            await wf.eval_step_exprs(YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main"))
+            await wf.eval_step_exprs(
+                YieldStep(arguments={"x": "$ 1 + 2"}, workflow="main")
+            )

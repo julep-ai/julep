@@ -94,7 +94,9 @@ def test_dollar_sign_variations():
     expression = "$ 1 + 2"
     result = validate_py_expression(expression)
 
-    assert all(len(issues) == 0 for issues in result.values()), "$ with space should be valid"
+    assert all(len(issues) == 0 for issues in result.values()), (
+        "$ with space should be valid"
+    )
 
     # Test $ without space - should NOT be evaluated at all
     expression = "$1 + 2"
@@ -152,7 +154,9 @@ def test_backwards_compatibility_cases():
     expression = "_[0]"
     result = validate_py_expression(expression)
 
-    assert all(len(issues) == 0 for issues in result.values()), "Array indexing should be valid"
+    assert all(len(issues) == 0 for issues in result.values()), (
+        "Array indexing should be valid"
+    )
 
     # Test simple underscore (auto-prepends $)
     expression = "_"

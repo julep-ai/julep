@@ -162,7 +162,9 @@ async def stream_chat_response(
                     **{
                         **choice,
                         "role": choice.get("role", default_role) or default_role,
-                        "finish_reason": choice.get("finish_reason", default_finish_reason)
+                        "finish_reason": choice.get(
+                            "finish_reason", default_finish_reason
+                        )
                         or default_finish_reason,
                     },
                     source="api_response",
@@ -301,7 +303,9 @@ async def chat(
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(
-        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
+        amount=chat_response.usage.total_tokens
+        if chat_response.usage is not None
+        else 0,
     )
 
     return chat_response

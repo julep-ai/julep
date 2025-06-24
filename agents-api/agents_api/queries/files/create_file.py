@@ -149,7 +149,13 @@ async def create_file_query(
 
     # Then create the association if owner info provided
     if owner_type and owner_id:
-        assoc_params = [developer_id, file_id, owner_type, owner_id, data.project or "default"]
+        assoc_params = [
+            developer_id,
+            file_id,
+            owner_type,
+            owner_id,
+            data.project or "default",
+        ]
         queries.append((file_owner_query, assoc_params))
 
     return queries

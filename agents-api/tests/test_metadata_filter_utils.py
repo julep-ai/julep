@@ -72,7 +72,9 @@ async def test_utility_build_metadata_filter_conditions_with_sql_injection_attem
     ]
 
     for metadata_filter in metadata_filters:
-        conditions, params = build_metadata_filter_conditions(base_params, metadata_filter)
+        conditions, params = build_metadata_filter_conditions(
+            base_params, metadata_filter
+        )
 
         # Each key-value pair should be properly parameterized, not included in the SQL directly
         for key, value in metadata_filter.items():

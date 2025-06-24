@@ -31,9 +31,13 @@ async def lifespan(container: FastAPI | ObjectWithState):
     # INIT POSTGRES #
     pg_dsn = os.environ.get("PG_DSN")
 
-    pool = await create_db_pool(pg_dsn, max_size=pool_max_size, min_size=min(pool_max_size, 10))
+    pool = await create_db_pool(
+        pg_dsn, max_size=pool_max_size, min_size=min(pool_max_size, 10)
+    )
 
-    if hasattr(container, "state") and not getattr(container.state, "postgres_pool", None):
+    if hasattr(container, "state") and not getattr(
+        container.state, "postgres_pool", None
+    ):
         container.state.postgres_pool = pool
 
     # INIT S3 #
@@ -54,7 +58,9 @@ async def lifespan(container: FastAPI | ObjectWithState):
         yield
     finally:
         # CLOSE POSTGRES #
-        if hasattr(container, "state") and getattr(container.state, "postgres_pool", None):
+        if hasattr(container, "state") and getattr(
+            container.state, "postgres_pool", None
+        ):
             pool = getattr(container.state, "postgres_pool", None)
             if pool:
                 await pool.close()
@@ -86,7 +92,9 @@ app: FastAPI = FastAPI(
 )
 
 # Enable metrics
-Instrumentator(excluded_handlers=["/metrics", "/docs", "/openapi.json"]).instrument(app).expose(
+Instrumentator(excluded_handlers=["/metrics", "/docs", "/openapi.json"]).instrument(
+    app
+).expose(
     app,
     include_in_schema=False,
 )

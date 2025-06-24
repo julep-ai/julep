@@ -197,7 +197,9 @@ async def test_query_count_executions(
     assert result["count"] > 0
 
 
-async def test_query_create_execution_transition(pg_dsn, test_developer_id, test_execution):
+async def test_query_create_execution_transition(
+    pg_dsn, test_developer_id, test_execution
+):
     pool = await create_db_pool(dsn=pg_dsn)
     scope_id = uuid7()
     result = await create_execution_transition(

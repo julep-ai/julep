@@ -99,6 +99,9 @@ py-modules = [
     "agents_api",
 ]
 
+[tool.ruff.lint]
+ignore = ["SLF001"]
+
 [tool.ty.rules]
 invalid-parameter-default = "warn"
 invalid-argument-type = "warn"

@@ -159,7 +159,9 @@ def from_payload_data(data: bytes, type_hint: type | None = None) -> Any:
         try:
             decoded = type_hint(**decoded.model_dump())
         except Exception as e:
-            logging.warning(f"WARNING: Could not promote {decoded_type} to {type_hint}: {e}")
+            logging.warning(
+                f"WARNING: Could not promote {decoded_type} to {type_hint}: {e}"
+            )
 
     return decoded
 
@@ -198,7 +200,9 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
             return FailedEncodingSentinel(payload_data=error_bytes)
 
     def from_payload(self, payload: Payload, type_hint: type | None = None) -> Any:
-        current_python_version = f"{sys.version_info.major}.{sys.version_info.minor}".encode()
+        current_python_version = (
+            f"{sys.version_info.major}.{sys.version_info.minor}".encode()
+        )
 
         # Check if this is a payload we can handle
         if (

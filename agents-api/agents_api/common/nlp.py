@@ -100,11 +100,15 @@ def extract_keywords(doc: Doc, top_n: int = 25, split_chunks: bool = True) -> li
         ent_keywords.append(text) if span in ent_spans_set else keywords.append(text)
 
     # Normalize keywords by replacing multiple spaces with single space and stripping
-    normalized_ent_keywords = [WHITESPACE_RE.sub(" ", kw).strip() for kw in ent_keywords]
+    normalized_ent_keywords = [
+        WHITESPACE_RE.sub(" ", kw).strip() for kw in ent_keywords
+    ]
     normalized_keywords = [WHITESPACE_RE.sub(" ", kw).strip() for kw in keywords]
 
     if split_chunks:
-        normalized_keywords = [word for kw in normalized_keywords for word in kw.split()]
+        normalized_keywords = [
+            word for kw in normalized_keywords for word in kw.split()
+        ]
 
     # Count frequencies efficiently
     ent_freq = Counter(normalized_ent_keywords)

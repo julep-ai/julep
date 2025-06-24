@@ -11,12 +11,12 @@ from ...common.utils.datetime import utcnow
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# Query to list execution transitions
-list_execution_transitions_query = """
+# Base query to list execution transitions
+base_list_transitions_query = """
 SELECT * FROM transitions
 WHERE
     execution_id = $1
-    AND (current_step).scope_id = $7
+    {scope_filter}
     AND created_at >= $6
     AND created_at >= (select created_at from executions where execution_id = $1 LIMIT 1)
 ORDER BY
@@ -24,7 +24,8 @@ ORDER BY
     CASE WHEN $4 = 'created_at' AND $5 = 'desc' THEN created_at END DESC NULLS LAST
 LIMIT $2 OFFSET $3;
 """
-#  Query to get a single transition
+
+# Query to get a single transition
 get_execution_transition_query = """
 SELECT * FROM transitions
 WHERE
@@ -57,19 +58,21 @@ def _transform(d):
     }
 
 
-@rewrap_exceptions({
-    asyncpg.InvalidRowCountInLimitClauseError: partialclass(
-        HTTPException,
-        status_code=400,
-        detail="Invalid limit clause",
-    ),
-    asyncpg.InvalidRowCountInResultOffsetClauseError: partialclass(
-        HTTPException,
-        status_code=400,
-        detail="Invalid offset clause",
-    ),
-    **common_db_exceptions("transition", ["list"]),
-})
+@rewrap_exceptions(
+    {
+        asyncpg.InvalidRowCountInLimitClauseError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid limit clause",
+        ),
+        asyncpg.InvalidRowCountInResultOffsetClauseError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Invalid offset clause",
+        ),
+        **common_db_exceptions("transition", ["list"]),
+    }
+)
 @wrap_in_class(
     Transition,
     transform=_transform,
@@ -119,10 +122,14 @@ async def list_execution_transitions(
         utcnow() - search_window,
     ]
 
-    query = list_execution_transitions_query
+    # Build scope filter condition
     if scope_id is None:
-        query = query.replace("AND (current_step).scope_id = $7", "")
+        scope_filter = ""
     else:
+        scope_filter = "AND (current_step).scope_id = $7"
         params.append(str(scope_id))
+
+    # Format the query with the appropriate scope filter
+    query = base_list_transitions_query.format(scope_filter=scope_filter)
 
     return (query, params)

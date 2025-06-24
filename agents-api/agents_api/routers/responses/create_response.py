@@ -117,7 +117,9 @@ async def create_response(
         settings.pop("stop")
 
     # Prepare tools for the model - pass through tools as is
-    tools_list = [tool.model_dump() for tool in chat_input.tools] if chat_input.tools else []
+    tools_list = (
+        [tool.model_dump() for tool in chat_input.tools] if chat_input.tools else []
+    )
 
     # top_p is not supported for reasoning models
     if is_reasoning_model(model=settings["model"]) and settings.get("top_p"):
@@ -193,7 +195,9 @@ async def create_response(
                 break
 
             # Process tool calls and get updated messages
-            current_messages = await process_tool_calls(current_messages, tool_call_requests)
+            current_messages = await process_tool_calls(
+                current_messages, tool_call_requests
+            )
 
             performed_tool_calls.extend(tool_call_requests)
             # Make a follow-up call to the model with updated messages
@@ -231,14 +235,16 @@ async def create_response(
             new_entries = []
 
             # Add the user message
-            new_entries.extend([
-                CreateEntryRequest.from_model_input(
-                    model=settings["model"],
-                    **msg,
-                    source="api_request",
-                )
-                for msg in new_messages
-            ])
+            new_entries.extend(
+                [
+                    CreateEntryRequest.from_model_input(
+                        model=settings["model"],
+                        **msg,
+                        source="api_request",
+                    )
+                    for msg in new_messages
+                ]
+            )
 
             # Add all the tool interaction messages
             for msg in all_interaction_messages[len(messages) :]:
@@ -304,7 +310,9 @@ async def create_response(
 
     # Return the response
     # FIXME: Implement streaming for chat
-    chat_response_class = ChunkChatResponse if chat_input.stream else MessageChatResponse
+    chat_response_class = (
+        ChunkChatResponse if chat_input.stream else MessageChatResponse
+    )
 
     chat_response: ChatResponse = chat_response_class(
         id=uuid7(),
@@ -316,7 +324,9 @@ async def create_response(
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(
-        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
+        amount=chat_response.usage.total_tokens
+        if chat_response.usage is not None
+        else 0,
     )
 
     # End chat function

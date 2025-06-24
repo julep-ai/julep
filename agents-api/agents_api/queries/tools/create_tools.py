@@ -68,7 +68,9 @@ async def create_tools(
     """
 
     assert all(
-        getattr(tool, tool.type) is not None for tool in data if hasattr(tool, tool.type)
+        getattr(tool, tool.type) is not None
+        for tool in data
+        if hasattr(tool, tool.type)
     ), "Tool spec must be passed"
 
     tools_data = [

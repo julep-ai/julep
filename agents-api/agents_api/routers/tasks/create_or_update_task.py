@@ -15,7 +15,9 @@ from ...queries.tasks.create_or_update_task import (
 from .router import router
 
 
-@router.post("/agents/{agent_id}/tasks/{task_id}", status_code=HTTP_201_CREATED, tags=["tasks"])
+@router.post(
+    "/agents/{agent_id}/tasks/{task_id}", status_code=HTTP_201_CREATED, tags=["tasks"]
+)
 async def create_or_update_task(
     data: CreateOrUpdateTaskRequest,
     agent_id: UUID,
@@ -27,7 +29,9 @@ async def create_or_update_task(
         if data.input_schema is not None:
             validate(None, data.input_schema)
     except SchemaError:
-        raise HTTPException(detail="Invalid input schema", status_code=HTTP_400_BAD_REQUEST)
+        raise HTTPException(
+            detail="Invalid input schema", status_code=HTTP_400_BAD_REQUEST
+        )
     except ValidationError:
         pass
 

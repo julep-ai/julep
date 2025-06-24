@@ -214,7 +214,9 @@ async def test_query_list_files(pg_dsn, test_developer, test_file):
     assert any(f.id == test_file.id for f in files)
 
 
-async def test_query_list_files_with_project_filter(pg_dsn, test_developer, test_project):
+async def test_query_list_files_with_project_filter(
+    pg_dsn, test_developer, test_project
+):
     pool = await create_db_pool(dsn=pg_dsn)
 
     # Create a file with the project
@@ -293,7 +295,9 @@ async def test_query_list_files_invalid_sort_by(pg_dsn, test_developer, test_fil
     assert exc.value.detail == "Invalid sort field"
 
 
-async def test_query_list_files_invalid_sort_direction(pg_dsn, test_developer, test_file):
+async def test_query_list_files_invalid_sort_direction(
+    pg_dsn, test_developer, test_file
+):
     """Test that listing files with an invalid sort direction raises an exception."""
 
     pool = await create_db_pool(dsn=pg_dsn)

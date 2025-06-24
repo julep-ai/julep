@@ -52,6 +52,8 @@ def add_indices(list_of_dicts, idx_name: str = "index") -> list[dict]:
 
 def get_names_from_session(session) -> dict[str, Any]:
     return {
-        role: next((msg.get("name", None) for msg in session if msg["role"] == role), None)
+        role: next(
+            (msg.get("name", None) for msg in session if msg["role"] == role), None
+        )
         for role in {"user", "assistant", "system"}
     }

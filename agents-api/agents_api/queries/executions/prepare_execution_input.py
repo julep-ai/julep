@@ -60,7 +60,9 @@ SELECT * FROM
             **d["agent"],
         },
         "agent_tools": [
-            {tool["type"]: tool.pop("spec"), **tool} for tool in d["tools"] if tool is not None
+            {tool["type"]: tool.pop("spec"), **tool}
+            for tool in d["tools"]
+            if tool is not None
         ],
         "arguments": d["execution"]["input"],
         "execution": {

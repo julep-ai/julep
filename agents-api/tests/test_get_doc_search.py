@@ -4,7 +4,10 @@ from agents_api.autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from agents_api.common.utils.get_doc_search import get_language, get_search_fn_and_params
+from agents_api.common.utils.get_doc_search import (
+    get_language,
+    get_search_fn_and_params,
+)
 from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid

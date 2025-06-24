@@ -70,7 +70,9 @@ def test_route_update_secret(make_request, test_developer_id):
         "value": "sk_updated_value",
         "metadata": {"updated": True, "timestamp": "now"},
     }
-    update_response = make_request(method="PUT", url=f"/secrets/{secret_id}", json=update_data)
+    update_response = make_request(
+        method="PUT", url=f"/secrets/{secret_id}", json=update_data
+    )
     assert update_response.status_code == 200
     updated_secret = update_response.json()
     assert updated_secret["name"] == updated_name

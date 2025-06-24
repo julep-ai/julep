@@ -8,44 +8,27 @@ from ...autogen.openapi_model import PatchUserRequest, User
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
 from ..projects.project_exists import project_exists
+from ..sql_builder import build_patch_query
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# Define the raw SQL query outside the function
-user_query = """
+# Base query to check project and get user after update
+user_select_query = """
 WITH proj AS (
     -- Find project ID by canonical name if project is being updated
     SELECT project_id, canonical_name
     FROM projects
-    WHERE developer_id = $1 AND canonical_name = $6
-    AND $6 IS NOT NULL
+    WHERE developer_id = $1 AND canonical_name = $2
+    AND $2 IS NOT NULL
 ), project_exists AS (
     -- Check if the specified project exists
     SELECT
         CASE
-            WHEN $6 IS NULL THEN TRUE -- No project specified, so exists check passes
+            WHEN $2 IS NULL THEN TRUE -- No project specified, so exists check passes
             WHEN EXISTS (SELECT 1 FROM proj) THEN TRUE -- Project exists
             ELSE FALSE -- Project specified but doesn't exist
         END AS exists
 ), user_update AS (
-    -- Only proceed with update if project exists
-    UPDATE users
-    SET
-        name = CASE
-            WHEN $3::text IS NOT NULL THEN $3 -- name
-            ELSE name
-        END,
-        about = CASE
-            WHEN $4::text IS NOT NULL THEN $4 -- about
-            ELSE about
-        END,
-        metadata = CASE
-            WHEN $5::jsonb IS NOT NULL THEN metadata || $5 -- metadata
-            ELSE metadata
-        END
-    WHERE developer_id = $1
-    AND user_id = $2
-    AND (SELECT exists FROM project_exists)
-    RETURNING *
+    -- UPDATE_PLACEHOLDER
 ), project_association AS (
     -- Create or update project association if project is being updated
     INSERT INTO project_users (
@@ -56,15 +39,15 @@ WITH proj AS (
     SELECT
         p.project_id,
         $1,
-        $2
-    FROM proj p
+        u.user_id
+    FROM proj p, user_update u
     ON CONFLICT (project_id, user_id) DO NOTHING
     RETURNING 1
 ), old_associations AS (
     -- Remove any previous project associations if we're updating with a new project
     DELETE FROM project_users pu
     WHERE pu.developer_id = $1
-    AND pu.user_id = $2
+    AND pu.user_id IN (SELECT user_id FROM user_update)
     AND EXISTS (SELECT 1 FROM proj) -- Only delete if we have a new project
     AND NOT EXISTS (
         SELECT 1 FROM proj p
@@ -79,7 +62,7 @@ SELECT
         (SELECT canonical_name
          FROM projects p
          JOIN project_users pu ON p.project_id = pu.project_id
-         WHERE pu.developer_id = $1 AND pu.user_id = $2
+         WHERE pu.developer_id = $1 AND pu.user_id = u.user_id
          LIMIT 1),
         'default'
     ) AS project
@@ -118,22 +101,61 @@ async def patch_user_query(
     Returns:
         tuple[str, list]: SQL query and parameters
     """
-    # SQL will return project_exists status in the result
-    # If false, the row won't be updated, and we'll raise an appropriate exception
-    # in the error handling layer
-    params = [
-        developer_id,  # $1
-        user_id,  # $2
-        data.name,  # $3. Will be NULL if not provided
-        data.about,  # $4. Will be NULL if not provided
-        data.metadata,  # $5. Will be NULL if not provided
-        data.project or "default",  # $6. Use default if None is provided
-    ]
+    # Prepare patch data
+    patch_fields = {
+        "name": data.name,
+        "about": data.about,
+    }
 
-    return (
-        user_query,
-        params,
+    # Handle metadata separately (merge operation)
+    if data.metadata is not None:
+        patch_fields["metadata"] = data.metadata
+
+    # Filter out None values
+    update_fields = {k: v for k, v in patch_fields.items() if v is not None}
+
+    # If no fields to update, just return the user
+    if not update_fields:
+        simple_select = """
+        SELECT
+            u.*,
+            COALESCE(
+                (SELECT canonical_name
+                 FROM projects p
+                 JOIN project_users pu ON p.project_id = pu.project_id
+                 WHERE pu.developer_id = $1 AND pu.user_id = $2
+                 LIMIT 1),
+                'default'
+            ) AS project
+        FROM users u
+        WHERE u.user_id = $2 AND u.developer_id = $1;
+        """
+        return (simple_select, [str(developer_id), str(user_id)])
+
+    # Build the UPDATE query
+    # Note: We already have 2 parameters in the outer query ($1 and $2), so start from 3
+    update_query, update_params = build_patch_query(
+        table_name="users",
+        patch_data=update_fields,
+        where_conditions={"user_id": str(user_id), "developer_id": str(developer_id)},
+        returning_fields=["*"],
+        param_offset=2,  # Start from $3 since $1 and $2 are used in the CTE
     )
+
+    # Special handling for metadata - use JSONB merge
+    if data.metadata is not None:
+        # Find metadata in update query and modify it to use merge operator
+        update_query = update_query.replace(
+            '"metadata" = $', '"metadata" = "metadata" || $'
+        )
+
+    # Replace the UPDATE_PLACEHOLDER in the main query
+    final_query = user_select_query.replace("-- UPDATE_PLACEHOLDER", update_query)
+
+    # Combine parameters: developer_id, project_name, then update params
+    all_params = [str(developer_id), data.project or "default", *update_params]
+
+    return (final_query, all_params)
 
 
 async def patch_user(

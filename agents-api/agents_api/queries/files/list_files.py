@@ -69,7 +69,9 @@ async def list_files(
 
     # Add owner filtering
     if owner_type and owner_id:
-        query += f" AND fo.owner_type = ${param_index} AND fo.owner_id = ${param_index + 1}"
+        query += (
+            f" AND fo.owner_type = ${param_index} AND fo.owner_id = ${param_index + 1}"
+        )
         params.extend([owner_type, owner_id])
         param_index += 2
 

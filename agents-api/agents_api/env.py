@@ -33,7 +33,9 @@ max_payload_size: int = env.int(
 enable_backwards_compatibility_for_syntax: bool = env.bool(
     "ENABLE_BACKWARDS_COMPATIBILITY_FOR_SYNTAX", default=True
 )
-max_steps_accessible_in_tasks: int = env.int("MAX_STEPS_ACCESSIBLE_IN_TASKS", default=250)
+max_steps_accessible_in_tasks: int = env.int(
+    "MAX_STEPS_ACCESSIBLE_IN_TASKS", default=250
+)
 gunicorn_cpu_divisor: int = env.int("GUNICORN_CPU_DIVISOR", default=4)
 secrets_cache_ttl: int = env.int("SECRETS_CACHE_TTL", default=120)
 
@@ -73,10 +75,14 @@ pg_dsn: str = env.str(
     "PG_DSN",
     default="postgres://postgres:postgres@0.0.0.0:5432/postgres?sslmode=disable",
 )
-summarization_model_name: str = env.str("SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo")
+summarization_model_name: str = env.str(
+    "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
+)
 
 query_timeout: float = env.float("QUERY_TIMEOUT", default=90.0)
-pool_max_size: int = min(env.int("POOL_MAX_SIZE", default=multiprocessing.cpu_count()), 10)
+pool_max_size: int = min(
+    env.int("POOL_MAX_SIZE", default=multiprocessing.cpu_count()), 10
+)
 
 
 # Auth
@@ -104,14 +110,18 @@ litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
 
 # Embedding service
 # -----------------
-embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="openai/text-embedding-3-large")
+embedding_model_id: str = env.str(
+    "EMBEDDING_MODEL_ID", default="openai/text-embedding-3-large"
+)
 
 embedding_dimensions: int = env.int("EMBEDDING_DIMENSIONS", default=1024)
 
 
 # Integration service
 # -------------------
-integration_service_url: str = env.str("INTEGRATION_SERVICE_URL", default="http://0.0.0.0:8000")
+integration_service_url: str = env.str(
+    "INTEGRATION_SERVICE_URL", default="http://0.0.0.0:8000"
+)
 
 
 # Temporal
@@ -128,7 +138,9 @@ temporal_schedule_to_close_timeout: int = env.int(
     default=3600,
 )
 temporal_heartbeat_timeout: int = env.int("TEMPORAL_HEARTBEAT_TIMEOUT", default=900)
-temporal_metrics_bind_host: str = env.str("TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0")
+temporal_metrics_bind_host: str = env.str(
+    "TEMPORAL_METRICS_BIND_HOST", default="0.0.0.0"
+)
 temporal_metrics_bind_port: int = env.int("TEMPORAL_METRICS_BIND_PORT", default=14000)
 temporal_activity_after_retry_timeout: int = env.int(
     "TEMPORAL_ACTIVITY_AFTER_RETRY_TIMEOUT",
@@ -171,7 +183,9 @@ zerogpt_url: str = env.str(
     "ZEROGPT_URL", default="https://api.zerogpt.com/api/detect/detectText"
 )
 desklib_url: str = env.str("DESKLIB_URL", default="http://35.243.190.233/detect")
-sapling_url: str = env.str("SAPLING_URL", default="https://api.sapling.ai/api/v1/aidetect")
+sapling_url: str = env.str(
+    "SAPLING_URL", default="https://api.sapling.ai/api/v1/aidetect"
+)
 brave_api_key: str = env.str("BRAVE_API_KEY", default=None)
 # Responses Flag
 # ---------------

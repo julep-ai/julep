@@ -39,7 +39,11 @@ async def test_query_list_execution_inputs_data(
                     "step": 0,
                     "scope_id": scope_id,
                 },
-                next={"workflow": f"`main`[0].foreach[{i}]", "step": 0, "scope_id": scope_id},
+                next={
+                    "workflow": f"`main`[0].foreach[{i}]",
+                    "step": 0,
+                    "scope_id": scope_id,
+                },
             )
         )
 
@@ -301,7 +305,10 @@ async def test_query_list_execution_inputs_data_search_window(
     assert transitions_with_search_window[0].output == {"step_step": "step step"}
 
     transitions_without_search_window = await list_execution_inputs_data(
-        execution_id=execution_id, scope_id=scope_id, direction="asc", connection_pool=pool
+        execution_id=execution_id,
+        scope_id=scope_id,
+        direction="asc",
+        connection_pool=pool,
     )
 
     assert len(transitions_without_search_window) == 2
@@ -367,7 +374,10 @@ async def test_query_list_execution_state_data_search_window(
     assert transitions_with_search_window[0].output == {"step_step": "step step"}
 
     transitions_without_search_window = await list_execution_state_data(
-        execution_id=execution_id, scope_id=scope_id, direction="asc", connection_pool=pool
+        execution_id=execution_id,
+        scope_id=scope_id,
+        direction="asc",
+        connection_pool=pool,
     )
 
     assert len(transitions_without_search_window) == 2

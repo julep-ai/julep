@@ -246,7 +246,9 @@ def validate_yield_arguments(cls, v):
         for key, expr in v.items():
             is_valid, error = validate_python_expression(expr)
             if not is_valid:
-                msg = f"Invalid Python expression in yield arguments key '{key}': {error}"
+                msg = (
+                    f"Invalid Python expression in yield arguments key '{key}': {error}"
+                )
                 raise ValueError(msg)
     return v
 
@@ -294,16 +296,20 @@ MapReduceStep.validate_reduce_expression = validate_reduce_expression
 
 _CreateTaskRequest = CreateTaskRequest
 
-CreateTaskRequest.model_config = ConfigDict(**{
-    **_CreateTaskRequest.model_config,
-    "extra": "allow",
-})
+CreateTaskRequest.model_config = ConfigDict(
+    **{
+        **_CreateTaskRequest.model_config,
+        "extra": "allow",
+    }
+)
 
 
 @model_validator(mode="after")
 def validate_subworkflows(self):
     subworkflows = {
-        k: v for k, v in self.model_dump().items() if k not in _CreateTaskRequest.model_fields
+        k: v
+        for k, v in self.model_dump().items()
+        if k not in _CreateTaskRequest.model_fields
     }
 
     for workflow_name, workflow_definition in subworkflows.items():
@@ -487,10 +493,12 @@ class PartialTaskSpecDef(TaskSpecDef):
 
 
 class Task(_Task):
-    model_config = ConfigDict(**{
-        **_Task.model_config,
-        "extra": "allow",
-    })
+    model_config = ConfigDict(
+        **{
+            **_Task.model_config,
+            "extra": "allow",
+        }
+    )
 
 
 # Patch some models to allow extra fields
@@ -524,20 +532,24 @@ _PatchTaskRequest = PatchTaskRequest
 
 
 class PatchTaskRequest(_PatchTaskRequest):
-    model_config = ConfigDict(**{
-        **_PatchTaskRequest.model_config,
-        "extra": "allow",
-    })
+    model_config = ConfigDict(
+        **{
+            **_PatchTaskRequest.model_config,
+            "extra": "allow",
+        }
+    )
 
 
 _UpdateTaskRequest = UpdateTaskRequest
 
 
 class UpdateTaskRequest(_UpdateTaskRequest):
-    model_config = ConfigDict(**{
-        **_UpdateTaskRequest.model_config,
-        "extra": "allow",
-    })
+    model_config = ConfigDict(
+        **{
+            **_UpdateTaskRequest.model_config,
+            "extra": "allow",
+        }
+    )
 
 
 Includable = Literal[

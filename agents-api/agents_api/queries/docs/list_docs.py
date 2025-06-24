@@ -129,9 +129,7 @@ async def list_docs(
         d.created_at"""
 
     # Add sorting and pagination
-    query += (
-        f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
-    )
+    query += f" ORDER BY {sort_by} {direction} LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}"
     params.extend([limit, offset])
 
     return query, params

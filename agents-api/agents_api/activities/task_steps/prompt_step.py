@@ -76,7 +76,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         prompt = await base_evaluate(prompt, context)
 
     # Wrap the prompt in a list if it is not already
-    prompt = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
+    prompt = (
+        prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
+    )
 
     if not isinstance(context.execution_input, ExecutionInput):
         msg = "Expected ExecutionInput type for context.execution_input"
@@ -86,7 +88,9 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     agent_default_settings: dict = context.execution_input.agent.default_settings or {}
 
     agent_model: str = (
-        context.execution_input.agent.model if context.execution_input.agent.model else "gpt-4o"
+        context.execution_input.agent.model
+        if context.execution_input.agent.model
+        else "gpt-4o"
     )
 
     excluded_keys = [

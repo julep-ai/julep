@@ -71,7 +71,9 @@ async def test_render_list_secrets_query_usage_in_render_chat_input(test_develop
     mock_chat_context.get_active_tools.return_value = tools
     mock_chat_context.settings = {"model": "claude-3.5-sonnet"}
     mock_chat_context.get_chat_environment.return_value = {}
-    mock_chat_context.merge_system_template.return_value = "System: Use tools to help the user"
+    mock_chat_context.merge_system_template.return_value = (
+        "System: Use tools to help the user"
+    )
 
     # Mock input data
     session_id = uuid4()
@@ -85,12 +87,18 @@ async def test_render_list_secrets_query_usage_in_render_chat_input(test_develop
         patch(
             "agents_api.routers.sessions.render.prepare_chat_context"
         ) as mock_prepare_chat_context,
-        patch("agents_api.routers.sessions.render.gather_messages") as mock_gather_messages,
-        patch("agents_api.routers.sessions.render.render_template") as mock_render_template,
+        patch(
+            "agents_api.routers.sessions.render.gather_messages"
+        ) as mock_gather_messages,
+        patch(
+            "agents_api.routers.sessions.render.render_template"
+        ) as mock_render_template,
         patch(
             "agents_api.routers.sessions.render.evaluate_expressions"
         ) as mock_render_evaluate_expressions,
-        patch("agents_api.routers.sessions.render.validate_model") as mock_validate_model,
+        patch(
+            "agents_api.routers.sessions.render.validate_model"
+        ) as mock_validate_model,
     ):
         # Set up return values for mocks
         mock_validate_model.return_value = None
@@ -224,7 +232,11 @@ async def test_tasks_list_secrets_query_with_multiple_secrets(test_developer_id)
 
     # Create a proper Agent
     test_agent = Agent(
-        id=uuid4(), name="test_agent", model="gpt-4", created_at=utcnow(), updated_at=utcnow()
+        id=uuid4(),
+        name="test_agent",
+        model="gpt-4",
+        created_at=utcnow(),
+        updated_at=utcnow(),
     )
 
     # Create execution input with the task
@@ -246,7 +258,9 @@ async def test_tasks_list_secrets_query_with_multiple_secrets(test_developer_id)
 
     # Mock the current step to use all tools
     with (
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets_query,
+        patch(
+            "agents_api.common.protocol.tasks.list_secrets_query"
+        ) as mock_list_secrets_query,
         patch(
             "agents_api.common.protocol.tasks.evaluate_expressions"
         ) as mock_evaluate_expressions,
@@ -257,7 +271,9 @@ async def test_tasks_list_secrets_query_with_multiple_secrets(test_developer_id)
         mock_evaluate_expressions.side_effect = lambda spec, values: {
             k: v.replace("$secrets.api_key_1", "sk_test_123")
             .replace("$secrets.api_key_2", "sk_test_456")
-            .replace("$secrets.database_url", "postgresql://user:password@localhost:5432/db")
+            .replace(
+                "$secrets.database_url", "postgresql://user:password@localhost:5432/db"
+            )
             if isinstance(v, str)
             else v
             for k, v in spec.items()
@@ -329,7 +345,11 @@ async def test_tasks_list_secrets_query_in_stepcontext_tools_method(test_develop
 
     # Create a proper Agent
     test_agent = Agent(
-        id=uuid4(), name="test_agent", model="gpt-4", created_at=utcnow(), updated_at=utcnow()
+        id=uuid4(),
+        name="test_agent",
+        model="gpt-4",
+        created_at=utcnow(),
+        updated_at=utcnow(),
     )
 
     # Create execution input with the task
@@ -352,7 +372,9 @@ async def test_tasks_list_secrets_query_in_stepcontext_tools_method(test_develop
     # Mock the current step to use all tools
     with (
         patch.object(step_context, "current_step", MagicMock(tools="all")),
-        patch("agents_api.common.protocol.tasks.list_secrets_query") as mock_list_secrets_query,
+        patch(
+            "agents_api.common.protocol.tasks.list_secrets_query"
+        ) as mock_list_secrets_query,
     ):
         # Set mock return value
         mock_list_secrets_query.return_value = test_secrets

@@ -28,7 +28,9 @@ from uuid_extensions import uuid7
 # Fixtures from conftest.py: pg_dsn, test_agent, test_developer_id, test_session, test_user
 
 
-async def test_query_create_session_sql(pg_dsn, test_developer_id, test_agent, test_user):
+async def test_query_create_session_sql(
+    pg_dsn, test_developer_id, test_agent, test_user
+):
     """Test that a session can be successfully created."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -119,7 +121,9 @@ async def test_query_list_sessions(pg_dsn, test_developer_id, test_session):
     assert any(s.id == test_session.id for s in result)
 
 
-async def test_query_list_sessions_with_filters(pg_dsn, test_developer_id, test_session):
+async def test_query_list_sessions_with_filters(
+    pg_dsn, test_developer_id, test_session
+):
     """Test listing sessions with specific filters."""
 
     pool = await create_db_pool(dsn=pg_dsn)
@@ -184,7 +188,9 @@ async def test_query_update_session_sql(
     assert updated_session.forward_tool_calls is True
 
 
-async def test_query_patch_session_sql(pg_dsn, test_developer_id, test_session, test_agent):
+async def test_query_patch_session_sql(
+    pg_dsn, test_developer_id, test_session, test_agent
+):
     """Test that a session can be successfully patched."""
 
     pool = await create_db_pool(dsn=pg_dsn)

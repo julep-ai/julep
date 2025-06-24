@@ -13,64 +13,29 @@ from ...autogen.openapi_model import Agent, PatchAgentRequest
 from ...common.utils.db_exceptions import common_db_exceptions
 from ...metrics.counters import query_metrics
 from ..projects.project_exists import project_exists
+from ..sql_builder import build_patch_query
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
-# Define the raw SQL query
-agent_query = """
+# Base query to check project and get agent after update
+agent_select_query = """
 WITH proj AS (
     -- Find project ID by canonical name if project is being updated
     SELECT project_id, canonical_name
     FROM projects
-    WHERE developer_id = $1 AND canonical_name = $11
-    AND $11 IS NOT NULL
+    WHERE developer_id = $1 AND canonical_name = $2
+    AND $2 IS NOT NULL
 ),
 project_exists AS (
     -- Check if project exists when being updated
     SELECT
         CASE
-            WHEN $11 IS NULL THEN TRUE -- No project specified, so exists check passes
+            WHEN $2 IS NULL THEN TRUE -- No project specified, so exists check passes
             WHEN EXISTS (SELECT 1 FROM proj) THEN TRUE -- Project exists
             ELSE FALSE -- Project specified but doesn't exist
         END AS exists
 ),
 updated_agent AS (
-    UPDATE agents
-    SET
-        name = CASE
-            WHEN $3::text IS NOT NULL THEN $3
-            ELSE name
-        END,
-        about = CASE
-            WHEN $4::text IS NOT NULL THEN $4
-            ELSE about
-        END,
-        metadata = CASE
-            WHEN $5::jsonb IS NOT NULL THEN metadata || $5
-            ELSE metadata
-        END,
-        model = CASE
-            WHEN $6::text IS NOT NULL THEN $6
-            ELSE model
-        END,
-        default_settings = CASE
-            WHEN $7::jsonb IS NOT NULL THEN $7
-            ELSE default_settings
-        END,
-        default_system_template = CASE
-            WHEN $8::text IS NOT NULL THEN $8
-            ELSE default_system_template
-        END,
-        instructions = CASE
-            WHEN $9::text[] IS NOT NULL THEN $9
-            ELSE instructions
-        END,
-        canonical_name = CASE
-            WHEN $10::citext IS NOT NULL THEN $10
-            ELSE canonical_name
-        END
-    WHERE agent_id = $2 AND developer_id = $1
-    AND (SELECT exists FROM project_exists)
-    RETURNING *
+    -- UPDATE_PLACEHOLDER
 )
 SELECT
     (SELECT exists FROM project_exists) AS project_exists,
@@ -96,7 +61,7 @@ async def patch_agent_query(
     agent_id: UUID,
     developer_id: UUID,
     data: PatchAgentRequest,
-) -> tuple[str, list]:
+) -> tuple[str, list] | list[tuple[str, list]]:
     """
     Constructs the SQL query to partially update an agent's details.
 
@@ -106,26 +71,70 @@ async def patch_agent_query(
         data (PatchAgentRequest): A dictionary of fields to update.
 
     Returns:
-        tuple[str, list]: A tuple containing the SQL query and its parameters.
+        tuple[str, list] | list[tuple[str, list]]: SQL query(ies) and parameters.
     """
-    params = [
-        developer_id,
-        agent_id,
-        data.name,
-        data.about,
-        data.metadata,
-        data.model,
-        data.default_settings,
-        data.default_system_template,
-        [data.instructions] if isinstance(data.instructions, str) else data.instructions,
-        data.canonical_name,
-        data.project,
-    ]
+    # Prepare patch data, handling special cases
+    patch_fields = {
+        "name": data.name,
+        "about": data.about,
+        "model": data.model,
+        "default_settings": data.default_settings,
+        "default_system_template": data.default_system_template,
+        "canonical_name": data.canonical_name,
+    }
 
-    return (
-        agent_query,
-        params,
+    # Handle metadata (merge operation)
+    if data.metadata is not None:
+        patch_fields["metadata"] = data.metadata
+
+    # Handle instructions (convert string to array if needed)
+    if data.instructions is not None:
+        patch_fields["instructions"] = (
+            [data.instructions]
+            if isinstance(data.instructions, str)
+            else data.instructions
+        )
+
+    # Filter out None values
+    update_fields = {k: v for k, v in patch_fields.items() if v is not None}
+
+    # If no fields to update, just return the agent
+    if not update_fields:
+        simple_select = """
+        SELECT
+            a.*,
+            p.canonical_name as project
+        FROM agents a
+        LEFT JOIN project_agents pa ON a.developer_id = pa.developer_id AND a.agent_id = pa.agent_id
+        LEFT JOIN projects p ON pa.project_id = p.project_id
+        WHERE a.agent_id = $1 AND a.developer_id = $2;
+        """
+        return (simple_select, [agent_id, developer_id])
+
+    # Build the UPDATE query - cast UUIDs to proper types
+    # Note: We already have 2 parameters in the outer query ($1 and $2), so start from 3
+    update_query, update_params = build_patch_query(
+        table_name="agents",
+        patch_data=update_fields,
+        where_conditions={"agent_id": str(agent_id), "developer_id": str(developer_id)},
+        returning_fields=["*"],
+        param_offset=2,  # Start from $3 since $1 and $2 are used in the CTE
     )
+
+    # Special handling for metadata - use JSONB merge
+    if data.metadata is not None:
+        # Find metadata in update query and modify it to use merge operator
+        update_query = update_query.replace(
+            '"metadata" = $', '"metadata" = "metadata" || $'
+        )
+
+    # Replace the UPDATE_PLACEHOLDER in the main query
+    final_query = agent_select_query.replace("-- UPDATE_PLACEHOLDER", update_query)
+
+    # Combine parameters: developer_id, project_name, then update params
+    all_params = [str(developer_id), data.project, *update_params]
+
+    return (final_query, all_params)
 
 
 async def patch_agent(
