@@ -99,11 +99,14 @@ async def create_doc(
         final_params_owner = []
 
         for idx, content in enumerate(data.content):
+            # Convert Content object to string if needed
+            content_str = content.root if hasattr(content, "root") else content
+
             doc_params = [
                 developer_id,
                 current_doc_id,
                 data.title,
-                content,
+                content_str,  # Use the string value
                 idx,
                 modality,
                 embedding_model,
@@ -135,12 +138,15 @@ async def create_doc(
         ))
 
     else:
+        # Convert Content object to string if needed
+        content_str = data.content.root if hasattr(data.content, "root") else data.content
+
         # Create the doc record
         doc_params = [
             developer_id,
             current_doc_id,
             data.title,
-            data.content,
+            content_str,  # Use the string value
             index,
             modality,
             embedding_model,

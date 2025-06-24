@@ -190,8 +190,55 @@ model_list:
     model: "groq/gemma2-9b-it"
     tags: ["paid"]
     api_key: os.environ/GROQ_API_KEY
-    
-    
+
+- model_name: "llama-3.1-8b-instant"
+  litellm_params:
+    model: "groq/llama-3.1-8b-instant"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "llama-3.3-70b-versatile"
+  litellm_params:
+    model: "groq/llama-3.3-70b-versatile"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "deepseek-r1-distill-llama-70b"
+  litellm_params:
+    model: "groq/deepseek-r1-distill-llama-70b"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "meta-llama/llama-4-maverick-17b-128e-instruct"
+  litellm_params:
+    model: "groq/meta-llama/llama-4-maverick-17b-128e-instruct"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "meta-llama/llama-4-scout-17b-16e-instruct"
+  litellm_params:
+    model: "groq/meta-llama/llama-4-scout-17b-16e-instruct"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "mistral-saba-24b"
+  litellm_params:
+    model: "groq/mistral-saba-24b"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "qwen-qwq-32b"
+  litellm_params:
+    model: "groq/qwen-qwq-32b"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "qwen/qwen3-32b"
+  litellm_params:
+    model: "groq/qwen/qwen3-32b"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
 # OpenRouter models
 - model_name: "mistral-large-2411"
   litellm_params:
@@ -306,6 +353,18 @@ model_list:
 - model_name: "cerebras/llama-4-scout-17b-16e-instruct"
   litellm_params:
     model: "cerebras/llama-4-scout-17b-16e-instruct"
+    api_key: os.environ/CEREBRAS_API_KEY
+    tags: ["paid"]
+
+- model_name: "cerebras/deepseek-r1-distill-llama-70b"
+  litellm_params:
+    model: "cerebras/deepseek-r1-distill-llama-70b"
+    api_key: os.environ/CEREBRAS_API_KEY
+    tags: ["paid"]
+
+- model_name: "cerebras/qwen-3-32b"
+  litellm_params:
+    model: "cerebras/qwen-3-32b"
     api_key: os.environ/CEREBRAS_API_KEY
     tags: ["paid"]
 
