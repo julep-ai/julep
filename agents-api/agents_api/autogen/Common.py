@@ -9,6 +9,16 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
+class Content(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[str, Field(max_length=30000)]
+    """
+    Contents of a document
+    """
+
+
 class JinjaTemplate(RootModel[str]):
     model_config = ConfigDict(
         populate_by_name=True,

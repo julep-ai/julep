@@ -48,7 +48,16 @@ model Doc {
 /** Payload for creating a doc */
 @withVisibility("create")
 model CreateDocRequest {
-    ...Doc;
+    ...HasId;
+    ...HasMetadata;
+    ...HasCreatedAt;
+
+    /** Title describing what this document contains */
+    @maxLength(800)
+    title: string;
+
+    /** Contents of the document. Each string is limited to 30k characters. */
+    content: content | content[];
 
     /** Instruction for the embedding model. */
     embed_instruction: string | null = null;
@@ -105,78 +114,78 @@ model EmbedQueryResponse {
     vectors: float[][];
 }
 
-model BaseDocSearchRequest {
+// Base search parameters common to all search types
+model BaseSearchParams {
     /** The limit of documents to return */
     @minValue(1)
     @maxValue(50)
     limit: uint16 = 10;
-
-    /** The language to be used for text-only search. Support for other languages coming soon. */
-    lang: string = "en-US";
-
+    
     /** Metadata filter to apply to the search */
     metadata_filter: MetadataFilter = #{};
 }
 
-model VectorDocSearchRequest extends BaseDocSearchRequest {
+// Text search specific parameters
+model TextSearchParams {
+    /** Text to use in the search */
+    text: string;
+    
+    /** The language to be used for text search. Support for other languages coming soon. */
+    lang: string = "en-US";
+    
+    /** Trigram similarity threshold for fuzzy matching. Set to null to disable trigram search. */
+    @minValue(0)
+    @maxValue(1)
+    trigram_similarity_threshold: float | null = null;
+}
+
+// Vector search specific parameters  
+model VectorSearchParams {
+    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
+    vector: float[];
+    
     /** The confidence cutoff level */
     @minValue(-1)
     @maxValue(1)
     confidence: float = 0.5;
-
-    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[];
-
-    text?: never;
-
+    
     /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
     @minValue(0)
     @maxValueExclusive(1)
     mmr_strength?: float = 0.5;
 }
 
-model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
-    /** Text to use in the search. */
-    text: string;
-
-    vector?: never;
-
-    /** The trigram_similarity_threshold cutoff level */
-    @minValue(0)
-    @maxValue(1)
-    trigram_similarity_threshold: float = 0.6;
-}
-
-model HybridDocSearchRequest extends BaseDocSearchRequest {
-    /** The confidence cutoff level */
-    @minValue(-1)
-    @maxValue(1)
-    confidence: float = 0.5;
-
+// Hybrid search parameters
+model HybridSearchParams {
     /** The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector; */
     @minValue(0)
     @maxValue(1)
     alpha: float = 0.5;
+    
+    /** The k_multiplier to control how many intermediate results to fetch before final scoring */
+    @minValue(1)
+    @maxValue(10)
+    k_multiplier: int8 = 5;
+}
 
-    /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
-    text: string;
+// Composed search request models
+model TextOnlyDocSearchRequest {
+    ...BaseSearchParams;
+    ...TextSearchParams;
+    vector?: never;
+}
 
-    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[];
+model VectorDocSearchRequest {
+    ...BaseSearchParams;
+    ...VectorSearchParams;
+    text?: never;
+}
 
-    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
-    @minValue(0)
-    @maxValueExclusive(1)
-    mmr_strength?: float = 0.5;
-
-    /** The trigram_similarity_threshold cutoff level */
-    @minValue(0)
-    @maxValue(1)
-    trigram_similarity_threshold: float = 0.6;
-
-    /** The k_multiplier cutoff level to control how many intermediate results to fetch before final scoring */
-    @minValue(0)
-    k_multiplier: int8 = 7;
+model HybridDocSearchRequest {
+    ...BaseSearchParams;
+    ...TextSearchParams;
+    ...VectorSearchParams;
+    ...HybridSearchParams;
 }
 
 alias DocSearchRequest = VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest;

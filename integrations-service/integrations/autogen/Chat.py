@@ -157,7 +157,8 @@ class Content(BaseModel):
     """
 
 
-ContentItem = Content
+class ContentItem(Content):
+    pass
 
 
 class ContentItemModel(BaseModel):
@@ -168,22 +169,28 @@ class ContentItemModel(BaseModel):
     source: Source
 
 
-ContentItemModel1 = Content
+class ContentItemModel1(Content):
+    pass
 
 
-ContentItemModel2 = ContentItemModel
+class ContentItemModel2(ContentItemModel):
+    pass
 
 
-ContentItemModel3 = Content
+class ContentItemModel3(Content):
+    pass
 
 
-ContentItemModel4 = ContentItemModel
+class ContentItemModel4(ContentItemModel):
+    pass
 
 
-ContentItemModel5 = Content
+class ContentItemModel5(Content):
+    pass
 
 
-ContentItemModel6 = ContentItemModel
+class ContentItemModel6(ContentItemModel):
+    pass
 
 
 class ContentModel(BaseModel):
@@ -199,7 +206,8 @@ class ContentModel(BaseModel):
     content: list[ContentItem] | list[ContentItemModel]
 
 
-ContentModel1 = Content
+class ContentModel1(Content):
+    pass
 
 
 class ContentModel2(BaseModel):
@@ -215,7 +223,8 @@ class ContentModel2(BaseModel):
     content: list[ContentItemModel1] | list[ContentItemModel2]
 
 
-ContentModel3 = Content
+class ContentModel3(Content):
+    pass
 
 
 class ContentModel4(BaseModel):
@@ -231,7 +240,8 @@ class ContentModel4(BaseModel):
     content: list[ContentItemModel3] | list[ContentItemModel4]
 
 
-ContentModel5 = Content
+class ContentModel5(Content):
+    pass
 
 
 class ContentModel6(BaseModel):

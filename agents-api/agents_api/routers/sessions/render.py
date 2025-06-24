@@ -103,6 +103,11 @@ async def render_chat_input(
         for ref in doc_references
     ]
 
+    # Add metadata from chat_input to the environment
+    # AIDEV-NOTE: metadata field enables dynamic instructions at message level via system template
+    if hasattr(chat_input, "metadata") and chat_input.metadata:
+        env["metadata"] = chat_input.metadata
+
     # Render the system message
     if system_template := chat_context.merge_system_template(
         chat_context.session.system_template,
