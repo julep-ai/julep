@@ -1,15 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 目录</h3>
-
-- [为什么选择Julep？](#为什么选择julep)
-- [开始使用](#开始使用)
-- [文档和示例](#文档和示例)
-- [社区和贡献](#社区和贡献)
-- [许可证](#许可证)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 <sup><div align="center">
   <!-- Keep these links. Translations will automatically update with the README. -->
   [Deutsch](https://www.readme-i18n.com/julep-ai/julep?lang=de) | 
@@ -55,6 +43,19 @@
 </div>
 
 **立即试用Julep：** 访问 **[Julep网站](https://julep.ai)** · 在 **[Julep控制台](https://dashboard.julep.ai)** 开始使用 (免费API密钥) · 阅读 **[文档](https://docs.julep.ai/introduction/julep)**
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<h3>📖 目录</h3>
+
+- [为什么选择Julep？](#为什么选择julep)
+- [开始使用](#开始使用)
+- [文档和示例](#文档和示例)
+- [社区和贡献](#社区和贡献)
+- [许可证](#许可证)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
@@ -110,8 +111,6 @@ Julep是一个构建**基于智能代理的AI工作流**的开源平台，远超
 * **[API和SDK参考](https://docs.julep.ai/api-reference/)：** 查找所有SDK方法和REST API端点的详细参考，以将Julep集成到你的应用程序中。
 * **[教程](https://docs.julep.ai/tutorials/)：** 构建真实应用程序的分步指南（例如搜索网络的研究代理、旅行规划助手或具有自定义知识的聊天机器人）。
 * **[Cookbook食谱](https://github.com/julep-ai/julep/tree/dev/cookbooks)：** 探索**Julep Cookbook**以获取现成的示例工作流和代理。这些食谱展示了常见模式和用例 - 通过示例学习的绝佳方式。*浏览此存储库中的 [`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks) 目录以获取示例代理定义。*
-
-<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 

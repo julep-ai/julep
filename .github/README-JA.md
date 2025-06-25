@@ -1,15 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 目次</h3>
-
-- [なぜJulepなのか？](#なぜjulepなのか)
-- [はじめに](#はじめに)
-- [ドキュメントと例](#ドキュメントと例)
-- [コミュニティと貢献](#コミュニティと貢献)
-- [ライセンス](#ライセンス)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 <sup><div align="center">
   <!-- Keep these links. Translations will automatically update with the README. -->
   [Deutsch](https://www.readme-i18n.com/julep-ai/julep?lang=de) | 
@@ -55,6 +43,19 @@
 </div>
 
 **今すぐJulepを試す：** **[Julepウェブサイト](https://julep.ai)** をご覧ください · **[Julepダッシュボード](https://dashboard.julep.ai)** で始める (無料APIキー) · **[ドキュメント](https://docs.julep.ai/introduction/julep)** を読む
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<h3>📖 目次</h3>
+
+- [なぜJulepなのか？](#なぜjulepなのか)
+- [はじめに](#はじめに)
+- [ドキュメントと例](#ドキュメントと例)
+- [コミュニティと貢献](#コミュニティと貢献)
+- [ライセンス](#ライセンス)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
@@ -110,8 +111,6 @@ Julepの起動と実行は簡単です：
 * **[API・SDK リファレンス](https://docs.julep.ai/api-reference/)：** JulepをアプリケーションNに統合するためのすべてのSDKメソッドとREST APIエンドポイントの詳細なリファレンスを見つけます。
 * **[チュートリアル](https://docs.julep.ai/tutorials/)：** 実際のアプリケーション構築のためのステップバイステップガイド（例：Webを検索するリサーチエージェント、旅行計画アシスタント、カスタム知識を持つチャットボット）。
 * **[クックブックレシピ](https://github.com/julep-ai/julep/tree/dev/cookbooks)：** 既製のワークフローとエージェントの例については**Julep Cookbook**を探索してください。これらのレシピは一般的なパターンと使用例を示しています - 例から学ぶ素晴らしい方法です。*サンプルエージェント定義については、このリポジトリの[`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks)ディレクトリを参照してください。*
-
-<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 

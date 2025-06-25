@@ -1,15 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table des matières</h3>
-
-- [Pourquoi Julep ?](#pourquoi-julep-)
-- [Commencer](#commencer)
-- [Documentation et exemples](#documentation-et-exemples)
-- [Communauté et contributions](#communauté-et-contributions)
-- [Licence](#licence)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 <sup><div align="center">
   <!-- Keep these links. Translations will automatically update with the README. -->
   [Deutsch](https://www.readme-i18n.com/julep-ai/julep?lang=de) | 
@@ -55,6 +43,19 @@
 </div>
 
 **Essayez Julep dès aujourd'hui :** Visitez le **[Site Web de Julep](https://julep.ai)** · Commencez sur le **[Tableau de Bord Julep](https://dashboard.julep.ai)** (clé API gratuite) · Lisez la **[Documentation](https://docs.julep.ai/introduction/julep)**
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<h3>📖 Table des matières</h3>
+
+- [Pourquoi Julep ?](#pourquoi-julep-)
+- [Commencer](#commencer)
+- [Documentation et exemples](#documentation-et-exemples)
+- [Communauté et contributions](#communauté-et-contributions)
+- [Licence](#licence)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
@@ -110,8 +111,6 @@ Vous voulez plonger plus profondément ? La **[Documentation Julep](https://docs
 * **[Référence API et SDK](https://docs.julep.ai/api-reference/) :** Trouvez une référence détaillée pour toutes les méthodes SDK et les points de terminaison de l'API REST pour intégrer Julep dans vos applications.
 * **[Tutoriels](https://docs.julep.ai/tutorials/) :** Guides étape par étape pour construire des applications réelles (ex. un agent de recherche qui parcourt le web, un assistant de planification de voyage, ou un chatbot avec des connaissances personnalisées).
 * **[Recettes de livre de cuisine](https://github.com/julep-ai/julep/tree/dev/cookbooks) :** Explorez le **Livre de cuisine Julep** pour des exemples de flux de travail et d'agents prêts à l'emploi. Ces recettes démontrent des modèles communs et des cas d'usage - un excellent moyen d'apprendre par l'exemple. *Parcourez le répertoire [`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks) dans ce dépôt pour des définitions d'agents d'exemple.*
-
-<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
