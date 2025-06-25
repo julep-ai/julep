@@ -50,7 +50,7 @@ async def search_user_docs(
         **params,
     )
 
-    if include_embeddings == False:
+    if include_embeddings is False:
         docs = strip_embeddings(docs)
 
     # Apply MMR if enabled and applicable
@@ -107,7 +107,7 @@ async def search_agent_docs(
         **params,
     )
 
-    if include_embeddings == False:
+    if include_embeddings is False:
         docs = strip_embeddings(docs)
 
     # Apply MMR if enabled and applicable

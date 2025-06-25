@@ -47,7 +47,11 @@ def get_search_fn_and_params(
     search_params,
     *,
     extract_keywords: bool = False,
-) -> tuple[Any, dict[str, float | int | str | dict[str, float] | list[float]] | None, dict[str, bool] | None]:
+) -> tuple[
+    Any,
+    dict[str, float | int | str | dict[str, float] | list[float]] | None,
+    dict[str, bool] | None,
+]:
     search_fn, params, post_processing = None, None, None
 
     match search_params:

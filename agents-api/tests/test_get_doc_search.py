@@ -78,6 +78,7 @@ def _():
         "include_embeddings": True,
     }
 
+
 @test("get_search_fn_and_params: vector search request with MMR")
 def _():
     request = VectorDocSearchRequest(
@@ -100,6 +101,7 @@ def _():
     assert post_processing == {
         "include_embeddings": True,
     }
+
 
 @test("get_search_fn_and_params: hybrid search request")
 def _():
@@ -135,6 +137,7 @@ def _():
         "include_embeddings": True,
     }
 
+
 @test("get_search_fn_and_params: hybrid search request with MMR")
 def _():
     request = HybridDocSearchRequest(
@@ -168,6 +171,7 @@ def _():
     assert post_processing == {
         "include_embeddings": True,
     }
+
 
 @test("get_search_fn_and_params: hybrid search request with invalid language")
 def _():
