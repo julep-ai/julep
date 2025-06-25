@@ -1,22 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
-
-  - [
-    
-    ·
-    
-    ·
-    
-  ](#%C2%B7%0A----%0A----%C2%B7)
-- [Why Julep?](#why-julep)
-- [Getting Started](#getting-started)
-- [Documentation and Examples](#documentation-and-examples)
-- [Community and Contributions](#community-and-contributions)
-- [License](#license)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 <sup><div align="center">
   <!-- Keep these links. Translations will automatically update with the README. -->
   [Deutsch](https://www.readme-i18n.com/julep-ai/julep?lang=de) | 
@@ -63,7 +44,20 @@
 
 **Try Julep Today:** Visit the **[Julep Website](https://julep.ai)** · Get started on the **[Julep Dashboard](https://dashboard.julep.ai)** (free API key) · Read the **[Documentation](https://docs.julep.ai/introduction/julep)**
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<h3>📖 Table of Contents</h3>
+
+- [Why Julep?](#why-julep)
+- [Getting Started](#getting-started)
+- [Documentation and Examples](#documentation-and-examples)
+- [Community and Contributions](#community-and-contributions)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## Why Julep?
 
@@ -80,7 +74,7 @@ Julep is an open-source platform for building **agent-based AI workflows** that 
 
 *Focus on your AI logic and creativity, while Julep takes care of the heavy lifting!* <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/2c0eef4b-7b75-42bd-9722-4bea97a2d532" width="20">
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## Getting Started
 <p>
@@ -106,7 +100,7 @@ That’s it! Your first AI agent can be up and running in minutes. For a complet
 
 > **Note:** Julep also offers a command-line interface (CLI) (currently in beta for Python) to manage workflows and agents. If you prefer a no-code approach or want to script common tasks, see the [Julep CLI docs](https://docs.julep.ai/responses/quickstart#cli-installation) for details.
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## Documentation and Examples
 
@@ -118,7 +112,7 @@ Looking to dive deeper? The **[Julep Documentation](https://docs.julep.ai)** cov
 * **[Tutorials](https://docs.julep.ai/tutorials/):** Step-by-step guides for building real applications (e.g. a research agent that searches the web, a trip-planning assistant, or a chatbot with custom knowledge).
 * **[Cookbook Recipes](https://github.com/julep-ai/julep/tree/dev/cookbooks):** Explore the **Julep Cookbook** for ready-made example workflows and agents. These recipes demonstrate common patterns and use cases – a great way to learn by example. *Browse the [`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks) directory in this repository for sample agent definitions.*
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## Community and Contributions
 
