@@ -166,7 +166,7 @@ async def gather_messages(
         **params,
     )
 
-    if include_embeddings == False:
+    if include_embeddings is False:
         doc_references = strip_embeddings(doc_references)
 
     # Apply MMR if enabled and applicable
