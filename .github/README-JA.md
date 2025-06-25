@@ -2,13 +2,6 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 目次</h3>
 
-  - [
-    
-    ·
-    
-    ·
-    
-  ](#%C2%B7%0A----%0A----%C2%B7)
 - [なぜJulepなのか？](#なぜjulepなのか)
 - [はじめに](#はじめに)
 - [ドキュメントと例](#ドキュメントと例)
@@ -63,7 +56,7 @@
 
 **今すぐJulepを試す：** **[Julepウェブサイト](https://julep.ai)** をご覧ください · **[Julepダッシュボード](https://dashboard.julep.ai)** で始める (無料APIキー) · **[ドキュメント](https://docs.julep.ai/introduction/julep)** を読む
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## なぜJulepなのか？
 
@@ -80,7 +73,7 @@ Julepは、単純なプロンプトのチェーンをはるかに超えた**エ�
 
 *AIロジックと創造性に集中し、重労働はJulepにお任せください！* <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/2c0eef4b-7b75-42bd-9722-4bea97a2d532" width="20">
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## はじめに
 <p>
@@ -106,7 +99,7 @@ Julepの起動と実行は簡単です：
 
 > **注意：** Julepはワークフローとエージェントを管理するためのコマンドラインインターface（CLI）も提供しています（現在Pythonのベータ版）。ノーコードアプローチを好む場合や一般的なタスクをスクリプト化したい場合は、詳細について[Julep CLIドキュメント](https://docs.julep.ai/responses/quickstart#cli-installation)を参照してください。
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## ドキュメントと例
 
@@ -118,9 +111,9 @@ Julepの起動と実行は簡単です：
 * **[チュートリアル](https://docs.julep.ai/tutorials/)：** 実際のアプリケーション構築のためのステップバイステップガイド（例：Webを検索するリサーチエージェント、旅行計画アシスタント、カスタム知識を持つチャットボット）。
 * **[クックブックレシピ](https://github.com/julep-ai/julep/tree/dev/cookbooks)：** 既製のワークフローとエージェントの例については**Julep Cookbook**を探索してください。これらのレシピは一般的なパターンと使用例を示しています - 例から学ぶ素晴らしい方法です。*サンプルエージェント定義については、このリポジトリの[`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks)ディレクトリを参照してください。*
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## コミュニティと貢献
 

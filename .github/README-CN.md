@@ -2,13 +2,6 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <h3>📖 目录</h3>
 
-  - [
-    
-    ·
-    
-    ·
-    
-  ](#%C2%B7%0A----%0A----%C2%B7)
 - [为什么选择Julep？](#为什么选择julep)
 - [开始使用](#开始使用)
 - [文档和示例](#文档和示例)
@@ -63,7 +56,7 @@
 
 **立即试用Julep：** 访问 **[Julep网站](https://julep.ai)** · 在 **[Julep控制台](https://dashboard.julep.ai)** 开始使用 (免费API密钥) · 阅读 **[文档](https://docs.julep.ai/introduction/julep)**
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## 为什么选择Julep？
 
@@ -80,7 +73,7 @@ Julep是一个构建**基于智能代理的AI工作流**的开源平台，远超
 
 *专注于你的AI逻辑和创意，而把繁重的工作交给Julep！* <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/2c0eef4b-7b75-42bd-9722-4bea97a2d532" width="20">
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## 开始使用
 <p>
@@ -106,7 +99,7 @@ Julep是一个构建**基于智能代理的AI工作流**的开源平台，远超
 
 > **注意：** Julep还提供命令行界面（CLI）（当前为Python的beta版）来管理工作流和代理。如果你喜欢无代码方法或想要脚本化常见任务，请参见 [Julep CLI文档](https://docs.julep.ai/responses/quickstart#cli-installation) 了解详情。
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## 文档和示例
 
@@ -118,9 +111,9 @@ Julep是一个构建**基于智能代理的AI工作流**的开源平台，远超
 * **[教程](https://docs.julep.ai/tutorials/)：** 构建真实应用程序的分步指南（例如搜索网络的研究代理、旅行规划助手或具有自定义知识的聊天机器人）。
 * **[Cookbook食谱](https://github.com/julep-ai/julep/tree/dev/cookbooks)：** 探索**Julep Cookbook**以获取现成的示例工作流和代理。这些食谱展示了常见模式和用例 - 通过示例学习的绝佳方式。*浏览此存储库中的 [`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks) 目录以获取示例代理定义。*
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
-<img src="https://private-user-images.githubusercontent.com/112978092/456212419-e8e13991-c0fe-46f7-a1db-5969da909dda.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTAxOTUwNzcsIm5iZiI6MTc1MDE5NDc3NywicGF0aCI6Ii8xMTI5NzgwOTIvNDU2MjEyNDE5LWU4ZTEzOTkxLWMwZmUtNDZmNy1hMWRiLTU5NjlkYTkwOWRkYS5naWY_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNjE3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDYxN1QyMTEyNTdaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wOTYzMWEwNDBlNzkwYzc2NDg4OTFmNzUwMjljZDQ5Y2JiZWIzMjMxOGM4MDc3N2I3YTlhNDlkYjY0OWY2YmIyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.EmG9Ba0fnv-EF2FtkbnY0uVmRJROynLtTg2W9wzGuu4">
+<img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
 ## 社区和贡献
 
