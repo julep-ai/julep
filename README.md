@@ -1,3 +1,22 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<h3>📖 Table of Contents</h3>
+
+  - [
+    
+    ·
+    
+    ·
+    
+  ](#%C2%B7%0A----%0A----%C2%B7)
+- [Why Julep?](#why-julep)
+- [Getting Started](#getting-started)
+- [Documentation and Examples](#documentation-and-examples)
+- [Community and Contributions](#community-and-contributions)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <sup><div align="center">
   <!-- Keep these links. Translations will automatically update with the README. -->
   [Deutsch](https://www.readme-i18n.com/julep-ai/julep?lang=de) | 
