@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from langcodes import Language
 
 from ...autogen.openapi_model import (
+    DocReference,
     HybridDocSearchRequest,
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
@@ -127,3 +128,13 @@ def get_search_fn_and_params(
 
     # Note: connection_pool will be passed separately by the caller
     return search_fn, params, post_processing
+
+@beartype
+def strip_embeddings(
+    docs: list[DocReference] | DocReference,
+) -> list[DocReference] | DocReference:
+    if isinstance(docs, list):
+        docs = [strip_embeddings(doc) for doc in docs]
+    else:
+        docs.snippet.embedding = None
+    return docs

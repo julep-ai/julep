@@ -12,10 +12,9 @@ from ...autogen.openapi_model import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from ...common.utils.get_doc_search import get_search_fn_and_params
+from ...common.utils.get_doc_search import get_search_fn_and_params, strip_embeddings
 from ...common.utils.mmr import apply_mmr_to_docs
 from ...dependencies.developer_id import get_developer_id
-from ..utils.doc_utils import strip_embeddings
 from .router import router
 
 
