@@ -129,6 +129,7 @@ def get_search_fn_and_params(
     # Note: connection_pool will be passed separately by the caller
     return search_fn, params, post_processing
 
+
 @beartype
 def strip_embeddings(
     docs: list[DocReference] | DocReference,
