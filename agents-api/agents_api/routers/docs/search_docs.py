@@ -15,6 +15,7 @@ from ...autogen.openapi_model import (
 from ...common.utils.get_doc_search import get_search_fn_and_params
 from ...common.utils.mmr import apply_mmr_to_docs
 from ...dependencies.developer_id import get_developer_id
+from ..utils.doc_utils import strip_embeddings
 from .router import router
 
 
@@ -32,13 +33,14 @@ async def search_user_docs(
         x_developer_id (UUID): The unique identifier of the developer associated with the user.
         search_params (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest): The parameters for the search.
         user_id (UUID): The unique identifier of the user associated with the documents.
-
     Returns:
         DocSearchResponse: The search results.
     """
 
     # Get the search function and params here
-    search_fn, params = get_search_fn_and_params(search_params)
+    search_fn, params, post_processing = get_search_fn_and_params(search_params)
+
+    include_embeddings = post_processing.get("include_embeddings", True)
 
     start = time.time()
     # Get the docs here
@@ -47,6 +49,9 @@ async def search_user_docs(
         owners=[("user", user_id)],
         **params,
     )
+
+    if include_embeddings == False:
+        docs = strip_embeddings(docs)
 
     # Apply MMR if enabled and applicable
     if (
@@ -84,14 +89,15 @@ async def search_agent_docs(
     Parameters:
         x_developer_id (UUID): The unique identifier of the developer associated with the agent.
         search_params (TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest): The parameters for the search.
-        agent_id (UUID): The unique identifier of the agent associated with the documents.
-
+        agent_id (UUID): The umnique identifier of the agent associated with the documents.
     Returns:
         DocSearchResponse: The search results.
     """
 
     # Get the search function and params here
-    search_fn, params = get_search_fn_and_params(search_params)
+    search_fn, params, post_processing = get_search_fn_and_params(search_params)
+
+    include_embeddings = post_processing.get("include_embeddings", True)
 
     start = time.time()
     # Get the docs here
@@ -100,6 +106,9 @@ async def search_agent_docs(
         owners=[("agent", agent_id)],
         **params,
     )
+
+    if include_embeddings == False:
+        docs = strip_embeddings(docs)
 
     # Apply MMR if enabled and applicable
     if (
