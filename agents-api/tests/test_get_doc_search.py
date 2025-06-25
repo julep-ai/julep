@@ -39,7 +39,7 @@ def _():
         trigram_similarity_threshold=0.4,
     )
 
-    search_fn, params = get_search_fn_and_params(request)
+    search_fn, params, post_processing = get_search_fn_and_params(request)
 
     assert search_fn == search_docs_by_text
     assert params == {
@@ -49,6 +49,9 @@ def _():
         "search_language": "english_unaccent",
         "extract_keywords": False,
         "trigram_similarity_threshold": 0.4,
+    }
+    assert post_processing == {
+        "include_embeddings": True,
     }
 
 
@@ -62,7 +65,7 @@ def _():
         mmr_strength=0,
     )
 
-    search_fn, params = get_search_fn_and_params(request)
+    search_fn, params, post_processing = get_search_fn_and_params(request)
 
     assert search_fn == search_docs_by_embedding
     assert params == {
@@ -71,7 +74,9 @@ def _():
         "confidence": 0.8,
         "metadata_filter": {"field": "value"},
     }
-
+    assert post_processing == {
+        "include_embeddings": True,
+    }
 
 @test("get_search_fn_and_params: vector search request with MMR")
 def _():
@@ -83,7 +88,7 @@ def _():
         mmr_strength=0.5,
     )
 
-    search_fn, params = get_search_fn_and_params(request)
+    search_fn, params, post_processing = get_search_fn_and_params(request)
 
     assert search_fn == search_docs_by_embedding
     assert params == {
@@ -92,7 +97,9 @@ def _():
         "confidence": 0.8,
         "metadata_filter": {"field": "value"},
     }
-
+    assert post_processing == {
+        "include_embeddings": True,
+    }
 
 @test("get_search_fn_and_params: hybrid search request")
 def _():
@@ -109,7 +116,7 @@ def _():
         k_multiplier=7,
     )
 
-    search_fn, params = get_search_fn_and_params(request)
+    search_fn, params, post_processing = get_search_fn_and_params(request)
 
     assert search_fn == search_docs_hybrid
     assert params == {
@@ -124,7 +131,9 @@ def _():
         "trigram_similarity_threshold": 0.4,
         "k_multiplier": 7,
     }
-
+    assert post_processing == {
+        "include_embeddings": True,
+    }
 
 @test("get_search_fn_and_params: hybrid search request with MMR")
 def _():
@@ -141,7 +150,7 @@ def _():
         k_multiplier=7,
     )
 
-    search_fn, params = get_search_fn_and_params(request)
+    search_fn, params, post_processing = get_search_fn_and_params(request)
 
     assert search_fn == search_docs_hybrid
     assert params == {
@@ -156,7 +165,9 @@ def _():
         "trigram_similarity_threshold": 0.4,
         "k_multiplier": 7,
     }
-
+    assert post_processing == {
+        "include_embeddings": True,
+    }
 
 @test("get_search_fn_and_params: hybrid search request with invalid language")
 def _():
@@ -174,7 +185,7 @@ def _():
     )
 
     with raises(HTTPException) as exc:
-        _search_fn, _params = get_search_fn_and_params(request)
+        _search_fn, _params, _post_processing = get_search_fn_and_params(request)
 
     assert exc.raised.status_code == 422
     assert exc.raised.detail == "Invalid ISO 639 language code."
