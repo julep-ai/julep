@@ -10,10 +10,11 @@
 
 Julep is a serverless platform for building AI workflows and agents. It helps data and ML teams orchestrate complex AI operations, manage state across interactions, and integrate with existing data infrastructure and tools. Key components:
 
-- **agents-api**: Core service for agent definitions and task execution
-- **memory-store**: Persistent storage with PostgreSQL and vector capabilities
-- **workflow engine**: Temporal-based execution of complex, multi-step tasks
-- **integrations**: Connectors to external services and tools
+- **src/ts-api**: Core service for agent definitions and task execution
+- **src/memory-store**: Persistent storage with PostgreSQL and vector capabilities
+- **src/scheduler**: Temporal-based workflow engine for execution
+- **src/integrations-service**: Connectors to external services and tools
+- **src/**: All core service modules are now organized under the src/ directory
 
 **Golden rule**: When unsure about implementation details or requirements, ALWAYS consult the developer rather than making assumptions.
 
@@ -24,7 +25,7 @@ Julep is a serverless platform for building AI workflows and agents. It helps da
 | #: | AI *may* do                                                            | AI *must NOT* do                                                                    |
 |---|------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
 | G-0 | Whenever unsure about something that's related to the project, ask the developer for clarification before making changes.    |  ❌ Write changes or use tools when you are not sure about something project specific, or if you don't have context for a particular feature/decision. |
-| G-1 | Generate code **only inside** relevant source directories (e.g., `agents_api/` for the main API, `cli/src/` for the CLI, `integrations/` for integration-specific code) or explicitly pointed files.    | ❌ Touch `tests/`, `SPEC.md`, or any `*_spec.py` / `*.ward` files (humans own tests & specs). |
+| G-1 | Generate code **only inside** relevant source directories (e.g., `src/agents-api/agents_api/` for the main API, `src/cli/src/` for the CLI, `src/integrations-service/` for integration-specific code) or explicitly pointed files.    | ❌ Touch `tests/`, `SPEC.md`, or any `*_spec.py` / `*.ward` files (humans own tests & specs). |
 | G-2 | Add/update **`AIDEV-NOTE:` anchor comments** near non-trivial edited code. | ❌ Delete or mangle existing `AIDEV-` comments.                                     |
 | G-3 | Follow lint/style configs (`pyproject.toml`, `.ruff.toml`, `.pre-commit-config.yaml`). Use the project's configured linter, if available, instead of manually re-formatting code. | ❌ Re-format code to any other style.                                               |
 | G-4 | For changes >300 LOC or >3 files, **ask for confirmation**.            | ❌ Refactor large modules without human guidance.                                     |
@@ -82,20 +83,20 @@ async def process_data(data: dict) -> Result:
 
 ## 4. Project layout & Core Components
 
-| Directory               | Description                                       |
-| ----------------------- | ------------------------------------------------- |
-| `agents-api/`           | FastAPI service & Temporal activities             |
-| `memory-store/`         | PostgreSQL + TimescaleDB schemas & migrations     |
-| `blob-store/`           | S3-compatible object storage for files            |
-| `integrations-service/` | Adapters for external services (browsers, APIs)   |
-| `scheduler/`            | Temporal workflow engine for execution            |
-| `gateway/`              | API gateway (routing, request handling)           |
-| `llm-proxy/`            | LiteLLM proxy for language models                 |
-| `monitoring/`           | Prometheus & Grafana                              |
-| `typespec/`             | **Source-of-truth** API specifications (TypeSpec) |
-| `sdks/`                 | Node.js & Python client SDKs                      |
+| Directory                         | Description                                       |
+| --------------------------------- | ------------------------------------------------- |
+| `src/agents-api/`             | FastAPI service & Temporal activities             |
+| `src/memory-store/`           | PostgreSQL + TimescaleDB schemas & migrations     |
+| `src/blob-store/`             | S3-compatible object storage for files            |
+| `src/integrations-service/`   | Adapters for external services (browsers, APIs)   |
+| `src/scheduler/`              | Temporal workflow engine for execution            |
+| `src/gateway/`                | API gateway (routing, request handling)           |
+| `src/llm-proxy/`              | LiteLLM proxy for language models                 |
+| `src/monitoring/`             | Prometheus & Grafana                              |
+| `src/typespec/`               | **Source-of-truth** API specifications (TypeSpec) |
+| `sdks/`                           | Node.js & Python client SDKs                      |
 
-See `CONTRIBUTING.md` for a full architecture diagram.
+See `.github/CONTRIBUTING.md` for a full architecture diagram.
 
 **Key domain models**:
 - **Agents**: AI agent definitions with instructions and tools
@@ -146,8 +147,8 @@ async def render_feed(...):
 
 ## 7. API models & codegen
 
-*   To modify API models (e.g., in `agents_api/autogen/`), **edit TypeSpec files** in `typespec/`.
-*   **Regenerate code** after TypeSpec changes: `bash scripts/generate_openapi_code.sh` (from project root).
+*   To modify API models (e.g., in `src/agents-api/agents_api/autogen/`), **edit TypeSpec files** in `src/typespec/`.
+*   **Regenerate code** after TypeSpec changes: `bash src/scripts/generate_openapi_code.sh` (from project root).
 *   **Do NOT manually edit** generated files (e.g., in `autogen/` directories) as they will be overwritten.
 
 **API pattern examples**:
@@ -190,7 +191,7 @@ async def create_entry(
 
 *   Use descriptive test names: `@test("Descriptive name of what is being tested")`.
 *   Activate virtual environment: `source .venv/bin/activate`.
-*   Ensure correct working directory (e.g., `agents-api/`) and `PYTHONPATH=$PWD` for script-based tests.
+*   Ensure correct working directory (e.g., `src/agents-api/`) and `PYTHONPATH=$PWD` for script-based tests.
 *   Filter tests: `poe test --search "pattern_to_match"` (do NOT use `-p`).
 *   Limit failures for faster feedback: `poe test --fail-limit 1 --search "pattern_to_match"`.
 
@@ -212,7 +213,7 @@ async def create_entry(
 *   Wrong current working directory (CWD) or `PYTHONPATH` for commands/tests (e.g., ensure you are in `agents-api/` not root for some `agents-api` tasks).
 *   Large AI refactors in a single commit (makes `git bisect` difficult).
 *   Delegating test/spec writing entirely to AI (can lead to false confidence).
-*   **Note about `src/`**: Only the `cli` component has a `src/` directory. For `agents-api`, code is directly in `agents_api/`. Follow the existing pattern for each component.
+*   **Note about `src/`**: Only the `cli` component has a `src/` directory. For `src/agents-api`, code is directly in `agents_api/`. Follow the existing pattern for each component.
 
 ---
 
@@ -231,31 +232,31 @@ Components (e.g., `agents-api`, `julep-cli`, `integrations-service`) are version
 This section provides pointers to important files and common patterns within the codebase.
 
 *   **API Route Definitions**:
-    *   Location: `agents-api/routers/` (e.g., `agents-api/routers/sessions.py`)
+    *   Location: `src/agents-api/agents_api/routers/` (e.g., `src/agents-api/agents_api/routers/sessions.py`)
     *   Pattern: FastAPI routers, Pydantic models for request/response, dependency injection.
 *   **Typed Exceptions**:
-    *   Location: `agents-api/common/exceptions/`
+    *   Location: `src/agents-api/agents_api/common/exceptions/`
     *   Pattern: Custom exception classes inheriting from base exceptions.
 *   **Pydantic Models**:
     *   Location: Used extensively across services, often in `models.py` files within component directories (e.g., `agents_api/common/protocol/`), or directly in router/activity files.
     *   Pattern: Data validation, serialization, and settings management.
 *   **Temporal Workflows & Activities**:
-    *   Location: `agents-api/workflows/` (workflow definitions) and `agents-api/activities/` (activity implementations).
+    *   Location: `src/agents-api/agents_api/workflows/` (workflow definitions) and `src/agents-api/agents_api/activities/` (activity implementations).
     *   Pattern: Define complex, stateful operations using Temporal's primitives.
 *   **Database Queries & Models (Memory Store)**:
-    *   Location: `agents-api/queries/` (for SQL query builders/files) and `memory-store/` (for schema migrations).
+    *   Location: `src/agents-api/agents_api/queries/` (for SQL query builders/files) and `src/memory-store/` (for schema migrations).
     *   Pattern: Asyncpg for database interaction, often with helper functions for CRUD operations.
 
 ---
 
 ## 14. Domain-Specific Terminology
 
-*   **Agent**: An AI entity with specific instructions, tools, and capabilities, defined via API. Core model in `typespec/agents/models.tsp`.
-*   **Task**: A definition of a workflow composed of multiple steps that an agent can execute. Core model in `typespec/tasks/models.tsp`.
-*   **Tool**: A specific capability or integration an agent can use (e.g., web search, API call). Defined in `typespec/tools/`.
-*   **Session**: A container for a sequence of interactions (entries) with an agent, maintaining context. Core model in `typespec/sessions/models.tsp`.
-*   **Entry**: A single message or event within a session (e.g., user input, agent response). Core model in `typespec/entries/models.tsp`.
-*   **Execution**: The runtime instance and state of a task being performed by an agent. Core model in `typespec/executions/models.tsp`.
+*   **Agent**: An AI entity with specific instructions, tools, and capabilities, defined via API. Core model in `src/typespec/agents/models.tsp`.
+*   **Task**: A definition of a workflow composed of multiple steps that an agent can execute. Core model in `src/typespec/tasks/models.tsp`.
+*   **Tool**: A specific capability or integration an agent can use (e.g., web search, API call). Defined in `src/typespec/tools/`.
+*   **Session**: A container for a sequence of interactions (entries) with an agent, maintaining context. Core model in `src/typespec/sessions/models.tsp`.
+*   **Entry**: A single message or event within a session (e.g., user input, agent response). Core model in `src/typespec/entries/models.tsp`.
+*   **Execution**: The runtime instance and state of a task being performed by an agent. Core model in `src/typespec/executions/models.tsp`.
 *   **POE (PoeThePoet)**: The task runner used in this project for development tasks like formatting, linting, testing, and code generation (configured in `pyproject.toml`).
 *   **TypeSpec**: The language used to define API schemas. It is the source of truth for API models, which are then generated into Python Pydantic models in `autogen/` directories.
 *   **Ward**: The primary Python testing framework used for unit and integration tests in most components (e.g., `agents-api`, `cli`).

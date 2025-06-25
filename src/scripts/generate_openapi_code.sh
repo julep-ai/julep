@@ -27,7 +27,7 @@ generate_json_schema () {
   curl -sL http://dev.julep.ai/api/openapi.json | jq -f ./schemas/walk.jq --arg target "${1}" > $2
 }
 
-cd typespec/ && \
+cd src/typespec/ && \
   tsp compile .
 cd -
 
