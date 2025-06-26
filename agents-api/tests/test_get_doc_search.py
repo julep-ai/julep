@@ -1,16 +1,21 @@
+from uuid import uuid4
+
+from agents_api.autogen.Docs import DocOwner, DocReference, Snippet
 from agents_api.autogen.openapi_model import (
     HybridDocSearchRequest,
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from agents_api.common.utils.get_doc_search import get_language, get_search_fn_and_params, strip_embeddings
+from agents_api.common.utils.get_doc_search import (
+    get_language,
+    get_search_fn_and_params,
+    strip_embeddings,
+)
 from agents_api.queries.docs.search_docs_by_embedding import search_docs_by_embedding
 from agents_api.queries.docs.search_docs_by_text import search_docs_by_text
 from agents_api.queries.docs.search_docs_hybrid import search_docs_hybrid
 from fastapi import HTTPException
 from ward import raises, test
-from agents_api.autogen.Docs import DocReference, DocOwner, Snippet
-from uuid import uuid4
 
 
 @test("get_language: valid language code returns lowercase language name")
@@ -292,17 +297,13 @@ def _():
         id=uuid4(),
         owner=DocOwner(id=uuid4(), role="user"),
         title="Test Document",
-        snippet=Snippet(
-            index=0,
-            content="Test content",
-            embedding=[0.1, 0.2, 0.3, 0.4, 0.5]
-        ),
-        distance=0.8
+        snippet=Snippet(index=0, content="Test content", embedding=[0.1, 0.2, 0.3, 0.4, 0.5]),
+        distance=0.8,
     )
-    
+
     # Test the function
     result = strip_embeddings(doc)
-    
+
     # Assertions
     assert isinstance(result, DocReference)
     assert result.snippet.embedding is None
@@ -319,16 +320,12 @@ def _():
         id=uuid4(),
         owner=DocOwner(id=uuid4(), role="agent"),
         title="Test Document",
-        snippet=Snippet(
-            index=1,
-            content="Test content without embedding",
-            embedding=None
-        )
+        snippet=Snippet(index=1, content="Test content without embedding", embedding=None),
     )
-    
+
     # Test the function
     result = strip_embeddings(doc)
-    
+
     # Assertions
     assert isinstance(result, DocReference)
     assert result.snippet.embedding is None
@@ -344,31 +341,23 @@ def _():
             id=uuid4(),
             owner=DocOwner(id=uuid4(), role="user"),
             title="Document 1",
-            snippet=Snippet(
-                index=0,
-                content="Content 1",
-                embedding=[0.1, 0.2, 0.3]
-            )
+            snippet=Snippet(index=0, content="Content 1", embedding=[0.1, 0.2, 0.3]),
         ),
         DocReference(
             id=uuid4(),
             owner=DocOwner(id=uuid4(), role="agent"),
             title="Document 2",
-            snippet=Snippet(
-                index=1,
-                content="Content 2",
-                embedding=[0.4, 0.5, 0.6]
-            )
-        )
+            snippet=Snippet(index=1, content="Content 2", embedding=[0.4, 0.5, 0.6]),
+        ),
     ]
-    
+
     # Test the function
     result = strip_embeddings(docs)
-    
+
     # Assertions
     assert isinstance(result, list)
     assert len(result) == 2
-    
+
     for i, doc in enumerate(result):
         assert isinstance(doc, DocReference)
         assert doc.snippet.embedding is None
@@ -385,30 +374,24 @@ def _():
             owner=DocOwner(id=uuid4(), role="user"),
             title="Document with embedding",
             snippet=Snippet(
-                index=0,
-                content="Content with embedding",
-                embedding=[0.1, 0.2, 0.3]
-            )
+                index=0, content="Content with embedding", embedding=[0.1, 0.2, 0.3]
+            ),
         ),
         DocReference(
             id=uuid4(),
             owner=DocOwner(id=uuid4(), role="agent"),
             title="Document without embedding",
-            snippet=Snippet(
-                index=1,
-                content="Content without embedding",
-                embedding=None
-            )
-        )
+            snippet=Snippet(index=1, content="Content without embedding", embedding=None),
+        ),
     ]
-    
+
     # Test the function
     result = strip_embeddings(docs)
-    
+
     # Assertions
     assert isinstance(result, list)
     assert len(result) == 2
-    
+
     for doc in result:
         assert isinstance(doc, DocReference)
         assert doc.snippet.embedding is None
@@ -418,10 +401,10 @@ def _():
 def _():
     # Test with empty list
     docs = []
-    
+
     # Test the function
     result = strip_embeddings(docs)
-    
+
     # Assertions
     assert isinstance(result, list)
     assert len(result) == 0
