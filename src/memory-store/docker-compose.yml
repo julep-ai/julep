@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
 
   vectorizer-worker:
-    image: timescale/pgai-vectorizer-worker:latest
+    image: timescale/pgai-vectorizer-worker:v0.10.5
     environment:
       - PGAI_VECTORIZER_WORKER_DB_URL=postgres://postgres:${MEMORY_STORE_PASSWORD:-julep_secure_password}@memory-store:5432/postgres
       - OPENAI_API_KEY=${OPENAI_API_KEY:?OPENAI_API_KEY is required}
