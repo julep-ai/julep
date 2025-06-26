@@ -31,8 +31,8 @@ cd src/typespec/ && \
   tsp compile .
 cd -
 
-generate_json_schema CreateTaskRequest ./schemas/create_task_request.json
-generate_json_schema CreateAgentRequest ./schemas/create_agent_request.json
+generate_json_schema CreateTaskRequest src/schemas/create_task_request.json
+generate_json_schema CreateAgentRequest src/schemas/create_agent_request.json
 
 cd agents-api && \
   codegen_then_format
