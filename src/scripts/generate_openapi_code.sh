@@ -20,11 +20,11 @@ codegen_then_format () {
 }
 
 generate_json_schema_local () {
-  \cat openapi.yaml | yq -o json | jq -f ./schemas/walk.jq --arg target "${1}" > $2
+  \cat openapi.yaml | yq -o json | jq -f src/schemas/walk.jq --arg target "${1}" > $2
 }
 
 generate_json_schema () {
-  curl -sL http://dev.julep.ai/api/openapi.json | jq -f ./schemas/walk.jq --arg target "${1}" > $2
+  curl -sL http://dev.julep.ai/api/openapi.json | jq -f src/schemas/walk.jq --arg target "${1}" > $2
 }
 
 cd src/typespec/ && \
@@ -34,10 +34,10 @@ cd -
 generate_json_schema CreateTaskRequest src/schemas/create_task_request.json
 generate_json_schema CreateAgentRequest src/schemas/create_agent_request.json
 
-cd agents-api && \
+cd src/agents-api && \
   codegen_then_format
 cd -
 
-cd integrations-service && \
+cd src/integrations-service && \
   codegen_then_format
 cd -
