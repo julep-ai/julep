@@ -11,7 +11,7 @@ on:
       - dev
       - main
     paths:
-      - 'cli/**'
+      - 'src/cli/**'
   workflow_dispatch:
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./cli
+        working-directory: ./src/cli
     
     steps:
       - name: Checkout code
@@ -97,7 +97,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: cli/dist/
+          packages-dir: src/cli/dist/
           verbose: true
           
       - name: Create GitHub Release

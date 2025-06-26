@@ -4,10 +4,10 @@ run-name: ${{ github.actor }} is typechecking the code
 on:
   pull_request:
     paths:
-      - 'agents-api/**'
+      - 'src/agents-api/**'
   push:
     paths:
-      - 'agents-api/**'
+      - 'src/agents-api/**'
 
 jobs:
   Typecheck:
@@ -22,7 +22,7 @@ jobs:
       - name: Cache pytype
         uses: actions/cache@v4
         with:
-          path: agents-api/.pytype
+          path: src/agents-api/.pytype
           key: ${{ runner.os }}-agents-api-pytype-${{ github.base_ref }}
           restore-keys: |
             ${{ runner.os }}-agents-api-pytype-
@@ -39,13 +39,13 @@ jobs:
 
       - name: Set up python and install dependencies
         run: |
-          cd integrations-service
+          cd src/integrations-service
           uv python install
           uv sync --all-extras --dev
 
       - name: Typecheck
         run: |
-          cd agents-api
+          cd src/agents-api
           uv run poe typecheck
 
 concurrency:
