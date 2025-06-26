@@ -39,7 +39,9 @@ async def search_user_docs(
     # Get the search function and params here
     search_fn, params, post_processing = get_search_fn_and_params(search_params)
 
-    include_embeddings = post_processing.get("include_embeddings", True)
+    include_embeddings = (
+        post_processing.get("include_embeddings", True) if post_processing else True
+    )
 
     start = time.time()
     # Get the docs here
@@ -96,7 +98,9 @@ async def search_agent_docs(
     # Get the search function and params here
     search_fn, params, post_processing = get_search_fn_and_params(search_params)
 
-    include_embeddings = post_processing.get("include_embeddings", True)
+    include_embeddings = (
+        post_processing.get("include_embeddings", True) if post_processing else True
+    )
 
     start = time.time()
     # Get the docs here

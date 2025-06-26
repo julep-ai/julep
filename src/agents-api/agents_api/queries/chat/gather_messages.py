@@ -157,7 +157,9 @@ async def gather_messages(
         search_params, extract_keywords=extract_keywords
     )
 
-    include_embeddings = post_processing.get("include_embeddings", True)
+    include_embeddings = (
+        post_processing.get("include_embeddings", True) if post_processing else True
+    )
 
     doc_references: list[DocReference] = await search_fn(
         developer_id=developer.id,
