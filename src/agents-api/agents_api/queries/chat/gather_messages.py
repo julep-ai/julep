@@ -18,7 +18,7 @@ from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.db_exceptions import common_db_exceptions, partialclass
-from ...common.utils.get_doc_search import get_search_fn_and_params
+from ...common.utils.get_doc_search import get_search_fn_and_params, strip_embeddings
 from ...common.utils.mmr import apply_mmr_to_docs
 from ..entries.get_history import get_history
 from ..utils import rewrap_exceptions
@@ -122,6 +122,7 @@ async def gather_messages(
             confidence=recall_options.confidence,
             mmr_strength=recall_options.mmr_strength,
             vector=query_embedding,
+            include_embeddings=recall_options.include_embeddings,
         )
     elif recall_options.mode == "hybrid":
         search_params = HybridDocSearchRequest(
@@ -135,6 +136,7 @@ async def gather_messages(
             vector=query_embedding,
             trigram_similarity_threshold=recall_options.trigram_similarity_threshold,
             k_multiplier=recall_options.k_multiplier,
+            include_embeddings=recall_options.include_embeddings,
         )
     elif recall_options.mode == "text":
         search_params = TextOnlyDocSearchRequest(
@@ -143,6 +145,7 @@ async def gather_messages(
             metadata_filter=recall_options.metadata_filter,
             text=query_text,
             trigram_similarity_threshold=recall_options.trigram_similarity_threshold,
+            include_embeddings=recall_options.include_embeddings,
         )
     else:
         # Invalid mode, return early
@@ -150,8 +153,12 @@ async def gather_messages(
 
     # Execute search (extract keywords for FTS because the query is a conversation snippet)
     extract_keywords: bool = True
-    search_fn, params = get_search_fn_and_params(
+    search_fn, params, post_processing = get_search_fn_and_params(
         search_params, extract_keywords=extract_keywords
+    )
+
+    include_embeddings = (
+        post_processing.get("include_embeddings", True) if post_processing else True
     )
 
     doc_references: list[DocReference] = await search_fn(
@@ -160,6 +167,9 @@ async def gather_messages(
         connection_pool=connection_pool,
         **params,
     )
+
+    if include_embeddings is False:
+        doc_references = strip_embeddings(doc_references)
 
     # Apply MMR if enabled and applicable
     if (

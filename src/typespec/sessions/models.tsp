@@ -33,6 +33,9 @@ model BaseDocSearch {
     @minValue(100)
     @maxValue(10000)
     max_query_length: uint32 = 1000;
+
+    /** Whether to include embeddings in the response */
+    include_embeddings: boolean = true;
 }
 
 model VectorDocSearch extends BaseDocSearch {

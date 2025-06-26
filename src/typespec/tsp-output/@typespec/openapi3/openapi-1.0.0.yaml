@@ -169,35 +169,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Agents.Agent'
   /agents/{id}/docs:
-    get:
-      operationId: AgentDocsRoute_list
-      description: List Docs owned by an Agent
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID of parent
-          schema:
-            $ref: '#/components/schemas/Common.uuid'
-        - $ref: '#/components/parameters/Common.PaginationOptions.limit'
-        - $ref: '#/components/parameters/Common.PaginationOptions.offset'
-        - $ref: '#/components/parameters/Common.PaginationOptions.sort_by'
-        - $ref: '#/components/parameters/Common.PaginationOptions.direction'
-        - $ref: '#/components/parameters/Common.PaginationOptions.metadata_filter'
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Docs.Doc'
-                required:
-                  - items
     post:
       operationId: AgentDocsRoute_create
       description: Create a Doc for this Agent
@@ -221,6 +192,43 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
+    get:
+      operationId: AgentDocsRoute_list
+      description: List Docs owned by an Agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - $ref: '#/components/parameters/Common.PaginationOptions.limit'
+        - $ref: '#/components/parameters/Common.PaginationOptions.offset'
+        - $ref: '#/components/parameters/Common.PaginationOptions.sort_by'
+        - $ref: '#/components/parameters/Common.PaginationOptions.direction'
+        - $ref: '#/components/parameters/Common.PaginationOptions.metadata_filter'
+        - name: include_embeddings
+          in: query
+          required: false
+          description: Whether to include embeddings in the response
+          schema:
+            type: boolean
+            default: true
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Docs.Doc'
+                required:
+                  - items
     delete:
       operationId: AgentDocsRoute_deleteBulk
       description: Bulk delete Docs owned by an Agent
@@ -738,6 +746,14 @@ paths:
           description: ID of the resource
           schema:
             $ref: '#/components/schemas/Common.uuid'
+        - name: include_embeddings
+          in: query
+          required: false
+          description: Whether to include embeddings in the response
+          schema:
+            type: boolean
+            default: true
+          explode: false
       responses:
         '200':
           description: The request has succeeded.
@@ -1723,35 +1739,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Users.User'
   /users/{id}/docs:
-    get:
-      operationId: UserDocsRoute_list
-      description: List Docs owned by a User
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID of parent
-          schema:
-            $ref: '#/components/schemas/Common.uuid'
-        - $ref: '#/components/parameters/Common.PaginationOptions.limit'
-        - $ref: '#/components/parameters/Common.PaginationOptions.offset'
-        - $ref: '#/components/parameters/Common.PaginationOptions.sort_by'
-        - $ref: '#/components/parameters/Common.PaginationOptions.direction'
-        - $ref: '#/components/parameters/Common.PaginationOptions.metadata_filter'
-      responses:
-        '200':
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Docs.Doc'
-                required:
-                  - items
     post:
       operationId: UserDocsRoute_create
       description: Create a Doc for this User
@@ -1775,6 +1762,43 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Docs.CreateDocRequest'
+    get:
+      operationId: UserDocsRoute_list
+      description: List Docs owned by a User
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of parent
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+        - $ref: '#/components/parameters/Common.PaginationOptions.limit'
+        - $ref: '#/components/parameters/Common.PaginationOptions.offset'
+        - $ref: '#/components/parameters/Common.PaginationOptions.sort_by'
+        - $ref: '#/components/parameters/Common.PaginationOptions.direction'
+        - $ref: '#/components/parameters/Common.PaginationOptions.metadata_filter'
+        - name: include_embeddings
+          in: query
+          required: false
+          description: Whether to include embeddings in the response
+          schema:
+            type: boolean
+            default: true
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Docs.Doc'
+                required:
+                  - items
     delete:
       operationId: UserDocsRoute_deleteBulk
       description: Bulk delete Docs owned by a User
@@ -3677,6 +3701,7 @@ components:
       required:
         - limit
         - metadata_filter
+        - include_embeddings
         - text
         - lang
         - trigram_similarity_threshold
@@ -3697,6 +3722,10 @@ components:
           additionalProperties: {}
           description: Metadata filter to apply to the search
           default: {}
+        include_embeddings:
+          type: boolean
+          description: Whether to include embeddings in the response
+          default: true
         text:
           type: string
           description: Text to use in the search
@@ -3792,6 +3821,7 @@ components:
       required:
         - limit
         - metadata_filter
+        - include_embeddings
         - text
         - lang
         - trigram_similarity_threshold
@@ -3808,6 +3838,10 @@ components:
           additionalProperties: {}
           description: Metadata filter to apply to the search
           default: {}
+        include_embeddings:
+          type: boolean
+          description: Whether to include embeddings in the response
+          default: true
         text:
           type: string
           description: Text to use in the search
@@ -3827,6 +3861,7 @@ components:
       required:
         - limit
         - metadata_filter
+        - include_embeddings
         - vector
         - confidence
       properties:
@@ -3842,6 +3877,10 @@ components:
           additionalProperties: {}
           description: Metadata filter to apply to the search
           default: {}
+        include_embeddings:
+          type: boolean
+          description: Whether to include embeddings in the response
+          default: true
         vector:
           type: array
           items:
@@ -6085,6 +6124,7 @@ components:
         - metadata_filter
         - num_search_messages
         - max_query_length
+        - include_embeddings
       properties:
         limit:
           type: integer
@@ -6116,6 +6156,10 @@ components:
           maximum: 10000
           description: The maximum query length to use for the search.
           default: 1000
+        include_embeddings:
+          type: boolean
+          description: Whether to include embeddings in the response
+          default: true
     Sessions.BaseDocSearchUpdate:
       type: object
       properties:
@@ -6149,6 +6193,10 @@ components:
           maximum: 10000
           description: The maximum query length to use for the search.
           default: 1000
+        include_embeddings:
+          type: boolean
+          description: Whether to include embeddings in the response
+          default: true
     Sessions.ContextOverflowType:
       type: string
       enum:

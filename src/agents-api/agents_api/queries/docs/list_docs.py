@@ -28,7 +28,7 @@ SELECT
     d.title,
     array_agg(d.content ORDER BY d.index) as content,
     array_agg(d.index ORDER BY d.index) as indices,
-    array_agg(CASE WHEN $2 THEN NULL ELSE e.embedding END ORDER BY d.index) as embeddings,
+    array_agg(CASE WHEN $2 THEN e.embedding ELSE NULL END ORDER BY d.index) as embeddings,
     d.modality,
     d.embedding_model,
     d.embedding_dimensions,
@@ -75,7 +75,7 @@ async def list_docs(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] | None = None,
-    include_without_embeddings: bool = False,
+    include_embeddings: bool = True,
 ) -> tuple[str, list]:
     """
     Lists docs with pagination and sorting, aggregating content chunks and embeddings.
@@ -89,7 +89,8 @@ async def list_docs(
         sort_by (Literal["created_at", "updated_at"]): The field to sort by.
         direction (Literal["asc", "desc"]): The direction to sort by.
         metadata_filter (dict[str, Any]): The metadata filter to apply.
-        include_without_embeddings (bool): Whether to include documents without embeddings.
+        include_embeddings (bool): Whether to include embeddings in the response.
+            Defaults to True for backward compatibility.
 
     Returns:
         tuple[str, list]: SQL query and parameters for listing the documents.
@@ -107,7 +108,8 @@ async def list_docs(
     metadata_filter = metadata_filter if metadata_filter is not None else {}
     # Start with the base query
     query = base_docs_query
-    params = [developer_id, include_without_embeddings, owner_type, owner_id]
+    # AIDEV-NOTE: Bandwidth optimization - pass include_embeddings to control embedding retrieval
+    params = [developer_id, include_embeddings, owner_type, owner_id]
 
     # Add metadata filtering before GROUP BY using the utility function with table alias
     metadata_conditions, params = build_metadata_filter_conditions(

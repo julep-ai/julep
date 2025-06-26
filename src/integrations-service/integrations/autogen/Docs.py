@@ -155,6 +155,10 @@ class HybridDocSearchRequest(BaseModel):
     """
     Metadata filter to apply to the search
     """
+    include_embeddings: StrictBool = True
+    """
+    Whether to include embeddings in the response
+    """
     text: str
     """
     Text to use in the search
@@ -238,6 +242,10 @@ class TextOnlyDocSearchRequest(BaseModel):
     """
     Metadata filter to apply to the search
     """
+    include_embeddings: StrictBool = True
+    """
+    Whether to include embeddings in the response
+    """
     text: str
     """
     Text to use in the search
@@ -263,6 +271,10 @@ class VectorDocSearchRequest(BaseModel):
     metadata_filter: dict[str, Any] = {}
     """
     Metadata filter to apply to the search
+    """
+    include_embeddings: StrictBool = True
+    """
+    Whether to include embeddings in the response
     """
     vector: list[float]
     """

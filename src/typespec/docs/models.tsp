@@ -123,6 +123,9 @@ model BaseSearchParams {
     
     /** Metadata filter to apply to the search */
     metadata_filter: MetadataFilter = #{};
+
+    /** Whether to include embeddings in the response */
+    include_embeddings: boolean = true;
 }
 
 // Text search specific parameters
