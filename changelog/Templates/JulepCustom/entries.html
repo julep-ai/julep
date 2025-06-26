@@ -1,0 +1,16 @@
+{{> head}}
+{{> header}}
+
+<main class="container entries-list">
+  {{#entries}}
+    <article class="entry-list-item">
+      <h2 class="entry-title"><a href="{{{url}}}">{{title}}</a></h2>
+      <p class="entry-meta">{{date}}</p>
+      {{#summary}}
+      <p class="entry-summary">{{summary}}</p>
+      {{/summary}}
+    </article>
+  {{/entries tagged "main"}}
+</main>
+
+{{> footer}} 
