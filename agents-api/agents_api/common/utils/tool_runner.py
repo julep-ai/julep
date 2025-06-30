@@ -28,7 +28,7 @@ from ...common.utils.evaluator import get_handler_with_filtered_params
 
 # AIDEV-NOTE: Formats internal Tool definitions into the structure expected by the LLM (currently focused on OpenAI function tools and integrations).
 @beartype
-def format_tool(tool: Tool | CreateToolRequest) -> dict:
+async def format_tool(tool: Tool | CreateToolRequest) -> dict:
     """Format a Tool or CreateToolRequest for the LLM."""
 
     if tool.type == "function":
@@ -41,7 +41,7 @@ def format_tool(tool: Tool | CreateToolRequest) -> dict:
             },
         }
     if tool.type == "integration" and tool.integration is not None:
-        return integrations.convert_to_openai_tool(
+        return await integrations.convert_to_openai_tool(
             provider=tool.integration.provider,
             method=tool.integration.method,
         )
@@ -160,7 +160,7 @@ async def run_llm_with_tools(
 ) -> list[dict]:
     """Run the LLM with a tool loop."""
 
-    formatted_tools = [format_tool(t) for t in tools]
+    formatted_tools = [await format_tool(t) for t in tools]
 
     # Build a map of function name to tool
     tool_map = {}

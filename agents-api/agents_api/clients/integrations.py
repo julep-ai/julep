@@ -32,7 +32,7 @@ async def run_integration_service(
 
 
 @beartype
-def convert_to_openai_tool(
+async def convert_to_openai_tool(
     *,
     provider: str,
     method: str | None = None,
@@ -40,8 +40,8 @@ def convert_to_openai_tool(
     slug = f"{provider}/{method}" if method else provider
     url = f"{integration_service_url}/integrations/{slug}/tool"
 
-    with Client(timeout=600) as client:
-        response = client.get(
+    async with AsyncClient(timeout=600) as client:
+        response = await client.get(
             url,
         )
         response.raise_for_status()

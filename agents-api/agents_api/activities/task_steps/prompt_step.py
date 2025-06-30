@@ -110,7 +110,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         passed_settings.pop("tool_choice", None)
 
     # Format tools for litellm
-    formatted_tools = [format_tool(tool) for tool in await context.tools()]
+    formatted_tools = [await format_tool(tool) for tool in await context.tools()]
 
     # Map tools to their original objects
     tools_mapping: dict[str, Tool] = {

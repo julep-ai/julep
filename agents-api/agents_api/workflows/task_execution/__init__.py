@@ -443,28 +443,37 @@ class TaskExecutionWorkflow:
 
         messages = self.outcome.output
 
-        if get_feature_flag_value(
-            "auto_tool_calls_prompt_step",
-            developer_id=self.context.execution_input.developer_id,
-        ):
-            if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
-                workflow.logger.debug(f"Prompt step: Received response: {messages}")
-                return WorkflowResult(state=PartialTransition(output=messages))
-
-            # TODO: make sure to include filtered function tool calls in the last message, or filter them from 2nd message
-            tool_calls_input = messages[-1]["tool_calls"]
-        else:
-            message = messages
-            if (
-                step.unwrap
-                or not step.auto_run_tools
-                or message["choices"][0]["finish_reason"] != "tool_calls"
+        try:
+            if get_feature_flag_value(
+                "auto_tool_calls_prompt_step",
+                developer_id=self.context.execution_input.developer_id,
             ):
-                workflow.logger.debug(f"Prompt step: Received response: {message}")
-                return WorkflowResult(state=PartialTransition(output=message))
+                if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
+                    workflow.logger.debug(f"Prompt step: Received response: {messages}")
+                    return WorkflowResult(state=PartialTransition(output=messages))
 
-            choice = message["choices"][0]
-            tool_calls_input = choice["message"]["tool_calls"]
+                # TODO: make sure to include filtered function tool calls in the last message, or filter them from 2nd message
+                tool_calls_input = messages[-1]["tool_calls"]
+            else:
+                message = messages
+                if (
+                    step.unwrap
+                    or not step.auto_run_tools
+                    or message["choices"][0]["finish_reason"] != "tool_calls"
+                ):
+                    workflow.logger.debug(f"Prompt step: Received response: {message}")
+                    return WorkflowResult(state=PartialTransition(output=message))
+
+                choice = message["choices"][0]
+                tool_calls_input = choice["message"]["tool_calls"]
+        except (KeyError, IndexError, TypeError) as e:
+            workflow.logger.error(f"Prompt step: Error parsing response structure: {e}")
+            msg = f"Invalid response structure in prompt step: {e}"
+            raise ApplicationError(msg) from e
+        except Exception as e:
+            workflow.logger.error(f"Prompt step: Unexpected error: {e}")
+            msg = f"Unexpected error in prompt step: {e}"
+            raise ApplicationError(msg) from e
 
         input_type = tool_calls_input[0]["type"]
 

@@ -9,7 +9,9 @@ from ..autogen.openapi_model import (
 )
 from ..clients.integrations import run_integration_service
 from ..env import brave_api_key
+import logging
 
+logger = logging.getLogger(__name__)
 
 async def execute_web_search_tool(tool_call: WebPreviewToolCall) -> ToolExecutionResult:
     """
@@ -196,5 +198,6 @@ def format_tool_results_for_llm(result: ToolExecutionResult) -> dict[str, Any]:
             formatted_result["content"] = json.dumps({
                 "error": f"Failed to serialize tool output: {e!s}"
             })
+            logger.error(f"Failed to serialize tool output: {e!s}")
 
     return formatted_result
