@@ -1,7 +1,7 @@
 from typing import Any
 
 from beartype import beartype
-from httpx import AsyncClient, Client
+from httpx import AsyncClient
 
 from ..env import integration_service_url
 

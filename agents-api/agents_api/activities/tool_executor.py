@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any
 
 from temporalio import activity
@@ -9,9 +10,9 @@ from ..autogen.openapi_model import (
 )
 from ..clients.integrations import run_integration_service
 from ..env import brave_api_key
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 async def execute_web_search_tool(tool_call: WebPreviewToolCall) -> ToolExecutionResult:
     """
