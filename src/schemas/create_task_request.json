@@ -6435,6 +6435,11 @@
           "title": "Confidence",
           "type": "number"
         },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "k_multiplier": {
           "default": 7,
           "minimum": 0.0,
@@ -6511,6 +6516,11 @@
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
         },
         "k_multiplier": {
           "default": 5,
@@ -6590,6 +6600,11 @@
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
         },
         "k_multiplier": {
           "default": 7,
@@ -11526,6 +11541,11 @@
     },
     "TextOnlyDocSearch": {
       "properties": {
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "lang": {
           "default": "en-US",
           "title": "Lang",
@@ -11576,6 +11596,11 @@
     },
     "TextOnlyDocSearchRequest": {
       "properties": {
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "lang": {
           "default": "en-US",
           "title": "Lang",
@@ -11619,6 +11644,11 @@
     },
     "TextOnlyDocSearchUpdate": {
       "properties": {
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "lang": {
           "default": "en-US",
           "title": "Lang",
@@ -13200,6 +13230,11 @@
           "title": "Confidence",
           "type": "number"
         },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "lang": {
           "default": "en-US",
           "title": "Lang",
@@ -13257,6 +13292,11 @@
           "title": "Confidence",
           "type": "number"
         },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
+        },
         "limit": {
           "default": 10,
           "maximum": 50.0,
@@ -13298,6 +13338,11 @@
           "minimum": -1.0,
           "title": "Confidence",
           "type": "number"
+        },
+        "include_embeddings": {
+          "default": true,
+          "title": "Include Embeddings",
+          "type": "boolean"
         },
         "lang": {
           "default": "en-US",

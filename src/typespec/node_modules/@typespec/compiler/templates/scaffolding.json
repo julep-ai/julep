@@ -1,0 +1,155 @@
+{
+  "empty": {
+    "title": "Empty project",
+    "description": "Create an empty project.",
+    "libraries": [],
+    "compilerVersion": "0.61.2"
+  },
+  "rest": {
+    "title": "Generic REST API",
+    "description": "Create a project representing a generic REST API",
+    "compilerVersion": "0.61.2",
+    "libraries": [
+      "@typespec/http",
+      "@typespec/rest",
+      "@typespec/openapi3"
+    ],
+    "config": {
+      "emit": [
+        "@typespec/openapi3"
+      ]
+    }
+  },
+  "library-ts": {
+    "title": "TypeSpec Library (With TypeScript)",
+    "description": "Create a new package to add decorators or linters to typespec.",
+    "compilerVersion": "0.61.2",
+    "libraries": [],
+    "files": [
+      {
+        "destination": "main.tsp",
+        "skipGeneration": true
+      },
+      {
+        "destination": "tspconfig.yaml",
+        "skipGeneration": true
+      },
+      {
+        "path": "library-ts/eslint.config.js",
+        "destination": "eslint.config.js"
+      },
+      {
+        "path": "library-ts/lib/decorators.tsp.mu",
+        "destination": "lib/decorators.tsp"
+      },
+      {
+        "path": "library-ts/lib/main.tsp",
+        "destination": "lib/main.tsp"
+      },
+      {
+        "path": "library-ts/package.json",
+        "destination": "package.json"
+      },
+      {
+        "path": "library-ts/prettierrc.yaml",
+        "destination": "prettierrc.yaml"
+      },
+      {
+        "path": "library-ts/src/decorators.ts",
+        "destination": "src/decorators.ts"
+      },
+      {
+        "path": "library-ts/src/index.ts",
+        "destination": "src/index.ts"
+      },
+      {
+        "path": "library-ts/src/lib.ts",
+        "destination": "src/lib.ts"
+      },
+      {
+        "path": "library-ts/src/linter.ts",
+        "destination": "src/linter.ts"
+      },
+      {
+        "path": "library-ts/src/rules/no-interfaces.rule.ts",
+        "destination": "src/rules/no-interfaces.rule.ts"
+      },
+      {
+        "path": "library-ts/src/testing/index.ts.mu",
+        "destination": "src/testing/index.ts"
+      },
+      {
+        "path": "library-ts/test/decorators.test.ts.mu",
+        "destination": "test/decorators.test.ts"
+      },
+      {
+        "path": "library-ts/test/rules/no-interfaces.rule.test.ts",
+        "destination": "test/rules/no-interfaces.rule.test.ts"
+      },
+      {
+        "path": "library-ts/test/test-host.ts.mu",
+        "destination": "test/test-host.ts"
+      },
+      {
+        "path": "library-ts/tsconfig.json",
+        "destination": "tsconfig.json"
+      }
+    ]
+  },
+  "emitter-ts": {
+    "title": "TypeSpec Emitter (With TypeScript)",
+    "description": "Create a new package that will be emitting typespec",
+    "compilerVersion": "0.61.2",
+    "libraries": [],
+    "files": [
+      {
+        "destination": "main.tsp",
+        "skipGeneration": true
+      },
+      {
+        "destination": "tspconfig.yaml",
+        "skipGeneration": true
+      },
+      {
+        "path": "emitter-ts/eslint.config.js",
+        "destination": "eslint.config.js"
+      },
+      {
+        "path": "emitter-ts/package.json",
+        "destination": "package.json"
+      },
+      {
+        "path": "emitter-ts/prettierrc.yaml",
+        "destination": "prettierrc.yaml"
+      },
+      {
+        "path": "emitter-ts/src/emitter.ts",
+        "destination": "src/emitter.ts"
+      },
+      {
+        "path": "emitter-ts/src/index.ts",
+        "destination": "src/index.ts"
+      },
+      {
+        "path": "emitter-ts/src/lib.ts",
+        "destination": "src/lib.ts"
+      },
+      {
+        "path": "emitter-ts/src/testing/index.ts.mu",
+        "destination": "src/testing/index.ts"
+      },
+      {
+        "path": "emitter-ts/test/hello.test.ts",
+        "destination": "test/hello.test.ts"
+      },
+      {
+        "path": "emitter-ts/test/test-host.ts.mu",
+        "destination": "test/test-host.ts"
+      },
+      {
+        "path": "emitter-ts/tsconfig.json",
+        "destination": "tsconfig.json"
+      }
+    ]
+  }
+}

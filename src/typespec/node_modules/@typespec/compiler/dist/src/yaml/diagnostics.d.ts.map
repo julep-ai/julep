@@ -1,0 +1,1 @@
+{"version":3,"file":"diagnostics.d.ts","sourceRoot":"","sources":["../../../src/yaml/diagnostics.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,cAAc,EAAE,MAAM,kBAAkB,CAAC;AAClD,OAAO,EAAE,wBAAwB,EAAE,UAAU,EAAE,MAAM,YAAY,CAAC;AAElE,wBAAgB,uBAAuB,CACrC,IAAI,EAAE,UAAU,EAChB,IAAI,EAAE,MAAM,EAAE,EACd,IAAI,GAAE,wBAAkC,GACvC,cAAc,CAOhB"}

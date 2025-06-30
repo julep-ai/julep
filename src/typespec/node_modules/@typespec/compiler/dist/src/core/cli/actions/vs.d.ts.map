@@ -1,0 +1,1 @@
+{"version":3,"file":"vs.d.ts","sourceRoot":"","sources":["../../../../../src/core/cli/actions/vs.ts"],"names":[],"mappings":"AAGA,OAAO,EAAE,UAAU,EAAY,MAAM,gBAAgB,CAAC;AAEtD,OAAO,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC;AAQ9C,wBAAsB,kBAAkB,CAAC,IAAI,EAAE,eAAe,GAAG,OAAO,CAAC,SAAS,UAAU,EAAE,CAAC,CA2B9F;AAED,wBAAsB,oBAAoB,CAAC,IAAI,EAAE,eAAe,GAAG,OAAO,CAAC,SAAS,UAAU,EAAE,CAAC,CAShG"}

@@ -1,0 +1,67 @@
+{
+  "name": "@readme/openapi-schemas",
+  "version": "3.1.0",
+  "description": "JSON Schemas for every version of the OpenAPI Specification",
+  "license": "MIT",
+  "author": "ReadMe <support@readme.io> (https://readme.com)",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "schemas"
+  ],
+  "keywords": [
+    "openapi",
+    "open-api",
+    "swagger",
+    "oas",
+    "api",
+    "rest",
+    "json",
+    "specification",
+    "definition",
+    "schema"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/readmeio/openapi-schemas.git"
+  },
+  "bugs": {
+    "url": "https://github.com/readmeio/openapi-schemas/issues"
+  },
+  "scripts": {
+    "attw": "attw --pack --format table-flipped",
+    "build": "npm run build:schemas && npm run build:typescript",
+    "build:schemas": "rm -rf .tmp/ src/schemas/ && git clone https://github.com/OAI/OpenAPI-Specification.git .tmp && cp -r .tmp/schemas src/schemas && tsx src/create-legacy-schema.ts",
+    "build:typescript": "tsup",
+    "lint": "tsc --noEmit && eslint . --ext .js,.ts --ignore-path .gitignore && prettier -c .",
+    "prebuild": "rm -rf .tmp/ dist/ schemas/",
+    "prelint": "npm run build:schemas",
+    "prepack": "npm run build",
+    "pretest": "npm run lint",
+    "prettier": "prettier --check --write .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@readme/eslint-config": "^14.0.0",
+    "@types/node": "^20.12.11",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "tsup": "^8.0.2",
+    "tsx": "^4.10.4",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  },
+  "prettier": "@readme/eslint-config/prettier"
+}

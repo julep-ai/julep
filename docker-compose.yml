@@ -14,7 +14,7 @@ include:
   - ./src/blob-store/docker-compose-ha.yml
   - ./src/hasura/docker-compose.yml
   - ./src/analytics/docker-compose.yml
-  - ./feature-flags/docker-compose.yml
+  - ./src/feature-flags/docker-compose.yml
   # - ./code-interpreter/docker-compose.yml
   # - ./embedding-service/docker-compose.yml
 

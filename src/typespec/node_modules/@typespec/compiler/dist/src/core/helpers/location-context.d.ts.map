@@ -1,0 +1,1 @@
+{"version":3,"file":"location-context.d.ts","sourceRoot":"","sources":["../../../../src/core/helpers/location-context.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,OAAO,EAAE,MAAM,eAAe,CAAC;AAC7C,OAAO,KAAK,EAAE,gBAAgB,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC;AAErE,wBAAgB,kBAAkB,CAAC,OAAO,EAAE,OAAO,EAAE,IAAI,EAAE,gBAAgB,GAAG,eAAe,CAO5F"}

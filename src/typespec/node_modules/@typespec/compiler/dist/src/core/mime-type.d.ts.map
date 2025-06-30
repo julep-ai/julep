@@ -1,0 +1,1 @@
+{"version":3,"file":"mime-type.d.ts","sourceRoot":"","sources":["../../../src/core/mime-type.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,QAAQ;IACvB,IAAI,EAAE,MAAM,CAAC;IACb,OAAO,EAAE,MAAM,CAAC;IAChB,MAAM,CAAC,EAAE,MAAM,CAAC;CACjB;AAKD,wBAAgB,aAAa,CAAC,QAAQ,EAAE,MAAM,GAAG,QAAQ,GAAG,SAAS,CAYpE"}

@@ -1,0 +1,40 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "tspMain": "lib/main.tsp",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "default": "./dist/src/testing/index.js"
+    }
+  },
+  "dependencies": {
+    "@typespec/compiler": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@typespec/library-linter": "latest",
+    "eslint": "^8.45.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc && npm run build:tsp",
+    "watch": "tsc --watch",
+    "build:tsp": "tsp compile . --warn-as-error --import @typespec/library-linter --no-emit",
+    "test": "node --test",
+    "lint": "eslint src/ test/ --report-unused-disable-directives --max-warnings=0",
+    "lint:fix": "eslint . --report-unused-disable-directives --fix",
+    "format": "prettier .  --write",
+    "format:check": "prettier --check ."
+  },
+  "private": true
+}
