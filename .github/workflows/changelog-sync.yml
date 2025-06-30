@@ -1,0 +1,98 @@
+name: Sync changelog with Blot
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: ["changelog/**"]
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - "changelog/**"
+  workflow_run:
+       workflows: ["Claude Changelog (PR)"]
+       types: [completed]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Configure git identity
+      run: |
+        git config --global user.name  "${{ secrets.BLOT_GIT_USERNAME }}"
+        git config --global user.email "${{ secrets.BLOT_GIT_USERNAME }}"
+
+    - name: Clone Blot repo
+      env:
+        BLOT_USERNAME: ${{ secrets.BLOT_GIT_USERNAME }}
+        BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
+      run: |
+        # URL-encode the username (replace @ with %40)
+        export ENCODED_USERNAME=${BLOT_USERNAME//@/%40}
+
+        # Clone into a directory outside the current git repo to avoid conflicts
+        cd ${{ runner.temp }}
+        
+        if ! git clone \
+          "https://${ENCODED_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git" ; then
+          echo "Error: Failed to clone Blot repository"
+          exit 1
+        fi
+
+        # Get the default branch and ensure we're on it
+        cd julepchangelog
+        git checkout -B master origin/master
+        cd ${{ github.workspace }}
+
+    - name: Copy updated files into Blot working tree
+      run: |
+        if [ ! -d "changelog" ]; then
+          echo "Error: changelog directory not found"
+          exit 1
+        fi
+
+        if ! rsync -a --delete --exclude='.git/' --exclude='.gitignore' changelog/ ${{ runner.temp }}/julepchangelog/; then
+          echo "Error: Failed to sync files"
+          exit 1
+        fi
+
+    - name: Commit & push if there are changes
+      env:
+        BLOT_USERNAME: ${{ secrets.BLOT_GIT_USERNAME }}
+        BLOT_PASSWORD: ${{ secrets.BLOT_GIT_PASSWORD }}
+      run: |
+        cd ${{ runner.temp }}/julepchangelog
+        
+        if [ -z "$(git status --porcelain)" ]; then
+         echo "No changes to publish"
+         exit 0
+        fi
+
+        if ! git add -A; then
+          echo "Error: Failed to stage changes"
+          exit 1
+        fi
+
+        if ! git commit -m "chore: publish updates"; then
+          echo "Error: Failed to commit changes"
+          exit 1
+        fi
+
+        # URL-encode the username (replace @ with %40)
+        export ENCODED_USERNAME=${BLOT_USERNAME//@/%40}
+        
+        if ! git push "https://${ENCODED_USERNAME}:${BLOT_PASSWORD}@blot.im/clients/git/end/julepchangelog.git" master; then
+          echo "Error: Failed to push changes to branch master"
+          exit 1
+        fi
+
+        echo "Successfully synced changelog to Blot"
+

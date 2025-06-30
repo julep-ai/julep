@@ -1,0 +1,267 @@
+providers:
+  file:
+    filename: "/etc/traefik/traefik.yml"
+
+enable: true
+entryPoints:
+  web:
+    address: ":$GATEWAY_PORT"
+
+  # Should only be available via localhost
+  metrics:
+    address: 127.0.0.1:8082
+
+ping: true
+accesslog: true
+log:
+  level: $TRAEFIK_LOG_LEVEL
+
+http:
+  routers:
+    agents-api-internal:
+      entryPoints:
+        - web
+      rule: Path(`/api/temporal/{path:.*}`)
+      middlewares:
+        - corsHeaders
+        - agents-api-strip-prefix-api
+      service: service-agents-api
+      priority: 2  # Higher priority than the general agents-api route
+
+    agents-api:
+      entryPoints:
+        - web
+      rule: Path(`/api{path:.*}`)
+      middlewares:
+        - agents-api-chain
+        - agents-api-strip-prefix-api
+        - corsHeaders
+      service: service-agents-api
+      priority: 1
+    
+    agents-api-docs:
+      entryPoints:
+        - web
+      rule: Path(`/api/{path:swagger|redoc|docs|scalar|openapi.json}`)
+      middlewares:
+        - agents-api-strip-prefix-api
+      service: service-agents-api
+      priority: 2
+
+    agents-api-healthz:
+      entryPoints:
+        - web
+      rule: Path(`/api/healthz`)
+      middlewares:
+        - agents-api-strip-prefix-api
+      service: service-agents-api
+      priority: 3
+
+    agents-api-redirect-to-docs:
+      entryPoints:
+        - web
+      rule: Path(`/`)
+      middlewares:
+        - agents-api-redirect-to-docs
+      service: service-agents-api
+      priority: 3
+
+    temporal-ui-public:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/tasks-ui{path:.*}`)
+      middlewares:
+        - corsHeaders
+        - temporal-ui-strip-prefix
+      service: service-temporal-ui-public
+      priority: 1
+
+    temporal-ui-public-assets:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/_app`)
+      middlewares:
+        - corsHeaders
+      service: service-temporal-ui-public
+      priority: 2
+
+    hasura:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/v1/graphql`)
+      middlewares:
+        - corsHeaders
+      service: service-hasura
+      priority: 3
+
+    # Handle direct /app/ routes (when Metabase generates URLs without /analytics prefix)
+    # ONLY accessible via iframe from dashboard
+    analytics-app-direct:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/app/`)
+      middlewares:
+        - corsHeaders
+        - analytics-cache-headers
+      service: service-analytics
+      priority: 5
+
+    # Handle double /app/ pattern for Metabase static assets
+    # ONLY accessible via iframe from dashboard  
+    analytics-app-double-assets:
+      entryPoints:
+        - web
+      rule: PathRegexp(`^/analytics/app/app/(dist|fonts|img|css)/(.*)`)
+      middlewares:
+        - corsHeaders
+        - analytics-cache-headers
+        - analytics-strip-app-double
+      service: service-analytics
+      priority: 4
+
+    # Metabase static assets - keep /analytics prefix since Metabase is configured for it
+    # ONLY accessible via iframe from dashboard
+    analytics-static-assets:
+      entryPoints:
+        - web
+      rule: PathRegexp(`^/analytics/(dist|fonts|img|css|app/dist|app/fonts|app/img|app/css)/(.*)`)
+      middlewares:
+        - corsHeaders
+        - analytics-cache-headers
+      service: service-analytics
+      priority: 3
+
+    # Redirect /analytics to /analytics/ (without trailing slash to with trailing slash)
+    analytics-redirect:
+      entryPoints:
+        - web
+      rule: Path(`/analytics`)
+      middlewares:
+        - analytics-redirect-with-slash
+      service: service-analytics
+      priority: 2
+
+    # General Analytics/Metabase proxy - strip /analytics prefix for backend requests
+    # ONLY accessible via iframe from dashboard
+    analytics:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/analytics/`)
+      middlewares:
+        - corsHeaders
+        - analytics-strip-prefix
+      service: service-analytics
+      priority: 1
+
+  middlewares:
+    corsHeaders:
+      headers:
+        accessControlAllowMethods: "*"
+        accessControlAllowHeaders: "*"
+        accessControlAllowOriginList: "*"
+        addVaryHeader: true
+
+    agents-api-redirect-to-docs:
+      redirectRegex:
+        regex: "^(.*)$"
+        replacement: "/api/docs"
+
+    agents-api-add-headers:
+      headers:
+        customrequestheaders:
+          $AGENTS_API_KEY_HEADER_NAME: $AGENTS_API_KEY
+
+    agents-api-chain:
+      chain:
+        middlewares:
+          - api-jwt-auth
+          - agents-api-add-headers
+
+    agents-api-strip-prefix-api:
+      stripprefix:
+        prefixes:
+          - /api
+        forceSlash: false
+
+    api-jwt-auth:
+      plugin:
+        jwt:
+          Alg: HS512
+          OpaAllowField: allow
+          OpaBody: true
+          PayloadFields:
+            - exp
+            - iat
+          Required: true
+          Keys:
+            - $JWT_SHARED_KEY
+          JwtHeaders:
+            X-Developer-Id: sub
+          OpaHttpStatusField: allow_status_code
+    
+    temporal-ui-strip-prefix:
+      stripprefix:
+        prefixes:
+          - /tasks-ui
+        forceSlash: false
+
+    analytics-strip-prefix:
+      stripprefix:
+        prefixes:
+          - /analytics
+        forceSlash: false
+
+    analytics-strip-app-double:
+      replacepathregex:
+        regex: "^/analytics/app/app/(.*)"
+        replacement: "/app/$1"
+
+    analytics-cache-headers:
+      headers:
+        customresponseheaders:
+          Cache-Control: "public, max-age=86400"
+
+    analytics-redirect-with-slash:
+      redirectRegex:
+        regex: "^/analytics$"
+        replacement: "/analytics/"
+
+  services:
+    service-agents-api:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $AGENTS_API_URL
+
+    service-temporal-ui-public:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $TEMPORAL_UI_PUBLIC_URL
+
+    service-hasura:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $HASURA_URL
+
+    service-analytics:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $ANALYTICS_URL
+
+experimental:
+  localPlugins:
+    jwt:
+      moduleName: github.com/julep-ai/traefik-jwt-plugin
+
+### TODO: Enable after testing
+# metrics:
+#   prometheus:
+#     addEntryPointsLabels: true
+#     addRoutersLabels: true
+#     addServicesLabels: true
+#     entryPoint: metrics
+#     headerLabels:
+#       apiuser: Authorization

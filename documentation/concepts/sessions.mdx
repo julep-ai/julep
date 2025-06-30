@@ -105,7 +105,9 @@ You can control the fuzzy matching behavior using the `trigram_similarity_thresh
 ### System Template
 
 <Info>
-The **System Template** is a specific system prompt written as a Jinja template that sets the foundational context and instructions for the agent within a session. It defines the background, directives, and any relevant information that the agent should consider when interacting with the user. For more details on Jinja templates, refer to the [Jinja documentation](https://jinja.palletsprojects.com/).
+The **System Template** is a specific system prompt written as a Jinja template that sets the foundational context and instructions for the agent within a session. It defines the background, directives, and any relevant information that the agent should consider when interacting with the user. 
+
+For a comprehensive guide on system templates including available variables, customization options, and advanced usage patterns, see the [System Templates](/advanced/system-templates) documentation. For more details on Jinja templates, refer to the [Jinja documentation](https://jinja.palletsprojects.com/).
 <Accordion title="Default System Template" icon="template">
 ```python [expandable]
 {%- if agent.name -%}

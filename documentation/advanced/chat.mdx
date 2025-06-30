@@ -86,6 +86,7 @@ Here's an example of how a typical message object might be structured in a chat 
 | `save`              | `bool` | Whether this interaction should be stored in the session history or not | `True` |
 | `remember`          | `bool` | DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) | `False` |
 | `model`             | `str` | The model to use for the chat completion. | `None` |
+| `metadata`          | `dict[str, Any]` | Custom metadata that can be passed to the system template for dynamic behavior. See [System Templates](/advanced/system-templates) for details. | `None` |
 
 ## Usage
 
@@ -128,6 +129,23 @@ Here's an example of how to use the chat API in Julep using the SDKs:
     )
     print("Agent's response:", response.choices[0].message.content)
     print("Searched Documents:", response.docs)
+    
+    # Chat with metadata for dynamic system prompts
+    response_with_metadata = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            {
+                "role": "user",
+                "content": "Help me with Python"
+            }
+        ],
+        metadata={
+            "language": "Spanish",
+            "expertise_level": "beginner",
+            "custom_instructions": "Use simple examples"
+        }
+    )
+    # The metadata will be available in the system template as {{metadata.language}}, etc.
     ```
 
     ```javascript Node.js [expandable]
@@ -159,6 +177,23 @@ Here's an example of how to use the chat API in Julep using the SDKs:
         ],
         recall: true
     });
+    
+    // Chat with metadata for dynamic system prompts
+    const responseWithMetadata = await client.sessions.chat({
+        session_id: session.id,
+        messages: [
+            {
+                role: "user",
+                content: "Help me with Python"
+            }
+        ],
+        metadata: {
+            language: "Spanish",
+            expertise_level: "beginner",
+            custom_instructions: "Use simple examples"
+        }
+    });
+    // The metadata will be available in the system template as {{metadata.language}}, etc.
     ```
 </CodeGroup>
 

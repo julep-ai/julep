@@ -22,11 +22,7 @@ jobs:
       - name: Collect merged PRs from the last two weeks
         id: collect_prs
         run: |
-          if [[ "$OSTYPE" == "darwin"* ]]; then
-            date_threshold=$(date -v-14d +"%Y-%m-%d")
-          else
-            date_threshold=$(date -d '-14 days' +"%Y-%m-%d")
-          fi
+          date_threshold=$(date -d '-14 days' +"%Y-%m-%d")
 
           echo "Fetching merged PRs since $date_threshold..."
 
@@ -59,7 +55,7 @@ jobs:
         if: steps.collect_prs.outputs.has_prs == 'true'
         id: generate_changelog
         run: |
-          if ! python scripts/generate_changelog.py; then
+          if ! python src/scripts/generate_changelog.py; then
             echo "Error: Failed to generate changelog"
             exit 1
           fi
