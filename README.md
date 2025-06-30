@@ -111,6 +111,7 @@ Looking to dive deeper? The **[Julep Documentation](https://docs.julep.ai)** cov
 * **[API & SDK Reference](https://docs.julep.ai/api-reference/):** Find detailed reference for all SDK methods and REST API endpoints to integrate Julep into your applications.
 * **[Tutorials](https://docs.julep.ai/tutorials/):** Step-by-step guides for building real applications (e.g. a research agent that searches the web, a trip-planning assistant, or a chatbot with custom knowledge).
 * **[Cookbook Recipes](https://github.com/julep-ai/julep/tree/dev/cookbooks):** Explore the **Julep Cookbook** for ready-made example workflows and agents. These recipes demonstrate common patterns and use cases – a great way to learn by example. *Browse the [`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks) directory in this repository for sample agent definitions.*
+* **[IDE Integration](https://context7.com/julep-ai/julep):** Access Julep documentation directly in your IDE! Perfect for getting instant answers while coding.
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 

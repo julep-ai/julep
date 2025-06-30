@@ -78,7 +78,7 @@ async def create_tools(
             str(uuid7()),
             tool.type,
             tool.name,
-            getattr(tool, tool.type) and getattr(tool, tool.type).model_dump(),
+            getattr(tool, tool.type) and getattr(tool, tool.type).model_dump(mode="json"),
             tool.description if hasattr(tool, "description") else None,
         ]
         for tool in data
