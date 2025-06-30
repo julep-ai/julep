@@ -111,6 +111,7 @@ Julepの起動と実行は簡単です：
 * **[API・SDK リファレンス](https://docs.julep.ai/api-reference/)：** JulepをアプリケーションNに統合するためのすべてのSDKメソッドとREST APIエンドポイントの詳細なリファレンスを見つけます。
 * **[チュートリアル](https://docs.julep.ai/tutorials/)：** 実際のアプリケーション構築のためのステップバイステップガイド（例：Webを検索するリサーチエージェント、旅行計画アシスタント、カスタム知識を持つチャットボット）。
 * **[クックブックレシピ](https://github.com/julep-ai/julep/tree/dev/cookbooks)：** 既製のワークフローとエージェントの例については**Julep Cookbook**を探索してください。これらのレシピは一般的なパターンと使用例を示しています - 例から学ぶ素晴らしい方法です。*サンプルエージェント定義については、このリポジトリの[`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks)ディレクトリを参照してください。*
+* **[IDE統合](https://context7.com/julep-ai/julep)：** IDE内でJulepドキュメントに直接アクセス！コーディング中に即座に答えを得るのに最適です。
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 

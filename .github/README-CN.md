@@ -111,6 +111,7 @@ Julep是一个构建**基于智能代理的AI工作流**的开源平台，远超
 * **[API和SDK参考](https://docs.julep.ai/api-reference/)：** 查找所有SDK方法和REST API端点的详细参考，以将Julep集成到你的应用程序中。
 * **[教程](https://docs.julep.ai/tutorials/)：** 构建真实应用程序的分步指南（例如搜索网络的研究代理、旅行规划助手或具有自定义知识的聊天机器人）。
 * **[Cookbook食谱](https://github.com/julep-ai/julep/tree/dev/cookbooks)：** 探索**Julep Cookbook**以获取现成的示例工作流和代理。这些食谱展示了常见模式和用例 - 通过示例学习的绝佳方式。*浏览此存储库中的 [`cookbooks/`](https://github.com/julep-ai/julep/tree/dev/cookbooks) 目录以获取示例代理定义。*
+* **[IDE集成](https://context7.com/julep-ai/julep)：** 直接在IDE中访问Julep文档！在编码时获得即时答案的完美解决方案。
 
 <img src="https://raw.githubusercontent.com/anasalatasiuni/gif/main/white-line.gif">
 
