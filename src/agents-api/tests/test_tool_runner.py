@@ -1,10 +1,10 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from agents_api.autogen.openapi_model import (
     ApiCallDef,
     CreateToolRequest,
-    FunctionDef,
     DummyIntegrationDef,
+    FunctionDef,
     SystemDef,
 )
 from agents_api.common.utils.tool_runner import format_tool

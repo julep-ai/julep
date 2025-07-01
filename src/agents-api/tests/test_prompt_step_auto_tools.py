@@ -28,7 +28,9 @@ async def _():
     )
 
     # Mock feature flag to be enabled
-    with patch("agents_api.activities.task_steps.prompt_step.get_feature_flag_value") as mock_flag:
+    with patch(
+        "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
+    ) as mock_flag:
         mock_flag.return_value = True
 
         # Mock base_evaluate to just return the prompt unchanged
@@ -65,7 +67,7 @@ async def _():
                         workflows=[Workflow(name="main", steps=[step])],
                     ),
                 )
-                
+
                 context = StepContext(
                     execution_input=execution_input,
                     current_input="test input",
@@ -80,14 +82,16 @@ async def _():
                 async def mock_tools_method(self):
                     return [tool]
 
-                with patch.object(StepContext, 'tools', mock_tools_method):
+                with patch.object(StepContext, "tools", mock_tools_method):
                     # Run the activity
                     result = await prompt_step(context)
 
                     # Verify run_llm_with_tools was called
                     mock_run_llm.assert_called_once()
                     call_args = mock_run_llm.call_args
-                    assert call_args[1]["messages"] == [{"role": "user", "content": "Test prompt"}]
+                    assert call_args[1]["messages"] == [
+                        {"role": "user", "content": "Test prompt"}
+                    ]
                     assert len(call_args[1]["tools"]) == 1
                     assert call_args[1]["tools"][0].name == "test_tool"
 
@@ -101,7 +105,9 @@ async def _():
 @test("prompt_step with auto tools handles unwrap correctly")
 async def _():
     # Mock feature flag to be enabled
-    with patch("agents_api.activities.task_steps.prompt_step.get_feature_flag_value") as mock_flag:
+    with patch(
+        "agents_api.activities.task_steps.prompt_step.get_feature_flag_value"
+    ) as mock_flag:
         mock_flag.return_value = True
 
         # Mock base_evaluate
@@ -138,7 +144,7 @@ async def _():
                         workflows=[Workflow(name="main", steps=[step])],
                     ),
                 )
-                
+
                 context = StepContext(
                     execution_input=execution_input,
                     current_input="test input",
@@ -153,7 +159,7 @@ async def _():
                 async def mock_tools_method(self):
                     return []
 
-                with patch.object(StepContext, 'tools', mock_tools_method):
+                with patch.object(StepContext, "tools", mock_tools_method):
                     # Run the activity
                     result = await prompt_step(context)
 

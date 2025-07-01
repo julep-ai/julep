@@ -48,7 +48,7 @@ class UnleashProvider(AbstractProvider):
             logger.info("⚠️ Testing mode detected, skipping Unleash initialization")
             self._unleash_client = None
             return
-            
+
         try:
             from UnleashClient import UnleashClient
 
