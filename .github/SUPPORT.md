@@ -44,7 +44,7 @@ When reporting issues, please provide as much detail as possible, including:
 
 We welcome contributions to Julep! If you're interested in contributing, please check out our:
 
-- [Contributing Guidelines](https://github.com/julep-ai/julep/blob/main/CONTRIBUTING.md)
+- [Contributing Guidelines](https://github.com/julep-ai/julep/blob/dev/.github/CONTRIBUTING.md)
 - [Code of Conduct](https://github.com/julep-ai/julep/blob/main/CODE_OF_CONDUCT.md)
 
 ## API Keys

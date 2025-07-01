@@ -113,7 +113,7 @@ Join our growing community of developers and AI enthusiasts! Here are some ways 
 
 * **Discord Community:** Have questions or ideas? Join the conversation on our [official Discord server](https://discord.gg/7H5peSN9QP) to chat with the Julep team and other users. We’re happy to help with troubleshooting or brainstorm new use cases.
 * **GitHub Discussions and Issues:** Feel free to use GitHub for reporting bugs, requesting features, or discussing implementation details. Check out the [**good first issues**](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) if you’d like to contribute – we welcome contributions of all kinds.
-* **Contributing:** If you want to contribute code or improvements, please see our [Contributing Guide](CONTRIBUTING.md) for how to get started. We appreciate all PRs and feedback. By collaborating, we can make Julep even better!
+* **Contributing:** If you want to contribute code or improvements, please see our [Contributing Guide](.github/CONTRIBUTING.md) for how to get started. We appreciate all PRs and feedback. By collaborating, we can make Julep even better!
 
 *Pro tip: <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/e379a33a-b428-4385-b44f-3da16e7bac9f" width="35"> Star our repo to stay updated – we’re constantly adding new features and examples.*    
 
