@@ -34,7 +34,7 @@ services:
       AUTH_ENABLE_API_TOKEN: "true"
     ports:
       # Bind only to localhost - not publicly accessible
-      - "127.0.0.1:${UNLEASH_PORT:-4242}:4242"
+      - "${UNLEASH_PORT:-4242}:4242"
     depends_on:
       unleash-db:
         condition: service_healthy
