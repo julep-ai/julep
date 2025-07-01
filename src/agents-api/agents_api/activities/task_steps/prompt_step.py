@@ -1,63 +1,22 @@
 # AIDEV-NOTE: This module contains the activity for executing a prompt step, which interacts with the language model.
+import functools
+
 from beartype import beartype
 from litellm.types.utils import ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from ...autogen.openapi_model import CreateToolRequest, Tool
+from ...autogen.openapi_model import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
 from ...common.protocol.tasks import ExecutionInput, StepContext, StepOutcome
+from ...common.utils.feature_flags import get_feature_flag_value
+from ...common.utils.tool_runner import format_tool, run_context_tool, run_llm_with_tools
 from ...env import debug
 from .base_evaluate import base_evaluate
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
-
-
-# AIDEV-NOTE: Formats internal Tool definitions into the structure expected by the LLM (currently focused on OpenAI function tools).
-@beartype
-def format_tool(tool: Tool | CreateToolRequest) -> dict:
-    if tool.type == "function":
-        return {
-            "type": "function",
-            "function": {
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.function and tool.function.parameters,
-            },
-        }
-
-    # For other tool types, we need to translate them to the OpenAI function tool format
-    return {
-        "type": "function",
-        "function": {"name": tool.name, "description": tool.description},
-    }
-
-    # AIDEV-TODO: Implement system tools formatting.
-    # FIXME: Implement system tools
-    # if tool.type == "system":
-    #     handler: Callable = get_handler_with_filtered_params(tool.system)
-
-    #     lc_tool: BaseTool = tool_decorator(handler)
-
-    #     json_schema: dict = lc_tool.get_input_jsonschema()
-
-    #     formatted["function"]["description"] = formatted["function"][
-    #         "description"
-    #     ] or json_schema.get("description")
-
-    #     formatted["function"]["parameters"] = json_schema
-
-    # AIDEV-TODO: Implement integration tools formatting.
-    # FIXME: Implement integration tools
-    # elif tool.type == "integration":
-    #     raise NotImplementedError("Integration tools are not supported")
-
-    # AIDEV-TODO: Implement API call tools formatting.
-    # FIXME: Implement API call tools
-    # elif tool.type == "api_call":
-    #     raise NotImplementedError("API call tools are not supported")
 
 
 @activity.defn
@@ -107,11 +66,51 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     passed_settings.update(passed_settings.pop("settings", {}) or {})
     passed_settings["user"] = str(context.execution_input.developer_id)
 
+    if get_feature_flag_value(
+        "auto_tool_calls_prompt_step", developer_id=str(context.execution_input.developer_id)
+    ):
+        if not passed_settings.get("tools"):
+            passed_settings.pop("tool_choice", None)
+
+        all_tools = await context.tools()
+
+        passed_settings = {k: v for k, v in passed_settings.items() if v is not None}
+
+        completion_data: dict = {
+            "model": agent_model,
+            **agent_default_settings,
+            **passed_settings,
+        }
+
+        responses: list[dict] = await run_llm_with_tools(
+            messages=prompt,
+            tools=all_tools,
+            settings=completion_data,
+            run_tool_call=functools.partial(run_context_tool, context),
+        )
+
+        if context.current_step.unwrap:
+            response = responses[-1]
+
+            # TODO: Allow unwrapping of function tool calls
+            if response["tool_calls"] is not None:
+                msg = "Function tool calls unwrapping is not supported yet"
+                raise ApplicationError(msg)
+
+            return StepOutcome(
+                output=response["content"],
+                next=None,
+            )
+
+        return StepOutcome(
+            output=responses,
+            next=None,
+        )
     if not passed_settings.get("tools"):
         passed_settings.pop("tool_choice", None)
 
     # Format tools for litellm
-    formatted_tools = [format_tool(tool) for tool in await context.tools()]
+    formatted_tools = [await format_tool(tool) for tool in await context.tools()]
 
     # Map tools to their original objects
     tools_mapping: dict[str, Tool] = {

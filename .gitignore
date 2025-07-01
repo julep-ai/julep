@@ -7,7 +7,7 @@ ngrok*
 .env
 *.env
 *.pyc
-*/node_modules/
+**/node_modules/
 .aider*
 .vscode/
 schema.sql
