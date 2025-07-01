@@ -12,7 +12,7 @@ from openfeature.evaluation_context import EvaluationContext
 from openfeature.flag_evaluation import FlagResolutionDetails, Reason
 from openfeature.provider import AbstractProvider, Metadata
 
-from agents_api.env import unleash_api_token, unleash_app_name, unleash_url
+from agents_api.env import testing, unleash_api_token, unleash_app_name, unleash_url
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,12 @@ class UnleashProvider(AbstractProvider):
 
     def _initialize_unleash(self):
         """Initialize the underlying Unleash client."""
+        # Skip Unleash initialization in testing mode
+        if testing:
+            logger.info("⚠️ Testing mode detected, skipping Unleash initialization")
+            self._unleash_client = None
+            return
+            
         try:
             from UnleashClient import UnleashClient
 
@@ -290,7 +296,8 @@ class FeatureFlagClient:
             provider = UnleashProvider()
             api.set_provider(provider)
 
-            logger.info("✅ Initialized OpenFeature with Unleash provider")
+            if not testing:
+                logger.info("✅ Initialized OpenFeature with Unleash provider")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize OpenFeature provider: {e}")
