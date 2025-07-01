@@ -444,9 +444,9 @@ class TaskExecutionWorkflow:
         messages = self.outcome.output
 
         try:
-            if get_feature_flag_value(
+            if self.context is not None and get_feature_flag_value(
                 "auto_tool_calls_prompt_step",
-                developer_id=self.context.execution_input.developer_id,
+                developer_id=str(self.context.execution_input.developer_id),
             ):
                 if step.unwrap or not step.auto_run_tools or messages[-1]["tool_calls"] is None:
                     workflow.logger.debug(f"Prompt step: Received response: {messages}")

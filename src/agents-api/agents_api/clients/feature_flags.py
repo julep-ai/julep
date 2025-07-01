@@ -333,9 +333,12 @@ class FeatureFlagClient:
                     targeting_key=context.get("developer_id"), attributes=context
                 )
 
+            if self._client is None:
+                return default_value if default_value is not None else False
+
             result = self._client.get_boolean_value(
                 flag_key=flag_name,
-                default_value=default_value,
+                default_value=default_value if default_value is not None else False,
                 evaluation_context=evaluation_context,
             )
 
@@ -344,7 +347,7 @@ class FeatureFlagClient:
 
         except Exception as e:
             logger.error(f"❌ Error evaluating feature flag '{flag_name}': {e}")
-            return default_value
+            return default_value if default_value is not None else False
 
 
 # Global feature flag client instance

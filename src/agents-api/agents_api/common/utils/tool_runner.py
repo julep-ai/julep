@@ -46,12 +46,15 @@ async def format_tool(tool: Tool | CreateToolRequest) -> dict:
             method=tool.integration.method,
         )
     if tool.type == "api_call" and tool.api_call is not None:
+        params = {}
+        if tool.api_call.params_schema is not None:
+            params = tool.api_call.params_schema.model_dump(exclude_none=True)
         return {
             "type": "function",
             "function": {
                 "name": tool.name,
                 "description": tool.description,
-                "parameters": tool.api_call.params_schema.model_dump(exclude_none=True),
+                "parameters": params,
             },
         }
     if tool.type == "system" and tool.system is not None:
@@ -79,7 +82,7 @@ async def format_tool(tool: Tool | CreateToolRequest) -> dict:
         "function": {
             "name": tool.name,
             "description": tool.description,
-            "parameters": tool.function.parameters,
+            "parameters": tool.function.parameters if tool.function else {},
         },
     }
 

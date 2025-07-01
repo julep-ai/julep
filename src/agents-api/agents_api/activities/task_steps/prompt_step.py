@@ -67,7 +67,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     passed_settings["user"] = str(context.execution_input.developer_id)
 
     if get_feature_flag_value(
-        "auto_tool_calls_prompt_step", developer_id=context.execution_input.developer_id
+        "auto_tool_calls_prompt_step", developer_id=str(context.execution_input.developer_id)
     ):
         if not passed_settings.get("tools"):
             passed_settings.pop("tool_choice", None)
