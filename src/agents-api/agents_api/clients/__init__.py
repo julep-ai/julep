@@ -7,5 +7,6 @@ The `clients` module contains client classes and functions for interacting with 
 """
 
 from .feature_flags import FeatureFlagClient, get_feature_flag_client
+from . import litellm
 
-__all__ = ["FeatureFlagClient", "get_feature_flag_client"]
+__all__ = ["FeatureFlagClient", "get_feature_flag_client", "litellm"]
