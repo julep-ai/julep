@@ -71,7 +71,7 @@ async def track_streaming_usage(
     collected_output: list[dict],
     response_id: str,
     custom_api_used: bool = False,
-    metadata: dict[str, Any] = {},
+    metadata: dict[str, Any] = None,
     connection_pool: Any = None,
 ) -> None:
     """
