@@ -94,6 +94,10 @@ async def track_streaming_usage(
             amount=usage_data.get("total_tokens", 0)
         )
 
+    # Only track usage in database if we have collected output
+    if not collected_output:
+        return
+
     # Track usage in database
     await track_usage(
         developer_id=developer_id,
