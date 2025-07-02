@@ -14,7 +14,10 @@ from ...metrics.counters import query_metrics
 from ..utils import pg_query, rewrap_exceptions, wrap_in_class
 
 # Delete project query that handles RESTRICT constraints by deleting associations first
+# Wrapped in a transaction to ensure atomicity
 delete_project_query = """
+BEGIN;
+
 -- First check if the project exists and is not the default project
 DO $$
 BEGIN
@@ -43,6 +46,8 @@ DELETE FROM projects
 WHERE developer_id = $1
 AND project_id = $2
 RETURNING project_id;
+
+COMMIT;
 """
 
 
