@@ -15,7 +15,7 @@ from .utils import get_julep_client
 
 @projects_app.command()
 def delete(
-    project_id: Annotated[str, typer.Option("--id", help="ID of the project to delete")],
+    project_id: Annotated[UUID, typer.Option("--id", help="ID of the project to delete")],
     yes: Annotated[
         bool,
         typer.Option("--yes", "-y", help="Skip confirmation prompt"),
