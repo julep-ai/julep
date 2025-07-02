@@ -617,10 +617,14 @@ class TaskExecutionWorkflow:
             # AIDEV-NOTE: Extract IDs from context for new execute_integration signature
             developer_id = self.context.execution_input.developer_id
             agent_id = self.context.execution_input.agent.id
-            task_id = self.context.execution_input.task.id if self.context.execution_input.task else None
-            session_id = getattr(self.context.execution_input, 'session', None)
+            task_id = (
+                self.context.execution_input.task.id
+                if self.context.execution_input.task
+                else None
+            )
+            session_id = getattr(self.context.execution_input, "session", None)
             session_id = session_id.id if session_id else None
-            
+
             tool_call_response = await workflow.execute_activity(
                 execute_integration,
                 args=[

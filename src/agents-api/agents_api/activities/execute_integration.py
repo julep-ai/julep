@@ -9,7 +9,6 @@ from ..app import app
 from ..autogen.openapi_model import BaseIntegrationDef
 from ..clients import integrations
 from ..common.exceptions.tools import IntegrationExecutionException
-from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..env import testing
 from ..queries import tools
 

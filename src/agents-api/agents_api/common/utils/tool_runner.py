@@ -104,9 +104,9 @@ async def run_context_tool(
         developer_id = context.execution_input.developer_id
         agent_id = context.execution_input.agent.id
         task_id = context.execution_input.task.id if context.execution_input.task else None
-        session_id = getattr(context.execution_input, 'session', None)
+        session_id = getattr(context.execution_input, "session", None)
         session_id = session_id.id if session_id else None
-        
+
         output = await execute_integration(
             developer_id=developer_id,
             agent_id=agent_id,

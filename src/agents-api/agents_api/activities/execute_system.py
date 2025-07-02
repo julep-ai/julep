@@ -19,7 +19,6 @@ from ..autogen.openapi_model import (
     UpdateUserRequest,
     VectorDocSearchRequest,
 )
-from ..common.protocol.tasks import ExecutionInput, StepContext
 from ..common.utils.evaluator import get_handler
 from ..env import testing
 from ..queries import developers
