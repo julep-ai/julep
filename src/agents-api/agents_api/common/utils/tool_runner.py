@@ -101,11 +101,11 @@ async def run_tool_call(
     connection_pool=None,
 ) -> ToolExecutionResult:
     """Execute a tool call with explicit parameters (no context required)."""
-    
+
     call_spec = call.model_dump()
     arguments = call_spec[f"{call.type}"]["arguments"]
     setup = call_spec[f"{call.type}"]["setup"]
-    
+
     if tool.type == "integration" and tool.integration:
         output = await execute_integration(
             developer_id=developer_id,
@@ -119,25 +119,25 @@ async def run_tool_call(
             connection_pool=connection_pool,
         )
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
-    
+
     if tool.type == "system" and tool.system:
         system = tool.system.model_copy(update={"arguments": arguments})
         system_dict = system.model_dump()
         system_def = SystemDef(**system_dict)
         output = await execute_system(
-            developer_id=developer_id, 
+            developer_id=developer_id,
             system=system_def,
             connection_pool=connection_pool,
         )
         if hasattr(output, "model_dump"):
             return ToolExecutionResult(id=call.id, name=tool.name, output=output.model_dump())
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
-    
+
     if tool.type == "api_call" and tool.api_call:
         arguments["include_response_content"] = tool.api_call.include_response_content
         output = await execute_api_call(tool.api_call, arguments)
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
-    
+
     return ToolExecutionResult(id=call.id, name=tool.name, output={})
 
 
@@ -148,14 +148,14 @@ async def run_context_tool(
     call: BaseChosenToolCall,
 ) -> ToolExecutionResult:
     """Execute a tool call within a workflow step context."""
-    
+
     # AIDEV-NOTE: Extract parameters from context and delegate to context-free function
     developer_id = context.execution_input.developer_id
     agent_id = context.execution_input.agent.id
     task_id = context.execution_input.task.id if context.execution_input.task else None
-    session_id = getattr(context.execution_input, 'session', None)
+    session_id = getattr(context.execution_input, "session", None)
     session_id = session_id.id if session_id else None
-    
+
     # Delegate to the context-free function
     return await run_tool_call(
         developer_id=developer_id,
