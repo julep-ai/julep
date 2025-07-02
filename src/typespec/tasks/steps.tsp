@@ -115,11 +115,11 @@ model PromptStepDef {
     unwrap?: boolean = false;
 
     /** Whether to auto-run the tool and send the tool results to the model when available.
-     * (default: true for prompt steps, false for sessions)
+     * (default: false)
      *
      * If a tool call is made, the tool's output will be used as the model's input.
      * If a tool call is not made, the model's output will be used as the next step's input. */
-    auto_run_tools: boolean = true;
+    auto_run_tools: boolean = false;
 
     /** Whether to disable caching for the prompt step */
     disable_cache: boolean = false;
