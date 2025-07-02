@@ -470,6 +470,21 @@ async def litellm_api_error(request: Request, exc: APIError):
     )
 
 
+@app.exception_handler(NotImplementedError)
+async def not_implemented_error_handler(request: Request, exc: NotImplementedError):
+    return JSONResponse(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        content={
+            "error": {
+                "message": str(exc),
+                "code": "not_implemented",
+                "type": "NotImplementedError",
+                "fix": "This feature is not yet implemented. Please check the API documentation for supported features.",
+            }
+        },
+    )
+
+
 def main(
     host: str = "127.0.0.1",
     port: int = 8000,
