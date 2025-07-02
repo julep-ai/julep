@@ -15,7 +15,8 @@ from ..common.exceptions.secrets import (
 )
 from ..common.utils.llm_providers import get_api_key_env_var_name
 from ..common.utils.secrets import get_secret_by_name
-from ..common.utils.usage import track_embedding_usage, track_usage
+from ..common.utils.usage import track_embedding_usage
+from ..common.utils.usage_tracker import track_completion_usage
 from ..env import (
     embedding_dimensions,
     embedding_model_id,
@@ -104,12 +105,12 @@ async def acompletion(
 
     response = patch_litellm_response(model_response)
 
-    # Track usage in database if we have a user ID (which should be the developer ID)
+    # Track usage if we have a user ID (which should be the developer ID)
     user = settings.get("user")
     if user and isinstance(response, ModelResponse):
         try:
             model = response.model
-            await track_usage(
+            await track_completion_usage(
                 developer_id=UUID(user),
                 model=model,
                 messages=messages,

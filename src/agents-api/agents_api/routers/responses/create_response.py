@@ -24,7 +24,7 @@ from ...routers.utils.model_converters import (
     convert_chat_response_to_response,
     convert_create_response,
 )
-from ..sessions.metrics import total_tokens_per_user
+
 from ..sessions.render import render_chat_input
 from .router import router
 
@@ -315,9 +315,7 @@ async def create_response(
         choices=[choice.model_dump() for choice in model_response.choices],
     )
 
-    total_tokens_per_user.labels(str(developer.id)).inc(
-        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
-    )
+
 
     # End chat function
     return convert_chat_response_to_response(

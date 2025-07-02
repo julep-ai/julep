@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, Header
 from fastapi.responses import StreamingResponse
-from litellm.utils import Choices, Message, ModelResponse
+from litellm.utils import ModelResponse
 from starlette.status import HTTP_201_CREATED
 from uuid_extensions import uuid7
 
@@ -18,10 +18,9 @@ from ...autogen.openapi_model import (
 from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.utils.datetime import utcnow
-from ...common.utils.usage import track_usage
+from ...common.utils.usage_tracker import track_streaming_usage
 from ...dependencies.developer_id import get_developer_data
 from ...queries.entries.create_entries import create_entries
-from .metrics import total_tokens_per_user
 from .render import render_chat_input
 from .router import router
 
@@ -118,30 +117,14 @@ async def stream_chat_response(
         # Forward the chunk as a proper ChunkChatResponse
         yield f"data: {chunk_response.model_dump_json()}\n\n"
 
-    # Track token usage with Prometheus metrics if available
-    if usage_data and usage_data.get("total_tokens", 0) > 0:
-        total_tokens_per_user.labels(str(developer_id)).inc(
-            amount=usage_data.get("total_tokens", 0)
-        )
-
-    # Track usage in database
-    await track_usage(
+    # Track usage using centralized tracker
+    await track_streaming_usage(
         developer_id=developer_id,
         model=model,
         messages=messages or [],
-        response=ModelResponse(
-            id=str(response_id),
-            choices=[
-                Choices(
-                    message=Message(
-                        content=choice.get("content", ""),
-                        tool_calls=choice.get("tool_calls"),
-                    ),
-                )
-                for choice in collected_output
-            ],
-            usage=usage_data,
-        ),
+        usage_data=usage_data,
+        collected_output=collected_output,
+        response_id=str(response_id),
         custom_api_used=custom_api_key_used,
         metadata={
             "tags": developer_tags or [],
@@ -298,10 +281,6 @@ async def chat(
         docs=doc_references,
         usage=model_response.usage.model_dump(),
         choices=[choice.model_dump() for choice in model_response.choices],
-    )
-
-    total_tokens_per_user.labels(str(developer.id)).inc(
-        amount=chat_response.usage.total_tokens if chat_response.usage is not None else 0,
     )
 
     return chat_response
