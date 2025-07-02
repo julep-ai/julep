@@ -24,7 +24,7 @@ from ...routers.utils.model_converters import (
     convert_chat_response_to_response,
     convert_create_response,
 )
-from ...common.utils.usage_tracker import track_completion_usage
+
 from ..sessions.render import render_chat_input
 from .router import router
 
@@ -315,15 +315,7 @@ async def create_response(
         choices=[choice.model_dump() for choice in model_response.choices],
     )
 
-    # Track usage using centralized tracker
-    await track_completion_usage(
-        developer_id=developer.id,
-        model=settings["model"],
-        messages=messages,
-        response=model_response,
-        custom_api_used=x_custom_api_key is not None,
-        metadata={"tags": developer.tags},
-    )
+
 
     # End chat function
     return convert_chat_response_to_response(
