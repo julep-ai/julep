@@ -28,7 +28,7 @@ async def track_completion_usage(
     messages: list[dict],
     response: ModelResponse,
     custom_api_used: bool = False,
-    metadata: dict[str, Any] = {},
+    metadata: Optional[dict[str, Any]] = None,
     connection_pool: Any = None,
 ) -> None:
     """
@@ -71,7 +71,7 @@ async def track_streaming_usage(
     collected_output: list[dict],
     response_id: str,
     custom_api_used: bool = False,
-    metadata: dict[str, Any] = {},
+    metadata: dict[str, Any] = None,
     connection_pool: Any = None,
 ) -> None:
     """
