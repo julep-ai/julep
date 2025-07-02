@@ -28,7 +28,7 @@ async def track_completion_usage(
     messages: list[dict],
     response: ModelResponse,
     custom_api_used: bool = False,
-    metadata: dict[str, Any] = {},
+    metadata: Optional[dict[str, Any]] = None,
     connection_pool: Any = None,
 ) -> None:
     """
