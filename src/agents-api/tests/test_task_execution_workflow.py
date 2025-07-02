@@ -918,7 +918,7 @@ async def _():
         return StepOutcome(output="function_call")
 
     wf = TaskExecutionWorkflow()
-    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")])
+    step = PromptStep(prompt=[PromptItem(content="hi there", role="user")], auto_run_tools=True)
     execution_input = ExecutionInput(
         developer_id=uuid.uuid4(),
         agent=Agent(
