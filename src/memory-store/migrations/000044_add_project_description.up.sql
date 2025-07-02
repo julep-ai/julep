@@ -3,7 +3,7 @@ BEGIN;
 -- Add description column to projects table
 ALTER TABLE projects 
 ADD COLUMN description TEXT DEFAULT NULL 
-CONSTRAINT ct_projects_description_length CHECK (
+CONSTRAINT chk_projects_description_length CHECK (
     description IS NULL
     OR length(description) <= 1000
 );
