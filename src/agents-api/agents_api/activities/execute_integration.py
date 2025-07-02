@@ -1,5 +1,6 @@
 import json
 from typing import Any
+from uuid import UUID
 
 from beartype import beartype
 from temporalio import activity
@@ -15,39 +16,40 @@ from ..queries import tools
 
 @beartype
 async def execute_integration(
-    context: StepContext,
+    developer_id: UUID,
+    agent_id: UUID,
+    task_id: UUID | None,
+    session_id: UUID | None,
     tool_name: str,
     integration: BaseIntegrationDef,
     arguments: dict[str, Any],
     setup: dict[str, Any] = {},
+    connection_pool=None,
 ) -> Any:
-    if not isinstance(context.execution_input, ExecutionInput):
-        msg = "Expected ExecutionInput type for context.execution_input"
-        raise TypeError(msg)
-
-    developer_id = context.execution_input.developer_id
-    agent_id = context.execution_input.agent.id
-
-    if context.execution_input.task is None:
-        msg = "Task cannot be None in execution_input"
+    # AIDEV-NOTE: task_id or session_id must be provided (one for task execution, one for chat)
+    if task_id is None and session_id is None:
+        msg = "Either task_id or session_id must be provided"
         raise ValueError(msg)
 
-    task_id = context.execution_input.task.id
+    if connection_pool is None:
+        connection_pool = getattr(app.state, "postgres_pool", None)
 
     merged_tool_args = await tools.get_tool_args_from_metadata(
         developer_id=developer_id,
         agent_id=agent_id,
         task_id=task_id,
+        session_id=session_id,
         arg_type="args",
-        connection_pool=app.state.postgres_pool,
+        connection_pool=connection_pool,
     )
 
     merged_tool_setup = await tools.get_tool_args_from_metadata(
         developer_id=developer_id,
         agent_id=agent_id,
         task_id=task_id,
+        session_id=session_id,
         arg_type="setup",
-        connection_pool=app.state.postgres_pool,
+        connection_pool=connection_pool,
     )
 
     arguments = arguments | (integration.arguments or {}) | merged_tool_args.get(tool_name, {})

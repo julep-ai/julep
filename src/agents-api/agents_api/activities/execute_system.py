@@ -27,20 +27,18 @@ from ..queries import developers
 
 @beartype
 async def execute_system(
-    context: StepContext,
+    developer_id: UUID,
     system: SystemDef,
+    connection_pool=None,
 ) -> Any:
     """Execute a system call with the appropriate handler and transformed arguments."""
 
     arguments: dict[str, Any] = system.arguments or {}
 
-    connection_pool = getattr(app.state, "postgres_pool", None)
+    if connection_pool is None:
+        connection_pool = getattr(app.state, "postgres_pool", None)
 
-    if not isinstance(context.execution_input, ExecutionInput):
-        msg = "Expected ExecutionInput type for context.execution_input"
-        raise TypeError(msg)
-
-    arguments["developer_id"] = context.execution_input.developer_id
+    arguments["developer_id"] = developer_id
 
     # Unbox all the arguments
     for key, value in arguments.items():

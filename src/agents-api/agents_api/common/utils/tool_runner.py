@@ -100,8 +100,22 @@ async def run_context_tool(
     setup = call_spec[f"{call.type}"]["setup"]
 
     if tool.type == "integration" and tool.integration:
+        # AIDEV-NOTE: Extract IDs from context for new execute_integration signature
+        developer_id = context.execution_input.developer_id
+        agent_id = context.execution_input.agent.id
+        task_id = context.execution_input.task.id if context.execution_input.task else None
+        session_id = getattr(context.execution_input, 'session', None)
+        session_id = session_id.id if session_id else None
+        
         output = await execute_integration(
-            context, tool.name, tool.integration, arguments, setup
+            developer_id=developer_id,
+            agent_id=agent_id,
+            task_id=task_id,
+            session_id=session_id,
+            tool_name=tool.name,
+            integration=tool.integration,
+            arguments=arguments,
+            setup=setup,
         )
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)
 
@@ -109,7 +123,9 @@ async def run_context_tool(
         system = tool.system.model_copy(update={"arguments": arguments})
         system_dict = system.model_dump()
         system_def = SystemDef(**system_dict)
-        output = await execute_system(context, system_def)
+        # AIDEV-NOTE: Extract developer_id for new execute_system signature
+        developer_id = context.execution_input.developer_id
+        output = await execute_system(developer_id=developer_id, system=system_def)
         if hasattr(output, "model_dump"):
             return ToolExecutionResult(id=call.id, name=tool.name, output=output.model_dump())
         return ToolExecutionResult(id=call.id, name=tool.name, output=output)

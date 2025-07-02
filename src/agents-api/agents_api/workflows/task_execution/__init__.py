@@ -614,9 +614,24 @@ class TaskExecutionWorkflow:
                 arguments=arguments,
             )
 
+            # AIDEV-NOTE: Extract IDs from context for new execute_integration signature
+            developer_id = self.context.execution_input.developer_id
+            agent_id = self.context.execution_input.agent.id
+            task_id = self.context.execution_input.task.id if self.context.execution_input.task else None
+            session_id = getattr(self.context.execution_input, 'session', None)
+            session_id = session_id.id if session_id else None
+            
             tool_call_response = await workflow.execute_activity(
                 execute_integration,
-                args=[self.context, tool_name, integration, arguments],
+                args=[
+                    developer_id,
+                    agent_id,
+                    task_id,
+                    session_id,
+                    tool_name,
+                    integration,
+                    arguments,
+                ],
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
@@ -677,9 +692,11 @@ class TaskExecutionWorkflow:
             call = tool_call.get("system")
 
             system_call = SystemDef(**call)
+            # AIDEV-NOTE: Extract developer_id for new execute_system signature
+            developer_id = self.context.execution_input.developer_id
             tool_call_response = await workflow.execute_activity(
                 execute_system,
-                args=[self.context, system_call],
+                args=[developer_id, system_call],
                 schedule_to_close_timeout=timedelta(
                     seconds=30 if debug or testing else temporal_schedule_to_close_timeout,
                 ),
