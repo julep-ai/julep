@@ -172,6 +172,9 @@ model ChatInput extends ChatInputData {
     ...MemoryAccessOptions;
     ...InputChatSettings;
     ...HasMetadata;
+    
+    /** Whether to automatically run tools and send the results back to the model (requires tools or agents with tools). */
+    auto_run_tools: boolean = false;
 }
 
 model BaseTokenLogProb {

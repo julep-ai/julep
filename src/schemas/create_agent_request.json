@@ -9665,7 +9665,7 @@
     "PromptStep-Input": {
       "properties": {
         "auto_run_tools": {
-          "default": true,
+          "default": false,
           "title": "Auto Run Tools",
           "type": "boolean"
         },
@@ -9775,7 +9775,7 @@
     "PromptStep-Output": {
       "properties": {
         "auto_run_tools": {
-          "default": true,
+          "default": false,
           "title": "Auto Run Tools",
           "type": "boolean"
         },
