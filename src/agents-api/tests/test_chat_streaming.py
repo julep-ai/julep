@@ -151,7 +151,9 @@ async def _(
             MagicMock(),  # chat_context
         )
 
-    with patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -248,7 +250,9 @@ async def _(
             MagicMock(),  # chat_context
         )
 
-    with patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -316,7 +320,9 @@ async def _(
     create_entries_mock = AsyncMock()
 
     with (
-        patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render),
+        patch(
+            "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+        ),
         patch("agents_api.routers.sessions.legacy.chat.create_entries", create_entries_mock),
     ):
         # Create chat input with stream=True and save=True
@@ -384,7 +390,9 @@ async def _(
     track_usage_mock = AsyncMock()
 
     with (
-        patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render),
+        patch(
+            "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+        ),
         patch("agents_api.routers.sessions.legacy.chat.track_usage", track_usage_mock),
     ):
         # Create chat input with stream=True
@@ -454,7 +462,9 @@ async def _(
             MagicMock(),  # chat_context
         )
 
-    with patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -523,7 +533,9 @@ async def _(
     )
     initial_count = len(initial_records)
 
-    with patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -614,7 +626,9 @@ async def _(
     )
     initial_count = len(initial_records)
 
-    with patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -705,7 +719,9 @@ async def _(
     )
     initial_count = len(initial_records)
 
-    with patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],
@@ -793,7 +809,9 @@ async def _(
     )
     initial_count = len(initial_records)
 
-    with patch("agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render):
+    with patch(
+        "agents_api.routers.sessions.legacy.chat.render_chat_input", side_effect=mock_render
+    ):
         # Create chat input with stream=True
         chat_input = ChatInput(
             messages=[{"role": "user", "content": "Hello"}],

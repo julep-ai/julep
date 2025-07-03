@@ -167,12 +167,15 @@ async def _():
     mock_response.choices = [mock_choice]
     mock_response.usage = MagicMock(model_dump=lambda: {"total_tokens": 10})
 
-    with patch(
-        "agents_api.routers.sessions.auto_tools.chat.render_chat_input",
-        return_value=([], [], [MagicMock()], {"model": "gpt-4"}, [], mock_chat_context),
-    ), patch(
-        "agents_api.clients.litellm.acompletion", new_callable=AsyncMock
-    ) as mock_acompletion:
+    with (
+        patch(
+            "agents_api.routers.sessions.auto_tools.chat.render_chat_input",
+            return_value=([], [], [MagicMock()], {"model": "gpt-4"}, [], mock_chat_context),
+        ),
+        patch(
+            "agents_api.clients.litellm.acompletion", new_callable=AsyncMock
+        ) as mock_acompletion,
+    ):
         mock_acompletion.return_value = mock_response
 
         await chat(
@@ -219,12 +222,15 @@ async def _():
     mock_response.choices = [mock_choice]
     mock_response.usage = MagicMock(model_dump=lambda: {"total_tokens": 10})
 
-    with patch(
-        "agents_api.routers.sessions.auto_tools.chat.render_chat_input",
-        return_value=([], [], [], {"model": "gpt-4"}, [], mock_chat_context),
-    ), patch(
-        "agents_api.clients.litellm.acompletion", new_callable=AsyncMock
-    ) as mock_acompletion:
+    with (
+        patch(
+            "agents_api.routers.sessions.auto_tools.chat.render_chat_input",
+            return_value=([], [], [], {"model": "gpt-4"}, [], mock_chat_context),
+        ),
+        patch(
+            "agents_api.clients.litellm.acompletion", new_callable=AsyncMock
+        ) as mock_acompletion,
+    ):
         mock_acompletion.return_value = mock_response
 
         result = await chat(

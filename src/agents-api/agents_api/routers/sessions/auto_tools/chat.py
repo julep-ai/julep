@@ -182,20 +182,25 @@ async def chat(
 
         # Save all messages to history if requested
         if chat_input.save:
-
             # Save input messages
-            entries_to_save = [CreateEntryRequest.from_model_input(
-                        model=settings["model"],
-                        **msg,
-                        source="api_request",
-                    ) for msg in new_messages]
+            entries_to_save = [
+                CreateEntryRequest.from_model_input(
+                    model=settings["model"],
+                    **msg,
+                    source="api_request",
+                )
+                for msg in new_messages
+            ]
 
             # Save all generated messages (including tool calls and results)
-            entries_to_save.extend(CreateEntryRequest.from_model_input(
-                        model=settings["model"],
-                        **msg,
-                        source="api_response",
-                    ) for msg in all_messages[len(messages) :])
+            entries_to_save.extend(
+                CreateEntryRequest.from_model_input(
+                    model=settings["model"],
+                    **msg,
+                    source="api_response",
+                )
+                for msg in all_messages[len(messages) :]
+            )
 
             background_tasks.add_task(
                 create_entries,
