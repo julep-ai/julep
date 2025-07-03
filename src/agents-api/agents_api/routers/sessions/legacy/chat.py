@@ -22,8 +22,8 @@ from ....common.utils.usage import track_usage
 from ....dependencies.developer_id import get_developer_data
 from ....queries.entries.create_entries import create_entries
 from ..metrics import total_tokens_per_user
-from .render import render_chat_input
 from ..router import router
+from .render import render_chat_input
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 

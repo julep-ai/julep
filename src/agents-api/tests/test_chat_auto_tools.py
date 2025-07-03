@@ -243,32 +243,32 @@ async def _():
     """Test that the chat router correctly uses ChatInput.auto_run_tools for routing."""
     # This test validates that the chat router implementation uses
     # ChatInput.auto_run_tools flag along with the feature flag for routing
-    
+
     # Test 1: With auto_run_tools=True
     chat_input_enabled = ChatInput(
         messages=[{"role": "user", "content": "Hello"}],
         auto_run_tools=True,
     )
-    
+
     # Verify the field exists and is set correctly
     assert hasattr(chat_input_enabled, "auto_run_tools")
     assert chat_input_enabled.auto_run_tools is True
-    
+
     # Test 2: With auto_run_tools=False
     chat_input_disabled = ChatInput(
         messages=[{"role": "user", "content": "Hello"}],
         auto_run_tools=False,
     )
-    
+
     # Verify the field exists and is set correctly
     assert hasattr(chat_input_disabled, "auto_run_tools")
     assert chat_input_disabled.auto_run_tools is False
-    
+
     # Test 3: Default value
     chat_input_default = ChatInput(
         messages=[{"role": "user", "content": "Hello"}],
     )
-    
+
     # Verify the field exists and defaults to False
     assert hasattr(chat_input_default, "auto_run_tools")
     assert chat_input_default.auto_run_tools is False

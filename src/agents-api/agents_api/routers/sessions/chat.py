@@ -66,7 +66,7 @@ async def chat(
     # AIDEV-NOTE: Feature flag controls which implementation to use
     if get_feature_flag_value("auto_run_tools_chat", developer_id=str(developer.id)):
         from .auto_tools.chat import chat as chat_auto_tools
-        
+
         return await chat_auto_tools(
             developer=developer,
             session_id=session_id,
@@ -79,7 +79,7 @@ async def chat(
 
     # Default to legacy implementation
     from .legacy.chat import chat as chat_legacy
-    
+
     return await chat_legacy(
         developer=developer,
         session_id=session_id,

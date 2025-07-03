@@ -24,6 +24,7 @@ from ....common.protocol.developers import Developer
 from ....common.utils.datetime import utcnow
 from ....common.utils.tool_runner import run_llm_with_tools, run_tool_call
 from ....queries.entries.create_entries import create_entries
+
 # Entry saving logic will be implemented directly in this file
 from ..metrics import total_tokens_per_user
 from .render import render_chat_input
@@ -127,7 +128,7 @@ async def chat(
                 )
                 for msg in new_messages
             ]
-            
+
             # Add the response
             new_entries.append(
                 CreateEntryRequest.from_model_input(
@@ -136,7 +137,7 @@ async def chat(
                     source="api_response",
                 )
             )
-            
+
             background_tasks.add_task(
                 create_entries,
                 developer_id=developer.id,
