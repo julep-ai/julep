@@ -2,7 +2,6 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
-from starlette.status import HTTP_200_OK
 
 from ....autogen.openapi_model import (
     ChatInput,
@@ -11,25 +10,17 @@ from ....autogen.openapi_model import (
 )
 from ....common.protocol.developers import Developer
 from ....common.protocol.sessions import ChatContext
-from ....common.utils.expressions import evaluate_expressions
 from ....common.utils.template import render_template
 from ....dependencies.developer_id import get_developer_data
 from ....env import max_free_sessions
 from ....queries.chat.gather_messages import gather_messages
 from ....queries.chat.prepare_chat_context import prepare_chat_context
-from ....queries.secrets.list import list_secrets_query
 from ....queries.sessions.count_sessions import count_sessions as count_sessions_query
 from ...utils.model_validation import validate_model
-from ..router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
-@router.post(
-    "/sessions/{session_id}/render",
-    status_code=HTTP_200_OK,
-    tags=["sessions", "render"],
-)
 async def render(
     developer: Annotated[Developer, Depends(get_developer_data)],
     session_id: UUID,
@@ -139,14 +130,6 @@ async def render_chat_input(
             if tool.name not in existing_tool_names:
                 tools.append(tool)
 
-    # Check if using Claude model and has specific tool types
-    is_claude_model = settings.get("model", "").lower().startswith("claude-3.5")
-
-    # Format tools for litellm
-    # formatted_tools = (
-    #     tools if is_claude_model else [format_tool(tool) for tool in tools]
-    # )
-
     # FIXME: Truncate chat messages in the chat context
     # SCRUM-7
     if chat_context.session.context_overflow == "truncate":
@@ -164,46 +147,6 @@ async def render_chat_input(
         for m in messages
     ]
 
-    # FIXME: Hack to make the computer use tools compatible with litellm
-    # Issue was: litellm expects type to be `computer_20241022` and spec to be
-    # `function` (see: https://docs.litellm.ai/docs/providers/anthropic#computer-tools)
-    # but we don't allow that (spec should match type).
-    formatted_tools = []
-    secrets = {}
-    if tools and any(
-        tool.type == "computer_20241022" and tool.computer_20241022 for tool in tools
-    ):
-        secrets = {
-            secret.name: secret.value
-            for secret in await list_secrets_query(
-                developer_id=developer.id,
-                decrypt=True,
-            )
-        }
-
-    for tool in tools:
-        if tool.type == "computer_20241022" and tool.computer_20241022:
-            function = tool.computer_20241022
-            tool = {
-                "type": tool.type,
-                "function": {
-                    "name": tool.name,
-                    "parameters": {
-                        k: evaluate_expressions(v, values={"secrets": secrets})
-                        for k, v in function.model_dump().items()
-                        if k not in ["name", "type"]
-                    }
-                    if function is not None
-                    else {},
-                },
-            }
-            formatted_tools.append(tool)
-
-    # If not using Claude model
-    # FIXME: Enable formatted_tools once format-tools PR is merged.
-    if not is_claude_model:
-        formatted_tools = None
-
     # HOTFIX: for groq calls, litellm expects tool_calls_id not to be in the messages
     # FIXME: This is a temporary fix. We need to update the agent-api to use the new tool calling format
     is_groq_model = settings.get("model", "").lower().startswith("llama-3.1")
@@ -217,6 +160,6 @@ async def render_chat_input(
             for message in messages
         ]
 
-    # AIDEV-NOTE: Return actual tools instead of formatted_tools for auto_tools implementation
-    # Tools will be formatted by run_llm_with_tools when needed
+    # AIDEV-NOTE: Return actual Tool objects (unformatted) for auto_tools implementation
+    # The auto_tools/chat.py handles tool formatting and execution internally
     return messages, doc_references, tools, settings, new_messages, chat_context

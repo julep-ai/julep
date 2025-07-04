@@ -2,7 +2,6 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
-from starlette.status import HTTP_200_OK
 
 from ....autogen.openapi_model import (
     ChatInput,
@@ -20,16 +19,10 @@ from ....queries.chat.prepare_chat_context import prepare_chat_context
 from ....queries.secrets.list import list_secrets_query
 from ....queries.sessions.count_sessions import count_sessions as count_sessions_query
 from ...utils.model_validation import validate_model
-from ..router import router
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
-@router.post(
-    "/sessions/{session_id}/render",
-    status_code=HTTP_200_OK,
-    tags=["sessions", "render"],
-)
 async def render(
     developer: Annotated[Developer, Depends(get_developer_data)],
     session_id: UUID,

@@ -5,12 +5,10 @@ from uuid import UUID
 from fastapi import BackgroundTasks, Depends, Header
 from fastapi.responses import StreamingResponse
 from litellm.utils import Choices, Message, ModelResponse
-from starlette.status import HTTP_201_CREATED
 from uuid_extensions import uuid7
 
 from ....autogen.openapi_model import (
     ChatInput,
-    ChatResponse,
     ChunkChatResponse,
     CreateEntryRequest,
     MessageChatResponse,
@@ -22,7 +20,6 @@ from ....common.utils.usage import track_usage
 from ....dependencies.developer_id import get_developer_data
 from ....queries.entries.create_entries import create_entries
 from ..metrics import total_tokens_per_user
-from ..router import router
 from .render import render_chat_input
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -172,12 +169,6 @@ async def stream_chat_response(
         )
 
 
-@router.post(
-    "/sessions/{session_id}/chat",
-    status_code=HTTP_201_CREATED,
-    tags=["sessions", "chat"],
-    response_model=ChatResponse,
-)
 async def chat(
     developer: Annotated[Developer, Depends(get_developer_data)],
     session_id: UUID,
