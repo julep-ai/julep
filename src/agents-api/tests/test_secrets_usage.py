@@ -18,7 +18,7 @@ from agents_api.autogen.openapi_model import (
 from agents_api.common.protocol.models import ExecutionInput
 from agents_api.common.protocol.tasks import StepContext
 from agents_api.common.utils.datetime import utcnow
-from agents_api.routers.sessions.render import render_chat_input
+from agents_api.routers.sessions.legacy.render import render_chat_input
 from ward import skip, test
 
 from tests.fixtures import test_developer, test_developer_id

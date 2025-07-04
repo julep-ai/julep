@@ -162,7 +162,8 @@ async def _():
     # Mock litellm.acompletion to verify it receives no tools
     mock_choice = MagicMock()
     mock_choice.message = MagicMock(content="Hi", tool_calls=None)
-    mock_choice.model_dump.return_value = {"message": {"content": "Hi", "tool_calls": None}}
+    mock_choice.message.model_dump.return_value = {"content": "Hi", "tool_calls": None}
+    mock_choice.finish_reason = "stop"
     mock_response = MagicMock()
     mock_response.choices = [mock_choice]
     mock_response.usage = MagicMock(model_dump=lambda: {"total_tokens": 10})
@@ -170,7 +171,14 @@ async def _():
     with (
         patch(
             "agents_api.routers.sessions.auto_tools.chat.render_chat_input",
-            return_value=([], [], [MagicMock()], {"model": "gpt-4"}, [], mock_chat_context),
+            return_value=(
+                [{"role": "user", "content": "Hello"}],
+                [],
+                [MagicMock()],
+                {"model": "gpt-4"},
+                [],
+                mock_chat_context,
+            ),
         ),
         patch(
             "agents_api.clients.litellm.acompletion", new_callable=AsyncMock
@@ -185,10 +193,10 @@ async def _():
             background_tasks=MagicMock(),
         )
 
-        # Verify litellm was called with tools=None
+        # Verify litellm was called with tools=[]
         mock_acompletion.assert_called_once()
         call_args = mock_acompletion.call_args[1]
-        assert call_args.get("tools") is None
+        assert call_args.get("tools") == []
 
 
 @test("chat_auto_tools with auto_run_tools=True and no tools works normally")
@@ -217,7 +225,8 @@ async def _():
     # Mock litellm response
     mock_choice = MagicMock()
     mock_choice.message = MagicMock(content="Hi", tool_calls=None)
-    mock_choice.model_dump.return_value = {"message": {"content": "Hi", "tool_calls": None}}
+    mock_choice.message.model_dump.return_value = {"content": "Hi", "tool_calls": None}
+    mock_choice.finish_reason = "stop"
     mock_response = MagicMock()
     mock_response.choices = [mock_choice]
     mock_response.usage = MagicMock(model_dump=lambda: {"total_tokens": 10})
@@ -225,7 +234,14 @@ async def _():
     with (
         patch(
             "agents_api.routers.sessions.auto_tools.chat.render_chat_input",
-            return_value=([], [], [], {"model": "gpt-4"}, [], mock_chat_context),
+            return_value=(
+                [{"role": "user", "content": "Hello"}],
+                [],
+                [],
+                {"model": "gpt-4"},
+                [],
+                mock_chat_context,
+            ),
         ),
         patch(
             "agents_api.clients.litellm.acompletion", new_callable=AsyncMock
