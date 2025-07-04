@@ -100,26 +100,45 @@ async def chat(
     completion_data.pop("messages", None)
     completion_data.pop("tools", None)
 
-    # If no tools or auto_run_tools is False, use simple completion
-    if not tools_to_use:
+    # Always use tool execution loop for consistency
+    # Get the first agent from the chat context
+    if not chat_context.agents:
+        msg = "No agent found for the session"
+        raise HTTPException(status_code=400, detail=msg)
+
+    agent = chat_context.agents[0]
+
+    # Create a partial function for tool execution with chat context
+    async def run_tool_partial(tool: Tool, call: BaseChosenToolCall) -> ToolExecutionResult:
+        return await run_tool_call(
+            developer_id=developer.id,
+            agent_id=agent.id,
+            task_id=None,  # No task in chat context
+            session_id=session_id,
+            tool=tool,
+            call=call,
+            connection_pool=connection_pool,
+        )
+
+    # Handle streaming for non-tool cases
+    if chat_input.stream and not tools_to_use:
+        # Import streaming function from legacy implementation
+        from ..legacy.chat import stream_chat_response
+
         # Prepare parameters for LiteLLM
         params = {
             "messages": messages,
-            "tools": None,  # No tools when auto_run_tools=False
+            "tools": None,  # No tools when streaming
+            "stream": True,
+            "stream_options": {"include_usage": True},
             **completion_data,
         }
 
-        # Set streaming parameter based on chat_input.stream
-        if chat_input.stream:
-            params["stream"] = True
-            params["stream_options"] = {"include_usage": True}
-
-        # Get response from LiteLLM
+        # Get streaming response from LiteLLM
         model_response = await litellm.acompletion(**params)
 
-        # Save messages if requested (non-tool execution path)
+        # Save input messages if requested
         if chat_input.save:
-            # Create entries for input messages
             new_entries = [
                 CreateEntryRequest.from_model_input(
                     model=settings["model"],
@@ -129,15 +148,6 @@ async def chat(
                 for msg in new_messages
             ]
 
-            # Add the response
-            new_entries.append(
-                CreateEntryRequest.from_model_input(
-                    model=settings["model"],
-                    **model_response.choices[0].model_dump()["message"],
-                    source="api_response",
-                )
-            )
-
             background_tasks.add_task(
                 create_entries,
                 developer_id=developer.id,
@@ -145,91 +155,87 @@ async def chat(
                 data=new_entries,
             )
 
-        # Auto tools implementation does not support streaming
-        # Keep model_response for later use
-    else:
-        # Use tool execution loop
-        # Get the first agent from the chat context
-        if not chat_context.agents:
-            msg = "No agent found for the session"
-            raise HTTPException(status_code=400, detail=msg)
-
-        agent = chat_context.agents[0]
-
-        # Create a partial function for tool execution with chat context
-        async def run_tool_partial(tool: Tool, call: BaseChosenToolCall) -> ToolExecutionResult:
-            return await run_tool_call(
+        # Return streaming response
+        return StreamingResponse(
+            stream_chat_response(
+                model_response=model_response,
                 developer_id=developer.id,
-                agent_id=agent.id,
-                task_id=None,  # No task in chat context
+                doc_references=doc_references,
+                should_save=chat_input.save,
                 session_id=session_id,
-                tool=tool,
-                call=call,
+                model=settings["model"],
+                background_tasks=background_tasks,
+                messages=messages,
+                custom_api_key_used=x_custom_api_key is not None,
+                developer_tags=developer.tags,
                 connection_pool=connection_pool,
-            )
-
-        # Use tools from render_chat_input which already includes agent tools + chat_input tools
-        # Run LLM with automatic tool execution
-        all_messages = await run_llm_with_tools(
-            messages=messages,
-            tools=tools_to_use,  # Already filtered based on auto_run_tools
-            settings=completion_data,
-            run_tool_call=run_tool_partial,
+            ),
+            media_type="text/event-stream",
         )
 
-        # The last message is the final response
-        final_response = all_messages[-1]
+    # Run LLM with automatic tool execution (tools=[] when auto_run_tools=False)
+    all_messages = await run_llm_with_tools(
+        messages=messages,
+        tools=tools_to_use,  # Empty list when auto_run_tools=False
+        settings=completion_data,
+        run_tool_call=run_tool_partial,
+    )
 
-        # Save all messages to history if requested
-        if chat_input.save:
-            # Save input messages
-            entries_to_save = [
+    # The last message is the final response
+    final_response = all_messages[-1]
+
+    # Save all messages to history if requested
+    if chat_input.save:
+        # Save input messages
+        entries_to_save = [
+            CreateEntryRequest.from_model_input(
+                model=settings["model"],
+                **msg,
+                source="api_request",
+            )
+            for msg in new_messages
+        ]
+
+        # Save all generated messages (including tool calls and results)
+        # Correctly label each message based on its type
+        for msg in all_messages[len(messages) :]:
+            role = msg.get("role")
+            # Determine the correct source based on message type
+            if role == "assistant" and msg.get("tool_calls"):
+                source = "tool_request"
+            elif role == "assistant":
+                source = "api_response"
+            elif role == "tool":
+                source = "tool_response"
+            else:
+                source = "api_request"  # fallback, shouldn't happen
+            
+            entries_to_save.append(
                 CreateEntryRequest.from_model_input(
                     model=settings["model"],
                     **msg,
-                    source="api_request",
+                    source=source,
                 )
-                for msg in new_messages
-            ]
-
-            # Save all generated messages (including tool calls and results)
-            entries_to_save.extend(
-                CreateEntryRequest.from_model_input(
-                    model=settings["model"],
-                    **msg,
-                    source="api_response",
-                )
-                for msg in all_messages[len(messages) :]
             )
 
-            background_tasks.add_task(
-                create_entries,
-                developer_id=developer.id,
-                session_id=session_id,
-                data=entries_to_save,
-            )
+        background_tasks.add_task(
+            create_entries,
+            developer_id=developer.id,
+            session_id=session_id,
+            data=entries_to_save,
+        )
 
     # Create non-streaming response
-    if tools_to_use:
-        # For tool execution, we synthesize usage data
-        usage_data = {
-            "prompt_tokens": 0,  # Would need to track this in run_llm_with_tools
-            "completion_tokens": 0,
-            "total_tokens": 0,
-        }
+    # Extract the final message content from the last message
+    final_content = final_response.get("content", "")
+    final_tool_calls = final_response.get("tool_calls")
 
-        # Extract the final message content from the last message
-        final_content = final_response.get("content", "")
-        final_tool_calls = final_response.get("tool_calls")
-    else:
-        # For non-tool execution, use the response from litellm
-        usage_data = model_response.usage.model_dump() if model_response.usage else {}
-        final_content = (
-            model_response.choices[0].message.content if model_response.choices else ""
-        )
-        final_tool_calls = (
-            model_response.choices[0].message.tool_calls if model_response.choices else None
-        )
+    # For usage data, we would need to track this in run_llm_with_tools
+    usage_data = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+    }
 
     chat_response = MessageChatResponse(
         id=uuid7(),
